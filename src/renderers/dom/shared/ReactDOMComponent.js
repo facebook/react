@@ -1113,7 +1113,7 @@ ReactDOMComponent.Mixin = {
 
     if (nextContent != null) {
       if (lastContent !== nextContent) {
-        this.updateTextContent('' + nextContent);
+        this.updateTextContent('' + nextContent, lastContent);
         if (__DEV__) {
           setContentChildForInstrumentation.call(this, nextContent);
         }

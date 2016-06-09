@@ -11,10 +11,6 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var setInnerHTML = require('setInnerHTML');
-
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
  * even in IE8. innerText is a poor substitute for textContent and, among many
@@ -25,16 +21,12 @@ var setInnerHTML = require('setInnerHTML');
  * @param {string} text
  * @internal
  */
-var setTextContent = function(node, text) {
-  node.textContent = text;
-};
-
-if (ExecutionEnvironment.canUseDOM) {
-  if (!('textContent' in document.documentElement)) {
-    setTextContent = function(node, text) {
-      setInnerHTML(node, escapeTextContentForBrowser(text));
-    };
+var setTextContent = function(node, text, update) {
+  if (text && update) {
+    node.firstChild.nodeValue = text;
+  } else {
+    node.textContent = text;
   }
-}
+};
 
 module.exports = setTextContent;
