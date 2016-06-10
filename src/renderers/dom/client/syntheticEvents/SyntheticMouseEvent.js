@@ -66,24 +66,28 @@ var MouseEventInterface = {
   offsetX: function(event) {
     return 'offsetX' in event ?
     event.offsetX :
-    ((e) => {
-      const target = e.target || e.srcElement;
-      const style = target.currentStyle || window.getComputedStyle(target, null);
-      const borderLeftWidth = parseInt(style.borderLeftWidth, 10);
-      const rect = target.getBoundingClientRect();
-      return parseInt((e.clientX - borderLeftWidth - rect.left), 10);
-    })(event);
+    'srcElement' in event ?
+      ((e) => {
+        const target = e.srcElement;
+        const style = target.currentStyle || window.getComputedStyle(target, null);
+        const borderLeftWidth = parseInt(style.borderLeftWidth, 10);
+        const rect = target.getBoundingClientRect();
+        return parseInt((e.clientX - borderLeftWidth - rect.left), 10);
+      })(event) :
+      'undefined';
   },
   offsetY: function(event) {
     return 'offsetY' in event ?
     event.offsetY :
-    ((e) => {
-      const target = e.target || e.srcElement;
-      const style = target.currentStyle || window.getComputedStyle(target, null);
-      const borderTopWidth = parseInt(style.borderTopWidth, 10);
-      const rect = target.getBoundingClientRect();
-      return parseInt((e.clientY - borderTopWidth - rect.top), 10);
-    })(event);
+    'srcElement' in event ?
+      ((e) => {
+        const target = e.srcElement;
+        const style = target.currentStyle || window.getComputedStyle(target, null);
+        const borderTopWidth = parseInt(style.borderTopWidth, 10);
+        const rect = target.getBoundingClientRect();
+        return parseInt((e.clientY - borderTopWidth - rect.top), 10);
+      })(event) :
+      'undefined';
   },
 };
 
