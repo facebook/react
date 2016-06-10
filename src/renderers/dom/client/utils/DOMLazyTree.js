@@ -53,7 +53,7 @@ function insertTreeChildren(tree) {
   } else if (tree.html != null) {
     setInnerHTML(node, tree.html);
   } else if (tree.text != null) {
-    setTextContent(node, tree.text, false);
+    setTextContent(node, tree.text);
   }
 }
 
@@ -105,7 +105,7 @@ function queueText(tree, text) {
   if (enableLazy) {
     tree.text = text;
   } else {
-    setTextContent(tree.node, text, false);
+    setTextContent(tree.node, text);
   }
 }
 

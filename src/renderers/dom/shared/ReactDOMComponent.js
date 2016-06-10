@@ -1105,7 +1105,7 @@ ReactDOMComponent.Mixin = {
     if (lastChildren != null && nextChildren == null) {
       this.updateChildren(null, transaction, context);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
-      this.updateTextContent('', null);
+      this.updateTextContent('');
       if (__DEV__) {
         ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
       }
@@ -1113,7 +1113,7 @@ ReactDOMComponent.Mixin = {
 
     if (nextContent != null) {
       if (lastContent !== nextContent) {
-        this.updateTextContent('' + nextContent, lastContent);
+        this.updateTextContent('' + nextContent);
         if (__DEV__) {
           setContentChildForInstrumentation.call(this, nextContent);
         }

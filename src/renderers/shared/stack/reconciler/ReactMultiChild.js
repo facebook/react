@@ -40,7 +40,6 @@ function makeInsertMarkup(markup, afterNode, toIndex) {
     fromNode: null,
     toIndex: toIndex,
     afterNode: afterNode,
-    shouldUpdate: null,
   };
 }
 
@@ -60,7 +59,6 @@ function makeMove(child, afterNode, toIndex) {
     fromNode: ReactReconciler.getHostNode(child),
     toIndex: toIndex,
     afterNode: afterNode,
-    shouldUpdate: null,
   };
 }
 
@@ -79,7 +77,6 @@ function makeRemove(child, node) {
     fromNode: node,
     toIndex: null,
     afterNode: null,
-    shouldUpdate: null,
   };
 }
 
@@ -98,7 +95,6 @@ function makeSetMarkup(markup) {
     fromNode: null,
     toIndex: null,
     afterNode: null,
-    shouldUpdate: null,
   };
 }
 
@@ -108,7 +104,7 @@ function makeSetMarkup(markup) {
  * @param {string} textContent Text content to set.
  * @private
  */
-function makeTextContent(textContent, shouldUpdate) {
+function makeTextContent(textContent) {
   // NOTE: Null values reduce hidden classes.
   return {
     type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
@@ -117,7 +113,6 @@ function makeTextContent(textContent, shouldUpdate) {
     fromNode: null,
     toIndex: null,
     afterNode: null,
-    shouldUpdate: shouldUpdate,
   };
 }
 
@@ -285,7 +280,7 @@ var ReactMultiChild = {
      * @param {string} nextContent String of content.
      * @internal
      */
-    updateTextContent: function(nextContent, lastContent) {
+    updateTextContent: function(nextContent) {
       var prevChildren = this._renderedChildren;
       // Remove any rendered children.
       ReactChildReconciler.unmountChildren(prevChildren, false);
@@ -294,8 +289,8 @@ var ReactMultiChild = {
           invariant(false, 'updateTextContent called on non-empty component.');
         }
       }
-      // Set new text content. Set it to update if we know the lastContent is a valid text node too
-      var updates = [makeTextContent(nextContent, lastContent)];
+      // Set new text content.
+      var updates = [makeTextContent(nextContent)];
       processQueue(this, updates);
     },
 

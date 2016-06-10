@@ -115,7 +115,7 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
     if (stringText) {
       // Set the text content of the first node after the opening comment, and
       // remove all following nodes up until the closing comment.
-      setTextContent(nodeAfterComment, stringText, false);
+      setTextContent(nodeAfterComment, stringText);
       removeDelimitedText(parentNode, nodeAfterComment, closingComment);
     } else {
       removeDelimitedText(parentNode, openingComment, closingComment);
@@ -223,8 +223,7 @@ var DOMChildrenOperations = {
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
           setTextContent(
             parentNode,
-            update.content,
-            update.shouldUpdate
+            update.content
           );
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation(

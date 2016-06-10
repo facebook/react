@@ -25,12 +25,16 @@ var setInnerHTML = require('setInnerHTML');
  * @param {string} text
  * @internal
  */
-var setTextContent = function(node, text, update) {
-  if (text && update) {
-    node.firstChild.nodeValue = text;
-  } else {
-    node.textContent = text;
+var setTextContent = function(node, text) {
+  if (text) {
+    var firstChild = node.firstChild;
+    
+    if (firstChild === node.lastChild) {
+      firstChild.nodeValue = text;
+      return;
+    }
   }
+  node.textContent = text;
 };
 
 if (ExecutionEnvironment.canUseDOM) {
