@@ -29,7 +29,7 @@ var setTextContent = function(node, text) {
   if (text) {
     var firstChild = node.firstChild;
     
-    if (firstChild === node.lastChild) {
+    if (firstChild && firstChild === node.lastChild) {
       firstChild.nodeValue = text;
       return;
     }
