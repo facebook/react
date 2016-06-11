@@ -16,7 +16,7 @@ class LikeButton extends React.Component {
     super();
     this.state = {
       liked: false
-    }
+    };
     this.handleClick = this.handleClick.bind(this);
   }
   handleClick() {
