@@ -34,7 +34,7 @@ function transferOutput(child : ?Fiber, parent : Fiber) {
   // avoid unnecessary traversal. When we have multiple output, we just pass
   // the linked list of fibers that has the individual output values.
   parent.output = (child && !child.sibling) ? child.output : child;
-  parent.memoizedInput = parent.input;
+  parent.memoizedProps = parent.pendingProps;
 }
 
 function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
@@ -55,7 +55,7 @@ function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
 }
 
 function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
-  var coroutine = (workInProgress.input : ?ReactCoroutine);
+  var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
@@ -104,7 +104,7 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
       console.log('/host component', workInProgress.type);
       return null;
     case CoroutineComponent:
-      console.log('/coroutine component', workInProgress.input.handler.name);
+      console.log('/coroutine component', workInProgress.pendingProps.handler.name);
       return moveCoroutineToHandlerPhase(current, workInProgress);
     case CoroutineHandlerPhase:
       transferOutput(workInProgress.stateNode, workInProgress);

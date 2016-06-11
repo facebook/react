@@ -134,7 +134,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
       // is passed. Should be doable though. Might require a wrapper don't know.
       if (rootFiber && rootFiber.type === element.type && rootFiber.key === element.key) {
         nextUnitOfWork = ReactFiber.cloneFiber(rootFiber);
-        nextUnitOfWork.input = element.props;
+        nextUnitOfWork.pendingProps = element.props;
         return {};
       }
 
