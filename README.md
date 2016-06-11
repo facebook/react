@@ -2,11 +2,9 @@
 
 React is a JavaScript library for building user interfaces.
 
-* **Just the UI:** Lots of people use React as the V in MVC. Since React makes no assumptions about the rest of your technology stack, it's easy to try it out on a small feature in an existing project.
-* **Virtual DOM:** React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using [React Native](https://facebook.github.io/react-native/).
-* **Data flow:** React implements one-way reactive data flow which reduces boilerplate and is easier to reason about than traditional data binding.
-
-**NEW**! Check out our newest project [React Native](https://github.com/facebook/react-native), which uses React and JavaScript to create native mobile apps.
+* **Declarative:** React makes it painless to update your views when your data changes. Just return the views to display for each possible state, and React handles the updates. Declarative views make your code more predictable, simpler to understand, and easier to debug.
+* **Component-Based:** With React, create encapsulated components that manage their own state, then compose them to build complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep your state out of the DOM.
+* **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack – you can build new features in React without rewriting your existing code. React can also render on the server using Node and power mobile apps using [React Native](https://facebook.github.io/react-native/).
 
 [Learn how to use React in your own project](https://facebook.github.io/react/docs/getting-started.html).
 
