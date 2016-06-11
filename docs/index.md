@@ -7,25 +7,19 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Just the UI</h3>
-      <p>
-        Lots of people use React as the V in MVC.
-        Since React makes no assumptions about the rest of your technology stack,
-        it&apos;s easy to try it out on a small feature in an existing project.
-      </p>
+      <h3>Declarative</h3>
+      <p>React makes it painless to update your views when your data changes. Just return the views to display for each possible state, and React handles the updates.</p>
+      <p>Declarative views make your code more predictable, simpler to understand, and easier to debug.</p>
     </div>
     <div class="marketing-col">
-      <h3>Virtual DOM</h3>
-      <p>
-        React abstracts away the DOM, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using <a href="https://facebook.github.io/react-native/">React Native</a>.
-      </p>
+      <h3>Component-Based</h3>
+      <p>With React, create encapsulated components that manage their own state, then compose them to build complex UIs.</p>
+      <p>Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep your state out of the DOM.</p>
     </div>
     <div class="marketing-col">
-      <h3>Data flow</h3>
-      <p>
-        React implements one-way reactive data flow which reduces boilerplate and is
-        easier to reason about than traditional data binding.
-      </p>
+      <h3>Learn Once, Write Anywhere</h3>
+      <p>We don't make assumptions about the rest of your technology stack – you can build new features in React without rewriting your existing code.</p>
+      <p>React can also render on the server using Node and power mobile apps using <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
     </div>
   </div>
 </section>
