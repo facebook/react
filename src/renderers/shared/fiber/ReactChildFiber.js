@@ -42,7 +42,7 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
         // TODO: This is not sufficient since previous siblings could be new.
         // Will fix reconciliation properly later.
         const clone = ReactFiber.cloneFiber(existingChild);
-        clone.input = element.props;
+        clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
         previousSibling.sibling = clone;
@@ -104,7 +104,7 @@ function createFirstChild(parent, existingChild, newChildren) {
           element.key === existingChild.key) {
         // Get the clone of the existing fiber.
         const clone = ReactFiber.cloneFiber(existingChild);
-        clone.input = element.props;
+        clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
         return clone;

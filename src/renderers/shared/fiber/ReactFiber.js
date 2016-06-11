@@ -66,9 +66,9 @@ export type Fiber = Instance & {
   ref: null | (handle : ?Object) => void,
 
   // Input is the data coming into process this fiber. Arguments. Props.
-  input: any, // This type will be more specific once we overload the tag.
-  // TODO: I think that there is a way to merge input and memoizedInput somehow.
-  memoizedInput: any, // The input used to create the output.
+  pendingProps: any, // This type will be more specific once we overload the tag.
+  // TODO: I think that there is a way to merge input and memoizedProps somehow.
+  memoizedProps: any, // The input used to create the output.
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
@@ -105,8 +105,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     ref: null,
 
-    input: null,
-    memoizedInput: null,
+    pendingProps: null,
+    memoizedProps: null,
     output: null,
 
     pendingWorkPriority: 0,
@@ -149,7 +149,7 @@ exports.cloneFiber = function(fiber : Fiber) : Fiber {
 
 exports.createFiberFromElement = function(element : ReactElement) {
   const fiber = exports.createFiberFromElementType(element.type, element.key);
-  fiber.input = element.props;
+  fiber.pendingProps = element.props;
   return fiber;
 };
 
@@ -175,7 +175,7 @@ exports.createFiberFromElementType = function(type : mixed, key : null | string)
 exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine) {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
-  fiber.input = coroutine;
+  fiber.pendingProps = coroutine;
   return fiber;
 };
 

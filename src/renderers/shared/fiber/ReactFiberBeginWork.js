@@ -37,22 +37,22 @@ function reconcileChildren(current, workInProgress, nextChildren) {
 
 function updateFunctionalComponent(current, workInProgress) {
   var fn = workInProgress.type;
-  var props = workInProgress.input;
+  var props = workInProgress.pendingProps;
   console.log('update fn:', fn.name);
   var nextChildren = fn(props);
   reconcileChildren(current, workInProgress, nextChildren);
 }
 
 function updateHostComponent(current, workInProgress) {
-  console.log('host component', workInProgress.type, typeof workInProgress.input.children === 'string' ? workInProgress.input.children : '');
+  console.log('host component', workInProgress.type, typeof workInProgress.pendingProps.children === 'string' ? workInProgress.pendingProps.children : '');
 
-  var nextChildren = workInProgress.input.children;
+  var nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren);
 }
 
 function mountIndeterminateComponent(current, workInProgress) {
   var fn = workInProgress.type;
-  var props = workInProgress.input;
+  var props = workInProgress.pendingProps;
   var value = fn(props);
   if (typeof value === 'object' && value && typeof value.render === 'function') {
     console.log('performed work on class:', fn.name);
@@ -67,7 +67,7 @@ function mountIndeterminateComponent(current, workInProgress) {
 }
 
 function updateCoroutineComponent(current, workInProgress) {
-  var coroutine = (workInProgress.input : ?ReactCoroutine);
+  var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
@@ -80,18 +80,18 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
   // Ideally nothing should rely on this, but relying on it here
   // means that we don't need an additional field on the work in
   // progress.
-  if (current && workInProgress.input === current.memoizedInput) {
+  if (current && workInProgress.pendingProps === current.memoizedProps) {
     // The most likely scenario is that the previous copy of the tree contains
-    // the same input as the new one. In that case, we can just copy the output
+    // the same props as the new one. In that case, we can just copy the output
     // and children from that node.
     workInProgress.output = current.output;
     workInProgress.child = current.child;
     workInProgress.stateNode = current.stateNode;
     return null;
   }
-  if (workInProgress.input === workInProgress.memoizedInput) {
+  if (workInProgress.pendingProps === workInProgress.memoizedProps) {
     // In a ping-pong scenario, this version could actually contain the
-    // old input. In that case, we can just bail out.
+    // old props. In that case, we can just bail out.
     return null;
   }
   switch (workInProgress.tag) {
@@ -102,7 +102,7 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
       updateFunctionalComponent(current, workInProgress);
       return workInProgress.child;
     case ClassComponent:
-      console.log('class component', workInProgress.input.type.name);
+      console.log('class component', workInProgress.pendingProps.type.name);
       return workInProgress.child;
     case HostComponent:
       updateHostComponent(current, workInProgress);
