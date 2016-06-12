@@ -115,4 +115,54 @@ describe('ReactIncremental', function() {
 
   });
 
+  it('can cancel partially rendered work and restart', function() {
+
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar>{props.text}</Bar>
+          <Bar>{props.text}</Bar>
+        </div>
+      );
+    }
+
+    // Init
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flush();
+
+    ops = [];
+
+    ReactNoop.render(<Foo text="bar" />);
+    // Flush part of the work
+    ReactNoop.flushLowPri(20);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // This will abort the previous work and restart
+    ReactNoop.render(<Foo text="baz" />);
+
+    // Flush part of the new work
+    ReactNoop.flushLowPri(20);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    // Flush the rest of the work which now includes the low priority
+    ReactNoop.flush(20);
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+
+    // TODO: Test the ability for a subtree to resume if it has lower priority.
+
+  });
+
 });
