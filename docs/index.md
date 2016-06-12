@@ -8,13 +8,13 @@ id: home
   <div class="marketing-row">
     <div class="marketing-col">
       <h3>Declarative</h3>
-      <p>React makes it painless to update your views when your data changes. Just return the views to display for each possible state, and React handles the updates.</p>
+      <p>React lets you work on dynamic UIs as if they were static. Describe what your views look like in different states, and React will take care of updating them whenever the data changes. </p>
       <p>Declarative views make your code more predictable, simpler to understand, and easier to debug.</p>
     </div>
     <div class="marketing-col">
       <h3>Component-Based</h3>
-      <p>With React, create encapsulated components that manage their own state, then compose them to build complex UIs.</p>
-      <p>Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep your state out of the DOM.</p>
+      <p>Create encapsulated React components that manage their own state. Then compose them to build complex UIs.</p>
+      <p>Since components are written in JavaScript instead of templates, you can pass rich data through your app and keep your state out of the DOM.</p>
     </div>
     <div class="marketing-col">
       <h3>Learn Once, Write Anywhere</h3>
