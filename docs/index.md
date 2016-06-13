@@ -8,17 +8,17 @@ id: home
   <div class="marketing-row">
     <div class="marketing-col">
       <h3>Declarative</h3>
-      <p>React makes it painless to update your views when your data changes. Just return the views to display for each possible state, and React handles the updates.</p>
-      <p>Declarative views make your code more predictable, simpler to understand, and easier to debug.</p>
+      <p>React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes.</p>
+      <p>Declarative views make your code more predictable and easier to debug.</p>
     </div>
     <div class="marketing-col">
       <h3>Component-Based</h3>
-      <p>With React, create encapsulated components that manage their own state, then compose them to build complex UIs.</p>
-      <p>Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep your state out of the DOM.</p>
+      <p>Build encapsulated components that manage their own state, then compose them to make complex UIs.</p>
+      <p>Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep state out of the DOM.</p>
     </div>
     <div class="marketing-col">
       <h3>Learn Once, Write Anywhere</h3>
-      <p>We don't make assumptions about the rest of your technology stack – you can build new features in React without rewriting your existing code.</p>
+      <p>We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code.</p>
       <p>React can also render on the server using Node and power mobile apps using <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
     </div>
   </div>
