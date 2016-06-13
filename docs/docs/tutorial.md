@@ -21,7 +21,7 @@ It'll also have a few neat features:
 
 ### Want to skip all this and just see the source?
 
-[It's all on GitHub.](https://github.com/reactjs/react-tutorial)
+[It's all on GitHub](https://github.com/reactjs/react-tutorial). Or, [view and edit your own live copy on HyperDev](https://hyperdev.com/#!/remix/react_tutorial/0539a08d-bcda-458e-8647-94813e4248b4).
 
 ### Running a server
 
