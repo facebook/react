@@ -158,6 +158,8 @@ function createFirstChild(parent, existingChild, newChildren) {
   }
 }
 
+// TODO: This API won't work because we'll need to transfer the side-effects of
+// unmounting children to the parent.
 exports.reconcileChildFibers = function(parent : Fiber, currentFirstChild : ?Fiber, newChildren : ReactNodeList) : ?Fiber {
   return createFirstChild(parent, currentFirstChild, newChildren);
 };

@@ -38,12 +38,16 @@ var NoopRenderer = ReactFiberReconciler({
 
 });
 
+var root = null;
+
 var ReactNoop = {
 
   render(element : ReactElement<any>) {
-
-    NoopRenderer.mountNewRoot(element);
-
+    if (!root) {
+      root = NoopRenderer.mountContainer(element, null);
+    } else {
+      NoopRenderer.updateContainer(element, root);
+    }
   },
 
   flushHighPri() {

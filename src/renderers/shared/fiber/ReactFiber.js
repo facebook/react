@@ -19,6 +19,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   ClassComponent,
+  HostContainer,
   HostComponent,
   CoroutineComponent,
   YieldComponent,
@@ -145,6 +146,12 @@ exports.cloneFiber = function(fiber : Fiber) : Fiber {
   alt.alternate = fiber;
   fiber.alternate = alt;
   return alt;
+};
+
+exports.createHostContainerFiber = function(containerInfo : ?Object) {
+  const fiber = createFiber(HostContainer, null);
+  fiber.stateNode = containerInfo;
+  return fiber;
 };
 
 exports.createFiberFromElement = function(element : ReactElement) {

@@ -23,6 +23,7 @@ var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
+  HostContainer,
   HostComponent,
   CoroutineComponent,
   CoroutineHandlerPhase,
@@ -99,6 +100,8 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
     case ClassComponent:
       console.log('/class component', workInProgress.type.name);
       transferOutput(workInProgress.child, workInProgress);
+      return null;
+    case HostContainer:
       return null;
     case HostComponent:
       console.log('/host component', workInProgress.type);
