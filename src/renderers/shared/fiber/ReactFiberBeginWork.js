@@ -29,10 +29,12 @@ var {
 } = ReactTypeOfWork;
 
 function reconcileChildren(current, workInProgress, nextChildren) {
+  const priority = workInProgress.pendingWorkPriority;
   workInProgress.child = ReactChildFiber.reconcileChildFibers(
     workInProgress,
     current ? current.child : null,
-    nextChildren
+    nextChildren,
+    priority
   );
 }
 

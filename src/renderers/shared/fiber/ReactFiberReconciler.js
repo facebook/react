@@ -219,10 +219,9 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
   return {
 
     mountContainer(element : ReactElement<any>, containerInfo : ?Object) : OpaqueNode {
-      const container = ReactFiber.createHostContainerFiber(containerInfo);
+      const container = ReactFiber.createHostContainerFiber(containerInfo, LowPriority);
       container.alternate = container;
       container.pendingProps = element;
-      container.pendingWorkPriority = LowPriority;
 
       scheduleLowPriWork(container);
 

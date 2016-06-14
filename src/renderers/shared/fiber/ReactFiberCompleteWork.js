@@ -83,10 +83,13 @@ function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
   var nextChildren = fn(props, yields);
 
   var currentFirstChild = current ? current.stateNode : null;
+  // Inherit the priority of the parent.
+  const priority = workInProgress.pendingWorkPriority;
   workInProgress.stateNode = ReactChildFiber.reconcileChildFibers(
     workInProgress,
     currentFirstChild,
-    nextChildren
+    nextChildren,
+    priority
   );
   return workInProgress.stateNode;
 }
