@@ -122,13 +122,14 @@ function shouldConstruct(Component) {
 }
 
 // This is used to create an alternate fiber to do work on.
-exports.cloneFiber = function(fiber : Fiber) : Fiber {
+exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
   // We use a double buffering pooling technique because we know that we'll only
   // ever need at most two versions of a tree. We pool the "other" unused node
   // that we're free to reuse. This is lazily created to avoid allocating extra
   // objects for things that are never updated. It also allow us to reclaim the
   // extra memory if needed.
   if (fiber.alternate) {
+    fiber.alternate.pendingWorkPriority = priorityLevel;
     return fiber.alternate;
   }
   // This should not have an alternate already
@@ -144,19 +145,22 @@ exports.cloneFiber = function(fiber : Fiber) : Fiber {
   alt.type = fiber.type;
   alt.stateNode = fiber.stateNode;
   alt.alternate = fiber;
+  alt.pendingWorkPriority = priorityLevel;
   fiber.alternate = alt;
   return alt;
 };
 
-exports.createHostContainerFiber = function(containerInfo : ?Object) {
+exports.createHostContainerFiber = function(containerInfo : ?Object, priorityLevel : PriorityLevel) {
   const fiber = createFiber(HostContainer, null);
   fiber.stateNode = containerInfo;
+  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement) {
+exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) {
   const fiber = exports.createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
+  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
@@ -179,14 +183,15 @@ exports.createFiberFromElementType = function(type : mixed, key : null | string)
   return fiber;
 };
 
-exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine) {
+exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
+  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield) {
+exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) {
   const fiber = createFiber(YieldComponent, yieldNode.key);
   return fiber;
 };
