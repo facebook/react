@@ -27,6 +27,9 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
 } = ReactTypeOfWork;
+var {
+  OffscreenPriority,
+} = require('ReactPriorityLevel');
 
 function reconcileChildren(current, workInProgress, nextChildren) {
   const priority = workInProgress.pendingWorkPriority;
@@ -50,7 +53,28 @@ function updateHostComponent(current, workInProgress) {
   console.log('host component', workInProgress.type, typeof workInProgress.pendingProps.children === 'string' ? workInProgress.pendingProps.children : '');
 
   var nextChildren = workInProgress.pendingProps.children;
-  reconcileChildren(current, workInProgress, nextChildren);
+
+  let priority = workInProgress.pendingWorkPriority;
+  if (workInProgress.pendingProps.hidden && priority !== OffscreenPriority) {
+    // If this host component is hidden, we can reconcile its children at
+    // the lowest priority and bail out from this particular pass. Unless, we're
+    // currently reconciling the lowest priority.
+    workInProgress.child = ReactChildFiber.reconcileChildFibers(
+      workInProgress,
+      current ? current.child : null,
+      nextChildren,
+      OffscreenPriority
+    );
+    return null;
+  } else {
+    workInProgress.child = ReactChildFiber.reconcileChildFibers(
+      workInProgress,
+      current ? current.child : null,
+      nextChildren,
+      priority
+    );
+    return workInProgress.child;
+  }
 }
 
 function mountIndeterminateComponent(current, workInProgress) {
@@ -119,8 +143,7 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
       }
       return null;
     case HostComponent:
-      updateHostComponent(current, workInProgress);
-      return workInProgress.child;
+      return updateHostComponent(current, workInProgress);
     case CoroutineHandlerPhase:
       // This is a restart. Reset the tag to the initial phase.
       workInProgress.tag = CoroutineComponent;
