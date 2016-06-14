@@ -21,6 +21,7 @@ var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
+  HostContainer,
   HostComponent,
   CoroutineComponent,
   CoroutineHandlerPhase,
@@ -104,6 +105,17 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     case ClassComponent:
       console.log('class component', workInProgress.pendingProps.type.name);
       return workInProgress.child;
+    case HostContainer:
+      reconcileChildren(current, workInProgress, workInProgress.pendingProps);
+      // A yield component is just a placeholder, we can just run through the
+      // next one immediately.
+      if (workInProgress.child) {
+        return beginWork(
+          workInProgress.child.alternate,
+          workInProgress.child
+        );
+      }
+      return null;
     case HostComponent:
       updateHostComponent(current, workInProgress);
       return workInProgress.child;
