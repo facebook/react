@@ -28,6 +28,11 @@ February 22 & 23 in San Francisco, CA
 
 [Website](http://conf.reactjs.com/) - [Schedule](http://conf.reactjs.com/schedule.html) - [Videos](https://www.youtube.com/playlist?list=PLb0IAmt7-GS0M8Q95RIc2lOM6nc77q1IY)
 
+### React Amsterdam 2016
+April 16 in Amsterdam, The Netherlands
+
+[Website](http://react.amsterdam) - [Videos](https://youtu.be/sXDZBxbRRag?list=PLNBNS7NRGKMG3uLrm5fgY02hJ87Wzb4IU)
+
 ### ReactEurope 2016
 June 2 & 3 in Paris, France
 
