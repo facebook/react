@@ -28,6 +28,22 @@ describe('ReactTestRenderer', function() {
     });
   });
 
+  it('exposes a type flag', function() {
+    function Link() {
+      return <a role="link" />;
+    }
+    var renderer = ReactTestRenderer.create(<Link />);
+    var object = renderer.toJSON();
+    expect(object.$$typeof).toBe(Symbol.for('react.test.json'));
+
+    // $$typeof should not be enumerable.
+    for (var key in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key)) {
+        expect(key).not.toBe('$$typeof');
+      }
+    }
+  });
+
   it('renders some basics with an update', function() {
     var renders = 0;
     var Component = React.createClass({
