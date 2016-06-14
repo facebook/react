@@ -402,6 +402,8 @@ describe('ReactES6Class', function() {
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
+    expect(() => instance.setProps({name: 'bar'})).toThrow();
+    expect(() => instance.replaceProps({name: 'bar'})).toThrow();
     expect(console.error.calls.count()).toBe(2);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'

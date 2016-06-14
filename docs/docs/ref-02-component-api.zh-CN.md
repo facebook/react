@@ -92,3 +92,40 @@ boolean isMounted()
 > 注意:
 >
 > 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html)
+
+
+### setProps
+
+```javascript
+void setProps(
+  object nextProps,
+  [function callback]
+)
+```
+
+当和一个外部的 JavaScript 应用整合的时候，你也许会想用 `ReactDOM.render()` 给 React 组件标示一个改变。
+
+在根组件上调用 `setProps()` 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 `setProps` 完成并且组件被重绘它就执行。
+
+> 注意:
+>
+> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用. 取代调用 `setProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
+>
+> 如果可能，上述的在同一个节点上再次调用 `ReactDOM.render()` 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）
+>
+> 这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 `ReactDOM.render()` 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 `setProps()`，不要利用响应式更新，而是当子组件在 `render()` 中创建的时候传入新的 prop 到子组件中。
+
+### replaceProps
+
+```javascript
+void replaceProps(
+  object nextProps,
+  [function callback]
+)
+```
+
+类似于 `setProps()`，但是删除任何先前存在的 props，而不是合并这两个对象。
+
+> 注意:
+>
+> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用.  取代调用 `replaceProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
