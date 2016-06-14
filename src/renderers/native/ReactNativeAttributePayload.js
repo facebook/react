@@ -394,6 +394,9 @@ function diffProperties(
       // default: fallthrough case when nested properties are defined
       removedKeys = null;
       removedKeyCount = 0;
+      // We think that attributeConfig is not CustomAttributeConfiguration at
+      // this point so we assume it must be AttributeConfiguration.
+      // $FlowFixMe
       updatePayload = diffNestedProperty(
         updatePayload,
         prevProp,

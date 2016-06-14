@@ -18,14 +18,15 @@
 
 'use strict';
 
+var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+
+var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
 var warning = require('warning');
 
 function getDeclarationErrorAddendum() {
@@ -45,13 +46,25 @@ function getDeclarationErrorAddendum() {
  */
 var ownerHasKeyUseWarning = {};
 
-var loggedTypeFailures = {};
+function getCurrentComponentErrorInfo(parentType) {
+  var info = getDeclarationErrorAddendum();
+
+  if (!info) {
+    var parentName = typeof parentType === 'string' ?
+      parentType : parentType.displayName || parentType.name;
+    if (parentName) {
+      info = ` Check the top-level render call using <${parentName}>.`;
+    }
+  }
+  return info;
+}
 
 /**
  * Warn if the element doesn't have an explicit key assigned to it.
  * This element is in an array. The array could grow and shrink or be
  * reordered. All children that haven't already been validated are required to
- * have a "key" property assigned to it.
+ * have a "key" property assigned to it. Error statuses are cached so a warning
+ * will only be shown once.
  *
  * @internal
  * @param {ReactElement} element Element that requires a key.
@@ -63,67 +76,36 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var addenda = getAddendaForKeyUse('uniqueKey', element, parentType);
-  if (addenda === null) {
-    // we already showed the warning
+  var memoizer = ownerHasKeyUseWarning.uniqueKey || (
+    ownerHasKeyUseWarning.uniqueKey = {}
+  );
+
+  var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
+  if (memoizer[currentComponentErrorInfo]) {
     return;
   }
-  warning(
-    false,
-    'Each child in an array or iterator should have a unique "key" prop.' +
-    '%s%s%s',
-    addenda.parentOrOwner || '',
-    addenda.childOwner || '',
-    addenda.url || ''
-  );
-}
-
-/**
- * Shared warning and monitoring code for the key warnings.
- *
- * @internal
- * @param {string} messageType A key used for de-duping warnings.
- * @param {ReactElement} element Component that requires a key.
- * @param {*} parentType element's parent's type.
- * @returns {?object} A set of addenda to use in the warning message, or null
- * if the warning has already been shown before (and shouldn't be shown again).
- */
-function getAddendaForKeyUse(messageType, element, parentType) {
-  var addendum = getDeclarationErrorAddendum();
-  if (!addendum) {
-    var parentName = typeof parentType === 'string' ?
-      parentType : parentType.displayName || parentType.name;
-    if (parentName) {
-      addendum = ` Check the top-level render call using <${parentName}>.`;
-    }
-  }
-
-  var memoizer = ownerHasKeyUseWarning[messageType] || (
-    ownerHasKeyUseWarning[messageType] = {}
-  );
-  if (memoizer[addendum]) {
-    return null;
-  }
-  memoizer[addendum] = true;
-
-  var addenda = {
-    parentOrOwner: addendum,
-    url: ' See https://fb.me/react-warning-keys for more information.',
-    childOwner: null,
-  };
+  memoizer[currentComponentErrorInfo] = true;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
+  var childOwner = '';
   if (element &&
       element._owner &&
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
-    addenda.childOwner =
+    childOwner =
       ` It was passed a child from ${element._owner.getName()}.`;
   }
 
-  return addenda;
+  warning(
+    false,
+    'Each child in an array or iterator should have a unique "key" prop.' +
+    '%s%s See https://fb.me/react-warning-keys for more information.%s',
+    currentComponentErrorInfo,
+    childOwner,
+    ReactComponentTreeDevtool.getCurrentStackAddendum(element)
+  );
 }
 
 /**
@@ -169,61 +151,6 @@ function validateChildKeys(node, parentType) {
 }
 
 /**
- * Assert that the props are valid
- *
- * @param {string} componentName Name of the component for error messages.
- * @param {object} propTypes Map of prop name to a ReactPropType
- * @param {object} props
- * @param {string} location e.g. "prop", "context", "child context"
- * @private
- */
-function checkPropTypes(componentName, propTypes, props, location) {
-  for (var propName in propTypes) {
-    if (propTypes.hasOwnProperty(propName)) {
-      var error;
-      // Prop type validation may throw. In case they do, we don't want to
-      // fail the render phase where it didn't fail before. So we log it.
-      // After these have been cleaned up, we'll let them throw.
-      try {
-        // This is intentionally an invariant that gets caught. It's the same
-        // behavior as without this statement except with a better message.
-        invariant(
-          typeof propTypes[propName] === 'function',
-          '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-          'React.PropTypes.',
-          componentName || 'React class',
-          ReactPropTypeLocationNames[location],
-          propName
-        );
-        error = propTypes[propName](props, propName, componentName, location);
-      } catch (ex) {
-        error = ex;
-      }
-      warning(
-        !error || error instanceof Error,
-        '%s: type specification of %s `%s` is invalid; the type checker ' +
-        'function must return `null` or an `Error` but returned a %s. ' +
-        'You may have forgotten to pass an argument to the type checker ' +
-        'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
-        'shape all require an argument).',
-        componentName || 'React class',
-        ReactPropTypeLocationNames[location],
-        propName,
-        typeof error
-      );
-      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-        // Only monitor this failure once because there tends to be a lot of the
-        // same error.
-        loggedTypeFailures[error.message] = true;
-
-        var addendum = getDeclarationErrorAddendum();
-        warning(false, 'Failed propType: %s%s', error.message, addendum);
-      }
-    }
-  }
-}
-
-/**
  * Given an element, validate that its props follow the propTypes definition,
  * provided by the type.
  *
@@ -236,11 +163,13 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   if (componentClass.propTypes) {
-    checkPropTypes(
-      name,
+    checkReactTypeSpec(
       componentClass.propTypes,
       element.props,
-      ReactPropTypeLocations.prop
+      ReactPropTypeLocations.prop,
+      name,
+      element,
+      null
     );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
@@ -255,7 +184,8 @@ function validatePropTypes(element) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function';
+    var validType = typeof type === 'string' || typeof type === 'function' ||
+                    (type !== null && typeof type === 'object');
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     warning(

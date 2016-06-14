@@ -78,7 +78,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return internalInstance.getNativeNode();
+    return internalInstance.getHostNode();
   } else {
     var rootNodeID = component._rootNodeID;
     if (rootNodeID) {

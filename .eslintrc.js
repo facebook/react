@@ -30,6 +30,7 @@ module.exports = {
     'indent': [ERROR, 2, {SwitchCase: 1}],
     'jsx-quotes': [ERROR, 'prefer-double'],
     'no-bitwise': OFF,
+    'no-inner-declarations': [ERROR, 'functions'],
     'no-multi-spaces': ERROR,
     'no-restricted-syntax': [ERROR, 'WithStatement'],
     'no-shadow': ERROR,

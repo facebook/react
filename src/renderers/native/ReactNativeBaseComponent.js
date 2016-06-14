@@ -166,7 +166,7 @@ ReactNativeBaseComponent.Mixin = {
    *
    * @return {null} Null.
    */
-  getNativeNode: function() {
+  getHostNode: function() {
     return this._rootNodeID;
   },
 
@@ -175,12 +175,12 @@ ReactNativeBaseComponent.Mixin = {
    * @param {Transaction} transaction For creating/updating.
    * @return {string} Unique iOS view tag.
    */
-  mountComponent: function(transaction, nativeParent, nativeContainerInfo, context) {
+  mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
     var tag = ReactNativeTagHandles.allocateTag();
 
     this._rootNodeID = tag;
-    this._nativeParent = nativeParent;
-    this._nativeContainerInfo = nativeContainerInfo;
+    this._hostParent = hostParent;
+    this._hostContainerInfo = hostContainerInfo;
 
     if (__DEV__) {
       for (var key in this.viewConfig.validAttributes) {
@@ -195,7 +195,7 @@ ReactNativeBaseComponent.Mixin = {
       this.viewConfig.validAttributes
     );
 
-    var nativeTopRootTag = nativeContainerInfo._tag;
+    var nativeTopRootTag = hostContainerInfo._tag;
     UIManager.createView(
       tag,
       this.viewConfig.uiViewClassName,

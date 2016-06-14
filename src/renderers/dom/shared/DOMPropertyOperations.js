@@ -177,7 +177,7 @@ var DOMPropertyOperations = {
       ReactDOMInstrumentation.debugTool.onSetValueForProperty(node, name, value);
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'update attribute',
         payload
@@ -198,10 +198,28 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'update attribute',
         payload
+      );
+    }
+  },
+
+  /**
+   * Deletes an attributes from a node.
+   *
+   * @param {DOMElement} node
+   * @param {string} name
+   */
+  deleteValueForAttribute: function(node, name) {
+    node.removeAttribute(name);
+    if (__DEV__) {
+      ReactDOMInstrumentation.debugTool.onDeleteValueForProperty(node, name);
+      ReactInstrumentation.debugTool.onHostOperation(
+        ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        'remove attribute',
+        name
       );
     }
   },
@@ -239,7 +257,7 @@ var DOMPropertyOperations = {
 
     if (__DEV__) {
       ReactDOMInstrumentation.debugTool.onDeleteValueForProperty(node, name);
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'remove attribute',
         name

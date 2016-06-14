@@ -200,8 +200,8 @@ describe('DOMPropertyOperations', function() {
         'xlinkHref',
         'about:blank'
       );
-      expect(stubNode.setAttributeNS.argsForCall.length).toBe(1);
-      expect(stubNode.setAttributeNS.argsForCall[0])
+      expect(stubNode.setAttributeNS.calls.count()).toBe(1);
+      expect(stubNode.setAttributeNS.calls.argsFor(0))
         .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
     });
 
