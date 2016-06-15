@@ -65,7 +65,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
   let currentRootsWithPendingWork : ?Fiber = null;
 
-  function findNextUnitOfWork(priorityLevel : PriorityLevel) : ?Fiber {
+  function findNextUnitOfWorkAtPriority(priorityLevel : PriorityLevel) : ?Fiber {
     let current = currentRootsWithPendingWork;
     while (current) {
       if (current.pendingWorkPriority !== 0 &&
@@ -74,11 +74,15 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
         if (current.pendingProps !== null) {
           // We found some work to do. We need to return the "work in progress"
           // of this node which will be the alternate.
-          return current.alternate;
+          const clone = ReactFiber.cloneFiber(current, current.pendingWorkPriority);
+          clone.pendingProps = current.pendingProps;
+          return clone;
         }
         // If we have a child let's see if any of our children has work to do.
         // Only bother doing this at all if the current priority level matches
         // because it is the highest priority for the whole subtree.
+        // TODO: Coroutines can have work in their stateNode which is another
+        // type of child that needs to be searched for work.
         if (current.child) {
           current = current.child;
           continue;
@@ -106,6 +110,21 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
     return null;
   }
 
+  function findNextUnitOfWork() {
+    // Find the highest possible priority work to do.
+    // This loop is unrolled just to satisfy Flow's enum constraint.
+    // We could make arbitrary many idle priority levels but having
+    // too many just means flushing changes too often.
+    let work = findNextUnitOfWorkAtPriority(HighPriority);
+    if (!work) {
+      work = findNextUnitOfWorkAtPriority(LowPriority);
+      if (!work) {
+        work = findNextUnitOfWorkAtPriority(OffscreenPriority);
+      }
+    }
+    return work;
+  }
+
   function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
@@ -114,29 +133,62 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
       // progress.
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
+
+      // The work is now done. We don't need this anymore. This flags
+      // to the system not to redo any work here.
+      workInProgress.pendingProps = null;
+
+      // TODO: Stop using the parent for this purpose. I think this will break
+      // down in edge cases because when nodes are reused during bailouts, we
+      // don't know which of two parents was used. Instead we should maintain
+      // a temporary manual stack.
+      // $FlowFixMe: This downcast is not safe. It is intentionally an error.
+      const parent = workInProgress.parent;
+
+      // Ensure that remaining work priority bubbles up.
+      if (parent && workInProgress.pendingWorkPriority !== NoWork &&
+          (parent.pendingWorkPriority === NoWork ||
+          parent.pendingWorkPriority > workInProgress.pendingWorkPriority)) {
+        parent.pendingWorkPriority = workInProgress.pendingWorkPriority;
+      }
+
       if (next) {
         // If completing this work spawned new work, do that next.
         return next;
       } else if (workInProgress.sibling) {
         // If there is more work to do in this parent, do that next.
         return workInProgress.sibling;
-      } else if (workInProgress.parent) {
+      } else if (parent) {
         // If there's no more work in this parent. Complete the parent.
-        // TODO: Stop using the parent for this purpose. I think this will break
-        // down in edge cases because when nodes are reused during bailouts, we
-        // don't know which of two parents was used. Instead we should maintain
-        // a temporary manual stack.
-        // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-        workInProgress = workInProgress.parent;
+        workInProgress = parent;
       } else {
         // If we're at the root, there's no more work to do.
-        currentRootsWithPendingWork = null;
-        return null;
+        console.log('completed flush with remaining work at priority', workInProgress.pendingWorkPriority);
+        if (workInProgress.pendingWorkPriority !== NoWork) {
+          // TODO: This removes all but one node. Broken.
+          currentRootsWithPendingWork = workInProgress;
+          const nextWork = findNextUnitOfWork();
+          if (!nextWork) {
+            // Something went wrong and there wasn't actually any more work.
+            // TODO: This currently fails because of the parent/root hacks.
+            // throw new Error('Should never finish with a priority level unless there is work.');
+            currentRootsWithPendingWork = null;
+            return null;
+          }
+          return nextWork;
+        } else {
+          currentRootsWithPendingWork = null;
+          return null;
+        }
       }
     }
   }
 
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
+    // Ignore work if there is nothing to do.
+    if (workInProgress.pendingProps === null) {
+      return null;
+    }
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -154,17 +206,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
 
   function performLowPriWork(deadline : Deadline) {
     if (!nextUnitOfWork) {
-      // Find the highest possible priority work to do.
-      // This loop is unrolled just to satisfy Flow's enum constraint.
-      // We could make arbitrary many idle priority levels but having
-      // too many just means flushing changes too often.
-      nextUnitOfWork = findNextUnitOfWork(HighPriority);
-      if (!nextUnitOfWork) {
-        nextUnitOfWork = findNextUnitOfWork(LowPriority);
-        if (!nextUnitOfWork) {
-          nextUnitOfWork = findNextUnitOfWork(OffscreenPriority);
-        }
-      }
+      nextUnitOfWork = findNextUnitOfWork();
     }
     while (nextUnitOfWork) {
       if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
@@ -236,7 +278,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
     },
 
     unmountContainer(container : OpaqueNode) : void {
-      container.pendingProps = null;
+      container.pendingProps = [];
       container.pendingWorkPriority = LowPriority;
 
       scheduleLowPriWork(container);

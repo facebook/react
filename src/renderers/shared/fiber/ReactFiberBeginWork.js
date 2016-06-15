@@ -28,6 +28,7 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 var {
+  NoWork,
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 
@@ -47,6 +48,7 @@ function updateFunctionalComponent(current, workInProgress) {
   console.log('update fn:', fn.name);
   var nextChildren = fn(props);
   reconcileChildren(current, workInProgress, nextChildren);
+  workInProgress.pendingWorkPriority = NoWork;
 }
 
 function updateHostComponent(current, workInProgress) {
@@ -65,6 +67,7 @@ function updateHostComponent(current, workInProgress) {
       nextChildren,
       OffscreenPriority
     );
+    workInProgress.pendingWorkPriority = OffscreenPriority;
     return null;
   } else {
     workInProgress.child = ReactChildFiber.reconcileChildFibers(
@@ -73,6 +76,7 @@ function updateHostComponent(current, workInProgress) {
       nextChildren,
       priority
     );
+    workInProgress.pendingWorkPriority = NoWork;
     return workInProgress.child;
   }
 }
@@ -85,12 +89,19 @@ function mountIndeterminateComponent(current, workInProgress) {
     console.log('performed work on class:', fn.name);
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
+    if (workInProgress.alternate) {
+      workInProgress.alternate.tag = ClassComponent;
+    }
   } else {
     console.log('performed work on fn:', fn.name);
     // Proceed under the assumption that this is a functional component
     workInProgress.tag = FunctionalComponent;
+    if (workInProgress.alternate) {
+      workInProgress.alternate.tag = FunctionalComponent;
+    }
   }
   reconcileChildren(current, workInProgress, value);
+  workInProgress.pendingWorkPriority = NoWork;
 }
 
 function updateCoroutineComponent(current, workInProgress) {
@@ -100,6 +111,7 @@ function updateCoroutineComponent(current, workInProgress) {
   }
   console.log('begin coroutine', workInProgress.type.name);
   reconcileChildren(current, workInProgress, coroutine.children);
+  workInProgress.pendingWorkPriority = NoWork;
 }
 
 function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
@@ -114,6 +126,7 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     workInProgress.output = current.output;
     workInProgress.child = current.child;
     workInProgress.stateNode = current.stateNode;
+    workInProgress.pendingWorkPriority = NoWork;
     return null;
   }
   if (workInProgress.pendingProps === workInProgress.memoizedProps) {
@@ -135,6 +148,7 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
       reconcileChildren(current, workInProgress, workInProgress.pendingProps);
       // A yield component is just a placeholder, we can just run through the
       // next one immediately.
+      workInProgress.pendingWorkPriority = NoWork;
       if (workInProgress.child) {
         return beginWork(
           workInProgress.child.alternate,
@@ -162,6 +176,7 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     case YieldComponent:
       // A yield component is just a placeholder, we can just run through the
       // next one immediately.
+      workInProgress.pendingWorkPriority = NoWork;
       if (workInProgress.sibling) {
         return beginWork(
           workInProgress.sibling.alternate,
