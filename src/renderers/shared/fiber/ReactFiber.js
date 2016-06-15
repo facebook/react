@@ -140,6 +140,11 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     // Stop using the alternates of parents once we have a parent stack.
     // $FlowFixMe: This downcast is not safe. It is intentionally an error.
     alt.parent = fiber.parent.alternate;
+    if (!alt.parent) {
+      // TODO: There needs to be a "work in progress" tree all the way up to
+      // the final root.
+      throw new Error('The parent must have an alternate already.');
+    }
   }
 
   alt.type = fiber.type;
@@ -150,10 +155,8 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   return alt;
 };
 
-exports.createHostContainerFiber = function(containerInfo : ?Object, priorityLevel : PriorityLevel) {
+exports.createHostContainerFiber = function() {
   const fiber = createFiber(HostContainer, null);
-  fiber.stateNode = containerInfo;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 

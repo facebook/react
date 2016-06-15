@@ -14,10 +14,12 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { FiberRoot } from 'ReactFiberRoot';
 
 var ReactFiber = require('ReactFiber');
 var { beginWork } = require('ReactFiberBeginWork');
 var { completeWork } = require('ReactFiberCompleteWork');
+var { createFiberRoot } = require('ReactFiberRoot');
 
 var {
   NoWork,
@@ -61,12 +63,15 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
   // const scheduleHighPriCallback = config.scheduleHighPriCallback;
   const scheduleLowPriCallback = config.scheduleLowPriCallback;
 
+  // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
 
-  let currentRootsWithPendingWork : ?Fiber = null;
+  // Linked list of roots with scheduled work on them.
+  let nextScheduledRoot : ?FiberRoot = null;
+  let lastScheduledRoot : ?FiberRoot = null;
 
-  function findNextUnitOfWorkAtPriority(priorityLevel : PriorityLevel) : ?Fiber {
-    let current = currentRootsWithPendingWork;
+  function findNextUnitOfWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) : ?Fiber {
+    let current = root.current;
     while (current) {
       if (current.pendingWorkPriority !== 0 &&
           current.pendingWorkPriority <= priorityLevel) {
@@ -84,6 +89,8 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
         // TODO: Coroutines can have work in their stateNode which is another
         // type of child that needs to be searched for work.
         if (current.child) {
+          // Ensure we have a work in progress copy to backtrack through.
+          ReactFiber.cloneFiber(current, NoWork);
           current = current.child;
           continue;
         }
@@ -111,18 +118,38 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
   }
 
   function findNextUnitOfWork() {
-    // Find the highest possible priority work to do.
-    // This loop is unrolled just to satisfy Flow's enum constraint.
-    // We could make arbitrary many idle priority levels but having
-    // too many just means flushing changes too often.
-    let work = findNextUnitOfWorkAtPriority(HighPriority);
-    if (!work) {
-      work = findNextUnitOfWorkAtPriority(LowPriority);
-      if (!work) {
-        work = findNextUnitOfWorkAtPriority(OffscreenPriority);
+    // Clear out roots with no more work on them.
+    while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
+      nextScheduledRoot.isScheduled = false;
+      if (nextScheduledRoot === lastScheduledRoot) {
+        nextScheduledRoot = null;
+        lastScheduledRoot = null;
+        return null;
       }
+      nextScheduledRoot = nextScheduledRoot.nextScheduledRoot;
     }
-    return work;
+    let root = nextScheduledRoot;
+    while (root) {
+      // Find the highest possible priority work to do.
+      // This loop is unrolled just to satisfy Flow's enum constraint.
+      // We could make arbitrary many idle priority levels but having
+      // too many just means flushing changes too often.
+      let work = findNextUnitOfWorkAtPriority(root, HighPriority);
+      if (work) {
+        return work;
+      }
+      work = findNextUnitOfWorkAtPriority(root, LowPriority);
+      if (work) {
+        return work;
+      }
+      work = findNextUnitOfWorkAtPriority(root, OffscreenPriority);
+      if (work) {
+        return work;
+      }
+      // We didn't find anything to do in this root, so let's try the next one.
+      root = root.nextScheduledRoot;
+    }
+    return null;
   }
 
   function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
@@ -162,24 +189,19 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
         // If there's no more work in this parent. Complete the parent.
         workInProgress = parent;
       } else {
-        // If we're at the root, there's no more work to do.
-        console.log('completed flush with remaining work at priority', workInProgress.pendingWorkPriority);
-        if (workInProgress.pendingWorkPriority !== NoWork) {
-          // TODO: This removes all but one node. Broken.
-          currentRootsWithPendingWork = workInProgress;
-          const nextWork = findNextUnitOfWork();
-          if (!nextWork) {
-            // Something went wrong and there wasn't actually any more work.
-            // TODO: This currently fails because of the parent/root hacks.
-            // throw new Error('Should never finish with a priority level unless there is work.');
-            currentRootsWithPendingWork = null;
-            return null;
-          }
-          return nextWork;
-        } else {
-          currentRootsWithPendingWork = null;
-          return null;
+        // If we're at the root, there's no more work to do. We can flush it.
+        const root : FiberRoot = (workInProgress.stateNode : any);
+        root.current = workInProgress;
+        console.log('completed one root flush with remaining work at priority', workInProgress.pendingWorkPriority);
+        const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
+        // TODO: We can be smarter here and only look for more work in the
+        // "next" scheduled work since we've already scanned passed. That
+        // also ensures that work scheduled during reconciliation gets deferred.
+        const nextWork = findNextUnitOfWork();
+        if (!nextWork && hasMoreWork) {
+          throw new Error('FiberRoots should not have flagged more work if there is none.');
         }
+        return nextWork;
       }
     }
   }
@@ -211,39 +233,36 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
     while (nextUnitOfWork) {
       if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        if (!nextUnitOfWork) {
+          // Find more work. We might have time to complete some more.
+          nextUnitOfWork = findNextUnitOfWork();
+        }
       } else {
         scheduleLowPriCallback(performLowPriWork);
-        break;
+        return;
       }
     }
   }
 
-  function scheduleLowPriWork(root : Fiber) {
+  function scheduleLowPriWork(root : FiberRoot) {
     // We must reset the current unit of work pointer so that we restart the
-    // search from the root during the next tick.
+    // search from the root during the next tick, in case there is now higher
+    // priority work somewhere earlier than before.
     nextUnitOfWork = null;
 
-    if (currentRootsWithPendingWork) {
-      if (root === currentRootsWithPendingWork) {
-        // We're already scheduled.
-        return;
-      }
-      // We already have some work pending in another root. Add this to the
-      // linked list.
-      let previousSibling = currentRootsWithPendingWork;
-      while (previousSibling.sibling) {
-        previousSibling = previousSibling.sibling;
-        if (root === previousSibling) {
-          // We're already scheduled.
-          return;
-        }
-      }
-      previousSibling.sibling = root;
+    if (root.isScheduled) {
+      // If we're already scheduled, we can bail out.
+      return;
+    }
+    root.isScheduled = true;
+    if (lastScheduledRoot) {
+      // Schedule ourselves to the end.
+      lastScheduledRoot.nextScheduledRoot = root;
+      lastScheduledRoot = root;
     } else {
-      // We're the first and only root with new changes.
-      currentRootsWithPendingWork = root;
-      root.sibling = null;
-      // Ensure we will get another callback to process the work.
+      // We're the only work scheduled.
+      nextScheduledRoot = root;
+      lastScheduledRoot = root;
       scheduleLowPriCallback(performLowPriWork);
     }
   }
@@ -261,27 +280,38 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
   return {
 
     mountContainer(element : ReactElement<any>, containerInfo : ?Object) : OpaqueNode {
-      const container = ReactFiber.createHostContainerFiber(containerInfo, LowPriority);
-      container.alternate = container;
+      const root = createFiberRoot(containerInfo);
+      const container = root.current;
+      // TODO: Use pending work/state instead of props.
       container.pendingProps = element;
+      container.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(container);
+      scheduleLowPriWork(root);
 
+      // It may seem strange that we don't return the root here, but that will
+      // allow us to have containers that are in the middle of the tree instead
+      // of being roots.
       return container;
     },
 
     updateContainer(element : ReactElement<any>, container : OpaqueNode) : void {
-      container.pendingProps = element;
-      container.pendingWorkPriority = LowPriority;
+      // TODO: If this is a nested container, this won't be the root.
+      const root : FiberRoot = (container.stateNode : any);
+      // TODO: Use pending work/state instead of props.
+      root.current.pendingProps = element;
+      root.current.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(container);
+      scheduleLowPriWork(root);
     },
 
     unmountContainer(container : OpaqueNode) : void {
-      container.pendingProps = [];
-      container.pendingWorkPriority = LowPriority;
+      // TODO: If this is a nested container, this won't be the root.
+      const root : FiberRoot = (container.stateNode : any);
+      // TODO: Use pending work/state instead of props.
+      root.current.pendingProps = [];
+      root.current.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(container);
+      scheduleLowPriWork(root);
     },
 
     getPublicRootInstance(container : OpaqueNode) : ?Object {
