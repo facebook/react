@@ -196,6 +196,8 @@ describe('ReactIncremental', function() {
     ReactNoop.render(<Foo text="foo" />);
     ReactNoop.flush();
 
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle']);
+
     ops = [];
 
     // Render part of the work. This should be enough to flush everything except
