@@ -161,7 +161,56 @@ describe('ReactIncremental', function() {
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
-    // TODO: Test the ability for a subtree to resume if it has lower priority.
+  });
+
+  it('can deprioritize unfinished work and resume it later', function() {
+
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    function Middle(props) {
+      ops.push('Middle');
+      return <span>{props.children}</span>;
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar>{props.text}</Bar>
+          <div hidden={true}>
+            <span>
+            <Middle>{props.text}</Middle>
+            </span>
+          </div>
+          <Bar>{props.text}</Bar>
+        </div>
+      );
+    }
+
+    // Init
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flush();
+
+    ops = [];
+
+    // Render part of the work. This should be enough to flush everything except
+    // the middle which has lower priority.
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flushLowPri(40);
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+
+    ops = [];
+
+    // Flush only the remaining work
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Middle']);
 
   });
 
