@@ -23,7 +23,7 @@ describe('ReactCoroutine', function() {
     spyOn(console, 'log');
   });
 
-  it('should render a coroutine', function() {
+  xit('should render a coroutine', function() {
 
     var ops = [];
 
