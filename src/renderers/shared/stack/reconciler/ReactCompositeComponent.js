@@ -342,6 +342,13 @@ var ReactCompositeComponentMixin = {
       }
     }
 
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
+      }
+    }
+
     return markup;
   },
 
@@ -950,6 +957,13 @@ var ReactCompositeComponentMixin = {
           inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
           inst
         );
+      }
+    }
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
       }
     }
   },
