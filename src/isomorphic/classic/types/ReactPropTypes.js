@@ -14,6 +14,7 @@
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
+var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
 
@@ -29,6 +30,11 @@ var getIteratorFn = require('getIteratorFn');
  *
  *       // A required enum prop named "category".
  *       category: Props.oneOf(['News','Photos']).isRequired,
+ *
+ *       // A required string only if description prop is provided.
+ *       blurb: Props.string.isRequiredIf(function(props, propName, componentName) {
+ *         return Boolean(props['description']);
+ *       });
  *
  *       // A prop named "dialog" that requires an instance of Dialog.
  *       dialog: Props.instanceOf(Dialog).isRequired
@@ -106,6 +112,7 @@ function is(x, y) {
 function createChainableTypeChecker(validate) {
   function checkType(
     isRequired,
+    isRequiredIf,
     props,
     propName,
     componentName,
@@ -114,6 +121,14 @@ function createChainableTypeChecker(validate) {
   ) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
+    if (Boolean(isRequiredIf)) {
+      if (typeof isRequiredIf === 'boolean') {
+        isRequired = isRequiredIf;
+      } else if (typeof isRequiredIf === 'function') {
+        isRequired = isRequiredIf(assign({}, props), propName, componentName);
+      }
+    }
+
     if (props[propName] == null) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
@@ -128,8 +143,11 @@ function createChainableTypeChecker(validate) {
     }
   }
 
-  var chainedCheckType = checkType.bind(null, false);
-  chainedCheckType.isRequired = checkType.bind(null, true);
+  var chainedCheckType = checkType.bind(null, false, null);
+  chainedCheckType.isRequired = checkType.bind(null, true, null);
+  chainedCheckType.isRequiredIf = function(condition) {
+    return checkType.bind(null, false, condition);
+  };
 
   return chainedCheckType;
 }
