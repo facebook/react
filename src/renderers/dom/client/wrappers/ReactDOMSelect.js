@@ -191,6 +191,7 @@ var ReactDOMSelect = {
     if (__DEV__) {
       checkSelectPropTypes(inst, props);
       warnIfValueIsNull(props);
+      warnIfDuplicateValues(inst);
     }
 
     var value = LinkedValueUtils.getValue(props);
@@ -217,9 +218,6 @@ var ReactDOMSelect = {
       );
       didWarnValueDefaultValue = true;
     }
-
-    warnIfDuplicateValues(inst);
-
   },
 
   getSelectValueContext: function(inst) {
