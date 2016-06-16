@@ -116,15 +116,6 @@ function traverseAllChildrenImpl(
           );
         }
       } else {
-        if (__DEV__) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is not yet fully supported. It is an ' +
-            'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.'
-          );
-          didWarnAboutMaps = true;
-        }
         // Iterator will provide entry [k,v] tuples rather than values.
         while (!(step = iterator.next()).done) {
           var entry = step.value;
