@@ -14,6 +14,7 @@
 var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
 var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
 var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var performanceNow = require('performanceNow');
@@ -255,6 +256,14 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onHostOperation', debugID, type, payload);
   },
+  onComponentHasMounted(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onComponentHasMounted', debugID);
+  },
+  onComponentHasUpdated(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onComponentHasUpdated', debugID);
+  },
   onSetState() {
     emitEvent('onSetState');
   },
@@ -310,6 +319,7 @@ var ReactDebugTool = {
 
 ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
 ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
+ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {
   ReactDebugTool.beginProfiling();
