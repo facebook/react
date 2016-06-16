@@ -45,6 +45,13 @@ function typeCheckPass(declaration, value) {
   expect(error).toBe(null);
 }
 
+function typeCheckWarn(propTypeFunc, message) { 
+  spyOn(console, ['error']);
+  propTypeFunc();
+  expect(console.error).toHaveBeenCalled();
+  expect(console.error.argsForCall[0][0]).toContain(message);
+}
+
 describe('ReactPropTypes', function() {
   beforeEach(function() {
     PropTypes = require('ReactPropTypes');
@@ -591,6 +598,12 @@ describe('ReactPropTypes', function() {
 
   describe('OneOf Types', function() {
     it('should fail for invalid argument', function() {
+      typeCheckWarn(
+        function() { 
+          PropTypes.oneOf('red', 'blue');
+        },
+        'Invalid argument supplied to oneOf, expected an instance of array.'
+      );
       typeCheckFail(
         PropTypes.oneOf('red', 'blue'),
         'red',
@@ -652,6 +665,12 @@ describe('ReactPropTypes', function() {
 
   describe('Union Types', function() {
     it('should fail for invalid argument', function() {
+      typeCheckWarn(
+        function() { 
+          PropTypes.oneOfType(PropTypes.string, PropTypes.number);
+        },
+        'Invalid argument supplied to oneOfType, expected an instance of array.'
+      );
       typeCheckFail(
         PropTypes.oneOfType(PropTypes.string, PropTypes.number),
         'red',
