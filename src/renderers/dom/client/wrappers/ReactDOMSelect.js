@@ -58,6 +58,26 @@ function warnIfValueIsNull(props) {
   }
 }
 
+function warnIfDuplicateValues(inst) {
+  const options = inst._currentElement.props.children;
+
+  if (options === undefined) {
+    return;
+  }
+
+  // Displays a warning for all duplicate values in select element. Does not exit after first duplicate is found.
+  for (var i = 0; i < options.length-1; i++) {
+    for (var j = i + 1; j < options.length; j++) {
+      if (options[i].props.value === options[j].props.value) {
+        warning(
+          false,
+          `Select element contains duplicate option value ${options[i].props.value} in options #${i} & #${j}`
+        );
+      }    
+    }
+  }
+}
+
 var valuePropNames = ['value', 'defaultValue'];
 
 /**
@@ -195,6 +215,9 @@ var ReactDOMSelect = {
       );
       didWarnValueDefaultValue = true;
     }
+
+    warnIfDuplicateValues(inst);
+
   },
 
   getSelectValueContext: function(inst) {
