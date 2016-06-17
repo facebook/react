@@ -318,7 +318,7 @@ var RESERVED_SPEC_KEYS = {
   mixins: function(Constructor, mixins) {
     if (mixins) {
       for (var i = 0; i < mixins.length; i++) {
-        mixSpecIntoComponent(Constructor, mixins[i]);
+        mixSpecIntoComponent(Constructor, mixins[i], true);
       }
     }
   },
@@ -434,7 +434,7 @@ function validateMethodOverride(isAlreadyDefined, name) {
  * Mixin helper which handles policy validation and reserved
  * specification keys when building React classes.
  */
-function mixSpecIntoComponent(Constructor, spec) {
+function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
   if (!spec) {
     return;
   }
@@ -519,13 +519,16 @@ function mixSpecIntoComponent(Constructor, spec) {
           }
         } else {
           proto[name] = property;
-          if (__DEV__) {
-            // Add verbose displayName to the function, which helps when looking
-            // at profiling tools.
-            if (typeof property === 'function' && spec.displayName) {
-              proto[name].displayName = spec.displayName + '_' + name;
-            }
-          }
+        }
+      }
+
+      if (__DEV__) {
+        var displayName = isFromMixin ?
+          'mixin' :
+          Constructor.displayName || 'anonymous';
+        if (typeof property === 'function') {
+          proto[name].displayName = displayName + '_' + name;
+          property.displayName = displayName + '_' + name;
         }
       }
     }
@@ -800,7 +803,7 @@ var ReactClass = {
       mixSpecIntoComponent.bind(null, Constructor)
     );
 
-    mixSpecIntoComponent(Constructor, spec);
+    mixSpecIntoComponent(Constructor, spec, false);
 
     // Initialize the defaultProps property after all mixins have been merged.
     if (Constructor.getDefaultProps) {
