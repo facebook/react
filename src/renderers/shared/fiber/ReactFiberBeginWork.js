@@ -125,6 +125,9 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     // and children from that node.
     workInProgress.output = current.output;
     workInProgress.child = current.child;
+    if (workInProgress.child) {
+      workInProgress.child.parent = workInProgress;
+    }
     workInProgress.stateNode = current.stateNode;
     workInProgress.pendingWorkPriority = NoWork;
     return null;

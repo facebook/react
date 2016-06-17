@@ -46,6 +46,7 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
         clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
+        clone.parent = parent;
         previousSibling.sibling = clone;
         return clone;
       }
@@ -108,6 +109,7 @@ function createFirstChild(parent, existingChild, newChildren, priority) {
         clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
+        clone.parent = parent;
         return clone;
       }
       const child = ReactFiber.createFiberFromElement(element, priority);

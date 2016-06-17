@@ -82,6 +82,10 @@ export type Fiber = Instance & {
   // memory if we need to.
   alternate: ?Fiber,
 
+  // Conceptual aliases
+  // parent : Instance -> returnFiber The parent happens to be the same as the return fiber.
+  // workInProgress : Fiber ->  alternate The alternate used for reuse happens to be the same as work in progress.
+
 };
 
 var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
@@ -128,29 +132,27 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // that we're free to reuse. This is lazily created to avoid allocating extra
   // objects for things that are never updated. It also allow us to reclaim the
   // extra memory if needed.
-  if (fiber.alternate) {
-    fiber.alternate.pendingWorkPriority = priorityLevel;
-    return fiber.alternate;
+  let alt = fiber.alternate;
+  if (alt) {
+    alt.stateNode = fiber.stateNode;
+    alt.child = fiber.child;
+    alt.sibling = fiber.sibling;
+    alt.ref = alt.ref;
+    alt.pendingProps = fiber.pendingProps;
+    alt.pendingWorkPriority = priorityLevel;
+    return alt;
   }
+
   // This should not have an alternate already
-  var alt = createFiber(fiber.tag, fiber.key);
-
-  if (fiber.parent) {
-    // TODO: This assumes the parent's alternate is already created.
-    // Stop using the alternates of parents once we have a parent stack.
-    // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-    alt.parent = fiber.parent.alternate;
-    if (!alt.parent) {
-      // TODO: There needs to be a "work in progress" tree all the way up to
-      // the final root.
-      throw new Error('The parent must have an alternate already.');
-    }
-  }
-
+  alt = createFiber(fiber.tag, fiber.key);
   alt.type = fiber.type;
   alt.stateNode = fiber.stateNode;
-  alt.alternate = fiber;
+  alt.child = fiber.child;
+  alt.sibling = fiber.sibling;
+  alt.ref = alt.ref;
   alt.pendingWorkPriority = priorityLevel;
+
+  alt.alternate = fiber;
   fiber.alternate = alt;
   return alt;
 };
