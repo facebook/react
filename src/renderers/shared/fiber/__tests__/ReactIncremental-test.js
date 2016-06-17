@@ -182,12 +182,13 @@ describe('ReactIncremental', function() {
       return (
         <div>
           <Bar>{props.text}</Bar>
-          <div hidden={true}>
-            <span>
+          <content hidden={true}>
             <Middle>{props.text}</Middle>
-            </span>
-          </div>
+          </content>
           <Bar>{props.text}</Bar>
+          <footer hidden={true}>
+            <Middle>Footer</Middle>
+          </footer>
         </div>
       );
     }
@@ -196,7 +197,7 @@ describe('ReactIncremental', function() {
     ReactNoop.render(<Foo text="foo" />);
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle']);
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle', 'Middle']);
 
     ops = [];
 
@@ -212,7 +213,7 @@ describe('ReactIncremental', function() {
     // Flush only the remaining work
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Middle']);
+    expect(ops).toEqual(['Middle', 'Middle']);
 
   });
 

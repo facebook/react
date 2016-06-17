@@ -42,8 +42,21 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
   let nextScheduledRoot : ?FiberRoot = null;
   let lastScheduledRoot : ?FiberRoot = null;
 
+  function cloneSiblings(current : Fiber, workInProgress : Fiber, parent : Fiber) {
+    while (current.sibling) {
+      current = current.sibling;
+      workInProgress = workInProgress.sibling = ReactFiber.cloneFiber(
+        current,
+        current.pendingWorkPriority
+      );
+      workInProgress.parent = parent;
+    }
+    workInProgress.sibling = null;
+  }
+
   function findNextUnitOfWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) : ?Fiber {
     let current = root.current;
+    ReactFiber.cloneFiber(current, current.pendingWorkPriority);
     while (current) {
       if (current.pendingWorkPriority !== 0 &&
           current.pendingWorkPriority <= priorityLevel) {
@@ -51,9 +64,12 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         if (current.pendingProps !== null) {
           // We found some work to do. We need to return the "work in progress"
           // of this node which will be the alternate.
-          const clone = ReactFiber.cloneFiber(current, current.pendingWorkPriority);
-          clone.pendingProps = current.pendingProps;
-          return clone;
+          const workInProgress = current.alternate;
+          if (!workInProgress) {
+            throw new Error('Should have wip now');
+          }
+          workInProgress.pendingProps = current.pendingProps;
+          return workInProgress;
         }
         // If we have a child let's see if any of our children has work to do.
         // Only bother doing this at all if the current priority level matches
@@ -62,7 +78,15 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         // type of child that needs to be searched for work.
         if (current.child) {
           // Ensure we have a work in progress copy to backtrack through.
-          ReactFiber.cloneFiber(current, NoWork);
+          let currentChild = current.child;
+          let workInProgress = current.alternate;
+          if (!workInProgress) {
+            throw new Error('Should have wip now');
+          }
+          workInProgress.pendingWorkPriority = current.pendingWorkPriority;
+          workInProgress.child = ReactFiber.cloneFiber(currentChild, NoWork);
+          workInProgress.child.parent = workInProgress;
+          cloneSiblings(currentChild, workInProgress.child, workInProgress);
           current = current.child;
           continue;
         }
@@ -164,15 +188,18 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         // If we're at the root, there's no more work to do. We can flush it.
         const root : FiberRoot = (workInProgress.stateNode : any);
         root.current = workInProgress;
-        console.log('completed one root flush with remaining work at priority', workInProgress.pendingWorkPriority);
-        const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
         // TODO: We can be smarter here and only look for more work in the
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
+        // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
         const nextWork = findNextUnitOfWork();
-        if (!nextWork && hasMoreWork) {
-          throw new Error('FiberRoots should not have flagged more work if there is none.');
-        }
+        // if (!nextWork && hasMoreWork) {
+          // TODO: This can happen when some deep work completes and we don't
+          // know if this was the last one. We should be able to keep track of
+          // the highest priority still in the tree for one pass. But if we
+          // terminate an update we don't know.
+          // throw new Error('FiberRoots should not have flagged more work if there is none.');
+        // }
         return nextWork;
       }
     }
@@ -181,7 +208,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
     // Ignore work if there is nothing to do.
     if (workInProgress.pendingProps === null) {
-      return null;
+      return completeUnitOfWork(workInProgress);
     }
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
