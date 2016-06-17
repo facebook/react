@@ -318,7 +318,7 @@ var RESERVED_SPEC_KEYS = {
   mixins: function(Constructor, mixins) {
     if (mixins) {
       for (var i = 0; i < mixins.length; i++) {
-        mixSpecIntoComponent(Constructor, mixins[i]);
+        mixSpecIntoComponent(Constructor, mixins[i], true);
       }
     }
   },
@@ -434,7 +434,7 @@ function validateMethodOverride(isAlreadyDefined, name) {
  * Mixin helper which handles policy validation and reserved
  * specification keys when building React classes.
  */
-function mixSpecIntoComponent(Constructor, spec) {
+function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
   if (!spec) {
     return;
   }
@@ -494,6 +494,17 @@ function mixSpecIntoComponent(Constructor, spec) {
       if (shouldAutoBind) {
         autoBindPairs.push(name, property);
         proto[name] = property;
+        if (__DEV__) {
+          var displayName;
+          if (isFromMixin) {
+            displayName = 'mixin';
+          } else {
+            displayName = Constructor.displayName || 'anonymous';
+          }
+          if (typeof property === 'function') {
+            property.displayName = displayName + '_' + name;
+          }
+        }
       } else {
         if (isAlreadyDefined) {
           var specPolicy = ReactClassInterface[name];
@@ -517,13 +528,30 @@ function mixSpecIntoComponent(Constructor, spec) {
           } else if (specPolicy === SpecPolicy.DEFINE_MANY) {
             proto[name] = createChainedFunction(proto[name], property);
           }
+
+          if (__DEV__) {
+            if (isFromMixin) {
+              displayName = 'mixin';
+            } else {
+              displayName = Constructor.displayName || 'anonymous';
+            }
+            if (typeof property === 'function') {
+              // `proto[name]` might not === `property` if the former is a
+              // chained/merged method.
+              proto[name].displayName = displayName + '_' + name;
+              property.displayName = displayName + '_' + name;
+            }
+          }
         } else {
           proto[name] = property;
           if (__DEV__) {
-            // Add verbose displayName to the function, which helps when looking
-            // at profiling tools.
-            if (typeof property === 'function' && spec.displayName) {
-              proto[name].displayName = spec.displayName + '_' + name;
+            if (isFromMixin) {
+              displayName = 'mixin';
+            } else {
+              displayName = Constructor.displayName || 'anonymous';
+            }
+            if (typeof property === 'function') {
+              property.displayName = displayName + '_' + name;
             }
           }
         }
@@ -800,7 +828,7 @@ var ReactClass = {
       mixSpecIntoComponent.bind(null, Constructor)
     );
 
-    mixSpecIntoComponent(Constructor, spec);
+    mixSpecIntoComponent(Constructor, spec, false);
 
     // Initialize the defaultProps property after all mixins have been merged.
     if (Constructor.getDefaultProps) {
