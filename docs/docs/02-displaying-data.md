@@ -20,7 +20,7 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
     <script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
