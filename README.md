@@ -65,6 +65,7 @@ The process to build `react.js` is built entirely on top of node.js, using many 
 #### Prerequisites
 
 * You have `node` installed at v4.0.0+ and `npm` at v2.0.0+.
+* You have `gcc` installed or are comfortable installing a compiler if needed. Some of our `npm` dependencies may require a compliation step. 
 * You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
 * You are familiar with `git`.
 
