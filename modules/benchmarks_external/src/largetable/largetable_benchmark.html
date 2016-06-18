@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<body>
+
+<h2>AngularJS/Dart 1.x largetable benchmark</h2>
+<form>
+  <div>
+    rows:
+    <input type="number" name="rows" value="100">
+    columns:
+    <input type="number" name="columns" value="20">
+  </div>
+  <div>
+    baseline binding:
+    <input type="radio"
+           name="benchmarkType"
+           value="baselineBinding"
+           id="baselineBinding"
+           checked>
+  </div>
+  <div>
+    baseline interpolation:
+    <input type="radio"
+           name="benchmarkType"
+           value="baselineInterpolation"
+           id="baselineInterpolation">
+  </div>
+  <div>
+    ngBind:
+    <input type="radio"
+           name="benchmarkType"
+           value="ngBind"
+           id="ngBind">
+  </div>
+  <div>
+    ngBindOnce:
+    <input type="radio"
+           name="benchmarkType"
+           value="ngBindOnce"
+           id="ngBindOnce">
+  </div>
+  <div>
+    interpolation:
+    <input type="radio"
+           name="benchmarkType"
+           value="interpolation"
+           id="interpolation">
+  </div>
+  <div>
+    attribute interpolation:
+    <input type="radio"
+           name="benchmarkType"
+           value="interpolationAttr"
+           id="interpolationAttr">
+  </div>
+  <div>
+    ngBind + fnInvocation:
+    <input type="radio"
+           name="benchmarkType"
+           value="ngBindFn"
+           id="ngBindFn">
+  </div>
+  <div>
+    interpolation + fnInvocation:
+    <input type="radio"
+           name="benchmarkType"
+           value="interpolationFn"
+           id="interpolationFn">
+  </div>
+  <div>
+    ngBind + filter:
+    <input type="radio"
+           name="benchmarkType"
+           value="ngBindFilter"
+           id="ngBindFilter">
+  </div>
+  <div>
+    interpolation + filter:
+    <input type="radio"
+           name="benchmarkType"
+           value="interpolationFilter"
+           id="interpolationFilter">
+  </div>
+  <button>Apply</button>
+</form>
+
+<p>
+<button id="destroyDom">destroyDom</button>
+<button id="createDom">createDom</button>
+</p>
+
+<div>
+<largetable></largetable>
+</div>
+
+$SCRIPTS$
+</body>
+</html>

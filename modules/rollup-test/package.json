@@ -1,0 +1,34 @@
+{
+  "name": "rollup-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "compile-system": "tsc -p tsconfig-system.json",
+    "bundle": "rollup -f iife -c rollup.config.js -o dist/bundle.es2015.js",
+    "es5": "tsc --out dist/bundle.js --target es5  --allowJs dist/bundle.es2015.js",
+    "minify": "uglifyjs --screw-ie8 --compress --mangle --in-source-map ./dist/bundle.js.map --source-map ./dist/bindle.min.js.map --source-map-include-sources --output ./dist/bundle.min.js ./dist/bundle.js",
+    "build": "npm run compile && npm run bundle && npm run es5 && npm run minify",
+    "serve": "python -m SimpleHTTPServer 8000"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@igorminar/md-button": "^1.1.0",
+    "@igorminar/platform-browser": "^0.1.0"
+  },
+  "devDependencies": {
+    "rollup": "^0.26.0",
+    "rollup-plugin-node-resolve": "^1.5.0",
+    "rollup-plugin-typescript": "^0.7.3",
+    "rollup-plugin-uglify": "^0.3.1",
+    "rxjs-es": "^5.0.0-beta.6",
+    "typescript": "^1.9.0-dev.20160423",
+    "uglify-js": "^2.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/angular/angular.git"
+  }
+}

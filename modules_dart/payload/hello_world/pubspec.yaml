@@ -1,0 +1,23 @@
+name: hello_world
+environment:
+  sdk: '>=1.10.0 <2.0.0'
+dependencies:
+  observe: '^0.13.1'
+  angular2: any
+  browser: '^0.10.0'
+dependency_overrides:
+  angular2:
+    path: ../../../dist/dart/angular2
+transformers:
+- angular2/transform/codegen:
+    platform_directives: 'package:angular2/src/common/directives.dart#CORE_DIRECTIVES'
+- angular2/transform/reflection_remover:
+    $include: [web/index.dart]
+- $dart2js:
+    minify: true
+    commandLineOptions:
+    - --show-package-warnings
+    - --trust-type-annotations
+    - --trust-primitives
+    # Uncomment to generate summaries from dart2js
+    # - --dump-info

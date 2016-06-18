@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../dist/packages-ts2dart/",
+    "paths": {
+      "selenium-webdriver": ["@angular/typings/selenium-webdriver/selenium-webdriver.d.ts"],
+      "rxjs/*": ["../node_modules/rxjs/*"],
+      "@angular/upgrade": ["./upgrade-ts2dart.d.ts"],
+      "@angular/*": ["./@angular/*"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "sourceRoot": ".",
+    "target": "es6"
+  },
+  "exclude": [
+    "@angular/upgrade/",
+    "@angular/core/test/typings.d.ts",
+    "@angular/manual_typings/globals.d.ts",
+    "@angular/typings/es6-collections/es6-collections.d.ts",
+    "@angular/typings/es6-promise/es6-promise.d.ts",
+    "@angular/typings/tsd.d.ts",
+    "@angular/typings.d.ts",
+    "angular1_router",
+    "rollup-test"
+  ]
+}

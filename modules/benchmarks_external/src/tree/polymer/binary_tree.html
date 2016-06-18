@@ -1,0 +1,24 @@
+<link rel="import" href="polymer.html">
+<dom-module id="binary-tree">
+  <template>
+    <span>
+      <span>{{data.value}}</span>
+      <template is="dom-if" if="[[data.left]]">
+        <binary-tree data="[[data.left]]"></binary-tree>
+      </template>
+      <template is="dom-if" if="[[data.right]]">
+        <binary-tree data="[[data.right]]"></binary-tree>
+      </template>
+    </span>
+  </template>
+</dom-module>
+<script>
+  Polymer({
+    is: 'binary-tree',
+    properties: {
+      data: Object
+    },
+    leftTree: null,
+    rightTree: null
+  });
+</script>

@@ -1,0 +1,11 @@
+<div>
+  <h2 class="page-title">Drafts</h2>
+
+  <ol class="inbox-list">
+    <li *ngFor="let item of items" class="inbox-item-record">
+      <a id="item-{{ item.id }}"
+         [routerLink]="['/detail', item.id]">
+        {{ item.subject }}</a>
+    </li>
+  </ol>
+</div>

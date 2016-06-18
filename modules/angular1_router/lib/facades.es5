@@ -1,0 +1,333 @@
+function CONST() {
+  return (function(target) {
+    return target;
+  });
+}
+
+function CONST_EXPR(expr) {
+  return expr;
+}
+
+function isPresent (x) {
+  return !!x;
+}
+
+function isBlank (x) {
+  return !x;
+}
+
+function isString(obj) {
+  return typeof obj === 'string';
+}
+
+function isType (x) {
+  return typeof x === 'function';
+}
+
+function isStringMap(obj) {
+  return typeof obj === 'object' && obj !== null;
+}
+
+function isArray(obj) {
+  return Array.isArray(obj);
+}
+
+function getTypeNameForDebugging (fn) {
+  return fn.name || 'Root';
+}
+
+var PromiseWrapper = {
+  resolve: function (reason) {
+    return $q.when(reason);
+  },
+
+  reject: function (reason) {
+    return $q.reject(reason);
+  },
+
+  catchError: function (promise, fn) {
+    return promise.then(null, fn);
+  },
+  all: function (promises) {
+    return $q.all(promises);
+  }
+};
+
+var RegExpWrapper = {
+  create: function(regExpStr, flags) {
+    flags = flags ? flags.replace(/g/g, '') : '';
+    return new RegExp(regExpStr, flags + 'g');
+  },
+  firstMatch: function(regExp, input) {
+    regExp.lastIndex = 0;
+    return regExp.exec(input);
+  },
+  matcher: function (regExp, input) {
+    regExp.lastIndex = 0;
+    return { re: regExp, input: input };
+  }
+};
+
+var reflector = {
+  annotations: function (fn) {
+    //TODO: implement me
+    return fn.annotations || [];
+  }
+};
+
+var MapWrapper = {
+  create: function() {
+    return new Map();
+  },
+
+  get: function(m, k) {
+    return m.get(k);
+  },
+
+  set: function(m, k, v) {
+    return m.set(k, v);
+  },
+
+  contains: function (m, k) {
+    return m.has(k);
+  },
+
+  forEach: function (m, fn) {
+    return m.forEach(fn);
+  }
+};
+
+var StringMapWrapper = {
+  create: function () {
+    return {};
+  },
+
+  set: function (m, k, v) {
+    return m[k] = v;
+  },
+
+  get: function (m, k) {
+    return m.hasOwnProperty(k) ? m[k] : undefined;
+  },
+
+  contains: function (m, k) {
+    return m.hasOwnProperty(k);
+  },
+
+  keys: function(map) {
+    return Object.keys(map);
+  },
+
+  isEmpty: function(map) {
+    for (var prop in map) {
+      if (map.hasOwnProperty(prop)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  delete: function(map, key) {
+    delete map[key];
+  },
+
+  forEach: function (m, fn) {
+    for (var prop in m) {
+      if (m.hasOwnProperty(prop)) {
+        fn(m[prop], prop);
+      }
+    }
+  },
+
+  equals: function (m1, m2) {
+    var k1 = Object.keys(m1);
+    var k2 = Object.keys(m2);
+    if (k1.length != k2.length) {
+      return false;
+    }
+    var key;
+    for (var i = 0; i < k1.length; i++) {
+      key = k1[i];
+      if (m1[key] !== m2[key]) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  merge: function(m1, m2) {
+    var m = {};
+    for (var attr in m1) {
+      if (m1.hasOwnProperty(attr)) {
+        m[attr] = m1[attr];
+      }
+    }
+    for (var attr in m2) {
+      if (m2.hasOwnProperty(attr)) {
+        m[attr] = m2[attr];
+      }
+    }
+    return m;
+  }
+};
+
+var List = Array;
+var ListWrapper = {
+  toJSON: function(l) {
+    return JSON.stringify(l);
+  },
+
+  clear: function (l) {
+    l.length = 0;
+  },
+
+  create: function () {
+    return [];
+  },
+
+  push: function (l, v) {
+    return l.push(v);
+  },
+
+  forEach: function (l, fn) {
+    return l.forEach(fn);
+  },
+
+  first: function(array) {
+    if (!array)
+      return null;
+    return array[0];
+  },
+
+  last: function(array) {
+    return (array && array.length) > 0 ? array[array.length - 1] : null;
+  },
+
+  map: function (l, fn) {
+    return l.map(fn);
+  },
+
+  join: function (l, str) {
+    return l.join(str);
+  },
+
+  reduce: function(list, fn, init) {
+    return list.reduce(fn, init);
+  },
+
+  filter: function(array, pred) {
+    return array.filter(pred);
+  },
+
+  concat: function(a, b) {
+    return a.concat(b);
+  },
+
+  slice: function(l) {
+    var from = arguments[1] !== (void 0) ? arguments[1] : 0;
+    var to = arguments[2] !== (void 0) ? arguments[2] : null;
+    return l.slice(from, to === null ? undefined : to);
+  },
+
+  maximum: function(list, predicate) {
+    if (list.length == 0) {
+      return null;
+    }
+    var solution = null;
+    var maxValue = -Infinity;
+    for (var index = 0; index < list.length; index++) {
+      var candidate = list[index];
+      if (isBlank(candidate)) {
+        continue;
+      }
+      var candidateValue = predicate(candidate);
+      if (candidateValue > maxValue) {
+        solution = candidate;
+        maxValue = candidateValue;
+      }
+    }
+    return solution;
+  }
+};
+
+var StringWrapper = {
+  charCodeAt: function(s, i) {
+    return s.charCodeAt(i);
+  },
+
+  equals: function (s1, s2) {
+    return s1 === s2;
+  },
+
+  split: function(s, re) {
+    return s.split(re);
+  },
+
+  replaceAll: function(s, from, replace) {
+    return s.replace(from, replace);
+  },
+
+  replaceAllMapped: function(s, from, cb) {
+    return s.replace(from, function(matches) {
+      // Remove offset & string from the result array
+      matches.splice(-2, 2);
+      // The callback receives match, p1, ..., pn
+      return cb.apply(null, matches);
+    });
+  },
+
+  contains: function(s, substr) {
+    return s.indexOf(substr) != -1;
+  }
+
+};
+
+//TODO: implement?
+// I think it's too heavy to ask 1.x users to bring in Rx for the router...
+function EventEmitter() {}
+
+var BaseException = Error;
+
+var ObservableWrapper = {
+  callNext: function(ob, val) {
+    ob.fn(val);
+  },
+  callEmit: function(ob, val) {
+    ob.fn(val);
+  },
+
+  subscribe: function(ob, fn) {
+    ob.fn = fn;
+  }
+};
+
+// TODO: https://github.com/angular/angular.js/blob/master/src/ng/browser.js#L227-L265
+var $__router_47_location__ = {
+  Location: Location
+};
+
+function Location(){}
+Location.prototype.subscribe = function () {
+  //TODO: implement
+};
+Location.prototype.path = function () {
+  return $location.url();
+};
+Location.prototype.isCurrentPathEqualTo = function (path, query) {
+  if (query === void 0) { query = ''; }
+  return this.path() === (path + query);
+};
+Location.prototype.go = function (path, query) {
+  return $location.url(path + query);
+};
+Location.prototype.replaceState = function (path, query) {
+  if (query === void 0) { query = ''; }
+  $location.url(path + query);
+  $location.replace();
+};
+Location.prototype.prepareExternalUrl = function(url) {
+  if (url.length > 0 && !url.startsWith('/')) {
+    url = '/' + url;
+  }
+  return $location.$$html5 ? '.' + url : '#' + $locationHashPrefix + url;
+};

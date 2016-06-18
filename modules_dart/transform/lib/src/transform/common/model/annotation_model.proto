@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package angular2.src.transform.common.model.proto;
+
+message NamedParameter {
+  required string name = 1;
+  required string value = 2;
+}
+
+message AnnotationModel {
+  // The constructor that creates the annotation, or the name of the field that
+  // defines the annotation.
+  required string name = 1;
+
+  // The positional parameters provided to the annotation.
+  repeated string parameters = 2;
+
+  // The named parameters provided to the annotation.
+  repeated NamedParameter named_parameters = 3;
+
+  // Whether this annotation is a constant object (for example, `@override`) as
+  // opposed to a const instance creation expression
+  // (for example, `@Injectable()`).
+  optional bool is_const_object = 4;
+}

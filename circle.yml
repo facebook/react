@@ -1,0 +1,11 @@
+machine:
+  node:
+    version: 5.4.1
+
+dependencies:
+  pre:
+    - npm install -g npm
+
+test:
+  override:
+    - gulp lint

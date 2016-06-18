@@ -1,0 +1,10 @@
+name: angular
+environment:
+  sdk: '>=1.12.0-dev.5.10 <2.0.0'
+dependencies:
+  observe: '^0.13.1'
+dev_dependencies:
+  guinness2: '0.0.5'
+  intl: '^0.12.4'
+  unittest: '^0.11.5+4'
+  quiver: '^0.21.4'

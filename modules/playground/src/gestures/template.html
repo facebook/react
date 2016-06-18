@@ -1,0 +1,15 @@
+<style type="text/css">
+  .row {
+    height: 33%;
+    text-align: center;
+    border-bottom: 1px solid black;
+    margin: 0;
+    padding: 0;
+    -webkit-user-select: none;
+  }
+</style>
+
+<div class="row" (swipe)="onSwipe($event)">Swipe (direction = {{swipeDirection}})</div>
+<div class="row" (pinch)="onPinch($event)">pinch (scale = {{pinchScale}})</div>
+<div class="row" (rotate)="onRotate($event)">Rotate (angle = {{rotateAngle}})</div>
+<div class="row"></div>

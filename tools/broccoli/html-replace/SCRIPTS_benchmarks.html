@@ -1,0 +1,48 @@
+<script src="es6-shim.js"></script>
+<script src="url_params_to_form.js"></script>
+<script src="system.src.js"></script>
+<script>
+  var scriptUrls;
+  var loadRuntimePackages = [
+    'benchmarks',
+    'playground',
+    // TODO(rado): These helpers don't end up in the bundle, thus they should
+    // not even be in src/*. Move them!
+    'angular2/src/testing/benchmark_util',
+    'angular2/src/facade/browser',
+    'rxjs'
+  ];
+  if (@@USE_BUNDLES) {
+    scriptUrls = [
+      '/bundle/angular2-polyfills.js',
+      '/bundle/angular2.dev.js',
+      '/bundle/http.js',
+      '/bundle/router.dev.js',
+      '/rxjs/bundles/Rx.js'
+    ];
+  } else {
+    console.warn("Not using the Angular 2 bundle. "+
+        "Don't use this configuration for e2e/performance tests!")
+    loadRuntimePackages.push('angular2');
+    scriptUrls = [
+      'Reflect.js',
+      'zone.js',
+      'long-stack-trace-zone.js'
+    ];
+  }
+  var systemJsPackages = {};
+  loadRuntimePackages.forEach(function(pck) {
+    systemJsPackages[pck] = {defaultExtension: 'js'};
+  });
+  System.config({
+    baseURL: '/',
+    packages: systemJsPackages
+  });
+  for (var i=0; i<scriptUrls.length; i++) {
+    document.write('<script src="'+scriptUrls[i]+'"></'+'script>');
+  }
+</script>
+<script>
+  var filename = '@@PATH/@@FILENAME';
+  System.import(filename).then(function(m) { m.main && m.main(); }, console.error.bind(console));
+</script>

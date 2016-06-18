@@ -1,0 +1,21 @@
+button {
+  background:red;
+  font-size:20px;
+  color:white;
+  border:0;
+  cursor:pointer;
+}
+
+.box {
+  font-size:50px;
+  border:10px solid black;
+  width:200px;
+  font-size:80px;
+  line-height:100px;
+  height:100px;
+  display:inline-block;
+  vertical-align:top;
+  text-align:center;
+  margin:5px;
+  overflow:hidden;
+}

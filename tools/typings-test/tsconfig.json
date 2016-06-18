@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../../dist/typing-test/",
+    "rootDir": ".",
+    "target": "es5"
+  },
+  "files": [
+    "include-all.ts",
+    "node_modules/@types/es6-promise/index.d.ts",
+    "node_modules/@types/es6-collections/index.d.ts",
+    "node_modules/@types/jasmine/index.d.ts"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "stripInternal": true,
+    "experimentalDecorators": true,
+    "module": "es2015",
+    "moduleResolution": "node",
+    "outDir": "../../../dist/packages-dist/platform-browser/esm",
+    "paths": {
+      "@angular/core": ["../../../dist/packages-dist/core"],
+      "@angular/core/testing": ["../../../dist/packages-dist/core/testing"],
+      "@angular/common": ["../../../dist/packages-dist/common"],
+      "@angular/common/testing": ["../../../dist/packages-dist/common/testing"],
+
+      // workaround for https://github.com/Microsoft/TypeScript/issues/8723
+      // we can get rid of this once we update to typescript 1.9.0-dev.20160525-1.0 or newer
+      "selenium-webdriver": ["../../../node_modules/@types/selenium-webdriver/index.d.ts"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "inlineSources": true,
+    "target": "es2015"
+  },
+  "files": [
+    "index.ts",
+    "testing.ts",
+    "testing_e2e.ts",
+    "../../../node_modules/@types/hammerjs/index.d.ts",
+    "../../../node_modules/@types/jasmine/index.d.ts",
+    "../../../node_modules/@types/protractor/index.d.ts",
+    "../../../node_modules/zone.js/dist/zone.js.d.ts"
+  ]
+}

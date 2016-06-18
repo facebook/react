@@ -1,0 +1,31 @@
+<html>
+<head>
+</head>
+
+<hello-world>loading..</hello-world>
+
+<script src="./node_modules/zone.js/dist/zone.js"></script>
+<script src="./node_modules/reflect-metadata/Reflect.js"></script>
+<script src="https://code.angularjs.org/tools/system.js"></script>
+<script src="https://code.angularjs.org/2.0.0-beta.16/Rx.js"></script>
+<script>
+  System.config({
+//    meta: {
+//      'rxjs/*': {
+//        main: 'http://localhost:8000/dist/Rx.umd.js',
+//        format: 'umd'
+//      }
+//    },
+    map: {
+      "@angular/core": "http://localhost:8000/dist/core.umd.js",
+      "@angular/common": "http://localhost:8000/dist/common.umd.js",
+      "@angular/compiler": "http://localhost:8000/dist/compiler.umd.js",
+      "@angular/platform-browser": "http://localhost:8000/dist/platform-browser.umd.js"
+    }
+
+  });
+  System.import('./dist/hello_world.js');
+
+
+</script>
+</html>

@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+import "annotation_model.proto";
+import "parameter_model.proto";
+
+package angular2.src.transform.common.model.proto;
+
+message PrefixedType {
+  // The prefix used to reference this Type, if any.
+  optional string prefix = 1;
+
+  // The name of the Type or type alias.
+  // See https://goo.gl/d8XPt0 for info on type aliases.
+  optional string name = 2;
+}
+
+message ReflectionInfoModel {
+  // The (potentially prefixed) name of this Injectable.
+  // This can be a `Type` or a function name.
+  required string name = 1;
+
+  // The name of the ctor used to create this Injectable. In most cases, this
+  // will be null and we will use the default constructor.
+  optional string ctor_name = 2;
+
+  optional bool is_function = 3;
+
+  repeated AnnotationModel annotations = 4;
+
+  repeated ParameterModel parameters = 5;
+
+  repeated string interfaces = 6;
+
+  // Directive dependencies parsed from the @View or @Component `directives`
+  // parameter.
+  repeated PrefixedType directives = 7;
+
+  // Pipe dependencies parsed from the @View or @Component `pipes` parameter.
+  repeated PrefixedType pipes = 8;
+}

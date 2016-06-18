@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<body>
+
+<h2>Params</h2>
+<form>
+  Elements:
+  <input type="number" name="elements" placeholder="elements" value="150">
+  <br>
+  <button>Apply</button>
+</form>
+
+<h2>Actions</h2>
+<p>
+  <button id="compileWithBindings">CompileWithBindings</button>
+  <button id="compileNoBindings">CompileNoBindings</button>
+</p>
+
+<template id="templateNoBindings">
+  <div class="class0 class1 class2 class3 class4 " nodir0="" attr0="value0" nodir1="" attr1="value1" nodir2="" attr2="value2" nodir3="" attr3="value3" nodir4="" attr4="value4">
+    <div class="class0 class1 class2 class3 class4 " nodir0="" attr0="value0" nodir1="" attr1="value1" nodir2="" attr2="value2" nodir3="" attr3="value3" nodir4="" attr4="value4">
+      <div class="class0 class1 class2 class3 class4 " nodir0="" attr0="value0" nodir1="" attr1="value1" nodir2="" attr2="value2" nodir3="" attr3="value3" nodir4="" attr4="value4">
+        <div class="class0 class1 class2 class3 class4 " nodir0="" attr0="value0" nodir1="" attr1="value1" nodir2="" attr2="value2" nodir3="" attr3="value3" nodir4="" attr4="value4">
+          <div class="class0 class1 class2 class3 class4 " nodir0="" attr0="value0" nodir1="" attr1="value1" nodir2="" attr2="value2" nodir3="" attr3="value3" nodir4="" attr4="value4">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="templateWithBindings">
+  <div class="class0 class1 class2 class3 class4 " dir0="" [attr0]="value0" dir1="" [attr1]="value1" dir2="" [attr2]="value2" dir3="" [attr3]="value3" dir4="" [attr4]="value4">
+    {{inter0}}{{inter1}}{{inter2}}{{inter3}}{{inter4}}
+    <div class="class0 class1 class2 class3 class4 " dir0="" [attr0]="value0" dir1="" [attr1]="value1" dir2="" [attr2]="value2" dir3="" [attr3]="value3" dir4="" [attr4]="value4">
+      {{inter0}}{{inter1}}{{inter2}}{{inter3}}{{inter4}}
+      <div class="class0 class1 class2 class3 class4 " dir0="" [attr0]="value0" dir1="" [attr1]="value1" dir2="" [attr2]="value2" dir3="" [attr3]="value3" dir4="" [attr4]="value4">
+        {{inter0}}{{inter1}}{{inter2}}{{inter3}}{{inter4}}
+        <div class="class0 class1 class2 class3 class4 " dir0="" [attr0]="value0" dir1="" [attr1]="value1" dir2="" [attr2]="value2" dir3="" [attr3]="value3" dir4="" [attr4]="value4">
+          {{inter0}}{{inter1}}{{inter2}}{{inter3}}{{inter4}}
+          <div class="class0 class1 class2 class3 class4 " dir0="" [attr0]="value0" dir1="" [attr1]="value1" dir2="" [attr2]="value2" dir3="" [attr3]="value3" dir4="" [attr4]="value4">
+            {{inter0}}{{inter1}}{{inter2}}{{inter3}}{{inter4}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+$SCRIPTS$
+
+</body>
+</html>

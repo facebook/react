@@ -1,8 +1,36 @@
-*Before* submitting a pull request, please make sure the following is done...
+**Please check if the PR fulfills these requirements**
+- [ ] The commit message follows our guidelines: https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit-message-format
+- [ ] Tests for the changes have been added (for bug fixes / features)
+- [ ] Docs have been added / updated (for bug fixes / features)
 
-1. Fork the repo and create your branch from `master`.
-2. If you've added code that should be tested, add tests!
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes (`grunt test`).
-5. Make sure your code lints (`grunt lint`) - we've done our best to make sure these rules match our internal linting guidelines.
-6. If you haven't already, complete the [CLA](https://code.facebook.com/cla).
+
+**What kind of change does this PR introduce?** (check one with "x")
+```
+[ ] Bugfix
+[ ] Feature
+[ ] Code style update (formatting, local variables)
+[ ] Refactoring (no functional changes, no api changes)
+[ ] Build related changes
+[ ] CI related changes
+[ ] Other... Please describe:
+```
+
+**What is the current behavior?** (You can also link to an open issue here)
+
+
+
+**What is the new behavior?**
+
+
+
+**Does this PR introduce a breaking change?** (check one with "x")
+```
+[ ] Yes
+[ ] No
+```
+
+If this PR contains a breaking change, please describe the impact and migration path for existing applications: ...
+
+
+**Other information**:
+

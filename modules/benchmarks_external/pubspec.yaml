@@ -1,0 +1,21 @@
+name: benchmarks_external
+environment:
+  sdk: '>=1.4.0'
+dependencies:
+  angular: '>=1.1.2+2 <2.0.0'
+  browser: '>=0.10.0 <0.11.0'
+dev_dependencies:
+  angular2:
+    path: ../angular2
+dependency_overrides:
+  intl: '^0.12.4' # angular depends on an older version of intl.
+transformers:
+- angular:
+    $include: "web/src"
+    html_files:
+      - web/src/naive_infinite_scroll/scroll_area.html
+      - web/src/naive_infinite_scroll/scroll_item.html
+- $dart2js:
+    $include: "web/src"
+    commandLineOptions:
+    - --show-package-warnings

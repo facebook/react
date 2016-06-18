@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<body>
+
+<h2>Params</h2>
+<form>
+  Depth:
+  <input type="number" name="depth" placeholder="depth" value="9">
+  <br>
+  Use Viewcache:
+  <label>
+  Yes<input type="radio" name="viewcache" placeholder="use viewcache" value="true" checked="checked">
+  </label>
+  <label>
+  No<input type="radio" name="viewcache" placeholder="use viewcache" value="false">
+  </label>
+  <br>
+  <button>Apply</button>
+</form>
+
+<h2>Angular2 tree benchmark</h2>
+<p>
+<button id="ng2DestroyDom">destroyDom</button>
+<button id="ng2CreateDom">createDom</button>
+<button id="ng2UpdateDomProfile">profile updateDom</button>
+<button id="ng2CreateDomProfile">profile createDom</button>
+</p>
+
+<h2>Baseline tree benchmark</h2>
+<p>
+<button id="baselineDestroyDom">destroyDom</button>
+<button id="baselineCreateDom">createDom</button>
+<button id="baselineUpdateDomProfile">profile updateDom</button>
+<button id="baselineCreateDomProfile">profile createDom</button>
+</p>
+
+<div>
+<app></app>
+</div>
+
+<div>
+<baseline></baseline>
+</div>
+
+$SCRIPTS$
+</body>
+</html>

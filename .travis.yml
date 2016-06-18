@@ -1,111 +1,196 @@
----
 language: node_js
-node_js:
-- 4
 sudo: false
+node_js:
+  - '5.4.1'
+
+addons:
+#  firefox: "38.0"
+  apt:
+    sources:
+      # needed to install g++ that is used by npms's native modules
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+
+branches:
+  except:
+    - g3_v2_0
+
 cache:
   directories:
-  - docs/vendor/bundle
-  - node_modules
-before_install:
-- |
-    if [ "$TEST_TYPE" != build_website ] && \
-      ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
-    then
-      echo "Only docs were updated, stopping build process."
-      exit
-    fi
-    npm install -g npm@latest-2
-    npm --version
-script:
-- |
-    if [ "$TEST_TYPE" = build_website ]; then
-      if [ "$TRAVIS_BRANCH" = "$REACT_WEBSITE_BRANCH" ] && [ "$TRAVIS_PULL_REQUEST" = false ]; then
-        set -e
+     - ./node_modules
+     - ./.chrome/chromium
+#    - $HOME/.pub-cache
 
-        GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
-        echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
-        git config --global user.name "Travis CI"
-        git config --global user.email "travis@reactjs.org"
 
-        git clone --branch gh-pages --depth=50 \
-          https://reactjs-bot@github.com/facebook/react.git \
-          $GH_PAGES_DIR
-        pushd docs
-        bundle install --jobs=3 --retry=3 --path=vendor/bundle
-        bundle exec rake release
-        cd $GH_PAGES_DIR
-        git status
-        if ! git diff-index --quiet HEAD --; then
-          git add -A .
-          git commit -m "Rebuild website"
-          git push origin gh-pages
-        fi
-        popd
-      fi
-    elif [ "$TEST_TYPE" = build ]; then
-      if [ "$SERVER" ]; then
-        set -e
-        ./node_modules/.bin/grunt build
-        curl \
-          -F "react=@build/react.js" \
-          -F "react.min=@build/react.min.js" \
-          -F "react-with-addons=@build/react-with-addons.js" \
-          -F "react-with-addons.min=@build/react-with-addons.min.js" \
-          -F "react-dom=@build/react-dom.js" \
-          -F "react-dom.min=@build/react-dom.min.js" \
-          -F "react-dom-server=@build/react-dom-server.js" \
-          -F "react-dom-server.min=@build/react-dom-server.min.js" \
-          -F "npm-react=@build/packages/react.tgz" \
-          -F "npm-react-dom=@build/packages/react-dom.tgz" \
-          -F "npm-react-native=@build/packages/react-native-renderer.tgz" \
-          -F "commit=$TRAVIS_COMMIT" \
-          -F "date=`git log --format='%ct' -1`" \
-          -F "pull_request=$TRAVIS_PULL_REQUEST" \
-          -F "token=$SECRET_TOKEN" \
-          -F "branch=$TRAVIS_BRANCH" \
-          $SERVER
-      fi
-    elif [ "$TEST_TYPE" = test ]; then
-      set -e
-      # Disabling coverage because it's broken:
-      # https://travis-ci.org/facebook/react/jobs/128163922
-      if false; then
-        ./node_modules/.bin/grunt jest:coverage
-        cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
-      else
-        ./node_modules/.bin/grunt jest:normal
-      fi
-      echo 'Testing in server-render (HTML generation) mode...'
-      printf '\nmodule.exports.useCreateElement = false;\n' \
-        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
-      ./node_modules/.bin/grunt jest:normal
-      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
-      ./node_modules/.bin/gulp react:extract-errors
-    else
-      ./node_modules/.bin/grunt $TEST_TYPE
-    fi
+#before_cache:
+#  # Undo the pollution of the typescript_next build before the cache is primed for future use
+#  - if [[ "$MODE" == "typescript_next" ]]; then npm install typescript; fi
+
 env:
-  matrix:
-  - TEST_TYPE=build
-  - TEST_TYPE=test
-  - TEST_TYPE=lint
-  - TEST_TYPE=flow
-  - TEST_TYPE=build_website
   global:
-  # SERVER
-  - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
-  # SECRET_TOKEN
-  - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
-  # GITHUB_TOKEN
-  - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
-  # COVERALLS_TOKEN
-  - secure: h/cUq+TrUMZOQmkFD7CvuwX0uAwmjIfKZ4qSUzY+QzUtDzOzA0L/XF84xTBq1Q5YYsEiaoF6GxxGCdrLQiBA/ZTd+88UHgeZPMRvi0xG9Q+PeePVOsZMTxy4/WWFgOfSQCk49Mj9zizGgO78i6vxq+SDXMtFHnZ+TpPJIEW6/m0=
-notifications:
-  irc:
-    use_notice: true
-    skip_join: true
-    on_success: change
-    on_failure: change
-    channels:
-    - chat.freenode.net#reactjs
+#    - KARMA_JS_BROWSERS=ChromeNoSandbox
+#    - E2E_BROWSERS=ChromeOnTravis
+#    - LOGS_DIR=/tmp/angular-build/logs
+#    - ARCH=linux-x64
+
+    # GITHUB_TOKEN_ANGULAR
+    # This is needed for the e2e Travis matrix task to publish packages to github for continuous packages delivery.
+    - secure: "fq/U7VDMWO8O8SnAQkdbkoSe2X92PVqg4d044HmRYVmcf6YbO48+xeGJ8yOk0pCBwl3ISO4Q2ot0x546kxfiYBuHkZetlngZxZCtQiFT9kyId8ZKcYdXaIW9OVdw3Gh3tQyUwDucfkVhqcs52D6NZjyE2aWZ4/d1V4kWRO/LMgo="
+  matrix:
+    # Order: a slower build first, so that we don't occupy an idle travis worker waiting for others to complete.
+   - CI_MODE=js
+   - CI_MODE=e2e
+   - CI_MODE=saucelabs_required
+   - CI_MODE=browserstack_required
+   - CI_MODE=saucelabs_optional
+   - CI_MODE=browserstack_optional
+
+matrix:
+  allow_failures:
+    - env: "CI_MODE=saucelabs_optional"
+    - env: "CI_MODE=browserstack_optional"
+
+
+install:
+  - ./scripts/ci-lite/install.sh
+
+before_script:
+
+
+script:
+  - ./scripts/ci-lite/build.sh && ./scripts/ci-lite/test.sh
+
+after_script:
+  - ./scripts/ci-lite/cleanup.sh
+
+
+#branches:
+#  except:
+#    - g3_v2_0
+#
+#cache:
+#  directories:
+#    - $HOME/.pub-cache
+#    - $HOME/.chrome/chromium
+#
+#before_cache:
+#  # Undo the pollution of the typescript_next build before the cache is primed for future use
+#  - if [[ "$MODE" == "typescript_next" ]]; then npm install typescript; fi
+#
+#env:
+#  global:
+#    # Use newer verison of GCC to that is required to compile native npm modules for Node v4+ on Ubuntu Precise
+#    # more info: https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements
+#    - CXX=g++-4.8
+#    - KARMA_DART_BROWSERS=DartiumWithWebPlatform
+#    # No sandbox mode is needed for Chromium in Travis, it crashes otherwise: https://sites.google.com/a/chromium.org/chromedriver/help/chrome-doesn-t-start
+#    - KARMA_JS_BROWSERS=ChromeNoSandbox
+#    - E2E_BROWSERS=ChromeOnTravis
+#    - LOGS_DIR=/tmp/angular-build/logs
+#    - SAUCE_USERNAME=angular-ci
+#    - SAUCE_ACCESS_KEY=9b988f434ff8-fbca-8aa4-4ae3-35442987
+#    - BROWSER_STACK_USERNAME=angularteam1
+#    - BROWSER_STACK_ACCESS_KEY=BWCd4SynLzdDcv8xtzsB
+#    - ARCH=linux-x64
+#    - DART_DEV_VERSION=latest
+#    - DART_STABLE_VERSION=latest
+#    - DART_CHANNEL=stable
+#    - DART_VERSION=$DART_STABLE_VERSION
+#    # Token for tsd to increase github rate limit
+#    # See https://github.com/DefinitelyTyped/tsd#tsdrc
+#    # This does not use http://docs.travis-ci.com/user/environment-variables/#Secure-Variables
+#    # because those are not visible for pull requests, and those should also be reliable.
+#    # This SSO token belongs to github account angular-github-ratelimit-token which has no access
+#    # (password is in Valentine)
+#    - TSDRC='{"token":"ef474500309daea53d5991b3079159a29520a40b"}'
+#    # GITHUB_TOKEN_ANGULAR
+#    - secure: "fq/U7VDMWO8O8SnAQkdbkoSe2X92PVqg4d044HmRYVmcf6YbO48+xeGJ8yOk0pCBwl3ISO4Q2ot0x546kxfiYBuHkZetlngZxZCtQiFT9kyId8ZKcYdXaIW9OVdw3Gh3tQyUwDucfkVhqcs52D6NZjyE2aWZ4/d1V4kWRO/LMgo="
+#  matrix:
+#    # Order: a slower build first, so that we don't occupy an idle travis worker waiting for others to complete.
+#    - MODE=dart
+#    - MODE=dart DART_CHANNEL=dev
+#    - MODE=saucelabs_required
+#    - MODE=browserstack_required
+#    - MODE=saucelabs_optional
+#    - MODE=browserstack_optional
+#    - MODE=dart_ddc
+#    - MODE=js
+#    - MODE=router
+#    - MODE=build_only
+#    - MODE=typescript_next
+#    - MODE=lint
+#
+#matrix:
+#  allow_failures:
+#    - env: "MODE=saucelabs_optional"
+#    - env: "MODE=browserstack_optional"
+#
+#addons:
+#  firefox: "38.0"
+#  apt:
+#    sources:
+#      - ubuntu-toolchain-r-test
+#    packages:
+#      - g++-4.8
+#
+#before_install:
+#  - node tools/analytics/build-analytics start ci job
+#  - node tools/analytics/build-analytics start ci before_install
+#  - echo ${TSDRC} > .tsdrc
+#  - export CHROME_BIN=$HOME/.chrome/chromium/chrome-linux/chrome
+#  - export DISPLAY=:99.0
+#  - export GIT_SHA=$(git rev-parse HEAD)
+#  - ./scripts/ci/init_android.sh
+#  - sh -e /etc/init.d/xvfb start
+#  # Use a separate SauseLabs account for upstream/master builds in order for Sauce to create a badge representing the status of just upstream/master
+#  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] && SAUCE_USERNAME="angular2-ci" && SAUCE_ACCESS_KEY="693ebc16208a-0b5b-1614-8d66-a2662f4e" || true'
+#  - node tools/analytics/build-analytics success ci before_install
+#
+#install:
+#  - node tools/analytics/build-analytics start ci install
+#  # Install version of npm that we are locked against
+#  - npm install -g npm@3.5.3
+#  # Install version of Chromium that we are locked against
+#  - ./scripts/ci/install_chromium.sh
+#  # Install version of Dart based on the matrix build variables
+#  - ./scripts/ci/install_dart.sh ${DART_CHANNEL} ${DART_VERSION} ${ARCH}
+#  # Print the size of caches to ease debugging
+#  - du -sh ./node_modules || true
+#  # Install npm dependecies
+#  # check-node-modules will exit(1) if we don't need to install
+#  # we need to manually kick off the postinstall script if check-node-modules exit(0)s
+#  - node tools/npm/check-node-modules --purge && npm install || npm run postinstall
+#  - node tools/analytics/build-analytics success ci install
+#
+#before_script:
+#  - node tools/analytics/build-analytics start ci before_script
+#  - mkdir -p $LOGS_DIR
+#  - ./scripts/ci/presubmit-queue-setup.sh
+#  - node tools/analytics/build-analytics success ci before_script
+#
+#script:
+#  - node tools/analytics/build-analytics start ci script
+#  - ./scripts/ci/build_and_test.sh ${MODE}
+#  - node tools/analytics/build-analytics success ci script
+#
+#after_script:
+#  - node tools/analytics/build-analytics start ci after_script
+#  - ./scripts/ci/print-logs.sh
+#  - ./scripts/ci/after-script.sh
+#  - ./scripts/publish/publish-build-artifacts.sh
+#  - node tools/analytics/build-analytics success ci after_script
+#  - tools/analytics/build-analytics $TRAVIS_TEST_RESULT ci job
+#
+#notifications:
+#  webhooks:
+#    urls:
+#      - https://webhooks.gitter.im/e/1ef62e23078036f9cee4
+#      # trigger Buildtime Trend Service to parse Travis CI log
+#      - https://buildtimetrend.herokuapp.com/travis
+#      - http://104.197.9.155:8484/hubot/travis/activity
+#    on_success: always  # options: [always|never|change] default: always
+#    on_failure: always  # options: [always|never|change] default: always
+#    on_start: never     # default: never
+#  slack:
+#    secure: EP4MzZ8JMyNQJ4S3cd5LEPWSMjC7ZRdzt3veelDiOeorJ6GwZfCDHncR+4BahDzQAuqyE/yNpZqaLbwRWloDi15qIUsm09vgl/1IyNky1Sqc6lEknhzIXpWSalo4/T9ZP8w870EoDvM/UO+LCV99R3wS8Nm9o99eLoWVb2HIUu0=

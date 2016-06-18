@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "stripInternal": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../../../dist/packages-dist/router-deprecated/",
+    "paths": {
+      "@angular/core": ["../../../dist/packages-dist/core"],
+      "@angular/common": ["../../../dist/packages-dist/common"],
+      "@angular/platform-browser": ["../../../dist/packages-dist/platform-browser/"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "inlineSources": true,
+    "lib": ["es6", "dom"],
+    "target": "es5"
+  },
+  "files": [
+    "index.ts",
+    "testing.ts",
+    "../../../node_modules/zone.js/dist/zone.js.d.ts"
+  ]
+}

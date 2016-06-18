@@ -1,0 +1,49 @@
+<link rel="import" href="polymer.html">
+<link rel="import" href="binary_tree.html">
+
+<dom-module id="root-tree">
+  <template>
+    <div>
+      <button on-click="create" id="createDom">createDom</button>
+      <button on-click="destroy" id="destroyDom">destroyDom</button>
+    </div>
+    <div>
+      <binary-tree data="[[data]]"></binary-tree>
+    </div>
+  </template>
+</dom-module>
+<script type="application/javascript">
+  (function() {
+    var count = 0;
+    var depthInput = document.querySelector('input[name=depth]');
+    var match = /depth=(\w+)/.exec(decodeURIComponent(location.search));
+    if (match) {
+      depthInput.value = match[1];
+    }
+    var maxDepth = depthInput.valueAsNumber;
+    Polymer({
+      is: 'root-tree',
+      properties: {
+        data: Object
+      },
+      create: function() {
+        var values = count++ % 2 == 0 ?
+          ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*'] :
+          ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', '-'];
+
+        this.data = this.buildTree(maxDepth, values, 0);
+      },
+      destroy: function() {
+        this.data = null;
+      },
+      buildTree: function(maxDepth, values, curDepth) {
+        if (maxDepth == curDepth) return {value: '', left: null, right: null};
+        return {
+          value: values[curDepth],
+          left: this.buildTree(maxDepth, values, curDepth+1),
+          right: this.buildTree(maxDepth, values, curDepth+1)
+        };
+      }
+    });
+  })();
+</script>

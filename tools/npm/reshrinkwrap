@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+'use strict';
+
+let childProcess = require('child_process');
+
+childProcess.spawn('npm', ['shrinkwrap', '--dev'], {stdio: 'inherit'}).on('exit', (exitCode) => {
+  if (exitCode !== 0) return;
+
+  childProcess.fork('./tools/npm/clean-shrinkwrap.js').on('exit', (exitCode) => {
+    if (exitCode !== 0) return;
+
+    childProcess.fork('./tools/npm/copy-npm-shrinkwrap');
+  });
+});

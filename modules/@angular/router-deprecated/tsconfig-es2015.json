@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "stripInternal": true,
+    "experimentalDecorators": true,
+    "module": "es2015",
+    "moduleResolution": "node",
+    "outDir": "../../../dist/packages-dist/router-deprecated/esm",
+    "paths": {
+      "@angular/core": ["../../../dist/packages-dist/core"],
+      "@angular/common": ["../../../dist/packages-dist/common"],
+      "@angular/platform-browser": ["../../../dist/packages-dist/platform-browser"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "inlineSources": true,
+    "target": "es2015"
+  },
+  "files": [
+    "index.ts",
+    "testing.ts",
+    "../../../node_modules/zone.js/dist/zone.js.d.ts"
+  ]
+}

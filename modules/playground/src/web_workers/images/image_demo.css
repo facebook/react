@@ -1,0 +1,30 @@
+.hidden{
+  display: none !important;
+}
+#images {
+  width: 600px;
+  margin: 0 auto;
+}
+ul li {
+  list-style-type: none;
+  float: left;
+  margin-left: 20px;
+  width: 200px;
+}
+#main ul {
+  width: 700px;
+}
+.card-image .image-loader{
+  position: absolute;
+  bottom: 0;
+  margin: auto;
+}
+
+.card-image img.grey {
+  opacity: 0.4;
+}
+
+.fixed-action-btn.bottom {
+  bottom: 45px;
+  right: 24px;
+}

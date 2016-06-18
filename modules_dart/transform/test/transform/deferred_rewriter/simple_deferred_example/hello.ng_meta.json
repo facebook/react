@@ -1,0 +1,32 @@
+{
+  "HelloCmp":
+  {
+    "kind": "type",
+    "value": {
+      "class": "Directive",
+      "isComponent": true,
+      "selector":"hello-app",
+      "exportAs": null,
+      "type": {
+        "id": 1,
+        "name": "HelloCmp",
+        "moduleUrl": "asset:angular2/test/transform/deferred_rewriter/simple_deferred_example/hello.dart"
+      },
+      "changeDetection": 5,
+      "inputs": {},
+      "outputs": {},
+      "hostListeners": {},
+      "hostProperties": {},
+      "hostAttributes": {},
+      "lifecycleHooks": [],
+      "template": {
+        "encapsulation": 0,
+        "template": "Hi",
+        "templateUrl": "package:other_package/template.html",
+        "styles": null,
+        "styleUrls": null,
+        "ngContentSelectors": null
+      }
+    }
+  }
+}

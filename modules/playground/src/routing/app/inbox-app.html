@@ -1,0 +1,5 @@
+<inbox-side-menu class="inbox-aside">
+  <a [routerLink]="['/Inbox']" class="link" [class.active]="inboxPageActive()">Inbox</a>
+  <a [routerLink]="['/Drafts']" class="link" [class.active]="draftsPageActive()">Drafts</a>
+</inbox-side-menu>
+<router-outlet></router-outlet>

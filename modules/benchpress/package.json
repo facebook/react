@@ -1,0 +1,23 @@
+{
+  "name": "benchpress",
+  "version": "<%= packageJson.version %>",
+  "description": "Benchpress - a framework for e2e performance tests",
+  "homepage": "<%= packageJson.homepage %>",
+  "bugs": "<%= packageJson.bugs %>",
+  "main" : "./index.js",
+  "contributors": <%= JSON.stringify(packageJson.contributors) %>,
+  "license": "<%= packageJson.license %>",
+  "repository": <%= JSON.stringify(packageJson.repository) %>,
+  "dependencies": {
+    "angular2": "<%= packageJson.version %>",
+    "es6-shim": "<%= packageJson.dependencies['es6-shim'] %>",
+    "reflect-metadata": "<%= packageJson.dependencies['reflect-metadata'] %>",
+    "rxjs": "<%= packageJson.dependencies['rxjs'] %>",
+    "selenium-webdriver": "<%= packageJson.dependencies['selenium-webdriver'] %>",
+    "zone.js": "<%= packageJson.dependencies['zone.js'] %>"
+  },
+  "optionalDependencies": {
+    "jpm": "<%= packageJson.devDependencies.jpm %>",
+    "firefox-profile": "<%= packageJson.devDependencies['firefox-profile'] %>"
+  }
+}

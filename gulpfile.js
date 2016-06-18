@@ -1,80 +1,67 @@
-/**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-
 'use strict';
 
-var gulp = require('gulp');
-var babel = require('gulp-babel');
-var flatten = require('gulp-flatten');
-var del = require('del');
+// THIS CHECK SHOULD BE THE FIRST THING IN THIS FILE
+// This is to ensure that we catch env issues before we error while requiring other dependencies.
+require('./tools/check-environment')(
+    {requiredNpmVersion: '>=3.5.3 <4.0.0', requiredNodeVersion: '>=5.4.1 <6.0.0'});
 
-var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
-var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
-var devExpressionWithCodes = require('./scripts/error-codes/dev-expression-with-codes');
 
-var paths = {
-  react: {
-    src: [
-      'src/**/*.js',
-      '!src/**/__benchmarks__/**/*.js',
-      '!src/**/__tests__/**/*.js',
-      '!src/**/__mocks__/**/*.js',
-      '!src/renderers/art/**/*.js',
-      '!src/shared/vendor/**/*.js',
-    ],
-    lib: 'build/modules',
-  },
-};
+const gulp = require('gulp');
+const path = require('path');
 
-var moduleMap = Object.assign(
-  {'object-assign': 'object-assign'},
-  require('fbjs/module-map'),
-  {
-    deepDiffer: 'react-native/lib/deepDiffer',
-    deepFreezeAndThrowOnMutationInDev: 'react-native/lib/deepFreezeAndThrowOnMutationInDev',
-    flattenStyle: 'react-native/lib/flattenStyle',
-    InitializeJavaScriptAppEngine: 'react-native/lib/InitializeJavaScriptAppEngine',
-    RCTEventEmitter: 'react-native/lib/RCTEventEmitter',
-    TextInputState: 'react-native/lib/TextInputState',
-    UIManager: 'react-native/lib/UIManager',
-    UIManagerStatTracker: 'react-native/lib/UIManagerStatTracker',
-    View: 'react-native/lib/View',
-  }
-);
+const srcsToFmt = ['tools/**/*.ts', 'modules/@angular/**/*.ts'];
 
-var errorCodeOpts = {
-  errorMapFilePath: 'scripts/error-codes/codes.json',
-};
-
-var babelOpts = {
-  plugins: [
-    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
-    [babelPluginModules, {map: moduleMap}],
-  ],
-};
-
-gulp.task('react:clean', function() {
-  return del([paths.react.lib]);
+gulp.task('format:enforce', () => {
+  const format = require('gulp-clang-format');
+  const clangFormat = require('clang-format');
+  return gulp.src(srcsToFmt).pipe(
+    format.checkFormat('file', clangFormat, {verbose: true, fail: true}));
 });
 
-gulp.task('react:modules', function() {
-  return gulp
-    .src(paths.react.src)
-    .pipe(babel(babelOpts))
-    .pipe(flatten())
-    .pipe(gulp.dest(paths.react.lib));
+gulp.task('format', () => {
+  const format = require('gulp-clang-format');
+  const clangFormat = require('clang-format');
+  return gulp.src(srcsToFmt, { base: '.' }).pipe(
+    format.format('file', clangFormat)).pipe(gulp.dest('.'));
 });
 
-gulp.task('react:extract-errors', function() {
-  return gulp
-    .src(paths.react.src)
-    .pipe(extractErrors(errorCodeOpts));
+gulp.task('lint', ['format:enforce', 'tools:build'], () => {
+  const tslint = require('gulp-tslint');
+  // Built-in rules are at
+  // https://github.com/palantir/tslint#supported-rules
+  const tslintConfig = require('./tslint.json');
+  return gulp.src(['modules/@angular/**/*.ts', '!modules/@angular/*/test/**'])
+    .pipe(tslint({
+      tslint: require('tslint').default,
+      configuration: tslintConfig,
+      rulesDirectory: 'dist/tools/tslint'
+    }))
+    .pipe(tslint.report('prose', {emitError: true}));
 });
 
-gulp.task('default', ['react:modules']);
+gulp.task('tools:build', (done) => { tsc('tools/', done); });
+
+
+gulp.task('serve', () => {
+  let connect = require('gulp-connect');
+  let cors = require('cors');
+
+  connect.server({
+    root: `${__dirname}/dist`,
+    port: 8000,
+    livereload: false,
+    open: false,
+    middleware: (connect, opt) => [cors()]
+  });
+});
+
+
+function tsc(projectPath, done) {
+  let child_process = require('child_process');
+
+  child_process
+      .spawn(
+          `${__dirname}/node_modules/.bin/tsc`, ['-p', path.join(__dirname, projectPath)],
+          {stdio: 'inherit'})
+      .on('close', (errorCode) => done(errorCode));
+}

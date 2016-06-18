@@ -1,0 +1,38 @@
+name: angular2_benchmarks
+version: <%= packageJson.version %>
+authors:
+<%= Object.keys(packageJson.contributors).map(function(name) {
+  return '- '+name+' <'+packageJson.contributors[name]+'>';
+}).join('\n') %>
+description: Angular2 benchmarks
+homepage: <%= packageJson.homepage %>
+environment:
+  sdk: '>=1.10.0 <2.0.0'
+dependencies:
+  angular2: '^<%= packageJson.version %>'
+  browser: '^0.10.0'
+dependency_overrides:
+  angular2:
+    path: ../angular2
+transformers:
+- angular2/transform/codegen
+- angular2/transform/reflection_remover:
+    $include:
+        - web/src/compiler/compiler_benchmark.dart
+        - web/src/costs/index.dart
+        - web/src/di/di_benchmark.dart
+        - web/src/element_injector/element_injector_benchmark.dart
+        - web/src/largetable/largetable_benchmark.dart
+        - web/src/naive_infinite_scroll/index.dart
+        - web/src/static_tree/tree_benchmark.dart
+        - web/src/tree/tree_benchmark.dart
+        - web/src/page_load/page_load.dart
+- $dart2js:
+    $include: web/src/**
+    minify: false
+    commandLineOptions:
+    - --dump-info
+    - --trust-type-annotations
+    - --trust-primitives
+    - --show-package-warnings
+    - --fatal-warnings

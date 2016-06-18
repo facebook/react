@@ -1,0 +1,18 @@
+name: angular2_testing
+description: 'Helpers to run unit tests for angular2 components and injectables.'
+version: 0.0.0
+environment:
+  sdk: '>=1.10.0 <2.0.0'
+dependencies:
+# This will be overridden by scripts/publish/pubspec_cleaner
+# to point to the current version of Angular2.
+  angular2:
+    path: '../angular2'
+dev_dependencies:
+  test: '^0.12.6'
+  quiver: '^0.21.4'
+transformers:
+# Allows testing with `pub serve`
+# See https://github.com/dart-lang/test#testing-with-barback
+- test/pub_serve:
+    $include: test/**_test.dart
