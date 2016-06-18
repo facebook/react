@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule isTextInputElement
+ * @flow
  */
 
 'use strict';
@@ -14,7 +15,7 @@
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
-var supportedInputTypes = {
+var supportedInputTypes: {[key: string]: true | void} = {
   'color': true,
   'date': true,
   'datetime': true,
@@ -32,12 +33,18 @@ var supportedInputTypes = {
   'week': true,
 };
 
-function isTextInputElement(elem) {
+function isTextInputElement(elem: ?HTMLElement): bool {
   var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-  return nodeName && (
-    (nodeName === 'input' && supportedInputTypes[elem.type]) ||
-    nodeName === 'textarea'
-  );
+
+  if (nodeName === 'input') {
+    return !!supportedInputTypes[((elem: any): HTMLInputElement).type];
+  }
+
+  if (nodeName === 'textarea') {
+    return true;
+  }
+
+  return false;
 }
 
 module.exports = isTextInputElement;
