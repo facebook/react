@@ -1,0 +1,14 @@
+<script src="es6-shim.js"></script>
+<script src="zone.js"></script>
+<script src="long-stack-trace-zone.js"></script>
+<script src="angular.js"></script>
+<script src="url_params_to_form.js"></script>
+<script src="system.src.js"></script>
+<script>
+  System.config({
+    baseURL: '/',
+    defaultJSExtensions: true
+  });
+  var filename = '@@PATH/@@FILENAME';
+  System.import(filename).then(function(m) { m.main && m.main(); }, console.error.bind(console));
+</script>

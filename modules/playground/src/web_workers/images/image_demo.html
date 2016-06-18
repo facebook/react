@@ -1,0 +1,33 @@
+<nav class="blue">
+  <div class="container">
+    <div class="nav-wrapper">
+      <a class="brand-logo">Angular 2 Image Demo</a>
+    </div>
+  </div>
+</nav>
+<section id="main" class="container">
+  <div class="row">
+    <div *ngFor="let image of images" class="col s12 m2">
+      <div class="card">
+        <div class="card-image">
+          <img [src]="image.src" [class.grey]="image.filtering"/>
+          <div class="image-loader progress" [class.hidden]="!image.filtering">
+            <div class="indeterminate"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fixed-action-btn bottom" (click)="applyFilters()">
+    <a class="btn-floating btn-large blue darken-4" (click)="applyFilters()">
+      <i class="large material-icons" (click)="applyFilters()">invert_colors</i>
+    </a>
+  </div>
+
+  <div class="file-field">
+    <div class="btn blue darken-2">
+      <span>Select Images</span>
+      <input type="file" accept="image/bmp" multiple (change)="uploadFiles($event.target.files)" />
+    </div>
+  </div>
+</section>

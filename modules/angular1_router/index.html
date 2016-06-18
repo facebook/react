@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+<div ng-app="myApp" ng-controller="MyCtrl">
+
+</div>
+<script src="../../node_modules/angular/angular.js"></script>
+<script src="../../dist/angular_1_router.js"></script>
+<script>
+  angular.module('myApp', ['ngComponentRouter'])
+    .controller('MyCtrl', ['$rootRouter', function ($rootRouter) {
+      console.log($rootRouter);
+      $rootRouter.navigateByUrl('/')
+        .then(console.log.bind(console, 'resolve'), console.log.bind(console, 'reject'));
+    }]);
+</script>
+</body>
+</html>

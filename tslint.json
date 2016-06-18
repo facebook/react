@@ -1,0 +1,8 @@
+{
+    "rules": {
+      "requireInternalWithUnderscore": true,
+      "duplicateModuleImport": true,
+      "semicolon": true,
+      "variable-name": [true, "ban-keywords"]
+    }
+}

@@ -1,0 +1,35 @@
+name: angular2
+version: <%= packageJson.version %>
+authors:
+<%= Object.keys(packageJson.contributors).map(function(name) {
+  return '- '+name+' <'+packageJson.contributors[name]+'>';
+}).join('\n') %>
+description: Angular 2 for Dart - a web framework for modern web apps
+homepage: <%= packageJson.homepage %>
+environment:
+  sdk: '>=1.10.0 <2.0.0'
+dependencies:
+  analyzer: '>=0.24.4 <0.28.0'
+  barback: '^0.15.2+2'
+  dart_style: '>=0.1.8 <0.3.0'
+  glob: '^1.0.0'
+  html: '^0.12.0'
+  intl: '^0.12.4'
+  logging: '>=0.9.0 <0.12.0'
+  observe: '^0.13.1'
+  path: '^1.0.0'
+  protobuf: '0.5.1'
+  source_span: '^1.0.0'
+  stack_trace: '^1.1.1'
+  build: '>=0.0.1'
+dev_dependencies:
+  transformer_test: '^0.2.0'
+  guinness: '^0.1.18'
+  guinness2: '0.0.5'
+  quiver: '^0.21.4'
+  test: '^0.12.6'
+transformers:
+- angular2/transform/codegen
+- $dart2js:
+    commandLineOptions:
+    - --show-package-warnings

@@ -1,3 +1,0 @@
-@mixin user-select($arg: none) {
-  @include prefixer(user-select, $arg, webkit moz ms spec);
-}

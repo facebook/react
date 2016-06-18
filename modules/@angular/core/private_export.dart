@@ -1,0 +1,17 @@
+export './src/core/change_detection/constants.dart' show isDefaultChangeDetectionStrategy, ChangeDetectorState, CHANGE_DETECTION_STRATEGY_VALUES;
+export './src/core/di/reflective_provider.dart' show constructDependencies;
+export './src/core/metadata/lifecycle_hooks.dart' show LifecycleHooks, LIFECYCLE_HOOKS_VALUES;
+export './src/core/reflection/reflector_reader.dart' show ReflectorReader;
+export './src/core/linker/component_resolver.dart' show ReflectorComponentResolver;
+export './src/core/linker/element.dart' show AppElement;
+export './src/core/linker/view.dart' show AppView;
+export './src/core/linker/view_type.dart' show ViewType;
+export './src/core/linker/view_utils.dart' show MAX_INTERPOLATION_VALUES, checkBinding, flattenNestedViewRenderNodes, interpolate, ViewUtils;
+export './src/core/metadata/view.dart' show VIEW_ENCAPSULATION_VALUES;
+export './src/core/linker/debug_context.dart' show DebugContext, StaticNodeDebugInfo;
+export './src/core/change_detection/change_detection_util.dart' show devModeEqual, uninitialized, ValueUnwrapper;
+export './src/core/render/api.dart' show RenderDebugInfo;
+export './src/core/linker/template_ref.dart' show TemplateRef_;
+export './src/core/profile/wtf_init.dart' show wtfInit;
+export './src/core/reflection/reflection_capabilities.dart' show ReflectionCapabilities;
+export './src/util/decorators' show makeDecorator;

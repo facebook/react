@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var fse = require('fs-extra');
+var path = require('path');
+
+var NPM_SHRINKWRAP_FILE = 'npm-shrinkwrap.json';
+var NPM_SHRINKWRAP_CACHED_FILE = 'node_modules/.npm-shrinkwrap.cached.json';
+var PROJECT_ROOT = path.join(__dirname, '../../');
+
+process.chdir(PROJECT_ROOT);
+
+if (fs.existsSync(NPM_SHRINKWRAP_FILE)) {
+  console.log('copying shrinkwrap fingerprint to', NPM_SHRINKWRAP_CACHED_FILE);
+  fse.copySync(NPM_SHRINKWRAP_FILE, NPM_SHRINKWRAP_CACHED_FILE);
+} else {
+  console.warn(`${NPM_SHRINKWRAP_FILE} not found. Copy operation will be skipped.`);
+}

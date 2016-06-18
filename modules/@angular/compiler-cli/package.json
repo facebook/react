@@ -1,0 +1,39 @@
+{
+  "name": "@angular/compiler-cli",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Execute angular2 template compiler in nodejs.",
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "bin": {
+    "ngc": "./src/main.js",
+    "ng-xi18n": "./src/extract_i18n.js"
+  },
+  "dependencies": {
+    "@angular/tsc-wrapped": "^0.1.0",
+    "reflect-metadata": "^0.1.2",
+    "parse5": "1.3.2"
+  },
+  "peerDependencies": {
+    "typescript": "^1.9.0-dev",
+    "@angular/compiler": "0.0.0-PLACEHOLDER",
+    "@angular/platform-server": "0.0.0-PLACEHOLDER",
+    "@angular/core": "0.0.0-PLACEHOLDER"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/angular/angular.git"
+  },
+  "keywords": [
+    "angular",
+    "compiler"
+  ],
+  "contributors": [
+    "Tobias Bosch <tbosch@google.com> (https://angular.io/)",
+    "Alex Eagle <alexeagle@google.com> (https://angular.io/)"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/angular/angular/issues"
+  },
+  "homepage": "https://github.com/angular/angular/tree/master/tools/compiler-cli"
+}

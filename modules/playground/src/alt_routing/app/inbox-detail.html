@@ -1,0 +1,24 @@
+<div>
+  <h2 class="page-title">{{ record.subject }}</h2>
+
+  <ul>
+    <li id="record-id">ID: {{ record.id }}</li>
+    <li id="record-name">Name: {{ record.firstName }} {{ record.lastName }}</li>
+    <li id="record-email">Email: {{ record.email }}</li>
+    <li id="record-date">Date: {{ record.date }}</li>
+  </ul>
+
+  <p>
+    {{ record.content }}
+  </p>
+
+  <span class="btn medium primary">
+    <a [routerLink]="record.draft ? ['/drafts'] : ['/']" class="back-button">Back</a>
+  </span>
+
+  <hr />
+
+  <a [routerLink]="['/inbox', { sort: 'date'} ]" class="sort-button">
+    View Latest Messages
+  </a>
+</div>

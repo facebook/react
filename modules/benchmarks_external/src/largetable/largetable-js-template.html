@@ -1,0 +1,58 @@
+<ng-switch on="benchmarkType">
+  <baseline-binding-table ng-switch-when="baselineBinding">
+  </baseline-binding-table>
+  <baseline-interpolation-table ng-switch-when="baselineInterpolation">
+  </baseline-interpolation-table>
+  <div ng-switch-when="ngBind">
+    <h2>baseline binding</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row">
+        <span ng-bind="column.i"></span>:<span ng-bind="column.j"></span>|
+      </span>
+    </div>
+  </div>
+  <div ng-switch-when="ngBindOnce">
+    <h2>baseline binding once</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in ::row">
+        <span ng-bind="::column.i"></span>:<span ng-bind="::column.j"></span>|
+      </span>
+    </div>
+  </div>
+  <div ng-switch-when="interpolation">
+    <h2>baseline interpolation</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row">{{column.i}}:{{column.j}}|</span>
+    </div>
+  </div>
+  <div ng-switch-when="interpolationAttr">
+    <h2>attribute interpolation</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row" i="{{column.i}}" j="{{column.j}}">i,j attrs</span>
+    </div>
+  </div>
+  <div ng-switch-when="ngBindFn">
+    <h2>bindings with functions</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row"><span ng-bind="column.iFn()"></span>:<span ng-bind="column.jFn()"></span>|</span>
+    </div>
+  </div>
+  <div ng-switch-when="interpolationFn">
+    <h2>interpolation with functions</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row">{{column.iFn()}}:{{column.jFn()}}|</span>
+    </div>
+  </div>
+  <div ng-switch-when="ngBindFilter">
+    <h2>bindings with filter</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row"><span ng-bind="column.i | noop"></span>:<span ng-bind="column.j | noop"></span>|</span>
+    </div>
+  </div>
+  <div ng-switch-when="interpolationFilter">
+    <h2>interpolation with filter</h2>
+    <div ng-repeat="row in data">
+      <span ng-repeat="column in row">{{column.i | noop}}:{{column.j | noop}}|</span>
+    </div>
+  </div>
+</ng-switch>

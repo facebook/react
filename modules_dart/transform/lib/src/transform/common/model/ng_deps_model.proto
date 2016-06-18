@@ -1,0 +1,27 @@
+syntax = "proto2";
+
+import "import_export_model.proto";
+import "reflection_info_model.proto";
+
+package angular2.src.transform.common.model.proto;
+
+message NgDepsModel {
+  optional string library_uri = 1;
+
+  repeated string part_uris = 2;
+
+  repeated ImportModel imports = 3;
+
+  repeated ExportModel exports = 4;
+
+  // All classes in `source_file` marked with @Injectable or a known subclass.
+  repeated ReflectionInfoModel reflectables = 5;
+
+  // The basename of the file from which the ng_deps were generated.
+  // Example: component.dart
+  optional string source_file = 6;
+
+  // Imports of the generated files associated with the declared `imports`
+  // and `exports` of the source file.
+  repeated ImportModel dep_imports = 7;
+}

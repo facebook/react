@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <title>Angular Upgrade 2.0</title>
+  <style>
+    user {
+      background-color: lightyellow;
+      border: 2px solid darkorange;
+      display: inline-block;
+      width: 150px;
+      padding: 1em;
+    }
+  </style>
+<body>
+  <upgrade-app ng-controller="Index" [user]="name" (reset)="name=''">
+    Your name: <input ngModel="name">
+    <hr>
+    <span class="greeting">Greetings from {{name}}!</span>
+  </upgrade-app>
+  <script src="/all/playground/vendor/angular.js"></script>
+  <script src="../bootstrap.js"></script>
+</body>
+</html>

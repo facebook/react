@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+<link rel="icon" href="data:;base64,=">
+</head>
+<body>
+
+<h2>Params</h2>
+
+<div>
+  <form>
+    <div>
+      Use Viewcache:
+      <label>
+      Yes<input type="radio" name="viewcache" placeholder="use viewcache" value="true" checked="checked">
+      </label>
+      <label>
+      No<input type="radio" name="viewcache" placeholder="use viewcache" value="false">
+      </label>
+    </div>
+
+    <div>
+      rows:
+      <input type="number" name="rows" value="100">
+      columns:
+      <input type="number" name="columns" value="20">
+    </div>
+
+    <div>
+      baseline (to be used in conjuction with Baseline:createDom &amp; Baseline:destroyDom buttons):
+      <input type="radio"
+             name="benchmarkType"
+             value="baseline"
+             id="baseline">
+    </div>
+    <div>
+      ngBind (not implemented):
+      <input type="radio"
+             name="benchmarkType"
+             value="ngBind"
+             id="ngBind">
+    </div>
+    <div>
+      ngBindOnce (not implemented):
+      <input type="radio"
+             name="benchmarkType"
+             value="ngBindOnce"
+             id="ngBindOnce">
+    </div>
+    <div>
+      interpolation:
+      <input type="radio"
+             name="benchmarkType"
+             value="interpolation"
+             id="interpolation"
+             checked>
+    </div>
+    <div>
+      attribute interpolation:
+      <input type="radio"
+             name="benchmarkType"
+             value="interpolationAttr"
+             id="interpolationAttr">
+    </div>
+    <div>
+      ngBind + fnInvocation (not implemented):
+      <input type="radio"
+             name="benchmarkType"
+             value="ngBindFn"
+             id="ngBindFn">
+    </div>
+    <div>
+      interpolation + fnInvocation:
+      <input type="radio"
+             name="benchmarkType"
+             value="interpolationFn"
+             id="interpolationFn">
+    </div>
+    <div>
+      ngBind + filter (not implemented):
+      <input type="radio"
+             name="benchmarkType"
+             value="ngBindFilter"
+             id="ngBindFilter">
+    </div>
+    <div>
+      interpolation + filter (not implemented):
+      <input type="radio"
+             name="benchmarkType"
+             value="interpolationFilter"
+             id="interpolationFilter">
+    </div>
+    <button>Apply</button>
+  </form>
+</div>
+
+<h2>Angular2 largetable benchmark</h2>
+<p>
+<button id="ng2DestroyDom">destroyDom</button>
+<button id="ng2CreateDom">createDom</button>
+<button id="ng2UpdateDomProfile">profile updateDom</button>
+<button id="ng2CreateDomProfile">profile createDom</button>
+</p>
+
+<h2>Baseline largetable benchmark</h2>
+<p>
+<button id="baselineDestroyDom">destroyDom</button>
+<button id="baselineCreateDom">createDom</button>
+<button id="baselineUpdateDomProfile">profile updateDom</button>
+<button id="baselineCreateDomProfile">profile createDom</button>
+</p>
+
+<div>
+<app></app>
+</div>
+
+<div>
+<baseline></baseline>
+</div>
+
+$SCRIPTS$
+</body>
+</html>

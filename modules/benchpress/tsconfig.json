@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "emitDecoratorMetadata": true,
+        "declaration": true,
+        "module": "commonjs",
+        "rootDir": ".",
+        "sourceMap": true,
+        "sourceRoot": ".",
+        "target": "ES5",
+        "outDir": "../../dist/js/cjs"
+    }
+}

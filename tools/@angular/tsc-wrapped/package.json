@@ -1,0 +1,19 @@
+{
+  "name": "@angular/tsc-wrapped",
+  "version": "0.1.0",
+  "description": "Wraps the tsc CLI, allowing extensions.",
+  "homepage": "https://github.com/angular/angular/tree/master/tools/tsc-wrapped",
+  "bugs": "https://github.com/angular/angular/issues",
+  "contributors": [
+    "Alex Eagle <alexeagle@google.com>",
+    "Chuck Jazdzewski <chuckj@google.com>"
+  ],
+  "license": "MIT",
+  "repository": {"type":"git","url":"https://github.com/angular/angular.git"},
+  "dependencies": {
+    "tsickle": "0.1.6"
+  },
+  "peerDependencies": {
+    "typescript": "^1.9.0-dev"
+  }
+}

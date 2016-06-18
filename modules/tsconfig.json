@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../dist/all/",
+    "noImplicitAny": true,
+    "paths": {
+      "selenium-webdriver": ["../node_modules/@types/selenium-webdriver/index.d.ts"],
+      "rxjs/*": ["../node_modules/rxjs/*"],
+      "@angular/*": ["./@angular/*"],
+      "@angular/tsc-wrapped": ["../dist/tools/@angular/tsc-wrapped"]
+    },
+    "rootDir": ".",
+    "inlineSourceMap": true,
+    "lib": ["es6", "dom"],
+    "target": "es5"
+  },
+  "exclude": [
+    "angular1_router",
+    "angular2",
+    "benchmarks",
+    "benchmarks_external",
+    "benchpress",
+    "payload_tests",
+    "rollup-test",
+    "upgrade-ts2dart.d.ts",
+    "zone-ts2dart.d.ts",
+    "@angular/compiler-cli/integrationtest"
+  ]
+}

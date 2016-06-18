@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../../dist/all/@angular",
+    "paths": {
+      "@angular/core": ["../../dist/all/@angular/core/index.d.ts"],
+      "@angular/core/*": ["../../dist/all/@angular/core/*"],
+      "@angular/compiler/*": ["../../dist/all/@angular/compiler/*"]
+    },
+    "rootDir": "../../dist/all/@angular",
+    "sourceMap": true,
+    "sourceRoot": ".",
+    "lib": ["es6", "dom"],
+    "target": "es5"
+  },
+  "files": [
+    "../../node_modules/@types/node/index.d.ts",
+    "../../dist/all/@angular/compiler/test/output/output_emitter_codegen_typed.ts",
+    "../../dist/all/@angular/compiler/test/output/output_emitter_codegen_untyped.ts",
+    "../../dist/all/@angular/compiler/test/offline_compiler_codegen_untyped.ts",
+    "../../dist/all/@angular/compiler/test/offline_compiler_codegen_typed.ts"
+  ]
+}

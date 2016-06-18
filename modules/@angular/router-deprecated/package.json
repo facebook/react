@@ -1,0 +1,19 @@
+{
+  "name": "@angular/router-deprecated",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "",
+  "main": "index.js",
+  "jsnext:main": "esm/index.js",
+  "typins": "index.d.ts",
+  "author": "angular",
+  "license": "MIT",
+  "peerDependencies": {
+    "@angular/core": "0.0.0-PLACEHOLDER",
+    "@angular/common": "0.0.0-PLACEHOLDER",
+    "@angular/platform-browser": "0.0.0-PLACEHOLDER"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/angular/angular.git"
+  }
+}

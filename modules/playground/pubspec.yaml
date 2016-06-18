@@ -1,0 +1,82 @@
+name: playground
+environment:
+  sdk: '>=1.10.0 <2.0.0'
+dependencies:
+  observe: '^0.13.1'
+  angular2: '^<%= packageJson.version %>'
+  browser: '^0.10.0'
+dev_dependencies:
+  guinness2: '0.0.5'
+  benchpress:
+    path: ../benchpress
+dependency_overrides:
+  angular2:
+    path: ../angular2
+  matcher: '0.12.0+1'
+transformers:
+- angular2/transform/codegen:
+    platform_directives: 'package:angular2/src/common/directives.dart#CORE_DIRECTIVES'
+- angular2/transform/reflection_remover:
+    $include:
+        - web/src/animate/index.dart
+        - web/src/async/index.dart
+        - web/src/gestures/index.dart
+        - web/src/hash_routing/index.dart
+        - web/src/hello_world/index.dart
+        - web/src/key_events/index.dart
+        - web/src/model_driven_forms/index.dart
+        - web/src/observable_models/index.dart
+        - web/src/order_management/index.dart
+        - web/src/person_management/index.dart
+        - web/src/relative_assets/index.dart
+        - web/src/routing/index.dart
+        - web/src/alt_routing/index.dart
+        - web/src/sourcemap/index.dart
+        - web/src/svg/index.dart
+        - web/src/template_driven_forms/index.dart
+        - web/src/todo/index.dart
+        - web/src/web_workers/kitchen_sink/background_index.dart
+        - web/src/web_workers/kitchen_sink/index.dart
+        - web/src/web_workers/message_broker/background_index.dart
+        - web/src/web_workers/message_broker/index.dart
+        - web/src/web_workers/todo/background_index.dart
+        - web/src/web_workers/todo/index.dart
+        - web/src/web_workers/todo/server_index.dart
+        - web/src/web_workers/router/index.dart
+        - web/src/web_workers/router/background_index.dart
+        - web/src/web_workers/input/index.dart
+        - web/src/web_workers/input/background_index.dart
+        - web/src/zippy_component/index.dart
+- angular2/transform/deferred_rewriter:
+    # No playground apps use deferred imports, but in general
+    # all libraries with deferred imports should be included.
+    $include: []
+
+- $dart2js:
+    $include:
+        - web/src/**
+    $exclude:
+        # web worker code compiled separately; see below
+        - web/src/web_workers/**
+    minify: false
+    commandLineOptions:
+        - --show-package-warnings
+        - --trust-type-annotations
+        - --trust-primitives
+        - --enable-experimental-mirrors
+        - --fatal-warnings
+
+# TODO(yjbanov): cannot use --fatal-warnings on web-worker code due to
+#                dart2js bug https://github.com/dart-lang/sdk/issues/23875
+- $dart2js:
+    $include:
+        - web/src/web_workers/**
+    $exclude:
+        - web/src/web_workers/images/**
+        - web/src/web_workers/todo/server_index.dart
+    minify: false
+    commandLineOptions:
+        - --show-package-warnings
+        - --trust-type-annotations
+        - --trust-primitives
+        - --enable-experimental-mirrors

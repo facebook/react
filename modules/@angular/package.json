@@ -1,0 +1,17 @@
+{
+  "name": "angular2",
+  "version": "<%= packageJson.version %>",
+  "description": "Angular 2 - a web framework for modern web apps",
+  "homepage": "<%= packageJson.homepage %>",
+  "bugs": "<%= packageJson.bugs %>",
+  "contributors": <%= JSON.stringify(packageJson.contributors) %>,
+  "license": "<%= packageJson.license %>",
+  "repository": <%= JSON.stringify(packageJson.repository) %>,
+  "devDependencies": <%= JSON.stringify(packageJson.defaultDevDependencies) %>,
+  "peerDependencies": {
+    "es6-shim": "<%= packageJson.dependencies['es6-shim'] %>",
+    "reflect-metadata": "<%= packageJson.dependencies['reflect-metadata'] %>",
+    "rxjs": "<%= packageJson.dependencies['rxjs'] %>",
+    "zone.js": "<%= packageJson.dependencies['zone.js'] %>"
+  }
+}

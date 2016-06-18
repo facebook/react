@@ -1,0 +1,68 @@
+<section id="todoapp">
+
+  <header id="header">
+    <h1>todos</h1>
+    <input
+      id="new-todo"
+      placeholder="What needs to be done?"
+      [(ngModel)]="inputValue"
+      autofocus
+      #newtodo
+      (keyup.enter)="enterTodo()">
+  </header>
+
+  <section id="main">
+    <input id="toggle-all" type="checkbox" [checked]="isComplete" (click)="toggleAll($event)">
+    <label for="toggle-all">Mark all as complete</label>
+
+    <ul id="todo-list">
+
+      <li *ngFor="let todo of todoStore.list" [class.hidden]="hideActive && !todo.completed || hideCompleted && todo.completed">
+        <div class="view"
+            [class.hidden]="todoEdit == todo">
+
+          <input class="toggle" type="checkbox"
+                 (click)="completeMe(todo)"
+                 [checked]="todo.completed">
+
+          <label (dblclick)="editTodo(todo)">{{todo.title}}</label>
+          <button class="destroy" (click)="deleteMe(todo)"></button>
+
+        </div>
+
+        <div>
+
+          <input class="edit"
+            [class.visible]="todoEdit == todo"
+            [(ngModel)]="todo.editTitle"
+            (keyup)="doneEditing($event, todo)">
+
+        </div>
+      </li>
+    </ul>
+
+  </section>
+
+  <footer id="footer">
+    <span id="todo-count"></span>
+    <div [class.hidden]="true"></div>
+    <ul id="filters">
+      <li>
+        <a href="#/" [class.selected]="!hideActive && !hideCompleted" (click)="showAll()">All</a>
+      </li>
+      <li>
+        <a href="#/active" [class.selected]="hideCompleted" (click)="toggleActive()">Active</a>
+      </li>
+      <li>
+        <a href="#/completed" [class.selected]="hideActive" (click)="toggleCompleted()">Completed</a>
+      </li>
+    </ul>
+    <button id="clear-completed" (click)="clearCompleted()">Clear completed</button>
+  </footer>
+
+</section>
+
+<footer id="info">
+  <p>Double-click to edit a todo</p>
+  <p>Created by <a href="http://twitter.com/angularjs">The Angular Team</a></p>
+</footer>

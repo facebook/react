@@ -1,0 +1,4 @@
+<div [attr.array]="[0]" [attr.map]="{a:1}" title="translate me" i18n-title="meaning|desc">{{ctxProp}}</div>
+<form><input type="button" [(ngModel)]="ctxProp"/></form>
+<my-comp *ngIf="ctxBool"></my-comp>
+<div *ngFor="let x of ctxArr" [attr.value]="x"></div>

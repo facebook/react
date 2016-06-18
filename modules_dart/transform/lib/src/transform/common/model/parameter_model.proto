@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package angular2.src.transform.common.model.proto;
+
+message ParameterModel {
+  optional string type_name = 1;
+
+  optional string type_args = 2;
+
+  repeated string metadata = 3;
+
+  optional string param_name = 4;
+}

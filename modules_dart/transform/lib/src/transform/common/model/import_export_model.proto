@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+package angular2.src.transform.common.model.proto;
+
+// Note that the fields that are common between `ImportModel` and `ExportModel`
+// are stored at the same indexes, which allows them to be semi-wire-compatible
+// with one another. This will hopefully not be necessary to exploit, but on the
+// chance that it is it's easier to define this now.
+message ImportModel {
+  required string uri = 1;
+
+  repeated string show_combinators = 2;
+
+  repeated string hide_combinators = 3;
+
+  optional string prefix = 4;
+
+  optional bool is_deferred = 5;
+}
+
+// See message above about wire-compatiblity with `ImportModel`.
+message ExportModel {
+  required string uri = 1;
+
+  repeated string show_combinators = 2;
+
+  repeated string hide_combinators = 3;
+}

@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+
+// Usage:
+//
+// build analytics start|success|error|<exitCode> <actionCategory> <actionName>
+
+
+'use strict';
+
+
+var analytics = require('./analytics');
+var fs = require('fs');
+var path = require('path');
+
+var eventType = process.argv[2];
+var actionCategory = process.argv[3];
+var actionName = process.argv[4];
+
+
+if (!analytics[actionCategory + 'Start']) {
+  throw new Error('Unknown build-analytics actionCategory "' + actionCategory + '"');
+}
+
+var exitCode = Number.parseInt(eventType, 10);
+if (!Number.isNaN(exitCode)) {
+  eventType = (exitCode === 0) ? 'success' : 'error';
+}
+
+if (eventType != 'start' && eventType != 'success' && eventType != 'error') {
+  throw new Error('Unknown build-analytics eventType "' + eventType + '"');
+}
+
+
+var startTimestampFilePath = path.resolve(path.join(__dirname, '..', '..', 'tmp', 'analytics', actionCategory + '-' + actionName));
+var analyticsDirPath = path.dirname(startTimestampFilePath);
+var tmpDirPath = path.dirname(analyticsDirPath);
+
+
+if (!fs.existsSync(tmpDirPath)) {
+  fs.mkdirSync(tmpDirPath);
+}
+if (!fs.existsSync(analyticsDirPath)) {
+  fs.mkdirSync(analyticsDirPath);
+}
+
+
+switch (eventType) {
+  case 'start':
+    analytics[actionCategory + 'Start'](actionName);
+    fs.writeFileSync(startTimestampFilePath, Date.now(), 'utf-8');
+    break;
+  case 'success':
+    try {
+      var startTime = fs.readFileSync(startTimestampFilePath, 'utf-8');
+      analytics[actionCategory + 'Success'](actionName, Date.now() - startTime);
+      fs.unlinkSync(startTimestampFilePath);
+    } catch(e) {
+      console.log('No start timestamp file "' + startTimestampFilePath + '" found, skipping analytics.');
+    }
+    break;
+  case 'error':
+    var startTime = fs.readFileSync(startTimestampFilePath, 'utf-8');
+    analytics[actionCategory + 'Error'](actionName, Date.now() - startTime);
+    fs.unlinkSync(startTimestampFilePath);
+}

@@ -1,0 +1,57 @@
+body {
+  background:#eee;
+  color:black;
+}
+
+.inbox-list,
+.inbox-list li {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.inbox-list a {
+  padding:5px;
+  display:block;
+}
+
+inbox, drafts, inbox-side-menu {
+  display:block;
+}
+
+inbox-side-menu .link {
+  display:block;
+  text-align:center;
+  padding:1em;
+}
+
+inbox-side-menu .link.active {
+  background:white;
+}
+
+inbox-side-menu .link:hover {
+  background:#eee;
+}
+
+inbox-side-menu {
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:200px;
+  background:#ddd;
+}
+
+inbox-side-menu a {
+  display: block;
+}
+
+inbox, drafts, inbox-detail {
+  padding:1em;
+  margin-left:200px;
+}
+
+inbox-detail {
+  display:block;
+  margin-left:200px;
+}

@@ -1,0 +1,13 @@
+<div>
+    <div id="scrollDiv"
+         ng-style="scrollDivStyle"
+         ng-scroll="onScroll()">
+        <div ng-style="paddingStyle"></div>
+        <div ng-style="innerStyle">
+            <scroll-item
+                ng-repeat="item in visibleItems"
+                offering="item">
+            </scroll-item>
+        </div>
+    </div>
+</div>

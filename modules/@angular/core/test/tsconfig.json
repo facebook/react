@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../../../../dist/packages-test/core/",
+    "paths": {
+      "rxjs/*": ["../../../../node_modules/rxjs/*"],
+      "@angular/*": ["../../../../dist/packages-dist/*"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "sourceRoot": ".",
+    "target": "es5"
+  }
+}

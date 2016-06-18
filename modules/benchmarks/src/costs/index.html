@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<body>
+
+<h2>Params</h2>
+<form>
+  Size:
+  <input type="number" name="size" placeholder="size" value="100">
+  <br>
+  <button>Apply</button>
+</form>
+
+<h2>Benchmarks</h2>
+<button id="reset">Reset</button>
+<table>
+<tr>
+  <td>Baseline (plain components)</td>
+  <td><button id="createPlainComponents">Run</button></td>
+</tr>
+<tr>
+  <td>Cost of decorators</td>
+  <td><button id="createComponentsWithDirectives">Run</button></td>
+</tr>
+<tr>
+  <td>Cost of dynamic components</td>
+  <td><button id="createDynamicComponents">Run</button></td>
+</tr>
+</table>
+
+<app></app>
+
+$SCRIPTS$
+</body>
+</html>

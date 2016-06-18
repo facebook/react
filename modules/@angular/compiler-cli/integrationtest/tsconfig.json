@@ -1,0 +1,19 @@
+{
+    "angularCompilerOptions": {
+      // For TypeScript 1.8, we have to lay out generated files
+      // in the same source directory with your code.
+      "genDir": ".",
+      "debug": true
+    },
+
+    "compilerOptions": {
+        "target": "es5",
+        "experimentalDecorators": true,
+        "noImplicitAny": true,
+        "moduleResolution": "node",
+        "rootDir": "",
+        "declaration": true,
+        "lib": ["es6", "dom"],
+        "baseUrl": "."
+    }
+}

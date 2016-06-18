@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "stripInternal": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "../../../dist/packages-dist/compiler/",
+    "paths": {
+      "@angular/core": ["../../../dist/packages-dist/core"],
+      "@angular/core/testing": ["../../../dist/packages-dist/core/testing"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "inlineSources": true,
+    "lib": ["es6", "dom"],
+    "target": "es5"
+  },
+  "files": [
+    "index.ts",
+    "testing.ts",
+    "../../../node_modules/zone.js/dist/zone.js.d.ts"
+  ]
+}

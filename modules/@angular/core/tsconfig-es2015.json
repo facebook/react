@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "stripInternal": true,
+    "experimentalDecorators": true,
+    "module": "es2015",
+    "moduleResolution": "node",
+    "outDir": "../../../dist/packages-dist/core/esm",
+    "paths": {
+      "rxjs/*": ["../../../node_modules/rxjs/*"]
+    },
+    "rootDir": ".",
+    "sourceMap": true,
+    "inlineSources": true,
+    "target": "es2015"
+  },
+  "files": [
+    "index.ts",
+    "testing.ts",
+    "../../../node_modules/zone.js/dist/zone.js.d.ts"
+  ]
+}

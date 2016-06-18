@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "system",
+    "moduleResolution": "node",
+    "outDir": "./dist/",
+    "rootDir": ".",
+    "sourceMap": true,
+    "sourceRoot": ".",
+    "target": "es5"
+  },
+  "files": [
+    "hello_world.ts",
+    "../@angular/typings/es6-collections/es6-collections.d.ts",
+    "../@angular/typings/es6-promise/es6-promise.d.ts"
+  ]
+}

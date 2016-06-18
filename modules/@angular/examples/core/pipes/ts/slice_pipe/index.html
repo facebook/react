@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <title>SlicePipe Example</title>
+  <base href="/">
+
+  <script src="http://cdn.rawgit.com/google/traceur-compiler/90da568c7aa8e53ea362db1fc211fbb4f65b5e94/bin/traceur-runtime.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/systemjs/0.18.4/system.js"></script>
+  <script>System.config({ baseURL: '/', defaultJSExtensions: true});</script>
+  <script src="/bundle/angular2.dev.js"></script>
+  <script src="/bundle/router.dev.js"></script>
+</head>
+<body>
+<example-app>
+  Loading...
+</example-app>
+<script>
+  var filename = '@angular/examples/core/pipes/ts/slice_pipe/slice_pipe_example';
+  System.import(filename).then(function(m) {
+    m.main();
+  }, console.error.bind(console));
+</script>
+</body>
+</html>

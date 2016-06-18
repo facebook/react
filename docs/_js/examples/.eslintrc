@@ -1,7 +1,0 @@
----
-rules:
-  block-scoped-var: 0
-  no-undef: 0
-  strict: 0
-  react/react-in-jsx-scope: 0
-  react/jsx-no-undef: 0

@@ -1,28 +1,49 @@
 .DS_STORE
+
+# Don’t commit the following directories created by pub.
+packages
+pubspec.lock
+.pub
+.packages
+
+/dist/
+.buildlog
 node_modules
-*~
-*.pyc
-static
-.grunt
-_SpecRunner.html
-__benchmarks__
-build/
-coverage/
-.module-cache
-*.gem
-docs/.bundle
-docs/code
-docs/_site
-docs/.sass-cache
-docs/js/*
-docs/downloads
-docs/vendor/bundle
-examples/shared/*.js
-test/the-files-to-test.generated.js
-*.log*
-chrome-user-data
-*.sublime-project
-*.sublime-workspace
-.idea
-*.iml
+bower_components
+
+# Or broccoli working directory
+tmp
+
+# Or the files created by dart2js.
+*.dart.js
+*.dart.precompiled.js
+*.js_
+*.js.deps
+*.js.map
+
+# Include when developing application packages.
+pubspec.lock
+.c9
+.idea/
+.settings/
+*.swo
+modules/.settings
 .vscode
+modules/.vscode
+
+# Don't check in secret files
+*secret.js
+
+# Ignore npm debug log
+npm-debug.log
+
+/docs/bower_components/
+
+# build-analytics
+.build-analytics
+
+# built dart payload tests
+/modules_dart/payload/**/build
+
+# rollup-test output
+/modules/rollup-test/dist/
