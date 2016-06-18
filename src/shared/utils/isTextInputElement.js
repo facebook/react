@@ -32,12 +32,20 @@ var supportedInputTypes = {
   'week': true,
 };
 
-function isTextInputElement(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-  return nodeName && (
-    (nodeName === 'input' && supportedInputTypes[elem.type]) ||
-    nodeName === 'textarea'
-  );
+function isTextInputElement(elem: ?HTMLElement): bool {
+  if (!elem) {
+    return false;
+  }
+
+  if (elem.nodeName === 'INPUT') {
+    return !!supportedInputTypes[(elem: HTMLInputElement).type];
+  }
+
+  if (elem.nodeName === 'TEXTAREA') {
+    return true;
+  }
+
+  return false;
 }
 
 module.exports = isTextInputElement;
