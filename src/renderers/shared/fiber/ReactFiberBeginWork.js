@@ -31,6 +31,7 @@ var {
   NoWork,
   OffscreenPriority,
 } = require('ReactPriorityLevel');
+var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
 
 function reconcileChildren(current, workInProgress, nextChildren) {
   const priority = workInProgress.pendingWorkPriority;
@@ -145,23 +146,34 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     // and children from that node.
     workInProgress.memoizedProps = workInProgress.pendingProps;
     workInProgress.output = current.output;
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    workInProgress.pendingProps = null;
     workInProgress.pendingWorkPriority = NoWork;
+    workInProgress.stateNode = current.stateNode;
     if (current.child) {
+      // If we bail out but still has work with the current priority in this
+      // subtree, we need to go find it right now. If we don't, we won't flush
+      // it until the next tick.
       workInProgress.child = current.child;
       reuseChildren(workInProgress, workInProgress.child);
+      if (workInProgress.pendingWorkPriority <= priorityLevel) {
+        // TODO: This passes the current node and reads the priority level and
+        // pending props from that. We want it to read our priority level and
+        // pending props from the work in progress. Needs restructuring.
+        return findNextUnitOfWorkAtPriority(workInProgress.alternate, priorityLevel);
+      } else {
+        return null;
+      }
     } else {
       workInProgress.child = null;
+      return null;
     }
-    workInProgress.stateNode = current.stateNode;
-    return null;
   }
-  if (workInProgress.pendingProps === workInProgress.memoizedProps) {
+  // if (workInProgress.pendingProps === workInProgress.memoizedProps) {
     // In a ping-pong scenario, this version could actually contain the
-    // old props. In that case, we can just bail out.
-    // TODO: I don't yet quite understand what should happen on the
-    // reused node here.
-    return null;
-  }
+    // old props. In that case, we should be able to just bail out but I
+    // don't yet quite understand what should happen on the reused node here.
+  // }
   switch (workInProgress.tag) {
     case IndeterminateComponent:
       mountIndeterminateComponent(current, workInProgress);
