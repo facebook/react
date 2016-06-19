@@ -157,6 +157,10 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
 
+      // TODO: If workInProgress returns null but still has work with the
+      // current priority in its subtree, we need to go find it right now.
+      // If we don't, we won't flush it until the next tick.
+
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
@@ -192,6 +196,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
+        console.log('----- COMPLETED with remaining work:', workInProgress.pendingWorkPriority);
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't

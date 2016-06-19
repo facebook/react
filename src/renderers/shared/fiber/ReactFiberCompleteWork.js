@@ -107,6 +107,7 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
     case HostContainer:
       return null;
     case HostComponent:
+      transferOutput(workInProgress.child, workInProgress);
       console.log('/host component', workInProgress.type);
       return null;
     case CoroutineComponent:
