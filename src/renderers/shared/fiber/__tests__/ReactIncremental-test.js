@@ -281,6 +281,76 @@ describe('ReactIncremental', function() {
     // Flush the rest to make sure that the bailout didn't block this work.
     ReactNoop.flush();
     expect(ops).toEqual(['Middle']);
+  });
+
+  it('can resume work in a bailed subtree within one pass', function() {
+
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    function Tester() {
+      // This component is just here to ensure that the bail out is
+      // in fact in effect in the expected place for this test.
+      ops.push('Tester');
+      return <div />;
+    }
+
+    function Middle(props) {
+      ops.push('Middle');
+      return <span>{props.children}</span>;
+    }
+
+    var middleContent = (
+      <aaa>
+        <Tester />
+        <bbb hidden={true}>
+          <ccc>
+            <Middle>Hi</Middle>
+          </ccc>
+        </bbb>
+      </aaa>
+    );
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div hidden={props.text === 'bar'}>
+          <Bar>{props.text}</Bar>
+          {middleContent}
+          <Bar>{props.text}</Bar>
+        </div>
+      );
+    }
+
+    // Init
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flushLowPri(52);
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Tester', 'Bar']);
+
+    ops = [];
+
+    // Make a quick update which will create a low pri tree on top of the
+    // already low pri tree.
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flushLowPri(15);
+
+    expect(ops).toEqual(['Foo']);
+
+    ops = [];
+
+    // At this point, middle will bail out but it has not yet fully rendered.
+    // Since that is the same priority as its parent tree. This should render
+    // as a single batch. Therefore, it is correct that Middle should be in the
+    // middle. If it occurs after the two "Bar" components then it was flushed
+    // after them which is not correct.
+    ReactNoop.flush();
+    expect(ops).toEqual(['Bar', 'Middle', 'Bar']);
 
   });
+
 });

@@ -13,13 +13,13 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 
-var ReactFiber = require('ReactFiber');
+var { cloneFiber } = require('ReactFiber');
 var { beginWork } = require('ReactFiberBeginWork');
 var { completeWork } = require('ReactFiberCompleteWork');
+var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
 
 var {
   NoWork,
@@ -42,77 +42,6 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
   let nextScheduledRoot : ?FiberRoot = null;
   let lastScheduledRoot : ?FiberRoot = null;
 
-  function cloneSiblings(current : Fiber, workInProgress : Fiber, parent : Fiber) {
-    while (current.sibling) {
-      current = current.sibling;
-      workInProgress = workInProgress.sibling = ReactFiber.cloneFiber(
-        current,
-        current.pendingWorkPriority
-      );
-      workInProgress.parent = parent;
-    }
-    workInProgress.sibling = null;
-  }
-
-  function findNextUnitOfWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) : ?Fiber {
-    let current = root.current;
-    ReactFiber.cloneFiber(current, current.pendingWorkPriority);
-    while (current) {
-      if (current.pendingWorkPriority !== 0 &&
-          current.pendingWorkPriority <= priorityLevel) {
-        // This node has work to do that fits our priority level criteria.
-        if (current.pendingProps !== null) {
-          // We found some work to do. We need to return the "work in progress"
-          // of this node which will be the alternate.
-          const workInProgress = current.alternate;
-          if (!workInProgress) {
-            throw new Error('Should have wip now');
-          }
-          workInProgress.pendingProps = current.pendingProps;
-          return workInProgress;
-        }
-        // If we have a child let's see if any of our children has work to do.
-        // Only bother doing this at all if the current priority level matches
-        // because it is the highest priority for the whole subtree.
-        // TODO: Coroutines can have work in their stateNode which is another
-        // type of child that needs to be searched for work.
-        if (current.child) {
-          // Ensure we have a work in progress copy to backtrack through.
-          let currentChild = current.child;
-          let workInProgress = current.alternate;
-          if (!workInProgress) {
-            throw new Error('Should have wip now');
-          }
-          workInProgress.pendingWorkPriority = current.pendingWorkPriority;
-          workInProgress.child = ReactFiber.cloneFiber(currentChild, NoWork);
-          workInProgress.child.parent = workInProgress;
-          cloneSiblings(currentChild, workInProgress.child, workInProgress);
-          current = current.child;
-          continue;
-        }
-        // If we match the priority but has no child and no work to do,
-        // then we can safely reset the flag.
-        current.pendingWorkPriority = NoWork;
-      }
-      while (!current.sibling) {
-        // TODO: Stop using parent here. See below.
-        // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-        current = current.parent;
-        if (!current) {
-          return null;
-        }
-        if (current.pendingWorkPriority <= priorityLevel) {
-          // If this subtree had work left to do, we would have returned it by
-          // now. This could happen if a child with pending work gets cleaned up
-          // but we don't clear the flag then. It is safe to reset it now.
-          current.pendingWorkPriority = NoWork;
-        }
-      }
-      current = current.sibling;
-    }
-    return null;
-  }
-
   function findNextUnitOfWork() {
     // Clear out roots with no more work on them.
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
@@ -126,19 +55,20 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
     }
     let root = nextScheduledRoot;
     while (root) {
+      cloneFiber(root.current, root.current.pendingWorkPriority);
       // Find the highest possible priority work to do.
       // This loop is unrolled just to satisfy Flow's enum constraint.
       // We could make arbitrary many idle priority levels but having
       // too many just means flushing changes too often.
-      let work = findNextUnitOfWorkAtPriority(root, HighPriority);
+      let work = findNextUnitOfWorkAtPriority(root.current, HighPriority);
       if (work) {
         return work;
       }
-      work = findNextUnitOfWorkAtPriority(root, LowPriority);
+      work = findNextUnitOfWorkAtPriority(root.current, LowPriority);
       if (work) {
         return work;
       }
-      work = findNextUnitOfWorkAtPriority(root, OffscreenPriority);
+      work = findNextUnitOfWorkAtPriority(root.current, OffscreenPriority);
       if (work) {
         return work;
       }
@@ -156,10 +86,6 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
       // progress.
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
-
-      // TODO: If workInProgress returns null but still has work with the
-      // current priority in its subtree, we need to go find it right now.
-      // If we don't, we won't flush it until the next tick.
 
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
