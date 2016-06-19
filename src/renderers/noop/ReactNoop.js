@@ -19,6 +19,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var ReactFiberReconciler = require('ReactFiberReconciler');
 
 var scheduledHighPriCallback = null;
@@ -81,6 +83,35 @@ var ReactNoop = {
   flush() {
     ReactNoop.flushHighPri();
     ReactNoop.flushLowPri();
+  },
+
+  // Logs the current state of the tree.
+  dumpTree() {
+    if (!root) {
+      console.log('Nothing rendered yet.');
+      return;
+    }
+    let fiber : Fiber = (root.stateNode : any).current;
+    let depth = 0;
+    while (fiber) {
+      console.log('  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']');
+      if (fiber.child) {
+        fiber = fiber.child;
+        depth++;
+        continue;
+      } else {
+        while (!fiber.sibling) {
+          if (!fiber.parent) {
+            return;
+          } else {
+            // $FlowFixMe: This downcast is not safe. It is intentionally an error.
+            fiber = fiber.parent;
+          }
+          depth--;
+        }
+        fiber = fiber.sibling;
+      }
+    }
   },
 
 };
