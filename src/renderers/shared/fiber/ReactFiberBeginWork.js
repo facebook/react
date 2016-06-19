@@ -114,6 +114,26 @@ function updateCoroutineComponent(current, workInProgress) {
   workInProgress.pendingWorkPriority = NoWork;
 }
 
+function reuseChildren(newParent : Fiber, firstChild : Fiber) {
+  // TODO: None of this should be necessary if structured better.
+  // The parent pointer only needs to be updated when we walk into this child
+  // which we don't do right now. If the pending work priority indicated only
+  // if a child has work rather than if the node has work, then we would know
+  // by a single lookup on workInProgress rather than having to go through
+  // each child.
+  let child = firstChild;
+  do {
+    // Update the parent of the child to the newest fiber.
+    child.parent = newParent;
+    // Retain the priority if there's any work left to do in the children.
+    if (child.pendingWorkPriority !== NoWork &&
+        (newParent.pendingWorkPriority === NoWork ||
+        newParent.pendingWorkPriority > child.pendingWorkPriority)) {
+      newParent.pendingWorkPriority = child.pendingWorkPriority;
+    }
+  } while (child = child.sibling);
+}
+
 function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
   // The current, flushed, state of this fiber is the alternate.
   // Ideally nothing should rely on this, but relying on it here
@@ -123,18 +143,23 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     // The most likely scenario is that the previous copy of the tree contains
     // the same props as the new one. In that case, we can just copy the output
     // and children from that node.
+    workInProgress.memoizedProps = workInProgress.pendingProps;
     workInProgress.output = current.output;
-    workInProgress.child = current.child;
-    if (workInProgress.child) {
-      workInProgress.child.parent = workInProgress;
+    workInProgress.pendingWorkPriority = NoWork;
+    if (current.child) {
+      workInProgress.child = current.child;
+      reuseChildren(workInProgress, workInProgress.child);
+    } else {
+      workInProgress.child = null;
     }
     workInProgress.stateNode = current.stateNode;
-    workInProgress.pendingWorkPriority = NoWork;
     return null;
   }
   if (workInProgress.pendingProps === workInProgress.memoizedProps) {
     // In a ping-pong scenario, this version could actually contain the
     // old props. In that case, we can just bail out.
+    // TODO: I don't yet quite understand what should happen on the
+    // reused node here.
     return null;
   }
   switch (workInProgress.tag) {
