@@ -51,8 +51,6 @@ var SpecPolicy = keyMirror({
 });
 
 
-var injectedMixins = [];
-
 /**
  * Composite components are higher-level components that compose other composite
  * or host components.
@@ -796,10 +794,6 @@ var ReactClass = {
     Constructor.prototype.constructor = Constructor;
     Constructor.prototype.__reactAutoBindPairs = [];
 
-    injectedMixins.forEach(
-      mixSpecIntoComponent.bind(null, Constructor)
-    );
-
     mixSpecIntoComponent(Constructor, spec);
 
     // Initialize the defaultProps property after all mixins have been merged.
@@ -850,12 +844,6 @@ var ReactClass = {
     }
 
     return Constructor;
-  },
-
-  injection: {
-    injectMixin: function(mixin) {
-      injectedMixins.push(mixin);
-    },
   },
 
 };
