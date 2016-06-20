@@ -353,4 +353,88 @@ describe('ReactIncremental', function() {
 
   });
 
+  it('can reuse work done after being preempted', function() {
+
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    function Middle(props) {
+      ops.push('Middle');
+      return <span>{props.children}</span>;
+    }
+
+    var middleContent = (
+      <div>
+        <Middle>Hello</Middle>
+        <Bar>-</Bar>
+        <Middle>World</Middle>
+      </div>
+    );
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar>{props.text}</Bar>
+          <div hidden={true}>
+            {
+              props.step === 0 ?
+                <div>
+                  <Middle>Hi</Middle>
+                  <Bar>{props.text}</Bar>
+                  <Middle>There</Middle>
+                </div>
+                : middleContent
+            }
+          </div>
+        </div>
+      );
+    }
+
+    // Start rendering an update
+
+    // Init
+    ReactNoop.render(<Foo text="foo" step={0} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Middle', 'Bar', 'Middle']);
+
+    ops = [];
+
+    // Make a quick update which will schedule low priority work to
+    // update the middle content.
+    ReactNoop.render(<Foo text="bar" step={1} />);
+    ReactNoop.flushLowPri(30);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // The middle content is now pending rendering...
+    ReactNoop.flushLowPri(30);
+    expect(ops).toEqual(['Middle', 'Bar']);
+
+    ops = [];
+
+    // but we'll interupt it to render some higher priority work.
+    // The middle content will bailout so it remains untouched.
+    ReactNoop.render(<Foo text="foo" step={1} />);
+    ReactNoop.flushLowPri(30);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // Since we did nothing to the middle subtree during the interuption,
+    // we should be able to reuse the reconciliation work that we already did
+    // without restarting.
+    ReactNoop.flush();
+    expect(ops).toEqual(['Middle']);
+
+  });
+
 });

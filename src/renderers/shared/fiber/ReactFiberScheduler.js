@@ -90,6 +90,9 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
+      if (workInProgress.pendingWorkPriority === NoWork) {
+        workInProgress.hasWorkInProgress = false;
+      }
 
       // TODO: Stop using the parent for this purpose. I think this will break
       // down in edge cases because when nodes are reused during bailouts, we
