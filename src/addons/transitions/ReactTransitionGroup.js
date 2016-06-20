@@ -208,10 +208,6 @@ var ReactTransitionGroup = React.createClass({
   _handleDoneLeaving: function(key) {
     var component = this.refs[key];
 
-    if (component.componentDidLeave) {
-      component.componentDidLeave();
-    }
-
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping;
@@ -235,6 +231,10 @@ var ReactTransitionGroup = React.createClass({
         delete newChildren[key];
         return {children: newChildren};
       });
+    }
+
+    if (component.componentDidLeave) {
+      component.componentDidLeave();
     }
   },
 
