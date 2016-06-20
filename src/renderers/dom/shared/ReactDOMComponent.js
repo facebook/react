@@ -63,10 +63,6 @@ var RESERVED_PROPS = {
   suppressContentEditableWarning: null,
 };
 
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
-
-
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
     var owner = internalInstance._currentElement._owner || null;
@@ -222,9 +218,7 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
     );
   }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-  listenTo(registrationName, doc);
+  listenTo(registrationName, containerInfo._node);
   transaction.getReactMountReady().enqueue(putListener, {
     inst: inst,
     registrationName: registrationName,
