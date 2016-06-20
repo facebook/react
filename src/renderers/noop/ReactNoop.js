@@ -91,27 +91,16 @@ var ReactNoop = {
       console.log('Nothing rendered yet.');
       return;
     }
-    let fiber : Fiber = (root.stateNode : any).current;
-    let depth = 0;
-    while (fiber) {
+    function logFiber(fiber : Fiber, depth) {
       console.log('  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']');
       if (fiber.child) {
-        fiber = fiber.child;
-        depth++;
-        continue;
-      } else {
-        while (!fiber.sibling) {
-          if (!fiber.parent) {
-            return;
-          } else {
-            // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-            fiber = fiber.parent;
-          }
-          depth--;
-        }
-        fiber = fiber.sibling;
+        logFiber(fiber.child, depth + 1);
+      }
+      if (fiber.sibling) {
+        logFiber(fiber.sibling, depth);
       }
     }
+    logFiber((root.stateNode : any).current, 0);
   },
 
 };
