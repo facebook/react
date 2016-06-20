@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule adler32
+ * @flow
  */
 
 'use strict';
@@ -18,7 +19,7 @@ var MOD = 65521;
 // This implementation (a modified version of the SheetJS version) has been optimized
 // for our use case, at the expense of conforming to the adler32 specification
 // for non-ascii inputs.
-function adler32(data) {
+function adler32(data: string): number {
   var a = 1;
   var b = 0;
   var i = 0;
