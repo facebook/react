@@ -549,7 +549,7 @@ var CommentForm = React.createClass({
     var author = this.state.author.trim();
     var text = this.state.text.trim();
     if (!text || !author) {
-      return;
+      return false;
     }
     // TODO: send request to the server
     this.setState({author: '', text: ''});
