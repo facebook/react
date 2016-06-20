@@ -19,6 +19,11 @@ var ReactTestUtils;
 var WebComponents;
 
 describe('ReactMount', function() {
+
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(function() {
     jest.resetModuleRegistry();
 
@@ -178,9 +183,10 @@ describe('ReactMount', function() {
       ReactDOM.render(mySvg, container);
       ReactDOM.render(<centered/>, container);
       expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: ReactDOM.render(): Invalid component element. ' +
-        'Make sure the component starts with an upper-case letter.'
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: ReactDOM.render(): Invalid component element: `centered`. ' +
+        'Make sure the component starts with an upper-case letter.'+
+        '\n    in centered (at **)'
       );
     });
 

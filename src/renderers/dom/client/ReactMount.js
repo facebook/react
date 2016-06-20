@@ -25,7 +25,6 @@ var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
-var ReactDOMFactories = require('ReactDOMFactories');
 
 var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -469,14 +468,6 @@ var ReactMount = {
     var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
-      var validElement = typeof nextElement.type === 'string' ?
-      nextElement.type.match(/\-|\s+/) === null &&
-      document.createElement(nextElement.type) instanceof HTMLUnknownElement &&
-      !ReactDOMFactories.hasOwnProperty(nextElement.type) : false;
-
-      warning(!validElement, 'ReactDOM.render(): Invalid component element. ' +
-        'Make sure the component starts with an upper-case letter.');
-
       warning(
         !containerHasNonRootReactChild,
         'render(...): Replacing React-rendered children with a new root ' +
