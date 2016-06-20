@@ -169,11 +169,22 @@ function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
       return null;
     }
   }
-  // if (workInProgress.pendingProps === workInProgress.memoizedProps) {
-    // In a ping-pong scenario, this version could actually contain the
-    // old props. In that case, we should be able to just bail out but I
-    // don't yet quite understand what should happen on the reused node here.
-  // }
+
+  if (!workInProgress.hasWorkInProgress &&
+      workInProgress.pendingProps === workInProgress.memoizedProps &&
+      workInProgress.pendingWorkPriority === NoWork) {
+    // If we started this work before, and finished it, or if we're in a
+    // ping-pong update scenario, this version could already be what we're
+    // looking for. In that case, we should be able to just bail out.
+    workInProgress.pendingProps = null;
+    // TODO: We should be able to bail out if there is remaining work at a lower
+    // priority too. However, I don't know if that is safe or even better since
+    // the other tree could've potentially finished that work.
+    return null;
+  }
+
+  workInProgress.hasWorkInProgress = true;
+
   switch (workInProgress.tag) {
     case IndeterminateComponent:
       mountIndeterminateComponent(current, workInProgress);

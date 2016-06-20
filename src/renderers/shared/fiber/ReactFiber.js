@@ -82,6 +82,13 @@ export type Fiber = Instance & {
   // memory if we need to.
   alternate: ?Fiber,
 
+  // Keeps track if we've completed this node or if we're currently in the
+  // middle of processing it. We really should know this based on pendingProps
+  // or something else. We could also reuse the tag for this purpose. However,
+  // I'm not really sure so I'll use a flag for now.
+  // TODO: Find another way to infer this flag.
+  hasWorkInProgress: bool,
+
   // Conceptual aliases
   // parent : Instance -> returnFiber The parent happens to be the same as the return fiber.
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens to be the same as work in progress.
@@ -117,6 +124,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     pendingWorkPriority: 0,
 
     alternate: null,
+
+    hasWorkInProgress: false,
 
   };
 };
