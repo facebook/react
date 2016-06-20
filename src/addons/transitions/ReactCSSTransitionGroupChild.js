@@ -19,8 +19,6 @@ var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
 
-var TICK = 17;
-
 var ReactCSSTransitionGroupChild = React.createClass({
   displayName: 'ReactCSSTransitionGroupChild',
 
@@ -88,6 +86,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
     CSSCore.addClass(node, className);
 
+    // Flush pending styles
+    this.flush = node.offsetWidth;
+
     // Need to do this to actually trigger a transition.
     this.queueClassAndNode(activeClassName, node);
 
@@ -108,9 +109,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
       node: node,
     });
 
-    if (!this.timeout) {
-      this.timeout = setTimeout(this.flushClassNameAndNodeQueue, TICK);
-    }
+    this.flushClassNameAndNodeQueue();
   },
 
   flushClassNameAndNodeQueue: function() {
