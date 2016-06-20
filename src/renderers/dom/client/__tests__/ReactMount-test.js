@@ -163,6 +163,27 @@ describe('ReactMount', function() {
     );
   });
 
+  it('should warn when component does not follow proper case convention',
+    function() {
+      var container = document.createElement('container');
+      var myDiv = <div>React</div>;
+      var mySvg = <svg><polygon points="-145.6 556.9 104.8-145.6 429"/></svg>;
+      var centered = React.createClass({
+        render: function() {
+          return <div/>;
+        },
+      });
+      spyOn(console, 'error');
+      ReactDOM.render(myDiv, container);
+      ReactDOM.render(mySvg, container);
+      ReactDOM.render(<centered/>, container);
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: ReactDOM.render(): Invalid component element. ' +
+        'Make sure the component starts with an upper-case letter.'
+      );
+    });
+
   it('should account for escaping on a checksum mismatch', function() {
     var div = document.createElement('div');
     var markup = ReactDOMServer.renderToString(
