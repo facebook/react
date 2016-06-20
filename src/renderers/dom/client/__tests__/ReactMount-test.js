@@ -184,8 +184,9 @@ describe('ReactMount', function() {
       ReactDOM.render(<centered/>, container);
       expect(console.error.calls.count()).toBe(1);
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: ReactDOM.render(): Invalid component element: `centered`. ' +
-        'Make sure the component starts with an upper-case letter.'+
+        'Warning: Unknown element centered. Did you miss-spell an HTML tag name? ' +
+        'If you are using a custom component, make sure your custom component ' +
+        'starts with an upper-case letter.' +
         '\n    in centered (at **)'
       );
     });

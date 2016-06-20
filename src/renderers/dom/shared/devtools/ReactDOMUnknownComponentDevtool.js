@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMComponentCaseDevtool
+ * @providesModule ReactDOMUnknownComponentDevtool
  */
 
 'use strict';
@@ -28,8 +28,9 @@ function handleElement(debugID, element) {
 
   if (!didWarnAboutCase && invalidElement) {
     warning(false,
-      'ReactDOM.render(): Invalid component element: `%s`. ' +
-      'Make sure the component starts with an upper-case letter.%s',
+      'Unknown element %s. Did you miss-spell an HTML tag name? ' +
+      'If you are using a custom component, make sure your custom component ' +
+      'starts with an upper-case letter.%s',
       element.type,
       ReactComponentTreeDevtool.getStackAddendumByID(debugID)
     );
@@ -37,7 +38,7 @@ function handleElement(debugID, element) {
   }
 }
 
-var ReactDOMComponentCaseDevtool = {
+var ReactDOMUnknownComponentDevtool = {
   onBeforeMountComponent(debugID, element) {
     handleElement(debugID, element);
   },
@@ -45,4 +46,4 @@ var ReactDOMComponentCaseDevtool = {
     handleElement(debugID, element);
   },
 };
-module.exports = ReactDOMComponentCaseDevtool;
+module.exports = ReactDOMUnknownComponentDevtool;
