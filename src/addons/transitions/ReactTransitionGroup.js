@@ -208,6 +208,10 @@ var ReactTransitionGroup = React.createClass({
   _handleDoneLeaving: function(key) {
     var component = this.refs[key];
 
+    if (component.componentDidLeave) {
+      component.componentDidLeave();
+    }
+
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping;
@@ -226,15 +230,13 @@ var ReactTransitionGroup = React.createClass({
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
-      this.setState(function(state) {
-        var newChildren = Object.assign({}, state.children);
-        delete newChildren[key];
-        return {children: newChildren};
-      });
-    }
-
-    if (component.componentDidLeave) {
-      component.componentDidLeave();
+      if (this.isMounted()) {
+        this.setState(function(state) {
+          var newChildren = Object.assign({}, state.children);
+          delete newChildren[key];
+          return {children: newChildren};
+        });
+      }
     }
   },
 
