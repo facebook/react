@@ -19,7 +19,6 @@ var ReactUpdates = require('ReactUpdates');
 var warning = require('warning');
 
 var didWarnValueLink = false;
-var didWarnValueNull = false;
 var didWarnValueDefaultValue = false;
 
 function updateOptionsIfPendingUpdateAndMounted() {
@@ -45,6 +44,7 @@ function getDeclarationErrorAddendum(owner) {
   return '';
 }
 
+<<<<<<< HEAD
 function warnIfValueIsNull(props) {
   if (props != null && props.value === null && !didWarnValueNull) {
     warning(
@@ -80,6 +80,8 @@ function warnIfDuplicateValues(inst) {
   }
 }
 
+=======
+>>>>>>> 4886e028bfcb32c6cdfdf210802f862c1fca971f
 var valuePropNames = ['value', 'defaultValue'];
 
 /**
@@ -190,8 +192,11 @@ var ReactDOMSelect = {
   mountWrapper: function(inst, props) {
     if (__DEV__) {
       checkSelectPropTypes(inst, props);
+<<<<<<< HEAD
       warnIfValueIsNull(props);
       warnIfDuplicateValues(inst);
+=======
+>>>>>>> 4886e028bfcb32c6cdfdf210802f862c1fca971f
     }
 
     var value = LinkedValueUtils.getValue(props);
@@ -228,9 +233,6 @@ var ReactDOMSelect = {
 
   postUpdateWrapper: function(inst) {
     var props = inst._currentElement.props;
-    if (__DEV__) {
-      warnIfValueIsNull(props);
-    }
 
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down

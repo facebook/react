@@ -98,6 +98,27 @@ describe('ReactStatelessComponent', function() {
     expect(el.textContent).toBe('mest');
   });
 
+  it('should warn for childContextTypes on a functional component', () => {
+    spyOn(console, 'error');
+    function StatelessComponentWithChildContext(props) {
+      return <div>{props.name}</div>;
+    }
+
+    StatelessComponentWithChildContext.childContextTypes = {
+      foo: React.PropTypes.string,
+    };
+
+    var container = document.createElement('div');
+
+    ReactDOM.render(<StatelessComponentWithChildContext name="A" />, container);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
+      'be defined on a functional component.'
+    );
+  });
+
   it('should warn when stateless component returns array', function() {
     spyOn(console, 'error');
     function NotAComponent() {

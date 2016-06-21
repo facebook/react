@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
 var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
 var ReactDebugTool = require('ReactDebugTool');
 
@@ -68,5 +69,6 @@ var ReactDOMDebugTool = {
 };
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
+ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
 
 module.exports = ReactDOMDebugTool;

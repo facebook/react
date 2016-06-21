@@ -40,10 +40,10 @@ next: thinking-in-react-ja-JP.html
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Hello React</title>
+    <title>React Tutorial</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   </head>
   <body>
@@ -225,7 +225,7 @@ Markdown はインラインでテキストをフォーマットする簡単な�
   <title>Hello React</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
 </head>
@@ -289,8 +289,8 @@ var Comment = React.createClass({
 ```javascript
 // tutorial8.js
 var data = [
-  {author: "Pete Hunt", text: "This is one comment"},
-  {author: "Jordan Walke", text: "This is *another* comment"}
+  {id: 1, author: "Pete Hunt", text: "This is one comment"},
+  {id: 2, author: "Jordan Walke", text: "This is *another* comment"}
 ];
 ```
 
@@ -324,7 +324,7 @@ var CommentList = React.createClass({
   render: function() {
     var commentNodes = this.props.data.map(function (comment) {
       return (
-        <Comment author={comment.author}>
+        <Comment author={comment.author} key={comment.id}>
           {comment.text}
         </Comment>
       );
@@ -347,7 +347,7 @@ var CommentList = React.createClass({
 ```javascript{3}
 // tutorial11.js
 ReactDOM.render(
-  <CommentBox url="api/comments" />,
+  <CommentBox url="/api/comments" />,
   document.getElementById('content')
 );
 ```
@@ -389,8 +389,8 @@ var CommentBox = React.createClass({
 
 ```json
 [
-  {"author": "Pete Hunt", "text": "This is one comment"},
-  {"author": "Jordan Walke", "text": "This is *another* comment"}
+  {"id": "1", "author": "Pete Hunt", "text": "This is one comment"},
+  {"id": "2", "author": "Jordan Walke", "text": "This is *another* comment"}
 ]
 ```
 
@@ -466,7 +466,7 @@ var CommentBox = React.createClass({
 });
 
 ReactDOM.render(
-  <CommentBox url="comments.json" pollInterval={2000} />,
+  <CommentBox url="/api/comments" pollInterval={2000} />,
   document.getElementById('content')
 );
 
@@ -476,7 +476,7 @@ ReactDOM.render(
 
 ### 新しいコメントの追加
 
-いよいよフォームを作る段階に来ました。ここで `CommentForm` コンポーネントは、ユーザに自分の名前とコメントの内容を入力させ、コメントを保存させるためにサーバへリクエストを送る役割を果たすことになります。
+いよいよフォームを作る段階に来ました。ここで `CommentForm` コンポーネントは、ユーザに自分の名前とコメントの内容を入力させ、コメントを保存するためにサーバにリクエストを送信する必要があります。
 
 ```javascript{5-9}
 // tutorial15.js
@@ -493,28 +493,39 @@ var CommentForm = React.createClass({
 });
 ```
 
-それでは、フォームを使ってデータをやり取りできるようにしましょう。ユーザがフォームから送信したら、フォームをクリアしてサーバにリクエストを送り、コメントリストをリフレッシュすることになります。まず手始めに、フォームからの送信イベントを受け取ってフォームをクリアできるようにしましょう。
+#### 制御コンポーネント
 
-```javascript{3-13,16-19}
+このチュートリアルの DOM は、`input` 要素がレンダリングされ、ブラウザが状態（そのレンダリングされた値）を管理します。その結果、実際のDOMの状態がコンポーネントとは異なります。ビューの状態がコンポーネントとは異なり、これは理想的ではありません。React では、コンポーネントは初期化の時点だけでなく、常にビューの状態を表している必要があります。
+
+したがって、ユーザの入力を保存するために `this.state` を使用することになります。2つのプロパティの`author`と`text`に最初の`state`を定義して、空の文字列を設定します。`<input>`の要素では、`onChange`にハンドラをアタッチすると`value` に `state` が反映される。これらの `<input>` の要素は、`value` が設定された制御コンポーネントと呼ばれています。制御コンポーネントの詳細についてはこちらの[Forms article](/react/docs/forms.html#controlled-components)をご覧ください。
+
+```javascript{3-11,15-26}
 // tutorial16.js
 var CommentForm = React.createClass({
-  handleSubmit: function(e) {
-    e.preventDefault();
-    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
-    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
-    if (!text || !author) {
-      return;
-    }
-    // TODO: サーバにリクエストを送信
-    ReactDOM.findDOMNode(this.refs.author).value = '';
-    ReactDOM.findDOMNode(this.refs.text).value = '';
-    return;
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
   },
   render: function() {
     return (
-      <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
+      <form className="commentForm">
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
         <input type="submit" value="Post" />
       </form>
     );
@@ -522,24 +533,72 @@ var CommentForm = React.createClass({
 });
 ```
 
-##### イベント
+#### イベント
 
-React がコンポーネントにイベントハンドラを登録する際は camelCase の命名規則に従います。上のコードではフォームに `onSubmit` ハンドラを登録し、フォームから妥当な入力が送信されたらフォームをクリアするようになっています。
+React イベントハンドラのアタッチはコンポーネントにキャメルケースの命名規則を使用します。2つの`<input>`要素に`onChange`のハンドラをアタッチします。今、ユーザーの入力は`<input>`フィールド、アタッチされた`onChange`がコールバックされてコンポーネントの` state`が変更されます。その後、`input`要素のレンダリングされた値は、現在のコンポーネント` state`を反映するように更新されます。
 
-また `preventDefault()` を呼び出しているので、フォームからの送信に対してブラウザのデフォルト処理が反応することはありません。
+(賢明な読者は、説明したようにこれらのイベントハンドラが動作することを驚かれるかもしれない、明示的な結合を不要にそのコンポーネントインスタンスへの各メソッドは、メソッドの参照が明示的に`this`. `React.createClass(...)` [automatically binds](/react/docs/interactivity-and-dynamic-uis.html#under-the-hood-autobinding-and-event-delegation)にバインドされていないことを自動的に結合する与えられました。)
 
-##### Refs
+#### フォーム送信
 
-先程のコードでは `ref` 属性値を使って子のコンポーネントに名前を付けており、`this.ref` でそのコンポーネントを参照しています。`ReactDOM.findDOMNode(component)` にコンポーネントを指定して呼び出すことで、ブラウザの持つ実際の DOM 要素を取得することが出来ます。
+フォームを対話型にしましょう。ユーザーがフォームを送信すると、それをクリアする必要があります。サーバに要求を送信すると、コメントのリストを更新します。開始するとフォームの送信イベントでクリアするか試しましょう。
 
-##### Props としてのコールバック
+```javascript{12-21,24}
+// tutorial17.js
+var CommentForm = React.createClass({
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
+  },
+  handleSubmit: function(e) {
+    e.preventDefault();
+    var author = this.state.author.trim();
+    var text = this.state.text.trim();
+    if (!text || !author) {
+      return;
+    }
+    // TODO: サーバーに要求を送信
+    this.setState({author: '', text: ''});
+  },
+  render: function() {
+    return (
+      <form className="commentForm" onSubmit={this.handleSubmit}>
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
+        <input type="submit" value="Post" />
+      </form>
+    );
+  }
+});
+```
+
+フォームが有効な入力でサブミットされたときにフォームフィールドをクリアし、フォームに`onSubmit`ハンドラをアタッチします。
+
+`preventDefault()` はフォームを送信するイベントにブラウザのデフォルトのアクションを防ぐためにコールします。
+
+#### Props としてのコールバック
 
 ユーザがコメントを送信したら、コメントリストをリフレッシュして新しいリストを読み込むことになります。コメントリストを表す state を保持しているのは `CommentBox` なので、必要なロジックは `CommentBox` の中に書くのが筋でしょう。
 
 ここでは子のコンポーネントから親に向かって、いつもとは逆方向にデータを返す必要があります。まず、親のコンポーネントに新しいコールバック関数（`handleCommentSubmit`）を定義します。続いて `render` メソッド内にある子のコンポーネントにコールバックを渡すことで、`onCommentSubmit` イベントとコールバックを結び付けています。こうすることで、イベントが発生するたびにコールバックが呼び出されます。
 
 ```javascript{16-18,31}
-// tutorial17.js
+// tutorial18.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -555,7 +614,7 @@ var CommentBox = React.createClass({
     });
   },
   handleCommentSubmit: function(comment) {
-    // TODO: サーバに送信、リストをリフレッシュ
+    // TODO: submit to the server and refresh the list
   },
   getInitialState: function() {
     return {data: []};
@@ -576,28 +635,45 @@ var CommentBox = React.createClass({
 });
 ```
 
-それでは、ユーザがフォームから送信したら `CommentForm` がコールバックを呼び出せるようにしましょう。
+今、`CommentBox`は`onCommentSubmit`をpropして`CommentForm`にコールバックを利用した、ユーザーがフォームを送信したときに`CommentForm`はコールバックを呼び出すことができます。
 
-```javascript{10}
-// tutorial18.js
+```javascript{19}
+// tutorial19.js
 var CommentForm = React.createClass({
+  getInitialState: function() {
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e) {
+    this.setState({author: e.target.value});
+  },
+  handleTextChange: function(e) {
+    this.setState({text: e.target.value});
+  },
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = ReactDOM.findDOMNode(this.refs.author).value.trim();
-    var text = ReactDOM.findDOMNode(this.refs.text).value.trim();
+    var author = this.state.author.trim();
+    var text = this.state.text.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    ReactDOM.findDOMNode(this.refs.author).value = '';
-    ReactDOM.findDOMNode(this.refs.text).value = '';
-    return;
+    this.setState({author: '', text: ''});
   },
   render: function() {
     return (
       <form className="commentForm" onSubmit={this.handleSubmit}>
-        <input type="text" placeholder="Your name" ref="author" />
-        <input type="text" placeholder="Say something..." ref="text" />
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something..."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
         <input type="submit" value="Post" />
       </form>
     );
@@ -608,7 +684,7 @@ var CommentForm = React.createClass({
 こうしてコールバックが出来たので、あとはサーバにコメントを送信してリストをリフレッシュすれば完璧です。
 
 ```javascript{17-28}
-// tutorial19.js
+// tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -660,8 +736,8 @@ var CommentBox = React.createClass({
 
 アプリケーションに必要な機能は一通り実装できました。しかし、フォームからコメントを送信しても、サーバからのレスポンスが来るまで自分のコメントはリストに載らないため、アプリの動作は遅く感じます。ここでは、送信したコメントをリストに先読みさせて、アプリの体感速度をアップさせましょう。
 
-```javascript{17-19,29}
-// tutorial20.js
+```javascript{17-23,33}
+// tutorial21.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
@@ -678,6 +754,10 @@ var CommentBox = React.createClass({
   },
   handleCommentSubmit: function(comment) {
     var comments = this.state.data;
+    // Optimistically set an id on the new comment. It will be replaced by an
+    // id generated by the server. In a production application you would likely
+    // not use Date.now() for this and would have a more robust system in place.
+    comment.id = Date.now();
     var newComments = comments.concat([comment]);
     this.setState({data: newComments});
     $.ajax({

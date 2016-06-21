@@ -74,11 +74,15 @@ ReactTestComponent.prototype.toJSON = function() {
       childrenJSON.push(json);
     }
   }
-  return {
+  var object = {
     type: this._currentElement.type,
     props: props,
     children: childrenJSON.length ? childrenJSON : null,
   };
+  Object.defineProperty(object, '$$typeof', {
+    value: Symbol.for('react.test.json'),
+  });
+  return object;
 };
 Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
 

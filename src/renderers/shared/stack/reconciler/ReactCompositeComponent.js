@@ -46,6 +46,11 @@ function warnIfInvalidElement(Component, element) {
       'returned undefined, an array or some other invalid object.',
       Component.displayName || Component.name || 'Component'
     );
+    warning(
+      !Component.childContextTypes,
+      '%s(...): childContextTypes cannot be defined on a functional component.',
+      Component.displayName || Component.name || 'Component'
+    );
   }
 }
 
@@ -334,6 +339,13 @@ var ReactCompositeComponentMixin = {
         transaction.getReactMountReady().enqueue(invokeComponentDidMountWithTimer, this);
       } else {
         transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
+      }
+    }
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
       }
     }
 
@@ -741,6 +753,13 @@ var ReactCompositeComponentMixin = {
     nextUnmaskedContext
   ) {
     var inst = this._instance;
+    invariant(
+      inst != null,
+      'Attempted to update component `%s` that has already been unmounted ' +
+      '(or failed to mount).',
+      this.getName() || 'ReactCompositeComponent'
+    );
+
     var willReceive = false;
     var nextContext;
     var nextProps;
@@ -938,6 +957,13 @@ var ReactCompositeComponentMixin = {
           inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
           inst
         );
+      }
+    }
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
       }
     }
   },

@@ -258,6 +258,14 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onHostOperation', debugID, type, payload);
   },
+  onComponentHasMounted(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onComponentHasMounted', debugID);
+  },
+  onComponentHasUpdated(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onComponentHasUpdated', debugID);
+  },
   onSetState() {
     emitEvent('onSetState');
   },
@@ -314,9 +322,11 @@ if (__DEV__) {
   var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
   var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
   var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+  var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
   ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
   ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
   ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
+  ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
   var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
   if ((/[?&]react_perf\b/).test(url)) {
     ReactDebugTool.beginProfiling();

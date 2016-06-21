@@ -359,7 +359,15 @@ function trapBubbledEventsLocal() {
           );
         }
       }
-
+      break;
+    case 'source':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          EventConstants.topLevelTypes.topError,
+          'error',
+          node
+        ),
+      ];
       break;
     case 'img':
       inst._wrapperState.listeners = [
@@ -535,6 +543,7 @@ ReactDOMComponent.Mixin = {
       case 'img':
       case 'link':
       case 'object':
+      case 'source':
       case 'video':
         this._wrapperState = {
           listeners: null,
@@ -661,14 +670,33 @@ ReactDOMComponent.Mixin = {
           inputPostMount,
           this
         );
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
         break;
       case 'textarea':
         transaction.getReactMountReady().enqueue(
           textareaPostMount,
           this
         );
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
         break;
       case 'select':
+        if (props.autoFocus) {
+          transaction.getReactMountReady().enqueue(
+            AutoFocusUtils.focusDOMComponent,
+            this
+          );
+        }
+        break;
       case 'button':
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
@@ -683,6 +711,13 @@ ReactDOMComponent.Mixin = {
           this
         );
         break;
+    }
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = () => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
+      }
     }
 
     return mountImage;
@@ -905,6 +940,13 @@ ReactDOMComponent.Mixin = {
       // reconciliation
       transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
     }
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
+      }
+    }
   },
 
   /**
@@ -1124,6 +1166,7 @@ ReactDOMComponent.Mixin = {
       case 'img':
       case 'link':
       case 'object':
+      case 'source':
       case 'video':
         var listeners = this._wrapperState.listeners;
         if (listeners) {
