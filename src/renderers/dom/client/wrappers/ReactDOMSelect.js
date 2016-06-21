@@ -61,7 +61,7 @@ function warnIfValueIsNull(props) {
 function warnIfDuplicateValues(inst) {
   const options = inst._currentElement.props.children;
 
-  if (options === undefined) {
+  if (options == null) {
     return;
   }
 
