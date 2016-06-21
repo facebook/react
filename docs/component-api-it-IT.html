@@ -479,36 +479,6 @@
 
 <p>Questo metodo non è disponibile il componenti <code>class</code> ES6 che estendono <code>React.Component</code>. Potrebbe essere eliminato del tutto in una versione futura di React.</p>
 </blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Quando stai integrando con un&#39;applicazione JavaScript esterna puoi voler segnalare un cambiamento a un componente React il cui rendering è stato effettuato con <code>ReactDOM.render()</code>.</p>
-
-<p>Chiamare <code>setProps()</code> su un componente al livello radice cambierà le sue proprietà e scatenerà un ri-rendering. Inoltre, puoi fornire una funzione callback opzionale che verrà eseguita quando <code>setProps</code> ha terminato e il rendering del componente è terminato.</p>
-
-<blockquote>
-<p>Nota:</p>
-
-<p>Quando possibile, l&#39;approccio dichiarativo di invocare nuovamente <code>ReactDOM.render()</code> sullo stesso nodo è preferibile. Quest&#39;ultimo tende a rendere gli aggiornamenti più comprensibili. (Non vi è una differenza significativa di prestazioni tra i due approcci.)</p>
-
-<p>Questo metodo può essere chiamato soltanto su un componente al livello radice. Ovvero, è disponibile soltanto sul componente passato direttamente a <code>ReactDOM.render()</code> e nessuno dei suoi figli. Se il tuo intento è usare <code>setProps()</code> su un componente figlio, approfitta degli aggiornamenti reattivi e passa la nuova proprietà al componente figlio quando viene creato in <code>render()</code>.</p>
-
-<p>Questo metodo non è disponibile il componenti <code>class</code> ES6 che estendono <code>React.Component</code>. Potrebbe essere eliminato del tutto in una versione futura di React.</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Come <code>setProps()</code> ma elimina ogni proprietà preesistente anziché riunire i due oggetti.</p>
-
-<blockquote>
-<p>Nota:</p>
-
-<p>Questo metodo non è disponibile il componenti <code>class</code> ES6 che estendono <code>React.Component</code>. Potrebbe essere eliminato del tutto in una versione futura di React.</p>
-</blockquote>
 
 
     <div class="docs-prevnext">

@@ -479,36 +479,6 @@
 
 <p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 <a href="/react/blog/2015/12/16/ismounted-antipattern.html">start migrating away from isMounted() now</a></p>
 </blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>当和一个外部的 JavaScript 应用整合的时候，你也许会想用 <code>ReactDOM.render()</code> 给 React 组件标示一个改变。</p>
-
-<p>在根组件上调用 <code>setProps()</code> 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 <code>setProps</code> 完成并且组件被重绘它就执行。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p>这个方法被弃用了并会很快移除.这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用. 取代调用 <code>setProps</code>,试着以新的 props 再次调用 <code>ReactDOM.render()</code>. 更多的注意事项,见我们的<a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
-
-<p>如果可能，上述的在同一个节点上再次调用 <code>ReactDOM.render()</code> 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）</p>
-
-<p>这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 <code>ReactDOM.render()</code> 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 <code>setProps()</code>，不要利用响应式更新，而是当子组件在 <code>render()</code> 中创建的时候传入新的 prop 到子组件中。</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>类似于 <code>setProps()</code>，但是删除任何先前存在的 props，而不是合并这两个对象。</p>
-
-<blockquote>
-<p>注意:</p>
-
-<p>这个方法被弃用了并会很快移除.这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用.  取代调用 <code>replaceProps</code>,试着以新的 props 再次调用 <code>ReactDOM.render()</code>. 更多的注意事项,见我们的<a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
-</blockquote>
 
 
     <div class="docs-prevnext">

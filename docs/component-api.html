@@ -479,36 +479,6 @@
 
 <p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. It will likely be removed entirely in a future version of React, so you might as well <a href="/react/blog/2015/12/16/ismounted-antipattern.html">start migrating away from isMounted() now</a>.</p>
 </blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>ReactDOM.render()</code>.</p>
-
-<p>Calling <code>setProps()</code> on a root-level component will change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>This method is deprecated and will be removed soon. This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. Instead of calling <code>setProps</code>, try invoking ReactDOM.render() again with the new props. For additional notes, see our <a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
-
-<p>When possible, the declarative approach of calling <code>ReactDOM.render()</code> again on the same node is preferred instead. It tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
-
-<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>ReactDOM.render()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Like <code>setProps()</code> but deletes any pre-existing props instead of merging the two objects.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>This method is deprecated and will be removed soon. This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. Instead of calling <code>replaceProps</code>, try invoking ReactDOM.render() again with the new props. For additional notes, see our <a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">blog post about using the Top Level API</a></p>
-</blockquote>
 
 
     <div class="docs-prevnext">

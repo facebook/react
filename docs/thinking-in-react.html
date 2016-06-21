@@ -504,8 +504,8 @@
 
 <ol>
 <li>Is it passed in from a parent via props? If so, it probably isn&#39;t state.</li>
-<li>Does it change over time? If not, it probably isn&#39;t state.</li>
-<li>Can you compute it based on any other state or props in your component? If so, it&#39;s not state.</li>
+<li>Does it remain unchanged over time? If so, it probably isn&#39;t state.</li>
+<li>Can you compute it based on any other state or props in your component? If so, it isn&#39;t state.</li>
 </ol>
 
 <p>The original list of products is passed in as props, so that&#39;s not state. The search text and the checkbox seem to be state since they change over time and can&#39;t be computed from anything. And finally, the filtered list of products isn&#39;t state because it can be computed by combining the original list of products with the search text and value of the checkbox.</p>

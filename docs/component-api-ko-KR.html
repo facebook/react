@@ -479,36 +479,6 @@
 
 <p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
 </blockquote>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">setProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>외부 JavaScript 애플리케이션과 연동하는 경우 <code>ReactDOM.render()</code>로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.</p>
-
-<p>최상위 컴포넌트에서 <code>setProps()</code>를 호출하면 프로퍼티를 변경하고 렌더를 다시 발생합니다. 거기에 콜백 함수를 넘기면 <code>setProps</code>가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.</p>
-
-<blockquote>
-<p>주의:</p>
-
-<p>가능하다면 이것 대신 <code>ReactDOM.render()</code>를 같은 노드에서 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)</p>
-
-<p>이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, <code>ReactDOM.render()</code>에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 <code>setProps()</code>를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 <code>render()</code> 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.</p>
-
-<p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">replaceProps</span><span class="p">(</span>
-  <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p><code>setProps()</code>와 비슷하지만 두 객체를 합치는 대신 이전에 존재하던 props를 삭제합니다.</p>
-
-<blockquote>
-<p>주의:</p>
-
-<p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.</p>
-</blockquote>
 
 
     <div class="docs-prevnext">
