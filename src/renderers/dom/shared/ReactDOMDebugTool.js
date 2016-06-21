@@ -73,9 +73,6 @@ var ReactDOMDebugTool = {
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
 ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
-<<<<<<< Updated upstream
-=======
 ReactDOMDebugTool.addDevtool(ReactDOMDuplicateSelectValuesDevtool);
->>>>>>> Stashed changes
 
 module.exports = ReactDOMDebugTool;
