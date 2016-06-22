@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -27,7 +28,9 @@ var {
 
 var ReactElement = require('ReactElement');
 
-import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+var {
+  NoWork,
+} = require('ReactPriorityLevel');
 
 // An Instance is shared between all versions of a component. We can easily
 // break this out into a separate object to avoid copying so much to the
@@ -121,7 +124,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     memoizedProps: null,
     output: null,
 
-    pendingWorkPriority: 0,
+    pendingWorkPriority: NoWork,
 
     alternate: null,
 
