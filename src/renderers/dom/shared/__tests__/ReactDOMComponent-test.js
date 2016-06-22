@@ -759,8 +759,8 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
-        'input is a void element tag and must not have `children` or ' +
-        'use `props.dangerouslySetInnerHTML`.'
+        'input is a void element tag and must not have `children` nor ' +
+        'use `dangerouslySetInnerHTML`.'
       );
     });
 
