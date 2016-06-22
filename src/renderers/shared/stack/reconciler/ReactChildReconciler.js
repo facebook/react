@@ -130,13 +130,16 @@ var ReactChildReconciler = {
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement);
         nextChildren[name] = nextChildInstance;
-        mountImages[name] = ReactReconciler.mountComponent(
+        // Creating mount image now ensures refs are resolved in right order
+        // (see https://github.com/facebook/react/pull/7101 for explanation).
+        var nextChildMountImage = ReactReconciler.mountComponent(
           nextChildInstance,
           transaction,
           hostParent,
           hostContainerInfo,
           context
         );
+        mountImages.push(nextChildMountImage);
       }
     }
     // Unmount children that are no longer present.

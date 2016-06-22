@@ -349,7 +349,7 @@ var ReactMultiChild = {
     _updateChildren: function(nextNestedChildrenElements, transaction, context) {
       var prevChildren = this._renderedChildren;
       var removedNodes = {};
-      var mountImages = {};
+      var mountImages = [];
       var nextChildren = this._reconcilerUpdateChildren(
         prevChildren,
         nextNestedChildrenElements,
@@ -365,8 +365,10 @@ var ReactMultiChild = {
       var name;
       // `nextIndex` will increment for each child in `nextChildren`, but
       // `lastIndex` will be the last index visited in `prevChildren`.
-      var lastIndex = 0;
       var nextIndex = 0;
+      var lastIndex = 0;
+      // `nextMountIndex` will increment for each newly mounted child.
+      var nextMountIndex = 0;
       var lastPlacedNode = null;
       for (name in nextChildren) {
         if (!nextChildren.hasOwnProperty(name)) {
@@ -392,13 +394,14 @@ var ReactMultiChild = {
             updates,
             this._mountChildAtIndex(
               nextChild,
-              mountImages[name],
+              mountImages[nextMountIndex],
               lastPlacedNode,
               nextIndex,
               transaction,
               context
             )
           );
+          nextMountIndex++;
         }
         nextIndex++;
         lastPlacedNode = ReactReconciler.getHostNode(nextChild);
