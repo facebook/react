@@ -36,7 +36,7 @@ class HelloMessage extends React.Component{
 
 ```javascript
 var proto = Object.create(HTMLElement.prototype, {
-  createdCallback: {
+  attachedCallback: {
     value: function() {
       var mountPoint = document.createElement('span');
       this.createShadowRoot().appendChild(mountPoint);
