@@ -127,7 +127,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  receiveComponent: function(nextText, transaction) {
+  receiveComponent: function(nextText, transaction, context, isParentPure) {
     if (nextText !== this._currentElement) {
       this._currentElement = nextText;
       var nextStringText = '' + nextText;

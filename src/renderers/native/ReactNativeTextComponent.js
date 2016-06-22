@@ -59,7 +59,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
     return this._rootNodeID;
   },
 
-  receiveComponent: function(nextText, transaction, context) {
+  receiveComponent: function(nextText, transaction, context, isParentPure) {
     if (nextText !== this._currentElement) {
       this._currentElement = nextText;
       var nextStringText = '' + nextText;

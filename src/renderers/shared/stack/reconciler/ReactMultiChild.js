@@ -209,7 +209,8 @@ var ReactMultiChild = {
       nextNestedChildrenElements,
       removedNodes,
       transaction,
-      context
+      context,
+      isParentPure
     ) {
       var nextChildren;
       if (__DEV__) {
@@ -221,14 +222,24 @@ var ReactMultiChild = {
             ReactCurrentOwner.current = null;
           }
           ReactChildReconciler.updateChildren(
-            prevChildren, nextChildren, removedNodes, transaction, context
+            prevChildren,
+            nextChildren,
+            removedNodes,
+            transaction,
+            context,
+            isParentPure
           );
           return nextChildren;
         }
       }
       nextChildren = flattenChildren(nextNestedChildrenElements);
       ReactChildReconciler.updateChildren(
-        prevChildren, nextChildren, removedNodes, transaction, context
+        prevChildren,
+        nextChildren,
+        removedNodes,
+        transaction,
+        context,
+        isParentPure
       );
       return nextChildren;
     },
@@ -320,9 +331,19 @@ var ReactMultiChild = {
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    updateChildren: function(nextNestedChildrenElements, transaction, context) {
+    updateChildren: function(
+      nextNestedChildrenElements,
+      transaction,
+      context,
+      isParentPure
+    ) {
       // Hook used by React ART
-      this._updateChildren(nextNestedChildrenElements, transaction, context);
+      this._updateChildren(
+        nextNestedChildrenElements,
+        transaction,
+        context,
+        isParentPure
+      );
     },
 
     /**
@@ -331,7 +352,12 @@ var ReactMultiChild = {
      * @final
      * @protected
      */
-    _updateChildren: function(nextNestedChildrenElements, transaction, context) {
+    _updateChildren: function(
+      nextNestedChildrenElements,
+      transaction,
+      context,
+      isParentPure
+    ) {
       var prevChildren = this._renderedChildren;
       var removedNodes = {};
       var nextChildren = this._reconcilerUpdateChildren(
@@ -339,7 +365,8 @@ var ReactMultiChild = {
         nextNestedChildrenElements,
         removedNodes,
         transaction,
-        context
+        context,
+        isParentPure
       );
       if (!nextChildren && !prevChildren) {
         return;

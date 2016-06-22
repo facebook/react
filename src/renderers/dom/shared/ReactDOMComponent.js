@@ -881,10 +881,16 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {object} context
    */
-  receiveComponent: function(nextElement, transaction, context) {
+  receiveComponent: function(nextElement, transaction, context, isParentPure) {
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
-    this.updateComponent(transaction, prevElement, nextElement, context);
+    this.updateComponent(
+      transaction,
+      prevElement,
+      nextElement,
+      context,
+      isParentPure
+    );
   },
 
   /**
@@ -897,7 +903,13 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @overridable
    */
-  updateComponent: function(transaction, prevElement, nextElement, context) {
+  updateComponent: function(
+    transaction,
+    prevElement,
+    nextElement,
+    context,
+    isParentPure
+  ) {
     var lastProps = prevElement.props;
     var nextProps = this._currentElement.props;
 
@@ -932,7 +944,8 @@ ReactDOMComponent.Mixin = {
       lastProps,
       nextProps,
       transaction,
-      context
+      context,
+      isParentPure
     );
 
     if (this._tag === 'select') {
@@ -1095,7 +1108,13 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    * @param {object} context
    */
-  _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
+  _updateDOMChildren: function(
+    lastProps,
+    nextProps,
+    transaction,
+    context,
+    isParentPure
+  ) {
     var lastContent =
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
     var nextContent =
@@ -1117,7 +1136,7 @@ ReactDOMComponent.Mixin = {
     var lastHasContentOrHtml = lastContent != null || lastHtml != null;
     var nextHasContentOrHtml = nextContent != null || nextHtml != null;
     if (lastChildren != null && nextChildren == null) {
-      this.updateChildren(null, transaction, context);
+      this.updateChildren(null, transaction, context, isParentPure);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
       this.updateTextContent('');
       if (__DEV__) {
@@ -1144,7 +1163,7 @@ ReactDOMComponent.Mixin = {
         setContentChildForInstrumentation.call(this, null);
       }
 
-      this.updateChildren(nextChildren, transaction, context);
+      this.updateChildren(nextChildren, transaction, context, isParentPure);
     }
   },
 

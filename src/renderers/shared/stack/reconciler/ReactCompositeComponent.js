@@ -23,11 +23,17 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var checkReactTypeSpec = require('checkReactTypeSpec');
-
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
+var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+
+var CompositeTypes = {
+  ImpureClass: 0,
+  PureClass: 1,
+  StatelessFunctional: 2,
+};
 
 function StatelessComponent(Component) {
 }
@@ -89,7 +95,11 @@ function invokeComponentDidUpdateWithTimer(prevProps, prevState, prevContext) {
 }
 
 function shouldConstruct(Component) {
-  return Component.prototype && Component.prototype.isReactComponent;
+  return !!(Component.prototype && Component.prototype.isReactComponent);
+}
+
+function isPureComponent(Component) {
+  return !!(Component.prototype && Component.prototype.isPureReactComponent);
 }
 
 /**
@@ -142,6 +152,7 @@ var ReactCompositeComponentMixin = {
   construct: function(element) {
     this._currentElement = element;
     this._rootNodeID = null;
+    this._compositeType = null;
     this._instance = null;
     this._hostParent = null;
     this._hostContainerInfo = null;
@@ -198,11 +209,12 @@ var ReactCompositeComponentMixin = {
     var Component = this._currentElement.type;
 
     // Initialize the public class
-    var inst = this._constructComponent(publicProps, publicContext);
+    var doConstruct = shouldConstruct(Component);
+    var inst = this._constructComponent(doConstruct, publicProps, publicContext);
     var renderedElement;
 
     // Support functional components
-    if (!shouldConstruct(Component) && (inst == null || inst.render == null)) {
+    if (!doConstruct && (inst == null || inst.render == null)) {
       renderedElement = inst;
       warnIfInvalidElement(Component, renderedElement);
       invariant(
@@ -214,6 +226,13 @@ var ReactCompositeComponentMixin = {
         Component.displayName || Component.name || 'Component'
       );
       inst = new StatelessComponent(Component);
+      this._compositeType = CompositeTypes.StatelessFunctional;
+    } else {
+      if (isPureComponent(Component)) {
+        this._compositeType = CompositeTypes.PureClass;
+      } else {
+        this._compositeType = CompositeTypes.ImpureClass;
+      }
     }
 
     if (__DEV__) {
@@ -352,23 +371,23 @@ var ReactCompositeComponentMixin = {
     return markup;
   },
 
-  _constructComponent: function(publicProps, publicContext) {
+  _constructComponent: function(doConstruct, publicProps, publicContext) {
     if (__DEV__) {
       ReactCurrentOwner.current = this;
       try {
-        return this._constructComponentWithoutOwner(publicProps, publicContext);
+        return this._constructComponentWithoutOwner(doConstruct, publicProps, publicContext);
       } finally {
         ReactCurrentOwner.current = null;
       }
     } else {
-      return this._constructComponentWithoutOwner(publicProps, publicContext);
+      return this._constructComponentWithoutOwner(doConstruct, publicProps, publicContext);
     }
   },
 
-  _constructComponentWithoutOwner: function(publicProps, publicContext) {
+  _constructComponentWithoutOwner: function(doConstruct, publicProps, publicContext) {
     var Component = this._currentElement.type;
     var instanceOrElement;
-    if (shouldConstruct(Component)) {
+    if (doConstruct) {
       if (__DEV__) {
         if (this._debugID !== 0) {
           ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
@@ -687,7 +706,12 @@ var ReactCompositeComponentMixin = {
     );
   },
 
-  receiveComponent: function(nextElement, transaction, nextContext) {
+  receiveComponent: function(
+    nextElement,
+    transaction,
+    nextContext,
+    isParentPure
+  ) {
     var prevElement = this._currentElement;
     var prevContext = this._context;
 
@@ -698,7 +722,8 @@ var ReactCompositeComponentMixin = {
       prevElement,
       nextElement,
       prevContext,
-      nextContext
+      nextContext,
+      isParentPure
     );
   },
 
@@ -715,7 +740,10 @@ var ReactCompositeComponentMixin = {
         this,
         this._pendingElement,
         transaction,
-        this._context
+        this._context,
+        // Element updates are enqueued only at the top level, which we consider
+        // impure
+        false
       );
     } else if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
       this.updateComponent(
@@ -723,7 +751,10 @@ var ReactCompositeComponentMixin = {
         this._currentElement,
         this._currentElement,
         this._context,
-        this._context
+        this._context,
+        // isParentPure here doesn't matter because state updates don't happen to
+        // functional components.
+        true
       );
     } else {
       this._updateBatchNumber = null;
@@ -750,7 +781,8 @@ var ReactCompositeComponentMixin = {
     prevParentElement,
     nextParentElement,
     prevUnmaskedContext,
-    nextUnmaskedContext
+    nextUnmaskedContext,
+    isParentPure
   ) {
     var inst = this._instance;
     invariant(
@@ -762,7 +794,6 @@ var ReactCompositeComponentMixin = {
 
     var willReceive = false;
     var nextContext;
-    var nextProps;
 
     // Determine if the context has changed or not
     if (this._context === nextUnmaskedContext) {
@@ -772,7 +803,8 @@ var ReactCompositeComponentMixin = {
       willReceive = true;
     }
 
-    nextProps = nextParentElement.props;
+    var prevProps = prevParentElement.props;
+    var nextProps = nextParentElement.props;
 
     // Not a simple state update but a props update
     if (prevParentElement !== nextParentElement) {
@@ -805,22 +837,32 @@ var ReactCompositeComponentMixin = {
     var nextState = this._processPendingState(nextProps, nextContext);
     var shouldUpdate = true;
 
-    if (!this._pendingForceUpdate && inst.shouldComponentUpdate) {
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'shouldComponentUpdate'
-          );
+    var pureSelf =
+      this._compositeType === CompositeTypes.PureClass ||
+      isParentPure && this._compositeType === CompositeTypes.StatelessFunctional;
+    if (!this._pendingForceUpdate) {
+      if (inst.shouldComponentUpdate) {
+        if (__DEV__) {
+          if (this._debugID !== 0) {
+            ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+              this._debugID,
+              'shouldComponentUpdate'
+            );
+          }
         }
-      }
-      shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-            this._debugID,
-            'shouldComponentUpdate'
-          );
+        shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
+        if (__DEV__) {
+          if (this._debugID !== 0) {
+            ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+              this._debugID,
+              'shouldComponentUpdate'
+            );
+          }
+        }
+      } else {
+        if (pureSelf) {
+          shouldUpdate =
+            inst.state !== nextState || !shallowEqual(prevProps, nextProps);
         }
       }
     }
@@ -844,7 +886,8 @@ var ReactCompositeComponentMixin = {
         nextState,
         nextContext,
         transaction,
-        nextUnmaskedContext
+        nextUnmaskedContext,
+        pureSelf
       );
     } else {
       // If it's determined that a component should not update, we still want
@@ -904,7 +947,8 @@ var ReactCompositeComponentMixin = {
     nextState,
     nextContext,
     transaction,
-    unmaskedContext
+    unmaskedContext,
+    pureSelf
   ) {
     var inst = this._instance;
 
@@ -944,7 +988,7 @@ var ReactCompositeComponentMixin = {
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction, unmaskedContext);
+    this._updateRenderedComponent(transaction, unmaskedContext, pureSelf);
 
     if (hasComponentDidUpdate) {
       if (__DEV__) {
@@ -974,7 +1018,7 @@ var ReactCompositeComponentMixin = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  _updateRenderedComponent: function(transaction, context) {
+  _updateRenderedComponent: function(transaction, context, pureSelf) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
     var nextRenderedElement = this._renderValidatedComponent();
@@ -983,7 +1027,8 @@ var ReactCompositeComponentMixin = {
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        pureSelf
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
@@ -1083,7 +1128,7 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
-    if (__DEV__ || !(this._instance instanceof StatelessComponent)) {
+    if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
       ReactCurrentOwner.current = this;
       try {
         renderedComponent =
@@ -1173,7 +1218,7 @@ var ReactCompositeComponentMixin = {
    */
   getPublicInstance: function() {
     var inst = this._instance;
-    if (inst instanceof StatelessComponent) {
+    if (this._compositeType === CompositeTypes.StatelessFunctional) {
       return null;
     }
     return inst;
