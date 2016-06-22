@@ -37,11 +37,7 @@
 
       // Define WebComponent
       var proto = Object.create(HTMLElement.prototype, {
-        createdCallback: {
-          value: function() {
-          }
-        }
-        ,attachedCallback: {
+        attachedCallback: {
           value: function() {
             var mountPoint = document.createElement('span');
             this.createShadowRoot().appendChild(mountPoint);
@@ -49,14 +45,6 @@
             var name = this.getAttribute('name');
             var url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
             ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
-          }
-        }
-        ,detachedCallback: {
-          value: function() {
-          }
-        }
-        ,attributeChangedCallback: {
-          value: function() {
           }
         }
       });
