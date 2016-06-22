@@ -207,6 +207,7 @@ var ReactMultiChild = {
     _reconcilerUpdateChildren: function(
       prevChildren,
       nextNestedChildrenElements,
+      mountImages,
       removedNodes,
       transaction,
       context
@@ -221,14 +222,28 @@ var ReactMultiChild = {
             ReactCurrentOwner.current = null;
           }
           ReactChildReconciler.updateChildren(
-            prevChildren, nextChildren, removedNodes, transaction, context
+            prevChildren,
+            nextChildren,
+            mountImages,
+            removedNodes,
+            transaction,
+            this,
+            this._hostContainerInfo,
+            context
           );
           return nextChildren;
         }
       }
       nextChildren = flattenChildren(nextNestedChildrenElements);
       ReactChildReconciler.updateChildren(
-        prevChildren, nextChildren, removedNodes, transaction, context
+        prevChildren,
+        nextChildren,
+        mountImages,
+        removedNodes,
+        transaction,
+        this,
+        this._hostContainerInfo,
+        context
       );
       return nextChildren;
     },
@@ -334,9 +349,11 @@ var ReactMultiChild = {
     _updateChildren: function(nextNestedChildrenElements, transaction, context) {
       var prevChildren = this._renderedChildren;
       var removedNodes = {};
+      var mountImages = {};
       var nextChildren = this._reconcilerUpdateChildren(
         prevChildren,
         nextNestedChildrenElements,
+        mountImages,
         removedNodes,
         transaction,
         context
@@ -375,6 +392,7 @@ var ReactMultiChild = {
             updates,
             this._mountChildAtIndex(
               nextChild,
+              mountImages[name],
               lastPlacedNode,
               nextIndex,
               transaction,
@@ -468,17 +486,11 @@ var ReactMultiChild = {
      */
     _mountChildAtIndex: function(
       child,
+      mountImage,
       afterNode,
       index,
       transaction,
       context) {
-      var mountImage = ReactReconciler.mountComponent(
-        child,
-        transaction,
-        this,
-        this._hostContainerInfo,
-        context
-      );
       child._mountIndex = index;
       return this.createChild(child, afterNode, mountImage);
     },

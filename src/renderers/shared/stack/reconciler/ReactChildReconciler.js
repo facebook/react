@@ -93,8 +93,11 @@ var ReactChildReconciler = {
   updateChildren: function(
     prevChildren,
     nextChildren,
+    mountImages,
     removedNodes,
     transaction,
+    hostParent,
+    hostContainerInfo,
     context) {
     // We currently don't have a way to track moves here but if we use iterators
     // instead of for..in we can zip the iterators and check if an item has
@@ -127,6 +130,13 @@ var ReactChildReconciler = {
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement);
         nextChildren[name] = nextChildInstance;
+        mountImages[name] = ReactReconciler.mountComponent(
+          nextChildInstance,
+          transaction,
+          hostParent,
+          hostContainerInfo,
+          context
+        );
       }
     }
     // Unmount children that are no longer present.
