@@ -788,8 +788,8 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
       }).toThrowError(
-        'menuitem is a void element tag and must not have `children` or use ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'menuitem is a void element tag and must not have `children` nor use ' +
+        '`dangerouslySetInnerHTML`.'
       );
 
     });
