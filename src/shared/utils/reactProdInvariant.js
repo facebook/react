@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule reactProdInvariant
+ * @flow
  */
 'use strict';
 
@@ -16,7 +17,7 @@
  * and will _only_ be required by the corresponding babel pass.
  * It always throws.
  */
-function reactProdInvariant(code) {
+function reactProdInvariant(code: string): void {
   var argCount = arguments.length - 1;
 
   var message = (
@@ -33,7 +34,7 @@ function reactProdInvariant(code) {
     ' for full errors and additional helpful warnings.'
   );
 
-  var error = new Error(message);
+  var error: Error & { framesToPop?: number } = new Error(message);
   error.name = 'Invariant Violation';
   error.framesToPop = 1; // we don't care about reactProdInvariant's own frame
 
