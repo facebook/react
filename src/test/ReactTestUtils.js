@@ -82,14 +82,38 @@ function findAllInRenderedTreeInternal(inst, test) {
  * @lends ReactTestUtils
  */
 var ReactTestUtils = {
-  renderIntoDocument: function(instance) {
+  renderIntoDocument: function(element) {
     var div = document.createElement('div');
     // None of our tests actually require attaching the container to the
     // DOM, and doing so creates a mess that we rely on test isolation to
     // clean up, so we're going to stop honoring the name of this method
     // (and probably rename it eventually) if no problems arise.
     // document.documentElement.appendChild(div);
-    return ReactDOM.render(instance, div);
+    return ReactDOM.render(element, div);
+  },
+
+  renderIntoDocumentAsync: function(element) {
+    invariant(typeof element.ref !== 'string',
+      'String refs can not be used at the top-level element of a render.'
+    );
+    var promise = new Promise(function(fulfill, reject) {
+      var div = document.createElement('div');
+      // None of our tests actually require attaching the container to the
+      // DOM, and doing so creates a mess that we rely on test isolation to
+      // clean up, so we're going to stop honoring the name of this method
+      // (and probably rename it eventually) if no problems arise.
+      // document.documentElement.appendChild(div);
+      var oldRef = element.ref;
+      var newRef = (instance) => {
+        if (oldRef) {
+          oldRef(instance);
+        }
+        fulfill(instance);
+      };
+      element = React.cloneElement(element, {ref: newRef});
+      ReactDOM.render(element, div);
+    });
+    return promise;
   },
 
   isElement: function(element) {

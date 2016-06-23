@@ -106,5 +106,9 @@
     "unmockedModulePathPatterns": [
       ""
     ]
+  },
+  "dependencies": {
+    "babel-plugin-syntax-async-functions": "^6.8.0",
+    "babel-plugin-transform-async-to-generator": "^6.8.0"
   }
 }
