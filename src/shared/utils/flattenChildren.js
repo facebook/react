@@ -27,7 +27,7 @@ function flattenSingleChildIntoContext(
   traverseContext: mixed,
   child: ReactElement<any>,
   name: string,
-  selfDebugID: number
+  selfDebugID?: number,
 ): void {
   // We found a component instance.
   if (traverseContext && typeof traverseContext === 'object') {
@@ -54,7 +54,10 @@ function flattenSingleChildIntoContext(
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(children: ReactElement<any>, selfDebugID: number): ?{ [name: string]: ReactElement<any> } {
+function flattenChildren(
+  children: ReactElement<any>,
+  selfDebugID?: number,
+): ?{ [name: string]: ReactElement<any> } {
   if (children == null) {
     return children;
   }
