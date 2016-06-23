@@ -24,26 +24,28 @@ var warning = require('warning');
  * @param {number=} selfDebugID Optional debugID of the current internal instance.
  */
 function flattenSingleChildIntoContext(
-  traverseContext: any,
+  traverseContext: mixed,
   child: ReactElement<any>,
   name: string,
   selfDebugID: number
 ): void {
   // We found a component instance.
-  var result = traverseContext;
-  var keyUnique = (result[name] === undefined);
-  if (__DEV__) {
-    warning(
-      keyUnique,
-      'flattenChildren(...): Encountered two children with the same key, ' +
-      '`%s`. Child keys must be unique; when two children share a key, only ' +
-      'the first child will be used.%s',
-      KeyEscapeUtils.unescape(name),
-      ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
-    );
-  }
-  if (keyUnique && child != null) {
-    result[name] = child;
+  if (traverseContext && typeof traverseContext === 'object') {
+    const result = traverseContext;
+    const keyUnique = (result[name] === undefined);
+    if (__DEV__) {
+      warning(
+        keyUnique,
+        'flattenChildren(...): Encountered two children with the same key, ' +
+        '`%s`. Child keys must be unique; when two children share a key, only ' +
+        'the first child will be used.%s',
+        KeyEscapeUtils.unescape(name),
+        ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
+      );
+    }
+    if (keyUnique && child != null) {
+      result[name] = child;
+    }
   }
 }
 
@@ -52,7 +54,7 @@ function flattenSingleChildIntoContext(
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(children: ReactElement<any>, selfDebugID: number): any {
+function flattenChildren(children: ReactElement<any>, selfDebugID: number): ?{ [name: string]: ReactElement<any> } {
   if (children == null) {
     return children;
   }
