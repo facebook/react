@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule flattenChildren
+ * @flow
  */
 
 'use strict';
@@ -22,7 +23,12 @@ var warning = require('warning');
  * @param {!string} name String name of key path to child.
  * @param {number=} selfDebugID Optional debugID of the current internal instance.
  */
-function flattenSingleChildIntoContext(traverseContext, child, name, selfDebugID) {
+function flattenSingleChildIntoContext(
+  traverseContext: any,
+  child: ReactElement<any>,
+  name: string,
+  selfDebugID: number
+): void {
   // We found a component instance.
   var result = traverseContext;
   var keyUnique = (result[name] === undefined);
@@ -46,7 +52,7 @@ function flattenSingleChildIntoContext(traverseContext, child, name, selfDebugID
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(children, selfDebugID) {
+function flattenChildren(children: ReactElement<any>, selfDebugID: number): any {
   if (children == null) {
     return children;
   }
