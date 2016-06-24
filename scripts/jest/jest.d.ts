@@ -70,3 +70,5 @@ declare module 'jasmine-check' {
 }
 declare var check: any;
 declare var gen: any;
+
+//test my setup
