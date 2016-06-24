@@ -115,22 +115,22 @@ function updateCoroutineComponent(current, workInProgress) {
   workInProgress.pendingWorkPriority = NoWork;
 }
 
-function reuseChildren(newParent : Fiber, firstChild : Fiber) {
+function reuseChildren(returnFiber : Fiber, firstChild : Fiber) {
   // TODO: None of this should be necessary if structured better.
-  // The parent pointer only needs to be updated when we walk into this child
+  // The returnFiber pointer only needs to be updated when we walk into this child
   // which we don't do right now. If the pending work priority indicated only
   // if a child has work rather than if the node has work, then we would know
   // by a single lookup on workInProgress rather than having to go through
   // each child.
   let child = firstChild;
   do {
-    // Update the parent of the child to the newest fiber.
-    child.parent = newParent;
+    // Update the returnFiber of the child to the newest fiber.
+    child.return = returnFiber;
     // Retain the priority if there's any work left to do in the children.
     if (child.pendingWorkPriority !== NoWork &&
-        (newParent.pendingWorkPriority === NoWork ||
-        newParent.pendingWorkPriority > child.pendingWorkPriority)) {
-      newParent.pendingWorkPriority = child.pendingWorkPriority;
+        (returnFiber.pendingWorkPriority === NoWork ||
+        returnFiber.pendingWorkPriority > child.pendingWorkPriority)) {
+      returnFiber.pendingWorkPriority = child.pendingWorkPriority;
     }
   } while (child = child.sibling);
 }
