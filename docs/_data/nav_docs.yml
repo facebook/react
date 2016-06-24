@@ -8,6 +8,8 @@
     title: Thinking in React
 - title: Community Resources
   items:
+  - id: learning-resources
+    title: Learning Resources
   - id: conferences
     title: Conferences
   - id: videos
