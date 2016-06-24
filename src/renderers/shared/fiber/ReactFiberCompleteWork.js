@@ -30,12 +30,12 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
-function transferOutput(child : ?Fiber, parent : Fiber) {
+function transferOutput(child : ?Fiber, returnFiber : Fiber) {
   // If we have a single result, we just pass that through as the output to
   // avoid unnecessary traversal. When we have multiple output, we just pass
   // the linked list of fibers that has the individual output values.
-  parent.output = (child && !child.sibling) ? child.output : child;
-  parent.memoizedProps = parent.pendingProps;
+  returnFiber.output = (child && !child.sibling) ? child.output : child;
+  returnFiber.memoizedProps = returnFiber.pendingProps;
 }
 
 function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
@@ -83,7 +83,7 @@ function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
   var nextChildren = fn(props, yields);
 
   var currentFirstChild = current ? current.stateNode : null;
-  // Inherit the priority of the parent.
+  // Inherit the priority of the returnFiber.
   const priority = workInProgress.pendingWorkPriority;
   workInProgress.stateNode = ReactChildFiber.reconcileChildFibers(
     workInProgress,

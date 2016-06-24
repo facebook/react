@@ -29,7 +29,7 @@ var {
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 
-function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousSibling : Fiber, newChildren, priority : PriorityLevel) : Fiber {
+function createSubsequentChild(returnFiber : Fiber, existingChild : ?Fiber, previousSibling : Fiber, newChildren, priority : PriorityLevel) : Fiber {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return previousSibling;
   }
@@ -46,13 +46,13 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
         clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
-        clone.parent = parent;
+        clone.return = returnFiber;
         previousSibling.sibling = clone;
         return clone;
       }
       const child = ReactFiber.createFiberFromElement(element, priority);
       previousSibling.sibling = child;
-      child.parent = parent;
+      child.return = returnFiber;
       return child;
     }
 
@@ -60,7 +60,7 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
       const coroutine = (newChildren : ReactCoroutine);
       const child = ReactFiber.createFiberFromCoroutine(coroutine, priority);
       previousSibling.sibling = child;
-      child.parent = parent;
+      child.return = returnFiber;
       return child;
     }
 
@@ -70,7 +70,7 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
       const child = ReactFiber.createFiberFromYield(yieldNode, priority);
       child.output = reifiedYield;
       previousSibling.sibling = child;
-      child.parent = parent;
+      child.return = returnFiber;
       return child;
     }
   }
@@ -79,7 +79,7 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
     let prev : Fiber = previousSibling;
     let existing : ?Fiber = existingChild;
     for (var i = 0; i < newChildren.length; i++) {
-      prev = createSubsequentChild(parent, existing, prev, newChildren[i], priority);
+      prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
       if (prev && existing) {
         // TODO: This is not correct because there could've been more
         // than one sibling consumed but I don't want to return a tuple.
@@ -93,7 +93,7 @@ function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousS
   }
 }
 
-function createFirstChild(parent, existingChild, newChildren, priority) {
+function createFirstChild(returnFiber, existingChild, newChildren, priority) {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return null;
   }
@@ -109,18 +109,18 @@ function createFirstChild(parent, existingChild, newChildren, priority) {
         clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
-        clone.parent = parent;
+        clone.return = returnFiber;
         return clone;
       }
       const child = ReactFiber.createFiberFromElement(element, priority);
-      child.parent = parent;
+      child.return = returnFiber;
       return child;
     }
 
     case REACT_COROUTINE_TYPE: {
       const coroutine = (newChildren : ReactCoroutine);
       const child = ReactFiber.createFiberFromCoroutine(coroutine, priority);
-      child.parent = parent;
+      child.return = returnFiber;
       return child;
     }
 
@@ -132,7 +132,7 @@ function createFirstChild(parent, existingChild, newChildren, priority) {
       const reifiedYield = ReactReifiedYield.createReifiedYield(yieldNode);
       const child = ReactFiber.createFiberFromYield(yieldNode, priority);
       child.output = reifiedYield;
-      child.parent = parent;
+      child.return = returnFiber;
       return child;
     }
   }
@@ -143,10 +143,10 @@ function createFirstChild(parent, existingChild, newChildren, priority) {
     var existing : ?Fiber = existingChild;
     for (var i = 0; i < newChildren.length; i++) {
       if (prev == null) {
-        prev = createFirstChild(parent, existing, newChildren[i], priority);
+        prev = createFirstChild(returnFiber, existing, newChildren[i], priority);
         first = prev;
       } else {
-        prev = createSubsequentChild(parent, existing, prev, newChildren[i], priority);
+        prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
       }
       if (prev && existing) {
         // TODO: This is not correct because there could've been more
@@ -162,7 +162,7 @@ function createFirstChild(parent, existingChild, newChildren, priority) {
 }
 
 // TODO: This API won't work because we'll need to transfer the side-effects of
-// unmounting children to the parent.
-exports.reconcileChildFibers = function(parent : Fiber, currentFirstChild : ?Fiber, newChildren : ReactNodeList, priority : PriorityLevel) : ?Fiber {
-  return createFirstChild(parent, currentFirstChild, newChildren, priority);
+// unmounting children to the returnFiber.
+exports.reconcileChildFibers = function(returnFiber : Fiber, currentFirstChild : ?Fiber, newChildren : ReactNodeList, priority : PriorityLevel) : ?Fiber {
+  return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);
 };

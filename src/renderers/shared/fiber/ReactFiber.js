@@ -41,11 +41,6 @@ type Instance = {
   // Tag identifying the type of fiber.
   tag: TypeOfWork,
 
-  // The parent Fiber used to create this one. The type is constrained to the
-  // Instance part of the Fiber since it is not safe to traverse the tree from
-  // the instance.
-  parent: ?Instance, // Consider a regenerated temporary parent stack instead.
-
   // Unique identifier of this child.
   key: null | string,
 
@@ -55,11 +50,21 @@ type Instance = {
   // The local state associated with this fiber.
   stateNode: ?Object,
 
+  // Conceptual aliases
+  // parent : Instance -> return The parent happens to be the same as the
+  // return fiber since we've merged the fiber and instance.
+
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = Instance & {
+
+  // The Fiber to return to after finishing processing this one.
+  // This is effectively the parent, but there can be multiple parents (two)
+  // so this is only the parent of the thing we're currently processing.
+  // It is conceptually the same as the return address of a stack frame.
+  return: ?Fiber,
 
   // Singly Linked List Tree Structure.
   child: ?Fiber,
@@ -71,8 +76,8 @@ export type Fiber = Instance & {
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
-  // TODO: I think that there is a way to merge input and memoizedProps somehow.
-  memoizedProps: any, // The input used to create the output.
+  // TODO: I think that there is a way to merge pendingProps and memoizedProps.
+  memoizedProps: any, // The props used to create the output.
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
@@ -93,8 +98,8 @@ export type Fiber = Instance & {
   hasWorkInProgress: bool,
 
   // Conceptual aliases
-  // parent : Instance -> returnFiber The parent happens to be the same as the return fiber.
-  // workInProgress : Fiber ->  alternate The alternate used for reuse happens to be the same as work in progress.
+  // workInProgress : Fiber ->  alternate The alternate used for reuse happens
+  // to be the same as work in progress.
 
 };
 
@@ -105,8 +110,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     tag: tag,
 
-    parent: null,
-
     key: key,
 
     type: null,
@@ -114,6 +117,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     stateNode: null,
 
     // Fiber
+
+    return: null,
 
     child: null,
     sibling: null,
@@ -126,9 +131,9 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     pendingWorkPriority: NoWork,
 
-    alternate: null,
-
     hasWorkInProgress: false,
+
+    alternate: null,
 
   };
 };

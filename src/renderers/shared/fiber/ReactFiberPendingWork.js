@@ -21,14 +21,14 @@ var {
   NoWork,
 } = require('ReactPriorityLevel');
 
-function cloneSiblings(current : Fiber, workInProgress : Fiber, parent : Fiber) {
+function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fiber) {
   while (current.sibling) {
     current = current.sibling;
     workInProgress = workInProgress.sibling = ReactFiber.cloneFiber(
       current,
       current.pendingWorkPriority
     );
-    workInProgress.parent = parent;
+    workInProgress.return = returnFiber;
   }
   workInProgress.sibling = null;
 }
@@ -63,7 +63,7 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
         }
         workInProgress.pendingWorkPriority = current.pendingWorkPriority;
         workInProgress.child = ReactFiber.cloneFiber(currentChild, NoWork);
-        workInProgress.child.parent = workInProgress;
+        workInProgress.child.return = workInProgress;
         cloneSiblings(currentChild, workInProgress.child, workInProgress);
         current = current.child;
         continue;
@@ -79,9 +79,7 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
       return null;
     }
     while (!current.sibling) {
-      // TODO: Stop using parent here. See below.
-      // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-      current = current.parent;
+      current = current.return;
       if (!current) {
         return null;
       }
@@ -95,4 +93,4 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
     current = current.sibling;
   }
   return null;
-}
+};

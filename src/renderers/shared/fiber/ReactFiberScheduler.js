@@ -94,29 +94,24 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         workInProgress.hasWorkInProgress = false;
       }
 
-      // TODO: Stop using the parent for this purpose. I think this will break
-      // down in edge cases because when nodes are reused during bailouts, we
-      // don't know which of two parents was used. Instead we should maintain
-      // a temporary manual stack.
-      // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-      const parent = workInProgress.parent;
+      const returnFiber = workInProgress.return;
 
       // Ensure that remaining work priority bubbles up.
-      if (parent && workInProgress.pendingWorkPriority !== NoWork &&
-          (parent.pendingWorkPriority === NoWork ||
-          parent.pendingWorkPriority > workInProgress.pendingWorkPriority)) {
-        parent.pendingWorkPriority = workInProgress.pendingWorkPriority;
+      if (returnFiber && workInProgress.pendingWorkPriority !== NoWork &&
+          (returnFiber.pendingWorkPriority === NoWork ||
+          returnFiber.pendingWorkPriority > workInProgress.pendingWorkPriority)) {
+        returnFiber.pendingWorkPriority = workInProgress.pendingWorkPriority;
       }
 
       if (next) {
         // If completing this work spawned new work, do that next.
         return next;
       } else if (workInProgress.sibling) {
-        // If there is more work to do in this parent, do that next.
+        // If there is more work to do in this returnFiber, do that next.
         return workInProgress.sibling;
-      } else if (parent) {
-        // If there's no more work in this parent. Complete the parent.
-        workInProgress = parent;
+      } else if (returnFiber) {
+        // If there's no more work in this returnFiber. Complete the returnFiber.
+        workInProgress = returnFiber;
       } else {
         // If we're at the root, there's no more work to do. We can flush it.
         const root : FiberRoot = (workInProgress.stateNode : any);
