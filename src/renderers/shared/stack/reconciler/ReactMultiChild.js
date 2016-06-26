@@ -207,6 +207,7 @@ var ReactMultiChild = {
     _reconcilerUpdateChildren: function(
       prevChildren,
       nextNestedChildrenElements,
+      mountImages,
       removedNodes,
       transaction,
       context
@@ -221,14 +222,28 @@ var ReactMultiChild = {
             ReactCurrentOwner.current = null;
           }
           ReactChildReconciler.updateChildren(
-            prevChildren, nextChildren, removedNodes, transaction, context
+            prevChildren,
+            nextChildren,
+            mountImages,
+            removedNodes,
+            transaction,
+            this,
+            this._hostContainerInfo,
+            context
           );
           return nextChildren;
         }
       }
       nextChildren = flattenChildren(nextNestedChildrenElements);
       ReactChildReconciler.updateChildren(
-        prevChildren, nextChildren, removedNodes, transaction, context
+        prevChildren,
+        nextChildren,
+        mountImages,
+        removedNodes,
+        transaction,
+        this,
+        this._hostContainerInfo,
+        context
       );
       return nextChildren;
     },
@@ -334,9 +349,11 @@ var ReactMultiChild = {
     _updateChildren: function(nextNestedChildrenElements, transaction, context) {
       var prevChildren = this._renderedChildren;
       var removedNodes = {};
+      var mountImages = [];
       var nextChildren = this._reconcilerUpdateChildren(
         prevChildren,
         nextNestedChildrenElements,
+        mountImages,
         removedNodes,
         transaction,
         context
@@ -348,8 +365,10 @@ var ReactMultiChild = {
       var name;
       // `nextIndex` will increment for each child in `nextChildren`, but
       // `lastIndex` will be the last index visited in `prevChildren`.
-      var lastIndex = 0;
       var nextIndex = 0;
+      var lastIndex = 0;
+      // `nextMountIndex` will increment for each newly mounted child.
+      var nextMountIndex = 0;
       var lastPlacedNode = null;
       for (name in nextChildren) {
         if (!nextChildren.hasOwnProperty(name)) {
@@ -375,12 +394,14 @@ var ReactMultiChild = {
             updates,
             this._mountChildAtIndex(
               nextChild,
+              mountImages[nextMountIndex],
               lastPlacedNode,
               nextIndex,
               transaction,
               context
             )
           );
+          nextMountIndex++;
         }
         nextIndex++;
         lastPlacedNode = ReactReconciler.getHostNode(nextChild);
@@ -468,17 +489,11 @@ var ReactMultiChild = {
      */
     _mountChildAtIndex: function(
       child,
+      mountImage,
       afterNode,
       index,
       transaction,
       context) {
-      var mountImage = ReactReconciler.mountComponent(
-        child,
-        transaction,
-        this,
-        this._hostContainerInfo,
-        context
-      );
       child._mountIndex = index;
       return this.createChild(child, afterNode, mountImage);
     },
