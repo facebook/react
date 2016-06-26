@@ -313,6 +313,12 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onUnmountComponent', debugID);
   },
+  onCreateChainableTypeChecker(componentName, props, propName) {
+    emitEvent('onCreateChainableTypeChecker',
+              componentName,
+              props,
+              propName);
+  },
   onTestEvent() {
     emitEvent('onTestEvent');
   },
@@ -320,10 +326,12 @@ var ReactDebugTool = {
 
 if (__DEV__) {
   var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
+  var ReactMiscapitalizedPropNameWarningDevTool = require('ReactMiscapitalizedPropNameWarningDevTool');
   var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
   var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
   var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
   ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
+  ReactDebugTool.addDevtool(ReactMiscapitalizedPropNameWarningDevTool);
   ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
   ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
   ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
