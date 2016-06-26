@@ -434,6 +434,21 @@ function validateMethodOverride(isAlreadyDefined, name) {
  */
 function mixSpecIntoComponent(Constructor, spec) {
   if (!spec) {
+    if (__DEV__) {
+      var typeofSpec = typeof spec;
+      var isMixinValid = typeofSpec === 'object' && spec !== null;
+
+      warning(
+        isMixinValid,
+        '%s: You\'re attempting to include a mixin that is either null ' +
+        'or not an object. Check the mixins included by the component, ' +
+        'as well as any mixins they include themselves. ' +
+        'Expected object but got %s.',
+        Constructor.displayName || 'ReactClass',
+        spec === null ? null : typeofSpec
+      );
+    }
+
     return;
   }
 
