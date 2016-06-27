@@ -78,8 +78,8 @@ function handleElement(debugID, element) {
         if (areEqual(values[i], values[j])) {
           warning(
               false,
-              `Select element contains duplicate option value ${values[i]} in options #${i} & #${j}`,
-              element.type,
+              'Select element contains duplicate option value `%s` in options #%s & #%s.%s',
+              values[i], i, j,
               ReactComponentTreeDevtool.getStackAddendumByID(debugID)
             );
           didWarnDupeSelectValues = true;
