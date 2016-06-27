@@ -13,6 +13,7 @@
 
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
@@ -111,10 +112,21 @@ function createChainableTypeChecker(validate) {
     propName,
     componentName,
     location,
-    propFullName
+    propFullName,
+    secret
   ) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
+    if (!__DEV__) {
+      if (secret !== ReactPropTypesSecret) {
+        console.error(
+          `You are manually calling a React.PropTypes validation function ` +
+          `for the prop ${propFullName} on ${componentName} in a production ` +
+          `build. This is deprecated and will not work in the next ` +
+          `major version.`
+        );
+      }
+    }
     if (props[propName] == null) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
@@ -125,7 +137,13 @@ function createChainableTypeChecker(validate) {
       }
       return null;
     } else {
-      return validate(props, propName, componentName, location, propFullName);
+      return validate(
+        props,
+        propName,
+        componentName,
+        location,
+        propFullName,
+      );
     }
   }
 
@@ -136,7 +154,14 @@ function createChainableTypeChecker(validate) {
 }
 
 function createPrimitiveTypeChecker(expectedType) {
-  function validate(props, propName, componentName, location, propFullName) {
+  function validate(
+    props,
+    propName,
+    componentName,
+    location,
+    propFullName,
+    secret
+  ) {
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== expectedType) {
@@ -183,7 +208,8 @@ function createArrayOfTypeChecker(typeChecker) {
         i,
         componentName,
         location,
-        `${propFullName}[${i}]`
+        `${propFullName}[${i}]`,
+        ReactPropTypesSecret
       );
       if (error instanceof Error) {
         return error;
@@ -272,7 +298,8 @@ function createObjectOfTypeChecker(typeChecker) {
           key,
           componentName,
           location,
-          `${propFullName}.${key}`
+          `${propFullName}.${key}`,
+          ReactPropTypesSecret
         );
         if (error instanceof Error) {
           return error;
@@ -294,7 +321,14 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
       if (
-        checker(props, propName, componentName, location, propFullName) == null
+        checker(
+          props,
+          propName,
+          componentName,
+          location,
+          propFullName,
+          ReactPropTypesSecret
+        ) == null
       ) {
         return null;
       }
@@ -344,7 +378,8 @@ function createShapeTypeChecker(shapeTypes) {
         key,
         componentName,
         location,
-        `${propFullName}.${key}`
+        `${propFullName}.${key}`,
+        ReactPropTypesSecret
       );
       if (error) {
         return error;
