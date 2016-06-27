@@ -227,16 +227,8 @@ function createInstanceTypeChecker(expectedClass) {
 
 function createEnumTypeChecker(expectedValues) {
   if (!Array.isArray(expectedValues)) {
-    if (__DEV__) {
-      warning(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
-      return emptyFunction.thatReturnsNull;
-    } else {
-      return createChainableTypeChecker(function() {
-        return new Error(
-          `Invalid argument supplied to oneOf, expected an instance of array.`
-        );
-      });
-    }
+    warning(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
+    return emptyFunction.thatReturnsNull;
   }
 
   function validate(props, propName, componentName, location, propFullName) {
@@ -294,16 +286,8 @@ function createObjectOfTypeChecker(typeChecker) {
 
 function createUnionTypeChecker(arrayOfTypeCheckers) {
   if (!Array.isArray(arrayOfTypeCheckers)) {
-    if (__DEV__) {
-      warning(false, 'Invalid argument supplied to oneOfType, expected an instance of array.');
-      return emptyFunction.thatReturnsNull;
-    } else {
-      return createChainableTypeChecker(function() {
-        return new Error(
-          `Invalid argument supplied to oneOfType, expected an instance of array.`
-        );
-      });
-    }
+    warning(false, 'Invalid argument supplied to oneOfType, expected an instance of array.');
+    return emptyFunction.thatReturnsNull;
   }
 
   function validate(props, propName, componentName, location, propFullName) {
