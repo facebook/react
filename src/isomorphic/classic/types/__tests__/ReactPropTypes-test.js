@@ -596,7 +596,8 @@ describe('ReactPropTypes', function() {
       PropTypes.oneOf('red', 'blue');
 
       expect(console.error).toHaveBeenCalled();
-      expect(console.error.calls.argsFor(0)[0]).toContain('Invalid argument supplied to oneOf, expected an instance of array.');
+      expect(console.error.calls.argsFor(0)[0])
+        .toContain('Invalid argument supplied to oneOf, expected an instance of array.');
     });
 
     it('should warn for invalid values', function() {
@@ -658,7 +659,8 @@ describe('ReactPropTypes', function() {
       PropTypes.oneOfType(PropTypes.string, PropTypes.number);
 
       expect(console.error).toHaveBeenCalled();
-      expect(console.error.calls.argsFor(0)[0]).toContain('Invalid argument supplied to oneOfType, expected an instance of array.');
+      expect(console.error.calls.argsFor(0)[0])
+        .toContain('Invalid argument supplied to oneOfType, expected an instance of array.');
     });
 
     it('should warn if none of the types are valid', function() {

@@ -229,6 +229,7 @@ function createEnumTypeChecker(expectedValues) {
   if (!Array.isArray(expectedValues)) {
     if (__DEV__) {
       warning(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
+      return function() {};
     } else {
       return createChainableTypeChecker(function() {
         return new Error(
@@ -295,6 +296,7 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
   if (!Array.isArray(arrayOfTypeCheckers)) {
     if (__DEV__) {
       warning(false, 'Invalid argument supplied to oneOfType, expected an instance of array.');
+      return function() {};
     } else {
       return createChainableTypeChecker(function() {
         return new Error(
