@@ -18,6 +18,11 @@ var areEqual = require('areEqual');
 var didWarnDupeSelectValues = false;
 
 function handleElement(debugID, element) {
+  
+  if (didWarnDupeSelectValues) {
+    return;
+  }
+  
   if (element == null) {
     return;
   }
@@ -35,56 +40,54 @@ function handleElement(debugID, element) {
     return;
   }
 
-  if (!didWarnDupeSelectValues) {
-    let values = [];
-    let options = element.props.children;
+  let values = [];
+  let options = element.props.children;
 
-    //  If options is not iterable make it an array.
-    if (typeof options[Symbol.iterator] !== 'function') {
-      options = [options];
-    }
+  //  If options is not iterable make it an array.
+  if (typeof options[Symbol.iterator] !== 'function') {
+    options = [options];
+  }
 
-    // Combine the values from all options into a single array.
-    for (const option of options) {
-      if (option.type === 'optGroup') {
-        if ((option.props != null) && (option.props.children != null)) {
-          let groupOptions = option.props.children;
-          //  If groupOptions is not iterable make it an array.
-          if (typeof groupOptions[Symbol.iterator] !== 'function') {
-            groupOptions = [groupOptions];
-          }
-          for (const groupOption of groupOptions) {
-            if ((groupOption.props != null) && (groupOption.props.value != null)) {
-              values.push(groupOption.props.value);
-            }
+  // Combine the values from all options into a single array.
+  for (const option of options) {
+    if (option.type === 'optGroup') {
+      if ((option.props != null) && (option.props.children != null)) {
+        let groupOptions = option.props.children;
+        //  If groupOptions is not iterable make it an array.
+        if (typeof groupOptions[Symbol.iterator] !== 'function') {
+          groupOptions = [groupOptions];
+        }
+        for (const groupOption of groupOptions) {
+          if ((groupOption.props != null) && (groupOption.props.value != null)) {
+            values.push(groupOption.props.value);
           }
         }
       }
+    }
 
-      if (option.type === 'option') {
-        if ((option.props != null) && (option.props.value)) {
-          values.push(option.props.value);
-        }
+    if (option.type === 'option') {
+      if ((option.props != null) && (option.props.value)) {
+        values.push(option.props.value);
       }
     }
+  }
 
-    if (values.length <= 1) {
-      return;
-    }
+  if (values.length <= 1) {
+    return;
+  }
 
-    // Check the array for duplicate values.
-    for (var i = 0; i < values.length-1; i++) {
-      for (var j = i + 1; j < values.length; j++) {
-        if (areEqual(values[i], values[j])) {
-          warning(
-              false,
-              'Select element contains duplicate option value `%s` in options #%s & #%s.%s',
-              values[i], i, j,
-              ReactComponentTreeDevtool.getStackAddendumByID(debugID)
-            );
-          didWarnDupeSelectValues = true;
-          return;
-        }
+  // Check the array for duplicate values.
+  for (var i = 0; i < values.length-1; i++) {
+    for (var j = i + 1; j < values.length; j++) {
+      if (areEqual(values[i], values[j])) {
+        warning(
+            false,
+            'Select element contains duplicate option value `%s` in options #%s & #%s.%s',
+            values[i], i, j,
+            ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+          );
+        didWarnDupeSelectValues = true;
+        return;
       }
     }
   }
