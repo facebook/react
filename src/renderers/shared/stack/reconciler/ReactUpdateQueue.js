@@ -248,6 +248,7 @@ var ReactUpdateQueue = {
 
   enqueueElementInternal: function(internalInstance, nextElement, nextContext) {
     internalInstance._pendingElement = nextElement;
+    // TODO: introduce _pendingContext instead of setting it directly.
     internalInstance._context = nextContext;
     enqueueUpdate(internalInstance);
   },

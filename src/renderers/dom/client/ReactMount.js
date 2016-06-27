@@ -20,6 +20,7 @@ var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
@@ -390,7 +391,7 @@ var ReactMount = {
    */
   renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
-      parentComponent != null && parentComponent._reactInternalInstance != null,
+      parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
     );
     return ReactMount._renderSubtreeIntoContainer(
@@ -440,10 +441,14 @@ var ReactMount = {
       null,
       nextElement
     );
-    var nextContext = parentComponent ?
-      parentComponent._reactInternalInstance._processChildContext(
-        parentComponent._reactInternalInstance._context
-      ) : emptyObject;
+
+    var nextContext;
+    if (parentComponent) {
+      var parentInst = ReactInstanceMap.get(parentComponent);
+      nextContext = parentInst._processChildContext(parentInst._context);
+    } else {
+      nextContext = emptyObject;
+    }
 
     var prevComponent = getTopLevelWrapperInContainer(container);
 
