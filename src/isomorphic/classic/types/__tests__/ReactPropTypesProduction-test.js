@@ -244,7 +244,7 @@ describe('ReactPropTypesProduction', function() {
       },
     });
     var instance = (
-      <Component foo="foo" bar={42} baz={{ qux: [1, 2, 3] }}/>
+      <Component foo="foo" bar="bar" baz={{ qux: [1, 2, 3] }}/>
     );
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(console.error.calls.count()).toBe(0);
