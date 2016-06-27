@@ -118,7 +118,7 @@ function createChainableTypeChecker(validate) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
     if (!__DEV__) {
-      if (secret !== ReactPropTypesSecret) {
+      if (secret !== ReactPropTypesSecret && typeof console !== 'undefined') {
         console.error(
           `You are manually calling a React.PropTypes validation function ` +
           `for the prop ${propFullName} on ${componentName} in a production ` +
