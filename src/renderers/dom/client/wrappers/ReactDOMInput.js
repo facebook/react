@@ -22,7 +22,6 @@ var warning = require('warning');
 
 var didWarnValueLink = false;
 var didWarnCheckedLink = false;
-var didWarnValueNull = false;
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;
@@ -35,17 +34,9 @@ function forceUpdateIfMounted() {
   }
 }
 
-function warnIfValueIsNull(props) {
-  if (props != null && props.value === null && !didWarnValueNull) {
-    warning(
-      false,
-      '`value` prop on `input` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.'
-    );
-
-    didWarnValueNull = true;
-  }
+function isControlled(props) {
+  var usesChecked = props.type === 'checkbox' || props.type === 'radio';
+  return usesChecked ? props.checked !== undefined : props.value !== undefined;
 }
 
 /**
@@ -144,7 +135,6 @@ var ReactDOMInput = {
         );
         didWarnValueDefaultValue = true;
       }
-      warnIfValueIsNull(props);
     }
 
     var defaultValue = props.defaultValue;
@@ -156,7 +146,7 @@ var ReactDOMInput = {
     };
 
     if (__DEV__) {
-      inst._wrapperState.controlled = props.checked !== undefined || props.value !== undefined;
+      inst._wrapperState.controlled = isControlled(props);
     }
   },
 
@@ -164,16 +154,10 @@ var ReactDOMInput = {
     var props = inst._currentElement.props;
 
     if (__DEV__) {
-      warnIfValueIsNull(props);
-
-      var defaultValue = props.defaultChecked || props.defaultValue;
-      var controlled = props.checked !== undefined || props.value !== undefined;
+      var controlled = isControlled(props);
       var owner = inst._currentElement._owner;
 
-      if (
-        !inst._wrapperState.controlled &&
-        controlled && !didWarnUncontrolledToControlled
-      ) {
+      if (!inst._wrapperState.controlled && controlled && !didWarnUncontrolledToControlled) {
         warning(
           false,
           '%s is changing an uncontrolled input of type %s to be controlled. ' +
@@ -185,11 +169,7 @@ var ReactDOMInput = {
         );
         didWarnUncontrolledToControlled = true;
       }
-      if (
-        inst._wrapperState.controlled &&
-        (defaultValue || !controlled) &&
-        !didWarnControlledToUncontrolled
-      ) {
+      if (inst._wrapperState.controlled && !controlled && !didWarnControlledToUncontrolled) {
         warning(
           false,
           '%s is changing a controlled input of type %s to be uncontrolled. ' +

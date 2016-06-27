@@ -15,6 +15,8 @@ var flatten = require('gulp-flatten');
 var del = require('del');
 
 var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
+var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
+var devExpressionWithCodes = require('./scripts/error-codes/dev-expression-with-codes');
 
 var paths = {
   react: {
@@ -46,9 +48,14 @@ var moduleMap = Object.assign(
   }
 );
 
+var errorCodeOpts = {
+  errorMapFilePath: 'scripts/error-codes/codes.json',
+};
+
 var babelOpts = {
   plugins: [
-    [babelPluginModules, { map: moduleMap }],
+    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
+    [babelPluginModules, {map: moduleMap}],
   ],
 };
 
@@ -62,6 +69,12 @@ gulp.task('react:modules', function() {
     .pipe(babel(babelOpts))
     .pipe(flatten())
     .pipe(gulp.dest(paths.react.lib));
+});
+
+gulp.task('react:extract-errors', function() {
+  return gulp
+    .src(paths.react.src)
+    .pipe(extractErrors(errorCodeOpts));
 });
 
 gulp.task('default', ['react:modules']);

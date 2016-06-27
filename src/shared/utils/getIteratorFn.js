@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule getIteratorFn
+ * @flow
  */
 
 'use strict';
@@ -29,7 +30,7 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
  * @param {?object} maybeIterable
  * @return {?function}
  */
-function getIteratorFn(maybeIterable) {
+function getIteratorFn(maybeIterable: ?any): ?(p: ReactElement<any>) => void {
   var iteratorFn = maybeIterable && (
     (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
     maybeIterable[FAUX_ITERATOR_SYMBOL]

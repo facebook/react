@@ -29,6 +29,8 @@
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-react-jsx-source": "^6.8.0",
     "babel-preset-react": "^6.5.0",
+    "babel-traverse": "^6.9.0",
+    "babylon": "6.8.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
@@ -41,7 +43,7 @@
     "eslint-plugin-react-internal": "file:eslint-rules",
     "fbjs": "^0.8.1",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.24.0",
+    "flow-bin": "^0.26.0",
     "glob": "^6.0.1",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
@@ -51,6 +53,7 @@
     "gulp": "^3.9.0",
     "gulp-babel": "^6.0.0",
     "gulp-flatten": "^0.2.0",
+    "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
     "jest": "^12.1.1",
     "loose-envify": "^1.1.0",
@@ -75,7 +78,8 @@
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "jest"
+    "test": "jest",
+    "flow": "flow"
   },
   "jest": {
     "modulePathIgnorePatterns": [
@@ -95,6 +99,7 @@
     "testPathDirs": [
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
+      "<rootDir>/scripts",
       "<rootDir>/src",
       "node_modules/fbjs"
     ],

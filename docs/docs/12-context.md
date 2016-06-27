@@ -50,7 +50,7 @@ class MessageList extends React.Component {
     const children = this.props.messages.map((message) =>
       <Message text={message.text} color={color} />
     );
-    return <div>{this.props.children}</div>;
+    return <div>{children}</div>;
   }
 }
 ```

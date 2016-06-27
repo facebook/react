@@ -60,6 +60,14 @@ var StatusDisplay = React.createClass({
     return this.state.internalState;
   },
 
+  componentDidMount: function() {
+    this.props.onFlush();
+  },
+
+  componentDidUpdate: function() {
+    this.props.onFlush();
+  },
+
   render: function() {
     return (
       <div>
@@ -74,34 +82,60 @@ var StatusDisplay = React.createClass({
  */
 var FriendsStatusDisplay = React.createClass({
   /**
-   * Retrieves the rendered children in a nice format for comparing to the input
-   * `this.props.usernameToStatus`. Gets the order directly from each rendered
-   * child's `index` field. Refs are not maintained in the rendered order, and
-   * neither is `this._renderedChildren` (surprisingly).
-   */
-  getStatusDisplays: function() {
-    var name;
-    var orderOfUsernames = [];
+  * Gets the order directly from each rendered child's `index` field.
+  * Refs are not maintained in the rendered order, and neither is
+  * `this._renderedChildren` (surprisingly).
+  */
+  getOriginalKeys: function() {
+    var originalKeys = [];
     // TODO: Update this to a better test that doesn't rely so much on internal
     // implementation details.
     var statusDisplays =
       ReactInstanceMap.get(this)
       ._renderedComponent
       ._renderedChildren;
+    var name;
     for (name in statusDisplays) {
       var child = statusDisplays[name];
       var isPresent = !!child;
       if (isPresent) {
-        orderOfUsernames[child._mountIndex] = getOriginalKey(name);
+        originalKeys[child._mountIndex] = getOriginalKey(name);
       }
     }
+    return originalKeys;
+  },
+  /**
+   * Retrieves the rendered children in a nice format for comparing to the input
+   * `this.props.usernameToStatus`.
+   */
+  getStatusDisplays: function() {
     var res = {};
     var i;
-    for (i = 0; i < orderOfUsernames.length; i++) {
-      var key = orderOfUsernames[i];
+    var originalKeys = this.getOriginalKeys();
+    for (i = 0; i < originalKeys.length; i++) {
+      var key = originalKeys[i];
       res[key] = this.refs[key];
     }
     return res;
+  },
+  /**
+   * Verifies that by the time a child is flushed, the refs that appeared
+   * earlier have already been resolved.
+   * TODO: This assumption will likely break with incremental reconciler
+   * but our internal layer API depends on this assumption. We need to change
+   * it to be more declarative before making ref resolution indeterministic.
+   */
+  verifyPreviousRefsResolved: function(flushedKey) {
+    var i;
+    var originalKeys = this.getOriginalKeys();
+    for (i = 0; i < originalKeys.length; i++) {
+      var key = originalKeys[i];
+      if (key === flushedKey) {
+        // We are only interested in children up to the current key.
+        return;
+      }
+      expect(this.refs[key]).toBeTruthy();
+    }
   },
   render: function() {
     var children = [];
@@ -110,7 +144,12 @@ var FriendsStatusDisplay = React.createClass({
       var status = this.props.usernameToStatus[key];
       children.push(
         !status ? null :
-        <StatusDisplay key={key} ref={key} status={status} />
+        <StatusDisplay
+          key={key}
+          ref={key}
+          onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
+          status={status}
+        />
       );
     }
     return (

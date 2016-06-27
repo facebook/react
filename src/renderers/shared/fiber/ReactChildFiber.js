@@ -28,14 +28,26 @@ var {
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 
-function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChildren) : Fiber {
+function createSubsequentChild(parent : Fiber, existingChild : ?Fiber, previousSibling : Fiber, newChildren) : Fiber {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return previousSibling;
   }
 
   switch (newChildren.$$typeof) {
     case REACT_ELEMENT_TYPE: {
-      const element = (newChildren : ReactElement);
+      const element = (newChildren : ReactElement<any>);
+      if (existingChild &&
+          element.type === existingChild.type &&
+          element.key === existingChild.key) {
+        // TODO: This is not sufficient since previous siblings could be new.
+        // Will fix reconciliation properly later.
+        const clone = ReactFiber.cloneFiber(existingChild);
+        clone.input = element.props;
+        clone.child = existingChild.child;
+        clone.sibling = null;
+        previousSibling.sibling = clone;
+        return clone;
+      }
       const child = ReactFiber.createFiberFromElement(element);
       previousSibling.sibling = child;
       child.parent = parent;
@@ -63,8 +75,14 @@ function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChild
 
   if (Array.isArray(newChildren)) {
     let prev : Fiber = previousSibling;
+    let existing : ?Fiber = existingChild;
     for (var i = 0; i < newChildren.length; i++) {
-      prev = createSubsequentChild(parent, prev, newChildren[i]);
+      prev = createSubsequentChild(parent, existing, prev, newChildren[i]);
+      if (prev && existing) {
+        // TODO: This is not correct because there could've been more
+        // than one sibling consumed but I don't want to return a tuple.
+        existing = existing.sibling;
+      }
     }
     return prev;
   } else {
@@ -73,14 +91,24 @@ function createSubsequentChild(parent : Fiber, previousSibling : Fiber, newChild
   }
 }
 
-function createFirstChild(parent, newChildren) {
+function createFirstChild(parent, existingChild, newChildren) {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return null;
   }
 
   switch (newChildren.$$typeof) {
     case REACT_ELEMENT_TYPE: {
-      const element = (newChildren : ReactElement);
+      const element = (newChildren : ReactElement<any>);
+      if (existingChild &&
+          element.type === existingChild.type &&
+          element.key === existingChild.key) {
+        // Get the clone of the existing fiber.
+        const clone = ReactFiber.cloneFiber(existingChild);
+        clone.input = element.props;
+        clone.child = existingChild.child;
+        clone.sibling = null;
+        return clone;
+      }
       const child = ReactFiber.createFiberFromElement(element);
       child.parent = parent;
       return child;
@@ -109,12 +137,18 @@ function createFirstChild(parent, newChildren) {
   if (Array.isArray(newChildren)) {
     var first : ?Fiber = null;
     var prev : ?Fiber = null;
+    var existing : ?Fiber = existingChild;
     for (var i = 0; i < newChildren.length; i++) {
       if (prev == null) {
-        prev = createFirstChild(parent, newChildren[i]);
+        prev = createFirstChild(parent, existing, newChildren[i]);
         first = prev;
       } else {
-        prev = createSubsequentChild(parent, prev, newChildren[i]);
+        prev = createSubsequentChild(parent, existing, prev, newChildren[i]);
+      }
+      if (prev && existing) {
+        // TODO: This is not correct because there could've been more
+        // than one sibling consumed but I don't want to return a tuple.
+        existing = existing.sibling;
       }
     }
     return first;
@@ -124,6 +158,6 @@ function createFirstChild(parent, newChildren) {
   }
 }
 
-exports.reconcileChildFibers = function(parent : Fiber, firstChild : ?Fiber, newChildren : ReactNodeList) : ?Fiber {
-  return createFirstChild(parent, newChildren);
+exports.reconcileChildFibers = function(parent : Fiber, currentFirstChild : ?Fiber, newChildren : ReactNodeList) : ?Fiber {
+  return createFirstChild(parent, currentFirstChild, newChildren);
 };

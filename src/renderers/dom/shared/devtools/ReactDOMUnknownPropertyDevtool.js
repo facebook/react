@@ -24,6 +24,7 @@ if (__DEV__) {
     key: true,
     ref: true,
 
+    autoFocus: true,
     defaultValue: true,
     valueLink: true,
     defaultChecked: true,

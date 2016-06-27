@@ -7,9 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNodeTypes
+ * @flow
  */
 
 'use strict';
+
+type ReactNodeType = 0 | 1 | 2;
 
 var ReactElement = require('ReactElement');
 
@@ -20,7 +23,7 @@ var ReactNodeTypes = {
   COMPOSITE: 1,
   EMPTY: 2,
 
-  getType: function(node) {
+  getType: function(node: ReactElement<any>): ReactNodeType {
     if (node === null || node === false) {
       return ReactNodeTypes.EMPTY;
     } else if (ReactElement.isValidElement(node)) {

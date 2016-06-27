@@ -59,7 +59,7 @@ $ browserify -t [ babelify --presets [ react ] ] main.js -o bundle.js
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>

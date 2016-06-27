@@ -7,25 +7,19 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Just the UI</h3>
-      <p>
-        Lots of people use React as the V in MVC.
-        Since React makes no assumptions about the rest of your technology stack,
-        it&apos;s easy to try it out on a small feature in an existing project.
-      </p>
+      <h3>Declarative</h3>
+      <p>React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes.</p>
+      <p>Declarative views make your code more predictable and easier to debug.</p>
     </div>
     <div class="marketing-col">
-      <h3>Virtual DOM</h3>
-      <p>
-        React abstracts away the DOM, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using <a href="https://facebook.github.io/react-native/">React Native</a>.
-      </p>
+      <h3>Component-Based</h3>
+      <p>Build encapsulated components that manage their own state, then compose them to make complex UIs.</p>
+      <p>Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep state out of the DOM.</p>
     </div>
     <div class="marketing-col">
-      <h3>Data flow</h3>
-      <p>
-        React implements one-way reactive data flow which reduces boilerplate and is
-        easier to reason about than traditional data binding.
-      </p>
+      <h3>Learn Once, Write Anywhere</h3>
+      <p>We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code.</p>
+      <p>React can also render on the server using Node and power mobile apps using <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
     </div>
   </div>
 </section>
@@ -72,13 +66,13 @@ id: home
       <h3>A Component Using External Plugins</h3>
       <p>
         React is flexible and provides hooks that allow you to interface with
-        other libraries and frameworks. This example uses **marked**, an external
-        Markdown library, to convert the textarea's value in real-time.
+        other libraries and frameworks. This example uses **remarkable**, an
+        external Markdown library, to convert the textarea's value in real time.
       </p>
       <div id="markdownExample"></div>
     </div>
   </div>
-  <script src="/react/js/marked.min.js"></script>
+  <script src="/react/js/remarkable.min.js"></script>
   <script src="/react/js/examples/hello.js"></script>
   <script src="/react/js/examples/timer.js"></script>
   <script src="/react/js/examples/todo.js"></script>
