@@ -42,13 +42,10 @@ describe('ReactPropTypesProduction', function() {
       'testComponent',
       'prop'
     );
-    const expectedCount = __DEV__ ? 0 : 1;
-    expect(console.error.calls.count()).toBe(expectedCount);
-    if (!__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'You are manually calling a React.PropTypes validation '
-      );
-    }
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'You are manually calling a React.PropTypes validation '
+    );
     console.error.calls.reset();
   }
 
@@ -230,36 +227,6 @@ describe('ReactPropTypesProduction', function() {
       );
       typeCheckPass(PropTypes.element, <div />);
     });
-  });
-
-  it('should not warn in the development environment', () => {
-    __DEV__ = true;
-    oldProcess = process;
-    global.process = {env: {NODE_ENV: 'development'}};
-    jest.resetModuleRegistry();
-    PropTypes = require('ReactPropTypes');
-    React = require('React');
-
-    spyOn(console, 'error');
-    typeCheckPass(PropTypes.bool, true);
-    typeCheckPass(PropTypes.array, []);
-    typeCheckPass(PropTypes.string, 'foo');
-    typeCheckPass(PropTypes.any, 'foo');
-    typeCheckPass(
-      PropTypes.arrayOf(PropTypes.number),
-      [1, 2, 3]
-    );
-    typeCheckPass(PropTypes.instanceOf(Date), new Date());
-    typeCheckPass(
-      PropTypes.objectOf({ foo: PropTypes.string }),
-      { foo: 'bar' }
-    );
-    typeCheckPass(PropTypes.oneOf('red', 'blue'), 'red');
-    typeCheckPass(
-      PropTypes.oneOfType(PropTypes.string, PropTypes.number),
-      'red'
-    );
-    typeCheckPass(PropTypes.shape({ foo: PropTypes.number }), { foo: 42 });
   });
 
   it('should not warn when doing type checks internally', function() {
