@@ -20,6 +20,7 @@ var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
@@ -287,10 +288,11 @@ var ReactMount = {
   _updateRootComponent: function(
       prevComponent,
       nextElement,
+      nextContext,
       container,
       callback) {
     ReactMount.scrollMonitor(container, function() {
-      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement);
+      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement, nextContext);
       if (callback) {
         ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
       }
@@ -389,7 +391,7 @@ var ReactMount = {
    */
   renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
-      parentComponent != null && parentComponent._reactInternalInstance != null,
+      parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
     );
     return ReactMount._renderSubtreeIntoContainer(
@@ -440,6 +442,14 @@ var ReactMount = {
       nextElement
     );
 
+    var nextContext;
+    if (parentComponent) {
+      var parentInst = ReactInstanceMap.get(parentComponent);
+      nextContext = parentInst._processChildContext(parentInst._context);
+    } else {
+      nextContext = emptyObject;
+    }
+
     var prevComponent = getTopLevelWrapperInContainer(container);
 
     if (prevComponent) {
@@ -453,6 +463,7 @@ var ReactMount = {
         ReactMount._updateRootComponent(
           prevComponent,
           nextWrappedElement,
+          nextContext,
           container,
           updatedCallback
         );
@@ -501,11 +512,7 @@ var ReactMount = {
       nextWrappedElement,
       container,
       shouldReuseMarkup,
-      parentComponent != null ?
-        parentComponent._reactInternalInstance._processChildContext(
-          parentComponent._reactInternalInstance._context
-        ) :
-        emptyObject
+      nextContext
     )._renderedComponent.getPublicInstance();
     if (callback) {
       callback.call(component);

@@ -118,7 +118,7 @@ var ReactNativeMount = {
       var prevWrappedElement = prevComponent._currentElement;
       var prevElement = prevWrappedElement.props;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
-        ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement);
+        ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement, emptyObject);
         if (callback) {
           ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
         }
