@@ -14,7 +14,7 @@
 var ReactRef = require('ReactRef');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var invariant = require('invariant');
+var warning = require('warning');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -206,7 +206,7 @@ var ReactReconciler = {
     if (internalInstance._updateBatchNumber !== updateBatchNumber) {
       // The component's enqueued batch number should always be the current
       // batch or the following one.
-      invariant(
+      warning(
         internalInstance._updateBatchNumber == null ||
         internalInstance._updateBatchNumber === updateBatchNumber + 1,
         'performUpdateIfNecessary: Unexpected batch number (current %s, ' +
