@@ -811,8 +811,8 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
-        'input is a void element tag and must not have `children` or ' +
-        'use `props.dangerouslySetInnerHTML`.'
+        'input is a void element tag and must neither have `children` nor ' +
+        'use `dangerouslySetInnerHTML`.'
       );
     });
 
@@ -825,8 +825,8 @@ describe('ReactDOMComponent', function() {
           container
         );
       }).toThrowError(
-        'input is a void element tag and must not have `children` or use ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'input is a void element tag and must neither have `children` nor use ' +
+        '`dangerouslySetInnerHTML`.'
       );
     });
 
@@ -840,8 +840,8 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
       }).toThrowError(
-        'menuitem is a void element tag and must not have `children` or use ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'menuitem is a void element tag and must neither have `children` nor use ' +
+        '`dangerouslySetInnerHTML`.'
       );
 
     });
@@ -977,8 +977,8 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<X />, container);
       }).toThrowError(
-        'input is a void element tag and must not have `children` ' +
-        'or use `props.dangerouslySetInnerHTML`. Check the render method of X.'
+        'input is a void element tag and must neither have `children` ' +
+        'nor use `dangerouslySetInnerHTML`. Check the render method of X.'
       );
     });
 
@@ -1007,8 +1007,8 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
-        'input is a void element tag and must not have `children` or use ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'input is a void element tag and must neither have `children` nor use ' +
+        '`dangerouslySetInnerHTML`.'
       );
     });
 
@@ -1021,8 +1021,8 @@ describe('ReactDOMComponent', function() {
           container
         );
       }).toThrowError(
-        'input is a void element tag and must not have `children` or use ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'input is a void element tag and must neither have `children` nor use ' +
+        '`dangerouslySetInnerHTML`.'
       );
     });
 
