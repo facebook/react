@@ -54,7 +54,7 @@ function handleElement(debugID, element) {
             groupOptions = [groupOptions];
           }
           for (const groupOption of groupOptions) {
-            if (groupOption.props != null) {
+            if ((groupOption.props != null) && (groupOption.props.value != null)) {
               values.push(groupOption.props.value);
             }
           }
@@ -62,7 +62,7 @@ function handleElement(debugID, element) {
       }
 
       if (option.type === 'option') {
-        if (option.props != null) {
+        if ((option.props != null) && (option.props.value)) {
           values.push(option.props.value);
         }
       }
