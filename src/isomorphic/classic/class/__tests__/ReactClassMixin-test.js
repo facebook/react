@@ -321,8 +321,8 @@ describe('ReactClass-mixin', function() {
       },
     });
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -341,8 +341,8 @@ describe('ReactClass-mixin', function() {
       },
     });
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -365,8 +365,8 @@ describe('ReactClass-mixin', function() {
       },
     });
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -389,8 +389,8 @@ describe('ReactClass-mixin', function() {
       },
     });
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
