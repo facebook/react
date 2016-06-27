@@ -287,10 +287,11 @@ var ReactMount = {
   _updateRootComponent: function(
       prevComponent,
       nextElement,
+      nextContext,
       container,
       callback) {
     ReactMount.scrollMonitor(container, function() {
-      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement);
+      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement, nextContext);
       if (callback) {
         ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
       }
@@ -439,6 +440,10 @@ var ReactMount = {
       null,
       nextElement
     );
+    var nextContext = parentComponent ?
+      parentComponent._reactInternalInstance._processChildContext(
+        parentComponent._reactInternalInstance._context
+      ) : emptyObject;
 
     var prevComponent = getTopLevelWrapperInContainer(container);
 
@@ -453,6 +458,7 @@ var ReactMount = {
         ReactMount._updateRootComponent(
           prevComponent,
           nextWrappedElement,
+          nextContext,
           container,
           updatedCallback
         );
@@ -501,11 +507,7 @@ var ReactMount = {
       nextWrappedElement,
       container,
       shouldReuseMarkup,
-      parentComponent != null ?
-        parentComponent._reactInternalInstance._processChildContext(
-          parentComponent._reactInternalInstance._context
-        ) :
-        emptyObject
+      nextContext
     )._renderedComponent.getPublicInstance();
     if (callback) {
       callback.call(component);

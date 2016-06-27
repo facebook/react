@@ -95,7 +95,6 @@ describe('renderSubtreeIntoContainer', function() {
   });
 
   it('should pass updated context if context changes', function() {
-
     var container = document.createElement('div');
     document.body.appendChild(container);
     var portal = document.createElement('div');

@@ -246,8 +246,9 @@ var ReactUpdateQueue = {
     enqueueUpdate(internalInstance);
   },
 
-  enqueueElementInternal: function(internalInstance, newElement) {
-    internalInstance._pendingElement = newElement;
+  enqueueElementInternal: function(internalInstance, nextElement, nextContext) {
+    internalInstance._pendingElement = nextElement;
+    internalInstance._context = nextContext;
     enqueueUpdate(internalInstance);
   },
 
