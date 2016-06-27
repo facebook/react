@@ -155,8 +155,8 @@ function assertValidProps(component, props) {
   if (voidElementTags[component._tag]) {
     invariant(
       props.children == null && props.dangerouslySetInnerHTML == null,
-      '%s is a void element tag and must not have `children` or ' +
-      'use `props.dangerouslySetInnerHTML`.%s',
+      '%s is a void element tag and must neither have `children` nor ' +
+      'use `dangerouslySetInnerHTML`.%s',
       component._tag,
       component._currentElement._owner ?
         ' Check the render method of ' +
