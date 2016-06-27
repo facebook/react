@@ -12,8 +12,8 @@
 'use strict';
 
 var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
-
 var warning = require('warning');
+var areEqual = require('areEqual');
 
 var didWarnDupeSelectValues = false;
 
@@ -21,34 +21,74 @@ function handleElement(debugID, element) {
   if (element == null) {
     return;
   }
+
   if (element.type !== 'select') {
     return;
   }
 
-  if (element.props != null && element.props.value === null && !didWarnDupeSelectValues) {
+  if ((element.props == null) || (element.props.children == null)) {
+    return;
+  }
 
-    console.log('TEST');
+  // Uncontrolled select elements can have duplicate values.
+  if (element.props.hasOwnProperty('defaultValue')) {
+    return;
+  }
 
-    /*
-    warning(
-      false,
-      '`value` prop on `%s` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.%s',
-      element.type,
-      ReactComponentTreeDevtool.getStackAddendumByID(debugID)
-    );
-    */
-    didWarnDupeSelectValues = true;
+  if (!didWarnDupeSelectValues) {
+    let values = [];
+    let options = element.props.children;
+
+    //  If options is not iterable make it an array.
+    if (typeof options[Symbol.iterator] !== 'function') {
+      options = [options];
+    }
+
+    // Combine the values from all options into a single array.
+    for (const option of options) {
+      if (option.type === 'optGroup') {
+        if ((option.props != null) && (option.props.children != null)) {
+          let groupOptions = option.props.children;
+          //  If groupOptions is not iterable make it an array.
+          if (typeof groupOptions[Symbol.iterator] !== 'function') {
+            groupOptions = [groupOptions];
+          }
+          for (const groupOption of groupOptions) {
+            if (groupOption.props != null) {
+              values.push(groupOption.props.value);
+            }
+          }
+        }
+      }
+
+      if (option.type === 'option') {
+        if (option.props != null) {
+          values.push(option.props.value);
+        }
+      }
+    }
+
+    if (values.length <= 1) {
+      return;
+    }
+
+    // Check the array for duplicate values.
+    for (var i = 0; i < values.length-1; i++) {
+      for (var j = i + 1; j < values.length; j++) {
+        if (areEqual(values[i], values[j])) {
+          warning(
+              false,
+              `Select element contains duplicate option value ${values[i]} in options #${i} & #${j}`,
+              element.type,
+              ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+            );
+          didWarnDupeSelectValues = true;
+          return;
+        }
+      }
+    }
   }
 }
-
-
-//  *** see if need different events in here
-// Look at old version of the DOMInput and see what events it listened to before refactoring.
-// * Did not use in an event. Just moved code. Check 7040 updates.
-// Need to remove my updates to ReactDOMSelect.js. Move stuff to Devtools.
-// Look for an example of using this module.
 
 var ReactDOMDuplicateSelectValuesDevtool = {
   onBeforeMountComponent(debugID, element) {
