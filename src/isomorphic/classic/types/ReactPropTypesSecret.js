@@ -12,6 +12,6 @@
 
 'use strict';
 
-const ReactPropTypesSecret = '__REACT_PROP_TYPES_SECRET__';
+const ReactPropTypesSecret = '__REACT_PROP_TYPES_SECRET__' + Math.random();
 
 module.exports = ReactPropTypesSecret;
