@@ -229,7 +229,7 @@ describe('ReactPropTypesProduction', function() {
     });
   });
 
-  it('should not warn when doing type checks internally', function() {
+  it('should not warn for type checks performed by React', function() {
     spyOn(console, 'error');
     var Component = React.createClass({
       propTypes: {
