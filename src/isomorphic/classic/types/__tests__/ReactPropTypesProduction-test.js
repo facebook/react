@@ -34,7 +34,7 @@ describe('ReactPropTypesProduction', function() {
     global.process = oldProcess;
   });
 
-  function typeCheckPass(declaration, value) {
+  function productionWarningCheck(declaration, value) {
     var props = {testProp: value};
     declaration(
       props,
@@ -53,48 +53,48 @@ describe('ReactPropTypesProduction', function() {
   describe('Primitive Types', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.array, /please/);
-      typeCheckPass(PropTypes.array, []);
-      typeCheckPass(PropTypes.array.isRequired, /please/);
-      typeCheckPass(PropTypes.array.isRequired, []);
-      typeCheckPass(PropTypes.array.isRequired, null);
-      typeCheckPass(PropTypes.array.isRequired, undefined);
-      typeCheckPass(PropTypes.bool, []);
-      typeCheckPass(PropTypes.bool, true);
-      typeCheckPass(PropTypes.bool.isRequired, []);
-      typeCheckPass(PropTypes.bool.isRequired, true);
-      typeCheckPass(PropTypes.bool.isRequired, null);
-      typeCheckPass(PropTypes.bool.isRequired, undefined);
-      typeCheckPass(PropTypes.func, false);
-      typeCheckPass(PropTypes.func, function() {});
-      typeCheckPass(PropTypes.func.isRequired, false);
-      typeCheckPass(PropTypes.func.isRequired, function() {});
-      typeCheckPass(PropTypes.func.isRequired, null);
-      typeCheckPass(PropTypes.func.isRequired, undefined);
-      typeCheckPass(PropTypes.number, function() {});
-      typeCheckPass(PropTypes.number, 42);
-      typeCheckPass(PropTypes.number.isRequired, function() {});
-      typeCheckPass(PropTypes.number.isRequired, 42);
-      typeCheckPass(PropTypes.number.isRequired, null);
-      typeCheckPass(PropTypes.number.isRequired, undefined);
-      typeCheckPass(PropTypes.string, 0);
-      typeCheckPass(PropTypes.string, 'foo');
-      typeCheckPass(PropTypes.string.isRequired, 0);
-      typeCheckPass(PropTypes.string.isRequired, 'foo');
-      typeCheckPass(PropTypes.string.isRequired, null);
-      typeCheckPass(PropTypes.string.isRequired, undefined);
-      typeCheckPass(PropTypes.symbol, 0);
-      typeCheckPass(PropTypes.symbol, Symbol('Foo'));
-      typeCheckPass(PropTypes.symbol.isRequired, 0);
-      typeCheckPass(PropTypes.symbol.isRequired, Symbol('Foo'));
-      typeCheckPass(PropTypes.symbol.isRequired, null);
-      typeCheckPass(PropTypes.symbol.isRequired, undefined);
-      typeCheckPass(PropTypes.object, '');
-      typeCheckPass(PropTypes.object, {foo: 'bar'});
-      typeCheckPass(PropTypes.object.isRequired, '');
-      typeCheckPass(PropTypes.object.isRequired, {foo: 'bar'});
-      typeCheckPass(PropTypes.object.isRequired, null);
-      typeCheckPass(PropTypes.object.isRequired, undefined);
+      productionWarningCheck(PropTypes.array, /please/);
+      productionWarningCheck(PropTypes.array, []);
+      productionWarningCheck(PropTypes.array.isRequired, /please/);
+      productionWarningCheck(PropTypes.array.isRequired, []);
+      productionWarningCheck(PropTypes.array.isRequired, null);
+      productionWarningCheck(PropTypes.array.isRequired, undefined);
+      productionWarningCheck(PropTypes.bool, []);
+      productionWarningCheck(PropTypes.bool, true);
+      productionWarningCheck(PropTypes.bool.isRequired, []);
+      productionWarningCheck(PropTypes.bool.isRequired, true);
+      productionWarningCheck(PropTypes.bool.isRequired, null);
+      productionWarningCheck(PropTypes.bool.isRequired, undefined);
+      productionWarningCheck(PropTypes.func, false);
+      productionWarningCheck(PropTypes.func, function() {});
+      productionWarningCheck(PropTypes.func.isRequired, false);
+      productionWarningCheck(PropTypes.func.isRequired, function() {});
+      productionWarningCheck(PropTypes.func.isRequired, null);
+      productionWarningCheck(PropTypes.func.isRequired, undefined);
+      productionWarningCheck(PropTypes.number, function() {});
+      productionWarningCheck(PropTypes.number, 42);
+      productionWarningCheck(PropTypes.number.isRequired, function() {});
+      productionWarningCheck(PropTypes.number.isRequired, 42);
+      productionWarningCheck(PropTypes.number.isRequired, null);
+      productionWarningCheck(PropTypes.number.isRequired, undefined);
+      productionWarningCheck(PropTypes.string, 0);
+      productionWarningCheck(PropTypes.string, 'foo');
+      productionWarningCheck(PropTypes.string.isRequired, 0);
+      productionWarningCheck(PropTypes.string.isRequired, 'foo');
+      productionWarningCheck(PropTypes.string.isRequired, null);
+      productionWarningCheck(PropTypes.string.isRequired, undefined);
+      productionWarningCheck(PropTypes.symbol, 0);
+      productionWarningCheck(PropTypes.symbol, Symbol('Foo'));
+      productionWarningCheck(PropTypes.symbol.isRequired, 0);
+      productionWarningCheck(PropTypes.symbol.isRequired, Symbol('Foo'));
+      productionWarningCheck(PropTypes.symbol.isRequired, null);
+      productionWarningCheck(PropTypes.symbol.isRequired, undefined);
+      productionWarningCheck(PropTypes.object, '');
+      productionWarningCheck(PropTypes.object, {foo: 'bar'});
+      productionWarningCheck(PropTypes.object.isRequired, '');
+      productionWarningCheck(PropTypes.object.isRequired, {foo: 'bar'});
+      productionWarningCheck(PropTypes.object.isRequired, null);
+      productionWarningCheck(PropTypes.object.isRequired, undefined);
     });
   });
 
@@ -102,29 +102,29 @@ describe('ReactPropTypesProduction', function() {
   describe('Any Type', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.any, null);
-      typeCheckPass(PropTypes.any.isRequired, null);
-      typeCheckPass(PropTypes.any.isRequired, undefined);
+      productionWarningCheck(PropTypes.any, null);
+      productionWarningCheck(PropTypes.any.isRequired, null);
+      productionWarningCheck(PropTypes.any.isRequired, undefined);
     });
   });
 
   describe('ArrayOf Type', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(
+      productionWarningCheck(
       PropTypes.arrayOf({ foo: PropTypes.string }),
         { foo: 'bar' }
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.arrayOf(PropTypes.number),
         [1, 2, 'b']
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.arrayOf(PropTypes.number),
         {'0': 'maybe-array', length: 1}
       );
-      typeCheckPass(PropTypes.arrayOf(PropTypes.number).isRequired, null);
-      typeCheckPass(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
+      productionWarningCheck(PropTypes.arrayOf(PropTypes.number).isRequired, null);
+      productionWarningCheck(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
     });
   });
 
@@ -132,80 +132,80 @@ describe('ReactPropTypesProduction', function() {
   describe('Component Type', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.element, [<div />, <div />]);
-      typeCheckPass(PropTypes.element, <div />);
-      typeCheckPass(PropTypes.element, 123);
-      typeCheckPass(PropTypes.element, 'foo');
-      typeCheckPass(PropTypes.element, false);
-      typeCheckPass(PropTypes.element.isRequired, null);
-      typeCheckPass(PropTypes.element.isRequired, undefined);
+      productionWarningCheck(PropTypes.element, [<div />, <div />]);
+      productionWarningCheck(PropTypes.element, <div />);
+      productionWarningCheck(PropTypes.element, 123);
+      productionWarningCheck(PropTypes.element, 'foo');
+      productionWarningCheck(PropTypes.element, false);
+      productionWarningCheck(PropTypes.element.isRequired, null);
+      productionWarningCheck(PropTypes.element.isRequired, undefined);
     });
   });
 
   describe('Instance Types', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.instanceOf(Date), {});
-      typeCheckPass(PropTypes.instanceOf(Date), new Date());
-      typeCheckPass(PropTypes.instanceOf(Date).isRequired, {});
-      typeCheckPass(PropTypes.instanceOf(Date).isRequired, new Date());
+      productionWarningCheck(PropTypes.instanceOf(Date), {});
+      productionWarningCheck(PropTypes.instanceOf(Date), new Date());
+      productionWarningCheck(PropTypes.instanceOf(Date).isRequired, {});
+      productionWarningCheck(PropTypes.instanceOf(Date).isRequired, new Date());
     });
   });
 
   describe('React Component Types', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.node, 'node');
-      typeCheckPass(PropTypes.node, {});
-      typeCheckPass(PropTypes.node.isRequired, 'node');
-      typeCheckPass(PropTypes.node.isRequired, undefined);
-      typeCheckPass(PropTypes.node.isRequired, undefined);
+      productionWarningCheck(PropTypes.node, 'node');
+      productionWarningCheck(PropTypes.node, {});
+      productionWarningCheck(PropTypes.node.isRequired, 'node');
+      productionWarningCheck(PropTypes.node.isRequired, undefined);
+      productionWarningCheck(PropTypes.node.isRequired, undefined);
     });
   });
 
   describe('ObjectOf Type', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.objectOf({ foo: PropTypes.string }),
         { foo: 'bar' }
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.objectOf(PropTypes.number),
         {a: 1, b: 2, c: 'b'}
       );
-      typeCheckPass(PropTypes.objectOf(PropTypes.number), [1, 2]);
-      typeCheckPass(PropTypes.objectOf(PropTypes.number), null);
-      typeCheckPass(PropTypes.objectOf(PropTypes.number), undefined);
+      productionWarningCheck(PropTypes.objectOf(PropTypes.number), [1, 2]);
+      productionWarningCheck(PropTypes.objectOf(PropTypes.number), null);
+      productionWarningCheck(PropTypes.objectOf(PropTypes.number), undefined);
     });
   });
 
   describe('OneOf Types', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.oneOf('red', 'blue'), 'red');
-      typeCheckPass(PropTypes.oneOf(['red', 'blue']), true);
-      typeCheckPass(PropTypes.oneOf(['red', 'blue']), null);
-      typeCheckPass(PropTypes.oneOf(['red', 'blue']), undefined);
+      productionWarningCheck(PropTypes.oneOf('red', 'blue'), 'red');
+      productionWarningCheck(PropTypes.oneOf(['red', 'blue']), true);
+      productionWarningCheck(PropTypes.oneOf(['red', 'blue']), null);
+      productionWarningCheck(PropTypes.oneOf(['red', 'blue']), undefined);
     });
   });
 
   describe('Union Types', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.oneOfType(PropTypes.string, PropTypes.number),
         'red'
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         []
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         null
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         undefined
       );
@@ -215,17 +215,17 @@ describe('ReactPropTypesProduction', function() {
   describe('Shape Types', function() {
     it('should warn if called manually in production', function() {
       spyOn(console, 'error');
-      typeCheckPass(PropTypes.shape({}), 'some string');
-      typeCheckPass(PropTypes.shape({ foo: PropTypes.number }), { foo: 42 });
-      typeCheckPass(
+      productionWarningCheck(PropTypes.shape({}), 'some string');
+      productionWarningCheck(PropTypes.shape({ foo: PropTypes.number }), { foo: 42 });
+      productionWarningCheck(
         PropTypes.shape({key: PropTypes.number}).isRequired,
         null
       );
-      typeCheckPass(
+      productionWarningCheck(
         PropTypes.shape({key: PropTypes.number}).isRequired,
         undefined
       );
-      typeCheckPass(PropTypes.element, <div />);
+      productionWarningCheck(PropTypes.element, <div />);
     });
   });
 
