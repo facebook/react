@@ -19,7 +19,6 @@ var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 describe('renderSubtreeIntoContainer', function() {
 
   it('should pass context when rendering subtree elsewhere', function() {
-
     var portal = document.createElement('div');
 
     var Component = React.createClass({
@@ -94,7 +93,7 @@ describe('renderSubtreeIntoContainer', function() {
     });
   });
 
-  it('should pass updated context if context changes', function() {
+  it('should update context if it changes due to setState', function() {
     var container = document.createElement('div');
     document.body.appendChild(container);
     var portal = document.createElement('div');
@@ -119,9 +118,7 @@ describe('renderSubtreeIntoContainer', function() {
       getChildContext: function() {
         return {
           foo: this.state.bar,
-          getFoo: function() {
-            return this.state.bar;
-          }.bind(this),
+          getFoo: () => this.state.bar,
         };
       },
 
@@ -144,9 +141,58 @@ describe('renderSubtreeIntoContainer', function() {
       },
     });
 
-    var instance = ReactDOM.render(<Parent/>, container);
+    var instance = ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
     instance.setState({bar: 'changed'});
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
+
+  it('should update context if it changes due to re-render', function() {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    var portal = document.createElement('div');
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string.isRequired,
+        getFoo: React.PropTypes.func.isRequired,
+      },
+
+      render: function() {
+        return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
+      },
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string.isRequired,
+        getFoo: React.PropTypes.func.isRequired,
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.bar,
+          getFoo: () => this.props.bar,
+        };
+      },
+
+      render: function() {
+        return null;
+      },
+
+      componentDidMount: function() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+      },
+
+      componentDidUpdate() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+      },
+    });
+
+    ReactDOM.render(<Parent bar="initial" />, container);
+    expect(portal.firstChild.innerHTML).toBe('initial-initial');
+    ReactDOM.render(<Parent bar="changed" />, container);
+    expect(portal.firstChild.innerHTML).toBe('changed-changed');
+  });
+
 });
