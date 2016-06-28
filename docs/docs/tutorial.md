@@ -398,10 +398,10 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       cache: false,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -428,10 +428,10 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       cache: false,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -594,10 +594,10 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       cache: false,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -680,10 +680,10 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       cache: false,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -694,10 +694,10 @@ var CommentBox = React.createClass({
       dataType: 'json',
       type: 'POST',
       data: comment,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -733,10 +733,10 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       cache: false,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
@@ -754,10 +754,10 @@ var CommentBox = React.createClass({
       dataType: 'json',
       type: 'POST',
       data: comment,
-      success: function(data) {
+      done: function(data) {
         this.setState({data: data});
       }.bind(this),
-      error: function(xhr, status, err) {
+      fail: function(xhr, status, err) {
         this.setState({data: comments});
         console.error(this.props.url, status, err.toString());
       }.bind(this)
