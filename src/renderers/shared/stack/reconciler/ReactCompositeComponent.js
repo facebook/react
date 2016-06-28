@@ -310,8 +310,11 @@ var ReactCompositeComponentMixin = {
     var initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
-    } else {
-      this._notifyStateChanged()
+    } else if (__DEV__ && this._debugID !== 0) {
+      ReactInstrumentation.debugTool.onStateChanged(
+        this._debugID,
+        this._instance.state
+      );
     }
 
     invariant(
@@ -864,15 +867,12 @@ var ReactCompositeComponentMixin = {
 
   _updateState(nextState) {
     this._instance.state = nextState;
-    this._notifyStateChanged();
-  },
 
-  // Explicitly notify about state change everytime the state changes,
-  // and don't count on _processPendingState, in case it might be called
-  // without actually changing the state later
-  _notifyStateChanged() {
-    // Only emit event when no in production, and not TopLevelWrapper (_debugID === 0)
     if (__DEV__ && this._debugID !== 0) {
+      // Explicitly notify about state change everytime the state changes,
+      // and don't count on _processPendingState, in case it might be called
+      // without actually changing the state late
+      // Only emit event when no in production, and not TopLevelWrapper (_debugID === 0)
       ReactInstrumentation.debugTool.onStateChanged(
         this._debugID,
         this._instance.state
