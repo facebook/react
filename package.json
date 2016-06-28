@@ -55,7 +55,7 @@
     "gulp-flatten": "^0.2.0",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest": "^12.1.1",
+    "jest": "^13.0.0",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
     "platform": "^1.1.0",
