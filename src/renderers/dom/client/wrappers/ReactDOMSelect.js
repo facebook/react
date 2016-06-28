@@ -107,10 +107,7 @@ function updateOptions(inst, multiple, propValue) {
       selectedValue['' + propValue[i]] = true;
     }
     for (i = 0; i < options.length; i++) {
-      var selected = selectedValue.hasOwnProperty(options[i].value);
-      if (options[i].selected !== selected) {
-        options[i].selected = selected;
-      }
+      options[i].selected = selectedValue.hasOwnProperty(options[i].value);
     }
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
