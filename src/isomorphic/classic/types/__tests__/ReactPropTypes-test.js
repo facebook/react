@@ -16,6 +16,7 @@ var React;
 var ReactFragment;
 var ReactPropTypeLocations;
 var ReactTestUtils;
+var ReactPropTypesSecret;
 
 var Component;
 var MyComponent;
@@ -28,7 +29,9 @@ function typeCheckFail(declaration, value, message) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
   );
   expect(error instanceof Error).toBe(true);
   expect(error.message).toBe(message);
@@ -40,7 +43,9 @@ function typeCheckPass(declaration, value) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
   );
   expect(error).toBe(null);
 }
@@ -52,6 +57,7 @@ describe('ReactPropTypes', function() {
     ReactFragment = require('ReactFragment');
     ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
+    ReactPropTypesSecret = require('ReactPropTypesSecret');
   });
 
   describe('Primitive Types', function() {

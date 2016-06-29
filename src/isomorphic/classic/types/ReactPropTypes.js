@@ -127,11 +127,13 @@ function createChainableTypeChecker(validate) {
       ) {
         var cacheKey = `${componentName}:${propName}`;
         if (!manualPropTypeCallCache[cacheKey]) {
-          console.error(
-            `You are manually calling a React.PropTypes validation ` +
-             `function for the prop ${propFullName} on ${componentName} ` +
-             `in a production build. This is deprecated and will ` +
-             `not work in the next major version.`
+          warning(
+            false,
+            'You are manually calling a React.PropTypes validation ' +
+            'function for the prop %s on %s. This is deprecated ' +
+            'and will not work in the next major version.',
+            propFullName,
+            componentName
           );
           manualPropTypeCallCache[cacheKey] = true;
         }
