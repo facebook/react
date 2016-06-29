@@ -314,9 +314,8 @@ if (__DEV__) {
 
     var stack = [];
     do {
-      stack.push(instance);
+      stack.unshift(instance);
     } while ((instance = instance._currentElement._owner));
-    stack.reverse();
     return stack;
   };
 
