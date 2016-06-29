@@ -128,28 +128,63 @@ function recordTouchStart(touch: Touch): void {
 
 function recordTouchMove(touch: Touch): void {
   const touchRecord = touchBank[getTouchIdentifier(touch)];
-  invariant(touchRecord, 'Touch data should have been recorded on start.');
-  touchRecord.touchActive = true;
-  touchRecord.previousPageX = touchRecord.currentPageX;
-  touchRecord.previousPageY = touchRecord.currentPageY;
-  touchRecord.previousTimeStamp = touchRecord.currentTimeStamp;
-  touchRecord.currentPageX = touch.pageX;
-  touchRecord.currentPageY = touch.pageY;
-  touchRecord.currentTimeStamp = timestampForTouch(touch);
-  touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
+  if (touchRecord) {
+    touchRecord.touchActive = true;
+    touchRecord.previousPageX = touchRecord.currentPageX;
+    touchRecord.previousPageY = touchRecord.currentPageY;
+    touchRecord.previousTimeStamp = touchRecord.currentTimeStamp;
+    touchRecord.currentPageX = touch.pageX;
+    touchRecord.currentPageY = touch.pageY;
+    touchRecord.currentTimeStamp = timestampForTouch(touch);
+    touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
+  } else {
+    console.error(
+      'Cannot record touch move without a touch start.\n' +
+      'Touch Move: %s\n',
+      'Touch Bank: %s',
+      printTouch(touch),
+      printTouchBank()
+    );
+  }
 }
 
 function recordTouchEnd(touch: Touch): void {
   const touchRecord = touchBank[getTouchIdentifier(touch)];
-  invariant(touchRecord, 'Touch data should have been recorded on start.');
-  touchRecord.touchActive = false;
-  touchRecord.previousPageX = touchRecord.currentPageX;
-  touchRecord.previousPageY = touchRecord.currentPageY;
-  touchRecord.previousTimeStamp = touchRecord.currentTimeStamp;
-  touchRecord.currentPageX = touch.pageX;
-  touchRecord.currentPageY = touch.pageY;
-  touchRecord.currentTimeStamp = timestampForTouch(touch);
-  touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
+  if (touchRecord) {
+    touchRecord.touchActive = false;
+    touchRecord.previousPageX = touchRecord.currentPageX;
+    touchRecord.previousPageY = touchRecord.currentPageY;
+    touchRecord.previousTimeStamp = touchRecord.currentTimeStamp;
+    touchRecord.currentPageX = touch.pageX;
+    touchRecord.currentPageY = touch.pageY;
+    touchRecord.currentTimeStamp = timestampForTouch(touch);
+    touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
+  } else {
+    console.error(
+      'Cannot record touch end without a touch start.\n' +
+      'Touch End: %s\n',
+      'Touch Bank: %s',
+      printTouch(touch),
+      printTouchBank()
+    );
+  }
+}
+
+function printTouch(touch: Touch): string {
+  return JSON.stringify({
+    identifier: touch.identifier,
+    pageX: touch.pageX,
+    pageY: touch.pageY,
+    timestamp: timestampForTouch(touch),
+  });
+}
+
+function printTouchBank(): string {
+  let printed = JSON.stringify(touchBank.slice(0, MAX_TOUCH_BANK));
+  if (touchBank.length > MAX_TOUCH_BANK) {
+    printed += ' (original size: ' + touchBank.length + ')';
+  }
+  return printed;
 }
 
 const ResponderTouchHistoryStore = {
@@ -160,7 +195,8 @@ const ResponderTouchHistoryStore = {
       nativeEvent.changedTouches.forEach(recordTouchStart);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
-        touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[0].identifier;
+        touchHistory.indexOfSingleActiveTouch =
+          nativeEvent.touches[0].identifier;
       }
     } else if (isEndish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordTouchEnd);
@@ -174,10 +210,10 @@ const ResponderTouchHistoryStore = {
           }
         }
         if (__DEV__) {
-          const activeTouchData = touchBank[touchHistory.indexOfSingleActiveTouch];
+          const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
           warning(
-            activeTouchData != null &&
-            activeTouchData.touchActive,
+            activeRecord != null &&
+            activeRecord.touchActive,
             'Cannot find single active touch.'
           );
         }
