@@ -590,12 +590,16 @@ describe('ReactPropTypes', function() {
   });
 
   describe('OneOf Types', function() {
-    it('should fail for invalid argument', function() {
-      typeCheckFail(
-        PropTypes.oneOf('red', 'blue'),
-        'red',
-        'Invalid argument supplied to oneOf, expected an instance of array.'
-      );
+    it('should warn but not error for invalid argument', function() {
+      spyOn(console, 'error');
+
+      PropTypes.oneOf('red', 'blue');
+
+      expect(console.error).toHaveBeenCalled();
+      expect(console.error.calls.argsFor(0)[0])
+        .toContain('Invalid argument supplied to oneOf, expected an instance of array.');
+
+      typeCheckPass(PropTypes.oneOf('red', 'blue'), 'red');
     });
 
     it('should warn for invalid values', function() {
@@ -651,12 +655,16 @@ describe('ReactPropTypes', function() {
   });
 
   describe('Union Types', function() {
-    it('should fail for invalid argument', function() {
-      typeCheckFail(
-        PropTypes.oneOfType(PropTypes.string, PropTypes.number),
-        'red',
-        'Invalid argument supplied to oneOfType, expected an instance of array.'
-      );
+    it('should warn but not error for invalid argument', function() {
+      spyOn(console, 'error');
+
+      PropTypes.oneOfType(PropTypes.string, PropTypes.number);
+
+      expect(console.error).toHaveBeenCalled();
+      expect(console.error.calls.argsFor(0)[0])
+        .toContain('Invalid argument supplied to oneOfType, expected an instance of array.');
+
+      typeCheckPass(PropTypes.oneOf(PropTypes.string, PropTypes.number), []);
     });
 
     it('should warn if none of the types are valid', function() {
