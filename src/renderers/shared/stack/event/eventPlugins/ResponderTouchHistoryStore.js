@@ -15,6 +15,7 @@
 const EventPluginUtils = require('EventPluginUtils');
 
 const invariant = require('invariant');
+const warning = require('warning');
 
 const {
   isEndish,
@@ -53,7 +54,7 @@ const touchHistory = {
 };
 
 type Touch = {
-  identifier: number,
+  identifier: ?number,
   pageX: number,
   pageY: number,
   timestamp: number,
@@ -102,38 +103,32 @@ function resetTouchRecord(touchRecord: TouchRecord, touch: Touch): void {
   touchRecord.previousTimeStamp = timestampForTouch(touch);
 }
 
-function validateTouch(touch: Touch): void {
-  const {identifier} = touch;
+function getTouchIdentifier({identifier}: Touch): number {
   invariant(identifier != null, 'Touch object is missing identifier');
-  if (identifier > MAX_TOUCH_BANK) {
-    console.warn(
-      'Touch identifier ' + identifier + ' is greater than maximum ' +
-      'supported ' + MAX_TOUCH_BANK + ' which causes performance issues ' +
-      'backfilling array locations for all of the indices.'
-    );
-  }
+  warning(
+    identifier <= MAX_TOUCH_BANK,
+    'Touch identifier %s is greater than maximum supported %s which causes ' +
+    'performance issues backfilling array locations for all of the indices.',
+    identifier,
+    MAX_TOUCH_BANK
+  );
+  return identifier;
 }
 
-function recordStartTouchData(touch: Touch): void {
-  const {identifier} = touch;
+function recordTouchStart(touch: Touch): void {
+  const identifier = getTouchIdentifier(touch);
   const touchRecord = touchBank[identifier];
-  if (__DEV__) {
-    validateTouch(touch);
-  }
   if (touchRecord) {
     resetTouchRecord(touchRecord, touch);
   } else {
-    touchBank[touch.identifier] = createTouchRecord(touch);
+    touchBank[identifier] = createTouchRecord(touch);
   }
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 }
 
-function recordMoveTouchData(touch: Touch): void {
-  const touchRecord = touchBank[touch.identifier];
-  if (__DEV__) {
-    validateTouch(touch);
-    invariant(touchRecord, 'Touch data should have been recorded on start');
-  }
+function recordTouchMove(touch: Touch): void {
+  const touchRecord = touchBank[getTouchIdentifier(touch)];
+  invariant(touchRecord, 'Touch data should have been recorded on start.');
   touchRecord.touchActive = true;
   touchRecord.previousPageX = touchRecord.currentPageX;
   touchRecord.previousPageY = touchRecord.currentPageY;
@@ -144,12 +139,9 @@ function recordMoveTouchData(touch: Touch): void {
   touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
 }
 
-function recordEndTouchData(touch: Touch): void {
-  const touchRecord = touchBank[touch.identifier];
-  if (__DEV__) {
-    validateTouch(touch);
-    invariant(touchRecord, 'Touch data should have been recorded on start');
-  }
+function recordTouchEnd(touch: Touch): void {
+  const touchRecord = touchBank[getTouchIdentifier(touch)];
+  invariant(touchRecord, 'Touch data should have been recorded on start.');
   touchRecord.touchActive = false;
   touchRecord.previousPageX = touchRecord.currentPageX;
   touchRecord.previousPageY = touchRecord.currentPageY;
@@ -163,15 +155,15 @@ function recordEndTouchData(touch: Touch): void {
 const ResponderTouchHistoryStore = {
   recordTouchTrack(topLevelType: string, nativeEvent: TouchEvent): void {
     if (isMoveish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordMoveTouchData);
+      nativeEvent.changedTouches.forEach(recordTouchMove);
     } else if (isStartish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordStartTouchData);
+      nativeEvent.changedTouches.forEach(recordTouchStart);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[0].identifier;
       }
     } else if (isEndish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordEndTouchData);
+      nativeEvent.changedTouches.forEach(recordTouchEnd);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
         for (let i = 0; i < touchBank.length; i++) {
@@ -183,8 +175,11 @@ const ResponderTouchHistoryStore = {
         }
         if (__DEV__) {
           const activeTouchData = touchBank[touchHistory.indexOfSingleActiveTouch];
-          const foundActive = activeTouchData != null && !!activeTouchData.touchActive;
-          invariant(foundActive, 'Cannot find single active touch');
+          warning(
+            activeTouchData != null &&
+            activeTouchData.touchActive,
+            'Cannot find single active touch.'
+          );
         }
       }
     }
