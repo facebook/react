@@ -104,7 +104,7 @@ function resetTouchRecord(touchRecord: TouchRecord, touch: Touch): void {
 }
 
 function getTouchIdentifier({identifier}: Touch): number {
-  invariant(identifier != null, 'Touch object is missing identifier');
+  invariant(identifier != null, 'Touch object is missing identifier.');
   warning(
     identifier <= MAX_TOUCH_BANK,
     'Touch identifier %s is greater than maximum supported %s which causes ' +
