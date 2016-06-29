@@ -13,35 +13,41 @@
 
 
 describe('ReactPropTypesProduction', function() {
-  var oldProcess;
+  // var oldProcess;
   var PropTypes;
   var React;
   var ReactTestUtils;
 
   beforeEach(function() {
-    __DEV__ = false;
-    oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
-
-    jest.resetModuleRegistry();
+    // __DEV__ = false;
+    // oldProcess = process;
+    // global.process = {env: {NODE_ENV: 'production'}};
+    //
+    // jest.resetModuleRegistry();
     PropTypes = require('ReactPropTypes');
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
 
   afterEach(function() {
-    __DEV__ = true;
-    global.process = oldProcess;
+    // __DEV__ = true;
+    // global.process = oldProcess;
   });
 
-  function expectWarningInProduction(declaration, value) {
+  function expectWarningInDevelopment(declaration, value) {
     var props = {testProp: value};
-    declaration(
-      props,
-      'testProp',
-      'testComponent',
-      'prop'
-    );
+    // Call the function three times in all cases to make
+    // sure the warning is only output once.
+    var propName = 'testProp' + Math.random().toString();
+    var componentName = 'testComponent' + Math.random().toString();
+    for (var i = 0; i < 3; i ++) {
+      declaration(
+        props,
+        propName,
+        componentName,
+        'prop'
+      );
+    }
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'You are manually calling a React.PropTypes validation '
@@ -51,161 +57,161 @@ describe('ReactPropTypesProduction', function() {
 
 
   describe('Primitive Types', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.array, /please/);
-      expectWarningInProduction(PropTypes.array, []);
-      expectWarningInProduction(PropTypes.array.isRequired, /please/);
-      expectWarningInProduction(PropTypes.array.isRequired, []);
-      expectWarningInProduction(PropTypes.array.isRequired, null);
-      expectWarningInProduction(PropTypes.array.isRequired, undefined);
-      expectWarningInProduction(PropTypes.bool, []);
-      expectWarningInProduction(PropTypes.bool, true);
-      expectWarningInProduction(PropTypes.bool.isRequired, []);
-      expectWarningInProduction(PropTypes.bool.isRequired, true);
-      expectWarningInProduction(PropTypes.bool.isRequired, null);
-      expectWarningInProduction(PropTypes.bool.isRequired, undefined);
-      expectWarningInProduction(PropTypes.func, false);
-      expectWarningInProduction(PropTypes.func, function() {});
-      expectWarningInProduction(PropTypes.func.isRequired, false);
-      expectWarningInProduction(PropTypes.func.isRequired, function() {});
-      expectWarningInProduction(PropTypes.func.isRequired, null);
-      expectWarningInProduction(PropTypes.func.isRequired, undefined);
-      expectWarningInProduction(PropTypes.number, function() {});
-      expectWarningInProduction(PropTypes.number, 42);
-      expectWarningInProduction(PropTypes.number.isRequired, function() {});
-      expectWarningInProduction(PropTypes.number.isRequired, 42);
-      expectWarningInProduction(PropTypes.number.isRequired, null);
-      expectWarningInProduction(PropTypes.number.isRequired, undefined);
-      expectWarningInProduction(PropTypes.string, 0);
-      expectWarningInProduction(PropTypes.string, 'foo');
-      expectWarningInProduction(PropTypes.string.isRequired, 0);
-      expectWarningInProduction(PropTypes.string.isRequired, 'foo');
-      expectWarningInProduction(PropTypes.string.isRequired, null);
-      expectWarningInProduction(PropTypes.string.isRequired, undefined);
-      expectWarningInProduction(PropTypes.symbol, 0);
-      expectWarningInProduction(PropTypes.symbol, Symbol('Foo'));
-      expectWarningInProduction(PropTypes.symbol.isRequired, 0);
-      expectWarningInProduction(PropTypes.symbol.isRequired, Symbol('Foo'));
-      expectWarningInProduction(PropTypes.symbol.isRequired, null);
-      expectWarningInProduction(PropTypes.symbol.isRequired, undefined);
-      expectWarningInProduction(PropTypes.object, '');
-      expectWarningInProduction(PropTypes.object, {foo: 'bar'});
-      expectWarningInProduction(PropTypes.object.isRequired, '');
-      expectWarningInProduction(PropTypes.object.isRequired, {foo: 'bar'});
-      expectWarningInProduction(PropTypes.object.isRequired, null);
-      expectWarningInProduction(PropTypes.object.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.array, /please/);
+      expectWarningInDevelopment(PropTypes.array, []);
+      expectWarningInDevelopment(PropTypes.array.isRequired, /please/);
+      expectWarningInDevelopment(PropTypes.array.isRequired, []);
+      expectWarningInDevelopment(PropTypes.array.isRequired, null);
+      expectWarningInDevelopment(PropTypes.array.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.bool, []);
+      expectWarningInDevelopment(PropTypes.bool, true);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, []);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, true);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, null);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.func, false);
+      expectWarningInDevelopment(PropTypes.func, function() {});
+      expectWarningInDevelopment(PropTypes.func.isRequired, false);
+      expectWarningInDevelopment(PropTypes.func.isRequired, function() {});
+      expectWarningInDevelopment(PropTypes.func.isRequired, null);
+      expectWarningInDevelopment(PropTypes.func.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.number, function() {});
+      expectWarningInDevelopment(PropTypes.number, 42);
+      expectWarningInDevelopment(PropTypes.number.isRequired, function() {});
+      expectWarningInDevelopment(PropTypes.number.isRequired, 42);
+      expectWarningInDevelopment(PropTypes.number.isRequired, null);
+      expectWarningInDevelopment(PropTypes.number.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.string, 0);
+      expectWarningInDevelopment(PropTypes.string, 'foo');
+      expectWarningInDevelopment(PropTypes.string.isRequired, 0);
+      expectWarningInDevelopment(PropTypes.string.isRequired, 'foo');
+      expectWarningInDevelopment(PropTypes.string.isRequired, null);
+      expectWarningInDevelopment(PropTypes.string.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.symbol, 0);
+      expectWarningInDevelopment(PropTypes.symbol, Symbol('Foo'));
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, 0);
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, Symbol('Foo'));
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, null);
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.object, '');
+      expectWarningInDevelopment(PropTypes.object, {foo: 'bar'});
+      expectWarningInDevelopment(PropTypes.object.isRequired, '');
+      expectWarningInDevelopment(PropTypes.object.isRequired, {foo: 'bar'});
+      expectWarningInDevelopment(PropTypes.object.isRequired, null);
+      expectWarningInDevelopment(PropTypes.object.isRequired, undefined);
     });
   });
 
 
   describe('Any Type', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.any, null);
-      expectWarningInProduction(PropTypes.any.isRequired, null);
-      expectWarningInProduction(PropTypes.any.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.any, null);
+      expectWarningInDevelopment(PropTypes.any.isRequired, null);
+      expectWarningInDevelopment(PropTypes.any.isRequired, undefined);
     });
   });
 
   describe('ArrayOf Type', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(
+      expectWarningInDevelopment(
       PropTypes.arrayOf({ foo: PropTypes.string }),
         { foo: 'bar' }
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.arrayOf(PropTypes.number),
         [1, 2, 'b']
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.arrayOf(PropTypes.number),
         {'0': 'maybe-array', length: 1}
       );
-      expectWarningInProduction(PropTypes.arrayOf(PropTypes.number).isRequired, null);
-      expectWarningInProduction(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number).isRequired, null);
+      expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
     });
   });
 
 
   describe('Component Type', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.element, [<div />, <div />]);
-      expectWarningInProduction(PropTypes.element, <div />);
-      expectWarningInProduction(PropTypes.element, 123);
-      expectWarningInProduction(PropTypes.element, 'foo');
-      expectWarningInProduction(PropTypes.element, false);
-      expectWarningInProduction(PropTypes.element.isRequired, null);
-      expectWarningInProduction(PropTypes.element.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.element, [<div />, <div />]);
+      expectWarningInDevelopment(PropTypes.element, <div />);
+      expectWarningInDevelopment(PropTypes.element, 123);
+      expectWarningInDevelopment(PropTypes.element, 'foo');
+      expectWarningInDevelopment(PropTypes.element, false);
+      expectWarningInDevelopment(PropTypes.element.isRequired, null);
+      expectWarningInDevelopment(PropTypes.element.isRequired, undefined);
     });
   });
 
   describe('Instance Types', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.instanceOf(Date), {});
-      expectWarningInProduction(PropTypes.instanceOf(Date), new Date());
-      expectWarningInProduction(PropTypes.instanceOf(Date).isRequired, {});
-      expectWarningInProduction(PropTypes.instanceOf(Date).isRequired, new Date());
+      expectWarningInDevelopment(PropTypes.instanceOf(Date), {});
+      expectWarningInDevelopment(PropTypes.instanceOf(Date), new Date());
+      expectWarningInDevelopment(PropTypes.instanceOf(Date).isRequired, {});
+      expectWarningInDevelopment(PropTypes.instanceOf(Date).isRequired, new Date());
     });
   });
 
   describe('React Component Types', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.node, 'node');
-      expectWarningInProduction(PropTypes.node, {});
-      expectWarningInProduction(PropTypes.node.isRequired, 'node');
-      expectWarningInProduction(PropTypes.node.isRequired, undefined);
-      expectWarningInProduction(PropTypes.node.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.node, 'node');
+      expectWarningInDevelopment(PropTypes.node, {});
+      expectWarningInDevelopment(PropTypes.node.isRequired, 'node');
+      expectWarningInDevelopment(PropTypes.node.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.node.isRequired, undefined);
     });
   });
 
   describe('ObjectOf Type', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.objectOf({ foo: PropTypes.string }),
         { foo: 'bar' }
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.objectOf(PropTypes.number),
         {a: 1, b: 2, c: 'b'}
       );
-      expectWarningInProduction(PropTypes.objectOf(PropTypes.number), [1, 2]);
-      expectWarningInProduction(PropTypes.objectOf(PropTypes.number), null);
-      expectWarningInProduction(PropTypes.objectOf(PropTypes.number), undefined);
+      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), [1, 2]);
+      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), null);
+      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), undefined);
     });
   });
 
   describe('OneOf Types', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.oneOf('red', 'blue'), 'red');
-      expectWarningInProduction(PropTypes.oneOf(['red', 'blue']), true);
-      expectWarningInProduction(PropTypes.oneOf(['red', 'blue']), null);
-      expectWarningInProduction(PropTypes.oneOf(['red', 'blue']), undefined);
+      expectWarningInDevelopment(PropTypes.oneOf('red', 'blue'), 'red');
+      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), true);
+      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), null);
+      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), undefined);
     });
   });
 
   describe('Union Types', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.oneOfType(PropTypes.string, PropTypes.number),
         'red'
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         []
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         null
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         undefined
       );
@@ -213,19 +219,19 @@ describe('ReactPropTypesProduction', function() {
   });
 
   describe('Shape Types', function() {
-    it('should warn if called manually in production', function() {
+    it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInProduction(PropTypes.shape({}), 'some string');
-      expectWarningInProduction(PropTypes.shape({ foo: PropTypes.number }), { foo: 42 });
-      expectWarningInProduction(
+      expectWarningInDevelopment(PropTypes.shape({}), 'some string');
+      expectWarningInDevelopment(PropTypes.shape({ foo: PropTypes.number }), { foo: 42 });
+      expectWarningInDevelopment(
         PropTypes.shape({key: PropTypes.number}).isRequired,
         null
       );
-      expectWarningInProduction(
+      expectWarningInDevelopment(
         PropTypes.shape({key: PropTypes.number}).isRequired,
         undefined
       );
-      expectWarningInProduction(PropTypes.element, <div />);
+      expectWarningInDevelopment(PropTypes.element, <div />);
     });
   });
 
@@ -247,7 +253,10 @@ describe('ReactPropTypesProduction', function() {
       <Component foo="foo" bar="bar" baz={{ qux: [1, 2, 3] }}/>
     );
     instance = ReactTestUtils.renderIntoDocument(instance);
-    expect(console.error.calls.count()).toBe(0);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).not.toContain(
+      'You are manually calling a React.PropTypes validation '
+    );
   });
 
 });

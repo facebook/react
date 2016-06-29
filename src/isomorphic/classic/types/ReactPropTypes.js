@@ -106,6 +106,9 @@ function is(x, y) {
 /*eslint-enable no-self-compare*/
 
 function createChainableTypeChecker(validate) {
+  if (__DEV__) {
+    var manualPropTypeCallCache = {};
+  }
   function checkType(
     isRequired,
     props,
@@ -117,14 +120,21 @@ function createChainableTypeChecker(validate) {
   ) {
     componentName = componentName || ANONYMOUS;
     propFullName = propFullName || propName;
-    if (!__DEV__) {
-      if (secret !== ReactPropTypesSecret && typeof console !== 'undefined') {
-        console.error(
-          `You are manually calling a React.PropTypes validation function ` +
-          `for the prop ${propFullName} on ${componentName} in a production ` +
-          `build. This is deprecated and will not work in the next ` +
-          `major version.`
-        );
+    if (__DEV__) {
+      if (
+        secret !== ReactPropTypesSecret &&
+        typeof console !== 'undefined'
+      ) {
+        var cacheKey = `${componentName}:${propName}`;
+        if (!manualPropTypeCallCache[cacheKey]) {
+          console.error(
+            `You are manually calling a React.PropTypes validation ` +
+             `function for the prop ${propFullName} on ${componentName} ` +
+             `in a production build. This is deprecated and will ` +
+             `not work in the next major version.`
+          );
+          manualPropTypeCallCache[cacheKey] = true;
+        }
       }
     }
     if (props[propName] == null) {
