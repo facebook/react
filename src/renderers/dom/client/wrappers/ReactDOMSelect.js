@@ -29,7 +29,7 @@ function updateOptionsIfPendingUpdateAndMounted() {
     var value = LinkedValueUtils.getValue(props);
 
     if (value != null) {
-      updateOptions(this, Boolean(props.multiple), value);
+      updateOptions(this, value);
     }
   }
 }
@@ -93,39 +93,18 @@ function checkSelectPropTypes(inst, props) {
 
 /**
  * @param {ReactDOMComponent} inst
- * @param {boolean} multiple
- * @param {*} propValue A stringable (with `multiple`, a list of stringables).
+ * @param {*} propValue A stringable or a list of stringables.
  * @private
  */
-function updateOptions(inst, multiple, propValue) {
-  var selectedValue, i;
-  var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
-
-  if (multiple) {
-    selectedValue = {};
-    for (i = 0; i < propValue.length; i++) {
-      selectedValue['' + propValue[i]] = true;
-    }
-    for (i = 0; i < options.length; i++) {
-      var selected = selectedValue.hasOwnProperty(options[i].value);
-      if (options[i].selected !== selected) {
-        options[i].selected = selected;
-      }
-    }
-  } else {
-    // Do not set `select.value` as exact behavior isn't consistent across all
-    // browsers for all cases.
-    selectedValue = '' + propValue;
-    for (i = 0; i < options.length; i++) {
-      if (options[i].value === selectedValue) {
-        options[i].selected = true;
-        return;
-      }
-    }
-    if (options.length) {
-      options[0].selected = true;
-    }
-  }
+function updateOptions(inst, propValue) {
+	propValue = [].concat(propValue); // makes propValue an array even if it's just a single value
+	var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
+	var opt;
+	for (var i = 0; i < options.length; i++) {
+		opt = options[i];
+		(propValue.indexOf(opt.value) < 0 ? opt.selected : !opt.selected) &&
+			(opt.selected = !opt.selected);
+	}
 }
 
 /**
@@ -201,14 +180,14 @@ var ReactDOMSelect = {
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
       inst._wrapperState.pendingUpdate = false;
-      updateOptions(inst, Boolean(props.multiple), value);
+      updateOptions(inst, value);
     } else if (wasMultiple !== Boolean(props.multiple)) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(inst, Boolean(props.multiple), props.defaultValue);
+        updateOptions(inst, props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(inst, Boolean(props.multiple), props.multiple ? [] : '');
+        updateOptions(inst, props.multiple ? [] : '');
       }
     }
   },
