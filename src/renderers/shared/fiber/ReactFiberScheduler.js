@@ -19,6 +19,7 @@ import type { HostConfig } from 'ReactFiberReconciler';
 var { cloneFiber } = require('ReactFiber');
 var { beginWork } = require('ReactFiberBeginWork');
 var { completeWork } = require('ReactFiberCompleteWork');
+var { commitWork } = require('ReactFiberCommitWork');
 var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
 
 var {
@@ -78,6 +79,22 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
     return null;
   }
 
+  function commitAllWork(finishedWork : Fiber) {
+    // Commit all the side-effects within a tree.
+    // TODO: Error handling.
+    let effectfulFiber = finishedWork.firstEffect;
+    while (effectfulFiber) {
+      commitWork(effectfulFiber);
+      const next = effectfulFiber.nextEffect;
+      // Ensure that we clean these up so that we don't accidentally keep them.
+      // I'm not actually sure this matters because we can't reset firstEffect
+      // and lastEffect since they're on every node, not just the effectful
+      // ones. So we have to clean everything as we reuse nodes anyway.
+      effectfulFiber.nextEffect = null;
+      effectfulFiber = next;
+    }
+  }
+
   function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
@@ -96,11 +113,25 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
 
       const returnFiber = workInProgress.return;
 
-      // Ensure that remaining work priority bubbles up.
-      if (returnFiber && workInProgress.pendingWorkPriority !== NoWork &&
-          (returnFiber.pendingWorkPriority === NoWork ||
-          returnFiber.pendingWorkPriority > workInProgress.pendingWorkPriority)) {
-        returnFiber.pendingWorkPriority = workInProgress.pendingWorkPriority;
+      if (returnFiber) {
+        // Ensure that remaining work priority bubbles up.
+        if (workInProgress.pendingWorkPriority !== NoWork &&
+            (returnFiber.pendingWorkPriority === NoWork ||
+            returnFiber.pendingWorkPriority > workInProgress.pendingWorkPriority)) {
+          returnFiber.pendingWorkPriority = workInProgress.pendingWorkPriority;
+        }
+        // Ensure that the first and last effect of the parent corresponds
+        // to the children's first and last effect. This probably relies on
+        // children completing in order.
+        if (!returnFiber.firstEffect) {
+          returnFiber.firstEffect = workInProgress.firstEffect;
+        }
+        if (workInProgress.lastEffect) {
+          if (returnFiber.lastEffect) {
+            returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
+          }
+          returnFiber.lastEffect = workInProgress.lastEffect;
+        }
       }
 
       if (next) {
@@ -121,6 +152,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
         console.log('----- COMPLETED with remaining work:', workInProgress.pendingWorkPriority);
+        commitAllWork(workInProgress);
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't
