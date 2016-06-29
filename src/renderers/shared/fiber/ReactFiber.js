@@ -82,6 +82,16 @@ export type Fiber = Instance & {
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
 
+  // Singly linked list fast path to the next fiber with side-effects.
+  nextEffect: ?Fiber,
+
+  // The first and last fiber with side-effect within this subtree. This allows
+  // us to reuse a slice of the linked list when we reuse the work done within
+  // this fiber.
+  firstEffect: ?Fiber,
+  lastEffect: ?Fiber,
+
+
   // This will be used to quickly determine if a subtree has no pending changes.
   pendingWorkPriority: PriorityLevel,
 
@@ -129,6 +139,10 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     memoizedProps: null,
     output: null,
 
+    nextEffect: null,
+    firstEffect: null,
+    lastEffect: null,
+
     pendingWorkPriority: NoWork,
 
     hasWorkInProgress: false,
@@ -157,6 +171,13 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.ref = alt.ref;
     alt.pendingProps = fiber.pendingProps;
     alt.pendingWorkPriority = priorityLevel;
+
+    // Whenever we clone, we do so to get a new work in progress.
+    // This ensures that we've reset these in the new tree.
+    alt.nextEffect = null;
+    alt.firstEffect = null;
+    alt.lastEffect = null;
+
     return alt;
   }
 

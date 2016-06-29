@@ -30,6 +30,16 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
+function markForPostEffect(workInProgress : Fiber) {
+  // Schedule a side-effect on this fiber, after the children's side-effects.
+  if (workInProgress.lastEffect) {
+    workInProgress.lastEffect.nextEffect = workInProgress;
+  } else {
+    workInProgress.firstEffect = workInProgress;
+  }
+  workInProgress.lastEffect = workInProgress;
+}
+
 function transferOutput(child : ?Fiber, returnFiber : Fiber) {
   // If we have a single result, we just pass that through as the output to
   // avoid unnecessary traversal. When we have multiple output, we just pass
@@ -108,6 +118,11 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
       return null;
     case HostComponent:
       transferOutput(workInProgress.child, workInProgress);
+      if (workInProgress.alternate) {
+        // If we have an alternate, that means this is an update and we need to
+        // schedule a side-effect to do the updates.
+        markForPostEffect(workInProgress);
+      }
       console.log('/host component', workInProgress.type);
       return null;
     case CoroutineComponent:
