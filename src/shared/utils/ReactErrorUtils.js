@@ -65,7 +65,9 @@ if (__DEV__) {
       typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
     ReactErrorUtils.invokeGuardedCallback = function(name, func, a, b) {
-      var boundFunc = func.bind(null, a, b);
+      var boundFunc = function() {
+        invokeGuardedCallback(name, func, a, b);
+      };
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');

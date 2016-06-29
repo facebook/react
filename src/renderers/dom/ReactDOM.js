@@ -19,6 +19,7 @@ var ReactMount = require('ReactMount');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
+var ReactEventListener = require('ReactEventListener');
 
 var findDOMNode = require('findDOMNode');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
@@ -32,6 +33,7 @@ var React = {
   render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   version: ReactVersion,
+  onUnhandledError: ReactEventListener.onUnhandledError,
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,

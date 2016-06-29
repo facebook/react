@@ -90,6 +90,7 @@ function scrollValueMonitor(cb) {
 var ReactEventListener = {
   _enabled: true,
   _handleTopLevel: null,
+  _unhandledErrorCallback: null,
 
   WINDOW_HANDLE: ExecutionEnvironment.canUseDOM ? window : null,
 
@@ -168,9 +169,19 @@ var ReactEventListener = {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.
       ReactUpdates.batchedUpdates(handleTopLevelImpl, bookKeeping);
+    } catch (err) {
+      if (ReactEventListener._unhandledErrorCallback) {
+        ReactEventListener._unhandledErrorCallback(err);
+      } else {
+        throw err;
+      }
     } finally {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }
+  },
+
+  onUnhandledError: function(handler) {
+    ReactEventListener._unhandledErrorCallback = handler;
   },
 };
 
