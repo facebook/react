@@ -7,4 +7,4 @@ prev: expose-component-functions.html
 next: children-undefined.html
 ---
 
-This page has moved to: [refs](/react/docs/more-about-refs.html).
+This page has moved to: [refs](https://facebook.github.io/react/docs/more-about-refs.html).

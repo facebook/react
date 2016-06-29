@@ -7,7 +7,7 @@ prev: false-in-jsx.html
 next: expose-component-functions.html
 ---
 
-For parent-child communication, simply [pass props](/react/docs/multiple-components.html).
+For parent-child communication, simply [pass props](https://facebook.github.io/react/docs/multiple-components.html).
 
 For child-parent communication:
 Say your `GroceryList` component has a list of items generated through an array. When a list item is clicked, you want to display its name:
