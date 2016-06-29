@@ -254,10 +254,26 @@ Methods follow the same semantics as regular ES6 classes, meaning that they don'
 We recommend that you bind your event handlers in the constructor so they are only bound once for every instance:
 
 ```javascript
-constructor(props) {
-  super(props);
-  this.state = {count: props.initialCount};
-  this.tick = this.tick.bind(this);
+class Counter extends React.Component {
+  constructor() {
+    super();
+    this.tick = this.tick.bind(this);
+  }
+  tick() {
+    ...
+  }
+  ...
+}
+```
+
+Or using property initializers, there is a neat trick that you can use to accomplish this syntactically::
+
+```javascript
+class Counter extends React.Component {
+  tick = () => {
+    ...
+  }
+  ...
 }
 ```
 
