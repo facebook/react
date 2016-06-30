@@ -13,6 +13,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -22,23 +23,31 @@ var {
   HostComponent,
 } = ReactTypeOfWork;
 
-module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
+  const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
 
   function commitWork(finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
-      case ClassComponent:
+      case ClassComponent: {
         // TODO: Fire componentDidMount/componentDidUpdate, update refs
         return;
-      case HostContainer:
+      }
+      case HostContainer: {
         // TODO: Attach children to root container.
+        const children = finishedWork.output;
+        const root : FiberRoot = finishedWork.stateNode;
+        const containerInfo : C = root.containerInfo;
+        updateContainer(containerInfo, children);
         return;
-      case HostComponent:
+      }
+      case HostComponent: {
         if (finishedWork.stateNode == null || !finishedWork.alternate) {
           throw new Error('This should only be done during updates.');
         }
-        const children = finishedWork.output;
+        const child = (finishedWork.child : ?Fiber);
+        const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = finishedWork.memoizedProps;
         // If we have an alternate, that means this is an update and we need to
         // schedule a side-effect to do the updates.
@@ -47,6 +56,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         const instance : I = finishedWork.stateNode;
         commitUpdate(instance, oldProps, newProps, children);
         return;
+      }
       default:
         throw new Error('This unit of work tag should not have side-effects.');
     }

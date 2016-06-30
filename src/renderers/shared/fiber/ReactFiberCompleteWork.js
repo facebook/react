@@ -17,6 +17,8 @@ import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
+import type { TypeOfWork } from 'ReactTypeOfWork';
+
 var ReactChildFiber = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -30,7 +32,7 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
-module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   const createInstance = config.createInstance;
   const prepareUpdate = config.prepareUpdate;
@@ -120,12 +122,22 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
         transferOutput(workInProgress.child, workInProgress);
         return null;
       case HostContainer:
+        transferOutput(workInProgress.child, workInProgress);
+        // We don't know if a container has updated any children so we always
+        // need to update it right now. We schedule this side-effect after
+        // all the other side-effects in the subtree.
+        // TODO: I just realized that this means that nodes are not in the DOM
+        // document when componentDidMount/Update fires. I'll need to change
+        // the order for host component effects to happen *before* their
+        // children I think.
+        markForPostEffect(workInProgress);
         return null;
       case HostComponent:
         console.log('/host component', workInProgress.type);
-        transferOutput(workInProgress.child, workInProgress);
-        const children = workInProgress.output;
-        const newProps = workInProgress.memoizedProps;
+        const child = (workInProgress.child : ?Fiber);
+        const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
+        const newProps = workInProgress.pendingProps;
+        workInProgress.memoizedProps = newProps;
         if (workInProgress.alternate && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
@@ -136,9 +148,12 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
             // This returns true if there was something to update.
             markForPostEffect(workInProgress);
           }
+          workInProgress.output = instance;
         } else {
           const instance = createInstance(workInProgress.type, newProps, children);
+          // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
+          workInProgress.output = instance;
         }
         return null;
       case CoroutineComponent:

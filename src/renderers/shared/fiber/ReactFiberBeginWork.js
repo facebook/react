@@ -34,7 +34,7 @@ var {
 } = require('ReactPriorityLevel');
 var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
 
-module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   function reconcileChildren(current, workInProgress, nextChildren) {
     const priority = workInProgress.pendingWorkPriority;
