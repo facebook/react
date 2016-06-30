@@ -10,13 +10,6 @@
  * @flow
  */
 
-/**
- * This is a renderer of React that doesn't have a render target output.
- * It is useful to demonstrate the internals of the reconciler in isolation
- * and for testing semantics of reconciliation separate from the host
- * environment.
- */
-
 'use strict';
 
 import type { HostChildren } from 'ReactFiberReconciler';

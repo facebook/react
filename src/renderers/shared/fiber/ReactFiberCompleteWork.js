@@ -143,7 +143,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return null;
       case HostComponent:
         console.log('/host component', workInProgress.type);
-        const child = (workInProgress.child : ?Fiber);
+        const child = workInProgress.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = workInProgress.pendingProps;
         workInProgress.memoizedProps = newProps;
