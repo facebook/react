@@ -17,8 +17,6 @@ import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
-import type { TypeOfWork } from 'ReactTypeOfWork';
-
 var ReactChildFiber = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -37,8 +35,20 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   const createInstance = config.createInstance;
   const prepareUpdate = config.prepareUpdate;
 
+  function markForPreEffect(workInProgress : Fiber) {
+    // Schedule a side-effect on this fiber, BEFORE the children's side-effects.
+    if (workInProgress.firstEffect) {
+      workInProgress.nextEffect = workInProgress.firstEffect;
+      workInProgress.firstEffect = workInProgress;
+    } else {
+      workInProgress.firstEffect = workInProgress;
+      workInProgress.lastEffect = workInProgress;
+    }
+  }
+
+  /*
   function markForPostEffect(workInProgress : Fiber) {
-    // Schedule a side-effect on this fiber, after the children's side-effects.
+    // Schedule a side-effect on this fiber, AFTER the children's side-effects.
     if (workInProgress.lastEffect) {
       workInProgress.lastEffect.nextEffect = workInProgress;
     } else {
@@ -46,6 +56,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
     workInProgress.lastEffect = workInProgress;
   }
+  */
 
   function transferOutput(child : ?Fiber, returnFiber : Fiber) {
     // If we have a single result, we just pass that through as the output to
@@ -124,13 +135,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);
         // We don't know if a container has updated any children so we always
-        // need to update it right now. We schedule this side-effect after
-        // all the other side-effects in the subtree.
-        // TODO: I just realized that this means that nodes are not in the DOM
-        // document when componentDidMount/Update fires. I'll need to change
-        // the order for host component effects to happen *before* their
-        // children I think.
-        markForPostEffect(workInProgress);
+        // need to update it right now. We schedule this side-effect before
+        // all the other side-effects in the subtree. We need to schedule it
+        // before so that the entire tree is up-to-date before the life-cycles
+        // are invoked.
+        markForPreEffect(workInProgress);
         return null;
       case HostComponent:
         console.log('/host component', workInProgress.type);
@@ -138,15 +147,14 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = workInProgress.pendingProps;
         workInProgress.memoizedProps = newProps;
-        if (workInProgress.alternate && workInProgress.stateNode != null) {
+        if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
-          const current = workInProgress.alternate;
           const oldProps = current.memoizedProps;
           const instance : I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps, children)) {
             // This returns true if there was something to update.
-            markForPostEffect(workInProgress);
+            markForPreEffect(workInProgress);
           }
           workInProgress.output = instance;
         } else {
