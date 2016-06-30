@@ -73,9 +73,6 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
       current.pendingWorkPriority = NoWork;
     }
     if (current === currentRoot) {
-      if (current.pendingWorkPriority <= priorityLevel) {
-        current.pendingWorkPriority = NoWork;
-      }
       return null;
     }
     while (!current.sibling) {
