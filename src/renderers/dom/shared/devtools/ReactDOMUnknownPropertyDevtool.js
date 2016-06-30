@@ -36,16 +36,16 @@ if (__DEV__) {
   };
   var warnedProperties = {};
 
-  var warnUnknownProperty = function(tagName, name, debugID) {
+  var validateProperty = function(tagName, name, debugID) {
     if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
-      return;
+      return true;
     }
     if (reactProps.hasOwnProperty(name) && reactProps[name] ||
         warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
-      return;
+      return true;
     }
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
-      return;
+      return true;
     }
     warnedProperties[name] = true;
     var lowerCasedName = name.toLowerCase();
@@ -75,6 +75,7 @@ if (__DEV__) {
         standardName,
         ReactComponentTreeDevtool.getStackAddendumByID(debugID)
       );
+      return true;
     } else if (registrationName != null) {
       warning(
         registrationName == null,
@@ -83,21 +84,50 @@ if (__DEV__) {
         registrationName,
         ReactComponentTreeDevtool.getStackAddendumByID(debugID)
       );
+      return true;
     } else {
       // We were unable to guess which prop the user intended.
       // It is likely that the user was just blindly spreading/forwarding props
       // Components should be careful to only render valid props/attributes.
-      warning(
-        false,
-        'Unknown prop `%s` on <%s> tag. Remove this prop from the element. ' +
-        'For details, see https://fb.me/react-unknown-prop%s',
-        name,
-        tagName,
-        ReactComponentTreeDevtool.getStackAddendumByID(debugID)
-      );
+      // Warning will be invoked in warnUnknownProperties to allow grouping.
+      return false;
     }
   };
 }
+
+var warnUnknownProperties = function(debugID, element) {
+  var unknownProps = [];
+  for (var key in element.props) {
+    var isValid = validateProperty(element.type, key, debugID);
+    if (!isValid) {
+      unknownProps.push(key);
+    }
+  }
+
+  var unknownPropString = unknownProps
+    .map(prop => '`' + prop + '`')
+    .join(', ');
+
+  if (unknownProps.length === 1) {
+    warning(
+      false,
+      'Unknown prop %s on <%s> tag. Remove this prop from the element. ' +
+      'For details, see https://fb.me/react-unknown-prop%s',
+      unknownPropString,
+      element.type,
+      ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+    );
+  } else if (unknownProps.length > 1) {
+    warning(
+      false,
+      'Unknown props %s on <%s> tag. Remove these props from the element. ' +
+      'For details, see https://fb.me/react-unknown-prop%s',
+      unknownPropString,
+      element.type,
+      ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+    );
+  }
+};
 
 function handleElement(debugID, element) {
   if (element == null || typeof element.type !== 'string') {
@@ -106,9 +136,7 @@ function handleElement(debugID, element) {
   if (element.type.indexOf('-') >= 0 || element.props.is) {
     return;
   }
-  for (var key in element.props) {
-    warnUnknownProperty(element.type, key, debugID);
-  }
+  warnUnknownProperties(debugID, element);
 }
 
 var ReactDOMUnknownPropertyDevtool = {
