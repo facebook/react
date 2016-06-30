@@ -16,10 +16,11 @@ import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 
+var ReactFiberBeginWork = require('ReactFiberBeginWork');
+var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
+var ReactFiberCommitWork = require('ReactFiberCommitWork');
+
 var { cloneFiber } = require('ReactFiber');
-var { beginWork } = require('ReactFiberBeginWork');
-var { completeWork } = require('ReactFiberCompleteWork');
-var { commitWork } = require('ReactFiberCommitWork');
 var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
 
 var {
@@ -32,6 +33,10 @@ var {
 var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
+
+  const { beginWork } = ReactFiberBeginWork(config);
+  const { completeWork } = ReactFiberCompleteWork(config);
+  const { commitWork } = ReactFiberCommitWork(config);
 
   // const scheduleHighPriCallback = config.scheduleHighPriCallback;
   const scheduleLowPriCallback = config.scheduleLowPriCallback;
