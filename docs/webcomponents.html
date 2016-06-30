@@ -438,7 +438,7 @@ recommended solution is to write a React component that behaves as a wrapper for
 You will need to manually attach event handlers to handle these events within your React components.</p>
 </blockquote>
 <h2><a class="anchor" name="using-react-in-your-web-components"></a>Using React in your Web Components <a class="hash-link" href="#using-react-in-your-web-components">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">createdCallback</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">attachedCallback</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="kd">var</span> <span class="nx">mountPoint</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">);</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">createShadowRoot</span><span class="p">().</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">mountPoint</span><span class="p">);</span>
@@ -493,7 +493,7 @@ You will need to manually attach event handlers to handle these events within yo
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
 

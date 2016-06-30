@@ -594,7 +594,7 @@
 <span class="p">}</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
-<p>The API is similar to <code>React.createClass</code> with the exception of <code>getInitialState</code>. Instead of providing a separate <code>getInitialState</code> method, you set up your own <code>state</code> property in the constructor.</p>
+<p>The API is similar to <code>React.createClass</code> with the exception of <code>getInitialState</code>. Instead of providing a separate <code>getInitialState</code> method, you set up your own <code>state</code> property in the constructor. Just like the return value of <code>getInitialState</code>, the value you assign to <code>this.state</code> will be used as the initial state for your component.</p>
 
 <p>Another difference is that <code>propTypes</code> and <code>defaultProps</code> are defined as properties on the constructor instead of in the class body.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">export</span> <span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
@@ -704,7 +704,7 @@ However, you may still specify <code>.propTypes</code> and <code>.defaultProps</
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
 
