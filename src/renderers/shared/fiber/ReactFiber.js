@@ -48,7 +48,7 @@ type Instance = {
   type: any,
 
   // The local state associated with this fiber.
-  stateNode: ?Object,
+  stateNode: any,
 
   // Conceptual aliases
   // parent : Instance -> return The parent happens to be the same as the

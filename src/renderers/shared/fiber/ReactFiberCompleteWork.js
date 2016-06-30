@@ -15,7 +15,6 @@
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
-
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var ReactChildFiber = require('ReactChildFiber');
@@ -32,6 +31,9 @@ var {
 } = ReactTypeOfWork;
 
 module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
+
+  const createInstance = config.createInstance;
+  const prepareUpdate = config.prepareUpdate;
 
   function markForPostEffect(workInProgress : Fiber) {
     // Schedule a side-effect on this fiber, after the children's side-effects.
@@ -120,13 +122,24 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
       case HostContainer:
         return null;
       case HostComponent:
+        console.log('/host component', workInProgress.type);
         transferOutput(workInProgress.child, workInProgress);
-        if (workInProgress.alternate) {
+        const children = workInProgress.output;
+        const newProps = workInProgress.memoizedProps;
+        if (workInProgress.alternate && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
-          markForPostEffect(workInProgress);
+          const current = workInProgress.alternate;
+          const oldProps = current.memoizedProps;
+          const instance : I = workInProgress.stateNode;
+          if (prepareUpdate(instance, oldProps, newProps, children)) {
+            // This returns true if there was something to update.
+            markForPostEffect(workInProgress);
+          }
+        } else {
+          const instance = createInstance(workInProgress.type, newProps, children);
+          workInProgress.stateNode = instance;
         }
-        console.log('/host component', workInProgress.type);
         return null;
       case CoroutineComponent:
         console.log('/coroutine component', workInProgress.pendingProps.handler.name);

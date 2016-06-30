@@ -22,18 +22,21 @@ var {
   LowPriority,
 } = require('ReactPriorityLevel');
 
-type ReactHostElement<T, P> = {
-  type: T,
-  props: P
-};
-
 type Deadline = {
   timeRemaining : () => number
 };
 
+type HostChildNode<I> = { output: HostChildren<I>, sibling: ?HostChildNode<I> };
+
+export type HostChildren<I> = null | void | I | HostChildNode<I>;
+
 export type HostConfig<T, P, I> = {
 
-  createHostInstance(element : ReactHostElement<T, P>) : I,
+  createInstance(type : T, props : P, children : HostChildren<I>) : I,
+  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : bool,
+  commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : void,
+  deleteInstance(instance : I) : void,
+
   scheduleHighPriCallback(callback : () => void) : void,
   scheduleLowPriCallback(callback : (deadline : Deadline) => void) : void
 

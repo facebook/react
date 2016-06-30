@@ -20,20 +20,44 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 
 var scheduledHighPriCallback = null;
 var scheduledLowPriCallback = null;
 
+type Props = { };
+type Instance = { id: number };
+
+var instanceCounter = 0;
+
 var NoopRenderer = ReactFiberReconciler({
 
-  createHostInstance() {
-
+  createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
+    console.log('Create instance #' + instanceCounter);
+    return {
+      id: instanceCounter++
+    };
   },
+
+  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : boolean {
+    console.log('Prepare for update on #' + instance.id);
+    return true;
+  },
+
+  commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
+    console.log('Commit update on #' + instance.id);
+  },
+
+  deleteInstance(instance : Instance) : void {
+    console.log('Delete #' + instance.id);
+  },
+
   scheduleHighPriCallback(callback) {
     scheduledHighPriCallback = callback;
   },
+
   scheduleLowPriCallback(callback) {
     scheduledLowPriCallback = callback;
   },
