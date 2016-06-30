@@ -12,18 +12,25 @@
 
 'use strict';
 
-var ReactTypesOfWork = require('ReactTypesOfWork');
+import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+import type { TypeOfWork } from 'ReactTypeOfWork';
+import type { PriorityLevel } from 'ReactPriorityLevel';
+
+var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   ClassComponent,
+  HostContainer,
   HostComponent,
   CoroutineComponent,
   YieldComponent,
-} = ReactTypesOfWork;
+} = ReactTypeOfWork;
 
 var ReactElement = require('ReactElement');
 
-import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+var {
+  NoWork,
+} = require('ReactPriorityLevel');
 
 // An Instance is shared between all versions of a component. We can easily
 // break this out into a separate object to avoid copying so much to the
@@ -32,12 +39,7 @@ import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 type Instance = {
 
   // Tag identifying the type of fiber.
-  tag: number,
-
-  // The parent Fiber used to create this one. The type is constrained to the
-  // Instance part of the Fiber since it is not safe to traverse the tree from
-  // the instance.
-  parent: ?Instance, // Consider a regenerated temporary parent stack instead.
+  tag: TypeOfWork,
 
   // Unique identifier of this child.
   key: null | string,
@@ -48,11 +50,21 @@ type Instance = {
   // The local state associated with this fiber.
   stateNode: ?Object,
 
+  // Conceptual aliases
+  // parent : Instance -> return The parent happens to be the same as the
+  // return fiber since we've merged the fiber and instance.
+
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = Instance & {
+
+  // The Fiber to return to after finishing processing this one.
+  // This is effectively the parent, but there can be multiple parents (two)
+  // so this is only the parent of the thing we're currently processing.
+  // It is conceptually the same as the return address of a stack frame.
+  return: ?Fiber,
 
   // Singly Linked List Tree Structure.
   child: ?Fiber,
@@ -63,31 +75,40 @@ export type Fiber = Instance & {
   ref: null | (handle : ?Object) => void,
 
   // Input is the data coming into process this fiber. Arguments. Props.
-  input: any, // This type will be more specific once we overload the tag.
-  // TODO: I think that there is a way to merge input and memoizedInput somehow.
-  memoizedInput: any, // The input used to create the output.
+  pendingProps: any, // This type will be more specific once we overload the tag.
+  // TODO: I think that there is a way to merge pendingProps and memoizedProps.
+  memoizedProps: any, // The props used to create the output.
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
 
   // This will be used to quickly determine if a subtree has no pending changes.
-  hasPendingChanges: bool,
+  pendingWorkPriority: PriorityLevel,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
   alternate: ?Fiber,
 
+  // Keeps track if we've completed this node or if we're currently in the
+  // middle of processing it. We really should know this based on pendingProps
+  // or something else. We could also reuse the tag for this purpose. However,
+  // I'm not really sure so I'll use a flag for now.
+  // TODO: Find another way to infer this flag.
+  hasWorkInProgress: bool,
+
+  // Conceptual aliases
+  // workInProgress : Fiber ->  alternate The alternate used for reuse happens
+  // to be the same as work in progress.
+
 };
 
-var createFiber = function(tag : number, key : null | string) : Fiber {
+var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
   return {
 
     // Instance
 
     tag: tag,
-
-    parent: null,
 
     key: key,
 
@@ -97,16 +118,20 @@ var createFiber = function(tag : number, key : null | string) : Fiber {
 
     // Fiber
 
+    return: null,
+
     child: null,
     sibling: null,
 
     ref: null,
 
-    input: null,
-    memoizedInput: null,
+    pendingProps: null,
+    memoizedProps: null,
     output: null,
 
-    hasPendingChanges: true,
+    pendingWorkPriority: NoWork,
+
+    hasWorkInProgress: false,
 
     alternate: null,
 
@@ -118,35 +143,46 @@ function shouldConstruct(Component) {
 }
 
 // This is used to create an alternate fiber to do work on.
-exports.cloneFiber = function(fiber : Fiber) : Fiber {
+exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
   // We use a double buffering pooling technique because we know that we'll only
   // ever need at most two versions of a tree. We pool the "other" unused node
   // that we're free to reuse. This is lazily created to avoid allocating extra
   // objects for things that are never updated. It also allow us to reclaim the
   // extra memory if needed.
-  if (fiber.alternate) {
-    return fiber.alternate;
+  let alt = fiber.alternate;
+  if (alt) {
+    alt.stateNode = fiber.stateNode;
+    alt.child = fiber.child;
+    alt.sibling = fiber.sibling;
+    alt.ref = alt.ref;
+    alt.pendingProps = fiber.pendingProps;
+    alt.pendingWorkPriority = priorityLevel;
+    return alt;
   }
+
   // This should not have an alternate already
-  var alt = createFiber(fiber.tag, fiber.key);
-
-  if (fiber.parent) {
-    // TODO: This assumes the parent's alternate is already created.
-    // Stop using the alternates of parents once we have a parent stack.
-    // $FlowFixMe: This downcast is not safe. It is intentionally an error.
-    alt.parent = fiber.parent.alternate;
-  }
-
+  alt = createFiber(fiber.tag, fiber.key);
   alt.type = fiber.type;
   alt.stateNode = fiber.stateNode;
+  alt.child = fiber.child;
+  alt.sibling = fiber.sibling;
+  alt.ref = alt.ref;
+  alt.pendingWorkPriority = priorityLevel;
+
   alt.alternate = fiber;
   fiber.alternate = alt;
   return alt;
 };
 
-exports.createFiberFromElement = function(element : ReactElement) {
+exports.createHostContainerFiber = function() {
+  const fiber = createFiber(HostContainer, null);
+  return fiber;
+};
+
+exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) {
   const fiber = exports.createFiberFromElementType(element.type, element.key);
-  fiber.input = element.props;
+  fiber.pendingProps = element.props;
+  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
@@ -169,14 +205,16 @@ exports.createFiberFromElementType = function(type : mixed, key : null | string)
   return fiber;
 };
 
-exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine) {
+exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
-  fiber.input = coroutine;
+  fiber.pendingProps = coroutine;
+  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield) {
+exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) {
   const fiber = createFiber(YieldComponent, yieldNode.key);
+  fiber.pendingProps = {};
   return fiber;
 };

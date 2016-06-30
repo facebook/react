@@ -19,6 +19,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var ReactFiberReconciler = require('ReactFiberReconciler');
 
 var scheduledHighPriCallback = null;
@@ -38,12 +40,16 @@ var NoopRenderer = ReactFiberReconciler({
 
 });
 
+var root = null;
+
 var ReactNoop = {
 
   render(element : ReactElement<any>) {
-
-    NoopRenderer.mountNewRoot(element);
-
+    if (!root) {
+      root = NoopRenderer.mountContainer(element, null);
+    } else {
+      NoopRenderer.updateContainer(element, root);
+    }
   },
 
   flushHighPri() {
@@ -77,6 +83,24 @@ var ReactNoop = {
   flush() {
     ReactNoop.flushHighPri();
     ReactNoop.flushLowPri();
+  },
+
+  // Logs the current state of the tree.
+  dumpTree() {
+    if (!root) {
+      console.log('Nothing rendered yet.');
+      return;
+    }
+    function logFiber(fiber : Fiber, depth) {
+      console.log('  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']');
+      if (fiber.child) {
+        logFiber(fiber.child, depth + 1);
+      }
+      if (fiber.sibling) {
+        logFiber(fiber.sibling, depth);
+      }
+    }
+    logFiber((root.stateNode : any).current, 0);
   },
 
 };

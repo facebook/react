@@ -18,23 +18,24 @@ import type { Fiber } from 'ReactFiber';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var ReactChildFiber = require('ReactChildFiber');
-var ReactTypesOfWork = require('ReactTypesOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
+  HostContainer,
   HostComponent,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
-} = ReactTypesOfWork;
+} = ReactTypeOfWork;
 
-function transferOutput(child : ?Fiber, parent : Fiber) {
+function transferOutput(child : ?Fiber, returnFiber : Fiber) {
   // If we have a single result, we just pass that through as the output to
   // avoid unnecessary traversal. When we have multiple output, we just pass
   // the linked list of fibers that has the individual output values.
-  parent.output = (child && !child.sibling) ? child.output : child;
-  parent.memoizedInput = parent.input;
+  returnFiber.output = (child && !child.sibling) ? child.output : child;
+  returnFiber.memoizedProps = returnFiber.pendingProps;
 }
 
 function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
@@ -55,7 +56,7 @@ function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
 }
 
 function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
-  var coroutine = (workInProgress.input : ?ReactCoroutine);
+  var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
   if (!coroutine) {
     throw new Error('Should be resolved by now');
   }
@@ -82,10 +83,13 @@ function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
   var nextChildren = fn(props, yields);
 
   var currentFirstChild = current ? current.stateNode : null;
+  // Inherit the priority of the returnFiber.
+  const priority = workInProgress.pendingWorkPriority;
   workInProgress.stateNode = ReactChildFiber.reconcileChildFibers(
     workInProgress,
     currentFirstChild,
-    nextChildren
+    nextChildren,
+    priority
   );
   return workInProgress.stateNode;
 }
@@ -95,25 +99,28 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
     case FunctionalComponent:
       console.log('/functional component', workInProgress.type.name);
       transferOutput(workInProgress.child, workInProgress);
-      break;
+      return null;
     case ClassComponent:
       console.log('/class component', workInProgress.type.name);
       transferOutput(workInProgress.child, workInProgress);
-      break;
+      return null;
+    case HostContainer:
+      return null;
     case HostComponent:
+      transferOutput(workInProgress.child, workInProgress);
       console.log('/host component', workInProgress.type);
-      break;
+      return null;
     case CoroutineComponent:
-      console.log('/coroutine component', workInProgress.input.handler.name);
+      console.log('/coroutine component', workInProgress.pendingProps.handler.name);
       return moveCoroutineToHandlerPhase(current, workInProgress);
     case CoroutineHandlerPhase:
       transferOutput(workInProgress.stateNode, workInProgress);
       // Reset the tag to now be a first phase coroutine.
       workInProgress.tag = CoroutineComponent;
-      break;
+      return null;
     case YieldComponent:
       // Does nothing.
-      break;
+      return null;
 
     // Error cases
     case IndeterminateComponent:
@@ -121,5 +128,4 @@ exports.completeWork = function(current : ?Fiber, workInProgress : Fiber) : ?Fib
     default:
       throw new Error('Unknown unit of work tag');
   }
-  return null;
 };
