@@ -32,7 +32,7 @@ var {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I>(config : HostConfig<T, P, I>) {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   const { beginWork } = ReactFiberBeginWork(config);
   const { completeWork } = ReactFiberCompleteWork(config);

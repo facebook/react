@@ -27,18 +27,53 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var scheduledHighPriCallback = null;
 var scheduledLowPriCallback = null;
 
+const TERMINAL_TAG = 99;
+
+type Container = { rootID: number, children: Array<Instance> };
 type Props = { };
-type Instance = { id: number };
+type Instance = { tag: 99, type: string, id: number, children: Array<Instance> };
 
 var instanceCounter = 0;
 
+function recursivelyAppendChildren(flatArray : Array<Instance>, child : HostChildren<Instance>) {
+  if (!child) {
+    return;
+  }
+  if (child.tag === TERMINAL_TAG) {
+    flatArray.push(child);
+  } else {
+    let node = child;
+    do {
+      recursivelyAppendChildren(flatArray, node.output);
+    } while (node = node.sibling);
+  }
+}
+
+function flattenChildren(children : HostChildren<Instance>) {
+  const flatArray = [];
+  recursivelyAppendChildren(flatArray, children);
+  return flatArray;
+}
+
 var NoopRenderer = ReactFiberReconciler({
+
+  updateContainer(containerInfo : Container, children : HostChildren<Instance>) : void {
+    console.log('Update container #' + containerInfo.rootID);
+    containerInfo.children = flattenChildren(children);
+  },
 
   createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
     console.log('Create instance #' + instanceCounter);
-    return {
-      id: instanceCounter++
+    const inst = {
+      tag: TERMINAL_TAG,
+      id: instanceCounter++,
+      type: type,
+      children: flattenChildren(children),
     };
+    // Hide from unit tests
+    Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
+    Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
+    return inst;
   },
 
   prepareUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : boolean {
@@ -48,6 +83,7 @@ var NoopRenderer = ReactFiberReconciler({
 
   commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
     console.log('Commit update on #' + instance.id);
+    instance.children = flattenChildren(children);
   },
 
   deleteInstance(instance : Instance) : void {
@@ -64,13 +100,17 @@ var NoopRenderer = ReactFiberReconciler({
 
 });
 
+var rootContainer = { rootID: 0, children: [] };
+
 var root = null;
 
 var ReactNoop = {
 
+  root: rootContainer,
+
   render(element : ReactElement<any>) {
     if (!root) {
-      root = NoopRenderer.mountContainer(element, null);
+      root = NoopRenderer.mountContainer(element, rootContainer);
     } else {
       NoopRenderer.updateContainer(element, root);
     }
@@ -115,6 +155,19 @@ var ReactNoop = {
       console.log('Nothing rendered yet.');
       return;
     }
+
+    function logHostInstances(children: Array<Instance>, depth) {
+      for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        console.log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
+        logHostInstances(child.children, depth + 1);
+      }
+    }
+    function logContainer(container : Container, depth) {
+      console.log('  '.repeat(depth) + '- [root#' + container.rootID + ']');
+      logHostInstances(container.children, depth + 1);
+    }
+
     function logFiber(fiber : Fiber, depth) {
       console.log('  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']');
       if (fiber.child) {
@@ -124,6 +177,10 @@ var ReactNoop = {
         logFiber(fiber.sibling, depth);
       }
     }
+
+    console.log('HOST INSTANCES:');
+    logContainer(rootContainer, 0);
+    console.log('FIBERS:');
     logFiber((root.stateNode : any).current, 0);
   },
 

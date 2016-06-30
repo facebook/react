@@ -14,6 +14,7 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
+import type { TypeOfWork } from 'ReactTypeOfWork';
 
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
@@ -26,11 +27,17 @@ type Deadline = {
   timeRemaining : () => number
 };
 
-type HostChildNode<I> = { output: HostChildren<I>, sibling: ?HostChildNode<I> };
+type HostChildNode<I> = { tag: TypeOfWork, output: HostChildren<I>, sibling: any };
 
 export type HostChildren<I> = null | void | I | HostChildNode<I>;
 
-export type HostConfig<T, P, I> = {
+export type HostConfig<T, P, I, C> = {
+
+  // TODO: We don't currently have a quick way to detect that children didn't
+  // reorder so we host will always need to check the set. We should make a flag
+  // or something so that it can bailout easily.
+
+  updateContainer(containerInfo : C, children : HostChildren<I>) : void;
 
   createInstance(type : T, props : P, children : HostChildren<I>) : I,
   prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : bool,
@@ -44,22 +51,22 @@ export type HostConfig<T, P, I> = {
 
 type OpaqueNode = Fiber;
 
-export type Reconciler = {
-  mountContainer(element : ReactElement<any>, containerInfo : ?Object) : OpaqueNode,
+export type Reconciler<C> = {
+  mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
   updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
   unmountContainer(container : OpaqueNode) : void,
 
   // Used to extract the return value from the initial render. Legacy API.
-  getPublicRootInstance(container : OpaqueNode) : ?Object,
+  getPublicRootInstance(container : OpaqueNode) : (C | null),
 };
 
-module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconciler<C> {
 
   var { scheduleLowPriWork } = ReactFiberScheduler(config);
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : ?Object) : OpaqueNode {
+    mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode {
       const root = createFiberRoot(containerInfo);
       const container = root.current;
       // TODO: Use pending work/state instead of props.
@@ -94,7 +101,7 @@ module.exports = function<T, P, I>(config : HostConfig<T, P, I>) : Reconciler {
       scheduleLowPriWork(root);
     },
 
-    getPublicRootInstance(container : OpaqueNode) : ?Object {
+    getPublicRootInstance(container : OpaqueNode) : (C | null) {
       return null;
     },
 

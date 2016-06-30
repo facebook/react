@@ -18,7 +18,7 @@ const { createHostContainerFiber } = require('ReactFiber');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
-  containerInfo: ?Object,
+  containerInfo: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
   // Determines if this root has already been added to the schedule for work.
@@ -27,7 +27,7 @@ export type FiberRoot = {
   nextScheduledRoot: ?FiberRoot,
 };
 
-exports.createFiberRoot = function(containerInfo : ?Object) : FiberRoot {
+exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostContainerFiber();
