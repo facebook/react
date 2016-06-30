@@ -46,11 +46,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         if (finishedWork.stateNode == null || !finishedWork.alternate) {
           throw new Error('This should only be done during updates.');
         }
+        // Commit the work prepared earlier.
         const child = (finishedWork.child : ?Fiber);
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = finishedWork.memoizedProps;
-        // If we have an alternate, that means this is an update and we need to
-        // schedule a side-effect to do the updates.
         const current = finishedWork.alternate;
         const oldProps = current.memoizedProps;
         const instance : I = finishedWork.stateNode;
