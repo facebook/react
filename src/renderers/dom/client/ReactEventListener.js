@@ -21,6 +21,17 @@ var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
 
 /**
+ * Tracks all listeners added to a document, for later batch removal.
+ * @type {Array}
+ */
+var documentEventListenerRemovers = [];
+
+/**
+ * This is invoked when the document is reset.
+ */
+var documentResetCallback = function() {};
+
+/**
  * Find the deepest React component completely containing the root of the
  * passed-in instance (for use when entire React trees are nested within each
  * other). If React trees are not nested, returns null.
@@ -172,6 +183,40 @@ var ReactEventListener = {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }
   },
+  /**
+   * Records the remover for a previously added document event listener.
+   * @param {function} remover A function that removes an added listener.
+   */
+  addDocumentEventListenerRemover: function(remover) {
+    if (remover) {
+      documentEventListenerRemovers.push(remover);
+    }
+  },
+
+  /**
+   * This callback will be invoked when resetDocument is also called.
+   * @param callback
+     */
+  setDocumentResetCallback: function(callback) {
+    documentResetCallback = callback;
+  },
+
+  /**
+   * Removes all previously added document or global event listeners.
+   * @param {object} The document holding the last component.
+   */
+  resetDocument: function(doc) {
+    for (;;) {
+      var remover = documentEventListenerRemovers.pop();
+      if (!remover) {
+        break;
+      }
+      remover();
+    }
+
+    documentResetCallback(doc);
+  },
+
 };
 
 module.exports = ReactEventListener;

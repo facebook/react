@@ -209,4 +209,52 @@ describe('ReactEventListener', function() {
     expect(calls[0][EVENT_TARGET_PARAM])
       .toBe(ReactDOMComponentTree.getInstanceFromNode(instance.getInner()));
   });
+
+  it('documentResetCallback called when resetDocument called with provided document', function() {
+    var iframe =document.createElement('iframe');
+    var doc = iframe.contentDocument;
+    var resetCalled = false;
+    ReactEventListener.setDocumentResetCallback(function(d) {
+      expect(d).toBe(doc);
+      resetCalled = true;
+    });
+    ReactEventListener.resetDocument(doc);
+    expect(resetCalled).toBe(true);
+  });
+
+  it('document event remover called once and removed upon first resetDocument', function() {
+    var removed = false;
+    ReactEventListener.addDocumentEventListenerRemover(function() {
+      expect(removed).toBe(false);
+      removed = true;
+    });
+    ReactEventListener.resetDocument(document);
+    expect(removed).toBe(true);
+    ReactEventListener.resetDocument(document);
+    ReactEventListener.resetDocument(document);
+  });
+
+  it('multiple document event removers each called once and removed upon first resetDocument call', function() {
+    var i = false;
+    ReactEventListener.addDocumentEventListenerRemover(function() {
+      expect(i).toBe(false);
+      i = true;
+    });
+    var j = false;
+    ReactEventListener.addDocumentEventListenerRemover(function() {
+      expect(j).toBe(false);
+      j = true;
+    });
+    var k = false;
+    ReactEventListener.addDocumentEventListenerRemover(function() {
+      expect(k).toBe(false);
+      k = true;
+    });
+    ReactEventListener.resetDocument(document);
+    expect(i).toBe(true);
+    expect(j).toBe(true);
+    expect(k).toBe(true);
+    ReactEventListener.resetDocument(document);
+    ReactEventListener.resetDocument(document);
+  });
 });
