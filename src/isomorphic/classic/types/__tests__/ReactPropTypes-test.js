@@ -80,6 +80,12 @@ describe('ReactPropTypes', function() {
         'Invalid prop `testProp` of type `object` supplied to ' +
         '`testComponent`, expected `string`.'
       );
+      typeCheckFail(
+        PropTypes.string,
+        Symbol(),
+        'Invalid prop `testProp` of type `symbol` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
     });
 
     it('should fail date and regexp correctly', function() {
@@ -106,6 +112,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.object, {});
       typeCheckPass(PropTypes.object, new Date());
       typeCheckPass(PropTypes.object, /please/);
+      typeCheckPass(PropTypes.symbol, Symbol());
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -124,6 +131,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.any, 0);
       typeCheckPass(PropTypes.any, 'str');
       typeCheckPass(PropTypes.any, []);
+      typeCheckPass(PropTypes.any, Symbol());
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -150,6 +158,7 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.arrayOf(PropTypes.number), [1, 2, 3]);
       typeCheckPass(PropTypes.arrayOf(PropTypes.string), ['a', 'b', 'c']);
       typeCheckPass(PropTypes.arrayOf(PropTypes.oneOf(['a', 'b'])), ['a', 'b']);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.symbol), [Symbol(), Symbol()]);
     });
 
     it('should support arrayOf with complex types', function() {
@@ -262,7 +271,7 @@ describe('ReactPropTypes', function() {
       var instance = <Component label={<div />} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(console.error.argsForCall.length).toBe(0);
+      expect(console.error.calls.count()).toBe(0);
     });
 
     it('should warn when passing no label and isRequired is set', () => {
@@ -271,7 +280,7 @@ describe('ReactPropTypes', function() {
       var instance = <Component />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.calls.count()).toBe(1);
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -412,7 +421,7 @@ describe('ReactPropTypes', function() {
         k4: null,
         k5: undefined,
       }));
-      expect(console.error.calls).toEqual([]);
+      expect(console.error.calls.count()).toBe(0);
     });
 
     it('should not warn for iterables', function() {
@@ -490,6 +499,10 @@ describe('ReactPropTypes', function() {
         PropTypes.objectOf(PropTypes.oneOf(['a', 'b'])),
         {a: 'a', b: 'b'}
       );
+      typeCheckPass(
+        PropTypes.objectOf(PropTypes.symbol),
+        {a: Symbol(), b: Symbol(), c: Symbol()}
+      );
     });
 
     it('should support objectOf with complex types', function() {
@@ -543,6 +556,12 @@ describe('ReactPropTypes', function() {
         PropTypes.objectOf(PropTypes.number),
         'string',
         'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected an object.'
+      );
+      typeCheckFail(
+        PropTypes.objectOf(PropTypes.symbol),
+        Symbol(),
+        'Invalid prop `testProp` of type `symbol` supplied to ' +
         '`testComponent`, expected an object.'
       );
     });
@@ -782,6 +801,36 @@ describe('ReactPropTypes', function() {
     });
   });
 
+  describe('Symbol Type', function() {
+    it('should warn for non-symbol', function() {
+      typeCheckFail(
+        PropTypes.symbol,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+      typeCheckFail(
+        PropTypes.symbol,
+        function() { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+      typeCheckFail(
+        PropTypes.symbol,
+        {
+          '@@toStringTag': 'Katana',
+        },
+        'Invalid prop `testProp` of type `object` supplied to ' +
+        '`testComponent`, expected `symbol`.'
+      );
+    });
+
+    it('should not warn for a polyfilled Symbol', function() {
+      var CoreSymbol = require('core-js/library/es6/symbol');
+      typeCheckPass(PropTypes.symbol, CoreSymbol('core-js'));
+    });
+  });
+
   describe('Custom validator', function() {
     beforeEach(function() {
       jest.resetModuleRegistry();
@@ -800,9 +849,8 @@ describe('ReactPropTypes', function() {
       var instance = <Component num={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(spy.argsForCall.length).toBe(2); // temp double validation
-      expect(spy.argsForCall[0][1]).toBe('num');
-      expect(spy.argsForCall[0][2]).toBe('Component');
+      expect(spy.calls.count()).toBe(1);
+      expect(spy.calls.argsFor(0)[1]).toBe('num');
     });
 
     it('should have been called even if the prop is not present', function() {
@@ -818,13 +866,13 @@ describe('ReactPropTypes', function() {
       var instance = <Component bla={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(spy.argsForCall.length).toBe(2); // temp double validation
+      expect(spy.calls.count()).toBe(1);
+      expect(spy.calls.argsFor(0)[1]).toBe('num');
     });
 
     it('should have received the validator\'s return value', function() {
       spyOn(console, 'error');
-
-      var spy = jasmine.createSpy().andCallFake(
+      var spy = jasmine.createSpy().and.callFake(
         function(props, propName, componentName) {
           if (props[propName] !== 5) {
             return new Error('num must be 5!');
@@ -841,17 +889,19 @@ describe('ReactPropTypes', function() {
 
       var instance = <Component num={6} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toBe(
-        'Warning: Failed propType: num must be 5!'
+      expect(console.error.calls.count()).toBe(1);
+      expect(
+        console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+      ).toBe(
+        'Warning: Failed prop type: num must be 5!\n' +
+        '    in Component (at **)'
       );
     });
 
     it('should not warn if the validator returned null',
       function() {
         spyOn(console, 'error');
-
-        var spy = jasmine.createSpy().andCallFake(
+        var spy = jasmine.createSpy().and.callFake(
           function(props, propName, componentName) {
             return null;
           }
@@ -866,7 +916,7 @@ describe('ReactPropTypes', function() {
 
         var instance = <Component num={5} />;
         instance = ReactTestUtils.renderIntoDocument(instance);
-        expect(console.error.argsForCall.length).toBe(0);
+        expect(console.error.calls.count()).toBe(0);
       }
     );
   });

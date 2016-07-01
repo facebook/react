@@ -1,6 +1,6 @@
 {
   "name": "react-native-renderer",
-  "version": "15.1.0",
+  "version": "15.2.0-rc.2",
   "description": "React package for use inside react-native.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -14,6 +14,6 @@
   },
   "homepage": "https://facebook.github.io/react-native/",
   "dependencies": {
-    "react": "^15.1.0"
+    "react": "^15.2.0-rc.2"
   }
 }

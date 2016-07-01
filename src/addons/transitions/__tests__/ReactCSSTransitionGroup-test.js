@@ -45,7 +45,7 @@ describe('ReactCSSTransitionGroup', function() {
     );
 
     // Warning about the missing transitionLeaveTimeout prop
-    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('should not warn if timeouts is zero', function() {
@@ -61,7 +61,7 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should clean-up silently after the timeout elapses', function() {
@@ -103,7 +103,7 @@ describe('ReactCSSTransitionGroup', function() {
     }
 
     // No warnings
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
 
     // The leaving child has been removed
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
@@ -287,6 +287,44 @@ describe('ReactCSSTransitionGroup', function() {
     ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
 
     ReactDOM.unmountComponentAtNode(container);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
+  });
+
+  it('should handle unmounted elements properly', function() {
+    var Child = React.createClass({
+      render() {
+        if (!this.props.show) {
+          return null;
+        }
+        return <div />;
+      },
+    });
+
+    var Component = React.createClass({
+      getInitialState() {
+        return { showChild: true };
+      },
+
+      componentDidMount() {
+        this.setState({ showChild: false });
+      },
+
+      render() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            transitionAppear={true}
+            transitionAppearTimeout={0}
+          >
+            <Child show={this.state.showChild} />
+          </ReactCSSTransitionGroup>
+        );
+      },
+    });
+
+    ReactDOM.render(<Component/>, container);
 
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();

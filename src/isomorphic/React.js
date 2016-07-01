@@ -16,7 +16,6 @@ var ReactComponent = require('ReactComponent');
 var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
@@ -28,6 +27,7 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;

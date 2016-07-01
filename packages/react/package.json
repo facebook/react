@@ -1,7 +1,7 @@
 {
   "name": "react",
   "description": "React is a JavaScript library for building user interfaces.",
-  "version": "15.1.0",
+  "version": "15.2.0-rc.2",
   "keywords": [
     "react"
   ],
@@ -23,7 +23,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "fbjs": "^0.8.0",
+    "fbjs": "^0.8.1",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0"
   },

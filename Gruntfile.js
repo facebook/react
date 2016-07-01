@@ -56,6 +56,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('lint', ['eslint']);
 
+  grunt.registerTask('flow', require('./grunt/tasks/flow'));
+
   grunt.registerTask('delete-build-modules', function() {
     // Use gulp here.
     spawnGulp(['react:clean'], null, this.async());

@@ -16,13 +16,13 @@ var invariant = require('invariant');
 var instanceCache = {};
 
 /**
- * Drill down (through composites and empty components) until we get a native or
- * native text component.
+ * Drill down (through composites and empty components) until we get a host or
+ * host text component.
  *
  * This is pretty polymorphic but unavoidable with the current structure we have
  * for `_renderedChildren`.
  */
-function getRenderedNativeOrTextFromComponent(component) {
+function getRenderedHostOrTextFromComponent(component) {
   var rendered;
   while ((rendered = component._renderedComponent)) {
     component = rendered;
@@ -31,11 +31,11 @@ function getRenderedNativeOrTextFromComponent(component) {
 }
 
 /**
- * Populate `_nativeNode` on the rendered native/text component with the given
+ * Populate `_hostNode` on the rendered host/text component with the given
  * DOM node. The passed `inst` can be a composite.
  */
 function precacheNode(inst, tag) {
-  var nativeInst = getRenderedNativeOrTextFromComponent(inst);
+  var nativeInst = getRenderedHostOrTextFromComponent(inst);
   instanceCache[tag] = nativeInst;
 }
 
