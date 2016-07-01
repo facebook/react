@@ -134,5 +134,6 @@ var errorMap = {
   "132": "Ended a touch event which was not counted in trackedTouchCount.",
   "133": "Touch object is missing identifier",
   "134": "Touch data should have been recorded on start",
-  "135": "Cannot find single active touch"
+  "135": "Cannot find single active touch",
+  "136": "Attempted to update component `%s` that has already been unmounted (or failed to mount)."
 };
