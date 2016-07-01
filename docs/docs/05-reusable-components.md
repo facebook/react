@@ -266,7 +266,7 @@ class Counter extends React.Component {
 }
 ```
 
-Or using property initializers, there is a neat trick that you can use to accomplish this syntactically::
+Or using property initializers, there is a neat trick that you can use to accomplish this syntactically:
 
 ```javascript
 class Counter extends React.Component {
