@@ -13,7 +13,6 @@
 
 var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var warning = require('warning');
-var areEqual = require('areEqual');
 
 var didWarnDupeSelectValues = false;
 
@@ -40,7 +39,7 @@ function handleElement(debugID, element) {
     return;
   }
 
-  let values = [];
+  let values = {};
   let options = element.props.children;
 
   //  If options is not iterable make it an array.
@@ -48,7 +47,6 @@ function handleElement(debugID, element) {
     options = [options];
   }
 
-  // Combine the values from all options into a single array.
   for (const option of options) {
     if (option.type === 'optGroup') {
       if ((option.props != null) && (option.props.children != null)) {
@@ -58,7 +56,18 @@ function handleElement(debugID, element) {
         }
         for (const groupOption of groupOptions) {
           if ((groupOption.props != null) && (groupOption.props.value != null)) {
-            values.push(groupOption.props.value);
+            const value = groupOption.props.value;
+            if (!values[value]) {
+              values[value] = value;
+            } else {
+              warning(
+                false,
+                'Select element contains duplicate option value `%s`.%s',
+                value,
+                ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+                );
+              didWarnDupeSelectValues = true;
+            }
           }
         }
       }
@@ -66,27 +75,18 @@ function handleElement(debugID, element) {
 
     if (option.type === 'option') {
       if ((option.props != null) && (option.props.value)) {
-        values.push(option.props.value);
-      }
-    }
-  }
-
-  if (values.length <= 1) {
-    return;
-  }
-
-  // Check the array for duplicate values.
-  for (var i = 0; i < values.length-1; i++) {
-    for (var j = i + 1; j < values.length; j++) {
-      if (areEqual(values[i], values[j])) {
-        warning(
+        const value = option.props.value;
+        if (!values[value]) {
+          values[value] = value;
+        } else {
+          warning(
             false,
-            'Select element contains duplicate option value `%s` in options #%s & #%s.%s',
-            values[i], i, j,
+            'Select element contains duplicate option value `%s`.%s',
+            value,
             ReactComponentTreeDevtool.getStackAddendumByID(debugID)
-          );
-        didWarnDupeSelectValues = true;
-        return;
+            );
+          didWarnDupeSelectValues = true;
+        }
       }
     }
   }
