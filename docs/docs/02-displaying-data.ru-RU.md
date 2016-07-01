@@ -3,7 +3,7 @@ id: displaying-data-ru-RU
 title: Отображение данных
 permalink: displaying-data-ru-RU.html
 prev: why-react-ru-RU.html
-next: jsx-in-depth.html
+next: jsx-in-depth-ru-RU.html
 ---
 
 Главная задача интерфейса — это отображать данные. React делает это легко и обновляет интерфейс сразу, как только изменятся данные.
@@ -89,7 +89,7 @@ setInterval(function() {
 
 Мы установили, что с JSX создавать React приложения проще, и дизайнеров как правило устраивает его синтаксис. Но у разных людей разные предпочтения, поэтому стоит сказать, что **JSX необязателен при работе с React.**
 
-JSX сам по себе очень прост. Чтобы узнать о нем больше, почитайте [подробно про JSX](/react/docs/jsx-in-depth.html). Или можете попробовать его в [Babel REPL](https://babeljs.io/repl/).
+JSX сам по себе очень прост. Чтобы узнать о нем больше, почитайте [подробно про JSX](/react/docs/jsx-in-depth-ru-RU.html). Или можете попробовать его в [Babel REPL](https://babeljs.io/repl/).
 
 JSX похож на HTML, но но имеет существенные отличия. Почитайте про [подводные камни JSX](/react/docs/jsx-gotchas.html), чтобы понять их ключевые различия.
 
