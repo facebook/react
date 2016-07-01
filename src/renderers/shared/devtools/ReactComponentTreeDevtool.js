@@ -24,6 +24,7 @@ function updateTree(id, update) {
   if (!tree[id]) {
     tree[id] = {
       element: null,
+      state: null,
       parentID: null,
       ownerID: null,
       text: null,
@@ -165,6 +166,10 @@ var ReactComponentTreeDevtool = {
     delete rootIDs[id];
   },
 
+  onStateChanged(id, state) {
+    updateTree(id, item => item.state = state);
+  },
+
   purgeUnmountedComponents() {
     if (ReactComponentTreeDevtool._preventPurging) {
       // Should only be used for testing.
@@ -261,6 +266,11 @@ var ReactComponentTreeDevtool = {
 
   getRegisteredIDs() {
     return Object.keys(tree);
+  },
+
+  getState(id) {
+    var item = tree[id];
+    return item ? item.state : null;
   },
 };
 
