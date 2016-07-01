@@ -1,4 +1,4 @@
-/## 15.2.0 (July 1, 2016)
+## 15.2.0 (July 1, 2016)
 
 ### React
 - Add error codes to production invariants, with links to the view the full error text. ([@keyanzhang](https://github.com/keyanzhang) in [#6948](https://github.com/facebook/react/pull/6948))
