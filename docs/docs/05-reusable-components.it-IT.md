@@ -24,6 +24,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // Tutto ciò che può essere mostrato: numeri, stringhe, elementi, o un array
     // (o frammento) contenente questi tipi.
