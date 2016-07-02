@@ -82,8 +82,6 @@ script:
       ./node_modules/.bin/grunt jest:normal
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
       ./node_modules/.bin/gulp react:extract-errors
-    elif [[ "$TEST_TYPE" = gulp_* ]]; then
-      ./node_modules/.bin/gulp ${TEST_TYPE:5}
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi
@@ -91,8 +89,8 @@ env:
   matrix:
   - TEST_TYPE=build
   - TEST_TYPE=test
-  - TEST_TYPE=gulp_lint
-  - TEST_TYPE=gulp_flow
+  - TEST_TYPE=lint
+  - TEST_TYPE=flow
   - TEST_TYPE=build_website
   global:
   # SERVER
