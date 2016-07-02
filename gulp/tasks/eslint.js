@@ -37,3 +37,5 @@ gulp.task('eslint', function(cb) {
     cb();
   });
 });
+
+gulp.task('lint', ['eslint']);
