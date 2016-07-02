@@ -81,3 +81,5 @@ gulp.task('react:extract-errors', function() {
 });
 
 gulp.task('default', ['react:modules']);
+
+gulp.task('lint', ['eslint']);
