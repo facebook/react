@@ -16,7 +16,7 @@ var spawn = require('child_process').spawn;
 
 var extension = process.platform === 'win32' ? '.cmd' : '';
 
-gulp.task('eslint', function(cb) {
+gulp.task('eslint', function(done) {
   spawn(
     process.execPath,
     [
@@ -34,7 +34,7 @@ gulp.task('eslint', function(cb) {
     }
 
     gutil.log('Lint passed');
-    cb();
+    done();
   });
 });
 

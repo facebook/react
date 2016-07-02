@@ -16,7 +16,7 @@ var spawn = require('child_process').spawn;
 
 var extension = process.platform === 'win32' ? '.cmd' : '';
 
-gulp.task('flow', function(cb) {
+gulp.task('flow', function(done) {
   spawn(
     process.execPath,
     [
@@ -35,6 +35,6 @@ gulp.task('flow', function(cb) {
     }
 
     gutil.log('Flow passed');
-    cb();
+    done();
   });
 });
