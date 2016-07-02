@@ -52,11 +52,15 @@ module.exports = function(grunt) {
       grunt.loadNpmTasks(npmTaskName);
     });
 
-  grunt.registerTask('eslint', require('./grunt/tasks/eslint'));
+  grunt.registerTask('eslint', function() {
+    spawnGulp(['eslint'], null, this.async());
+  });
 
   grunt.registerTask('lint', ['eslint']);
 
-  grunt.registerTask('flow', require('./grunt/tasks/flow'));
+  grunt.registerTask('flow', function() {
+    spawnGulp(['flow'], null, this.async());
+  });
 
   grunt.registerTask('delete-build-modules', function() {
     // Use gulp here.
@@ -84,7 +88,9 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
-  grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
+  grunt.registerTask('version-check', function() {
+    spawnGulp(['version-check'], null, this.async());
+  });
 
   grunt.registerTask('build:basic', [
     'build-modules',
@@ -109,7 +115,9 @@ module.exports = function(grunt) {
     'build-modules',
     'npm-react:release',
   ]);
-  grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
+  grunt.registerTask('build:react-dom', function() {
+    spawnGulp(['build:react-dom'], null, this.async());
+  });
 
   var jestTasks = require('./grunt/tasks/jest');
   grunt.registerTask('jest:normal', jestTasks.normal);

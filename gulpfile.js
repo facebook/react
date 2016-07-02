@@ -13,10 +13,15 @@ var gulp = require('gulp');
 var babel = require('gulp-babel');
 var flatten = require('gulp-flatten');
 var del = require('del');
+var requireDir = require('require-dir');
 
 var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
 var devExpressionWithCodes = require('./scripts/error-codes/dev-expression-with-codes');
+
+// Import Gulp tasks from the `tasks` directory.
+// Use `gulp --tasks` to list all available tasks.
+requireDir('./gulp/tasks');
 
 var paths = {
   react: {
