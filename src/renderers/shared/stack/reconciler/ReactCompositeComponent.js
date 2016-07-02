@@ -199,23 +199,9 @@ var ReactCompositeComponentMixin = {
 
     // Initialize the public class
     var inst = this._constructComponent(publicProps, publicContext);
-    var renderedElement;
-
-    // Support functional components
-    if (!shouldConstruct(Component) && (inst == null || inst.render == null)) {
-      renderedElement = inst;
-      warnIfInvalidElement(Component, renderedElement);
-      invariant(
-        inst === null ||
-        inst === false ||
-        ReactElement.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
-        Component.displayName || Component.name || 'Component'
-      );
-      inst = new StatelessComponent(Component);
-    }
-
+    var renderedElement = inst.__element;
+    delete inst.__element;
+    
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
       // warning now to help debugging
@@ -398,6 +384,23 @@ var ReactCompositeComponentMixin = {
         }
       }
       instanceOrElement = Component(publicProps, publicContext, ReactUpdateQueue);
+      
+      // Support functional components
+      if (!shouldConstruct(Component) && (instanceOrElement == null || instanceOrElement.render == null)) {
+        var renderedElement = instanceOrElement;         
+        warnIfInvalidElement(Component, renderedElement);
+        invariant(
+          renderedElement === null ||
+          renderedElement === false ||
+          ReactElement.isValidElement(renderedElement),
+          '%s(...): A valid React element (or null) must be returned. You may have ' +
+          'returned undefined, an array or some other invalid object.',
+          Component.displayName || Component.name || 'Component'
+        );
+        
+        instanceOrElement = new StatelessComponent(Component);
+        instanceOrElement.__element = renderedElement;                 
+      }
       if (__DEV__) {
         if (this._debugID !== 0) {
           ReactInstrumentation.debugTool.onEndLifeCycleTimer(
