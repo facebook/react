@@ -28,5 +28,5 @@ function buildLicenseHeader(name, version) {
 
 module.exports = {
   buildSimpleHeader,
-  buildLicenseHeader
+  buildLicenseHeader,
 };
