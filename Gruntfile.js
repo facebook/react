@@ -105,7 +105,9 @@ module.exports = function(grunt) {
     'build-modules',
     'npm-react:release',
   ]);
-  grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
+  grunt.registerTask('build:react-dom', function() {
+    spawnGulp(['build:react-dom'], null, this.async());
+  });
 
   var jestTasks = require('./grunt/tasks/jest');
   grunt.registerTask('jest:normal', jestTasks.normal);
