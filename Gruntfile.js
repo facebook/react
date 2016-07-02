@@ -78,7 +78,9 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
-  grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
+  grunt.registerTask('version-check', function() {
+    spawnGulp(['version-check'], null, this.async());
+  });
 
   grunt.registerTask('build:basic', [
     'build-modules',
