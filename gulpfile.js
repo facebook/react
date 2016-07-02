@@ -66,6 +66,10 @@ var babelOpts = {
   ],
 };
 
+gulp.task('eslint', getTask('eslint'));
+
+gulp.task('lint', ['eslint']);
+
 gulp.task('react:clean', function() {
   return del([paths.react.lib]);
 });

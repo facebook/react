@@ -52,7 +52,10 @@ module.exports = function(grunt) {
       grunt.loadNpmTasks(npmTaskName);
     });
 
-  grunt.registerTask('eslint', require('./grunt/tasks/eslint'));
+  grunt.registerTask('eslint', function() {
+    // Use gulp here.
+    spawnGulp(['eslint'], null, this.async());
+  });
 
   grunt.registerTask('lint', ['eslint']);
 
