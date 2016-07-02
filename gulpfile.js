@@ -72,6 +72,8 @@ gulp.task('lint', ['eslint']);
 
 gulp.task('flow', getTask('flow'));
 
+gulp.task('version-check', getTask('version-check'));
+
 gulp.task('react:clean', function() {
   return del([paths.react.lib]);
 });
