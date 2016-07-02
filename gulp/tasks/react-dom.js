@@ -28,16 +28,16 @@ function build(name, filename) {
   var srcFile = `vendor/${filename}.js`;
   var src = fs.readFileSync(srcFile, 'utf8');
   var srcMin = UglifyJS.minify(src, {
-    fromString: true
+    fromString: true,
   }).code;
 
   var destFile = new gutil.File({
     path: `${filename}.js`,
-    contents: new Buffer(header + src)
+    contents: new Buffer(header + src),
   });
   var destFileMin = new gutil.File({
     path: `${filename}.min.js`,
-    contents: new Buffer(header + srcMin)
+    contents: new Buffer(header + srcMin),
   });
 
   var out = through.obj();
@@ -54,6 +54,6 @@ gulp.task('build:react-dom', function() {
 
   merge([
     reactDom,
-    reactDomServer
+    reactDomServer,
   ]);
 });
