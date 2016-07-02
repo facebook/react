@@ -23,6 +23,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // 所有可以被渲染的对象：数字，
     // 字符串，DOM 元素或包含这些类型的数组(or fragment) 。
