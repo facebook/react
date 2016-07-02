@@ -161,7 +161,7 @@ function runBatchedUpdates(transaction) {
       var namedComponent = component;
       // Duck type TopLevelWrapper. This is probably always true.
       if (
-        component._currentElement.props ===
+        component._currentElement.props.child ===
         component._renderedComponent._currentElement
       ) {
         namedComponent = component._renderedComponent;

@@ -19,6 +19,7 @@ var SECRET_DOM_INTERNALS_NAME = 'ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_W
 var shimSharedModules = globalShim.configure({
   './ReactCurrentOwner': SECRET_INTERNALS_NAME + '.ReactCurrentOwner',
   './ReactComponentTreeHook': SECRET_INTERNALS_NAME + '.ReactComponentTreeHook',
+  './ReactElement': 'React', // All the methods that are shared are exposed.
 });
 
 // Shim references to ReactDOM internals from addons.
