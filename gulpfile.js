@@ -70,6 +70,8 @@ gulp.task('eslint', getTask('eslint'));
 
 gulp.task('lint', ['eslint']);
 
+gulp.task('flow', getTask('flow'));
+
 gulp.task('react:clean', function() {
   return del([paths.react.lib]);
 });

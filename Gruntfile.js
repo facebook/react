@@ -59,7 +59,10 @@ module.exports = function(grunt) {
 
   grunt.registerTask('lint', ['eslint']);
 
-  grunt.registerTask('flow', require('./grunt/tasks/flow'));
+  grunt.registerTask('flow', function() {
+    // Use gulp here.
+    spawnGulp(['flow'], null, this.async());
+  });
 
   grunt.registerTask('delete-build-modules', function() {
     // Use gulp here.
