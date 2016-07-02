@@ -46,5 +46,5 @@ module.exports = function(gulp, plugins) {
       );
       done();
     });
-  }
-}
+  };
+};
