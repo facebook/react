@@ -23,6 +23,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // 何でもレンダリングできます。number、string、要素やそれらを含む配列など。
     optionalNode: React.PropTypes.node,
