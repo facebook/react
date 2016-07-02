@@ -15,16 +15,12 @@ var fs = require('fs');
 var merge = require('merge2');
 var through = require('through2');
 var UglifyJS = require('uglify-js');
+var helpers = require('../helpers');
 
 var packageJson = require('../../package.json');
 
 function build(name, filename) {
-  var LICENSE_TEMPLATE =
-    fs.readFileSync('./gulp/data/header-template-extended.txt', 'utf8');
-  var header = LICENSE_TEMPLATE
-    .replace('<%= package %>', name)
-    .replace('<%= version %>', packageJson.version);
-
+  var header = helpers.buildLicenseHeader(name, packageJson.version);
   var srcFile = `vendor/${filename}.js`;
   var src = fs.readFileSync(srcFile, 'utf8');
   var srcMin = UglifyJS.minify(src, {
