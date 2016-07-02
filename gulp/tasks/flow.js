@@ -30,11 +30,19 @@ gulp.task('flow', function(done) {
     }
   ).on('close', function(code) {
     if (code !== 0) {
-      gutil.log('Flow failed');
+      gutil.log(
+        gutil.colors.red(
+          'Flow failed'
+        )
+      );
       process.exit(code);
     }
 
-    gutil.log('Flow passed');
+    gutil.log(
+      gutil.colors.green(
+        'Flow passed'
+      )
+    );
     done();
   });
 });

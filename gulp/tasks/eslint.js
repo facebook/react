@@ -29,11 +29,19 @@ gulp.task('eslint', function(done) {
     }
   ).on('close', function(code) {
     if (code !== 0) {
-      gutil.log('Lint failed');
+      gutil.log(
+        gutil.colors.red(
+          'Lint failed'
+        )
+      );
       process.exit(code);
     }
 
-    gutil.log('Lint passed');
+    gutil.log(
+      gutil.colors.green(
+        'Lint passed'
+      )
+    );
     done();
   });
 });
