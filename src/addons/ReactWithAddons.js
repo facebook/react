@@ -17,6 +17,8 @@ var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
+var ReactPerf = require('ReactPerf');
+var ReactTestUtils = require('ReactTestUtils');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 
 var shallowCompare = require('shallowCompare');
@@ -34,8 +36,8 @@ React.addons = {
 };
 
 if (__DEV__) {
-  React.addons.Perf = require('ReactPerf');
-  React.addons.TestUtils = require('ReactTestUtils');
+  React.addons.Perf = ReactPerf;
+  React.addons.TestUtils = ReactTestUtils;
 }
 
 module.exports = React;

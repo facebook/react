@@ -13,6 +13,7 @@
 
 'use strict';
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactMount = require('ReactMount');
@@ -66,7 +67,6 @@ if (
 }
 
 if (__DEV__) {
-  var ExecutionEnvironment = require('ExecutionEnvironment');
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // First check if devtools is not installed

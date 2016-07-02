@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
+var ReactElementValidator = require('ReactElementValidator');
 
 var mapObject = require('mapObject');
 
@@ -23,7 +24,6 @@ var mapObject = require('mapObject');
  */
 function createDOMFactory(tag) {
   if (__DEV__) {
-    var ReactElementValidator = require('ReactElementValidator');
     return ReactElementValidator.createFactory(tag);
   }
   return ReactElement.createFactory(tag);
