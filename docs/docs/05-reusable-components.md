@@ -13,86 +13,87 @@ When designing interfaces, break down the common design elements (buttons, form 
 As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. Note that for performance reasons `propTypes` is only checked in development mode. Here is an example documenting the different validators provided:
 
 ```javascript
-React.createClass({
-  propTypes: {
-    // You can declare that a prop is a specific JS primitive. By default, these
-    // are all optional.
-    optionalArray: React.PropTypes.array,
-    optionalBool: React.PropTypes.bool,
-    optionalFunc: React.PropTypes.func,
-    optionalNumber: React.PropTypes.number,
-    optionalObject: React.PropTypes.object,
-    optionalString: React.PropTypes.string,
+function MyComponent(props) {
+  return <div>Hello React</div>;
+}
 
-    // Anything that can be rendered: numbers, strings, elements or an array
-    // (or fragment) containing these types.
-    optionalNode: React.PropTypes.node,
+MyComponent.propTypes = {
+  // You can declare that a prop is a specific JS primitive. By default, these
+  // are all optional.
+  optionalArray: React.PropTypes.array,
+  optionalBool: React.PropTypes.bool,
+  optionalFunc: React.PropTypes.func,
+  optionalNumber: React.PropTypes.number,
+  optionalObject: React.PropTypes.object,
+  optionalString: React.PropTypes.string,
+  
+  // Anything that can be rendered: numbers, strings, elements or an array
+  // (or fragment) containing these types.
+  optionalNode: React.PropTypes.node,
 
-    // A React element.
-    optionalElement: React.PropTypes.element,
+  // A React element.
+  optionalElement: React.PropTypes.element,
 
-    // You can also declare that a prop is an instance of a class. This uses
-    // JS's instanceof operator.
-    optionalMessage: React.PropTypes.instanceOf(Message),
+  // You can also declare that a prop is an instance of a class. This uses
+  // JS's instanceof operator.
+  optionalMessage: React.PropTypes.instanceOf(Message),
 
-    // You can ensure that your prop is limited to specific values by treating
-    // it as an enum.
-    optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
+  // You can ensure that your prop is limited to specific values by treating
+  // it as an enum.
+  optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
 
-    // An object that could be one of many types
-    optionalUnion: React.PropTypes.oneOfType([
-      React.PropTypes.string,
-      React.PropTypes.number,
-      React.PropTypes.instanceOf(Message)
-    ]),
+  // An object that could be one of many types
+  optionalUnion: React.PropTypes.oneOfType([
+    React.PropTypes.string,
+    React.PropTypes.number,
+    React.PropTypes.instanceOf(Message)
+  ]),
 
-    // An array of a certain type
-    optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
+  // An array of a certain type
+  optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
 
-    // An object with property values of a certain type
-    optionalObjectOf: React.PropTypes.objectOf(React.PropTypes.number),
+  // An object with property values of a certain type
+  optionalObjectOf: React.PropTypes.objectOf(React.PropTypes.number),
 
-    // An object taking on a particular shape
-    optionalObjectWithShape: React.PropTypes.shape({
-      color: React.PropTypes.string,
-      fontSize: React.PropTypes.number
-    }),
+  // An object taking on a particular shape
+  optionalObjectWithShape: React.PropTypes.shape({
+    color: React.PropTypes.string,
+    fontSize: React.PropTypes.number
+  }),
 
-    // You can chain any of the above with `isRequired` to make sure a warning
-    // is shown if the prop isn't provided.
-    requiredFunc: React.PropTypes.func.isRequired,
+  // You can chain any of the above with `isRequired` to make sure a warning
+  // is shown if the prop isn't provided.
+  requiredFunc: React.PropTypes.func.isRequired,
 
-    // A value of any data type
-    requiredAny: React.PropTypes.any.isRequired,
+  // A value of any data type
+  requiredAny: React.PropTypes.any.isRequired,
 
-    // You can also specify a custom validator. It should return an Error
-    // object if the validation fails. Don't `console.warn` or throw, as this
-    // won't work inside `oneOfType`.
-    customProp: function(props, propName, componentName) {
-      if (!/matchme/.test(props[propName])) {
-        return new Error(
-          'Invalid prop `' + propName + '` supplied to' +
-          ' `' + componentName + '`. Validation failed.'
-        );
-      }
-    },
-
-    // You can also supply a custom validator to `arrayOf` and `objectOf`.
-    // It should return an Error object if the validation fails. The validator
-    // will be called for each key in the array or object. The first two
-    // arguments of the validator are the array or object itself, and the
-    // current item's key.
-    customArrayProp: React.PropTypes.arrayOf(function(propValue, key, componentName, location, propFullName) {
-      if (!/matchme/.test(propValue[key])) {
-        return new Error(
-          'Invalid prop `' + propFullName + '` supplied to' +
-          ' `' + componentName + '`. Validation failed.'
-        );
-      }
-    })
+  // You can also specify a custom validator. It should return an Error
+  // object if the validation fails. Don't `console.warn` or throw, as this
+  // won't work inside `oneOfType`.
+  customProp: function(props, propName, componentName) {
+    if (!/matchme/.test(props[propName])) {
+      return new Error(
+        'Invalid prop `' + propName + '` supplied to' +
+        ' `' + componentName + '`. Validation failed.'
+      );
+    }
   },
-  /* ... */
-});
+
+  // You can also supply a custom validator to `arrayOf` and `objectOf`.
+  // It should return an Error object if the validation fails. The validator
+  // will be called for each key in the array or object. The first two
+  // arguments of the validator are the array or object itself, and the
+  // current item's key.
+  customArrayProp: React.PropTypes.arrayOf(function(propValue, key, componentName, location, propFullName) {
+    if (!/matchme/.test(propValue[key])) {
+      return new Error(
+        'Invalid prop `' + propFullName + '` supplied to' +
+        ' `' + componentName + '`. Validation failed.'
+      );
+    }
+  })
+};
 ```
 
 ### Single Child
@@ -100,20 +101,17 @@ React.createClass({
 With `React.PropTypes.element` you can specify that only a single child can be passed to a component as children.
 
 ```javascript
-var MyComponent = React.createClass({
-  propTypes: {
-    children: React.PropTypes.element.isRequired
-  },
+function MyComponent(props) {
+  return (
+    <div>
+      {props.children} // This must be exactly one element or it will warn.
+    </div>
+  );
+};
 
-  render: function() {
-    return (
-      <div>
-        {this.props.children} // This must be exactly one element or it will warn.
-      </div>
-    );
-  }
-
-});
+MyComponent.propTypes = {
+  children: React.PropTypes.element.isRequired
+};
 ```
 
 ## Default Prop Values
@@ -121,29 +119,32 @@ var MyComponent = React.createClass({
 React lets you define default values for your `props` in a very declarative way:
 
 ```javascript
-var ComponentWithDefaultProps = React.createClass({
-  getDefaultProps: function() {
-    return {
-      value: 'default value'
-    };
-  }
-  /* ... */
-});
+function ComponentWithDefaultProps(props) {
+  return (
+    <div>
+      {props.value} // If not specified by the parent component, will use the default value
+    </div>
+  );
+};
+
+ComponentWithDefaultProps.defaultProps = {
+  value: 'default value'
+};
 ```
 
-The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+In this example, `ComponentWithDefaultProps.defaultProps` will be cached and used to ensure that `props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
 ## Transferring Props: A Shortcut
 
 A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
-var CheckLink = React.createClass({
-  render: function() {
-    // This takes any props passed to CheckLink and copies them to <a>
-    return <a {...this.props}>{'√ '}{this.props.children}</a>;
-  }
-});
+function CheckLink(props) {
+  // This takes any props passed to CheckLink and copies them to <a>
+  return (
+    <a {...props}>{'√ '}{props.children}</a>
+  );
+};
 
 ReactDOM.render(
   <CheckLink href="/checked.html">
@@ -153,56 +154,9 @@ ReactDOM.render(
 );
 ```
 
-## Mixins
-
-Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
-
-One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
-
-```javascript
-var SetIntervalMixin = {
-  componentWillMount: function() {
-    this.intervals = [];
-  },
-  setInterval: function() {
-    this.intervals.push(setInterval.apply(null, arguments));
-  },
-  componentWillUnmount: function() {
-    this.intervals.forEach(clearInterval);
-  }
-};
-
-var TickTock = React.createClass({
-  mixins: [SetIntervalMixin], // Use the mixin
-  getInitialState: function() {
-    return {seconds: 0};
-  },
-  componentDidMount: function() {
-    this.setInterval(this.tick, 1000); // Call a method on the mixin
-  },
-  tick: function() {
-    this.setState({seconds: this.state.seconds + 1});
-  },
-  render: function() {
-    return (
-      <p>
-        React has been running for {this.state.seconds} seconds.
-      </p>
-    );
-  }
-});
-
-ReactDOM.render(
-  <TickTock />,
-  document.getElementById('example')
-);
-```
-
-A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called. Methods defined on mixins run in the order mixins were listed, followed by a method call on the component.
-
 ## ES6 Classes
 
-You may also define your React classes as a plain JavaScript class. For example using ES6 class syntax:
+You can define your React classes as a plain JavaScript class. For example using ES6 class syntax:
 
 ```javascript
 class HelloMessage extends React.Component {
@@ -288,7 +242,11 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 Or using the new ES6 arrow syntax:
 
 ```javascript
-const HelloMessage = (props) => <div>Hello {props.name}</div>;
+const HelloMessage = (props) => {
+  return (
+    <div>Hello {props.name}</div>
+  );
+}
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
@@ -304,3 +262,50 @@ However, you may still specify `.propTypes` and `.defaultProps` by setting them 
 > In React v0.14, stateless functional components were not permitted to return `null` or `false` (a workaround is to return a `<noscript />` instead). This was fixed in React v15, and stateless functional components are now permitted to return `null`.
 
 In an ideal world, most of your components would be stateless functions because in the future we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations. This is the recommended pattern, when possible.
+
+## Mixins
+
+If you're still using `React.createClass` to create your components (ES6 Classes and Stateless components don't support Mixins), sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
+
+One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
+
+```javascript
+var SetIntervalMixin = {
+  componentWillMount: function() {
+    this.intervals = [];
+  },
+  setInterval: function() {
+    this.intervals.push(setInterval.apply(null, arguments));
+  },
+  componentWillUnmount: function() {
+    this.intervals.forEach(clearInterval);
+  }
+};
+
+var TickTock = React.createClass({
+  mixins: [SetIntervalMixin], // Use the mixin
+  getInitialState: function() {
+    return {seconds: 0};
+  },
+  componentDidMount: function() {
+    this.setInterval(this.tick, 1000); // Call a method on the mixin
+  },
+  tick: function() {
+    this.setState({seconds: this.state.seconds + 1});
+  },
+  render: function() {
+    return (
+      <p>
+        React has been running for {this.state.seconds} seconds.
+      </p>
+    );
+  }
+});
+
+ReactDOM.render(
+  <TickTock />,
+  document.getElementById('example')
+);
+```
+
+A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called. Methods defined on mixins run in the order mixins were listed, followed by a method call on the component.
