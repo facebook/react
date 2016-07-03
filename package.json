@@ -61,6 +61,11 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
     "platform": "^1.1.0",
+    "rollup": "^0.33.0",
+    "rollup-plugin-babel": "^2.6.1",
+    "rollup-plugin-node-resolve": "^1.7.1",
+    "rollup-plugin-replace": "^1.1.1",
+    "rollup-plugin-uglify": "^1.0.1",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
@@ -81,7 +86,9 @@
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
-    "flow": "flow"
+    "flow": "flow",
+    "rollup:dev": "rollup -c scripts/rollup/rollup.config.dev.js",
+    "rollup:prod": "rollup -c scripts/rollup/rollup.config.prod.js"
   },
   "jest": {
     "modulePathIgnorePatterns": [
