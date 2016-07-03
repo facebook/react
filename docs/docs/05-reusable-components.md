@@ -304,3 +304,27 @@ However, you may still specify `.propTypes` and `.defaultProps` by setting them 
 > In React v0.14, stateless functional components were not permitted to return `null` or `false` (a workaround is to return a `<noscript />` instead). This was fixed in React v15, and stateless functional components are now permitted to return `null`.
 
 In an ideal world, most of your components would be stateless functions because in the future we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations. This is the recommended pattern, when possible.
+
+## Reactive Stateless Functions
+
+You can notify React to update UI invoking `this.render()`:
+
+```javascript
+
+function Clock(props) {
+  setTimeout(this.render, 1000);  
+  return <div>{new Date()}</div>;
+}
+ReactDOM.render(<Clock />, mountNode);
+```
+
+Or using the new ES6 arrow syntax:
+
+```javascript
+const Clock = (props) => {
+  setTimeout(this.render, 1000);  
+  return <div>{props.name}</div>;
+};
+
+ReactDOM.render(<Clock />, mountNode);
+```

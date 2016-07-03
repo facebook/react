@@ -5719,8 +5719,12 @@ function getDeclarationErrorAddendum(component) {
 
 function StatelessComponent(Component) {}
 StatelessComponent.prototype.render = function () {
+  var rerender= this.updater.enqueueForceUpdate.bind(this);
+  var fakeComponent={
+    render: rerender,
+  }
   var Component = ReactInstanceMap.get(this)._currentElement.type;
-  var element = Component(this.props, this.context, this.updater);
+  var element = Component.call(fakeComponent, this.props, this.context, this.updater);
   warnIfInvalidElement(Component, element);
   return element;
 };

@@ -266,4 +266,24 @@ describe('ReactStatelessComponent', function() {
       'have returned undefined, an array or some other invalid object.'
     );
   });
+  
+  it('should support re-render stateless component', function() {
+    var externalValue = 'A';
+    var rerenderCallBack;
+    
+    function StatelessComponentRenderingExternalState(props) {
+      rerenderCallBack = this && this.render;      
+      return <div>{externalValue}</div>;
+    }
+    
+    var el = document.createElement('div');
+    var comp = <StatelessComponentRenderingExternalState />;
+    ReactDOM.render(comp, el);
+
+    expect(el.textContent).toBe('A');
+    
+    externalValue = 'B';
+    rerenderCallBack();
+    expect(el.textContent).toBe('B');    
+  });  
 });

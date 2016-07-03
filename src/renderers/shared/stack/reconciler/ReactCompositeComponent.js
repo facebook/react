@@ -32,8 +32,12 @@ var warning = require('warning');
 function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
+  var rerender= this.updater.enqueueForceUpdate.bind(this.updater, this);
+  var fakeComponent={
+    render: rerender,
+  }
   var Component = ReactInstanceMap.get(this)._currentElement.type;
-  var element = Component(this.props, this.context, this.updater);
+  var element = Component.call(fakeComponent, this.props, this.context, this.updater);
   warnIfInvalidElement(Component, element);
   return element;
 };
@@ -383,7 +387,15 @@ var ReactCompositeComponentMixin = {
           );
         }
       }
-      instanceOrElement = Component(publicProps, publicContext, ReactUpdateQueue);
+      
+      // Support functional components
+      var fakeComponent={
+        render() {
+          instanceOrElement.updater.enqueueForceUpdate(instanceOrElement);
+        },
+      };      
+      
+      instanceOrElement = Component.call(fakeComponent, publicProps, publicContext, ReactUpdateQueue);
       
       // Support functional components
       if (!shouldConstruct(Component) && (instanceOrElement == null || instanceOrElement.render == null)) {
@@ -399,7 +411,7 @@ var ReactCompositeComponentMixin = {
         );
         
         instanceOrElement = new StatelessComponent(Component);
-        instanceOrElement.__element = renderedElement;                 
+        instanceOrElement.__element = renderedElement;
       }
       if (__DEV__) {
         if (this._debugID !== 0) {
