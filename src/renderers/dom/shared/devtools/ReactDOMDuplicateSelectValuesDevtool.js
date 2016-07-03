@@ -16,6 +16,8 @@ var warning = require('warning');
 var REACT_ELEMENT_TYPE = require('ReactElement').REACT_ELEMENT_TYPE;
 
 var didWarnDupeSelectValues = false;
+let values = null;
+let debugId = null;
 
 function handleElement(debugID, element) {
   
@@ -40,12 +42,13 @@ function handleElement(debugID, element) {
     return;
   }
 
-  const values = {};
+  values = {};
+  debugId = debugID;
 
-  checkOptions(element.props.children, values, debugID);
+  checkOptions(element.props.children);
 }
 
-function checkOptions(options, values, debugID) {
+function checkOptions(options) {
   //  If options is not iterable make it an array.
   if (typeof options[Symbol.iterator] !== 'function') {
     options = [options];
@@ -53,13 +56,13 @@ function checkOptions(options, values, debugID) {
 
   for (const option of options) {
     // Check that option is a React element.
-    if ((option.$$typeof == null) || (option.$$typeof !== REACT_ELEMENT_TYPE)) {
+    if ((option == null) || (option.$$typeof == null) || (option.$$typeof !== REACT_ELEMENT_TYPE)) {
       continue;
     }
 
     if (option.type === 'optGroup') {
       if ((option.props != null) && (option.props.children != null)) {
-        checkOptions(option.props.children, values, debugID);
+        checkOptions(option.props.children);
       }
     }
     
@@ -73,7 +76,7 @@ function checkOptions(options, values, debugID) {
             false,
             'Select element contains duplicate option value `%s`.%s',
             value,
-            ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+            ReactComponentTreeDevtool.getStackAddendumByID(debugId)
             );
           didWarnDupeSelectValues = true;
         }
