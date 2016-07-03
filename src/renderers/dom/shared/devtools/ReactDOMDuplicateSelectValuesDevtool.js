@@ -13,6 +13,7 @@
 
 var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var warning = require('warning');
+var REACT_ELEMENT_TYPE = require('ReactElement').REACT_ELEMENT_TYPE;
 
 var didWarnDupeSelectValues = false;
 
@@ -21,7 +22,7 @@ function handleElement(debugID, element) {
   if (didWarnDupeSelectValues) {
     return;
   }
-  
+
   if (element == null) {
     return;
   }
@@ -34,49 +35,38 @@ function handleElement(debugID, element) {
     return;
   }
 
-  // Uncontrolled select elements can have duplicate values.
-  if (element.props.hasOwnProperty('defaultValue')) {
+  // Only process controlled elements.
+  if (element.props.hasOwnProperty('value') === false) {
     return;
   }
 
   let values = {};
-  let options = element.props.children;
+  
+  checkOptions(element.props.children, values, debugID);
+}
 
+function checkOptions(options, values, debugID) {
   //  If options is not iterable make it an array.
   if (typeof options[Symbol.iterator] !== 'function') {
     options = [options];
   }
 
   for (const option of options) {
-    if (option.type === 'optGroup') {
-      if ((option.props != null) && (option.props.children != null)) {
-        let groupOptions = option.props.children;
-        if (typeof groupOptions[Symbol.iterator] !== 'function') {
-          groupOptions = [groupOptions];
-        }
-        for (const groupOption of groupOptions) {
-          if ((groupOption.props != null) && (groupOption.props.value != null)) {
-            const value = groupOption.props.value;
-            if (!values[value]) {
-              values[value] = value;
-            } else {
-              warning(
-                false,
-                'Select element contains duplicate option value `%s`.%s',
-                value,
-                ReactComponentTreeDevtool.getStackAddendumByID(debugID)
-                );
-              didWarnDupeSelectValues = true;
-            }
-          }
-        }
-      }
+    // Check that option is a React element.
+    if ((option.$$typeof == null) || (option.$$typeof !== REACT_ELEMENT_TYPE)) {
+      continue;
     }
 
+    if (option.type === 'optGroup') {
+      if ((option.props != null) && (option.props.children != null)) {
+        checkOptions(option.props.children, values, debugID);
+      }
+    }
+    
     if (option.type === 'option') {
-      if ((option.props != null) && (option.props.value)) {
+      if ((option.props != null) && (option.props.value != null)) {
         const value = option.props.value;
-        if (!values[value]) {
+        if (!values.hasOwnProperty(value)) {
           values[value] = value;
         } else {
           warning(
