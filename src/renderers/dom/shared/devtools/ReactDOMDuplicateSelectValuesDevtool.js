@@ -40,8 +40,8 @@ function handleElement(debugID, element) {
     return;
   }
 
-  let values = {};
-  
+  const values = {};
+
   checkOptions(element.props.children, values, debugID);
 }
 
