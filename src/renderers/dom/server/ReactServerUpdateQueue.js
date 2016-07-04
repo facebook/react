@@ -6,20 +6,23 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNoopUpdateQueue
+ * @providesModule ReactServerUpdateQueue
+ * @flow
  */
 
 'use strict';
 
+var ReactUpdateQueue = require('ReactUpdateQueue');
+var Transaction = require('Transaction');
 var warning = require('warning');
 
-function warnNoop(publicInstance, callerName) {
+function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
     warning(
       false,
-      '%s(...): Can only update a mounted or mounting component. ' +
-      'This usually means you called %s() on an unmounted component. ' +
+      '%s(...): Can only update a mounting component. ' +
+      'This usually means you called %s() outside componentWillMount() on the server. ' +
       'This is a no-op. Please check the code for the %s component.',
       callerName,
       callerName,
@@ -29,9 +32,18 @@ function warnNoop(publicInstance, callerName) {
 }
 
 /**
- * This is the abstract API for an update queue.
+ * This is the update queue used for server rendering.
+ * It delegates to ReactUpdateQueue while server rendering is in progress and
+ * switches to ReactNoopUpdateQueue after the transaction has completed.
+ * @class ReactServerUpdateQueue
+ * @param {Transaction} transaction
  */
-var ReactNoopUpdateQueue = {
+class ReactServerUpdateQueue {
+  /* :: transaction: Transaction; */
+
+  constructor(transaction: Transaction) {
+    this.transaction = transaction;
+  }
 
   /**
    * Checks whether or not this composite component is mounted.
@@ -40,9 +52,9 @@ var ReactNoopUpdateQueue = {
    * @protected
    * @final
    */
-  isMounted: function(publicInstance) {
+  isMounted(publicInstance: ReactComponent<any, any, any>): boolean {
     return false;
-  },
+  }
 
   /**
    * Enqueue a callback that will be executed after all the pending updates
@@ -52,7 +64,11 @@ var ReactNoopUpdateQueue = {
    * @param {?function} callback Called after state is updated.
    * @internal
    */
-  enqueueCallback: function(publicInstance, callback) { },
+  enqueueCallback(publicInstance: ReactComponent<any, any, any>, callback?: Function, callerName?: string) {
+    if (this.transaction.isInTransaction()) {
+      ReactUpdateQueue.enqueueCallback(publicInstance, callback, callerName);
+    }
+  }
 
   /**
    * Forces an update. This should only be invoked when it is known with
@@ -67,9 +83,13 @@ var ReactNoopUpdateQueue = {
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @internal
    */
-  enqueueForceUpdate: function(publicInstance) {
-    warnNoop(publicInstance, 'forceUpdate');
-  },
+  enqueueForceUpdate(publicInstance: ReactComponent<any, any, any>) {
+    if (this.transaction.isInTransaction()) {
+      ReactUpdateQueue.enqueueForceUpdate(publicInstance);
+    } else {
+      warnNoop(publicInstance, 'forceUpdate');
+    }
+  }
 
   /**
    * Replaces all of the state. Always use this or `setState` to mutate state.
@@ -79,12 +99,16 @@ var ReactNoopUpdateQueue = {
    * accessing `this.state` after calling this method may return the old value.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} completeState Next state.
+   * @param {object|function} completeState Next state.
    * @internal
    */
-  enqueueReplaceState: function(publicInstance, completeState) {
-    warnNoop(publicInstance, 'replaceState');
-  },
+  enqueueReplaceState(publicInstance: ReactComponent<any, any, any>, completeState: Object|Function) {
+    if (this.transaction.isInTransaction()) {
+      ReactUpdateQueue.enqueueReplaceState(publicInstance, completeState);
+    } else {
+      warnNoop(publicInstance, 'replaceState');
+    }
+  }
 
   /**
    * Sets a subset of the state. This only exists because _pendingState is
@@ -93,12 +117,16 @@ var ReactNoopUpdateQueue = {
    * during the merge.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} partialState Next partial state to be merged with state.
+   * @param {object|function} partialState Next partial state to be merged with state.
    * @internal
    */
-  enqueueSetState: function(publicInstance, partialState) {
-    warnNoop(publicInstance, 'setState');
-  },
-};
+  enqueueSetState(publicInstance: ReactComponent<any, any, any>, partialState: Object|Function) {
+    if (this.transaction.isInTransaction()) {
+      ReactUpdateQueue.enqueueSetState(publicInstance, partialState);
+    } else {
+      warnNoop(publicInstance, 'setState');
+    }
+  }
+}
 
-module.exports = ReactNoopUpdateQueue;
+module.exports = ReactServerUpdateQueue;

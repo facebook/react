@@ -16,6 +16,7 @@ var PooledClass = require('PooledClass');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
 var Transaction = require('Transaction');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 
 /**
@@ -104,7 +105,7 @@ var TRANSACTION_WRAPPERS = [
  *
  * @class ReactReconcileTransaction
  */
-function ReactReconcileTransaction(useCreateElement) {
+function ReactReconcileTransaction(useCreateElement: boolean) {
   this.reinitializeTransaction();
   // Only server-side rendering really needs this option (see
   // `ReactServerRendering`), but server-side uses
@@ -133,6 +134,13 @@ var Mixin = {
    */
   getReactMountReady: function() {
     return this.reactMountReady;
+  },
+
+  /**
+   * @return {object} The queue to collect React async events.
+   */
+  getUpdateQueue: function() {
+    return ReactUpdateQueue;
   },
 
   /**
