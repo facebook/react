@@ -20,7 +20,6 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactReconciler = require('ReactReconciler');
-var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var checkReactTypeSpec = require('checkReactTypeSpec');
 
@@ -197,8 +196,10 @@ var ReactCompositeComponentMixin = {
 
     var Component = this._currentElement.type;
 
+    var updateQueue = transaction.getUpdateQueue();
+
     // Initialize the public class
-    var inst = this._constructComponent(publicProps, publicContext);
+    var inst = this._constructComponent(publicProps, publicContext, updateQueue);
     var renderedElement;
 
     // Support functional components
@@ -245,7 +246,7 @@ var ReactCompositeComponentMixin = {
     inst.props = publicProps;
     inst.context = publicContext;
     inst.refs = emptyObject;
-    inst.updater = ReactUpdateQueue;
+    inst.updater = updateQueue;
 
     this._instance = inst;
 
@@ -352,20 +353,20 @@ var ReactCompositeComponentMixin = {
     return markup;
   },
 
-  _constructComponent: function(publicProps, publicContext) {
+  _constructComponent: function(publicProps, publicContext, updateQueue) {
     if (__DEV__) {
       ReactCurrentOwner.current = this;
       try {
-        return this._constructComponentWithoutOwner(publicProps, publicContext);
+        return this._constructComponentWithoutOwner(publicProps, publicContext, updateQueue);
       } finally {
         ReactCurrentOwner.current = null;
       }
     } else {
-      return this._constructComponentWithoutOwner(publicProps, publicContext);
+      return this._constructComponentWithoutOwner(publicProps, publicContext, updateQueue);
     }
   },
 
-  _constructComponentWithoutOwner: function(publicProps, publicContext) {
+  _constructComponentWithoutOwner: function(publicProps, publicContext, updateQueue) {
     var Component = this._currentElement.type;
     var instanceOrElement;
     if (shouldConstruct(Component)) {
@@ -377,7 +378,7 @@ var ReactCompositeComponentMixin = {
           );
         }
       }
-      instanceOrElement = new Component(publicProps, publicContext, ReactUpdateQueue);
+      instanceOrElement = new Component(publicProps, publicContext, updateQueue);
       if (__DEV__) {
         if (this._debugID !== 0) {
           ReactInstrumentation.debugTool.onEndLifeCycleTimer(
@@ -397,7 +398,7 @@ var ReactCompositeComponentMixin = {
           );
         }
       }
-      instanceOrElement = Component(publicProps, publicContext, ReactUpdateQueue);
+      instanceOrElement = Component(publicProps, publicContext, updateQueue);
       if (__DEV__) {
         if (this._debugID !== 0) {
           ReactInstrumentation.debugTool.onEndLifeCycleTimer(
