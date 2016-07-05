@@ -800,7 +800,6 @@ describe('ReactPropTypes', function() {
 
     it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.oneOf('red', 'blue'), 'red');
       expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), true);
       expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), null);
       expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), undefined);
@@ -879,10 +878,6 @@ describe('ReactPropTypes', function() {
 
     it('should warn if called manually in development', function() {
       spyOn(console, 'error');
-      expectWarningInDevelopment(
-        PropTypes.oneOfType(PropTypes.string, PropTypes.number),
-        'red'
-      );
       expectWarningInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         []
