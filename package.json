@@ -53,6 +53,7 @@
     "gulp": "^3.9.0",
     "gulp-babel": "^6.0.0",
     "gulp-flatten": "^0.2.0",
+    "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
     "jest": "^12.1.1",
