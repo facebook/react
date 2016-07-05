@@ -467,5 +467,29 @@ describe('ReactPerf', function() {
     expect(console.error.calls.count()).toBe(1);
 
     __DEV__ = true;
-  })
+  });
+
+  it('should not warn when wrapped in a component', () => {
+    spyOn(console, 'error');
+
+    return new Promise((resolve) => {
+      var Wrapper = React.createClass({
+        componentDidMount() {
+          ReactPerf.start();
+          this.setState({testProp: 'hello'});
+        },
+        componentDidUpdate() {
+          ReactPerf.stop();
+          resolve();
+        },
+        render() {
+          return this.props.children;
+        },
+      });
+      var container = document.createElement('div');
+      ReactDOM.render(<Wrapper><App /></Wrapper>, container);
+    }).then(() => {
+      expect(console.error.calls.count()).toBe(0, 'Instead got: ' + console.error.calls.argsFor(0)[0]);
+    });
+  });
 });
