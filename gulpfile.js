@@ -18,6 +18,13 @@ var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
 var devExpressionWithCodes = require('./scripts/error-codes/dev-expression-with-codes');
 
+// Load all of the Gulp plugins.
+var plugins = require('gulp-load-plugins')();
+
+function getTask(name) {
+  return require(`./gulp/tasks/${name}`)(gulp, plugins);
+}
+
 var paths = {
   react: {
     src: [
@@ -58,6 +65,14 @@ var babelOpts = {
     [babelPluginModules, {map: moduleMap}],
   ],
 };
+
+gulp.task('eslint', getTask('eslint'));
+
+gulp.task('lint', ['eslint']);
+
+gulp.task('flow', getTask('flow'));
+
+gulp.task('version-check', getTask('version-check'));
 
 gulp.task('react:clean', function() {
   return del([paths.react.lib]);
