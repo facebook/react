@@ -13,6 +13,7 @@
 
 var ReactPropTypes = require('ReactPropTypes');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -109,7 +110,9 @@ var LinkedValueUtils = {
           props,
           propName,
           tagName,
-          ReactPropTypeLocations.prop
+          ReactPropTypeLocations.prop,
+          null,
+          ReactPropTypesSecret
         );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {

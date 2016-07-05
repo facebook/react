@@ -15,6 +15,7 @@ var emptyFunction = require('emptyFunction');
 var LinkPropTypes = require('ReactLink').PropTypes;
 var React = require('React');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';
 var requiredMessage =
@@ -26,7 +27,9 @@ function typeCheckFail(declaration, value, message) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
   );
   expect(error instanceof Error).toBe(true);
   expect(error.message).toBe(message);
@@ -38,7 +41,9 @@ function typeCheckPass(declaration, value) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
   );
   expect(error).toBe(null);
 }
