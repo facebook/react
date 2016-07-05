@@ -102,9 +102,6 @@ function resetMeasurements() {
 }
 
 function checkDebugID(debugID) {
-  if (!debugID) {
-    throw new Error('wat')
-  }
   warning(debugID, 'ReactDebugTool: debugID may not be empty.');
 }
 
