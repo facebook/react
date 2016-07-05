@@ -474,9 +474,7 @@ var ReactCompositeComponentMixin = {
     }
 
     this._renderedNodeType = ReactNodeTypes.getType(renderedElement);
-    var child = this._instantiateReactComponent(
-      renderedElement
-    );
+    var child = this._instantiateReactComponent(renderedElement, true);
     this._renderedComponent = child;
     if (__DEV__) {
       if (child._debugID !== 0 && this._debugID !== 0) {
@@ -991,9 +989,7 @@ var ReactCompositeComponentMixin = {
       ReactReconciler.unmountComponent(prevComponentInstance, false);
 
       this._renderedNodeType = ReactNodeTypes.getType(nextRenderedElement);
-      var child = this._instantiateReactComponent(
-        nextRenderedElement
-      );
+      var child = this._instantiateReactComponent(nextRenderedElement, true);
       this._renderedComponent = child;
       if (__DEV__) {
         if (child._debugID !== 0 && this._debugID !== 0) {

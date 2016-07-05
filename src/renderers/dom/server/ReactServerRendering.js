@@ -40,7 +40,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
       if (__DEV__) {
         ReactInstrumentation.debugTool.onBeginFlush();
       }
-      var componentInstance = instantiateReactComponent(element);
+      var componentInstance = instantiateReactComponent(element, true);
       var markup = ReactReconciler.mountComponent(
         componentInstance,
         transaction,

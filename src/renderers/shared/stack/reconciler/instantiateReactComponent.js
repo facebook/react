@@ -78,10 +78,11 @@ var nextDebugID = 1;
  * Given a ReactNode, create an instance that will actually be mounted.
  *
  * @param {ReactNode} node
+ * @param {boolean} shouldHaveDebugID
  * @return {object} A new instance of the element's constructor.
  * @protected
  */
-function instantiateReactComponent(node) {
+function instantiateReactComponent(node, shouldHaveDebugID) {
   var instance;
 
   var isEmpty = node === null || node === false;
@@ -141,7 +142,7 @@ function instantiateReactComponent(node) {
   instance._mountImage = null;
 
   if (__DEV__) {
-    var debugID = isEmpty ? 0 : nextDebugID++;
+    var debugID = (shouldHaveDebugID && !isEmpty) ? nextDebugID++ : 0;
     instance._debugID = debugID;
 
     if (debugID !== 0) {

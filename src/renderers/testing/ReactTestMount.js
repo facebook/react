@@ -120,16 +120,10 @@ var ReactHostMount = {
     //   }
     // }
 
-    var instance = instantiateReactComponent(nextWrappedElement);
+    var instance = instantiateReactComponent(nextWrappedElement, false);
 
     if (__DEV__) {
-      // Mute future events from the top level wrapper.
-      // It is an implementation detail that devtools should not know about.
-      instance._debugID = 0;
-
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onBeginFlush();
-      }
+      ReactInstrumentation.debugTool.onBeginFlush();
     }
 
     // The initial render is synchronous but any updates that happen during
