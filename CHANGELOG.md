@@ -2,7 +2,7 @@
 
 ### React
 - Add error codes to production invariants, with links to the view the full error text. ([@keyanzhang](https://github.com/keyanzhang) in [#6948](https://github.com/facebook/react/pull/6948))
-- Include component stack information in PropType validation warnings. ([@spicyj](https://github.com/spicyj) in [#6771](https://github.com/facebook/react/pull/6771))
+- Include component stack information in PropType validation warnings. ([@troydemonbreun](https://github.com/troydemonbreun) in [#6398](https://github.com/facebook/react/pull/6398), [@spicyj](https://github.com/spicyj) in [#6771](https://github.com/facebook/react/pull/6771))
 - Include component stack information in key warnings. ([@keyanzhang](https://github.com/keyanzhang) in [#6799](https://github.com/facebook/react/pull/6799))
 - Stop validating props at mount time, only validate at element creation. ([@keyanzhang](https://github.com/keyanzhang) in [#6823](https://github.com/facebook/react/pull/6823))
 - New invariant providing actionable error in missing instance case. ([@yungsters](https://github.com/yungsters) in [#6990](https://github.com/facebook/react/pull/6990))
