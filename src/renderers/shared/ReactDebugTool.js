@@ -263,6 +263,7 @@ var ReactDebugTool = {
   },
   onSetChildren(debugID, childDebugIDs) {
     checkDebugID(debugID);
+    childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
   onSetOwner(debugID, ownerDebugID) {
