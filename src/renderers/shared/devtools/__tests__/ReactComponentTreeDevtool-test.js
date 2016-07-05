@@ -1716,103 +1716,137 @@ describe('ReactComponentTreeDevtool', () => {
     expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
-  it('creates current stack addenda', () => {
-    function getAddendum(element) {
-      var addendum = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
-      return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
-    }
-
-    var Anon = React.createClass({displayName: null, render: () => null});
-    var Orange = React.createClass({render: () => null});
-
-    expect(getAddendum()).toBe(
-      ''
-    );
-    expect(getAddendum(<div />)).toBe(
-      '\n    in div (at **)'
-    );
-    expect(getAddendum(<Anon />)).toBe(
-      '\n    in Unknown (at **)'
-    );
-    expect(getAddendum(<Orange />)).toBe(
-      '\n    in Orange (at **)'
-    );
-    expect(getAddendum(React.createElement(Orange))).toBe(
-      '\n    in Orange'
-    );
-
-    var renders = 0;
-    var rOwnedByQ;
-
-    function Q() {
-      return (rOwnedByQ = React.createElement(R));
-    }
-    function R() {
-      return <div><S /></div>;
-    }
-    class S extends React.Component {
-      componentDidMount() {
-        // Check that the parent path is still fetched when only S itself is on
-        // the stack.
-        this.forceUpdate();
+  describe('stack addenda', () => {
+    it('gets created', () => {
+      function getAddendum(element) {
+        var addendum = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+        return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
       }
-      render() {
-        expect(getAddendum()).toBe(
-          '\n    in S (at **)' +
-          '\n    in div (at **)' +
-          '\n    in R (created by Q)' +
-          '\n    in Q (at **)'
-        );
-        expect(getAddendum(<span />)).toBe(
-          '\n    in span (at **)' +
-          '\n    in S (at **)' +
-          '\n    in div (at **)' +
-          '\n    in R (created by Q)' +
-          '\n    in Q (at **)'
-        );
-        expect(getAddendum(React.createElement('span'))).toBe(
-          '\n    in span (created by S)' +
-          '\n    in S (at **)' +
-          '\n    in div (at **)' +
-          '\n    in R (created by Q)' +
-          '\n    in Q (at **)'
-        );
-        renders++;
-        return null;
+
+      var Anon = React.createClass({displayName: null, render: () => null});
+      var Orange = React.createClass({render: () => null});
+
+      expect(getAddendum()).toBe(
+        ''
+      );
+      expect(getAddendum(<div />)).toBe(
+        '\n    in div (at **)'
+      );
+      expect(getAddendum(<Anon />)).toBe(
+        '\n    in Unknown (at **)'
+      );
+      expect(getAddendum(<Orange />)).toBe(
+        '\n    in Orange (at **)'
+      );
+      expect(getAddendum(React.createElement(Orange))).toBe(
+        '\n    in Orange'
+      );
+
+      var renders = 0;
+      var rOwnedByQ;
+
+      function Q() {
+        return (rOwnedByQ = React.createElement(R));
       }
-    }
-    ReactDOM.render(<Q />, document.createElement('div'));
-    expect(renders).toBe(2);
-
-    // Make sure owner is fetched for the top element too.
-    expect(getAddendum(rOwnedByQ)).toBe(
-      '\n    in R (created by Q)'
-    );
-  });
-
-  it('creates stack addenda by ID', () => {
-    function getAddendum(id) {
-      var addendum = ReactComponentTreeDevtool.getStackAddendumByID(id);
-      return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
-    }
-
-    class Q extends React.Component {
-      render() {
-        return null;
+      function R() {
+        return <div><S /></div>;
       }
-    }
+      class S extends React.Component {
+        componentDidMount() {
+          // Check that the parent path is still fetched when only S itself is on
+          // the stack.
+          this.forceUpdate();
+        }
+        render() {
+          expect(getAddendum()).toBe(
+            '\n    in S (at **)' +
+            '\n    in div (at **)' +
+            '\n    in R (created by Q)' +
+            '\n    in Q (at **)'
+          );
+          expect(getAddendum(<span />)).toBe(
+            '\n    in span (at **)' +
+            '\n    in S (at **)' +
+            '\n    in div (at **)' +
+            '\n    in R (created by Q)' +
+            '\n    in Q (at **)'
+          );
+          expect(getAddendum(React.createElement('span'))).toBe(
+            '\n    in span (created by S)' +
+            '\n    in S (at **)' +
+            '\n    in div (at **)' +
+            '\n    in R (created by Q)' +
+            '\n    in Q (at **)'
+          );
+          renders++;
+          return null;
+        }
+      }
+      ReactDOM.render(<Q />, document.createElement('div'));
+      expect(renders).toBe(2);
 
-    var q = ReactDOM.render(<Q />, document.createElement('div'));
-    expect(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
-      '\n    in Q (at **)'
-    );
+      // Make sure owner is fetched for the top element too.
+      expect(getAddendum(rOwnedByQ)).toBe(
+        '\n    in R (created by Q)'
+      );
+    });
 
-    spyOn(console, 'error');
-    getAddendum(-17);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ReactComponentTreeDevtool: Missing React element for debugID ' +
-      '-17 when building stack'
-    );
-  });
+    it('can be retrieved by ID', () => {
+      function getAddendum(id) {
+        var addendum = ReactComponentTreeDevtool.getStackAddendumByID(id);
+        return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
+      }
+
+      class Q extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      var q = ReactDOM.render(<Q />, document.createElement('div'));
+      expect(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
+        '\n    in Q (at **)'
+      );
+
+      spyOn(console, 'error');
+      getAddendum(-17);
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: ReactComponentTreeDevtool: Missing React element for ' +
+        'debugID -17 when building stack'
+      );
+    });
+
+    it('is created during mounting', () => {
+      // https://github.com/facebook/react/issues/7187
+      var el = document.createElement('div');
+      var portalEl = document.createElement('div');
+      class Foo extends React.Component {
+        componentWillMount() {
+          ReactDOM.render(<div />, portalEl);
+        }
+        render() {
+          return <div><div /></div>;
+        }
+      }
+      ReactDOM.render(<Foo />, el);
+    });
+
+    it('is created when calling renderToString during render', () => {
+      // https://github.com/facebook/react/issues/7190
+      var el = document.createElement('div');
+      class Foo extends React.Component {
+        render() {
+          return (
+            <div>
+              <div>
+                {ReactDOMServer.renderToString(<div />)}
+              </div>
+            </div>
+          );
+        }
+      }
+      ReactDOM.render(<Foo />, el);
+    });
+  })
 });
