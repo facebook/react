@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -48,7 +49,7 @@ function checkReactTypeSpec(typeSpecs, values, location, componentName, element,
           ReactPropTypeLocationNames[location],
           typeSpecName
         );
-        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location);
+        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
       } catch (ex) {
         error = ex;
       }
