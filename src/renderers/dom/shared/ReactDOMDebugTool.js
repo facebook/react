@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
+var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
 var ReactDebugTool = require('ReactDebugTool');
 
 var warning = require('warning');
@@ -19,23 +21,21 @@ var eventHandlers = [];
 var handlerDoesThrowForEvent = {};
 
 function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
-  if (__DEV__) {
-    eventHandlers.forEach(function(handler) {
-      try {
-        if (handler[handlerFunctionName]) {
-          handler[handlerFunctionName](arg1, arg2, arg3, arg4, arg5);
-        }
-      } catch (e) {
-        warning(
-          handlerDoesThrowForEvent[handlerFunctionName],
-          'exception thrown by devtool while handling %s: %s',
-          handlerFunctionName,
-          e + '\n' + e.stack
-        );
-        handlerDoesThrowForEvent[handlerFunctionName] = true;
+  eventHandlers.forEach(function(handler) {
+    try {
+      if (handler[handlerFunctionName]) {
+        handler[handlerFunctionName](arg1, arg2, arg3, arg4, arg5);
       }
-    });
-  }
+    } catch (e) {
+      warning(
+        handlerDoesThrowForEvent[handlerFunctionName],
+        'exception thrown by devtool while handling %s: %s',
+        handlerFunctionName,
+        e + '\n' + e.stack
+      );
+      handlerDoesThrowForEvent[handlerFunctionName] = true;
+    }
+  });
 }
 
 var ReactDOMDebugTool = {
@@ -66,11 +66,7 @@ var ReactDOMDebugTool = {
   },
 };
 
-if (__DEV__) {
-  var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
-  var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
-  ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
-  ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
-}
+ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
+ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
 
 module.exports = ReactDOMDebugTool;
