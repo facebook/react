@@ -12,7 +12,6 @@
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
@@ -34,6 +33,7 @@ function flattenSingleChildIntoContext(
     const result = traverseContext;
     const keyUnique = (result[name] === undefined);
     if (__DEV__) {
+      var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
       warning(
         keyUnique,
         'flattenChildren(...): Encountered two children with the same key, ' +
