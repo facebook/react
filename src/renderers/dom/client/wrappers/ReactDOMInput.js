@@ -216,10 +216,20 @@ var ReactDOMInput = {
   },
 
   postMountWrapper: function(inst) {
+    var props = inst._currentElement.props;
+
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    node.value = node.value; // Detach value from defaultValue
+
+    // Detach value from defaultValue. We won't do anything if we're working on
+    // submit or reset inputs as those values & defaultValues are linked. They
+    // are not resetable nodes so this operation doesn't matter and actually
+    // removes browser-default values (eg "Submit Query") when no value is
+    // provided.
+    if (props.type !== 'submit' && props.type !== 'reset') {
+      node.value = node.value;
+    }
 
     // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
     // this is needed to work around a chrome bug where setting defaultChecked
