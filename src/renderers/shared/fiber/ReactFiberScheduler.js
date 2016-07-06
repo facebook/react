@@ -156,7 +156,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        console.log('----- COMPLETED with remaining work:', workInProgress.pendingWorkPriority);
         commitAllWork(workInProgress);
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {

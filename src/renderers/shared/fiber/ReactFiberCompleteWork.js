@@ -125,11 +125,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     switch (workInProgress.tag) {
       case FunctionalComponent:
-        console.log('/functional component', workInProgress.type.name);
         transferOutput(workInProgress.child, workInProgress);
         return null;
       case ClassComponent:
-        console.log('/class component', workInProgress.type.name);
         transferOutput(workInProgress.child, workInProgress);
         return null;
       case HostContainer:
@@ -142,7 +140,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         markForPreEffect(workInProgress);
         return null;
       case HostComponent:
-        console.log('/host component', workInProgress.type);
         const child = workInProgress.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = workInProgress.pendingProps;
@@ -165,7 +162,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         }
         return null;
       case CoroutineComponent:
-        console.log('/coroutine component', workInProgress.pendingProps.handler.name);
         return moveCoroutineToHandlerPhase(current, workInProgress);
       case CoroutineHandlerPhase:
         transferOutput(workInProgress.stateNode, workInProgress);

@@ -20,7 +20,6 @@ describe('ReactCoroutine', function() {
     React = require('React');
     ReactNoop = require('ReactNoop');
     ReactCoroutine = require('ReactCoroutine');
-    spyOn(console, 'log');
   });
 
   it('should render a coroutine', function() {

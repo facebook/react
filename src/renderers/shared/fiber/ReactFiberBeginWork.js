@@ -49,7 +49,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   function updateFunctionalComponent(current, workInProgress) {
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
-    console.log('update fn:', fn.name);
     var nextChildren = fn(props);
     reconcileChildren(current, workInProgress, nextChildren);
     workInProgress.pendingWorkPriority = NoWork;
@@ -59,10 +58,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     var props = workInProgress.pendingProps;
     if (!workInProgress.stateNode) {
       var ctor = workInProgress.type;
-      console.log('mount class:', workInProgress.type.name);
       workInProgress.stateNode = new ctor(props);
-    } else {
-      console.log('update class:', workInProgress.type.name);
     }
     var instance = workInProgress.stateNode;
     instance.props = props;
@@ -72,11 +68,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   }
 
   function updateHostComponent(current, workInProgress) {
-    console.log(
-      'host component', workInProgress.type, 
-      typeof workInProgress.pendingProps.children === 'string' ? workInProgress.pendingProps.children : ''
-    );
-
     var nextChildren = workInProgress.pendingProps.children;
 
     let priority = workInProgress.pendingWorkPriority;
@@ -109,7 +100,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     var props = workInProgress.pendingProps;
     var value = fn(props);
     if (typeof value === 'object' && value && typeof value.render === 'function') {
-      console.log('performed work on class:', fn.name);
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
       if (workInProgress.alternate) {
@@ -117,7 +107,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       }
       value = value.render();
     } else {
-      console.log('performed work on fn:', fn.name);
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       if (workInProgress.alternate) {
@@ -133,7 +122,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     if (!coroutine) {
       throw new Error('Should be resolved by now');
     }
-    console.log('begin coroutine', workInProgress.type.name);
     reconcileChildren(current, workInProgress, coroutine.children);
     workInProgress.pendingWorkPriority = NoWork;
   }

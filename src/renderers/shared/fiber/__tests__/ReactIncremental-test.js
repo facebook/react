@@ -18,7 +18,6 @@ describe('ReactIncremental', function() {
   beforeEach(function() {
     React = require('React');
     ReactNoop = require('ReactNoop');
-    spyOn(console, 'log');
   });
 
   it('should render a simple component', function() {

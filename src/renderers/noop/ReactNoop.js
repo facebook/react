@@ -58,12 +58,10 @@ function flattenChildren(children : HostChildren<Instance>) {
 var NoopRenderer = ReactFiberReconciler({
 
   updateContainer(containerInfo : Container, children : HostChildren<Instance>) : void {
-    console.log('Update container #' + containerInfo.rootID);
     containerInfo.children = flattenChildren(children);
   },
 
   createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
-    console.log('Create instance #' + instanceCounter);
     const inst = {
       tag: TERMINAL_TAG,
       id: instanceCounter++,
@@ -77,17 +75,14 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : boolean {
-    console.log('Prepare for update on #' + instance.id);
     return true;
   },
 
   commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
-    console.log('Commit update on #' + instance.id);
     instance.children = flattenChildren(children);
   },
 
   deleteInstance(instance : Instance) : void {
-    console.log('Delete #' + instance.id);
   },
 
   scheduleHighPriCallback(callback) {

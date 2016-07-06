@@ -94,7 +94,7 @@ function createSubsequentChild(
     }
     return prev;
   } else {
-    console.log('Unknown child', newChildren);
+    // TODO: Throw for unknown children.
     return previousSibling;
   }
 }
@@ -162,7 +162,7 @@ function createFirstChild(returnFiber, existingChild, newChildren, priority) {
     }
     return first;
   } else {
-    console.log('Unknown child', newChildren);
+    // TODO: Throw for unknown children.
     return null;
   }
 }
