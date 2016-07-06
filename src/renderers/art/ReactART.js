@@ -21,7 +21,6 @@ const Mode = require('art/modes/current');
 const React = require('React');
 const ReactDOM = require('ReactDOM');
 const ReactInstanceMap = require('ReactInstanceMap');
-const ReactInstrumentation = require('ReactInstrumentation');
 const ReactMultiChild = require('ReactMultiChild');
 const ReactUpdates = require('ReactUpdates');
 
@@ -187,9 +186,6 @@ const Surface = React.createClass({
 
     this.node = Mode.Surface(+this.props.width, +this.props.height, domNode);
 
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginFlush();
-    }
     const transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
     transaction.perform(
       this.mountAndInjectChildren,
@@ -199,9 +195,6 @@ const Surface = React.createClass({
       ReactInstanceMap.get(this)._context
     );
     ReactUpdates.ReactReconcileTransaction.release(transaction);
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onEndFlush();
-    }
   },
 
   componentDidUpdate: function(oldProps) {
@@ -211,9 +204,6 @@ const Surface = React.createClass({
       node.resize(+this.props.width, +this.props.height);
     }
 
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginFlush();
-    }
     const transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
     transaction.perform(
       this.updateChildren,
@@ -223,9 +213,6 @@ const Surface = React.createClass({
       ReactInstanceMap.get(this)._context
     );
     ReactUpdates.ReactReconcileTransaction.release(transaction);
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onEndFlush();
-    }
 
     if (node.render) {
       node.render();

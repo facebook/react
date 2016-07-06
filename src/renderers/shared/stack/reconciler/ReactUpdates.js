@@ -14,7 +14,6 @@
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
@@ -193,10 +192,6 @@ function runBatchedUpdates(transaction) {
 }
 
 var flushBatchedUpdates = function() {
-  if (__DEV__) {
-    ReactInstrumentation.debugTool.onBeginFlush();
-  }
-
   // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
   // array and perform any updates enqueued by mount-ready handlers (i.e.,
   // componentDidUpdate) but we need to check here too in order to catch
@@ -215,10 +210,6 @@ var flushBatchedUpdates = function() {
       queue.notifyAll();
       CallbackQueue.release(queue);
     }
-  }
-
-  if (__DEV__) {
-    ReactInstrumentation.debugTool.onEndFlush();
   }
 };
 
