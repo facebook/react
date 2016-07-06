@@ -240,6 +240,12 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onEndReconcilerTimer', debugID, timerType);
   },
+  onError(debugID) {
+    if (currentTimerDebugID != null) {
+      endLifeCycleTimer(currentTimerDebugID, currentTimerType);
+    }
+    emitEvent('onError', debugID);
+  },
   onBeginProcessingChildContext() {
     emitEvent('onBeginProcessingChildContext');
   },
