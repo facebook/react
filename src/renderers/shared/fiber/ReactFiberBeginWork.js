@@ -16,7 +16,7 @@ import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 
-var ReactChildFiber = require('ReactChildFiber');
+var { reconcileChildFibers } = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -38,7 +38,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   function reconcileChildren(current, workInProgress, nextChildren) {
     const priority = workInProgress.pendingWorkPriority;
-    workInProgress.child = ReactChildFiber.reconcileChildFibers(
+    workInProgress.child = reconcileChildFibers(
       workInProgress,
       current ? current.child : null,
       nextChildren,
@@ -75,7 +75,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // If this host component is hidden, we can reconcile its children at
       // the lowest priority and bail out from this particular pass. Unless, we're
       // currently reconciling the lowest priority.
-      workInProgress.child = ReactChildFiber.reconcileChildFibers(
+      workInProgress.child = reconcileChildFibers(
         workInProgress,
         current ? current.child : null,
         nextChildren,
@@ -84,7 +84,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       workInProgress.pendingWorkPriority = OffscreenPriority;
       return null;
     } else {
-      workInProgress.child = ReactChildFiber.reconcileChildFibers(
+      workInProgress.child = reconcileChildFibers(
         workInProgress,
         current ? current.child : null,
         nextChildren,

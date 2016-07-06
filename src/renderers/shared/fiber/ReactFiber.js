@@ -201,13 +201,13 @@ exports.createHostContainerFiber = function() {
 };
 
 exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) {
-  const fiber = exports.createFiberFromElementType(element.type, element.key);
+  const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromElementType = function(type : mixed, key : null | string) {
+function createFiberFromElementType(type : mixed, key : null | string) {
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
@@ -225,6 +225,8 @@ exports.createFiberFromElementType = function(type : mixed, key : null | string)
   }
   return fiber;
 };
+
+exports.createFiberFromElementType = createFiberFromElementType;
 
 exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) {
   const fiber = createFiber(CoroutineComponent, coroutine.key);

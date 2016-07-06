@@ -15,7 +15,7 @@
 import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
-var ReactFiber = require('ReactFiber');
+var { cloneFiber } = require('ReactFiber');
 
 var {
   NoWork,
@@ -24,7 +24,7 @@ var {
 function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fiber) {
   while (current.sibling) {
     current = current.sibling;
-    workInProgress = workInProgress.sibling = ReactFiber.cloneFiber(
+    workInProgress = workInProgress.sibling = cloneFiber(
       current,
       current.pendingWorkPriority
     );
@@ -62,7 +62,7 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
           throw new Error('Should have wip now');
         }
         workInProgress.pendingWorkPriority = current.pendingWorkPriority;
-        workInProgress.child = ReactFiber.cloneFiber(currentChild, NoWork);
+        workInProgress.child = cloneFiber(currentChild, NoWork);
         workInProgress.child.return = workInProgress;
         cloneSiblings(currentChild, workInProgress.child, workInProgress);
         current = current.child;

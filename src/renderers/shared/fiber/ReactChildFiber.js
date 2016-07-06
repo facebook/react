@@ -29,11 +29,24 @@ var {
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 
+const {
+  cloneFiber,
+  createFiberFromElement,
+  createFiberFromCoroutine,
+  createFiberFromYield,
+} = ReactFiber;
+
+const {
+  createReifiedYield,
+} = ReactReifiedYield;
+
+const isArray = Array.isArray;
+
 function createSubsequentChild(
-  returnFiber : Fiber, 
-  existingChild : ?Fiber, 
-  previousSibling : Fiber, 
-  newChildren, 
+  returnFiber : Fiber,
+  existingChild : ?Fiber,
+  previousSibling : Fiber,
+  newChildren,
   priority : PriorityLevel
 ) : Fiber {
   if (typeof newChildren !== 'object' || newChildren === null) {
@@ -48,7 +61,7 @@ function createSubsequentChild(
           element.key === existingChild.key) {
         // TODO: This is not sufficient since previous siblings could be new.
         // Will fix reconciliation properly later.
-        const clone = ReactFiber.cloneFiber(existingChild, priority);
+        const clone = cloneFiber(existingChild, priority);
         clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
@@ -56,7 +69,7 @@ function createSubsequentChild(
         previousSibling.sibling = clone;
         return clone;
       }
-      const child = ReactFiber.createFiberFromElement(element, priority);
+      const child = createFiberFromElement(element, priority);
       previousSibling.sibling = child;
       child.return = returnFiber;
       return child;
@@ -64,7 +77,7 @@ function createSubsequentChild(
 
     case REACT_COROUTINE_TYPE: {
       const coroutine = (newChildren : ReactCoroutine);
-      const child = ReactFiber.createFiberFromCoroutine(coroutine, priority);
+      const child = createFiberFromCoroutine(coroutine, priority);
       previousSibling.sibling = child;
       child.return = returnFiber;
       return child;
@@ -72,8 +85,8 @@ function createSubsequentChild(
 
     case REACT_YIELD_TYPE: {
       const yieldNode = (newChildren : ReactYield);
-      const reifiedYield = ReactReifiedYield.createReifiedYield(yieldNode);
-      const child = ReactFiber.createFiberFromYield(yieldNode, priority);
+      const reifiedYield = createReifiedYield(yieldNode);
+      const child = createFiberFromYield(yieldNode, priority);
       child.output = reifiedYield;
       previousSibling.sibling = child;
       child.return = returnFiber;
@@ -81,7 +94,7 @@ function createSubsequentChild(
     }
   }
 
-  if (Array.isArray(newChildren)) {
+  if (isArray(newChildren)) {
     let prev : Fiber = previousSibling;
     let existing : ?Fiber = existingChild;
     for (var i = 0; i < newChildren.length; i++) {
@@ -111,21 +124,21 @@ function createFirstChild(returnFiber, existingChild, newChildren, priority) {
           element.type === existingChild.type &&
           element.key === existingChild.key) {
         // Get the clone of the existing fiber.
-        const clone = ReactFiber.cloneFiber(existingChild, priority);
+        const clone = cloneFiber(existingChild, priority);
         clone.pendingProps = element.props;
         clone.child = existingChild.child;
         clone.sibling = null;
         clone.return = returnFiber;
         return clone;
       }
-      const child = ReactFiber.createFiberFromElement(element, priority);
+      const child = createFiberFromElement(element, priority);
       child.return = returnFiber;
       return child;
     }
 
     case REACT_COROUTINE_TYPE: {
       const coroutine = (newChildren : ReactCoroutine);
-      const child = ReactFiber.createFiberFromCoroutine(coroutine, priority);
+      const child = createFiberFromCoroutine(coroutine, priority);
       child.return = returnFiber;
       return child;
     }
@@ -135,15 +148,15 @@ function createFirstChild(returnFiber, existingChild, newChildren, priority) {
       // TODO: When there is only a single child, we can optimize this to avoid
       // the fragment.
       const yieldNode = (newChildren : ReactYield);
-      const reifiedYield = ReactReifiedYield.createReifiedYield(yieldNode);
-      const child = ReactFiber.createFiberFromYield(yieldNode, priority);
+      const reifiedYield = createReifiedYield(yieldNode);
+      const child = createFiberFromYield(yieldNode, priority);
       child.output = reifiedYield;
       child.return = returnFiber;
       return child;
     }
   }
 
-  if (Array.isArray(newChildren)) {
+  if (isArray(newChildren)) {
     var first : ?Fiber = null;
     var prev : ?Fiber = null;
     var existing : ?Fiber = existingChild;
@@ -170,9 +183,9 @@ function createFirstChild(returnFiber, existingChild, newChildren, priority) {
 // TODO: This API won't work because we'll need to transfer the side-effects of
 // unmounting children to the returnFiber.
 exports.reconcileChildFibers = function(
-  returnFiber : Fiber, 
-  currentFirstChild : ?Fiber, 
-  newChildren : ReactNodeList, 
+  returnFiber : Fiber,
+  currentFirstChild : ?Fiber,
+  newChildren : ReactNodeList,
   priority : PriorityLevel
 ) : ?Fiber {
   return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);

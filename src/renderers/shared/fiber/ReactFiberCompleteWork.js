@@ -17,7 +17,7 @@ import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
-var ReactChildFiber = require('ReactChildFiber');
+var { reconcileChildFibers } = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -113,7 +113,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     var currentFirstChild = current ? current.stateNode : null;
     // Inherit the priority of the returnFiber.
     const priority = workInProgress.pendingWorkPriority;
-    workInProgress.stateNode = ReactChildFiber.reconcileChildFibers(
+    workInProgress.stateNode = reconcileChildFibers(
       workInProgress,
       currentFirstChild,
       nextChildren,
