@@ -28,10 +28,13 @@ Form components allow listening for changes by setting a callback to the `onChan
 
 Like all DOM events, the `onChange` prop is supported on all native components and can be used to listen to bubbled change events.
 
+> Note:
+>
+> For `<input>` and `<textarea>`, `onChange` supersedes — and should generally be used instead of — the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
 
 ## Controlled Components
 
-An `<input>` with `value` set is a *controlled* component. In a controlled `<input>`, the value of the rendered element will always reflect the `value` prop. For example:
+A **controlled** `<input>` has a `value` prop. Rendering a controlled `<input>` will reflect the value of the `value` prop.
 
 ```javascript
   render: function() {
@@ -39,7 +42,7 @@ An `<input>` with `value` set is a *controlled* component. In a controlled `<inp
   }
 ```
 
-This will render an input that always has a value of `Hello!`. Any user input will have no effect on the rendered element because React has declared the value to be `Hello!`. If you wanted to update the value in response to user input, you could use the `onChange` event:
+User input will have no effect on the rendered element because React has declared the value to be `Hello!`. To update the value in response to user input, you could use the `onChange` event:
 
 ```javascript
   getInitialState: function() {
@@ -49,12 +52,17 @@ This will render an input that always has a value of `Hello!`. Any user input wi
     this.setState({value: event.target.value});
   },
   render: function() {
-    var value = this.state.value;
-    return <input type="text" value={value} onChange={this.handleChange} />;
+    return (
+      <input
+        type="text"
+        value={this.state.value}
+        onChange={this.handleChange}
+      />
+    );
   }
 ```
 
-In this example, we are simply accepting the newest value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
+In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
 ```javascript
   handleChange: function(event) {
@@ -62,12 +70,17 @@ In this example, we are simply accepting the newest value provided by the user a
   }
 ```
 
-This would accept user input but truncate the value to the first 140 characters.
+This would accept user input and truncate the value to the first 140 characters.
 
+A **Controlled** component does not maintain its own internal state; the component renders purely based on props.
+
+### Potential Issues With Checkboxes and Radio Buttons
+
+Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React uses a `click` event in place of a `change` event. For the most part this behaves as expected, except when calling `preventDefault` in a `change` handler. `preventDefault` stops the browser from visually updating the input, even if `checked` gets toggled. This can be worked around either by removing the call to `preventDefault`, or putting the toggle of `checked` in a `setTimeout`.
 
 ## Uncontrolled Components
 
-An `<input>` that does not supply a `value` (or sets it to `null`) is an *uncontrolled* component. In an uncontrolled `<input>`, the value of the rendered element will reflect the user's input. For example:
+An `<input>` without a `value` property is an *uncontrolled* component:
 
 ```javascript
   render: function() {
@@ -76,6 +89,10 @@ An `<input>` that does not supply a `value` (or sets it to `null`) is an *uncont
 ```
 
 This will render an input that starts off with an empty value. Any user input will be immediately reflected by the rendered element. If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components.
+
+An **uncontrolled** component maintains its own internal state.
+
+### Default Value
 
 If you want to initialize the component with a non-empty value, you can supply a `defaultValue` prop. For example:
 
@@ -87,11 +104,13 @@ If you want to initialize the component with a non-empty value, you can supply a
 
 This example will function much like the **Controlled Components** example above.
 
-Likewise, `<input>` supports `defaultChecked` and `<select>` supports `defaultValue`.
+Likewise, `<input type="checkbox">` and `<input type="radio">` support `defaultChecked`, and `<select>` supports `defaultValue`.
 
+> Note:
+>
+> The `defaultValue` and `defaultChecked` props are only used during initial render. If you need to update the value in a subsequent render, you will need to use a [controlled component](#controlled-components).
 
 ## Advanced Topics
-
 
 ### Why Controlled Components?
 
@@ -101,7 +120,7 @@ Using form components such as `<input>` in React presents a challenge that is ab
   <input type="text" name="title" value="Untitled" />
 ```
 
-This renders an input *initialized* with the value, `Untitled`. When the user updates the input, the node's value *property* will change. However, `node.getAttribute('value')` will still return the value used at initialization time, `Untitled`.
+This renders an input *initialized* with the value, `Untitled`. When the user updates the input, the node's `value` *property* will change. However, `node.getAttribute('value')` will still return the value used at initialization time, `Untitled`.
 
 Unlike HTML, React components must represent the state of the view at any point in time and not only at initialization time. For example, in React:
 
@@ -113,13 +132,12 @@ Unlike HTML, React components must represent the state of the view at any point 
 
 Since this method describes the view at any point in time, the value of the text input should *always* be `Untitled`.
 
-
 ### Why Textarea Value?
 
 In HTML, the value of `<textarea>` is usually set using its children:
 
 ```html
-  <!-- counterexample: DO NOT DO THIS! -->
+  <!-- antipattern: DO NOT DO THIS! -->
   <textarea name="description">This is the description.</textarea>
 ```
 
@@ -130,7 +148,6 @@ For HTML, this easily allows developers to supply multiline values. However, sin
 ```
 
 If you *do* decide to use children, they will behave like `defaultValue`.
-
 
 ### Why Select Value?
 
@@ -149,3 +166,8 @@ To make an uncontrolled component, `defaultValue` is used instead.
 > Note:
 >
 > You can pass an array into the `value` attribute, allowing you to select multiple options in a `select` tag: `<select multiple={true} value={['B', 'C']}>`.
+
+### Imperative operations
+
+If you need to imperatively perform an operation, you have to obtain a [reference to the DOM node](/react/docs/more-about-refs.html#the-ref-callback-attribute).
+For instance, if you want to imperatively submit a form, one approach would be to attach a `ref` to the `form` element and manually call `form.submit()`.

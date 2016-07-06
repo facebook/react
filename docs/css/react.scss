@@ -76,6 +76,10 @@ li {
   margin-left: 20px;
 }
 
+li + li {
+  margin-top: 10px;
+}
+
 // Make header navigation linkable and on the screen. Used in documentation and
 // blog posts.
 h1, h2, h3, h4, h5, h6 {
@@ -125,7 +129,7 @@ h1, h2, h3, h4, h5, h6 {
       margin: 0;
     }
 
-    a {
+    li > a {
       box-sizing: content-box;
       padding: 0 10px;
       line-height: $navHeight;
@@ -256,6 +260,22 @@ h1, h2, h3, h4, h5, h6 {
     &.active {
       color: $primary;
     }
+
+    &.external {
+      &:after {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        padding-left: 5px;
+        @include retina-image('../img/external', 10px 10px);
+        background-position: 100% 0;
+        background-repeat: no-repeat;
+        font-size: 10px;
+        line-height: 1em;
+        opacity: 0.5;
+      }
+    }
   }
 
   .nav-docs-section {
@@ -320,8 +340,8 @@ h1, h2, h3, h4, h5, h6 {
   h3 {
     color: $darkColor;
     font-size: 24px;
+    line-height: 28px;
     font-weight: normal;
-    text-transform: uppercase;
   }
   p {
     font-size: 16px;
@@ -384,6 +404,39 @@ h1, h2, h3, h4, h5, h6 {
 
 .docs-nextprev {
   @include clearfix;
+}
+
+/* JSX Compiler */
+
+.jsxCompiler {
+  margin: 0 auto;
+  padding-top: 20px;
+  width: 1220px;
+
+  label.compiler-option {
+    display: block;
+    margin-top: 5px;
+  }
+
+  #jsxCompiler {
+    margin-top: 20px;
+  }
+
+  .playgroundPreview {
+    padding: 0;
+    width: 600px;
+    word-wrap: break-word;
+
+    pre {
+      @include code-typography;
+    }
+  }
+
+  .playgroundError {
+    // The compiler view kills padding in order to render the CodeMirror code
+    // more nicely. For the error view, put a padding back
+    padding: 15px 20px;
+  }
 }
 
 .docs-prev {
@@ -475,38 +528,6 @@ section.black content {
 .docs-prevnext {
   padding-top: 40px;
   padding-bottom: 40px;
-}
-
-/* JSX Compiler */
-
-.jsxCompiler {
-  margin: 0 auto;
-  padding-top: 20px;
-  width: 1220px;
-
-  label.compiler-option {
-    display: block;
-    margin-top: 5px;
-  }
-
-  #jsxCompiler {
-    margin-top: 20px;
-  }
-
-  .playgroundPreview {
-    padding: 0;
-    width: 600px;
-
-    pre {
-      @include code-typography;
-    }
-  }
-
-  .playgroundError {
-    // The compiler view kills padding in order to render the CodeMirror code
-    // more nicely. For the error view, put a padding back
-    padding: 15px 20px;
-  }
 }
 
 /* Button */
@@ -641,6 +662,12 @@ p code {
   padding: 1px 3px;
 }
 
+small a code,
+li a code,
+p a code {
+  color: inherit;
+}
+
 .cm-s-default span.cm-string-2 {
   color: inherit;
 }
@@ -732,6 +759,8 @@ p code {
   margin-bottom: 0;
   background-color: transparent;
   border: 0;
+  float: left;
+  min-width: 100%;
 }
 
 .highlight pre code {
@@ -790,6 +819,10 @@ p code {
   margin-bottom: 30px;
 }
 
+.post img {
+  max-width: 100%;
+}
+
 .pagination {
   margin-bottom: 30px;
 
@@ -822,4 +855,73 @@ div[data-twttr-id] iframe {
 
 .three-column > ul:first-child {
   margin-left: 20px;
+}
+
+
+/* Algolia Doc Search */
+
+@media screen and (max-width: 960px) {
+  #algolia-doc-search {
+    display: none;
+  }
+}
+
+input#algolia-doc-search {
+  background: transparent url('/react/img/search.png') no-repeat 10px center;
+  background-size: 16px 16px;
+
+  position: relative;
+  vertical-align: top;
+  margin-left: 10px;
+  padding: 0 10px;
+  padding-left: 35px;
+  height: 30px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 20px;
+  background-color: #333;
+  border-radius: 4px;
+  color: white;
+  outline: none;
+  width: 170px;
+
+  transition: width .2s ease;
+}
+
+input#algolia-doc-search:focus {
+  width: 240px;
+}
+
+.algolia-autocomplete .aa-dropdown-menu {
+  margin-left: -110px;
+  margin-top: -4px;
+}
+
+.algolia-autocomplete {
+  vertical-align: top;
+  height: 53px;
+}
+
+.algolia-docsearch-suggestion {
+  border-bottom-color: #c05b4d;
+}
+
+.algolia-docsearch-suggestion--category-header {
+  background-color: #cc7a6f;
+}
+
+.algolia-docsearch-suggestion--highlight {
+  color: #c05b4d;
+}
+
+.algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--highlight {
+  background-color: #c05b4d;
+}
+
+.aa-cursor .algolia-docsearch-suggestion--content {
+  color: #c05b4d;
+}
+
+.aa-cursor .algolia-docsearch-suggestion {
+  background: #f1f3f5;
 }

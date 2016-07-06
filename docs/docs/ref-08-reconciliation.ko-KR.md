@@ -3,7 +3,7 @@ id: reconciliation-ko-KR
 title: 비교조정(Reconciliation)
 permalink: reconciliation-ko-KR.html
 prev: special-non-dom-attributes-ko-KR.html
-next: glossary-ko-KR.html
+next: webcomponents.html
 ---
 
 React의 주요 설계 철학은 업데이트할 때마다 전체 앱을 다시 렌더하는 것처럼 보이게 API를 만드는 것입니다. 이렇게 하면 애플리케이션 작성이 훨씬 쉬워지지만 한편으로는 어려운 도전 과제이기도 합니다. 이 글에서는 강력한 휴리스틱으로 어떻게 O(n<sup>3</sup>) 복잡도의 문제를 O(n)짜리로 바꿀 수 있었는지 설명합니다.
@@ -103,7 +103,7 @@ renderB: <div><span>second</span><span>first</span></div>
 => [replaceAttribute textContent 'second'], [insertNode <span>first</span>]
 ```
 
-원소의 목록을 변환하기 위한 최소 연산 집합을 찾는 알고리즘이 여럿 있습니다. [Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance)를 사용하면 O(n<sup>2</sup>) 복잡도로 원소 한 개의 삽입, 삭제, 교체를 위해 필요한 최솟값을 찾을 수 있습니다. Levenshtein 알고리즘을 사용해도 노드가 다른 위치로 이동한 경우는 알아낼 수 없고, 그것을 알아내는 알고리즘은 더욱 높은 복잡도를 가집니다.
+원소의 목록을 변환하기 위한 최소 연산 집합을 찾는 알고리즘이 여럿 있습니다. [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance)를 사용하면 O(n<sup>2</sup>) 복잡도로 원소 한 개의 삽입, 삭제, 교체를 위해 필요한 최솟값을 찾을 수 있습니다. Levenshtein 알고리즘을 사용해도 노드가 다른 위치로 이동한 경우는 알아낼 수 없고, 그것을 알아내는 알고리즘은 더욱 높은 복잡도를 가집니다.
 
 ### 키(keys)
 

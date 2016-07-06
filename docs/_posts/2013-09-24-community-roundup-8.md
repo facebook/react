@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #8"
-author: Vjeux
+author: vjeux
 ---
 
 A lot has happened in the month since our last update. Here are some of the more interesting things we've found. But first, we have a couple updates before we share links.
@@ -34,7 +34,7 @@ While this is not going to work for all the attributes since they are camelCased
 
 ## Remarkable React
 
-[Stoyan Stefanov](http://www.phpied.com/) gave a talk at [BrazilJS](http://braziljs.com.br/) about React and wrote an article with the content of the presentation. He goes through the difficulties of writting _active apps_ using the DOM API and shows how React handles it.
+[Stoyan Stefanov](http://www.phpied.com/) gave a talk at [BrazilJS](http://braziljs.com.br/) about React and wrote an article with the content of the presentation. He goes through the difficulties of writing _active apps_ using the DOM API and shows how React handles it.
 
 > So how does exactly React deal with it internally? Two crazy ideas - virtual DOM and synthetic events.
 >
@@ -66,4 +66,4 @@ While this is not going to work for all the attributes since they are camelCased
 
 [Vjeux](http://blog.vjeux.com/) re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.
 
-<iframe width="100%" height="300" src="https://jsfiddle.net/vjeux/QL9tz/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+[View the source on JSFiddle...](http://jsfiddle.net/vjeux/QL9tz)

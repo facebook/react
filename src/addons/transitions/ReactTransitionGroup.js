@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,30 +12,35 @@
 'use strict';
 
 var React = require('React');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var assign = require('Object.assign');
-var cloneWithProps = require('cloneWithProps');
 var emptyFunction = require('emptyFunction');
 
+/**
+ * A basis for animations. When children are declaratively added or removed,
+ * special lifecycle hooks are called.
+ * See https://facebook.github.io/react/docs/animation.html#low-level-api-reacttransitiongroup
+ */
 var ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func
+    childFactory: React.PropTypes.func,
   },
 
   getDefaultProps: function() {
     return {
       component: 'span',
-      childFactory: emptyFunction.thatReturnsArgument
+      childFactory: emptyFunction.thatReturnsArgument,
     };
   },
 
   getInitialState: function() {
     return {
-      children: ReactTransitionChildMapping.getChildMapping(this.props.children)
+      // TODO: can we get useful debug information to show at this point?
+      children: ReactTransitionChildMapping.getChildMapping(this.props.children),
     };
   },
 
@@ -55,16 +60,24 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentWillReceiveProps: function(nextProps) {
-    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-      nextProps.children
-    );
+    var nextChildMapping;
+    if (__DEV__) {
+      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+        nextProps.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+        nextProps.children
+      );
+    }
     var prevChildMapping = this.state.children;
 
     this.setState({
       children: ReactTransitionChildMapping.mergeChildMappings(
         prevChildMapping,
         nextChildMapping
-      )
+      ),
     });
 
     var key;
@@ -120,9 +133,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
       // This was removed before it had fully appeared. Remove it.
@@ -152,9 +173,17 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
       // This was removed before it had fully entered. Remove it.
@@ -185,16 +214,24 @@ var ReactTransitionGroup = React.createClass({
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
-    );
+    var currentChildMapping;
+    if (__DEV__) {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children,
+        ReactInstanceMap.get(this)._debugID
+      );
+    } else {
+      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+        this.props.children
+      );
+    }
 
     if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
       this.setState(function(state) {
-        var newChildren = assign({}, state.children);
+        var newChildren = Object.assign({}, state.children);
         delete newChildren[key];
         return {children: newChildren};
       });
@@ -213,18 +250,31 @@ var ReactTransitionGroup = React.createClass({
         // already been removed. In case you need this behavior you can provide
         // a childFactory function to wrap every child, even the ones that are
         // leaving.
-        childrenToRender.push(cloneWithProps(
+        childrenToRender.push(React.cloneElement(
           this.props.childFactory(child),
           {ref: key, key: key}
         ));
       }
     }
+
+    // Do not forward ReactTransitionGroup props to primitive DOM nodes
+    var props = Object.assign({}, this.props);
+    delete props.transitionLeave;
+    delete props.transitionName;
+    delete props.transitionAppear;
+    delete props.transitionEnter;
+    delete props.childFactory;
+    delete props.transitionLeaveTimeout;
+    delete props.transitionEnterTimeout;
+    delete props.transitionAppearTimeout;
+    delete props.component;
+
     return React.createElement(
       this.props.component,
-      this.props,
+      props,
       childrenToRender
     );
-  }
+  },
 });
 
 module.exports = ReactTransitionGroup;

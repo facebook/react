@@ -33,6 +33,7 @@ Use Jekyll to serve the website locally (by default, at `http://localhost:4000`)
 ```sh
 $ cd react/docs
 $ bundle exec rake
+$ bundle exec rake fetch_remotes
 $ bundle exec jekyll serve -w
 $ open http://localhost:4000/react/
 ```

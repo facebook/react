@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #6"
-author: Vjeux
+author: vjeux
 ---
 
 This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It's great to see the adoption of React growing.
@@ -54,7 +54,7 @@ este.demos.react.todoApp = este.react.create (`/** @lends {React.ReactComponent.
 
 ## React Stylus Boilerplate
 
-[Zaim Bakar](http://zaim.github.io/) shared his boilerplate to get started with Stylus CSS processor.
+[Zaim Bakar](https://zaim.github.io/) shared his boilerplate to get started with Stylus CSS processor.
 
 > This is my boilerplate React project using Grunt as the build tool, and Stylus as my CSS preprocessor.
 >

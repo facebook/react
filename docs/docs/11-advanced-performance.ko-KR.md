@@ -3,6 +3,7 @@ id: advanced-performance-ko-KR
 title: 성능 심화
 permalink: advanced-performance-ko-KR.html
 prev: perf-ko-KR.html
+next: context-ko-KR.html
 ---
 
 React를 도입하려 할 때 많은 사람이 묻는 첫 번째 질문은 React를 사용하지 않을 때처럼 애플리케이션이 빠르고 반응성도 좋을 것이냐는 것입니다. 모든 상태변화에 대해 컴포넌트의 하위 트리를 전부 다시 렌더링하는 아이디어에 대해 사람들은 이 프로세스가 성능에 부정적인 영향을 줄 것으로 생각하지만, React는 여러 가지 영리한 방법을 통해 UI를 업데이트하는데 필요한 비싼 DOM 조작을 최소화합니다.
@@ -11,7 +12,7 @@ React를 도입하려 할 때 많은 사람이 묻는 첫 번째 질문은 React
 
 React는 브라우저에서 렌더된 DOM 하위 트리의 서술자 개념인 *가상의 DOM*을 사용합니다. 이 병렬적인 서술체는 React가 DOM 노드를 생성하거나 이미 존재하는 DOM 노드에 접근하는 것(JavaScript 객체를 조작하는 것보다 느리죠)을 피하게 해 줍니다. 컴포넌트의 props나 state가 변경되면 React는 새로운 가상의 DOM을 구성해 이전의 것과 비교해서 실제 DOM 업데이트가 필요한지 결정합니다. 가능한 적게 변화를 적용하기 위해, React는 둘이 다를 경우에만 DOM을 [조정](/react/docs/reconciliation-ko-KR.html)할 것입니다.
 
-이에 더해, React는 컴포넌트 생명주기 함수인 `shouldComponentUpdate`를 제공합니다. 이는 다시 렌더링하는 프로세스가 일어나기 직전에 일어나며 개발자가 프로세스를 중단할 수 있게 합니다. 이 함수의 기본구현은 `true`를 반환해 React가 업데이트를 수행하도록 합니다.
+이에 더해, React는 컴포넌트 생명주기 함수인 `shouldComponentUpdate`를 제공합니다. 이는 다시 렌더링하는 프로세스(가상 DOM 비교와 어쩌면 일어날 DOM 조정)가 일어나기 직전에 일어나며 개발자가 프로세스를 중단할 수 있게 합니다. 이 함수의 기본구현은 `true`를 반환해 React가 업데이트를 수행하도록 합니다.
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
@@ -41,18 +42,18 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 C1과 C3의 `shouldComponentUpdate`가 `true`를 반환했기 때문에 React는 하위 노드로 내려가 그들을 확인합니다. C6는 `true`를 반환했네요; 이는 가상의 DOM과 같지 않기 때문에 DOM의 조정이 일어났습니다. 마지막으로 흥미로운 사례는 C8입니다. React가 이 노드를 위해 가상의 DOM을 작동했지만, 노드가 이전의 것과 일치했기 때문에 DOM의 조정을 일어나지 않았습니다.
 
-React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연적이었습니다. C8의 경우는 가상의 DOM과 비교를 해 제외되었고, C2의 하위 트리와 C7은 `shouldComponentUpdate` 단계에서 제외되어 가상의 DOM은 구동조차 되지 않았습니다.
+React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연적이었습니다. C8의 경우는, 가상의 DOM과 비교를 해 제외되었고, C2의 하위 트리와 C7은 `shouldComponentUpdate` 단계에서 제외되어 가상의 DOM은 구동조차 되지 않았습니다.
 
 자 그럼, 어떻게 `shouldComponentUpdate`를 구현해야 할까요? 문자열 값을 렌더하는 컴포넌트를 생각해보죠.
 
 ```javascript
 React.createClass({
-  propsTypes: {
+  propTypes: {
     value: React.PropTypes.string.isRequired
   },
 
   render: function() {
-    return <div>this.props.value</div>;
+    return <div>{this.props.value}</div>;
   }
 });
 ```
@@ -71,12 +72,12 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 ```javascript
 React.createClass({
-  propsTypes: {
+  propTypes: {
     value: React.PropTypes.object.isRequired
   },
 
   render: function() {
-    return <div>this.props.value.foo</div>;
+    return <div>{this.props.value.foo}</div>;
   }
 });
 ```
@@ -90,7 +91,7 @@ React.createClass({
 this.props.value !== nextProps.value; // true
 ```
 
-문제는 prop이 실제로 변경되지 않았을 때도 `shouldComponentUpdate`가 `true`를 반환할 거라는 겁니다. 이를 해결하기 위한 대안으로 아래와 같이 구현해 볼 수 있습니다:
+문제는 prop이 실제로 변경되지 않았을 때도 `shouldComponentUpdate`가 `true`를 반환할 거라는 겁니다. 이를 해결하기 위한 대안으로, 아래와 같이 구현해 볼 수 있습니다:
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
@@ -98,7 +99,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-기본적으로, 우리는 변경을 정확히 추적하기 위해서 깊은 비교를 해야 했습니다. 이 방법은 성능 면에서 제법 비싸고 각각의 모델마다 다른 깊은 등식 코드를 작성해야 하므로 확장이 힘들어 집니다. 심지어 객체 참조를 신중히 관리하지 않는다면 작동하지도 않을 수 있습니다. 컴포넌트가 부모에 의해 다뤄지는 경우를 살펴보죠:
+기본적으로, 우리는 변경을 정확히 추적하기 위해서 깊은 비교를 해야 했습니다. 이 방법은 성능 면에서 제법 비쌉니다. 각각의 모델마다 다른 깊은 등식 코드를 작성해야 하므로 확장이 힘들어 집니다. 심지어 객체 참조를 신중히 관리하지 않는다면 작동하지도 않을 수 있습니다. 컴포넌트가 부모에 의해 다뤄지는 경우를 살펴보죠:
 
 ```javascript
 React.createClass({
@@ -131,13 +132,13 @@ React.createClass({
 
 ## 구원자 Immutable-js
 
-[Immutable-js](https://github.com/facebook/immutable-js)는 Lee Byron이 만들고 Facebook이 오픈소스화 한 Javascript 컬렉션 라이브러리입니다. 이는 *구조의 공유(structural sharing)*를 통해 *불변의 영속적인(immutable persistent)* 컬렉션을 제공합니다. 이러한 속성이 무엇을 의미하는지 살펴보죠:
+[Immutable-js](https://github.com/facebook/immutable-js)는 Lee Byron이 만들고 Facebook이 오픈소스화 한 JavaScript 컬렉션 라이브러리입니다. 이는 *구조의 공유(structural sharing)*를 통해 *불변의 영속적인(immutable persistent)* 컬렉션을 제공합니다. 이러한 속성이 무엇을 의미하는지 살펴보죠:
 
 * *불변성(Immutable)*: 컬렉션이 한번 생성되면, 이 후 다른 시점에 변경될 수 없습니다.
 * *영속성(Persistent)*: 새로운 컬렉션이 이전의 컬렉션이나 셋(set) 같은 뮤테이션(mutation)에서 생성될 수 있습니다. 기존의 컬렉션은 새로운 컬렉션이 생성된 후에도 여전히 유효합니다.
 * *구조의 공유(Structural Sharing)*: 새로운 컬렉션은 가능한 한 원래의 컬렉션과 같은 구조를 사용해 생성됩니다. 공간 효율성과 적절한 성능을 위해 복사를 최소화합니다.
 
-불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 JavaScript 코드에서는:
+불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 이 JavaScript 코드에서는:
 
 ```javascript
 var x = { foo: "bar" };
@@ -163,7 +164,7 @@ x === y; // false
 
 ## Immutable-js와 Flux
 
-[Flux](http://facebook.github.io/flux/)를 사용한다면 immutable-js를 사용해 stores를 작성해야 합니다. [전체 API](http://facebook.github.io/immutable-js/docs/#/)를 살펴보세요.
+[Flux](https://facebook.github.io/flux/)를 사용한다면 immutable-js를 사용해 stores를 작성해야 합니다. [전체 API](https://facebook.github.io/immutable-js/docs/#/)를 살펴보세요.
 
 Immutable 자료구조를 이용해 스레드를 모델링하는 예제를 살펴봅시다. 먼저 모델링하려는 엔티티마다 `Record`를 정의해야 합니다. Record는 특정 필드들의 값을 유지하기 위한 불변의 컨테이너입니다:
 
@@ -200,6 +201,6 @@ this.messages = this.messages.push(new Message({
 });
 ```
 
-자료구조가 불변이기 때문에 push 함수의 결과를 this.messages에 할당할 필요가 있으니 주의하세요.
+자료구조가 불변이기 때문에 push 함수의 결과를 `this.messages`에 할당할 필요가 있으니 주의하세요.
 
 React 측에서는, 컴포넌트의 state를 보존하기 위해 immutable-js 자료구조를 사용한다면, 모든 컴포넌트에 `PureRenderMixin`을 혼합해 다시 렌더링하는 프로세스를 중단할 수 있습니다.

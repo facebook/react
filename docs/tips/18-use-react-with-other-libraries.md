@@ -16,7 +16,7 @@ var App = React.createClass({
   },
 
   componentDidMount: function() {
-    $(this.refs.placeholder.getDOMNode()).append($('<span />'));
+    $(this.refs.placeholder).append($('<span />'));
   },
 
   componentWillUnmount: function() {
@@ -33,7 +33,7 @@ var App = React.createClass({
   }
 });
 
-React.render(<App />, mountNode);
+ReactDOM.render(<App />, mountNode);
 ```
 
 You can attach your own [event listeners](/react/tips/dom-event-listeners.html) and even [event streams](https://baconjs.github.io) this way.

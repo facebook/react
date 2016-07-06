@@ -26,7 +26,7 @@ module.exports = function() {
     spawn({
       cmd: cmd,
       args: args,
-      opts: opts
+      opts: opts,
     }, function(error, result, code) {
       if (error) {
         grunt.log.error(error);
@@ -58,7 +58,7 @@ module.exports = function() {
         run('npm', [
           'install',
           '--production',
-          tgz
+          tgz,
         ], {cwd: dir}, function() {
           var nodePath = path.join(dir, 'node_modules');
           var pkgDir = path.join(nodePath, pkg.name);
@@ -66,7 +66,7 @@ module.exports = function() {
 
           // Make sure that bin/jsx is runnable by echoing main.js.
           run('bin/jsx', ['main.js'], {
-            cwd: pkgDir
+            cwd: pkgDir,
           }, function(result) {
             assert.ok(result.stdout.indexOf('transform') >= 0, result.stdout);
 
@@ -81,9 +81,9 @@ module.exports = function() {
             'require(\'react-tools\').transform(' +
               JSON.stringify(
                 '/** @jsx React.DOM */ <div>oyez</div>;'
-              ) + ')'
+              ) + ')',
           ], {
-            env: {NODE_PATH: nodePath}
+            env: {NODE_PATH: nodePath},
           }, function(result, code) {
             assert.ok(result.stdout.indexOf(
               'React.DOM.div(null, \'oyez\');'

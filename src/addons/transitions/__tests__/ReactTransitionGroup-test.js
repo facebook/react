@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -12,18 +12,22 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactTransitionGroup;
-var mocks;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactTransitionGroup', function() {
   var container;
 
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(function() {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTransitionGroup = require('ReactTransitionGroup');
-    mocks = require('mocks');
 
     container = document.createElement('div');
   });
@@ -62,7 +66,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -75,10 +79,10 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount', 'willAppear', 'didAppear']);
 
     log = [];
@@ -94,15 +98,15 @@ describe('ReactTransitionGroup', function() {
 
   it('should handle enter/leave/enter/leave correctly', function() {
     var log = [];
-    var cb;
+    var willEnterCb;
 
     var Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
-      componentWillEnter: function(_cb) {
+      componentWillEnter: function(cb) {
         log.push('willEnter');
-        cb = _cb;
+        willEnterCb = cb;
       },
       componentDidEnter: function() {
         log.push('didEnter');
@@ -119,7 +123,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -132,36 +136,37 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var i = 0; i < 5; i++) {
+    for (var k = 0; k < 5; k++) {
       instance.setState({count: 2});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 1});
     }
-    cb();
+    // other animations are blocked until willEnterCb is called
+    willEnterCb();
     expect(log).toEqual([
       'didMount', 'didMount', 'willEnter',
-      'didEnter', 'willLeave', 'didLeave', 'willUnmount'
+      'didEnter', 'willLeave', 'didLeave', 'willUnmount',
     ]);
   });
 
   it('should handle enter/leave/enter correctly', function() {
     var log = [];
-    var cb;
+    var willEnterCb;
 
     var Child = React.createClass({
       componentDidMount: function() {
         log.push('didMount');
       },
-      componentWillEnter: function(_cb) {
+      componentWillEnter: function(cb) {
         log.push('willEnter');
-        cb = _cb;
+        willEnterCb = cb;
       },
       componentDidEnter: function() {
         log.push('didEnter');
@@ -178,7 +183,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -191,27 +196,26 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var i = 0; i < 5; i++) {
+    for (var k = 0; k < 5; k++) {
       instance.setState({count: 1});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 2});
     }
-    cb();
+    willEnterCb();
     expect(log).toEqual([
-      'didMount', 'didMount', 'willEnter', 'didEnter'
+      'didMount', 'didMount', 'willEnter', 'didEnter',
     ]);
   });
 
   it('should handle entering/leaving several elements at once', function() {
     var log = [];
-    var cb;
 
     var Child = React.createClass({
       componentDidMount: function() {
@@ -236,7 +240,7 @@ describe('ReactTransitionGroup', function() {
       },
       render: function() {
         return <span />;
-      }
+      },
     });
 
     var Component = React.createClass({
@@ -249,24 +253,53 @@ describe('ReactTransitionGroup', function() {
           children.push(<Child key={i} id={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
-      }
+      },
     });
 
-    var instance = React.render(<Component />, container);
+    var instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount0']);
     log = [];
 
     instance.setState({count: 3});
     expect(log).toEqual([
       'didMount1', 'didMount2', 'willEnter1', 'didEnter1',
-      'willEnter2', 'didEnter2'
+      'willEnter2', 'didEnter2',
     ]);
     log = [];
 
     instance.setState({count: 0});
     expect(log).toEqual([
       'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1',
-      'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2'
+      'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2',
     ]);
+  });
+
+  it('should warn for duplicated keys with component stack info', function() {
+    spyOn(console, 'error');
+
+    var Component = React.createClass({
+      render: function() {
+        var children = [<div key="1"/>, <div key="1" />];
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      },
+    });
+
+    ReactDOM.render(<Component />, container);
+
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: flattenChildren(...): ' +
+      'Encountered two children with the same key, `1`. ' +
+      'Child keys must be unique; when two children share a key, ' +
+      'only the first child will be used.'
+    );
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      'Warning: flattenChildren(...): ' +
+      'Encountered two children with the same key, `1`. ' +
+      'Child keys must be unique; when two children share a key, ' +
+      'only the first child will be used.\n' +
+      '    in ReactTransitionGroup (at **)\n' +
+      '    in Component (at **)'
+    );
   });
 });

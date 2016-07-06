@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #4"
-author: Vjeux
+author: vjeux
 ---
 
 React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.
@@ -54,4 +54,4 @@ Over the past several weeks, members of our team, [Pete Hunt](http://www.petehun
 [Tom Occhino](http://tomocchino.com/) implemented Snake in 150 lines with React.
 
 > [Check the source on Github](https://github.com/tomocchino/react-snake/blob/master/src/snake.js)
-> <figure>[![](/react/img/blog/snake.png)](http://tomocchino.github.io/react-snake/)</figure>
+> <figure>[![](/react/img/blog/snake.png)](https://tomocchino.github.io/react-snake/)</figure>

@@ -20,13 +20,13 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <GenericWrapper><span/><span/><span/></GenericWrapper>,
   mountNode
 );
 ```
 
-하지만 자식이 하나만 있는 경우, `this.props.children`는 _배열 래퍼(wrapper)없이_ 싱글 자식 컴포넌트가 됩니다. 이렇게 함으로써 배열 할당을 줄일 수 있습니다. 
+하지만 자식이 하나만 있는 경우, `this.props.children`는 _배열 래퍼(wrapper)없이_ 싱글 자식 컴포넌트가 됩니다. 이렇게 함으로써 배열 할당을 줄일 수 있습니다.
 
 ```js
 var GenericWrapper = React.createClass({
@@ -43,7 +43,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
+ReactDOM.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
 ```
 
 `this.props.children`을 쉽게 다룰 수 있도록 [React.Children utilities](/react/docs/top-level-api-ko-KR.html#react.children)를 제공하고 있습니다.

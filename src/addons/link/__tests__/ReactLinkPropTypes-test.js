@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -15,6 +15,7 @@ var emptyFunction = require('emptyFunction');
 var LinkPropTypes = require('ReactLink').PropTypes;
 var React = require('React');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';
 var requiredMessage =
@@ -26,7 +27,9 @@ function typeCheckFail(declaration, value, message) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
   );
   expect(error instanceof Error).toBe(true);
   expect(error.message).toBe(message);
@@ -38,7 +41,9 @@ function typeCheckPass(declaration, value) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
   );
   expect(error).toBe(null);
 }
@@ -48,22 +53,22 @@ describe('ReactLink', function() {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {},
-      'Required prop `value` was not specified in `testComponent`.'
+      'Required prop `testProp.value` was not specified in `testComponent`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: 123},
-      'Required prop `requestChange` was not specified in `testComponent`.'
+      'Required prop `testProp.requestChange` was not specified in `testComponent`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {requestChange: emptyFunction},
-      'Required prop `value` was not specified in `testComponent`.'
+      'Required prop `testProp.value` was not specified in `testComponent`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: null, requestChange: null},
-      'Required prop `value` was not specified in `testComponent`.'
+      'Required prop `testProp.value` was not specified in `testComponent`.'
     );
   });
 
@@ -74,7 +79,7 @@ describe('ReactLink', function() {
     );
     typeCheckPass(
       LinkPropTypes.link(),
-      {value: {}, requestChange: emptyFunction
+      {value: {}, requestChange: emptyFunction,
     });
   });
 
@@ -104,7 +109,7 @@ describe('ReactLink', function() {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string),
       {value: 123, requestChange: emptyFunction},
-      'Invalid prop `value` of type `number` supplied to `testComponent`,' +
+      'Invalid prop `testProp.value` of type `number` supplied to `testComponent`,' +
       ' expected `string`.'
     );
   });
@@ -148,7 +153,7 @@ describe('ReactLink', function() {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.oneOfType([React.PropTypes.number])),
       {value: 'imastring', requestChange: emptyFunction},
-      'Invalid prop `value` supplied to `testComponent`.'
+      'Invalid prop `testProp.value` supplied to `testComponent`.'
     );
   });
 });

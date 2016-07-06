@@ -6,7 +6,7 @@ permalink: dangerously-set-inner-html.html
 prev: children-undefined.html
 ---
 
-Improper use of the `innerHTML` can open you up to a [cross-site scripting (XSS)](http://en.wikipedia.org/wiki/Cross-site_scripting) attack.  Sanitizing user input for display is notoriously error-prone, and failure to properly sanitize is one of the [leading causes of web vulnerabilities](http://owasptop10.googlecode.com/files/OWASP%20Top%2010%20-%202013.pdf) on the internet.
+Improper use of the `innerHTML` can open you up to a [cross-site scripting (XSS)](https://en.wikipedia.org/wiki/Cross-site_scripting) attack.  Sanitizing user input for display is notoriously error-prone, and failure to properly sanitize is one of the [leading causes of web vulnerabilities](https://owasptop10.googlecode.com/files/OWASP%20Top%2010%20-%202013.pdf) on the internet.
 
 Our design philosophy is that it should be “easy” to make things safe, and developers should explicitly state their intent when performing “unsafe” operations.  The prop name `dangerouslySetInnerHTML` is intentionally chosen to be frightening, and the prop value (an object instead of a string) can be used to indicate sanitized data.
 
@@ -21,4 +21,4 @@ The point being that if you unintentionally do say `<div dangerouslySetInnerHTML
 
 This functionality is mainly provided for cooperation with DOM string manipulation libraries, so the HTML provided must be well-formed (ie., pass XML validation).
 
-For a more complete usage example, refer to the last example on the [front page](/).
+For a more complete usage example, refer to the last example on the [front page](/react/).

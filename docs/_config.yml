@@ -1,7 +1,7 @@
 ---
 name: React
 description: A JavaScript library for building user interfaces
-url: http://facebook.github.io
+url: https://facebook.github.io
 baseurl: "/react"
 permalink: "/blog/:year/:month/:day/:title.html"
 paginate_path: "/blog/page:num/"
@@ -36,4 +36,13 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
-react_version: 0.14.0-alpha
+react_version: 15.1.0
+react_hashes:
+  dev: vck4RVcD/d8oCyYODNkyY5bF8we4hBqLNCQzIsK1n4eN+WTWkSMaXH8Bl0ByIaMd
+  prod: SA/uTNKFAqs8tVn1gROCqtn9Y/waa33EiLYKD7iALN+MDxP1DWBEWPCPmSkYzdsa
+  addons_dev: Bhsz0xzA1wDnGOSV7KbIL0pKaNOZ5KdPxqVOZTwVyU5NfUGDgN56LTVPVrGi3cMy
+  addons_prod: Gi+revrP36Zmqp/aqipOToEggqK5NWoKz1B1SUgiA1/OwV+pR8FqnU/VdfzizfUf
+  dom_dev: 0D/X+kBzzy9hGstygpjpkksS9+WWyG0B/ZfKROdwJ4h6BbJLCnL8lodLYYXxEunS
+  dom_prod: eZbWlQZOpUJXnnogcw4IRZvbGDRjAOpZvOEe932rEg0fhFmXXnaN9bLP/x1RbB6D
+  dom_server_dev: oo6/aLeY4xKtb+MetozfT9WlfPcJq6wnqeIT6suwaeA/qPaSG7B1wWvM8WLATV7Z
+  dom_server_prod: m3fk/O7t/S25hafVhhsrQ7YwjLJdqNNZwgYsAXft24YSrPXysowaoqpQokZO1lsI

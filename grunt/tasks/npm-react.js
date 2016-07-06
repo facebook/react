@@ -3,14 +3,16 @@
 var fs = require('fs');
 var grunt = require('grunt');
 
-var src = 'npm-react/';
-var dest = 'build/npm-react/';
+var src = 'packages/react/';
+var dest = 'build/packages/react/';
 var modSrc = 'build/modules/';
 var lib = dest + 'lib/';
 var dist = dest + 'dist/';
 var distFiles = [
-  'react.js', 'react.min.js', 'JSXTransformer.js',
-  'react-with-addons.js', 'react-with-addons.min.js'
+  'react.js',
+  'react.min.js',
+  'react-with-addons.js',
+  'react-with-addons.min.js',
 ];
 
 function buildRelease() {
@@ -26,7 +28,8 @@ function buildRelease() {
   // and build/modules/**/* to build/react-core/lib
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
-    grunt.file.expandMapping('**/*', lib, {cwd: modSrc})
+    grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
+    grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
   );
   mappings.forEach(function(mapping) {
     var mappingSrc = mapping.src[0];
@@ -54,19 +57,19 @@ function packRelease() {
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
-    args: ['pack', 'npm-react'],
+    args: ['pack', 'packages/react'],
     opts: {
-      cwd: 'build/'
-    }
+      cwd: 'build/',
+    },
   };
   grunt.util.spawn(spawnCmd, function() {
     var buildSrc = 'build/react-' + grunt.config.data.pkg.version + '.tgz';
-    var buildDest = 'build/react.tgz';
+    var buildDest = 'build/packages/react.tgz';
     fs.rename(buildSrc, buildDest, done);
   });
 }
 
 module.exports = {
   buildRelease: buildRelease,
-  packRelease: packRelease
+  packRelease: packRelease,
 };

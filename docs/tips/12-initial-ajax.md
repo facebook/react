@@ -9,7 +9,7 @@ next: false-in-jsx.html
 
 Fetch data in `componentDidMount`. When the response arrives, store the data in state, triggering a render to update your UI.
 
-When processing the response of an asynchronous request, be sure to check that the component is still mounted before updating its state by using `this.isMounted()`.
+When fetching data asynchronously, use `componentWillUnmount` to cancel any outstanding requests before the component is unmounted.
 
 This example fetches the desired Github user's latest gist:
 
@@ -23,15 +23,17 @@ var UserGist = React.createClass({
   },
 
   componentDidMount: function() {
-    $.get(this.props.source, function(result) {
+    this.serverRequest = $.get(this.props.source, function (result) {
       var lastGist = result[0];
-      if (this.isMounted()) {
-        this.setState({
-          username: lastGist.owner.login,
-          lastGistUrl: lastGist.html_url
-        });
-      }
+      this.setState({
+        username: lastGist.owner.login,
+        lastGistUrl: lastGist.html_url
+      });
     }.bind(this));
+  },
+
+  componentWillUnmount: function() {
+    this.serverRequest.abort();
   },
 
   render: function() {
@@ -44,7 +46,7 @@ var UserGist = React.createClass({
   }
 });
 
-React.render(
+ReactDOM.render(
   <UserGist source="https://api.github.com/users/octocat/gists" />,
   mountNode
 );

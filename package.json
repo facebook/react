@@ -1,101 +1,108 @@
 {
-  "name": "react-tools",
-  "description": "A set of complementary tools to React, including the JSX transformer.",
-  "version": "0.14.0-alpha",
-  "keywords": [
-    "react",
-    "jsx",
-    "transformer",
-    "view"
-  ],
-  "homepage": "http://facebook.github.io/react",
-  "bugs": "https://github.com/facebook/react/issues",
-  "license": "BSD-3-Clause",
-  "files": [
-    "main.js",
-    "bin/jsx",
-    "src/",
-    "vendor/fbtransform/",
-    "vendor/inline-source-map.js"
-  ],
-  "main": "main.js",
-  "bin": {
-    "jsx": "./bin/jsx"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/facebook/react"
-  },
-  "dependencies": {
-    "commoner": "^0.10.0",
-    "jstransform": "^10.1.0"
-  },
+  "name": "react-build",
+  "private": true,
+  "version": "16.0.0-alpha",
   "devDependencies": {
-    "benchmark": "~1.0.0",
-    "browserify": "^9.0.3",
+    "art": "^0.10.1",
+    "async": "^1.5.0",
+    "babel-cli": "^6.6.5",
+    "babel-core": "^6.0.0",
+    "babel-eslint": "^5.0.0",
+    "babel-plugin-check-es2015-constants": "^6.5.0",
+    "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
+    "babel-plugin-transform-es2015-arrow-functions": "^6.5.2",
+    "babel-plugin-transform-es2015-block-scoped-functions": "^6.5.0",
+    "babel-plugin-transform-es2015-block-scoping": "^6.5.0",
+    "babel-plugin-transform-es2015-classes": "^6.5.2",
+    "babel-plugin-transform-es2015-computed-properties": "^6.5.2",
+    "babel-plugin-transform-es2015-destructuring": "^6.5.0",
+    "babel-plugin-transform-es2015-for-of": "^6.5.2",
+    "babel-plugin-transform-es2015-literals": "^6.5.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.5.2",
+    "babel-plugin-transform-es2015-object-super": "^6.5.0",
+    "babel-plugin-transform-es2015-parameters": "^6.5.0",
+    "babel-plugin-transform-es2015-shorthand-properties": "^6.5.0",
+    "babel-plugin-transform-es2015-spread": "^6.5.2",
+    "babel-plugin-transform-es2015-template-literals": "^6.5.2",
+    "babel-plugin-transform-es3-member-expression-literals": "^6.5.0",
+    "babel-plugin-transform-es3-property-literals": "^6.5.0",
+    "babel-plugin-transform-object-rest-spread": "^6.6.5",
+    "babel-plugin-transform-react-jsx-source": "^6.8.0",
+    "babel-preset-react": "^6.5.0",
+    "babel-traverse": "^6.9.0",
+    "babylon": "6.8.0",
+    "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
-    "coverify": "~1.0.4",
-    "derequire": "^2.0.0",
-    "envify": "^3.0.0",
-    "es3ify": "~0.1.2",
-    "es5-shim": "^4.0.0",
-    "eslint": "^0.14.1",
-    "esprima-fb": "^13001.1001.0-dev-harmony-fb",
-    "grunt": "~0.4.2",
-    "grunt-cli": "~0.1.9",
-    "grunt-compare-size": "~0.4.0",
+    "core-js": "^2.2.1",
+    "coveralls": "^2.11.6",
+    "del": "^2.0.2",
+    "derequire": "^2.0.3",
+    "eslint": "1.10.3",
+    "eslint-plugin-react": "4.1.0",
+    "eslint-plugin-react-internal": "file:eslint-rules",
+    "fbjs": "^0.8.1",
+    "fbjs-scripts": "^0.6.0",
+    "flow-bin": "^0.27.0",
+    "glob": "^6.0.1",
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-compare-size": "^0.4.0",
     "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-compress": "^0.13.0",
-    "grunt-contrib-connect": "~0.6.0",
-    "grunt-contrib-jshint": "^0.10.0",
-    "grunt-jest": "^0.1.2",
+    "grunt-contrib-compress": "^0.14.0",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^6.0.0",
+    "gulp-flatten": "^0.2.0",
+    "gulp-load-plugins": "^1.2.4",
+    "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jasmine-tapreporter": "~0.2.2",
-    "jest-cli": "^0.2.1",
-    "optimist": "~0.6.0",
-    "phantomjs": "~1.9",
+    "jest": "^12.1.1",
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.0",
     "platform": "^1.1.0",
-    "populist": "~0.1.6",
-    "recast": "^0.9.11",
-    "sauce-tunnel": "~1.1.0",
-    "tmp": "~0.0.18",
-    "typescript": "^1.4.0",
-    "uglify-js": "~2.4.0",
-    "uglifyify": "^3.0.1",
-    "wd": "~0.2.6"
+    "run-sequence": "^1.1.4",
+    "through2": "^2.0.0",
+    "tmp": "~0.0.28",
+    "typescript": "~1.8.10",
+    "uglify-js": "^2.5.0",
+    "uglifyify": "^3.0.1"
   },
-  "engines": {
-    "node": ">=0.10.0"
+  "devEngines": {
+    "node": "4.x || 5.x || 6.x",
+    "npm": "2.x || 3.x"
   },
-  "preferGlobal": true,
   "commonerConfig": {
-    "version": 4
+    "version": 7
   },
   "scripts": {
+    "build": "grunt build",
+    "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
+    "lint": "grunt lint",
+    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
-    "jest": "jest",
-    "lint": "eslint src",
-    "build": "grunt build"
+    "flow": "flow"
   },
   "jest": {
-    "rootDir": "",
-    "scriptPreprocessor": "jest/preprocessor.js",
-    "setupEnvScriptFile": "jest/environment.js",
+    "modulePathIgnorePatterns": [
+      "/.module-cache/",
+      "/react/build/"
+    ],
     "persistModuleRegistryBetweenSpecs": true,
+    "rootDir": "",
+    "scriptPreprocessor": "scripts/jest/preprocessor.js",
+    "setupEnvScriptFile": "scripts/jest/environment.js",
+    "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
     "testFileExtensions": [
-      "js",
       "coffee",
+      "js",
       "ts"
     ],
-    "modulePathIgnorePatterns": [
-      "/build/",
-      "/node_modules/",
-      "/.module-cache/"
-    ],
     "testPathDirs": [
+      "<rootDir>/eslint-rules",
+      "<rootDir>/mocks",
+      "<rootDir>/scripts",
       "<rootDir>/src",
-      "<rootDir>/vendor/fbtransform"
+      "node_modules/fbjs"
     ],
     "unmockedModulePathPatterns": [
       ""

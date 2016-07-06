@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #9"
-author: Vjeux
+author: vjeux
 ---
 
 We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we'll probably organize more in the future.
@@ -56,7 +56,7 @@ The video will be available soon on the [JSConf EU website](http://2013.jsconf.e
 
 [Todd Kennedy](http://blog.selfassembled.org/) working at [Cond&eacute; Nast](http://www.condenast.com/) implemented a wrapper on-top of [JSHint](http://www.jshint.com/) that first converts JSX files to JS.
 
-> A wrapper around JSHint to allow linting of files containg JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.
+> A wrapper around JSHint to allow linting of files containing JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.
 >
 > ```
 npm install -g jsxhint
