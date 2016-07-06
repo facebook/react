@@ -55,6 +55,22 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     workInProgress.pendingWorkPriority = NoWork;
   }
 
+  function updateClassComponent(current, workInProgress) {
+    var props = workInProgress.pendingProps;
+    if (!workInProgress.stateNode) {
+      var ctor = workInProgress.type;
+      console.log('mount class:', workInProgress.type.name);
+      workInProgress.stateNode = new ctor(props);
+    } else {
+      console.log('update class:', workInProgress.type.name);
+    }
+    var instance = workInProgress.stateNode;
+    instance.props = props;
+    var nextChildren = instance.render();
+    reconcileChildren(current, workInProgress, nextChildren);
+    workInProgress.pendingWorkPriority = NoWork;
+  }
+
   function updateHostComponent(current, workInProgress) {
     console.log(
       'host component', workInProgress.type, 
@@ -99,6 +115,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       if (workInProgress.alternate) {
         workInProgress.alternate.tag = ClassComponent;
       }
+      value = value.render();
     } else {
       console.log('performed work on fn:', fn.name);
       // Proceed under the assumption that this is a functional component
@@ -199,7 +216,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         updateFunctionalComponent(current, workInProgress);
         return workInProgress.child;
       case ClassComponent:
-        console.log('class component', workInProgress.pendingProps.type.name);
+        updateClassComponent(current, workInProgress);
         return workInProgress.child;
       case HostContainer:
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
