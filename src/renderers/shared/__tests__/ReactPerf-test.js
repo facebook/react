@@ -469,27 +469,47 @@ describe('ReactPerf', function() {
     __DEV__ = true;
   });
 
-  it('should not warn when wrapped in a component', () => {
-    spyOn(console, 'error');
-
-    return new Promise((resolve) => {
-      var Wrapper = React.createClass({
-        componentDidMount() {
-          ReactPerf.start();
-          this.setState({testProp: 'hello'});
-        },
-        componentDidUpdate() {
-          ReactPerf.stop();
-          resolve();
-        },
-        render() {
-          return this.props.children;
-        },
-      });
-      var container = document.createElement('div');
-      ReactDOM.render(<Wrapper><App /></Wrapper>, container);
-    }).then(() => {
-      expect(console.error.calls.count()).toBe(0, 'Instead got: ' + console.error.calls.argsFor(0)[0]);
+  it('should work when measurement starts during reconciliation', () => {
+    // https://github.com/facebook/react/issues/6949#issuecomment-230371009
+    var Measurer = React.createClass({
+      componentWillMount() {
+        ReactPerf.start();
+      },
+      componentWillUpdate() {
+        ReactPerf.start();
+      },
+      componentDidMount() {
+        ReactPerf.stop();
+      },
+      componentDidUpdate() {
+        ReactPerf.stop();
+      },
+      render() {
+        // Force reconciliation despite constant element
+        return React.cloneElement(this.props.children);
+      },
     });
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Measurer><App /></Measurer>, container);
+    expect(ReactPerf.getWasted()).toEqual([]);
+
+    ReactDOM.render(<Measurer><App /></Measurer>, container);
+    expect(ReactPerf.getWasted()).toEqual([{
+      key: 'Measurer',
+      instanceCount: 1,
+      inclusiveRenderDuration: 4,
+      renderCount: 1,
+    }, {
+      key: 'App',
+      instanceCount: 1,
+      inclusiveRenderDuration: 3,
+      renderCount: 1,
+    }, {
+      key: 'App > Box',
+      instanceCount: 2,
+      inclusiveRenderDuration: 2,
+      renderCount: 2,
+    }]);
   });
 });
