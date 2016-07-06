@@ -55,31 +55,30 @@ function checkOptions(options) {
   }
 
   for (const option of options) {
-    // Check that option is a React element.
+    if (didWarnDupeSelectValues) {
+      continue;
+    }
+    // Check that option is a ReactElement.
     if ((option == null) || (option.$$typeof == null) || (option.$$typeof !== REACT_ELEMENT_TYPE)) {
       continue;
     }
-
-    if (option.type === 'optGroup') {
-      if ((option.props != null) && (option.props.children != null)) {
-        checkOptions(option.props.children);
-      }
+    
+    if ((option.type === 'optGroup') && (option.props != null) && (option.props.children != null)) {
+      checkOptions(option.props.children);
     }
     
-    if (option.type === 'option') {
-      if ((option.props != null) && (option.props.value != null)) {
-        const value = option.props.value;
-        if (!values.hasOwnProperty(value)) {
-          values[value] = value;
-        } else {
-          warning(
-            false,
-            'Select element contains duplicate option value `%s`.%s',
-            value,
-            ReactComponentTreeDevtool.getStackAddendumByID(debugId)
-            );
-          didWarnDupeSelectValues = true;
-        }
+    if ((option.type === 'option') && (option.props != null) && (option.props.value != null)) {
+      const value = option.props.value;
+      if (!values.hasOwnProperty(value)) {
+        values[value] = value;
+      } else {
+        warning(
+          false,
+          'Select element contains duplicate option value `%s`.%s',
+          value,
+          ReactComponentTreeDevtool.getStackAddendumByID(debugId)
+          );
+        didWarnDupeSelectValues = true;
       }
     }
   }
