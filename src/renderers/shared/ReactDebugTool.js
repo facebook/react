@@ -79,7 +79,7 @@ function resetMeasurements() {
   var previousMeasurements = currentFlushMeasurements || [];
   var previousOperations = ReactHostOperationHistoryDevtool.getHistory();
 
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     currentFlushStartTime = null;
     currentFlushMeasurements = null;
     clearHistory();
@@ -106,7 +106,7 @@ function checkDebugID(debugID) {
 }
 
 function beginLifeCycleTimer(debugID, timerType) {
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     return;
   }
   warning(
@@ -125,7 +125,7 @@ function beginLifeCycleTimer(debugID, timerType) {
 }
 
 function endLifeCycleTimer(debugID, timerType) {
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     return;
   }
   warning(
@@ -137,11 +137,13 @@ function endLifeCycleTimer(debugID, timerType) {
     currentTimerType || 'no',
     (debugID === currentTimerDebugID) ? 'the same' : 'another'
   );
-  currentFlushMeasurements.push({
-    timerType,
-    instanceID: debugID,
-    duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
-  });
+  if (isProfiling) {
+    currentFlushMeasurements.push({
+      timerType,
+      instanceID: debugID,
+      duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+    });
+  }
   currentTimerStartTime = null;
   currentTimerNestedFlushDuration = null;
   currentTimerDebugID = null;
