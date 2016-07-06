@@ -196,6 +196,7 @@ var ReactDebugTool = {
     isProfiling = true;
     flushHistory.length = 0;
     resetMeasurements();
+    ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
   },
   endProfiling() {
     if (!isProfiling) {
@@ -204,6 +205,7 @@ var ReactDebugTool = {
 
     isProfiling = false;
     resetMeasurements();
+    ReactDebugTool.removeDevtool(ReactHostOperationHistoryDevtool);
   },
   getFlushHistory() {
     return flushHistory;
@@ -311,7 +313,6 @@ var ReactDebugTool = {
 
 ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
 ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
 ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {
