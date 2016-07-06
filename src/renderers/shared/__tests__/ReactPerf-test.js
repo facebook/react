@@ -475,11 +475,11 @@ describe('ReactPerf', function() {
       componentWillMount() {
         ReactPerf.start();
       },
-      componentWillUpdate() {
-        ReactPerf.start();
-      },
       componentDidMount() {
         ReactPerf.stop();
+      },
+      componentWillUpdate() {
+        ReactPerf.start();
       },
       componentDidUpdate() {
         ReactPerf.stop();
