@@ -122,10 +122,6 @@ var ReactHostMount = {
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
 
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginFlush();
-    }
-
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
@@ -139,7 +135,6 @@ var ReactHostMount = {
       ReactInstrumentation.debugTool.onMountRootComponent(
         instance._renderedComponent._debugID
       );
-      ReactInstrumentation.debugTool.onEndFlush();
     }
     return new ReactTestInstance(instance);
   },

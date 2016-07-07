@@ -14,6 +14,7 @@
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var Transaction = require('Transaction');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
 /**
@@ -42,6 +43,13 @@ var ON_DOM_READY_QUEUEING = {
  * each other.
  */
 var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
+
+if (__DEV__) {
+  TRANSACTION_WRAPPERS.push({
+    initialize: ReactInstrumentation.debugTool.onBeginFlush,
+    close: ReactInstrumentation.debugTool.onEndFlush,
+  });
+}
 
 /**
  * Currently:
