@@ -631,25 +631,24 @@ var ReactCompositeComponentMixin = {
 
   /**
    * Asserts that the context object contains the keys specified in 
-   * `contextTypes`, and asserts that they are valid.
+   * `contextTypes`, and that they are valid.
    *
    * @param {object} context
-   * @return {?object}
+   * @return {object}
    * @private
    */
   _processContext: function(context) {
-    var maskedContext = context;
     if (__DEV__) {
       var Component = this._currentElement.type;
       if (Component.contextTypes) {
         this._checkContextTypes(
           Component.contextTypes,
-          maskedContext,
+          context,
           ReactPropTypeLocations.context
         );
       }
     }
-    return maskedContext;
+    return context;
   },
 
   /**
