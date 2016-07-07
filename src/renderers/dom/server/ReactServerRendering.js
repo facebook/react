@@ -37,9 +37,6 @@ function renderToStringImpl(element, makeStaticMarkup) {
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
     return transaction.perform(function() {
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onBeginFlush();
-      }
       var componentInstance = instantiateReactComponent(element, true);
       var markup = ReactReconciler.mountComponent(
         componentInstance,
@@ -52,7 +49,6 @@ function renderToStringImpl(element, makeStaticMarkup) {
         ReactInstrumentation.debugTool.onUnmountComponent(
           componentInstance._debugID
         );
-        ReactInstrumentation.debugTool.onEndFlush();
       }
       if (!makeStaticMarkup) {
         markup = ReactMarkupChecksum.addChecksumToMarkup(markup);

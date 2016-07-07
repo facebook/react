@@ -13,6 +13,7 @@
 
 describe('ReactHostOperationHistoryDevtool', () => {
   var React;
+  var ReactPerf;
   var ReactDOM;
   var ReactDOMComponentTree;
   var ReactDOMFeatureFlags;
@@ -22,11 +23,18 @@ describe('ReactHostOperationHistoryDevtool', () => {
     jest.resetModuleRegistry();
 
     React = require('React');
+    ReactPerf = require('ReactPerf');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
+
+    ReactPerf.start();
   });
+
+  afterEach(() => {
+    ReactPerf.stop();
+  })
 
   function assertHistoryMatches(expectedHistory) {
     var actualHistory = ReactHostOperationHistoryDevtool.getHistory();
