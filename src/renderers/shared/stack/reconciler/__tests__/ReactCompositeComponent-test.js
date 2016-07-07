@@ -875,15 +875,15 @@ describe('ReactCompositeComponent', function() {
     var Intermediary = React.createClass({
 
       componentWillReceiveProps: function(nextProps, nextContext) {
-        expect('foo' in nextContext).toBe(false);
+        expect('foo' in nextContext).toBe(true);
       },
 
       componentDidUpdate: function(prevProps, prevState, prevContext) {
-        expect('foo' in prevContext).toBe(false);
+        expect('foo' in prevContext).toBe(true);
       },
 
       shouldComponentUpdate: function(nextProps, nextState, nextContext) {
-        expect('foo' in nextContext).toBe(false);
+        expect('foo' in nextContext).toBe(true);
         return true;
       },
 
@@ -970,7 +970,7 @@ describe('ReactCompositeComponent', function() {
 
     var ChildWithoutContext = React.createClass({
       componentWillReceiveProps: function(nextProps, nextContext) {
-        expect('foo' in nextContext).toBe(false);
+        expect('foo' in nextContext).toBe(true);
 
         if (nextProps !== this.props) {
           propChanges++;
@@ -1034,7 +1034,7 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.Simulate.click(div.childNodes[0]);
 
     expect(propChanges).toBe(0);
-    expect(contextChanges).toBe(3); // ChildWithContext, GrandChild x 2
+    expect(contextChanges).toBe(4); // ChildWithContext, ChildWithoutContext, GrandChild x 2
   });
 
   it('should disallow nested render calls', function() {
