@@ -78,7 +78,7 @@ function resetMeasurements() {
   var previousMeasurements = currentFlushMeasurements || [];
   var previousOperations = ReactHostOperationHistoryDevtool.getHistory();
 
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     currentFlushStartTime = null;
     currentFlushMeasurements = null;
     clearHistory();
@@ -105,7 +105,7 @@ function checkDebugID(debugID) {
 }
 
 function beginLifeCycleTimer(debugID, timerType) {
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     return;
   }
   warning(
@@ -124,7 +124,7 @@ function beginLifeCycleTimer(debugID, timerType) {
 }
 
 function endLifeCycleTimer(debugID, timerType) {
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     return;
   }
   warning(
@@ -136,11 +136,13 @@ function endLifeCycleTimer(debugID, timerType) {
     currentTimerType || 'no',
     (debugID === currentTimerDebugID) ? 'the same' : 'another'
   );
-  currentFlushMeasurements.push({
-    timerType,
-    instanceID: debugID,
-    duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
-  });
+  if (isProfiling) {
+    currentFlushMeasurements.push({
+      timerType,
+      instanceID: debugID,
+      duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+    });
+  }
   currentTimerStartTime = null;
   currentTimerNestedFlushDuration = null;
   currentTimerDebugID = null;
@@ -193,6 +195,7 @@ var ReactDebugTool = {
     isProfiling = true;
     flushHistory.length = 0;
     resetMeasurements();
+    ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
   },
   endProfiling() {
     if (!isProfiling) {
@@ -201,6 +204,7 @@ var ReactDebugTool = {
 
     isProfiling = false;
     resetMeasurements();
+    ReactDebugTool.removeDevtool(ReactHostOperationHistoryDevtool);
   },
   getFlushHistory() {
     return flushHistory;
@@ -234,6 +238,12 @@ var ReactDebugTool = {
   onEndReconcilerTimer(debugID, timerType) {
     checkDebugID(debugID);
     emitEvent('onEndReconcilerTimer', debugID, timerType);
+  },
+  onError(debugID) {
+    if (currentTimerDebugID != null) {
+      endLifeCycleTimer(currentTimerDebugID, currentTimerType);
+    }
+    emitEvent('onError', debugID);
   },
   onBeginProcessingChildContext() {
     emitEvent('onBeginProcessingChildContext');
@@ -300,7 +310,6 @@ var ReactDebugTool = {
 
 ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
 ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {
   ReactDebugTool.beginProfiling();
