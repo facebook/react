@@ -30,8 +30,8 @@ var scheduledLowPriCallback = null;
 const TERMINAL_TAG = 99;
 
 type Container = { rootID: number, children: Array<Instance> };
-type Props = { };
-type Instance = { tag: 99, type: string, id: number, children: Array<Instance> };
+type Props = { prop: any };
+type Instance = { tag: 99, type: string, id: number, children: Array<Instance>, prop: any };
 
 var instanceCounter = 0;
 
@@ -67,6 +67,7 @@ var NoopRenderer = ReactFiberReconciler({
       id: instanceCounter++,
       type: type,
       children: flattenChildren(children),
+      prop: props.prop,
     };
     // Hide from unit tests
     Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
@@ -80,6 +81,7 @@ var NoopRenderer = ReactFiberReconciler({
 
   commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
     instance.children = flattenChildren(children);
+    instance.prop = newProps.prop;
   },
 
   deleteInstance(instance : Instance) : void {

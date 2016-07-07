@@ -21,11 +21,11 @@ describe('ReactIncremental', function() {
   });
 
   function div(...children) {
-    return { type: 'div', children };
+    return { type: 'div', children, prop: undefined };
   }
 
-  function span(...children) {
-    return { type: 'span', children };
+  function span(prop) {
+    return { type: 'span', children: [], prop };
   }
 
   it('can update child nodes of a host instance', function() {
@@ -60,7 +60,7 @@ describe('ReactIncremental', function() {
   it('does not update child nodes if a flush is aborted', function() {
 
     function Bar(props) {
-      return <span>{props.text}</span>;
+      return <span prop={props.text} />;
     }
 
     function Foo(props) {
@@ -78,15 +78,31 @@ describe('ReactIncremental', function() {
     ReactNoop.render(<Foo text="Hello" />);
     ReactNoop.flush();
     expect(ReactNoop.root.children).toEqual([
-      div(div(span(), span()), span()),
+      div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
 
     ReactNoop.render(<Foo text="World" />);
     ReactNoop.flushLowPri(35);
     expect(ReactNoop.root.children).toEqual([
-      div(div(span(), span()), span()),
+      div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
 
+  });
+
+  it('updates a child even though the old props is empty', function() {
+    function Foo(props) {
+      return (
+        <div hidden={true}>
+          <span prop={1} />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span(1)),
+    ]);
   });
 
   // TODO: Test that side-effects are not cut off when a work in progress node

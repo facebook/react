@@ -142,12 +142,18 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       case HostComponent:
         const child = workInProgress.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
-        const newProps = workInProgress.pendingProps;
-        workInProgress.memoizedProps = newProps;
+        let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
           const oldProps = current.memoizedProps;
+          // If we get updated because one of our children updated, we don't
+          // have newProps so we'll have to reuse them.
+          // TODO: Split the update API as separate for the props vs. children.
+          // Even better would be if children weren't special cased at all tho.
+          if (!newProps) {
+            newProps = oldProps;
+          }
           const instance : I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps, children)) {
             // This returns true if there was something to update.
@@ -155,11 +161,15 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           }
           workInProgress.output = instance;
         } else {
+          if (!newProps) {
+            throw new Error('We must have new props for new mounts.');
+          }
           const instance = createInstance(workInProgress.type, newProps, children);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;
         }
+        workInProgress.memoizedProps = newProps;
         return null;
       case CoroutineComponent:
         return moveCoroutineToHandlerPhase(current, workInProgress);
