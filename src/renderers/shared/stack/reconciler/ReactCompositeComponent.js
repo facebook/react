@@ -576,28 +576,7 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Filters the context object to only contain keys specified in
-   * `contextTypes`
-   *
-   * @param {object} context
-   * @return {?object}
-   * @private
-   */
-  _maskContext: function(context) {
-    var Component = this._currentElement.type;
-    var contextTypes = Component.contextTypes;
-    if (!contextTypes) {
-      return emptyObject;
-    }
-    var maskedContext = {};
-    for (var contextName in contextTypes) {
-      maskedContext[contextName] = context[contextName];
-    }
-    return maskedContext;
-  },
-
-  /**
-   * Filters the context object to only contain keys specified in
+   * Asserts that the context object contains the keys specified in 
    * `contextTypes`, and asserts that they are valid.
    *
    * @param {object} context
@@ -605,7 +584,7 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processContext: function(context) {
-    var maskedContext = this._maskContext(context);
+    var maskedContext = context;
     if (__DEV__) {
       var Component = this._currentElement.type;
       if (Component.contextTypes) {
