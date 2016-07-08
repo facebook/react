@@ -11,8 +11,8 @@
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -49,7 +49,7 @@ function checkReactTypeSpec(typeSpecs, values, location, componentName, element,
           ReactPropTypeLocationNames[location],
           typeSpecName
         );
-        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location);
+        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
       } catch (ex) {
         error = ex;
       }
@@ -72,10 +72,13 @@ function checkReactTypeSpec(typeSpecs, values, location, componentName, element,
 
         var componentStackInfo = '';
 
-        if (debugID !== null) {
-          componentStackInfo = ReactComponentTreeDevtool.getStackAddendumByID(debugID);
-        } else if (element !== null) {
-          componentStackInfo = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+        if (__DEV__) {
+          var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+          if (debugID !== null) {
+            componentStackInfo = ReactComponentTreeDevtool.getStackAddendumByID(debugID);
+          } else if (element !== null) {
+            componentStackInfo = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+          }
         }
 
         warning(

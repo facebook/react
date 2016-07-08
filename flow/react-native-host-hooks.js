@@ -38,7 +38,6 @@ declare module 'UIManager' {
   declare function removeSubviewsFromContainerWithID() : void;
   declare function replaceExistingNonRootView() : void;
   declare function setChildren() : void;
-  declare function setChildren() : void;
   declare function updateView() : void;
 }
 declare module 'View' { }

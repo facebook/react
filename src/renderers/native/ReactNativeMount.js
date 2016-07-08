@@ -135,18 +135,8 @@ var ReactNativeMount = {
 
     ReactNativeTagHandles.assertRootTag(containerTag);
 
-    var instance = instantiateReactComponent(nextWrappedElement);
+    var instance = instantiateReactComponent(nextWrappedElement, false);
     ReactNativeMount._instancesByContainerID[containerTag] = instance;
-
-    if (__DEV__) {
-      // Mute future events from the top level wrapper.
-      // It is an implementation detail that devtools should not know about.
-      instance._debugID = 0;
-
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onBeginFlush();
-      }
-    }
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -162,7 +152,6 @@ var ReactNativeMount = {
       ReactInstrumentation.debugTool.onMountRootComponent(
         instance._renderedComponent._debugID
       );
-      ReactInstrumentation.debugTool.onEndFlush();
     }
     var component = instance.getPublicInstance();
     if (callback) {

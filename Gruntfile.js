@@ -52,11 +52,17 @@ module.exports = function(grunt) {
       grunt.loadNpmTasks(npmTaskName);
     });
 
-  grunt.registerTask('eslint', require('./grunt/tasks/eslint'));
+  grunt.registerTask('eslint', function() {
+    // Use gulp here.
+    spawnGulp(['eslint'], null, this.async());
+  });
 
   grunt.registerTask('lint', ['eslint']);
 
-  grunt.registerTask('flow', require('./grunt/tasks/flow'));
+  grunt.registerTask('flow', function() {
+    // Use gulp here.
+    spawnGulp(['flow'], null, this.async());
+  });
 
   grunt.registerTask('delete-build-modules', function() {
     // Use gulp here.
@@ -84,7 +90,10 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
-  grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
+  grunt.registerTask('version-check', function() {
+    // Use gulp here.
+    spawnGulp(['version-check'], null, this.async());
+  });
 
   grunt.registerTask('build:basic', [
     'build-modules',

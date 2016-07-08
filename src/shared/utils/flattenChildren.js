@@ -12,7 +12,6 @@
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
@@ -27,13 +26,14 @@ function flattenSingleChildIntoContext(
   traverseContext: mixed,
   child: ReactElement<any>,
   name: string,
-  selfDebugID: number
+  selfDebugID?: number,
 ): void {
   // We found a component instance.
   if (traverseContext && typeof traverseContext === 'object') {
     const result = traverseContext;
     const keyUnique = (result[name] === undefined);
     if (__DEV__) {
+      var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
       warning(
         keyUnique,
         'flattenChildren(...): Encountered two children with the same key, ' +
@@ -54,7 +54,10 @@ function flattenSingleChildIntoContext(
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(children: ReactElement<any>, selfDebugID: number): ?{ [name: string]: ReactElement<any> } {
+function flattenChildren(
+  children: ReactElement<any>,
+  selfDebugID?: number,
+): ?{ [name: string]: ReactElement<any> } {
   if (children == null) {
     return children;
   }

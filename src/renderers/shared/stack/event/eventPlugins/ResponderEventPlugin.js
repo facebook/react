@@ -496,7 +496,7 @@ var ResponderEventPlugin = {
       );
     }
 
-    ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent, nativeEventTarget);
+    ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent);
 
     var extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent) ?
       setResponderAndExtractTransfer(

@@ -284,6 +284,11 @@ describe('ReactStatelessComponent', function() {
     
     externalValue = 'B';
     rerenderCallBack();
-    expect(el.textContent).toBe('B');    
+    expect(el.textContent).toBe('B');
+    
+    // each update generates a new this.render to Stateless Component
+    externalValue = 'C';
+    rerenderCallBack();
+    expect(el.textContent).toBe('C');            
   });  
 });
