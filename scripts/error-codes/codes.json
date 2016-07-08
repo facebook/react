@@ -135,5 +135,7 @@
   "133": "Touch object is missing identifier",
   "134": "Touch data should have been recorded on start",
   "135": "Cannot find single active touch",
-  "136": "Attempted to update component `%s` that has already been unmounted (or failed to mount)."
+  "136": "Attempted to update component `%s` that has already been unmounted (or failed to mount).",
+  "137": "%s is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`.%s",
+  "138": "Touch object is missing identifier."
 }
