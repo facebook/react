@@ -13,8 +13,9 @@
 
 var warning = require('warning');
 
-function warnTDZ(publicInstance, callerName) {
+function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
+    var constructor = publicInstance.constructor;
     warning(
       false,
       '%s(...): Can only update a mounted or mounting component. ' +
@@ -22,7 +23,7 @@ function warnTDZ(publicInstance, callerName) {
       'This is a no-op. Please check the code for the %s component.',
       callerName,
       callerName,
-      publicInstance.constructor && publicInstance.constructor.displayName || ''
+      constructor && (constructor.displayName || constructor.name) || 'ReactClass'
     );
   }
 }
@@ -67,7 +68,7 @@ var ReactNoopUpdateQueue = {
    * @internal
    */
   enqueueForceUpdate: function(publicInstance) {
-    warnTDZ(publicInstance, 'forceUpdate');
+    warnNoop(publicInstance, 'forceUpdate');
   },
 
   /**
@@ -82,7 +83,7 @@ var ReactNoopUpdateQueue = {
    * @internal
    */
   enqueueReplaceState: function(publicInstance, completeState) {
-    warnTDZ(publicInstance, 'replaceState');
+    warnNoop(publicInstance, 'replaceState');
   },
 
   /**
@@ -96,7 +97,7 @@ var ReactNoopUpdateQueue = {
    * @internal
    */
   enqueueSetState: function(publicInstance, partialState) {
-    warnTDZ(publicInstance, 'setState');
+    warnNoop(publicInstance, 'setState');
   },
 };
 

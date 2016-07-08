@@ -20,6 +20,7 @@ var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
@@ -287,10 +288,11 @@ var ReactMount = {
   _updateRootComponent: function(
       prevComponent,
       nextElement,
+      nextContext,
       container,
       callback) {
     ReactMount.scrollMonitor(container, function() {
-      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement);
+      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement, nextContext);
       if (callback) {
         ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
       }
@@ -313,10 +315,6 @@ var ReactMount = {
     shouldReuseMarkup,
     context
   ) {
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginFlush();
-    }
-
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case.
@@ -340,13 +338,7 @@ var ReactMount = {
     );
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
-    var componentInstance = instantiateReactComponent(nextElement);
-
-    if (__DEV__) {
-      // Mute future events from the top level wrapper.
-      // It is an implementation detail that devtools should not know about.
-      componentInstance._debugID = 0;
-    }
+    var componentInstance = instantiateReactComponent(nextElement, false);
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -368,7 +360,6 @@ var ReactMount = {
       ReactInstrumentation.debugTool.onMountRootComponent(
         componentInstance._renderedComponent._debugID
       );
-      ReactInstrumentation.debugTool.onEndFlush();
     }
 
     return componentInstance;
@@ -389,7 +380,7 @@ var ReactMount = {
    */
   renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
-      parentComponent != null && parentComponent._reactInternalInstance != null,
+      parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
     );
     return ReactMount._renderSubtreeIntoContainer(
@@ -440,6 +431,14 @@ var ReactMount = {
       nextElement
     );
 
+    var nextContext;
+    if (parentComponent) {
+      var parentInst = ReactInstanceMap.get(parentComponent);
+      nextContext = parentInst._processChildContext(parentInst._context);
+    } else {
+      nextContext = emptyObject;
+    }
+
     var prevComponent = getTopLevelWrapperInContainer(container);
 
     if (prevComponent) {
@@ -453,6 +452,7 @@ var ReactMount = {
         ReactMount._updateRootComponent(
           prevComponent,
           nextWrappedElement,
+          nextContext,
           container,
           updatedCallback
         );
@@ -501,11 +501,7 @@ var ReactMount = {
       nextWrappedElement,
       container,
       shouldReuseMarkup,
-      parentComponent != null ?
-        parentComponent._reactInternalInstance._processChildContext(
-          parentComponent._reactInternalInstance._context
-        ) :
-        emptyObject
+      nextContext
     )._renderedComponent.getPublicInstance();
     if (callback) {
       callback.call(component);

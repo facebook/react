@@ -20,26 +20,12 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 var didWarnValueLink = false;
-var didWarnValueNull = false;
 var didWarnValDefaultVal = false;
 
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
     ReactDOMTextarea.updateWrapper(this);
-  }
-}
-
-function warnIfValueIsNull(props) {
-  if (props != null && props.value === null && !didWarnValueNull) {
-    warning(
-      false,
-      '`value` prop on `textarea` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.'
-    );
-
-    didWarnValueNull = true;
   }
 }
 
@@ -109,7 +95,6 @@ var ReactDOMTextarea = {
         );
         didWarnValDefaultVal = true;
       }
-      warnIfValueIsNull(props);
     }
 
 
@@ -158,10 +143,6 @@ var ReactDOMTextarea = {
 
   updateWrapper: function(inst) {
     var props = inst._currentElement.props;
-
-    if (__DEV__) {
-      warnIfValueIsNull(props);
-    }
 
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = LinkedValueUtils.getValue(props);

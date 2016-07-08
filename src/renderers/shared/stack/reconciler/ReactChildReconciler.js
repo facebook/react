@@ -13,7 +13,6 @@
 
 var ReactReconciler = require('ReactReconciler');
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var instantiateReactComponent = require('instantiateReactComponent');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
@@ -24,6 +23,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
   // We found a component instance.
   var keyUnique = (childInstances[name] === undefined);
   if (__DEV__) {
+    var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
     warning(
       keyUnique,
       'flattenChildren(...): Encountered two children with the same key, ' +
@@ -34,7 +34,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
     );
   }
   if (child != null && keyUnique) {
-    childInstances[name] = instantiateReactComponent(child);
+    childInstances[name] = instantiateReactComponent(child, true);
   }
 }
 
@@ -125,7 +125,7 @@ var ReactChildReconciler = {
           ReactReconciler.unmountComponent(prevChild, false);
         }
         // The child must be instantiated before it's mounted.
-        var nextChildInstance = instantiateReactComponent(nextElement);
+        var nextChildInstance = instantiateReactComponent(nextElement, true);
         nextChildren[name] = nextChildInstance;
       }
     }

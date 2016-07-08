@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule accumulate
+ * @flow
  */
 
 'use strict';
@@ -20,28 +21,27 @@ var invariant = require('invariant');
  *
  * @return {*|array<*>} An accumulation of items.
  */
-function accumulate(current, next) {
+function accumulate<T>(current: ?(T | Array<T>), next: T | Array<T>): T | Array<T> {
   invariant(
     next != null,
     'accumulate(...): Accumulated items must be not be null or undefined.'
   );
+
   if (current == null) {
     return next;
-  } else {
-    // Both are not empty. Warning: Never call x.concat(y) when you are not
-    // certain that x is an Array (x could be a string with concat method).
-    var currentIsArray = Array.isArray(current);
-    var nextIsArray = Array.isArray(next);
-    if (currentIsArray) {
-      return current.concat(next);
-    } else {
-      if (nextIsArray) {
-        return [current].concat(next);
-      } else {
-        return [current, next];
-      }
-    }
   }
+
+  // Both are not empty. Warning: Never call x.concat(y) when you are not
+  // certain that x is an Array (x could be a string with concat method).
+  if (Array.isArray(current)) {
+    return current.concat(next);
+  }
+
+  if (Array.isArray(next)) {
+    return [current].concat(next);
+  }
+
+  return [current, next];
 }
 
 module.exports = accumulate;

@@ -15,7 +15,9 @@ var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
+var ReactInstrumentation = require('ReactInstrumentation');
 var Transaction = require('Transaction');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 
 /**
@@ -90,6 +92,13 @@ var TRANSACTION_WRAPPERS = [
   ON_DOM_READY_QUEUEING,
 ];
 
+if (__DEV__) {
+  TRANSACTION_WRAPPERS.push({
+    initialize: ReactInstrumentation.debugTool.onBeginFlush,
+    close: ReactInstrumentation.debugTool.onEndFlush,
+  });
+}
+
 /**
  * Currently:
  * - The order that these are listed in the transaction is critical:
@@ -104,7 +113,7 @@ var TRANSACTION_WRAPPERS = [
  *
  * @class ReactReconcileTransaction
  */
-function ReactReconcileTransaction(useCreateElement) {
+function ReactReconcileTransaction(useCreateElement: boolean) {
   this.reinitializeTransaction();
   // Only server-side rendering really needs this option (see
   // `ReactServerRendering`), but server-side uses
@@ -133,6 +142,13 @@ var Mixin = {
    */
   getReactMountReady: function() {
     return this.reactMountReady;
+  },
+
+  /**
+   * @return {object} The queue to collect React async events.
+   */
+  getUpdateQueue: function() {
+    return ReactUpdateQueue;
   },
 
   /**

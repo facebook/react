@@ -43,7 +43,7 @@
     "eslint-plugin-react-internal": "file:eslint-rules",
     "fbjs": "^0.8.1",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.26.0",
+    "flow-bin": "^0.27.0",
     "glob": "^6.0.1",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
@@ -53,6 +53,7 @@
     "gulp": "^3.9.0",
     "gulp-babel": "^6.0.0",
     "gulp-flatten": "^0.2.0",
+    "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
     "jest": "^12.1.1",
@@ -78,7 +79,8 @@
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "jest"
+    "test": "jest",
+    "flow": "flow"
   },
   "jest": {
     "modulePathIgnorePatterns": [

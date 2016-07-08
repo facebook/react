@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var invariant = require('invariant');
@@ -72,10 +71,13 @@ function checkReactTypeSpec(typeSpecs, values, location, componentName, element,
 
         var componentStackInfo = '';
 
-        if (debugID !== null) {
-          componentStackInfo = ReactComponentTreeDevtool.getStackAddendumByID(debugID);
-        } else if (element !== null) {
-          componentStackInfo = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+        if (__DEV__) {
+          var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+          if (debugID !== null) {
+            componentStackInfo = ReactComponentTreeDevtool.getStackAddendumByID(debugID);
+          } else if (element !== null) {
+            componentStackInfo = ReactComponentTreeDevtool.getCurrentStackAddendum(element);
+          }
         }
 
         warning(
