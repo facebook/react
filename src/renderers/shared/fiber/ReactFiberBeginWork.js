@@ -58,7 +58,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   function updateHostComponent(current, workInProgress) {
     console.log(
       'host component', workInProgress.type, 
-      typeof workInProgress.pendingProps.children === 'string' ? workInProgress.pendingProps.children : ''i
+      typeof workInProgress.pendingProps.children === 'string' ? workInProgress.pendingProps.children : ''
     );
 
     var nextChildren = workInProgress.pendingProps.children;
