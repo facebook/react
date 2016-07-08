@@ -23,6 +23,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // 렌더링될 수 있는 모든 것: 숫자, 문자열, 요소
     // 이것들을 포함하는 배열(이나 프래그먼트)
