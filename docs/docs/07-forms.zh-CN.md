@@ -6,7 +6,7 @@ prev: transferring-props-zh-CN.html
 next: working-with-the-browser-zh-CN.html
 ---
 
-诸如 `<input>`、`<textarea>`、`<option>` 这样的表单组件不同于其他组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。
+诸如 `<input>`、`<textarea>`、`<option>` 这样的表单组件不同于其他原生组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。
 
 关于 `<form>` 事件详情请查看 [表单事件](/react/docs/events-zh-CN.html#form-events)。
 
@@ -76,7 +76,7 @@ next: working-with-the-browser-zh-CN.html
 
 ### 复选框与单选按钮的潜在问题
 
-当心，在力图标准化复选框与单选按钮的变换处理中，React使用`click` 事件代替 `change` 事件。在大多数情况下它们表现的如同预期，除了在`change` handler中调用`preventDefault` 。`preventDefault` 阻止了浏览器视觉上更新输入，即使`checked`被触发。变通的方式是要么移除`preventDefault`的调用，要么把`checked` 的触发放在一个`setTimeout`里。
+当心，在力图标准化复选框与单选按钮的变换处理中，React使用 `click` 事件代替 `change` 事件。在大多数情况下它们表现的如同预期，除了在`change` handler中调用`preventDefault` 。`preventDefault` 阻止了浏览器视觉上更新输入，即使`checked`被触发。变通的方式是要么移除`preventDefault`的调用，要么把`checked` 的触发放在一个`setTimeout`里。
 
 ## 不受控组件
 
@@ -102,7 +102,7 @@ next: working-with-the-browser-zh-CN.html
   }
 ```
 
-这个例子会像上面的 **不受控组件** 例子一样运行。
+这个例子会像上面的 **受控组件** 例子一样运行。
 
 同样的， `<input type="checkbox">` 和 `<input type="radio">` 支持 `defaultChecked` 、 `<select>` 支持 `defaultValue`.
 
@@ -130,7 +130,7 @@ next: working-with-the-browser-zh-CN.html
   }
 ```
 
-既然这个方法描述了在任意时间点上的视图，那么文本输入框的值就应该*始终*为 `Untitled`。
+由于这个方法描述了在任意时间点上的视图，那么文本输入框的值就应该*始终*为 `Untitled`。
 
 ### 为什么 `<textarea>` 使用 `value` 属性？
 
@@ -141,7 +141,7 @@ next: working-with-the-browser-zh-CN.html
   <textarea name="description">This is the description.</textarea>
 ```
 
-对 HTML 而言，让开发者设置多行的值很容易。但是，React 是 JavaScript，没有字符串限制，可以使用 `\n` 实现换行。简言之，React 已经有 `value`、`defaultValue` 属性，`</textarea>` 组件的子节点扮演什么角色就有点模棱两可了。基于此， 设置 `<textarea>` 值时不应该使用子节点：
+对 HTML 而言，让开发者设置多行的值很容易。但是，由于 React 是 JavaScript，没有字符串限制，可以使用 `\n` 实现换行。简言之，React 已经有 `value`、`defaultValue` 属性，`<textarea>` 组件的子节点扮演什么角色就有点模棱两可了。基于此， 设置 `<textarea>` 值时不应该使用子节点：
 
 ```javascript
   <textarea name="description" value="This is a description." />
@@ -151,7 +151,7 @@ next: working-with-the-browser-zh-CN.html
 
 ### 为什么 `<select>` 使用 `value` 属性
 
-HTML 中 `<select>` 通常使用 `<option>` 的 `selected` 属性设置选中状态；React 为了更方面的控制组件，采用以下方式代替：
+HTML 中 `<select>` 通常使用 `<option>` 的 `selected` 属性设置选中状态；React 为了更方便地控制组件，采用以下方式代替：
 
 ```javascript
   <select value="B">
