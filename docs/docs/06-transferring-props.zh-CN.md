@@ -6,7 +6,7 @@ prev: reusable-components-zh-CN.html
 next: forms-zh-CN.html
 ---
 
-React 里有一个非常常用的模式就是对组件做一层抽象。组件对外公开一个简单的属性（Props）来实现功能，但内部细节可能有非常复杂的实现。
+React 里有一个非常常用的模式就是对组件做一层抽象。组件对外公开一个简单的属性（Props）来实现功能，但内部的实现可能非常复杂。
 
 可以使用 [JSX 展开属性](/react/docs/jsx-spread-zh-CN.html) 来合并现有的 props 和其它值：
 
@@ -53,7 +53,7 @@ ReactDOM.render(
 
 有时把所有属性都传下去是不安全或啰嗦的。这时可以使用 [解构赋值](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) 中的剩余属性特性来把未知属性批量提取出来。
 
-列出所有要当前使用的属性，后面跟着 `...other`。
+列出所有当前要使用的属性，后面跟着 `...other`。
 
 ```javascript
 var { checked, ...other } = props;
@@ -118,11 +118,11 @@ function FancyCheckbox(props) {
 
 > 注意:
 >
-> 顺序很重要，把 `{...other}` 放到 JSX props 前面会使它不被覆盖。上面例子中我们可以保证 input 的 type 是 `"checkbox"`。
+> 顺序很重要，把 `{...other}` 放到 JSX props 前面会使 props 不会被覆盖。上面例子中我们可以保证 input 的 type 是 `"checkbox"`。
 
 ## 剩余属性和展开属性 `...`
 
-剩余属性可以把对象剩下的属性提取到一个新的对象。会把所有在解构赋值中列出的属性剔除。
+剩余属性可以把对象剩下的属性提取到一个新的对象。这会把所有在解构赋值中列出的属性剔除。
 
 这是 [ECMAScript 草案](https://github.com/sebmarkbage/ecmascript-rest-spread) 中的试验特性。
 
