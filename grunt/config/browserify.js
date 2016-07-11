@@ -48,11 +48,11 @@ function simpleBannerify(src) {
 }
 
 // Our basic config which we'll add to to make our other builds
-var basic = {
+var dev = {
   entries: [
     './build/modules/ReactUMDEntry.js',
   ],
-  outfile: './build/react.js',
+  outfile: './build/react.dev.js',
   debug: false,
   standalone: 'React',
   // Apply as global transform so that we also envify fbjs and any other deps
@@ -61,11 +61,40 @@ var basic = {
   after: [derequire, simpleBannerify],
 };
 
-var min = {
+var devMin = {
   entries: [
     './build/modules/ReactUMDEntry.js',
   ],
-  outfile: './build/react.min.js',
+  outfile: './build/react.dev.min.js',
+  debug: false,
+  standalone: 'React',
+  // Apply as global transform so that we also envify fbjs and any other deps
+  globalTransforms: [envifyDev],
+  plugins: [collapser],
+  after: [derequire, minify, bannerify],
+};
+
+var prod = {
+  entries: [
+    './build/modules/ReactUMDEntry.js',
+  ],
+  outfile: './build/react.prod.js',
+  debug: false,
+  standalone: 'React',
+  // Envify twice. The first ensures that when we uglifyify, we have the right
+  // conditions to exclude requires. The global transform runs on deps.
+  transforms: [envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
+  plugins: [collapser],
+
+  after: [derequire, bannerify],
+};
+
+var prodMin = {
+  entries: [
+    './build/modules/ReactUMDEntry.js',
+  ],
+  outfile: './build/react.prod.min.js',
   debug: false,
   standalone: 'React',
   // Envify twice. The first ensures that when we uglifyify, we have the right
@@ -75,8 +104,7 @@ var min = {
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
   // the "require" calls.
-
-  after: [minify, bannerify],
+  after: [derequire, minify, bannerify],
 };
 
 var addons = {
@@ -109,9 +137,16 @@ var addonsMin = {
   after: [minify, bannerify],
 };
 
+var basic = Object.assign({}, dev, {outfile: './build/react/js'});
+var min = Object.assign({}, prodMin, {outfile: './build/react.min.js'});
+
 module.exports = {
   basic: basic,
+  dev: dev,
+  devMin: devMin,
   min: min,
+  prod: prod,
+  prodMin: prodMin,
   addons: addons,
   addonsMin: addonsMin,
 };
