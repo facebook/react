@@ -172,6 +172,7 @@ exports.reconcileChildFibers = function(
   returnFiber : Fiber, 
   currentFirstChild : ?Fiber, 
   newChildren : ReactNodeList, 
-  priority : PriorityLevel) : ?Fiber {
+  priority : PriorityLevel
+) : ?Fiber {
   return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);
 };
