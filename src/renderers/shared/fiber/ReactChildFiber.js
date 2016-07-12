@@ -29,7 +29,13 @@ var {
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 
-function createSubsequentChild(returnFiber : Fiber, existingChild : ?Fiber, previousSibling : Fiber, newChildren, priority : PriorityLevel) : Fiber {
+function createSubsequentChild(
+  returnFiber : Fiber, 
+  existingChild : ?Fiber, 
+  previousSibling : Fiber, 
+  newChildren, 
+  priority : PriorityLevel
+) : Fiber {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return previousSibling;
   }
@@ -163,6 +169,11 @@ function createFirstChild(returnFiber, existingChild, newChildren, priority) {
 
 // TODO: This API won't work because we'll need to transfer the side-effects of
 // unmounting children to the returnFiber.
-exports.reconcileChildFibers = function(returnFiber : Fiber, currentFirstChild : ?Fiber, newChildren : ReactNodeList, priority : PriorityLevel) : ?Fiber {
+exports.reconcileChildFibers = function(
+  returnFiber : Fiber, 
+  currentFirstChild : ?Fiber, 
+  newChildren : ReactNodeList, 
+  priority : PriorityLevel
+) : ?Fiber {
   return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);
 };
