@@ -33,7 +33,8 @@ function createSubsequentChild(
   returnFiber : Fiber, 
   existingChild : ?Fiber, 
   previousSibling : Fiber, 
-  newChildren, priority : PriorityLevel
+  newChildren, 
+  priority : PriorityLevel
 ) : Fiber {
   if (typeof newChildren !== 'object' || newChildren === null) {
     return previousSibling;
