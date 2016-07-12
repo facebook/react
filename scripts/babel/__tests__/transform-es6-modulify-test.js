@@ -52,7 +52,7 @@ import _assign from 'object-assign';`
   it('should throw when the RHS is a MemberExpression', () => {
     expect(() => {
       transform("var createElement = require('react').createElement;");
-    }).toThrowError(/Invalid require: `require\(\)` must be in a form of `var ... = require\(...\);`/);
+    }).toThrowError(/Invalid require: `require\(\)` must be in the form of `var ... = require\(...\);`/);
   });
 
   it('should throw for non-top level requires', () => {
@@ -121,42 +121,42 @@ React = require('react');
     compare(
       "module.exports = class Foo {};",
 
-      "export default (class Foo {})"
+      "export default (class Foo {});"
     );
 
     compare(
       "module.exports = class {};",
 
-      "export default (class {})"
+      "export default (class {});"
     );
 
     compare(
       "module.exports = function foo() {};",
 
-      "export default (function foo() {})"
+      "export default (function foo() {});"
     );
 
     compare(
       "module.exports = function() {};",
 
-      "export default (function () {})"
+      "export default (function () {});"
     );
   });
 
   it('should throw when it sees module.exports.foo = ...', () => {
     expect(() => {
       transform("module.exports.createElement = createElement;");
-    }).toThrowError(/Invalid exports: `module.exports` must be in a form of `module.exports = ...;`/);
+    }).toThrowError(/Invalid exports: `module.exports` must be in the form of `module.exports = ...;`/);
   });
 
   it('should throw when it sees module.exports on the right hand side', () => {
     expect(() => {
       transform('foo = module.exports;');
-    }).toThrowError(/Invalid exports: `module.exports` must be in a form of `module.exports = ...;`/);
+    }).toThrowError(/Invalid exports: `module.exports` must be in the form of `module.exports = ...;`/);
 
     expect(() => {
       transform(`var foo = module.exports;`);
-    }).toThrowError(/Invalid exports: `module.exports` must be in a form of `module.exports = ...;`/);
+    }).toThrowError(/Invalid exports: `module.exports` must be in the form of `module.exports = ...;`/);
   });
 
   it('should throw for non-top level exports', () => {

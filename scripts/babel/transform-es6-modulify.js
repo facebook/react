@@ -37,7 +37,7 @@ module.exports = function(babel) {
         if (t.isMemberExpression(path.parent)) {
           // `var createElement = require('react').createElement;`
           throw new Error(
-            'Invalid require: `require()` must be in a form of `var ... = require(...);`. ' + sourceLocText
+            'Invalid require: `require()` must be in the form of `var ... = require(...);`. ' + sourceLocText
           );
         } else if (!t.isVariableDeclarator(path.parent)) {
           // is not directly in a VariableDeclarator
@@ -86,7 +86,7 @@ module.exports = function(babel) {
         ) {
           // `module.exports` is on the RHS, or the LHS looks like `module.exports.foo`
           throw new Error(
-            'Invalid exports: `module.exports` must be in a form of `module.exports = ...;`. ' + sourceLocText
+            'Invalid exports: `module.exports` must be in the form of `module.exports = ...;`. ' + sourceLocText
           );
         } else if (!t.isProgram(path.scope.block)) {
           // is not on the top-level
