@@ -253,7 +253,10 @@ number deltaZ
 Event names:
 
 ```
-onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted 
+onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay 
+onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend 
+onTimeUpdate onVolumeChange onWaiting
 ```
 
 
