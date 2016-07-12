@@ -55,7 +55,12 @@ var DOMRenderer = ReactFiberReconciler({
     return domElement;
   },
 
-  prepareUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : boolean {
+  prepareUpdate(
+    domElement : Instance, 
+    oldProps : Props, 
+    newProps : Props, 
+    children : HostChildren<Instance>
+  ) : boolean {
     return true;
   },
 
