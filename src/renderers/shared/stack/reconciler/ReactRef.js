@@ -13,6 +13,7 @@
 'use strict';
 
 var ReactOwner = require('ReactOwner');
+var warning = require('warning');
 
 import type { ReactInstance } from 'ReactInstanceType';
 import type { ReactElement } from 'ReactElementType';
@@ -21,7 +22,12 @@ var ReactRef = {};
 
 function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
-    ref(component.getPublicInstance());
+    var instance = component.getPublicInstance();
+    warning(
+      instance !== null,
+      'Stateless function components cannot have refs.'
+    );
+    ref(instance);
   } else {
     // Legacy ref
     ReactOwner.addComponentAsRefTo(

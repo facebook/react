@@ -149,9 +149,9 @@ describe('ReactStatelessComponent', () => {
   it('should warn for functional refs in pure functions', function() {
     spyOn(console, 'error');
     function Child() {
-      return <div ref={node => {}} />;
+      return <div/>;
     }
-    ReactTestUtils.renderIntoDocument(<Child test="test" />);
+    ReactTestUtils.renderIntoDocument(<Child ref={node => {}} />);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'Stateless function components cannot have refs.'
