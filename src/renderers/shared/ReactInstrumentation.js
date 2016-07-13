@@ -11,11 +11,6 @@
 
 'use strict';
 
-var debugTool = null;
+var ReactDebugTool = require('ReactDebugTool');
 
-if (__DEV__) {
-  var ReactDebugTool = require('ReactDebugTool');
-  debugTool = ReactDebugTool;
-}
-
-module.exports = {debugTool};
+module.exports = {debugTool: ReactDebugTool};

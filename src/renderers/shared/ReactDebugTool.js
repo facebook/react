@@ -11,11 +11,11 @@
 
 'use strict';
 
-var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
-var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
-var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
+var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
+var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
 
 var performanceNow = require('performanceNow');
 var warning = require('warning');
@@ -325,12 +325,14 @@ var ReactDebugTool = {
   },
 };
 
-ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
-ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
-var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
-if ((/[?&]react_perf\b/).test(url)) {
-  ReactDebugTool.beginProfiling();
+if (__DEV__) {
+  ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
+  ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
+  ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
+  var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
+  if ((/[?&]react_perf\b/).test(url)) {
+    ReactDebugTool.beginProfiling();
+  }
 }
 
 module.exports = ReactDebugTool;
