@@ -727,7 +727,7 @@ describe('ReactDOMInput', function() {
     );
   });
 
-  it('sets type before value always', function() {
+  it('sets type and step before value always', function() {
     if (!ReactDOMFeatureFlags.useCreateElement) {
       return;
     }
@@ -749,12 +749,14 @@ describe('ReactDOMInput', function() {
       return el;
     });
 
-    ReactTestUtils.renderIntoDocument(<input value="hi" type="radio" />);
-    // Setting value before type does bad things. Make sure we set type first.
+    ReactTestUtils.renderIntoDocument(<input value="0" type="range" min="0" max="100" step="1" />);
     expect(log).toEqual([
       'set data-reactroot',
       'set type',
+      'set step',
       'set value',
+      'set min',
+      'set max',
       'set value',
       'set checked',
       'set checked',
