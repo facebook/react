@@ -36,11 +36,13 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // Webkit offers a very useful `textInput` event that can be used to
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
+// Note: Microsoft Edge exposes TextEvent but it's also not useful
 var canUseTextInputEvent = (
   ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !documentMode &&
-  !isPresto()
+  !isPresto() &&
+  !/\bEdge\/\d/.test(navigator.userAgent)
 );
 
 // In IE9+, we have access to composition events, but the data supplied
