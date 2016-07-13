@@ -571,7 +571,7 @@ var ColorMixin = {
 var Button = React.createClass({
   mixins: [ColorMixin],
 
-  render: function () {
+  render: function() {
     var theme = this.getLuminance(this.props.color) > 160 ? 'dark' : 'light';
     return (
       <div className={theme}>
@@ -590,7 +590,7 @@ Put utility functions into regular JavaScript modules and import them. This also
 var getLuminance = require('../utils/getLuminance');
 
 var Button = React.createClass({
-  render: function () {
+  render: function() {
     var theme = getLuminance(this.props.color) > 160 ? 'dark' : 'light';
     return (
       <div className={theme}>
