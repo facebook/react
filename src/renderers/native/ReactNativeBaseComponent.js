@@ -171,8 +171,10 @@ ReactNativeBaseComponent.Mixin = {
   },
 
   /**
-   * @param {string} rootID Root ID of this subtree.
-   * @param {Transaction} transaction For creating/updating.
+   * @param {ReactNativeReconcileTransaction} transaction
+   * @param {?ReactNativeBaseComponent} the parent component instance
+   * @param {?object} info about the host container
+   * @param {object} context
    * @return {string} Unique iOS view tag.
    */
   mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
