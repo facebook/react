@@ -58,7 +58,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
     "platform": "^1.1.0",
-    "rollup": "^0.33.0",
+    "rollup": "^0.34.1",
     "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-node-resolve": "^1.7.1",
     "rollup-plugin-replace": "^1.1.1",
