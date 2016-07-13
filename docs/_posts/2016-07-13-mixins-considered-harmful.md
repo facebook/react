@@ -427,7 +427,7 @@ var UserRow = React.createClass({
     return (
       <div>
         {this.renderHeader() /* Defined by RowMixin */}
-        <h2>{this.props.user.biography}
+        <h2>{this.props.user.biography}</h2>
       </div>
     )
   }
@@ -457,7 +457,7 @@ function UserRow(props) {
   return (
     <div>
       <RowHeader text={props.user.fullName} />
-      <h2>{props.user.biography}
+      <h2>{props.user.biography}</h2>
     </div>
   );
 }
