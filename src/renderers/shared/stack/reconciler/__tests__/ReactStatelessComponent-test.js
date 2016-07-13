@@ -146,7 +146,19 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
-  it('should warn when given a ref', () => {
+  it('should warn for functional refs in pure functions', function() {
+    spyOn(console, 'error');
+    function Child() {
+      return <div ref={node => {}} />;
+    }
+    ReactTestUtils.renderIntoDocument(<Child test="test" />);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'Stateless function components cannot have refs.'
+    );
+  });
+
+  it('should warn when given a ref', function() {
     spyOn(console, 'error');
 
     class Parent extends React.Component {
