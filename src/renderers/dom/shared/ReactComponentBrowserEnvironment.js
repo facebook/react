@@ -27,16 +27,6 @@ var ReactComponentBrowserEnvironment = {
   replaceNodeWithMarkup:
     DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup,
 
-  /**
-   * If a particular environment requires that some resources be cleaned up,
-   * specify this in the injected Mixin. In the DOM, we would likely want to
-   * purge any cached node ID lookups.
-   *
-   * @private
-   */
-  unmountIDFromEnvironment: function(rootNodeID) {
-  },
-
 };
 
 module.exports = ReactComponentBrowserEnvironment;
