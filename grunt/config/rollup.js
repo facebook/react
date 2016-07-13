@@ -16,11 +16,8 @@ var UglifyJS = require('uglify-js');
 
 var babelEs6ModulifyTransform = require('../../scripts/babel/transform-es6-modulify');
 
-var SIMPLE_TEMPLATE =
-  grunt.file.read('./grunt/data/header-template-short.txt');
-
 var LICENSE_TEMPLATE =
-  grunt.file.read('./grunt/data/header-template-extended.txt');
+  grunt.file.read('./grunt/data/header-template.txt');
 
 function minify(src) {
   return UglifyJS.minify(src, {fromString: true}).code;
@@ -32,18 +29,6 @@ function bannerify(src) {
   return (
     grunt.template.process(
       LICENSE_TEMPLATE,
-      {data: {package: packageName, version: version}}
-    ) +
-    src
-  );
-}
-
-function simpleBannerify(src) {
-  var version = grunt.config.data.pkg.version;
-  var packageName = this.data.packageName || this.data.moduleName;
-  return (
-    grunt.template.process(
-      SIMPLE_TEMPLATE,
       {data: {package: packageName, version: version}}
     ) +
     src
@@ -65,7 +50,7 @@ function getPlugins(replaceConfig) {
 
 var buildConfigs = {
   basic: {
-    after: [simpleBannerify],
+    after: [bannerify],
     dest: 'build/react.js',
     entry: 'build/modules/ReactUMDEntry.js',
     format: 'umd',
@@ -81,7 +66,7 @@ var buildConfigs = {
     plugins: getPlugins({'process.env.NODE_ENV': JSON.stringify('production')}),
   },
   addons: {
-    after: [simpleBannerify],
+    after: [bannerify],
     dest: 'build/react-with-addons.js',
     entry: 'build/modules/ReactWithAddonsUMDEntry.js',
     format: 'umd',

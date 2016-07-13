@@ -4,7 +4,7 @@ var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 
 var LICENSE_TEMPLATE =
-  grunt.file.read('./grunt/data/header-template-extended.txt');
+  grunt.file.read('./grunt/data/header-template.txt');
 
 function build(name, filename) {
   var srcFile = `vendor/${filename}.js`;
