@@ -110,4 +110,91 @@ describe('ReactTestRenderer', function() {
     });
   });
 
+  it('updates types', function() {
+    var renderer = ReactTestRenderer.create(<div>mouse</div>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['mouse'],
+    });
+
+    renderer.update(<span>mice</span>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'span',
+      props: {},
+      children: ['mice'],
+    });
+  });
+
+  it('updates children', function() {
+    var renderer = ReactTestRenderer.create(
+      <div>
+        <span key="a">A</span>
+        <span key="b">B</span>
+        <span key="c">C</span>
+      </div>
+    );
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: [
+        {type: 'span', props: {}, children: ['A']},
+        {type: 'span', props: {}, children: ['B']},
+        {type: 'span', props: {}, children: ['C']},
+      ],
+    });
+
+    renderer.update(
+      <div>
+        <span key="d">D</span>
+        <span key="c">C</span>
+        <span key="b">B</span>
+      </div>
+    );
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: [
+        {type: 'span', props: {}, children: ['D']},
+        {type: 'span', props: {}, children: ['C']},
+        {type: 'span', props: {}, children: ['B']},
+      ],
+    });
+  });
+
+  it('does the full lifecycle', function() {
+    var log = [];
+    class Log extends React.Component {
+      render() {
+        log.push('render ' + this.props.name);
+        return <div />;
+      }
+      componentDidMount() {
+        log.push('mount ' + this.props.name);
+      }
+      componentWillUnmount() {
+        log.push('unmount ' + this.props.name);
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Log key="foo" name="Foo" />);
+    renderer.update(<Log key="bar" name="Bar" />);
+    renderer.unmount();
+
+    expect(log).toEqual([
+      'render Foo',
+      'mount Foo',
+      'unmount Foo',
+      'render Bar',
+      'mount Bar',
+      'unmount Bar',
+    ]);
+  });
+
+  it('gives a ref to native components', function() {
+    var log = [];
+    ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
+    expect(log).toEqual([null]);
+  });
+
 });
