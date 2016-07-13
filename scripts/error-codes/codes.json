@@ -137,5 +137,6 @@
   "135": "Cannot find single active touch",
   "136": "Attempted to update component `%s` that has already been unmounted (or failed to mount).",
   "137": "%s is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`.%s",
-  "138": "Touch object is missing identifier."
+  "138": "Touch object is missing identifier.",
+  "139": "ReactTestRenderer: .update() can't be called after unmount."
 }
