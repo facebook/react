@@ -1,8 +1,6 @@
 (function() {
 
-var ReactImage0 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactImage0 = function(props) {
     if (props.x === 0) {
       return <i alt={""} className={"_3-99 img sp_i534r85sjIn sx_538591"} src={null}></i>;
     }
@@ -103,12 +101,9 @@ var ReactImage0 = React.createClass({
     if (props.x === 351) {
       return <i className={"_1cie img sp_i534r85sjIn sx_38fed8"} src={null} alt={""}></i>;
     }
-  },
-});
+};
 
-var AbstractLink1 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AbstractLink1 = function(props) {
     if (props.x === 1) {
       return (
         <a className={"_387r _55pi _2agf _4jy0 _4jy4 _517h _51sy _42ft"} style={{"width":250,"maxWidth":"250px"}} disabled={null} label={null} href={"#"} rel={undefined} onClick={function() {}}>
@@ -195,12 +190,9 @@ var AbstractLink1 = React.createClass({
         </a>
       );
     }
-  },
-});
+};
 
-var Link2 = React.createClass({
-  render: function() {
-    var props = this.props;
+var Link2 = function(props) {
     if (props.x === 2) {
       return <AbstractLink1 x={1} />;
     }
@@ -231,12 +223,9 @@ var Link2 = React.createClass({
     if (props.x === 268) {
       return <AbstractLink1 x={267} />;
     }
-  },
-});
+};
 
-var AbstractButton3 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AbstractButton3 = function(props) {
     if (props.x === 3) {
       return <Link2 x={2} />;
     }
@@ -438,12 +427,9 @@ var AbstractButton3 = React.createClass({
         </button>
       );
     }
-  },
-});
+};
 
-var XUIButton4 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIButton4 = function(props) {
     if (props.x === 4) {
       return <AbstractButton3 x={3} />;
     }
@@ -510,12 +496,9 @@ var XUIButton4 = React.createClass({
     if (props.x === 308) {
       return <AbstractButton3 x={307} />;
     }
-  },
-});
+};
 
-var AbstractPopoverButton5 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AbstractPopoverButton5 = function(props) {
     if (props.x === 5) {
       return <XUIButton4 x={4} />;
     }
@@ -528,12 +511,9 @@ var AbstractPopoverButton5 = React.createClass({
     if (props.x === 271) {
       return <XUIButton4 x={270} />;
     }
-  },
-});
+};
 
-var ReactXUIPopoverButton6 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactXUIPopoverButton6 = function(props) {
     if (props.x === 6) {
       return <AbstractPopoverButton5 x={5} />;
     }
@@ -546,12 +526,9 @@ var ReactXUIPopoverButton6 = React.createClass({
     if (props.x === 272) {
       return <AbstractPopoverButton5 x={271} />;
     }
-  },
-});
+};
 
-var BIGAdAccountSelector7 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BIGAdAccountSelector7 = function(props) {
     if (props.x === 7) {
       return (
         <div>
@@ -560,21 +537,15 @@ var BIGAdAccountSelector7 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEBIGAdAccountSelectorContainer_8 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEBIGAdAccountSelectorContainer_8 = function(props) {
     if (props.x === 8) {
       return <BIGAdAccountSelector7 x={7} />;
     }
-  },
-});
+};
 
-var ErrorBoundary9 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ErrorBoundary9 = function(props) {
     if (props.x === 9) {
       return <FluxContainer_AdsPEBIGAdAccountSelectorContainer_8 x={8} />;
     }
@@ -623,12 +594,9 @@ var ErrorBoundary9 = React.createClass({
     if (props.x === 475) {
       return <AdsPEContentContainer161 x={474} />;
     }
-  },
-});
+};
 
-var AdsErrorBoundary10 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsErrorBoundary10 = function(props) {
     if (props.x === 10) {
       return <ErrorBoundary9 x={9} />;
     }
@@ -677,30 +645,21 @@ var AdsErrorBoundary10 = React.createClass({
     if (props.x === 476) {
       return <ErrorBoundary9 x={475} />;
     }
-  },
-});
+};
 
-var AdsPENavigationBar11 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPENavigationBar11 = function(props) {
     if (props.x === 11) {
       return <div className={"_4t_9"}></div>;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPENavigationBarContainer_12 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPENavigationBarContainer_12 = function(props) {
     if (props.x === 12) {
       return <AdsPENavigationBar11 x={11} />;
     }
-  },
-});
+};
 
-var AdsPEDraftSyncStatus13 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEDraftSyncStatus13 = function(props) {
     if (props.x === 16) {
       return (
         <div className={"_3ut-"} onClick={function() {}}>
@@ -710,39 +669,27 @@ var AdsPEDraftSyncStatus13 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEDraftSyncStatusContainer_14 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEDraftSyncStatusContainer_14 = function(props) {
     if (props.x === 17) {
       return <AdsPEDraftSyncStatus13 x={16} />;
     }
-  },
-});
+};
 
-var AdsPEDraftErrorsStatus15 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEDraftErrorsStatus15 = function(props) {
     if (props.x === 18) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_viewFn_16 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_viewFn_16 = function(props) {
     if (props.x === 19) {
       return <AdsPEDraftErrorsStatus15 x={18} />;
     }
-  },
-});
+};
 
-var AdsPEPublishButton17 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEPublishButton17 = function(props) {
     if (props.x === 25) {
       return (
         <div className={"_5533"}>
@@ -754,21 +701,15 @@ var AdsPEPublishButton17 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEPublishButtonContainer_18 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEPublishButtonContainer_18 = function(props) {
     if (props.x === 26) {
       return <AdsPEPublishButton17 x={25} />;
     }
-  },
-});
+};
 
-var InlineBlock19 = React.createClass({
-  render: function() {
-    var props = this.props;
+var InlineBlock19 = function(props) {
     if (props.x === 30) {
       return (
         <div className={"uiPopover _6a _6b"} disabled={null}>
@@ -804,12 +745,9 @@ var InlineBlock19 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var ReactPopoverMenu20 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactPopoverMenu20 = function(props) {
     if (props.x === 31) {
       return <InlineBlock19 x={30} ref={"root"} />;
     }
@@ -825,12 +763,9 @@ var ReactPopoverMenu20 = React.createClass({
     if (props.x === 274) {
       return <InlineBlock19 x={273} ref={"root"} />;
     }
-  },
-});
+};
 
-var LeftRight21 = React.createClass({
-  render: function() {
-    var props = this.props;
+var LeftRight21 = function(props) {
     if (props.x === 34) {
       return (
         <div className={"clearfix"}>
@@ -911,12 +846,9 @@ var LeftRight21 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsUnifiedNavigationLocalNav22 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsUnifiedNavigationLocalNav22 = function(props) {
     if (props.x === 35) {
       return (
         <div className={"_34_i"}>
@@ -924,21 +856,15 @@ var AdsUnifiedNavigationLocalNav22 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var XUIDialog23 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIDialog23 = function(props) {
     if (props.x === 36) {
       return null;
     }
-  },
-});
+};
 
-var AdsPEResetDialog24 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEResetDialog24 = function(props) {
     if (props.x === 37) {
       return (
         <span>
@@ -946,12 +872,9 @@ var AdsPEResetDialog24 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AdsPETopNav25 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPETopNav25 = function(props) {
     if (props.x === 40) {
       return (
         <div style={{"width":1306}}>
@@ -960,45 +883,33 @@ var AdsPETopNav25 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsPETopNavContainer_26 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPETopNavContainer_26 = function(props) {
     if (props.x === 41) {
       return <AdsPETopNav25 x={40} />;
     }
-  },
-});
+};
 
-var XUIAbstractGlyphButton27 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIAbstractGlyphButton27 = function(props) {
     if (props.x === 46) {
       return <AbstractButton3 x={45} />;
     }
     if (props.x === 150) {
       return <AbstractButton3 x={149} />;
     }
-  },
-});
+};
 
-var XUICloseButton28 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUICloseButton28 = function(props) {
     if (props.x === 47) {
       return <XUIAbstractGlyphButton27 x={46} />;
     }
     if (props.x === 151) {
       return <XUIAbstractGlyphButton27 x={150} />;
     }
-  },
-});
+};
 
-var XUIText29 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIText29 = function(props) {
     if (props.x === 48) {
       return <span display={"inline"} className={" _50f7"}>{"Ads Manager"}</span>;
     }
@@ -1008,12 +919,9 @@ var XUIText29 = React.createClass({
     if (props.x === 206) {
       return <span display={"inline"} className={" _50f5 _50f7"}>{"Test Campaign"}</span>;
     }
-  },
-});
+};
 
-var XUINotice30 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUINotice30 = function(props) {
     if (props.x === 51) {
       return (
         <div size={"medium"} className={"_585n _585o _2wdd"}>
@@ -1027,21 +935,15 @@ var XUINotice30 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var ReactCSSTransitionGroupChild31 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactCSSTransitionGroupChild31 = function(props) {
     if (props.x === 52) {
       return <XUINotice30 x={51} />;
     }
-  },
-});
+};
 
-var ReactTransitionGroup32 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactTransitionGroup32 = function(props) {
     if (props.x === 53) {
       return (
         <span>
@@ -1049,21 +951,15 @@ var ReactTransitionGroup32 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var ReactCSSTransitionGroup33 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactCSSTransitionGroup33 = function(props) {
     if (props.x === 54) {
       return <ReactTransitionGroup32 x={53} />;
     }
-  },
-});
+};
 
-var AdsPETopError34 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPETopError34 = function(props) {
     if (props.x === 55) {
       return (
         <div className={"_2wdc"}>
@@ -1071,30 +967,21 @@ var AdsPETopError34 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsPETopErrorContainer_35 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPETopErrorContainer_35 = function(props) {
     if (props.x === 56) {
       return <AdsPETopError34 x={55} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsGuidanceChannel_36 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsGuidanceChannel_36 = function(props) {
     if (props.x === 59) {
       return null;
     }
-  },
-});
+};
 
-var ResponsiveBlock37 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ResponsiveBlock37 = function(props) {
     if (props.x === 62) {
       return (
         <div onResize={function() {}} className={"_4u-c"}>
@@ -1118,21 +1005,15 @@ var ResponsiveBlock37 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsBulkEditDialogContainer_38 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsBulkEditDialogContainer_38 = function(props) {
     if (props.x === 63) {
       return null;
     }
-  },
-});
+};
 
-var Column39 = React.createClass({
-  render: function() {
-    var props = this.props;
+var Column39 = function(props) {
     if (props.x === 66) {
       return (
         <div className={"_4bl8 _4bl7"}>
@@ -1145,12 +1026,9 @@ var Column39 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var XUIButtonGroup40 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIButtonGroup40 = function(props) {
     if (props.x === 75) {
       return (
         <div className={"_5n7z _51xa"}>
@@ -1185,75 +1063,51 @@ var XUIButtonGroup40 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEEditToolbarButton41 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEEditToolbarButton41 = function(props) {
     if (props.x === 85) {
       return <XUIButtonGroup40 x={84} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEEditCampaignGroupToolbarButtonContainer_42 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEEditCampaignGroupToolbarButtonContainer_42 = function(props) {
     if (props.x === 86) {
       return <AdsPEEditToolbarButton41 x={85} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEEditToolbarButtonContainer_43 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEEditToolbarButtonContainer_43 = function(props) {
     if (props.x === 87) {
       return <FluxContainer_AdsPEEditCampaignGroupToolbarButtonContainer_42 x={86} />;
     }
-  },
-});
+};
 
-var AdsPEExportImportMenu44 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEExportImportMenu44 = function(props) {
     if (props.x === 103) {
       return <ReactPopoverMenu20 x={102} key={"export"} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPECustomizeExportContainer_45 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPECustomizeExportContainer_45 = function(props) {
     if (props.x === 104) {
       return null;
     }
-  },
-});
+};
 
-var AdsPEExportAsTextDialog46 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEExportAsTextDialog46 = function(props) {
     if (props.x === 105) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEExportAsTextDialogContainer_47 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEExportAsTextDialogContainer_47 = function(props) {
     if (props.x === 106) {
       return <AdsPEExportAsTextDialog46 x={105} />;
     }
-  },
-});
+};
 
-var AdsPEExportImportMenuContainer48 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEExportImportMenuContainer48 = function(props) {
     if (props.x === 107) {
       return (
         <span>
@@ -1265,12 +1119,9 @@ var AdsPEExportImportMenuContainer48 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var Constructor49 = React.createClass({
-  render: function() {
-    var props = this.props;
+var Constructor49 = function(props) {
     if (props.x === 114) {
       return null;
     }
@@ -1283,12 +1134,9 @@ var Constructor49 = React.createClass({
     if (props.x === 183) {
       return null;
     }
-  },
-});
+};
 
-var TagSelectorPopover50 = React.createClass({
-  render: function() {
-    var props = this.props;
+var TagSelectorPopover50 = function(props) {
     if (props.x === 115) {
       return (
         <span className={" _3d6e"}>
@@ -1297,39 +1145,27 @@ var TagSelectorPopover50 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AdsPECampaignGroupTagContainer51 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupTagContainer51 = function(props) {
     if (props.x === 116) {
       return <TagSelectorPopover50 x={115} key={"98010048849317"} />;
     }
-  },
-});
+};
 
-var AdsRuleToolbarMenu52 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsRuleToolbarMenu52 = function(props) {
     if (props.x === 118) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPERuleToolbarMenuContainer_53 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPERuleToolbarMenuContainer_53 = function(props) {
     if (props.x === 119) {
       return <AdsRuleToolbarMenu52 x={118} />;
     }
-  },
-});
+};
 
-var FillColumn54 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FillColumn54 = function(props) {
     if (props.x === 120) {
       return (
         <div className={"_4bl9"}>
@@ -1346,12 +1182,9 @@ var FillColumn54 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var Layout55 = React.createClass({
-  render: function() {
-    var props = this.props;
+var Layout55 = function(props) {
     if (props.x === 121) {
       return (
         <div className={"clearfix"}>
@@ -1360,12 +1193,9 @@ var Layout55 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEMainPaneToolbar56 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEMainPaneToolbar56 = function(props) {
     if (props.x === 122) {
       return (
         <div className={"_3c5b clearfix"}>
@@ -1373,21 +1203,15 @@ var AdsPEMainPaneToolbar56 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPECampaignGroupToolbarContainer57 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupToolbarContainer57 = function(props) {
     if (props.x === 123) {
       return <AdsPEMainPaneToolbar56 x={122} />;
     }
-  },
-});
+};
 
-var AdsPEFiltersPopover58 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEFiltersPopover58 = function(props) {
     if (props.x === 144) {
       return (
         <span className={"_5b-l  _5bbe"}>
@@ -1400,12 +1224,9 @@ var AdsPEFiltersPopover58 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AbstractCheckboxInput59 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AbstractCheckboxInput59 = function(props) {
     if (props.x === 145) {
       return (
         <label className={"uiInputLabelInput _55sg _kv1"}>
@@ -1422,24 +1243,18 @@ var AbstractCheckboxInput59 = React.createClass({
         </label>
       );
     }
-  },
-});
+};
 
-var XUICheckboxInput60 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUICheckboxInput60 = function(props) {
     if (props.x === 146) {
       return <AbstractCheckboxInput59 x={145} />;
     }
     if (props.x === 337) {
       return <AbstractCheckboxInput59 x={336} />;
     }
-  },
-});
+};
 
-var InputLabel61 = React.createClass({
-  render: function() {
-    var props = this.props;
+var InputLabel61 = function(props) {
     if (props.x === 147) {
       return (
         <div display={"block"} className={"uiInputLabel clearfix"}>
@@ -1448,12 +1263,9 @@ var InputLabel61 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPopoverLink62 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPopoverLink62 = function(props) {
     if (props.x === 154) {
       return (
         <span>
@@ -1476,24 +1288,18 @@ var AdsPopoverLink62 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AdsHelpLink63 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsHelpLink63 = function(props) {
     if (props.x === 155) {
       return <AdsPopoverLink62 x={154} />;
     }
     if (props.x === 239) {
       return <AdsPopoverLink62 x={238} />;
     }
-  },
-});
+};
 
-var BUIFilterTokenInput64 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIFilterTokenInput64 = function(props) {
     if (props.x === 158) {
       return (
         <div className={"_5b5o _3yz3 _4cld"}>
@@ -1508,12 +1314,9 @@ var BUIFilterTokenInput64 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var BUIFilterToken65 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIFilterToken65 = function(props) {
     if (props.x === 159) {
       return (
         <div className={"_3yz1 _3yz2 _3dad"}>
@@ -1530,12 +1333,9 @@ var BUIFilterToken65 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var BUIFilterTokenCreateButton66 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIFilterTokenCreateButton66 = function(props) {
     if (props.x === 163) {
       return (
         <div className={"_1tc"}>
@@ -1543,12 +1343,9 @@ var BUIFilterTokenCreateButton66 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var BUIFilterTokenizer67 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIFilterTokenizer67 = function(props) {
     if (props.x === 164) {
       return (
         <div className={"_5b-m  clearfix"}>
@@ -1561,12 +1358,9 @@ var BUIFilterTokenizer67 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var XUIAmbientNUX68 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIAmbientNUX68 = function(props) {
     if (props.x === 165) {
       return null;
     }
@@ -1576,12 +1370,9 @@ var XUIAmbientNUX68 = React.createClass({
     if (props.x === 200) {
       return null;
     }
-  },
-});
+};
 
-var XUIAmbientNUX69 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUIAmbientNUX69 = function(props) {
     if (props.x === 166) {
       return <XUIAmbientNUX68 x={165} />;
     }
@@ -1591,12 +1382,9 @@ var XUIAmbientNUX69 = React.createClass({
     if (props.x === 201) {
       return <XUIAmbientNUX68 x={200} />;
     }
-  },
-});
+};
 
-var AdsPEAmbientNUXMegaphone70 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEAmbientNUXMegaphone70 = function(props) {
     if (props.x === 167) {
       return (
         <span>
@@ -1605,12 +1393,9 @@ var AdsPEAmbientNUXMegaphone70 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AdsPEFilters71 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEFilters71 = function(props) {
     if (props.x === 168) {
       return (
         <div className={"_4rw_"}>
@@ -1624,48 +1409,33 @@ var AdsPEFilters71 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEFilterContainer72 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEFilterContainer72 = function(props) {
     if (props.x === 169) {
       return <AdsPEFilters71 x={168} />;
     }
-  },
-});
+};
 
-var AdsPETablePager73 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPETablePager73 = function(props) {
     if (props.x === 172) {
       return null;
     }
-  },
-});
+};
 
-var AdsPECampaignGroupTablePagerContainer74 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupTablePagerContainer74 = function(props) {
     if (props.x === 173) {
       return <AdsPETablePager73 x={172} />;
     }
-  },
-});
+};
 
-var AdsPETablePagerContainer75 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPETablePagerContainer75 = function(props) {
     if (props.x === 174) {
       return <AdsPECampaignGroupTablePagerContainer74 x={173} />;
     }
-  },
-});
+};
 
-var ReactXUIError76 = React.createClass({
-  render: function() {
-    var props = this.props;
+var ReactXUIError76 = function(props) {
     if (props.x === 181) {
       return <AbstractButton3 x={180} />;
     }
@@ -1697,21 +1467,15 @@ var ReactXUIError76 = React.createClass({
     if (props.x === 280) {
       return <XUICard94 x={279} />;
     }
-  },
-});
+};
 
-var BUIPopoverButton77 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIPopoverButton77 = function(props) {
     if (props.x === 182) {
       return <ReactXUIError76 x={181} />;
     }
-  },
-});
+};
 
-var BUIDateRangePicker78 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIDateRangePicker78 = function(props) {
     if (props.x === 184) {
       return (
         <span>
@@ -1722,21 +1486,15 @@ var BUIDateRangePicker78 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AdsPEStatsRangePicker79 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEStatsRangePicker79 = function(props) {
     if (props.x === 185) {
       return <BUIDateRangePicker78 x={184} />;
     }
-  },
-});
+};
 
-var AdsPEStatRange80 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEStatRange80 = function(props) {
     if (props.x === 191) {
       return (
         <div className={"_3c5k"}>
@@ -1751,21 +1509,15 @@ var AdsPEStatRange80 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEStatRangeContainer81 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEStatRangeContainer81 = function(props) {
     if (props.x === 192) {
       return <AdsPEStatRange80 x={191} />;
     }
-  },
-});
+};
 
-var AdsPESideTrayTabButton82 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPESideTrayTabButton82 = function(props) {
     if (props.x === 196) {
       return (
         <div className={"_1-ly _59j9 _d9a"} onClick={function() {}}>
@@ -1787,21 +1539,15 @@ var AdsPESideTrayTabButton82 = React.createClass({
     if (props.x === 203) {
       return null;
     }
-  },
-});
+};
 
-var AdsPEEditorTrayTabButton83 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEEditorTrayTabButton83 = function(props) {
     if (props.x === 197) {
       return <AdsPESideTrayTabButton82 x={196} />;
     }
-  },
-});
+};
 
-var AdsPEInsightsTrayTabButton84 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEInsightsTrayTabButton84 = function(props) {
     if (props.x === 202) {
       return (
         <span>
@@ -1810,21 +1556,15 @@ var AdsPEInsightsTrayTabButton84 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var AdsPENekoDebuggerTrayTabButton85 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPENekoDebuggerTrayTabButton85 = function(props) {
     if (props.x === 204) {
       return <AdsPESideTrayTabButton82 x={203} />;
     }
-  },
-});
+};
 
-var AdsPEEditorChildLink86 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEEditorChildLink86 = function(props) {
     if (props.x === 211) {
       return (
         <div className={"_3ywr"}>
@@ -1834,21 +1574,15 @@ var AdsPEEditorChildLink86 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEEditorChildLinkContainer87 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEEditorChildLinkContainer87 = function(props) {
     if (props.x === 212) {
       return <AdsPEEditorChildLink86 x={211} />;
     }
-  },
-});
+};
 
-var AdsPEHeaderSection88 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEHeaderSection88 = function(props) {
     if (props.x === 213) {
       return (
         <div className={"_yke"}>
@@ -1863,39 +1597,27 @@ var AdsPEHeaderSection88 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPECampaignGroupHeaderSectionContainer89 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupHeaderSectionContainer89 = function(props) {
     if (props.x === 214) {
       return <AdsPEHeaderSection88 x={213} />;
     }
-  },
-});
+};
 
-var AdsEditorLoadingErrors90 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditorLoadingErrors90 = function(props) {
     if (props.x === 215) {
       return null;
     }
-  },
-});
+};
 
-var AdsTextInput91 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsTextInput91 = function(props) {
     if (props.x === 217) {
       return <ReactXUIError76 x={216} />;
     }
-  },
-});
+};
 
-var BUIFormElement92 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIFormElement92 = function(props) {
     if (props.x === 218) {
       return (
         <div className={"_5521 clearfix"}>
@@ -1917,12 +1639,9 @@ var BUIFormElement92 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var BUIForm93 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUIForm93 = function(props) {
     if (props.x === 219) {
       return (
         <div className={"_5ks1 _550r  _550t _550y _3w5n"}>
@@ -1930,12 +1649,9 @@ var BUIForm93 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var XUICard94 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUICard94 = function(props) {
     if (props.x === 220) {
       return (
         <div className={"_40bc _12k2 _4-u2  _4-u8"} xuiErrorPosition={"above"} background={"white"}>
@@ -1958,12 +1674,9 @@ var XUICard94 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsCard95 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsCard95 = function(props) {
     if (props.x === 222) {
       return <ReactXUIError76 x={221} />;
     }
@@ -1973,39 +1686,27 @@ var AdsCard95 = React.createClass({
     if (props.x === 281) {
       return <ReactXUIError76 x={280} />;
     }
-  },
-});
+};
 
-var AdsEditorNameSection96 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditorNameSection96 = function(props) {
     if (props.x === 223) {
       return <AdsCard95 x={222} />;
     }
-  },
-});
+};
 
-var AdsCampaignGroupNameSectionContainer97 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsCampaignGroupNameSectionContainer97 = function(props) {
     if (props.x === 224) {
       return <AdsEditorNameSection96 x={223} key={"nameSection98010048849317"} />;
     }
-  },
-});
+};
 
-var _render98 = React.createClass({
-  render: function() {
-    var props = this.props;
+var _render98 = function(props) {
     if (props.x === 225) {
       return <AdsCampaignGroupNameSectionContainer97 x={224} />;
     }
-  },
-});
+};
 
-var AdsPluginWrapper99 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPluginWrapper99 = function(props) {
     if (props.x === 226) {
       return <_render98 x={225} />;
     }
@@ -2021,12 +1722,9 @@ var AdsPluginWrapper99 = React.createClass({
     if (props.x === 291) {
       return <_render130 x={290} />;
     }
-  },
-});
+};
 
-var XUICardHeaderTitle100 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUICardHeaderTitle100 = function(props) {
     if (props.x === 227) {
       return (
         <span itemComponent={"span"} className={"_38my"}>
@@ -2054,12 +1752,9 @@ var XUICardHeaderTitle100 = React.createClass({
         </span>
       );
     }
-  },
-});
+};
 
-var XUICardSection101 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUICardSection101 = function(props) {
     if (props.x === 228) {
       return (
         <div className={"_5dw9 _5dwa _4-u3"} background={"transparent"}>
@@ -2085,30 +1780,21 @@ var XUICardSection101 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var XUICardHeader102 = React.createClass({
-  render: function() {
-    var props = this.props;
+var XUICardHeader102 = function(props) {
     if (props.x === 229) {
       return <XUICardSection101 x={228} />;
     }
-  },
-});
+};
 
-var AdsCardHeader103 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsCardHeader103 = function(props) {
     if (props.x === 230) {
       return <XUICardHeader102 x={229} />;
     }
-  },
-});
+};
 
-var AdsLabeledField104 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsLabeledField104 = function(props) {
     if (props.x === 231) {
       return (
         <div className={"_2oc6 _3bvz"} label={"Objective"} labelSize={"small"} optionalText={"(optional)"}>
@@ -2136,12 +1822,9 @@ var AdsLabeledField104 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FlexibleBlock105 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FlexibleBlock105 = function(props) {
     if (props.x === 233) {
       return <LeftRight21 x={232} />;
     }
@@ -2151,12 +1834,9 @@ var FlexibleBlock105 = React.createClass({
     if (props.x === 246) {
       return <LeftRight21 x={245} />;
     }
-  },
-});
+};
 
-var AdsBulkCampaignSpendCapField106 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsBulkCampaignSpendCapField106 = function(props) {
     if (props.x === 243) {
       return (
         <div className={"_33dv"}>
@@ -2166,75 +1846,51 @@ var AdsBulkCampaignSpendCapField106 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsCampaignGroupSpendCapContainer_107 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsCampaignGroupSpendCapContainer_107 = function(props) {
     if (props.x === 244) {
       return <AdsBulkCampaignSpendCapField106 x={243} />;
     }
-  },
-});
+};
 
-var AdsCardSection108 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsCardSection108 = function(props) {
     if (props.x === 248) {
       return <XUICardSection101 x={247} />;
     }
-  },
-});
+};
 
-var AdsEditorCampaignGroupDetailsSection109 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditorCampaignGroupDetailsSection109 = function(props) {
     if (props.x === 252) {
       return <AdsCard95 x={251} />;
     }
-  },
-});
+};
 
-var AdsEditorCampaignGroupDetailsSectionContainer110 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditorCampaignGroupDetailsSectionContainer110 = function(props) {
     if (props.x === 253) {
       return <AdsEditorCampaignGroupDetailsSection109 x={252} key={"campaignGroupDetailsSection98010048849317"} />;
     }
-  },
-});
+};
 
-var _render111 = React.createClass({
-  render: function() {
-    var props = this.props;
+var _render111 = function(props) {
     if (props.x === 254) {
       return <AdsEditorCampaignGroupDetailsSectionContainer110 x={253} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsEditorToplineDetailsSectionContainer_112 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsEditorToplineDetailsSectionContainer_112 = function(props) {
     if (props.x === 256) {
       return null;
     }
-  },
-});
+};
 
-var _render113 = React.createClass({
-  render: function() {
-    var props = this.props;
+var _render113 = function(props) {
     if (props.x === 257) {
       return <FluxContainer_AdsEditorToplineDetailsSectionContainer_112 x={256} />;
     }
-  },
-});
+};
 
-var AdsStickyArea114 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsStickyArea114 = function(props) {
     if (props.x === 259) {
       return (
         <div inContainingBlock={true}>
@@ -2255,12 +1911,9 @@ var AdsStickyArea114 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsEditorColumnContainer_115 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsEditorColumnContainer_115 = function(props) {
     if (props.x === 260) {
       return (
         <div>
@@ -2291,12 +1944,9 @@ var FluxContainer_AdsEditorColumnContainer_115 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var BUISwitch116 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BUISwitch116 = function(props) {
     if (props.x === 261) {
       return (
         <div data-hover={"tooltip"} data-tooltip-content={"Currently active. Click this switch to deactivate it."} data-tooltip-position={"below"} disabled={false} value={true} onToggle={function() {}} animate={true} className={"_128j _128k _128n"} role={"checkbox"} aria-checked={"true"}>
@@ -2307,48 +1957,33 @@ var BUISwitch116 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsStatusSwitchInternal117 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsStatusSwitchInternal117 = function(props) {
     if (props.x === 262) {
       return <BUISwitch116 x={261} />;
     }
-  },
-});
+};
 
-var AdsStatusSwitch118 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsStatusSwitch118 = function(props) {
     if (props.x === 263) {
       return <AdsStatusSwitchInternal117 x={262} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsCampaignGroupStatusSwitchContainer_119 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsCampaignGroupStatusSwitchContainer_119 = function(props) {
     if (props.x === 264) {
       return <AdsStatusSwitch118 x={263} key={"status98010048849317"} />;
     }
-  },
-});
+};
 
-var AdsLinksMenu120 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsLinksMenu120 = function(props) {
     if (props.x === 275) {
       return <ReactPopoverMenu20 x={274} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPluginizedLinksMenuContainer_121 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPluginizedLinksMenuContainer_121 = function(props) {
     if (props.x === 276) {
       return (
         <div>
@@ -2357,93 +1992,63 @@ var FluxContainer_AdsPluginizedLinksMenuContainer_121 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsCardLeftRightHeader122 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsCardLeftRightHeader122 = function(props) {
     if (props.x === 278) {
       return <LeftRight21 x={277} />;
     }
-  },
-});
+};
 
-var AdsPEIDSection123 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEIDSection123 = function(props) {
     if (props.x === 282) {
       return <AdsCard95 x={281} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPECampaignGroupIDSectionContainer_124 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPECampaignGroupIDSectionContainer_124 = function(props) {
     if (props.x === 283) {
       return <AdsPEIDSection123 x={282} />;
     }
-  },
-});
+};
 
-var DeferredComponent125 = React.createClass({
-  render: function() {
-    var props = this.props;
+var DeferredComponent125 = function(props) {
     if (props.x === 284) {
       return <FluxContainer_AdsPECampaignGroupIDSectionContainer_124 x={283} />;
     }
-  },
-});
+};
 
-var BootloadedComponent126 = React.createClass({
-  render: function() {
-    var props = this.props;
+var BootloadedComponent126 = function(props) {
     if (props.x === 285) {
       return <DeferredComponent125 x={284} />;
     }
-  },
-});
+};
 
-var _render127 = React.createClass({
-  render: function() {
-    var props = this.props;
+var _render127 = function(props) {
     if (props.x === 286) {
       return <BootloadedComponent126 x={285} />;
     }
-  },
-});
+};
 
-var AdsEditorErrorsCard128 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditorErrorsCard128 = function(props) {
     if (props.x === 288) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_FunctionalContainer_129 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_FunctionalContainer_129 = function(props) {
     if (props.x === 289) {
       return <AdsEditorErrorsCard128 x={288} />;
     }
-  },
-});
+};
 
-var _render130 = React.createClass({
-  render: function() {
-    var props = this.props;
+var _render130 = function(props) {
     if (props.x === 290) {
       return <FluxContainer_FunctionalContainer_129 x={289} />;
     }
-  },
-});
+};
 
-var AdsEditorMultiColumnLayout131 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditorMultiColumnLayout131 = function(props) {
     if (props.x === 294) {
       return (
         <div className={"_psh"}>
@@ -2463,12 +2068,9 @@ var AdsEditorMultiColumnLayout131 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPECampaignGroupEditor132 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupEditor132 = function(props) {
     if (props.x === 295) {
       return (
         <div>
@@ -2477,21 +2079,15 @@ var AdsPECampaignGroupEditor132 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPECampaignGroupEditorContainer133 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupEditorContainer133 = function(props) {
     if (props.x === 296) {
       return <AdsPECampaignGroupEditor132 x={295} />;
     }
-  },
-});
+};
 
-var AdsPESideTrayTabContent134 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPESideTrayTabContent134 = function(props) {
     if (props.x === 297) {
       return (
         <div className={"_1o_8 _44ra _5cyn"}>
@@ -2499,21 +2095,15 @@ var AdsPESideTrayTabContent134 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEEditorTrayTabContentContainer135 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEEditorTrayTabContentContainer135 = function(props) {
     if (props.x === 298) {
       return <AdsPESideTrayTabContent134 x={297} />;
     }
-  },
-});
+};
 
-var AdsPEMultiTabDrawer136 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEMultiTabDrawer136 = function(props) {
     if (props.x === 299) {
       return (
         <div className={"_2kev _2kex"}>
@@ -2529,21 +2119,15 @@ var AdsPEMultiTabDrawer136 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEMultiTabDrawerContainer_137 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEMultiTabDrawerContainer_137 = function(props) {
     if (props.x === 300) {
       return <AdsPEMultiTabDrawer136 x={299} />;
     }
-  },
-});
+};
 
-var AdsPESimpleOrganizer138 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPESimpleOrganizer138 = function(props) {
     if (props.x === 309) {
       return (
         <div className={"_tm2"}>
@@ -2553,12 +2137,9 @@ var AdsPESimpleOrganizer138 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEOrganizerContainer139 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEOrganizerContainer139 = function(props) {
     if (props.x === 310) {
       return (
         <div>
@@ -2566,12 +2147,9 @@ var AdsPEOrganizerContainer139 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableColumnResizeHandle140 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableColumnResizeHandle140 = function(props) {
     if (props.x === 313) {
       return (
         <div className={"_3487 _3488 _3489"} style={{"width":0,"height":25,"left":0}}>
@@ -2579,12 +2157,9 @@ var FixedDataTableColumnResizeHandle140 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPETableHeader141 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPETableHeader141 = function(props) {
     if (props.x === 315) {
       return (
         <div className={"_1cig _1ksv _1vd7 _4h2r"} id={undefined}>
@@ -2799,12 +2374,9 @@ var AdsPETableHeader141 = React.createClass({
     if (props.x === 452) {
       return <div className={"_1cig _25fg _4h2r"} id={undefined}></div>;
     }
-  },
-});
+};
 
-var TransitionCell142 = React.createClass({
-  render: function() {
-    var props = this.props;
+var TransitionCell142 = function(props) {
     if (props.x === 316) {
       return (
         <div isHeaderCell={true} label={"Campaigns"} dataKey={0} groupHeaderRenderer={function() {}} groupHeaderLabels={{}} groupHeaderData={{}} columnKey={undefined} height={40} width={721} rowIndex={0} className={"_4lgc _4h2u"} style={{"height":40,"width":721}}>
@@ -3124,12 +2696,9 @@ var TransitionCell142 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableCell143 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableCell143 = function(props) {
     if (props.x === 317) {
       return (
         <div className={"_4lg0 _4h2m"} style={{"height":40,"width":721,"left":0}}>
@@ -3400,12 +2969,9 @@ var FixedDataTableCell143 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableCellGroupImpl144 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableCellGroupImpl144 = function(props) {
     if (props.x === 318) {
       return (
         <div className={"_3pzj"} style={{"height":40,"position":"absolute","width":721,"zIndex":2,"transform":"translate3d(0px,0px,0)","backfaceVisibility":"hidden"}}>
@@ -3459,12 +3025,9 @@ var FixedDataTableCellGroupImpl144 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableCellGroup145 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableCellGroup145 = function(props) {
     if (props.x === 319) {
       return (
         <div style={{"height":40,"left":0}} className={"_3pzk"}>
@@ -3493,12 +3056,9 @@ var FixedDataTableCellGroup145 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableRowImpl146 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableRowImpl146 = function(props) {
     if (props.x === 334) {
       return (
         <div className={"_1gd4 _4li _52no _3h1a _1mib"} onClick={null} onDoubleClick={null} onMouseDown={null} onMouseEnter={null} onMouseLeave={null} style={{"width":1209,"height":40}}>
@@ -3521,12 +3081,9 @@ var FixedDataTableRowImpl146 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableRow147 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableRow147 = function(props) {
     if (props.x === 335) {
       return (
         <div style={{"width":1209,"height":40,"zIndex":1,"transform":"translate3d(0px,0px,0)","backfaceVisibility":"hidden"}} className={"_1gda"}>
@@ -3541,12 +3098,9 @@ var FixedDataTableRow147 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableAbstractSortableHeader148 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableAbstractSortableHeader148 = function(props) {
     if (props.x === 341) {
       return (
         <div onClick={function() {}} className={"_54_8 _4h2r _2wzx"}>
@@ -3757,12 +3311,9 @@ var FixedDataTableAbstractSortableHeader148 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTableSortableHeader149 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableSortableHeader149 = function(props) {
     if (props.x === 342) {
       return <FixedDataTableAbstractSortableHeader148 x={341} />;
     }
@@ -3826,21 +3377,15 @@ var FixedDataTableSortableHeader149 = React.createClass({
     if (props.x === 446) {
       return <FixedDataTableAbstractSortableHeader148 x={445} />;
     }
-  },
-});
+};
 
-var FixedDataTableBufferedRows150 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTableBufferedRows150 = function(props) {
     if (props.x === 459) {
       return <div style={{"position":"absolute","pointerEvents":"auto","transform":"translate3d(0px,65px,0)","backfaceVisibility":"hidden"}}></div>;
     }
-  },
-});
+};
 
-var Scrollbar151 = React.createClass({
-  render: function() {
-    var props = this.props;
+var Scrollbar151 = function(props) {
     if (props.x === 460) {
       return null;
     }
@@ -3851,12 +3396,9 @@ var Scrollbar151 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var HorizontalScrollbar152 = React.createClass({
-  render: function() {
-    var props = this.props;
+var HorizontalScrollbar152 = function(props) {
     if (props.x === 462) {
       return (
         <div className={"_3h1k _3h1m"} style={{"height":15,"width":1209}}>
@@ -3866,12 +3408,9 @@ var HorizontalScrollbar152 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FixedDataTable153 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FixedDataTable153 = function(props) {
     if (props.x === 463) {
       return (
         <div className={"_3h1i _1mie"} onWheel={function() {}} style={{"height":25,"width":1209}}>
@@ -3889,21 +3428,15 @@ var FixedDataTable153 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var TransitionTable154 = React.createClass({
-  render: function() {
-    var props = this.props;
+var TransitionTable154 = function(props) {
     if (props.x === 464) {
       return <FixedDataTable153 x={463} ref={"fixedDataTable"} />;
     }
-  },
-});
+};
 
-var AdsSelectableFixedDataTable155 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsSelectableFixedDataTable155 = function(props) {
     if (props.x === 465) {
       return (
         <div className={"_5hht"}>
@@ -3911,12 +3444,9 @@ var AdsSelectableFixedDataTable155 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsDataTableKeyboardSupportDecorator156 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsDataTableKeyboardSupportDecorator156 = function(props) {
     if (props.x === 466) {
       return (
         <div ref={"tableContainer"} className={"_5d6f"} tabIndex={"0"} onKeyDown={function() {}}>
@@ -3924,12 +3454,9 @@ var AdsDataTableKeyboardSupportDecorator156 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsEditableDataTableDecorator157 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsEditableDataTableDecorator157 = function(props) {
     if (props.x === 467) {
       return (
         <div onCopy={function() {}}>
@@ -3937,12 +3464,9 @@ var AdsEditableDataTableDecorator157 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEDataTableContainer158 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEDataTableContainer158 = function(props) {
     if (props.x === 468) {
       return (
         <div className={"_35l_ _1hr clearfix"}>
@@ -3953,21 +3477,15 @@ var AdsPEDataTableContainer158 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPECampaignGroupTableContainer159 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECampaignGroupTableContainer159 = function(props) {
     if (props.x === 470) {
       return <ResponsiveBlock37 x={469} />;
     }
-  },
-});
+};
 
-var AdsPEManageAdsPaneContainer160 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEManageAdsPaneContainer160 = function(props) {
     if (props.x === 473) {
       return (
         <div>
@@ -3994,21 +3512,15 @@ var AdsPEManageAdsPaneContainer160 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var AdsPEContentContainer161 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEContentContainer161 = function(props) {
     if (props.x === 474) {
       return <AdsPEManageAdsPaneContainer160 x={473} />;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEWorkspaceContainer_162 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEWorkspaceContainer_162 = function(props) {
     if (props.x === 477) {
       return (
         <div className={"_49wu"} style={{"height":177,"top":43,"width":1306}}>
@@ -4018,57 +3530,39 @@ var FluxContainer_AdsPEWorkspaceContainer_162 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsSessionExpiredDialogContainer_163 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsSessionExpiredDialogContainer_163 = function(props) {
     if (props.x === 478) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEUploadDialogLazyContainer_164 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEUploadDialogLazyContainer_164 = function(props) {
     if (props.x === 479) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_DialogContainer_165 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_DialogContainer_165 = function(props) {
     if (props.x === 480) {
       return null;
     }
-  },
-});
+};
 
-var AdsBugReportContainer166 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsBugReportContainer166 = function(props) {
     if (props.x === 481) {
       return <span></span>;
     }
-  },
-});
+};
 
-var AdsPEAudienceSplittingDialog167 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEAudienceSplittingDialog167 = function(props) {
     if (props.x === 482) {
       return null;
     }
-  },
-});
+};
 
-var AdsPEAudienceSplittingDialogContainer168 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEAudienceSplittingDialogContainer168 = function(props) {
     if (props.x === 483) {
       return (
         <div>
@@ -4076,120 +3570,81 @@ var AdsPEAudienceSplittingDialogContainer168 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var FluxContainer_AdsRuleDialogBootloadContainer_169 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsRuleDialogBootloadContainer_169 = function(props) {
     if (props.x === 484) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPECFTrayContainer_170 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPECFTrayContainer_170 = function(props) {
     if (props.x === 485) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEDeleteDraftContainer_171 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEDeleteDraftContainer_171 = function(props) {
     if (props.x === 486) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEInitialDraftPublishDialogContainer_172 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEInitialDraftPublishDialogContainer_172 = function(props) {
     if (props.x === 487) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEReachFrequencyStatusTransitionDialogBootloadContainer_173 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEReachFrequencyStatusTransitionDialogBootloadContainer_173 = function(props) {
     if (props.x === 488) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEPurgeArchiveDialogContainer_174 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEPurgeArchiveDialogContainer_174 = function(props) {
     if (props.x === 489) {
       return null;
     }
-  },
-});
+};
 
-var AdsPECreateDialogContainer175 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPECreateDialogContainer175 = function(props) {
     if (props.x === 490) {
       return <span></span>;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPEModalStatusContainer_176 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPEModalStatusContainer_176 = function(props) {
     if (props.x === 491) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsBrowserExtensionErrorDialogContainer_177 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsBrowserExtensionErrorDialogContainer_177 = function(props) {
     if (props.x === 492) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPESortByErrorTipContainer_178 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPESortByErrorTipContainer_178 = function(props) {
     if (props.x === 493) {
       return null;
     }
-  },
-});
+};
 
-var LeadDownloadDialogSelector179 = React.createClass({
-  render: function() {
-    var props = this.props;
+var LeadDownloadDialogSelector179 = function(props) {
     if (props.x === 494) {
       return null;
     }
-  },
-});
+};
 
-var FluxContainer_AdsPELeadDownloadDialogContainerClass_180 = React.createClass({
-  render: function() {
-    var props = this.props;
+var FluxContainer_AdsPELeadDownloadDialogContainerClass_180 = function(props) {
     if (props.x === 495) {
       return <LeadDownloadDialogSelector179 x={494} />;
     }
-  },
-});
+};
 
-var AdsPEContainer181 = React.createClass({
-  render: function() {
-    var props = this.props;
+var AdsPEContainer181 = function(props) {
     if (props.x === 496) {
       return (
         <div id={"ads_pe_container"}>
@@ -4218,18 +3673,15 @@ var AdsPEContainer181 = React.createClass({
         </div>
       );
     }
-  },
-});
+};
 
-var Benchmark = React.createClass({
-  render: function() {
-    var props = this.props;
+var Benchmark = function(props) {
     if (props.x === undefined) {
       return <AdsPEContainer181 x={496} />;
     }
-  },
-});
+};
 
 this.Benchmark = Benchmark;
 
 })(this);
+
