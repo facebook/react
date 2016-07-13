@@ -27,7 +27,7 @@ var warning = require('warning');
 
 ReactDefaultInjection.inject();
 
-var React = {
+var ReactDOM = {
   findDOMNode: findDOMNode,
   render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
@@ -135,4 +135,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = React;
+module.exports = ReactDOM;
