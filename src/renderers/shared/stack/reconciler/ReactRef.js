@@ -23,10 +23,16 @@ var ReactRef = {};
 function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
     var instance = component.getPublicInstance();
-    warning(
-      instance !== null,
-      'Stateless function components cannot have refs.'
-    );
+    if (__DEV__) {
+      var componentName = component && component.getName ?
+        component.getName() : 'a component';
+      warning(instance != null,
+        'Stateless function components cannot be given refs ' +
+        '(See %s%s).',
+        componentName,
+        owner ? ' created by ' + owner.getName() : ''
+      );
+    }
     ref(instance);
   } else {
     // Legacy ref
