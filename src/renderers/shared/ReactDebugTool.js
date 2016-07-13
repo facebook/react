@@ -17,11 +17,6 @@ var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
 var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
 var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
 
-var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
-var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
-var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
-
 var performanceNow = require('performanceNow');
 var warning = require('warning');
 
