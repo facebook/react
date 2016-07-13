@@ -427,7 +427,7 @@ var UserRow = React.createClass({
     return (
       <div>
         {this.renderHeader() /* Defined by RowMixin */}
-        <h2>{this.props.user.biography}
+        <h2>{this.props.user.biography}</h2>
       </div>
     )
   }
@@ -457,7 +457,7 @@ function UserRow(props) {
   return (
     <div>
       <RowHeader text={props.user.fullName} />
-      <h2>{props.user.biography}
+      <h2>{props.user.biography}</h2>
     </div>
   );
 }
@@ -571,7 +571,7 @@ var ColorMixin = {
 var Button = React.createClass({
   mixins: [ColorMixin],
 
-  render: function () {
+  render: function() {
     var theme = this.getLuminance(this.props.color) > 160 ? 'dark' : 'light';
     return (
       <div className={theme}>
@@ -590,7 +590,7 @@ Put utility functions into regular JavaScript modules and import them. This also
 var getLuminance = require('../utils/getLuminance');
 
 var Button = React.createClass({
-  render: function () {
+  render: function() {
     var theme = getLuminance(this.props.color) > 160 ? 'dark' : 'light';
     return (
       <div className={theme}>
