@@ -546,6 +546,8 @@
 <span class="p">};</span>
 
 <span class="kd">var</span> <span class="nx">Link</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">RouterMixin</span><span class="p">],</span>
+
   <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">e</span><span class="p">.</span><span class="nx">stopPropagation</span><span class="p">();</span>
 
