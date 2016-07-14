@@ -18,18 +18,13 @@ var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 var emptyFunction = require('emptyFunction');
 
 function getEnvironmentChildMapping(instance, props) {
-  var childMapping;
   if (__DEV__) {
-    childMapping = ReactTransitionChildMapping.getChildMapping(
+    return ReactTransitionChildMapping.getChildMapping(
       props.children,
       ReactInstanceMap.get(instance)._debugID
     );
-  } else {
-    childMapping = ReactTransitionChildMapping.getChildMapping(
-      props.children
-    );
   }
-  return childMapping;
+  return ReactTransitionChildMapping.getChildMapping(props.children);
 }
 
 /**
