@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Design Principles | React</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="Design Principles | React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://facebook.github.io/react/contributing/design-principles.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel-browser.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+          React
+        </a>
+        <ul class="nav-site nav-site-internal">
+          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
+          <li><a href="/react/support.html">Support</a></li>
+          <li><a href="/react/downloads.html">Download</a></li>
+          <li><a href="/react/blog/">Blog</a></li>
+          <li>
+            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+          </li>
+        </ul>
+
+        <ul class="nav-site nav-site-external">
+          <li><a href="https://github.com/facebook/react">GitHub</a></li>
+          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">Getting Started</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">Tutorial</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Community Resources</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/videos.html">Videos</a>
+            
+          </li>
+        
+          <li>
+            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            
+          </li>
+        
+          <li>
+            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">Why React?</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">Multiple Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/package-management.html">Package Management</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/environments.html">Server-side Environments</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">Top-Level API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">Component API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">Event System</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">DOM Differences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/webcomponents.html">Web Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Contributing Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Contributing</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/contributing/design-principles.html" class="active">Design Principles</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>Design Principles</h1>
+    <div class="subHeader"></div>
+    <p>After using React in a couple of applications, you might be interested in contributing to React. Before <a href="https://github.com/facebook/react/blob/master/CONTRIBUTING.md">diving into specifics</a>, we think it&#39;s important to establish a few design principles guiding our decisions about changes in React.</p>
+
+<p>We wrote this document so that you have a better idea of how we decide what React does and what React doesn&#39;t do, and what our development philosophy is like. While we are excited to see community contributions, we are not likely to choose a path that violates one or more of these principles.</p>
+
+<blockquote>
+<p><strong>Note:</strong></p>
+
+<p>This document assumes a strong understanding of React. It describes the design principles of <em>React itself</em>, not React components or applications.</p>
+
+<p>For an introduction to React, check out <a href="react/docs/thinking-in-react.html">Thinking in React</a> instead.</p>
+</blockquote>
+<h3><a class="anchor" name="composition"></a>Composition <a class="hash-link" href="#composition">#</a></h3>
+<p>The key feature of React is composition of components. Components written by different people should work well together. It is important to us that you can add functionality to a component without causing rippling changes throughout the codebase.</p>
+
+<p>For example, it should be possible to introduce some local state into a component without changing any of the components using it. Similarly, it should be possible to add some initialization and teardown code to any component when necessary.</p>
+
+<p>There is nothing &quot;bad&quot; about using state or lifecycle hooks in components. Like any powerful features, they should be used in moderation, but we have no intention to remove them. On the contrary, we think they are integral parts of what makes React useful. We might enable <a href="https://github.com/reactjs/react-future/tree/master/07%20-%20Returning%20State">more functional patterns</a> in the future, but both local state and lifecycle hooks will be a part of that model.</p>
+
+<p>Components are often described as &quot;just functions&quot; but in our view they need to be more than that to be useful. In React, components describe any composable behavior, and this includes rendering, lifecycle, and state. Some external libraries like <a href="http://facebook.github.io/relay/">Relay</a> augment components with other responsibilities such as describing data dependencies. It is possible that those ideas might make it back into React too in some form.</p>
+<h3><a class="anchor" name="common-abstraction"></a>Common Abstraction <a class="hash-link" href="#common-abstraction">#</a></h3>
+<p>In general we <a href="https://www.youtube.com/watch?v=4anAwXYqLG8">resist adding features</a> that can be implemented in userland. We don&#39;t want to bloat your apps with useless library code. However, there are exceptions to this.</p>
+
+<p>For example, if React didn&#39;t provide support for local state or lifecycle hooks, people would create custom abstractions for them. When there are multiple abstractions competing, React can&#39;t enforce or take advantage of the properties of either of them. It has to work with the lowest common denominator.</p>
+
+<p>This is why sometimes we add features to React itself. If we notice that many components implement a certain feature in incompatible or inefficient ways, we might prefer to bake it into React. We don&#39;t do it lightly. When we do it, it&#39;s because we are confident that raising the abstraction level benefits the whole ecosystem. State, lifecycle hooks, cross-browser event normalization are good examples of this.</p>
+
+<p>We always discuss such improvement proposals with the community. You can find some of those discussions by the <a href="https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22big+picture%22">“big picture”</a> label on the React issue tracker.</p>
+<h3><a class="anchor" name="escape-hatches"></a>Escape Hatches <a class="hash-link" href="#escape-hatches">#</a></h3>
+<p>React is pragmatic. It is driven by the needs of the products written at Facebook. While it is influenced by some paradigms that are not yet fully mainstream such as functional programming, staying accessible to a wide range of developers with different skills and experience levels is an explicit goal of the project.</p>
+
+<p>If we want to deprecate a pattern that we don&#39;t like, it is our responsibility to consider all existing use cases for it and <a href="/react/blog/2016/07/13/mixins-considered-harmful.html">educate the community about the alternatives</a> before we deprecate it. If some pattern that is useful for building apps is hard to express in a declarative way, we will <a href="/react/docs/more-about-refs.html">provide an imperative API</a> for it. If we can&#39;t figure out a perfect API for something that we found necessary in many apps, we will <a href="/react/docs/context.html">provide a temporary subpar working API</a> as long as it is possible to get rid of it later and it leaves the door open for future improvements.</p>
+<h3><a class="anchor" name="stability"></a>Stability <a class="hash-link" href="#stability">#</a></h3>
+<p>We value API stability because at Facebook we have more than 20 thousand components using React. This means that we are reluctant to change public APIs or behavior because teams depend on it both externally and internally.</p>
+
+<p>However we think stability in the sense of &quot;nothing changes&quot; is overrated. It quickly turns into stagnation. Instead, we prefer the stability in the sense of &quot;It is heavily used in production, and when something changes, there is a clear (and preferably automated) migration path.&quot;</p>
+
+<p>When we deprecate a pattern, we study its internal usage at Facebook and add deprecation warnings. They let us assess the impact of the change. Sometimes we back out if we see that it is too early, and we need to think more strategically about getting the codebases to the point where they are ready for this change.</p>
+
+<p>We don&#39;t deprecate anything without a good reason. We recognize that sometimes deprecations warnings cause frustration but we add them because deprecations clean up the road for the improvements and new features that we and many people in the community consider valuable.</p>
+
+<p>For example, we added a <a href="https://facebook.github.io/react/warnings/unknown-prop.html">warning about unknown DOM props</a> in React 15.2.0. Many projects were affected by this. However fixing this warning is important so that we can introduce the support for <a href="https://github.com/facebook/react/issues/140">custom attributes</a> to React. There is a reason like this behind every deprecation that we add.</p>
+
+<p>When we add a deprecation warning, we keep it for the rest of the current major version, and <a href="/react/blog/2016/02/19/new-versioning-scheme.html">change the behavior in the next major version</a>. If there is a lot of repetitive manual work involved, we release a <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemod</a> script that automates most of the change. Codemods enable us to move forward without stagnation in a massive codebase, and we encourage you to use them as well.</p>
+
+<p>You can find the codemods that we released in the <a href="https://github.com/reactjs/react-codemod">react-codemod</a> repository.</p>
+<h3><a class="anchor" name="interoperability"></a>Interoperability <a class="hash-link" href="#interoperability">#</a></h3>
+<p>We place high value in interoperability with existing systems and gradual adoption. Facebook has a massive non-React codebase. Its website uses a mix of a server-side component system called XHP, internal UI libraries that came before React, and React itself. It is important to us that any product team can <a href="https://www.youtube.com/watch?v=BF58ZJ1ZQxY">start using React for a small feature</a> rather than rewrite their code to bet on it.</p>
+
+<p>This is why React provides escape hatches to work with mutable models, and tries to work well together with other UI libraries. You can wrap an existing imperative UI into a declarative component, and vice versa. This is crucial for gradual adoption.</p>
+<h3><a class="anchor" name="scheduling"></a>Scheduling <a class="hash-link" href="#scheduling">#</a></h3>
+<p>Even when your components are described as functions, when you use React you don&#39;t call them directly. Every component returns a <a href="/react/blog/2015/12/18/react-components-elements-and-instances.html#elements-describe-the-tree">description of what needs to be rendered</a>, and that description may include both user-written components like <code>&lt;LikeButton&gt;</code> and platform-specific components like <code>&lt;div&gt;</code>. It is up to React to &quot;unroll&quot; <code>&lt;LikeButton&gt;</code> at some point in the future and actually apply changes to the UI tree according to the render results of the components recursively.</p>
+
+<p>This is a subtle distinction but a powerful one. Since you don&#39;t call that component function but let React call it, it means React has the power to delay calling it if necessary. In its current implementation React walks the tree recursively and calls render functions of the whole updated tree during a single tick. However in the future it might start <a href="https://github.com/facebook/react/issues/6170">delaying some updates to avoid dropping frames</a>. This is a common theme in React design. Some popular libraries implement the &quot;push&quot; approach where computations are performed when the new data is available. React, however, sticks to the &quot;pull&quot; approach where computations can be delayed until necessary.</p>
+
+<p>React is not a generic data processing library. It is a library for building user interfaces. We think that it is uniquely positioned in an app to know which computations are relevant right now and which are not. If something is offscreen, we can delay any logic related to it. If data is arriving faster than the frame rate, we can coalesce and batch updates. We can prioritize work coming from user interactions (such as an animation caused by a button click) over less important background work (such as rendering new content just loaded from the network) to avoid dropping frames. To be clear, we are not taking advantage of this right now. However the freedom to do something like this is why we prefer to have control over scheduling, and why <code>setState()</code> is asynchronous. Conceptually, we think of it as &quot;scheduling an update&quot;.</p>
+
+<p>The control over scheduling would be harder for us to gain if we let the user directly compose views with a &quot;push&quot; based paradigm common in some variations of <a href="https://en.wikipedia.org/wiki/Functional_reactive_programming">Functional Reactive Programming</a>. We want to own the &quot;glue&quot; code.</p>
+
+<p>It is a key goal for React that the amount of the user code that executes before yielding back into React is minimal. This ensures that React retains the capability to schedule and split work in chunks according to what it knows about the UI.</p>
+
+<p>There is an internal joke in the team that React should have been called &quot;Schedule&quot; because React does not want to be fully &quot;reactive&quot;.</p>
+<h3><a class="anchor" name="developer-experience"></a>Developer Experience <a class="hash-link" href="#developer-experience">#</a></h3>
+<p>Providing a good developer experience is important to us.</p>
+
+<p>For example, we maintain <a href="https://github.com/facebook/react-devtools">React DevTools</a> which let you inspect the React component tree in Chrome and Firefox. We have heard that it brings a big productivity boost both to the Facebook engineers and to the community.</p>
+
+<p>We also try to go an extra mile to provide helpful developer warnings. For example, React warns you in development if you nest tags in a way that the browser doesn&#39;t understand, or if you make a common typo in the API. Developer warnings and the related checks are the main reason why the development version of React is slower than the production version.</p>
+
+<p>The usage patterns that we see internally at Facebook help us understand what the common mistakes are, and how to prevent them early. When we add new features, we try to anticipate the common mistakes and warn about them.</p>
+
+<p>We are always looking out for ways to improve the developer experience. We love to hear your suggestions and accept your contributions to make it even better.</p>
+<h3><a class="anchor" name="debugging"></a>Debugging <a class="hash-link" href="#debugging">#</a></h3>
+<p>When something goes wrong, it is important that you have breadcrumbs to trace the mistake to its source in the codebase. In React, props and state are those breadcrumbs.</p>
+
+<p>If you see something wrong on the screen, you can open React DevTools, find the component responsible for rendering, and then see if the props and state are correct. If they are, you know that the problem is in the component’s <code>render()</code> function, or some function that is called by <code>render()</code>. The problem is isolated.</p>
+
+<p>If the state is wrong, you know that the problem is caused by one of the <code>setState()</code> calls in this file. This, too, is relatively simple to locate and fix because usually there are only a few <code>setState()</code> calls in a single file.</p>
+
+<p>If the props are wrong, you can traverse the tree up in the inspector, looking for the component that first &quot;poisoned the well&quot; by passing bad props down.</p>
+
+<p>This ability to trace any UI to the data that produced it in the form of current props and state is very important to React. It is an explicit design goal that state is not &quot;trapped&quot; in closures and combinators, and is available to React directly.</p>
+
+<p>While the UI is dynamic, we believe that synchronous <code>render()</code> functions of props and state turn debugging from guesswork into a boring but finite procedure. We would like to preserve this constraint in React even though it makes some use cases, like complex animations, harder.</p>
+<h3><a class="anchor" name="configuration"></a>Configuration <a class="hash-link" href="#configuration">#</a></h3>
+<p>We find global runtime configuration options to be problematic.</p>
+
+<p>For example, it is occasionally requested that we implement a function like <code>React.configure(options)</code> or <code>React.register(component)</code>. However this poses multiple problems, and we are not aware of good solutions to them.</p>
+
+<p>What if somebody calls such a function from a third-party component library? What if one React app embeds another React app, and their desired configurations are incompatible? How can a third-party component specify that it requires a particular configuration? We think that global configuration doesn&#39;t work well with composition. Since composition is central to React, we don&#39;t provide global configuration in code.</p>
+
+<p>We do, however, provide some global configuration on the build level. For example, we provide separate development and production builds. We may also <a href="https://github.com/facebook/react/issues/6627">add a profiling build</a> in the future, and we are open to considering other build flags.</p>
+<h3><a class="anchor" name="beyond-the-dom"></a>Beyond the DOM <a class="hash-link" href="#beyond-the-dom">#</a></h3>
+<p>We see the value of React in the way it allows us to write components that have less bugs and compose together well. DOM is the original rendering target for React but <a href="http://facebook.github.io/react-native/">React Native</a> is just as important both to Facebook and the community.</p>
+
+<p>Being renderer-agnostic is an important design constraint of React. It adds some overhead in the internal representations. On the other hand, any improvements to the core translate across platforms.</p>
+
+<p>Having a single programming model lets us form engineering teams around products instead of platforms. So far the tradeoff has been worth it for us.</p>
+<h3><a class="anchor" name="implementation"></a>Implementation <a class="hash-link" href="#implementation">#</a></h3>
+<p>We try to provide elegant APIs where possible. We are much less concerned with the implementation being elegant. The real world is far from perfect, and to a reasonable extent we prefer to put the ugly code into the library if it means the user does not have to write it. When we evaluate new code, we are looking for an implementation that is correct, performant and affords a good developer experience. Elegance is secondary.</p>
+
+<p>We prefer boring code to clever code. Code is disposable and often changes. So it is important that it <a href="https://youtu.be/4anAwXYqLG8?t=13m9s">doesn&#39;t introduce new internal abstractions unless absolutely necessary</a>. Verbose code that is easy to move around, change and remove is preferred to elegant code that is prematurely abstracted and hard to change.</p>
+<h3><a class="anchor" name="optimized-for-tooling"></a>Optimized for Tooling <a class="hash-link" href="#optimized-for-tooling">#</a></h3>
+<p>Some commonly used APIs have verbose names. For example, we use <code>componentDidMount()</code> instead of <code>didMount()</code> or <code>onMount()</code>. This is <a href="https://github.com/reactjs/react-future/issues/40#issuecomment-142442124">intentional</a>. The goal is to make the points of interaction with the library highly visible.</p>
+
+<p>In a massive codebase like Facebook, being able to search for uses of specific APIs is very important. We value distinct verbose names, and especially for the features that should be used sparingly. For example, <code>dangerouslySetInnerHTML</code> is hard to miss in a code review.</p>
+
+<p>Optimizing for search is also important because of our reliance on <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemods</a> to make breaking changes. We want it to be easy and safe to apply vast automated changes across the codebase, and unique verbose names help us achieve this. Similarly, distinctive names make it easy to write custom <a href="https://github.com/yannickcr/eslint-plugin-react">lint rules</a> about using React without worrying about potential false positives.</p>
+
+<p><a href="/react/docs/displaying-data.html#jsx-syntax">JSX</a> plays a similar role. While it is not required with React, we use it extensively at Facebook both for aesthetic and pragmatic reasons.</p>
+
+<p>In our codebase, JSX provides an unambigious hint to the tools that they are dealing with a React element tree. This makes it possible to add build-time optimizations such as <a href="http://babeljs.io/docs/plugins/transform-react-constant-elements/">hoisting constant elements</a>, safely lint and codemod internal component usage, and <a href="https://github.com/facebook/react/pull/6771">include JSX source location</a> into the warnings.</p>
+<h3><a class="anchor" name="driven-by-facebook"></a>Driven by Facebook <a class="hash-link" href="#driven-by-facebook">#</a></h3>
+<p>Ultimately React is driven by the needs of Facebook. We are more likely to spend time and energy on issues with React that people using it at Facebook are experiencing internally.</p>
+
+<p>We think there are two ways to look at it. You could say that React is a Facebook project, and is not driven by the community. In a way, this is true.</p>
+
+<p>Another way to look at it is that it&#39;s very hard to make a large group of people happy. It is often recommended that you pick a small audience, focus on making them happy, and this will bring a positive net effect. So far we have found that solving the problems encountered by Facebook product teams translates well to the open source community. If you&#39;re building apps with dynamic UI comparable to the Facebook products, you might find that React solves your problems as well.</p>
+
+<p>If you want to help us and implement a feature, fix a bug, or contribute to the documentation, we are excited to consider your contributions. React is a community project in the sense that pull requests are very welcome. However we encourage you to discuss your proposal in an issue first so that we can communicate the priority of your issue for us, and whether we agree with your general direction.</p>
+
+<p>The downside of this approach is that we don&#39;t focus as much on things that Facebook teams don&#39;t have to deal with, such as the &quot;getting started&quot; experience. We are acutely aware of this and are trying to find the right balance between things that matter to Facebook and things that matter to the community. When we do a bad job at it, we rely on you to step up and plug the holes.</p>
+
+<p>Thank you for helping us.</p>
+
+
+    <div class="docs-prevnext">
+      
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">
+        &copy; 2013&ndash;2016 Facebook Inc.<br>
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
+  </script>
+</body>
+</html>
