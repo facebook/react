@@ -11,26 +11,22 @@ next: multiple-components-zh-CN.html
 ## 简单例子
 
 ```javascript
-class LikeButton extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      liked: false
-    };
-    this.handleClick = this.handleClick.bind(this);
-  }
-  handleClick() {
+var LikeButton = React.createClass({
+  getInitialState: function() {
+    return {liked: false};
+  },
+  handleClick: function(event) {
     this.setState({liked: !this.state.liked});
-  }
-  render() {
-    const text = this.state.liked ? 'like' : 'haven\'t liked';
+  },
+  render: function() {
+    var text = this.state.liked ? 'liked' : 'haven\'t liked';
     return (
-      <div onClick={this.handleClick}>
+      <p onClick={this.handleClick}>
         You {text} this. Click to toggle.
-      </div>
+      </p>
     );
   }
-}
+});
 
 ReactDOM.render(
   <LikeButton />,
