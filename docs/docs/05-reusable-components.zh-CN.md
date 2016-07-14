@@ -227,7 +227,7 @@ Counter.defaultProps = { initialCount: 0 };
 方法遵循正式的ES6 class的语义，意味着它们不会自动绑定`this`到实例上。你必须显示的使用`.bind(this)` or [箭头函数](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`：
 
 ```javascript
-// 你可以使用 bind() 来保护 `this`
+// 你可以使用 bind() 来绑定 `this`
 <div onClick={this.tick.bind(this)}>
 
 // 或者你可以使用箭头函数
@@ -251,7 +251,7 @@ constructor(props) {
 <div onClick={this.tick}>
 ```
 
-这对应用的性能有帮助，特别是当你用 [深比较](/react/docs/shallow-compare.html) 实现 [shouldComponentUpdate()](/react/docs/component-specs.html#updating-shouldcomponentupdate) 时。
+这对应用的性能有帮助，特别是当你用 [浅层比较](/react/docs/shallow-compare.html) 实现 [shouldComponentUpdate()](/react/docs/component-specs.html#updating-shouldcomponentupdate) 时。
 
 ### 没有 Mixins
 
@@ -276,7 +276,7 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 这个简化的组件API旨在用于那些纯函数态的组件 。这些组件必须没有保持任何内部状态，没有备份实例，也没有组件生命周期方法。他们纯粹的函数式的转化他们的输入，没有引用。
-然而，你仍然可以以设置为函数的 properties 的方式来指定 `.propTypes` 和 `.defaultProps`，就像你在ES6类里设置他们那样。
+然而，你仍然可以以设置函数 properties 的方式来指定 `.propTypes` 和 `.defaultProps`，就像你在ES6类里设置他们那样。
 
 > 注意：
 >

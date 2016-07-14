@@ -8,7 +8,7 @@ next: reusable-components-zh-CN.html
 
 目前为止，我们已经学了如何用单个组件来展示数据和处理用户输入。下一步让我们来体验 React 最激动人心的特性之一：可组合性（composability）。
 
-## 动机：分离关注
+## 动机：关注分离
 
 通过复用那些接口定义良好的组件来开发新的模块化组件，我们得到了与使用函数和类相似的好处。具体来说就是能够通过开发简单的组件把程序的*不同关注面分离*。如果为程序开发一套自定义的组件库，那么就能以最适合业务场景的方式来展示你的用户界面。
 
@@ -100,7 +100,7 @@ ReactDOM.render(
 </Card>
 // 第二次渲染
 <Card>
-  <p style={{display: 'none'}}>Paragraph 1</p>
+  <p style={{'{{'}}display: 'none'}}>Paragraph 1</p>
   <p>Paragraph 2</p>
 </Card>
 ```
