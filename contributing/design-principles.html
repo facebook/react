@@ -436,7 +436,7 @@
 
 <p>This document assumes a strong understanding of React. It describes the design principles of <em>React itself</em>, not React components or applications.</p>
 
-<p>For an introduction to React, check out <a href="react/docs/thinking-in-react.html">Thinking in React</a> instead.</p>
+<p>For an introduction to React, check out <a href="/react/docs/thinking-in-react.html">Thinking in React</a> instead.</p>
 </blockquote>
 <h3><a class="anchor" name="composition"></a>Composition <a class="hash-link" href="#composition">#</a></h3>
 <p>The key feature of React is composition of components. Components written by different people should work well together. It is important to us that you can add functionality to a component without causing rippling changes throughout the codebase.</p>
@@ -467,7 +467,7 @@
 
 <p>We don&#39;t deprecate anything without a good reason. We recognize that sometimes deprecations warnings cause frustration but we add them because deprecations clean up the road for the improvements and new features that we and many people in the community consider valuable.</p>
 
-<p>For example, we added a <a href="https://facebook.github.io/react/warnings/unknown-prop.html">warning about unknown DOM props</a> in React 15.2.0. Many projects were affected by this. However fixing this warning is important so that we can introduce the support for <a href="https://github.com/facebook/react/issues/140">custom attributes</a> to React. There is a reason like this behind every deprecation that we add.</p>
+<p>For example, we added a <a href="/react/warnings/unknown-prop.html">warning about unknown DOM props</a> in React 15.2.0. Many projects were affected by this. However fixing this warning is important so that we can introduce the support for <a href="https://github.com/facebook/react/issues/140">custom attributes</a> to React. There is a reason like this behind every deprecation that we add.</p>
 
 <p>When we add a deprecation warning, we keep it for the rest of the current major version, and <a href="/react/blog/2016/02/19/new-versioning-scheme.html">change the behavior in the next major version</a>. If there is a lot of repetitive manual work involved, we release a <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemod</a> script that automates most of the change. Codemods enable us to move forward without stagnation in a massive codebase, and we encourage you to use them as well.</p>
 
@@ -479,9 +479,15 @@
 <h3><a class="anchor" name="scheduling"></a>Scheduling <a class="hash-link" href="#scheduling">#</a></h3>
 <p>Even when your components are described as functions, when you use React you don&#39;t call them directly. Every component returns a <a href="/react/blog/2015/12/18/react-components-elements-and-instances.html#elements-describe-the-tree">description of what needs to be rendered</a>, and that description may include both user-written components like <code>&lt;LikeButton&gt;</code> and platform-specific components like <code>&lt;div&gt;</code>. It is up to React to &quot;unroll&quot; <code>&lt;LikeButton&gt;</code> at some point in the future and actually apply changes to the UI tree according to the render results of the components recursively.</p>
 
-<p>This is a subtle distinction but a powerful one. Since you don&#39;t call that component function but let React call it, it means React has the power to delay calling it if necessary. In its current implementation React walks the tree recursively and calls render functions of the whole updated tree during a single tick. However in the future it might start <a href="https://github.com/facebook/react/issues/6170">delaying some updates to avoid dropping frames</a>. This is a common theme in React design. Some popular libraries implement the &quot;push&quot; approach where computations are performed when the new data is available. React, however, sticks to the &quot;pull&quot; approach where computations can be delayed until necessary.</p>
+<p>This is a subtle distinction but a powerful one. Since you don&#39;t call that component function but let React call it, it means React has the power to delay calling it if necessary. In its current implementation React walks the tree recursively and calls render functions of the whole updated tree during a single tick. However in the future it might start <a href="https://github.com/facebook/react/issues/6170">delaying some updates to avoid dropping frames</a>.</p>
 
-<p>React is not a generic data processing library. It is a library for building user interfaces. We think that it is uniquely positioned in an app to know which computations are relevant right now and which are not. If something is offscreen, we can delay any logic related to it. If data is arriving faster than the frame rate, we can coalesce and batch updates. We can prioritize work coming from user interactions (such as an animation caused by a button click) over less important background work (such as rendering new content just loaded from the network) to avoid dropping frames. To be clear, we are not taking advantage of this right now. However the freedom to do something like this is why we prefer to have control over scheduling, and why <code>setState()</code> is asynchronous. Conceptually, we think of it as &quot;scheduling an update&quot;.</p>
+<p>This is a common theme in React design. Some popular libraries implement the &quot;push&quot; approach where computations are performed when the new data is available. React, however, sticks to the &quot;pull&quot; approach where computations can be delayed until necessary.</p>
+
+<p>React is not a generic data processing library. It is a library for building user interfaces. We think that it is uniquely positioned in an app to know which computations are relevant right now and which are not.</p>
+
+<p>If something is offscreen, we can delay any logic related to it. If data is arriving faster than the frame rate, we can coalesce and batch updates. We can prioritize work coming from user interactions (such as an animation caused by a button click) over less important background work (such as rendering new content just loaded from the network) to avoid dropping frames.</p>
+
+<p>To be clear, we are not taking advantage of this right now. However the freedom to do something like this is why we prefer to have control over scheduling, and why <code>setState()</code> is asynchronous. Conceptually, we think of it as &quot;scheduling an update&quot;.</p>
 
 <p>The control over scheduling would be harder for us to gain if we let the user directly compose views with a &quot;push&quot; based paradigm common in some variations of <a href="https://en.wikipedia.org/wiki/Functional_reactive_programming">Functional Reactive Programming</a>. We want to own the &quot;glue&quot; code.</p>
 
