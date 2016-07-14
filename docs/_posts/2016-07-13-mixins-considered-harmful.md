@@ -489,6 +489,8 @@ var RouterMixin = {
 };
 
 var Link = React.createClass({
+  mixins: [RouterMixin],
+
   handleClick: function(e) {
     e.stopPropagation();
 
