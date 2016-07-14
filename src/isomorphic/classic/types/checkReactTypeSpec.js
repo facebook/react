@@ -19,7 +19,11 @@ var warning = require('warning');
 
 var ReactComponentTreeDevtool;
 
-if (process.env.NODE_ENV === 'test') {
+if (
+  typeof process !== 'undefined' &&
+  process.env &&
+  process.env.NODE_ENV === 'test'
+) {
   // Temporary hack.
   // Inline requires don't work well with Jest:
   // https://github.com/facebook/react/issues/7240
