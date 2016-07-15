@@ -1,7 +1,10 @@
 ---
+os:
+  - linux
+  - osx
 language: node_js
 node_js:
-- 4
+  - 4
 sudo: false
 cache:
   directories:
