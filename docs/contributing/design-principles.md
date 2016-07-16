@@ -43,11 +43,15 @@ If we want to deprecate a pattern that we don't like, it is our responsibility t
 
 ### Stability
 
-We value API stability because at Facebook we have more than 20 thousand components using React. This means that we are reluctant to change public APIs or behavior because teams depend on it both externally and internally.
+We value API stability. At Facebook, we have more than 20 thousand components using React. Many other companies, including [Twitter](https://twitter.com/) and [Airbnb](https://www.airbnb.com/), are also heavy users of React. This is why we are usually reluctant to change public APIs or behavior.
 
 However we think stability in the sense of "nothing changes" is overrated. It quickly turns into stagnation. Instead, we prefer the stability in the sense of "It is heavily used in production, and when something changes, there is a clear (and preferably automated) migration path."
 
 When we deprecate a pattern, we study its internal usage at Facebook and add deprecation warnings. They let us assess the impact of the change. Sometimes we back out if we see that it is too early, and we need to think more strategically about getting the codebases to the point where they are ready for this change.
+
+If we are confident that the change is not too disruptive and the migration strategy is viable for all use cases, we release the deprecation warning to the open source community. We are closely in touch with many users of React outside of Facebook, and we monitor popular open source projects and guide them in fixing those deprecations.
+
+Given the sheer size of the Facebook React codebase, successful internal migration is often a good indicator that other companies won't have problems either. Nevertheless sometimes people point out additional use cases we haven't thought of, and we add escape hatches for them or rethink our approach.
 
 We don't deprecate anything without a good reason. We recognize that sometimes deprecations warnings cause frustration but we add them because deprecations clean up the road for the improvements and new features that we and many people in the community consider valuable.
 
@@ -145,16 +149,14 @@ Optimizing for search is also important because of our reliance on [codemods](ht
 
 In our codebase, JSX provides an unambigious hint to the tools that they are dealing with a React element tree. This makes it possible to add build-time optimizations such as [hoisting constant elements](http://babeljs.io/docs/plugins/transform-react-constant-elements/), safely lint and codemod internal component usage, and [include JSX source location](https://github.com/facebook/react/pull/6771) into the warnings.
 
-### Driven by Facebook
+### Dogfooding
 
-Ultimately React is driven by the needs of Facebook. We are more likely to spend time and energy on issues with React that people using it at Facebook are experiencing internally.
+We try our best to address the problems raised by the community. However we are likely to prioritize the issues that people are *also* experiencing internally at Facebook. Perhaps counter-intuitively, we think this is the main reason why the community can bet on React.
 
-We think there are two ways to look at it. You could say that React is a Facebook project, and is not driven by the community. In a way, this is true.
+Heavy internal usage gives us the confidence that React won't disappear tomorrow. React was created at Facebook to solve its problems. It brings tangible business value to the company and is used in many of its products. [Dogfooding](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) it means that our vision stays sharp and we have a focused direction going forward.
 
-Another way to look at it is that it's very hard to make a large group of people happy. It is often recommended that you pick a small audience, focus on making them happy, and this will bring a positive net effect. So far we have found that solving the problems encountered by Facebook product teams translates well to the open source community. If you're building apps with dynamic UI comparable to the Facebook products, you might find that React solves your problems as well.
+This doesn't mean that we ignore the issues raised by the community. For example, we added support for [web components](/react/docs/webcomponents.html) and [SVG](https://github.com/facebook/react/pull/6243) to React even though we don't rely on either of them internally. We are actively [listening to your pain points](https://github.com/facebook/react/issues/2686) and [address them](/react/blog/2016/07/11/introducing-reacts-error-code-system.html) to the best of our ability. The community is what makes React special to us, and we are honored to contribute back.
 
-If you want to help us and implement a feature, fix a bug, or contribute to the documentation, we are excited to consider your contributions. React is a community project in the sense that pull requests are very welcome. However we encourage you to discuss your proposal in an issue first so that we can communicate the priority of your issue for us, and whether we agree with your general direction.
+After releasing many open source projects at Facebook, we have learned that trying to make everyone happy at the same time produced projects with poor focus that didn't grow well. Instead, we found that picking a small audience and focusing on making them happy brings a positive net effect. That's exactly what we did with React, and so far solving the problems encountered by Facebook product teams has translated well to the open source community.
 
-The downside of this approach is that we don't focus as much on things that Facebook teams don't have to deal with, such as the "getting started" experience. We are acutely aware of this and are trying to find the right balance between things that matter to Facebook and things that matter to the community. When we do a bad job at it, we rely on you to step up and plug the holes.
-
-Thank you for helping us.
+The downside of this approach is that sometimes we fail to give enough focus to the things that Facebook teams don't have to deal with, such as the "getting started" experience. We are acutely aware of this, and we are thinking of how to improve in a way that would benefit everyone in the community without making the same mistakes we did with open source projects before.
