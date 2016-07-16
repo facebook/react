@@ -1,9 +1,9 @@
 ---
-id: displaying-data
+id: displaying-data-zh-TW
 title: Displaying Data
-permalink: displaying-data.html
-prev: why-react.html
-next: jsx-in-depth.html
+permalink: displaying-data-zh-TW.html
+prev: why-react-zh-TW.html
+next: jsx-in-depth-zh-TW.html
 ---
 
 在使用者介面所能做最基本的事情就是呈現資料. React讓呈現資料變得更加容易並且當資料有所變動時也能自動地讓使用者介面保持呈現最新的資料.
