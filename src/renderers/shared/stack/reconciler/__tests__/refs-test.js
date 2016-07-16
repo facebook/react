@@ -116,10 +116,6 @@ var expectClickLogsLengthToBe = function(instance, length) {
 describe('reactiverefs', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
-
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   /**
@@ -163,10 +159,6 @@ describe('reactiverefs', function() {
 describe('ref swapping', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
-
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   var RefHopsAround = React.createClass({

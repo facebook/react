@@ -19,11 +19,28 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
+var ReactComponentTreeDevtool;
+
+if (
+  typeof process !== 'undefined' &&
+  process.env &&
+  process.env.NODE_ENV === 'test'
+) {
+  // Temporary hack.
+  // Inline requires don't work well with Jest:
+  // https://github.com/facebook/react/issues/7240
+  // Remove the inline requires when we don't need them anymore:
+  // https://github.com/facebook/react/pull/7178
+  ReactComponentTreeDevtool = require('ReactComponentTreeDevtool')
+}
+
 function instantiateChild(childInstances, child, name, selfDebugID) {
   // We found a component instance.
   var keyUnique = (childInstances[name] === undefined);
   if (__DEV__) {
-    var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+    if (!ReactComponentTreeDevtool) {
+      ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+    }
     warning(
       keyUnique,
       'flattenChildren(...): Encountered two children with the same key, ' +
