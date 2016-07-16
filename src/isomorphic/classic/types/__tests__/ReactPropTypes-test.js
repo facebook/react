@@ -20,8 +20,6 @@ var ReactPropTypesSecret;
 
 var Component;
 var MyComponent;
-var requiredMessage =
-  'Required prop `testProp` was not specified in `testComponent`.';
 
 function typeCheckFail(declaration, value, message) {
   var props = {testProp: value};
@@ -35,6 +33,45 @@ function typeCheckFail(declaration, value, message) {
   );
   expect(error instanceof Error).toBe(true);
   expect(error.message).toBe(message);
+}
+
+function typeCheckFailRequiredValues(declaration) {
+  var specifiedButIsNullMsg = 'Required prop `testProp` was specified in ' +
+  '`testComponent`, but its value is `null`.';
+  var unspecifiedMsg =
+    'Required prop `testProp` was not specified in `testComponent`.';
+  var props1 = {testProp: null};
+  var error1 = declaration(
+    props1,
+    'testProp',
+    'testComponent',
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
+  );
+  expect(error1.message).toBe(specifiedButIsNullMsg);
+  var props2 = {testProp: undefined};
+  var error2 = declaration(
+    props2,
+    'testProp',
+    'testComponent',
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
+  );
+  expect(error2 instanceof Error).toBe(true);
+  expect(error2.message).toBe(unspecifiedMsg);
+  var props3 = {};
+  var error3 = declaration(
+    props3,
+    'testProp',
+    'testComponent',
+    ReactPropTypeLocations.prop,
+    null,
+    ReactPropTypesSecret
+  );
+  expect(error3 instanceof Error).toBe(true);
+  expect(error3.message).toBe(unspecifiedMsg);
 }
 
 function typeCheckPass(declaration, value) {
@@ -146,8 +183,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(PropTypes.string.isRequired, null, requiredMessage);
-      typeCheckFail(PropTypes.string.isRequired, undefined, requiredMessage);
+      typeCheckFailRequiredValues(PropTypes.string.isRequired);
     });
 
     it('should warn if called manually in development', function() {
@@ -213,8 +249,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(PropTypes.any.isRequired, null, requiredMessage);
-      typeCheckFail(PropTypes.any.isRequired, undefined, requiredMessage);
+      typeCheckFailRequiredValues(PropTypes.any.isRequired);
     });
 
     it('should warn if called manually in development', function() {
@@ -307,15 +342,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.arrayOf(PropTypes.number).isRequired,
-        null,
-        requiredMessage
-      );
-      typeCheckFail(
-        PropTypes.arrayOf(PropTypes.number).isRequired,
-        undefined,
-        requiredMessage
+      typeCheckFailRequiredValues(
+        PropTypes.arrayOf(PropTypes.number).isRequired
       );
     });
 
@@ -406,8 +434,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(PropTypes.element.isRequired, null, requiredMessage);
-      typeCheckFail(PropTypes.element.isRequired, undefined, requiredMessage);
+      typeCheckFailRequiredValues(PropTypes.element.isRequired);
     });
 
     it('should warn if called manually in development', function() {
@@ -493,12 +520,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.instanceOf(String).isRequired, null, requiredMessage
-      );
-      typeCheckFail(
-        PropTypes.instanceOf(String).isRequired, undefined, requiredMessage
-      );
+      typeCheckFailRequiredValues(PropTypes.instanceOf(String).isRequired);
     });
 
     it('should warn if called manually in development', function() {
@@ -601,16 +623,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.node.isRequired,
-        null,
-        'Required prop `testProp` was not specified in `testComponent`.'
-      );
-      typeCheckFail(
-        PropTypes.node.isRequired,
-        undefined,
-        'Required prop `testProp` was not specified in `testComponent`.'
-      );
+      typeCheckFailRequiredValues(PropTypes.node.isRequired);
     });
 
     it('should accept empty array for required props', function() {
@@ -724,15 +737,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.objectOf(PropTypes.number).isRequired,
-        null,
-        requiredMessage
-      );
-      typeCheckFail(
-        PropTypes.objectOf(PropTypes.number).isRequired,
-        undefined,
-        requiredMessage
+      typeCheckFailRequiredValues(
+        PropTypes.objectOf(PropTypes.number).isRequired
       );
     });
 
@@ -804,16 +810,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.oneOf(['red', 'blue']).isRequired,
-        null,
-        requiredMessage
-      );
-      typeCheckFail(
-        PropTypes.oneOf(['red', 'blue']).isRequired,
-        undefined,
-        requiredMessage
-      );
+      typeCheckFailRequiredValues(PropTypes.oneOf(['red', 'blue']).isRequired);
     });
 
     it('should warn if called manually in development', function() {
@@ -882,15 +879,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-        null,
-        requiredMessage
-      );
-      typeCheckFail(
-        PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-        undefined,
-        requiredMessage
+      typeCheckFailRequiredValues(
+        PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired
       );
     });
 
@@ -983,15 +973,8 @@ describe('ReactPropTypes', function() {
     });
 
     it('should warn for missing required values', function() {
-      typeCheckFail(
-        PropTypes.shape({key: PropTypes.number}).isRequired,
-        null,
-        requiredMessage
-      );
-      typeCheckFail(
-        PropTypes.shape({key: PropTypes.number}).isRequired,
-        undefined,
-        requiredMessage
+      typeCheckFailRequiredValues(
+        PropTypes.shape({key: PropTypes.number}).isRequired
       );
     });
 

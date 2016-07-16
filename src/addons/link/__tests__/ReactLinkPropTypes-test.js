@@ -68,7 +68,8 @@ describe('ReactLink', function() {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: null, requestChange: null},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'Required prop `testProp.value` was specified in `testComponent`, but ' +
+        'its value is `null`.'
     );
   });
 
@@ -122,12 +123,14 @@ describe('ReactLink', function() {
   });
 
   it('should warn for missing required values', function() {
-    typeCheckFail(LinkPropTypes.link().isRequired, null, requiredMessage);
+    var specifiedButIsNullMsg = 'Required prop `testProp` was specified in ' +
+      '`testComponent`, but its value is `null`.';
+    typeCheckFail(LinkPropTypes.link().isRequired, null, specifiedButIsNullMsg);
     typeCheckFail(LinkPropTypes.link().isRequired, undefined, requiredMessage);
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string).isRequired,
       null,
-      requiredMessage
+      specifiedButIsNullMsg
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string).isRequired,

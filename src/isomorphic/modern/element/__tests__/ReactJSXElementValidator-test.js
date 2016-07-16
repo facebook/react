@@ -249,8 +249,8 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
+      'Warning: Failed prop type: Required prop `prop` was specified in ' +
+      '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
     );
   });
@@ -264,8 +264,8 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
+      'Warning: Failed prop type: Required prop `prop` was specified in ' +
+      '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
     );
   });

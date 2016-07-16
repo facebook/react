@@ -360,8 +360,8 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `Component`.\n' +
+      'Warning: Failed prop type: Required prop `prop` was specified in ' +
+      '`Component`, but its value is `null`.\n' +
       '    in Component'
     );
   });
@@ -385,8 +385,8 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `Component`.\n' +
+      'Warning: Failed prop type: Required prop `prop` was specified in ' +
+      '`Component`, but its value is `null`.\n' +
       '    in Component'
     );
   });
