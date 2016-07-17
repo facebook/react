@@ -49,6 +49,7 @@ function typeCheckFailRequiredValues(declaration) {
     null,
     ReactPropTypesSecret
   );
+  expect(error1 instanceof Error).toBe(true);
   expect(error1.message).toBe(specifiedButIsNullMsg);
   var props2 = {testProp: undefined};
   var error2 = declaration(
