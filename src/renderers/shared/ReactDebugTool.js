@@ -111,16 +111,18 @@ function beginLifeCycleTimer(debugID, timerType) {
   if (currentFlushNesting === 0) {
     return;
   }
-  warning(
-    !currentTimerType || lifeCycleTimerHasWarned,
-    'There is an internal error in the React performance measurement code. ' +
-    'Did not expect %s timer to start while %s timer is still in ' +
-    'progress for %s instance.',
-    timerType,
-    currentTimerType || 'no',
-    (debugID === currentTimerDebugID) ? 'the same' : 'another'
-  );
-  lifeCycleTimerHasWarned = true;
+  if (!lifeCycleTimerHasWarned) {
+    warning(
+      !currentTimerType,
+      'There is an internal error in the React performance measurement code. ' +
+      'Did not expect %s timer to start while %s timer is still in ' +
+      'progress for %s instance.',
+      timerType,
+      currentTimerType || 'no',
+      (debugID === currentTimerDebugID) ? 'the same' : 'another'
+    );
+    lifeCycleTimerHasWarned = true;
+  }
   currentTimerStartTime = performanceNow();
   currentTimerNestedFlushDuration = 0;
   currentTimerDebugID = debugID;
@@ -131,16 +133,18 @@ function endLifeCycleTimer(debugID, timerType) {
   if (currentFlushNesting === 0) {
     return;
   }
-  warning(
-    currentTimerType === timerType || lifeCycleTimerHasWarned,
-    'There is an internal error in the React performance measurement code. ' +
-    'We did not expect %s timer to stop while %s timer is still in ' +
-    'progress for %s instance. Please report this as a bug in React.',
-    timerType,
-    currentTimerType || 'no',
-    (debugID === currentTimerDebugID) ? 'the same' : 'another'
-  );
-  lifeCycleTimerHasWarned = true;
+  if (!lifeCycleTimerHasWarned) {
+    warning(
+      currentTimerType === timerType,
+      'There is an internal error in the React performance measurement code. ' +
+      'We did not expect %s timer to stop while %s timer is still in ' +
+      'progress for %s instance. Please report this as a bug in React.',
+      timerType,
+      currentTimerType || 'no',
+      (debugID === currentTimerDebugID) ? 'the same' : 'another'
+    );
+    lifeCycleTimerHasWarned = true;
+  }
   if (isProfiling) {
     currentFlushMeasurements.push({
       timerType,
