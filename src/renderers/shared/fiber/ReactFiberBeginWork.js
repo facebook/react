@@ -82,6 +82,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         OffscreenPriority
       );
       workInProgress.pendingWorkPriority = OffscreenPriority;
+      workInProgress.wasDeprioritized = true;
       return null;
     } else {
       workInProgress.child = reconcileChildFibers(
@@ -91,6 +92,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         priority
       );
       workInProgress.pendingWorkPriority = NoWork;
+      workInProgress.wasDeprioritized = false;
       return workInProgress.child;
     }
   }

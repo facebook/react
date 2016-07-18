@@ -89,6 +89,45 @@ describe('ReactIncremental', function() {
 
   });
 
+  it('preserves a previously rendered node when deprioritized', function() {
+
+    function Middle(props) {
+      return <span prop={props.children} />;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          <div hidden={true}>
+            <Middle>{props.text}</Middle>
+          </div>
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flush();
+
+    expect(ReactNoop.root.children).toEqual([
+      div(div(span('foo'))),
+    ]);
+
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flushLowPri(20);
+
+    expect(ReactNoop.root.children).toEqual([
+      div(div(span('foo'))),
+    ]);
+
+    ReactNoop.flush();
+
+    expect(ReactNoop.root.children).toEqual([
+      div(div(span('bar'))),
+    ]);
+
+  });
+
+
   it('updates a child even though the old props is empty', function() {
     function Foo(props) {
       return (

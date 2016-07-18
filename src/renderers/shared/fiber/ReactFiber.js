@@ -106,6 +106,11 @@ export type Fiber = Instance & {
   // I'm not really sure so I'll use a flag for now.
   // TODO: Find another way to infer this flag.
   hasWorkInProgress: bool,
+  // Keeps track if we've deprioritized the children of this node so we know to
+  // reuse the existing children.
+  // TODO: Find another way to infer this flag or separate children updates from
+  // property updates so that we simply don't try to update children here.
+  wasDeprioritized: bool,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
@@ -146,6 +151,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     pendingWorkPriority: NoWork,
 
     hasWorkInProgress: false,
+    wasDeprioritized: false,
 
     alternate: null,
 
