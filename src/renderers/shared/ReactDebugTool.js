@@ -111,9 +111,9 @@ function beginLifeCycleTimer(debugID, timerType) {
   if (currentFlushNesting === 0) {
     return;
   }
-  if (!lifeCycleTimerHasWarned) {
+  if (currentTimerType && !lifeCycleTimerHasWarned) {
     warning(
-      !currentTimerType,
+      false,
       'There is an internal error in the React performance measurement code. ' +
       'Did not expect %s timer to start while %s timer is still in ' +
       'progress for %s instance.',
@@ -133,9 +133,9 @@ function endLifeCycleTimer(debugID, timerType) {
   if (currentFlushNesting === 0) {
     return;
   }
-  if (!lifeCycleTimerHasWarned) {
+  if (currentTimerType !== timerType && !lifeCycleTimerHasWarned) {
     warning(
-      currentTimerType === timerType,
+      false,
       'There is an internal error in the React performance measurement code. ' +
       'We did not expect %s timer to stop while %s timer is still in ' +
       'progress for %s instance. Please report this as a bug in React.',
