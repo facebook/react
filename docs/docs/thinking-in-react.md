@@ -2,7 +2,7 @@
 id: thinking-in-react
 title: Thinking in React
 prev: tutorial.html
-next: conferences.html
+next: learning-resources.html
 redirect_from: 'blog/2013/11/05/thinking-in-react.html'
 ---
 

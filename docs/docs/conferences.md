@@ -2,7 +2,7 @@
 id: conferences
 title: Conferences
 permalink: conferences.html
-prev: thinking-in-react.html
+prev: learning-resources.html
 next: videos.html
 ---
 
