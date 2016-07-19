@@ -1,7 +1,7 @@
 ---
 id: addons
 title: Add-ons
-permalink: addons.html
+permalink: docs/addons.html
 prev: environments.html
 next: animation.html
 ---

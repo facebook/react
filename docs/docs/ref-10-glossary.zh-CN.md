@@ -1,7 +1,7 @@
 ---
 id: glossary-zh-CN
 title: React (虚拟) DOM 术语
-permalink: glossary-zh-CN.html
+permalink: docs/glossary-zh-CN.html
 prev: webcomponents-zh-CN.html
 ---
 

@@ -2,7 +2,7 @@
 id: if-else-in-JSX-ko-KR
 title: JSX에서 If-Else
 layout: tips
-permalink: if-else-in-JSX-ko-KR.html
+permalink: tips/if-else-in-JSX-ko-KR.html
 prev: inline-styles-ko-KR.html
 next: self-closing-tag-ko-KR.html
 ---

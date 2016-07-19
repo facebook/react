@@ -1,7 +1,7 @@
 ---
 id: tooling-integration-zh-CN
 title: 工具集成
-permalink: tooling-integration-zh-CN.html
+permalink: docs/tooling-integration-zh-CN.html
 prev: more-about-refs-zh-CN.html
 next: addons-zh-CN.html
 ---

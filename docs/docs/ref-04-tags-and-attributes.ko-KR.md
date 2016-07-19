@@ -1,7 +1,7 @@
 ---
 id: tags-and-attributes-ko-KR
 title: 태그와 어트리뷰트
-permalink: tags-and-attributes-ko-KR.html
+permalink: docs/tags-and-attributes-ko-KR.html
 prev: component-specs-ko-KR.html
 next: events-ko-KR.html
 ---

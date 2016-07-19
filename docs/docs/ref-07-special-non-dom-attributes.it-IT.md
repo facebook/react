@@ -1,7 +1,7 @@
 ---
 id: special-non-dom-attributes-it-IT
 title: Attributi Speciali Non-DOM
-permalink: special-non-dom-attributes-it-IT.html
+permalink: docs/special-non-dom-attributes-it-IT.html
 prev: dom-differences-it-IT.html
 next: reconciliation-it-IT.html
 ---

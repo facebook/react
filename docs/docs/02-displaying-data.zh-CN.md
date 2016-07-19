@@ -1,7 +1,7 @@
 ---
 id: displaying-data-zh-CN
 title: 显示数据
-permalink: displaying-data-zh-CN.html
+permalink: docs/displaying-data-zh-CN.html
 prev: why-react-zh-CN.html
 next: jsx-in-depth-zh-CN.html
 ---

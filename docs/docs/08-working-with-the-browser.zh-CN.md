@@ -1,7 +1,7 @@
 ---
 id: working-with-the-browser-zh-CN
 title: 与浏览器协作
-permalink: working-with-the-browser-zh-CN.html
+permalink: docs/working-with-the-browser-zh-CN.html
 prev: forms-zh-CN.html
 next: more-about-refs-zh-CN.html
 ---

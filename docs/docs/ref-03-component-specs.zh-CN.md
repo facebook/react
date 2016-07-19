@@ -1,7 +1,7 @@
 ---
 id: component-specs-zh-CN
 title: 组件的规范和生命周期
-permalink: component-specs-zh-CN.html
+permalink: docs/component-specs-zh-CN.html
 prev: component-api-zh-CN.html
 next: tags-and-attributes-zh-CN.html
 ---

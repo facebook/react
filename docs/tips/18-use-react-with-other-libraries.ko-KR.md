@@ -2,7 +2,7 @@
 id: use-react-with-other-libraries-ko-KR
 title: React와 다른 라이브러리를 함께 사용하기
 layout: tips
-permalink: use-react-with-other-libraries-ko-KR.html
+permalink: tips/use-react-with-other-libraries-ko-KR.html
 prev: children-undefined-ko-KR.html
 next: dangerously-set-inner-html-ko-KR.html
 ---

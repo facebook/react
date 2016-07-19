@@ -1,7 +1,7 @@
 ---
 id: advanced-performance
 title: Advanced Performance
-permalink: advanced-performance.html
+permalink: docs/advanced-performance.html
 prev: shallow-compare.html
 next: context.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: events
 title: Event System
-permalink: events.html
+permalink: docs/events.html
 prev: tags-and-attributes.html
 next: dom-differences.html
 ---

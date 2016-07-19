@@ -1,7 +1,7 @@
 ---
 id: forms-it-IT
 title: Moduli
-permalink: forms-it-IT.html
+permalink: docs/forms-it-IT.html
 prev: transferring-props-it-IT.html
 next: working-with-the-browser-it-IT.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: videos-ko-KR
 title: 비디오들
-permalink: videos-ko-KR.html
+permalink: docs/videos-ko-KR.html
 prev: conferences-ko-KR.html
 next: complementary-tools-ko-KR.html
 ---

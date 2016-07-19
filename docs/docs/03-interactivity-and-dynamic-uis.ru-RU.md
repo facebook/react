@@ -1,7 +1,7 @@
 ---
 id: interactivity-and-dynamic-uis-ru-RU
 title: Интерактивные и динамические интерфейсы
-permalink: interactivity-and-dynamic-uis-ru-RU.html
+permalink: docs/interactivity-and-dynamic-uis-ru-RU.html
 prev: jsx-gotchas.html
 next: multiple-components.html
 ---

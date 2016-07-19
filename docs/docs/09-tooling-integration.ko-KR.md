@@ -1,7 +1,7 @@
 ---
 id: tooling-integration-ko-KR
 title: 툴 통합
-permalink: tooling-integration-ko-KR.html
+permalink: docs/tooling-integration-ko-KR.html
 prev: more-about-refs-ko-KR.html
 next: addons-ko-KR.html
 ---
