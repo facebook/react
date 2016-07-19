@@ -134,7 +134,7 @@ It is important that `ReactDOM.render` remain at the bottom of the script for th
 
 ## Composing components
 
-Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s. Add these two components to your file, keeping the existing `CommentBox` declaration and `ReactDOM.render` call:
+Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s. Add these two components to your file, keeping the existing `CommentBox` declaration and `ReactDOM.render` call, be sure the placement of these new components falls between the existing `CommentBox` declaration and `ReactDOM.render` call. The order will be `CommentBox`, `CommentList`, `CommentForm`, and finally `ReactDOM.render`:
 
 ```javascript
 // tutorial2.js
