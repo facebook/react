@@ -169,7 +169,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         // it until the next tick.
         workInProgress.child = current.child;
         reuseChildren(workInProgress, workInProgress.child);
-        if (workInProgress.pendingWorkPriority <= priorityLevel) {
+        if (workInProgress.pendingWorkPriority !== NoWork && workInProgress.pendingWorkPriority <= priorityLevel) {
           // TODO: This passes the current node and reads the priority level and
           // pending props from that. We want it to read our priority level and
           // pending props from the work in progress. Needs restructuring.
@@ -184,15 +184,25 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
 
     if (!workInProgress.hasWorkInProgress &&
-        workInProgress.pendingProps === workInProgress.memoizedProps &&
-        workInProgress.pendingWorkPriority === NoWork) {
+        workInProgress.pendingProps === workInProgress.memoizedProps) {
       // If we started this work before, and finished it, or if we're in a
       // ping-pong update scenario, this version could already be what we're
       // looking for. In that case, we should be able to just bail out.
+      const priorityLevel = workInProgress.pendingWorkPriority;
       workInProgress.pendingProps = null;
-      // TODO: We should be able to bail out if there is remaining work at a lower
-      // priority too. However, I don't know if that is safe or even better since
-      // the other tree could've potentially finished that work.
+      workInProgress.pendingWorkPriority = NoWork;
+      if (workInProgress.child) {
+        // If we bail out but still has work with the current priority in this
+        // subtree, we need to go find it right now. If we don't, we won't flush
+        // it until the next tick.
+        reuseChildren(workInProgress, workInProgress.child);
+        if (workInProgress.pendingWorkPriority !== NoWork && workInProgress.pendingWorkPriority <= priorityLevel) {
+          // TODO: This passes the current node and reads the priority level and
+          // pending props from that. We want it to read our priority level and
+          // pending props from the work in progress. Needs restructuring.
+          return findNextUnitOfWorkAtPriority(workInProgress, priorityLevel);
+        }
+      }
       return null;
     }
 

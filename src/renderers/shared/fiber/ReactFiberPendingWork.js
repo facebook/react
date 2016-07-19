@@ -22,6 +22,7 @@ var {
 } = require('ReactPriorityLevel');
 
 function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fiber) {
+  workInProgress.return = returnFiber;
   while (current.sibling) {
     current = current.sibling;
     workInProgress = workInProgress.sibling = cloneFiber(
@@ -49,6 +50,7 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
         workInProgress.pendingProps = current.pendingProps;
         return workInProgress;
       }
+
       // If we have a child let's see if any of our children has work to do.
       // Only bother doing this at all if the current priority level matches
       // because it is the highest priority for the whole subtree.
@@ -62,8 +64,15 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
           throw new Error('Should have wip now');
         }
         workInProgress.pendingWorkPriority = current.pendingWorkPriority;
-        workInProgress.child = cloneFiber(currentChild, NoWork);
-        workInProgress.child.return = workInProgress;
+        // TODO: The below priority used to be set to NoWork which would've
+        // dropped work. This is currently unobservable but will become
+        // observable when the first sibling has lower priority work remaining
+        // than the next sibling. At that point we should add tests that catches
+        // this.
+        workInProgress.child = cloneFiber(
+          currentChild,
+          currentChild.pendingWorkPriority
+        );
         cloneSiblings(currentChild, workInProgress.child, workInProgress);
         current = current.child;
         continue;
