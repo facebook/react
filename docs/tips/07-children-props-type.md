@@ -2,7 +2,7 @@
 id: children-props-type
 title: Type of the Children props
 layout: tips
-permalink: children-props-type.html
+permalink: tips/children-props-type.html
 prev: style-props-value-px.html
 next: controlled-input-null-value.html
 ---

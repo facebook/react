@@ -2,7 +2,7 @@
 id: design-principles
 title: Design Principles
 layout: contributing
-permalink: design-principles.html
+permalink: contributing/design-principles.html
 ---
 
 After using React in a couple of applications, you might be interested in contributing to React. Before [diving into specifics](https://github.com/facebook/react/blob/master/CONTRIBUTING.md), we think it's important to establish a few design principles guiding our decisions about changes in React.

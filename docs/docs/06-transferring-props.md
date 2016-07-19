@@ -1,7 +1,7 @@
 ---
 id: transferring-props
 title: Transferring Props
-permalink: transferring-props.html
+permalink: docs/transferring-props.html
 prev: reusable-components.html
 next: forms.html
 ---

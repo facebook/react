@@ -1,7 +1,7 @@
 ---
 id: forms
 title: フォーム
-permalink: forms-ja-JP.html
+permalink: docs/forms-ja-JP.html
 prev: transferring-props-ja-JP.html
 next: working-with-the-browser-ja-JP.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: glossary-ko-KR
 title: React (가상) DOM 용어
-permalink: glossary-ko-KR.html
+permalink: docs/glossary-ko-KR.html
 prev: webcomponents-ko-KR.html
 ---
 

@@ -1,7 +1,7 @@
 ---
 id: top-level-api-ko-KR
 title: 최상위 API
-permalink: top-level-api-ko-KR.html
+permalink: docs/top-level-api-ko-KR.html
 next: component-api-ko-KR.html
 redirect_from: "/docs/reference-ko-KR.html"
 ---

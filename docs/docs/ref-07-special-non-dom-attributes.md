@@ -1,7 +1,7 @@
 ---
 id: special-non-dom-attributes
 title: Special Non-DOM Attributes
-permalink: special-non-dom-attributes.html
+permalink: docs/special-non-dom-attributes.html
 prev: dom-differences.html
 next: reconciliation.html
 ---

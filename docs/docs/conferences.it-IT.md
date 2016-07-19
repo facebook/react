@@ -1,7 +1,7 @@
 ---
 id: conferences-it-IT
 title: Conferenze
-permalink: conferences-it-IT.html
+permalink: docs/conferences-it-IT.html
 prev: thinking-in-react-it-IT.html
 next: videos-it-IT.html
 ---

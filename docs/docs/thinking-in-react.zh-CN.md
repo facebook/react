@@ -1,7 +1,7 @@
 ---
 id: thinking-in-react-zh-CN
 title: React 编程思想
-permalink: thinking-in-react-zh-CN.html
+permalink: docs/thinking-in-react-zh-CN.html
 prev: tutorial-zh-CN.html
 next: conferences-zh-CN.html
 redirect_from: 'blog/2013/11/05/thinking-in-react.html'

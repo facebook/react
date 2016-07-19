@@ -1,7 +1,7 @@
 ---
 id: transferring-props-zh-CN
 title: 传递 Props
-permalink: transferring-props-zh-CN.html
+permalink: docs/transferring-props-zh-CN.html
 prev: reusable-components-zh-CN.html
 next: forms-zh-CN.html
 ---

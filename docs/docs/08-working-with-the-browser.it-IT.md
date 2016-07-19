@@ -1,7 +1,7 @@
 ---
 id: working-with-the-browser-it-IT
 title: Lavorare con il Browser
-permalink: working-with-the-browser-it-IT.html
+permalink: docs/working-with-the-browser-it-IT.html
 prev: forms-it-IT.html
 next: more-about-refs-it-IT.html
 ---

@@ -2,7 +2,7 @@
 id: self-closing-tag-ko-KR
 title: 자기 자신을 닫는 태그
 layout: tips
-permalink: self-closing-tag-ko-KR.html
+permalink: tips/self-closing-tag-ko-KR.html
 prev: if-else-in-JSX-ko-KR.html
 next: maximum-number-of-jsx-root-nodes-ko-KR.html
 ---

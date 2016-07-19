@@ -1,7 +1,7 @@
 ---
 id: conferences-zh-CN
 title: 会议
-permalink: conferences-zh-CN.html
+permalink: docs/conferences-zh-CN.html
 prev: thinking-in-react-zh-CN.html
 next: videos-zh-CN.html
 ---

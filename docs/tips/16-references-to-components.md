@@ -2,7 +2,7 @@
 id: references-to-components
 title: References to Components
 layout: tips
-permalink: references-to-components.html
+permalink: tips/references-to-components.html
 prev: expose-component-functions.html
 next: children-undefined.html
 ---

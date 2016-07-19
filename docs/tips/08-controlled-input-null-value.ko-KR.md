@@ -2,7 +2,7 @@
 id: controlled-input-null-value-ko-KR
 title: 제어되는 input 내의 null 값
 layout: tips
-permalink: controlled-input-null-value-ko-KR.html
+permalink: tips/controlled-input-null-value-ko-KR.html
 prev: children-props-type-ko-KR.html
 next: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
 ---

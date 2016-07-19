@@ -1,7 +1,7 @@
 ---
 id: events-it-IT
 title: Sistema di Eventi
-permalink: events-it-IT.html
+permalink: docs/events-it-IT.html
 prev: tags-and-attributes-it-IT.html
 next: dom-differences-it-IT.html
 ---

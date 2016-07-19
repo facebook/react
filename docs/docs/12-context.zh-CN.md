@@ -1,7 +1,7 @@
 ---
 id: context-zh-CN
 title: Context
-permalink: context-zh-CN.html
+permalink: docs/context-zh-CN.html
 prev: advanced-performance-zh-CN.html
 ---
 

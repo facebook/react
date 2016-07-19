@@ -2,6 +2,7 @@
 id: downloads
 title: Downloads
 layout: single
+permalink: downloads.html
 ---
 Download the starter kit to get everything you need to
 [get started with React](/react/docs/getting-started.html). The starter kit includes React and some simple example apps.

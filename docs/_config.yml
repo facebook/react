@@ -5,21 +5,37 @@ url: https://facebook.github.io
 baseurl: "/react"
 permalink: "/blog/:year/:month/:day/:title.html"
 paginate_path: "/blog/page:num/"
-relative_permalinks: true
 paginate: 5
 timezone: America/Los_Angeles
 highlighter: pygments
 defaults:
 - scope:
     path: ''
-    type: post
+    type: posts
   values:
     layout: post
+    sectionid: blog
+- scope:
+    path: blog
+    type: pages
+  values:
+    sectionid: blog
 - scope:
     path: docs
-    type: page
+    type: pages
   values:
     layout: docs
+    sectionid: docs
+- scope:
+    path: tips
+    type: pages
+  values:
+    sectionid: docs
+- scope:
+    path: contributing
+    type: pages
+  values:
+    sectionid: docs
 exclude:
 - Gemfile
 - Gemfile.lock
@@ -36,6 +52,7 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
+- jekyll-paginate
 react_version: 15.2.1
 react_hashes:
   dev: g2900ZIpFKhyIsz+bnx4YDEfAISugYRU58ljeAgI8TZ0A0AkRLGUCN7OmjF16Cj+

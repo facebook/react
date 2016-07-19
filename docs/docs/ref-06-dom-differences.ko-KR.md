@@ -1,7 +1,7 @@
 ---
 id: dom-differences-ko-KR
 title: DOM과의 차이점
-permalink: dom-differences-ko-KR.html
+permalink: docs/dom-differences-ko-KR.html
 prev: events-ko-KR.html
 next: special-non-dom-attributes-ko-KR.html
 ---

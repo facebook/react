@@ -1,7 +1,7 @@
 ---
 id: why-react-ru-RU
 title: Почему именно React?
-permalink: why-react-ru-RU.html
+permalink: docs/why-react-ru-RU.html
 next: displaying-data-ru-RU.html
 ---
 React — библиотека JavaScript для создания интерфейсов от команд Facebook и Instagram. Многие ассоциируют React с понятием **View** в паттерне **[MVC](https://ru.wikipedia.org/wiki/Model-View-Controller)**.

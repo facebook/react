@@ -1,7 +1,7 @@
 ---
 id: events-ko-KR
 title: 이벤트 시스템
-permalink: events-ko-KR.html
+permalink: docs/events-ko-KR.html
 prev: tags-and-attributes-ko-KR.html
 next: dom-differences-ko-KR.html
 ---

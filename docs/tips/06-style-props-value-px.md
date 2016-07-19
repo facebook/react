@@ -2,7 +2,7 @@
 id: style-props-value-px
 title: Shorthand for Specifying Pixel Values in style props
 layout: tips
-permalink: style-props-value-px.html
+permalink: tips/style-props-value-px.html
 prev: maximum-number-of-jsx-root-nodes.html
 next: children-props-type.html
 ---

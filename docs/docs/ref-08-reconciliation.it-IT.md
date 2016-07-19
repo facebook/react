@@ -1,7 +1,7 @@
 ---
 id: reconciliation-it-IT
 title: Riconciliazione
-permalink: reconciliation-it-IT.html
+permalink: docs/reconciliation-it-IT.html
 prev: special-non-dom-attributes-it-IT.html
 next: webcomponents.html
 ---

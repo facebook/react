@@ -1,7 +1,7 @@
 ---
 id: component-specs
 title: Component Specs and Lifecycle
-permalink: component-specs.html
+permalink: docs/component-specs.html
 prev: component-api.html
 next: tags-and-attributes.html
 ---

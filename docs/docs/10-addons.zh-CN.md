@@ -1,7 +1,7 @@
 ---
 id: addons-zh-CN
 title: 插件
-permalink: addons-zh-CN.html
+permalink: docs/addons-zh-CN.html
 prev: tooling-integration-zh-CN.html
 next: animation-zh-CN.html
 ---
