@@ -1,6 +1,7 @@
 ---
 title: React Element Factories and JSX Warning
 layout: single
+permalink: warnings/legacy-factories.html
 ---
 
 You probably came here because your code is calling your component as a plain function call. This is now deprecated:

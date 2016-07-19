@@ -14,11 +14,28 @@ defaults:
     type: posts
   values:
     layout: post
+    sectionid: blog
+- scope:
+    path: blog
+    type: pages
+  values:
+    sectionid: blog
 - scope:
     path: docs
     type: pages
   values:
     layout: docs
+    sectionid: docs
+- scope:
+    path: tips
+    type: pages
+  values:
+    sectionid: docs
+- scope:
+    path: contributing
+    type: pages
+  values:
+    sectionid: docs
 exclude:
 - Gemfile
 - Gemfile.lock

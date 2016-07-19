@@ -2,6 +2,7 @@
 title: Need help?
 layout: single
 id: support
+permalink: support.html
 ---
 
 **React** is worked on full-time by Facebook's product infrastructure and Instagram's user interface engineering teams. They're often around and available for questions.

@@ -2,6 +2,7 @@
 id: acknowledgements
 title: Acknowledgements
 layout: single
+permalink: acknowledgements.html
 ---
 
 We'd like to thank all of our contributors:
