@@ -47,6 +47,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   }
 
   /*
+  // TODO: It's possible this will create layout thrash issues because mutations
+  // of the DOM and life-cycles are interleaved. E.g. if a componentDidMount
+  // of a sibling reads, then the next sibling updates and reads etc.
   function markForPostEffect(workInProgress : Fiber) {
     // Schedule a side-effect on this fiber, AFTER the children's side-effects.
     if (workInProgress.lastEffect) {
