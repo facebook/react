@@ -148,6 +148,23 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     } while (child = child.sibling);
   }
 
+  function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
+    let child = firstChild;
+    do {
+      // Ensure that the first and last effect of the parent corresponds
+      // to the children's first and last effect.
+      if (!returnFiber.firstEffect) {
+        returnFiber.firstEffect = child.firstEffect;
+      }
+      if (child.lastEffect) {
+        if (returnFiber.lastEffect) {
+          returnFiber.lastEffect.nextEffect = child.firstEffect;
+        }
+        returnFiber.lastEffect = child.lastEffect;
+      }
+    } while (child = child.sibling);
+  }
+
   function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
@@ -191,7 +208,17 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       const priorityLevel = workInProgress.pendingWorkPriority;
       workInProgress.pendingProps = null;
       workInProgress.pendingWorkPriority = NoWork;
-      if (workInProgress.child) {
+
+      workInProgress.firstEffect = null;
+      workInProgress.nextEffect = null;
+      workInProgress.lastEffect = null;
+
+      if (workInProgress.child && workInProgress.child.alternate) {
+        // On the way up here, we reset the child node to be the current one.
+        // Therefore we have to reuse the alternate. This is super weird.
+        workInProgress.child = workInProgress.child.alternate;
+        // Ensure that the effects of reused work are preserved.
+        reuseChildrenEffects(workInProgress, workInProgress.child);
         // If we bail out but still has work with the current priority in this
         // subtree, we need to go find it right now. If we don't, we won't flush
         // it until the next tick.

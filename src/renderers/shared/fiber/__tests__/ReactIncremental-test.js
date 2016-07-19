@@ -394,8 +394,6 @@ describe('ReactIncremental', function() {
       );
     }
 
-    // Start rendering an update
-
     // Init
     ReactNoop.render(<Foo text="foo" step={0} />);
     ReactNoop.flush();
