@@ -18,6 +18,10 @@ var flattenStyle = require('flattenStyle');
 
 var emptyObject = {};
 
+// enable this to allow warnings when trying to assign invalid attributes when running in __DEV__
+// TODO - allow configuration of this property without having to modify the code
+var enableStrictAttributeValidation = false;
+
 /**
  * Create a payload that contains all the updates between two sets of props.
  *
@@ -314,6 +318,9 @@ function diffProperties(
   for (var propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
+      if (__DEV__ && enableStrictAttributeValidation === true) {
+        throw new Error("unsupported attribute: " + propKey);
+      }
       continue; // not a valid native prop
     }
 
