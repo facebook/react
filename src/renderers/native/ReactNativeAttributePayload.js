@@ -319,7 +319,7 @@ function diffProperties(
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
       if (__DEV__ && enableStrictAttributeValidation === true) {
-        throw new Error("unsupported attribute: " + propKey);
+        throw new Error('unsupported attribute: ' + propKey);
       }
       continue; // not a valid native prop
     }
