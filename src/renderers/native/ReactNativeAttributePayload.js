@@ -318,7 +318,7 @@ function diffProperties(
   for (var propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
-      if (__DEV__ && enableStrictAttributeValidation === true) {
+      if (__DEV__ && enableStrictAttributeValidation === true && propKey !== 'children') {
         throw new Error('unsupported attribute: ' + propKey);
       }
       continue; // not a valid native prop
