@@ -356,12 +356,30 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not support multiple components or scalar values', () => {
-      var message = 'Invalid prop `testProp` supplied to `testComponent`, ' +
-        'expected a single ReactElement.';
-      typeCheckFail(PropTypes.element, [<div />, <div />], message);
-      typeCheckFail(PropTypes.element, 123, message);
-      typeCheckFail(PropTypes.element, 'foo', message);
-      typeCheckFail(PropTypes.element, false, message);
+      typeCheckFail(
+        PropTypes.element,
+        [<div />, <div />],
+        'Invalid prop `testProp` of type `array` supplied to `testComponent`, ' +
+        'expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.element,
+        123,
+        'Invalid prop `testProp` of type `number` supplied to `testComponent`, ' +
+        'expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.element,
+        'foo',
+        'Invalid prop `testProp` of type `string` supplied to `testComponent`, ' +
+        'expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.element,
+        false,
+        'Invalid prop `testProp` of type `boolean` supplied to `testComponent`, ' +
+        'expected a single ReactElement.'
+      );
     });
 
     it('should be able to define a single child as label', () => {
