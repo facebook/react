@@ -542,7 +542,7 @@
 			</item>
 		
 			<item>
-				<title>Introducing React's Error Code System</title>
+				<title>Introducing React&#39;s Error Code System</title>
 				<description>&lt;p&gt;Building a better developer experience has been one of the things that React deeply cares about, and a crucial part of it is to detect anti-patterns/potential errors early and provide helpful error messages when things (may) go wrong. However, most of these only exist in development mode; in production, we avoid having extra expensive assertions and sending down full error messages in order to reduce the number of bytes sent over the wire.&lt;/p&gt;
 
 &lt;p&gt;Prior to this release, we stripped out error messages at build-time and this is why you might have seen this message in production:&lt;/p&gt;
@@ -884,7 +884,7 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 		
 			<item>
 				<title>React v15.0 Release Candidate</title>
-				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn't think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
+				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn&#39;t think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
 
 &lt;p&gt;But now we&amp;#39;re ready, so without further ado, we&amp;#39;re shipping a release candidate for React v15 now. As a reminder, &lt;a href=&quot;/react/blog/2016/02/19/new-versioning-scheme.html&quot;&gt;we&amp;#39;re switching to major versions&lt;/a&gt; to indicate that we have been using React in production for a long time. This 15.0 release follows our previous 0.14 version and we&amp;#39;ll continue to follow semver like we&amp;#39;ve been doing since 2013. It&amp;#39;s also worth noting that &lt;a href=&quot;/react/blog/2016/01/12/discontinuing-ie8-support.html&quot;&gt;we no longer actively support Internet Explorer 8&lt;/a&gt;. We believe React will work in its current form there but we will not be prioritizing any efforts to fix new issues that only affect IE8.&lt;/p&gt;
 
