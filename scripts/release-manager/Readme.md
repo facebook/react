@@ -31,6 +31,13 @@ Cherry-picks PRs that are set to the `15-next` milestone. Handles merge conflict
 
 Bumps the version in all the places that need it.
 
+### `npm-publish`
+
+Publishes all built packages to npm (`next` dist-tag) and then for stable releases, also updates the `latest` dist-tag.
+
+**Prereqs:**
+- Have done everything else required for releasing (updating version, etc) and run `grunt build` or `grunt release`.
+
 ### `q`
 
 A secret alias to `exit` because `q` is faster.
