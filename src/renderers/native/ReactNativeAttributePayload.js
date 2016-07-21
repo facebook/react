@@ -15,6 +15,7 @@ var ReactNativePropRegistry = require('ReactNativePropRegistry');
 
 var deepDiffer = require('deepDiffer');
 var flattenStyle = require('flattenStyle');
+var warning = require('warning');
 
 var emptyObject = {};
 
@@ -318,8 +319,11 @@ function diffProperties(
   for (var propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
-      if (__DEV__ && enableStrictAttributeValidation === true && propKey !== 'children') {
-        throw new Error('unsupported attribute: ' + propKey);
+      if (__DEV__) {
+        warning(
+          enableStrictAttributeValidation === true && propKey !== 'children',
+          'unsupported attribute: ' + propKey
+        );
       }
       continue; // not a valid native prop
     }
