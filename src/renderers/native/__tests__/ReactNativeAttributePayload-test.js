@@ -17,6 +17,7 @@ jest.unmock('ReactNativePropRegistry');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var ReactNativePropRegistry = require('ReactNativePropRegistry');
 
+var create = ReactNativeAttributePayload.create;
 var diff = ReactNativeAttributePayload.diff;
 
 describe('ReactNativeAttributePayload', function() {
@@ -25,7 +26,7 @@ describe('ReactNativeAttributePayload', function() {
     expect(diff(
       {a: 1, c: 3},
       {b: 2, c: 3},
-      {a: true, b: true}
+      {a: true, b: true, c: true}
     )).toEqual({a: null, b: 2});
   });
 
@@ -54,11 +55,16 @@ describe('ReactNativeAttributePayload', function() {
   });
 
   it('should ignore invalid fields', () => {
+    spyOn(console, 'error');
+
     expect(diff(
       {a: 1},
       {b: 2},
       {}
     )).toEqual(null);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe('Warning: unsupported attribute: b');
   });
 
   it('should use the diff attribute', () => {
@@ -94,6 +100,8 @@ describe('ReactNativeAttributePayload', function() {
   });
 
   it('should work with undefined styles', () => {
+    spyOn(console, 'error');
+
     expect(diff(
       { style: { a: '#ffffff', b: 1 } },
       { style: undefined },
@@ -109,9 +117,14 @@ describe('ReactNativeAttributePayload', function() {
       { style: undefined },
       { style: { b: true } }
     )).toEqual(null);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe('Warning: unsupported attribute: a');
   });
 
   it('should work with empty styles', () => {
+    spyOn(console, 'error');
+
     expect(diff(
       {a: 1, c: 3},
       {},
@@ -127,6 +140,9 @@ describe('ReactNativeAttributePayload', function() {
       {},
       {a: true, b: true}
     )).toEqual(null);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe('Warning: unsupported attribute: c');
   });
 
   it('should flatten nested styles and predefined styles', () => {
@@ -241,6 +257,63 @@ describe('ReactNativeAttributePayload', function() {
       },
       {a: true, b: true, c: true}
     )).toEqual({a: null, c: true});
+  });
+
+  it('should work with simple example - create', () => {
+    expect(create(
+      {
+        a: 1,
+        b: 2,
+        c: 3,
+      },
+      {a: true, b: true, c: true}
+    )).toEqual({a: 1, b: 2, c: 3});
+  });
+
+  it('should log warning if create is called with invalid attribute', () => {
+    spyOn(console, 'error');
+
+    expect(create(
+      {
+        a: 1,
+        b: 2,
+        c: 3,
+      },
+      {a: true, b: true}
+    )).toEqual({a: 1, b: 2});
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe('Warning: unsupported attribute: c');
+  });
+
+  it('should not log warning if create is called with an unvalidated attribute', () => {
+    expect(create(
+      {
+        a: 1,
+        children: 2,
+        collapsable: 3,
+        style: 4,
+      },
+      {a: true}
+    )).toEqual({a: 1});
+  });
+
+  it('should log warnings if create is called with multiple invalid attribute', () => {
+    spyOn(console, 'error');
+
+    expect(create(
+      {
+        a: 1,
+        b: 2,
+        c: 3,
+      },
+      {}
+    )).toEqual(null);
+
+    expect(console.error.calls.count()).toBe(3);
+    expect(console.error.calls.argsFor(0)[0]).toBe('Warning: unsupported attribute: a');
+    expect(console.error.calls.argsFor(1)[0]).toBe('Warning: unsupported attribute: b');
+    expect(console.error.calls.argsFor(2)[0]).toBe('Warning: unsupported attribute: c');
   });
 
 });

@@ -21,7 +21,7 @@ var emptyObject = {};
 
 // enable this to allow warnings when trying to assign invalid attributes when running in __DEV__
 // TODO - allow configuration of this property without having to modify the code
-var enableStrictAttributeValidation = false;
+var enableStrictAttributeValidation = true;
 
 /**
  * Create a payload that contains all the updates between two sets of props.
@@ -320,8 +320,9 @@ function diffProperties(
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
       if (__DEV__) {
+        var unvalidatedAttributes = ['children', 'collapsable', 'style'];
         warning(
-          enableStrictAttributeValidation !== true || propKey === 'children',
+          !(enableStrictAttributeValidation && unvalidatedAttributes.indexOf(propKey) < 0),
           'unsupported attribute: ' + propKey
         );
       }
