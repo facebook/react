@@ -6,6 +6,9 @@ const chalk = require('chalk');
 // IDEA: maybe just always use this milestone across major releases too?
 const MILESTONE_NUMBER = 25;
 
+// 15.3.0
+const TARGET_MILESTONE_NUMBER = 31;
+
 const LABELS = {
   // Until there is a UI for it, uncomment these lines to run a patch release instead
   // 'semver-patch': true,
@@ -101,8 +104,20 @@ module.exports = function(vorpal, app) {
 
           this.log(`Found ${chalk.bold(richPulls.length)} pull requests:`)
 
-          promptForPRs.call(this, app, richPulls, 0).then(actionCB);
+          promptForPRs.call(this, app, richPulls, 0).then(() => {
 
+            // Update the milestone
+            if (!TARGET_MILESTONE_NUMBER) {
+              return actionCB();
+            }
+
+            const milestonePromises = richPulls.map((pr) => {
+              return app.ghissues.editIssue(pr.number, {
+                milestone: TARGET_MILESTONE_NUMBER
+              });
+            });
+            Promise.all(milestonePromises).then(actionCB);
+          });
         });
 
       });
@@ -139,6 +154,8 @@ function promptForPRs(app, prs, start) {
         try {
           app.gitCherryPickMerge(pr.merge_commit_sha);
         } catch (e) {
+
+          // TODO: add ability to mark a PR as skipped
           failed = true;
           this.log(`${chalk.bold.red('FAILED!')} Please fix manually and continue when ready.`);
           promptForPRs.call(this, app, prs, i + 1).then(resolve);
