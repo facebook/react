@@ -115,6 +115,7 @@ const app = {
       'q',
       'stable-prs',
       'version',
+      'npm-publish',
     ].forEach((command) => {
       vorpal.use(require(`./commands/${command}`)(vorpal, app));
     });
