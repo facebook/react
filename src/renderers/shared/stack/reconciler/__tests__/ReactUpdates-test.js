@@ -26,17 +26,18 @@ describe('ReactUpdates', function() {
 
   it('should batch state when updating state twice', function() {
     var updateCount = 0;
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Component extends React.Component {
+      state = {x: 0};
+
+      componentDidUpdate() {
         updateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>{this.state.x}</div>;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
@@ -54,17 +55,18 @@ describe('ReactUpdates', function() {
 
   it('should batch state when updating two different state keys', function() {
     var updateCount = 0;
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {x: 0, y: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Component extends React.Component {
+      state = {x: 0, y: 0};
+
+      componentDidUpdate() {
         updateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>({this.state.x}, {this.state.y})</div>;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
@@ -85,17 +87,18 @@ describe('ReactUpdates', function() {
 
   it('should batch state and props together', function() {
     var updateCount = 0;
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {y: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Component extends React.Component {
+      state = {y: 0};
+
+      componentDidUpdate() {
         updateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>({this.props.x}, {this.state.y})</div>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     var instance = ReactDOM.render(<Component x={0} />, container);
@@ -117,29 +120,32 @@ describe('ReactUpdates', function() {
 
   it('should batch parent/child state updates together', function() {
     var parentUpdateCount = 0;
-    var Parent = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Parent extends React.Component {
+      state = {x: 0};
+
+      componentDidUpdate() {
         parentUpdateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div><Child ref="child" x={this.state.x} /></div>;
-      },
-    });
+      }
+    }
+
     var childUpdateCount = 0;
-    var Child = React.createClass({
-      getInitialState: function() {
-        return {y: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Child extends React.Component {
+      state = {y: 0};
+
+      componentDidUpdate() {
         childUpdateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>{this.props.x + this.state.y}</div>;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
     var child = instance.refs.child;
@@ -163,29 +169,32 @@ describe('ReactUpdates', function() {
 
   it('should batch child/parent state updates together', function() {
     var parentUpdateCount = 0;
-    var Parent = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Parent extends React.Component {
+      state = {x: 0};
+
+      componentDidUpdate() {
         parentUpdateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div><Child ref="child" x={this.state.x} /></div>;
-      },
-    });
+      }
+    }
+
     var childUpdateCount = 0;
-    var Child = React.createClass({
-      getInitialState: function() {
-        return {y: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Child extends React.Component {
+      state = {y: 0};
+
+      componentDidUpdate() {
         childUpdateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>{this.props.x + this.state.y}</div>;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
     var child = instance.refs.child;
@@ -211,17 +220,18 @@ describe('ReactUpdates', function() {
 
   it('should support chained state updates', function() {
     var updateCount = 0;
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      componentDidUpdate: function() {
+
+    class Component extends React.Component {
+      state = {x: 0};
+
+      componentDidUpdate() {
         updateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>{this.state.x}</div>;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
@@ -250,20 +260,22 @@ describe('ReactUpdates', function() {
   it('should batch forceUpdate together', function() {
     var shouldUpdateCount = 0;
     var updateCount = 0;
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      shouldComponentUpdate: function() {
+
+    class Component extends React.Component {
+      state = {x: 0};
+
+      shouldComponentUpdate() {
         shouldUpdateCount++;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         updateCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>{this.state.x}</div>;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
@@ -291,23 +303,23 @@ describe('ReactUpdates', function() {
     var parentRenderCount = 0;
     var childRenderCount = 0;
 
-    var Parent = React.createClass({
-      shouldComponentUpdate: function() {
+    class Parent extends React.Component {
+      shouldComponentUpdate() {
         return false;
-      },
+      }
 
-      render: function() {
+      render() {
         parentRenderCount++;
         return <Child ref="child" />;
-      },
-    });
+      }
+    }
 
-    var Child = React.createClass({
-      render: function() {
+    class Child extends React.Component {
+      render() {
         childRenderCount++;
         return <div />;
-      },
-    });
+      }
+    }
 
     expect(parentRenderCount).toBe(0);
     expect(childRenderCount).toBe(0);
@@ -337,29 +349,29 @@ describe('ReactUpdates', function() {
     var numMiddleRenders = 0;
     var numBottomRenders = 0;
 
-    var Top = React.createClass({
-      render: function() {
+    class Top extends React.Component {
+      render() {
         return <Middle><Bottom /></Middle>;
-      },
-    });
+      }
+    }
 
-    var Middle = React.createClass({
-      componentDidMount: function() {
+    class Middle extends React.Component {
+      componentDidMount() {
         this.forceUpdate();
-      },
+      }
 
-      render: function() {
+      render() {
         numMiddleRenders++;
         return React.Children.only(this.props.children);
-      },
-    });
+      }
+    }
 
-    var Bottom = React.createClass({
-      render: function() {
+    class Bottom extends React.Component {
+      render() {
         numBottomRenders++;
         return null;
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(<Top />);
     expect(numMiddleRenders).toBe(2);
@@ -497,11 +509,11 @@ describe('ReactUpdates', function() {
     var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
     spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <div>{this.props.text}</div>;
-      },
-    });
+      }
+    }
 
     var containerA = document.createElement('div');
     var containerB = document.createElement('div');
@@ -532,27 +544,26 @@ describe('ReactUpdates', function() {
 
     var aUpdated = false;
 
-    var A = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      componentDidUpdate: function() {
+    class A extends React.Component {
+      state = {x: 0};
+
+      componentDidUpdate() {
         expect(ReactDOM.findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
-      },
-      render: function() {
-        return <div>A{this.state.x}</div>;
-      },
-    });
+      }
 
-    var B = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      render: function() {
+      render() {
+        return <div>A{this.state.x}</div>;
+      }
+    }
+
+    class B extends React.Component {
+      state = {x: 0};
+
+      render() {
         return <div>B{this.state.x}</div>;
-      },
-    });
+      }
+    }
 
     a = ReactTestUtils.renderIntoDocument(<A />);
     b = ReactTestUtils.renderIntoDocument(<B />);
@@ -567,35 +578,37 @@ describe('ReactUpdates', function() {
 
   it('should flush updates in the correct order', function() {
     var updates = [];
-    var Outer = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      render: function() {
+
+    class Outer extends React.Component {
+      state = {x: 0};
+
+      render() {
         updates.push('Outer-render-' + this.state.x);
         return <div><Inner x={this.state.x} ref="inner" /></div>;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         var x = this.state.x;
         updates.push('Outer-didUpdate-' + x);
         updates.push('Inner-setState-' + x);
         this.refs.inner.setState({x: x}, function() {
           updates.push('Inner-callback-' + x);
         });
-      },
-    });
-    var Inner = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      render: function() {
+      }
+    }
+
+    class Inner extends React.Component {
+      state = {x: 0};
+
+      render() {
         updates.push('Inner-render-' + this.props.x + '-' + this.state.x);
         return <div />;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         updates.push('Inner-didUpdate-' + this.props.x + '-' + this.state.x);
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Outer />);
 
@@ -642,12 +655,13 @@ describe('ReactUpdates', function() {
     var instances = [];
     var updates = [];
 
-    var MockComponent = React.createClass({
-      render: function() {
+    class MockComponent extends React.Component {
+      render() {
         updates.push(this.props.depth);
         return <div />;
-      },
-      componentDidMount: function() {
+      }
+
+      componentDidMount() {
         instances.push(this);
         if (this.props.depth < this.props.count) {
           ReactDOM.render(
@@ -658,8 +672,8 @@ describe('ReactUpdates', function() {
             ReactDOM.findDOMNode(this)
           );
         }
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(<MockComponent depth={0} count={2} />);
 
@@ -678,11 +692,10 @@ describe('ReactUpdates', function() {
   it('should queue nested updates', function() {
     // See https://github.com/facebook/react/issues/1147
 
-    var X = React.createClass({
-      getInitialState: function() {
-        return {s: 0};
-      },
-      render: function() {
+    class X extends React.Component {
+      state = {s: 0};
+
+      render() {
         if (this.state.s === 0) {
           return (
             <div>
@@ -692,32 +705,34 @@ describe('ReactUpdates', function() {
         } else {
           return <div>1</div>;
         }
-      },
-      go: function() {
+      }
+
+      go = () => {
         this.setState({s: 1});
         this.setState({s: 0});
         this.setState({s: 1});
-      },
-    });
+      };
+    }
 
-    var Y = React.createClass({
-      render: function() {
+    class Y extends React.Component {
+      render() {
         return (
           <div>
             <Z />
           </div>
         );
-      },
-    });
+      }
+    }
 
-    var Z = React.createClass({
-      render: function() {
+    class Z extends React.Component {
+      render() {
         return <div />;
-      },
-      componentWillUpdate: function() {
+      }
+
+      componentWillUpdate() {
         x.go();
-      },
-    });
+      }
+    }
 
     var x;
     var y;
@@ -734,26 +749,27 @@ describe('ReactUpdates', function() {
     // See https://github.com/facebook/react/issues/1353
     var a;
 
-    var A = React.createClass({
-      getInitialState: function() {
-        return {x: 0};
-      },
-      componentWillMount: function() {
-        a = this;
-      },
-      render: function() {
-        return <div>A{this.state.x}</div>;
-      },
-    });
+    class A extends React.Component {
+      state = {x: 0};
 
-    var B = React.createClass({
-      componentWillMount: function() {
+      componentWillMount() {
+        a = this;
+      }
+
+      render() {
+        return <div>A{this.state.x}</div>;
+      }
+    }
+
+    class B extends React.Component {
+      componentWillMount() {
         a.setState({x: 1});
-      },
-      render: function() {
+      }
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     ReactUpdates.batchedUpdates(function() {
       ReactTestUtils.renderIntoDocument(
@@ -770,22 +786,23 @@ describe('ReactUpdates', function() {
 
   it('calls componentWillReceiveProps setState callback properly', function() {
     var callbackCount = 0;
-    var A = React.createClass({
-      getInitialState: function() {
-        return {x: this.props.x};
-      },
-      componentWillReceiveProps: function(nextProps) {
+
+    class A extends React.Component {
+      state = {x: this.props.x};
+
+      componentWillReceiveProps(nextProps) {
         var newX = nextProps.x;
         this.setState({x: newX}, function() {
           // State should have updated by the time this callback gets called
           expect(this.state.x).toBe(newX);
           callbackCount++;
         });
-      },
-      render: function() {
+      }
+
+      render() {
         return <div>{this.state.x}</div>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     ReactDOM.render(<A x={1} />, container);
@@ -795,11 +812,13 @@ describe('ReactUpdates', function() {
 
   it('calls asap callbacks properly', function() {
     var callbackCount = 0;
-    var A = React.createClass({
-      render: function() {
+
+    class A extends React.Component {
+      render() {
         return <div />;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         ReactUpdates.asap(function() {
           expect(this).toBe(component);
           callbackCount++;
@@ -809,8 +828,8 @@ describe('ReactUpdates', function() {
           expect(callbackCount).toBe(1);
         }, component);
         expect(callbackCount).toBe(0);
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
     component.forceUpdate();
@@ -819,13 +838,16 @@ describe('ReactUpdates', function() {
 
   it('calls asap callbacks with queued updates', function() {
     var log = [];
-    var A = React.createClass({
-      getInitialState: () => ({updates: 0}),
-      render: function() {
+
+    class A extends React.Component {
+      state = {updates: 0};
+
+      render() {
         log.push('render-' + this.state.updates);
         return <div />;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         if (this.state.updates === 1) {
           ReactUpdates.asap(function() {
             this.setState({updates: 2}, function() {
@@ -842,8 +864,8 @@ describe('ReactUpdates', function() {
           });
         }
         log.push('didUpdate-' + this.state.updates);
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
     component.setState({updates: 1});
@@ -866,31 +888,29 @@ describe('ReactUpdates', function() {
   });
 
   it('does not call render after a component as been deleted', function() {
-
     var renderCount = 0;
     var componentB = null;
 
-    var B = React.createClass({
-      getInitialState: function() {
-        return {updates: 0};
-      },
-      componentDidMount: function() {
+    class B extends React.Component {
+      state = {updates: 0};
+
+      componentDidMount() {
         componentB = this;
-      },
-      render: function() {
+      }
+
+      render() {
         renderCount++;
         return <div />;
-      },
-    });
+      }
+    }
 
-    var A = React.createClass({
-      getInitialState: function() {
-        return {showB: true};
-      },
-      render: function() {
+    class A extends React.Component {
+      state = {showB: true};
+
+      render() {
         return this.state.showB ? <B /> : <div />;
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
@@ -907,17 +927,17 @@ describe('ReactUpdates', function() {
   it('marks top-level updates', function() {
     var ReactFeatureFlags = require('ReactFeatureFlags');
 
-    var Foo = React.createClass({
-      render: function() {
+    class Foo extends React.Component {
+      render() {
         return <Bar />;
-      },
-    });
+      }
+    }
 
-    var Bar = React.createClass({
-      render: function() {
+    class Bar extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     ReactDOM.render(<Foo />, container);
@@ -943,14 +963,15 @@ describe('ReactUpdates', function() {
       this.a = 1;
       this.b = 2;
     }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
+
+    class A extends React.Component {
+      state = {};
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => component.setState({}, 'no')).toThrowError(
@@ -1001,14 +1022,15 @@ describe('ReactUpdates', function() {
       this.a = 1;
       this.b = 2;
     }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
+
+    class A extends React.Component {
+      state = {};
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
     expect(() => component.forceUpdate('no')).toThrowError(
@@ -1026,42 +1048,46 @@ describe('ReactUpdates', function() {
   });
 
   it('does not update one component twice in a batch (#2410)', function() {
-    var Parent = React.createClass({
-      getChild: function() {
+    class Parent extends React.Component {
+      getChild = () => {
         return this.refs.child;
-      },
-      render: function() {
+      };
+
+      render() {
         return <Child ref="child" />;
-      },
-    });
+      }
+    }
 
     var renderCount = 0;
     var postRenderCount = 0;
     var once = false;
-    var Child = React.createClass({
-      getInitialState: function() {
-        return {updated: false};
-      },
-      componentWillUpdate: function() {
+
+    class Child extends React.Component {
+      state = {updated: false};
+
+      componentWillUpdate() {
         if (!once) {
           once = true;
           this.setState({updated: true});
         }
-      },
-      componentDidMount: function() {
+      }
+
+      componentDidMount() {
         expect(renderCount).toBe(postRenderCount + 1);
         postRenderCount++;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         expect(renderCount).toBe(postRenderCount + 1);
         postRenderCount++;
-      },
-      render: function() {
+      }
+
+      render() {
         expect(renderCount).toBe(postRenderCount);
         renderCount++;
         return <div />;
-      },
-    });
+      }
+    }
 
     var parent = ReactTestUtils.renderIntoDocument(<Parent />);
     var child = parent.getChild();

@@ -340,15 +340,15 @@ describe('ReactPropTypes', function() {
 
   describe('Component Type', function() {
     beforeEach(function() {
-      Component = React.createClass({
-        propTypes: {
+      Component = class extends React.Component {
+        static propTypes = {
           label: PropTypes.element.isRequired,
-        },
+        };
 
-        render: function() {
+        render() {
           return <div>{this.props.label}</div>;
-        },
-      });
+        }
+      };
     });
 
     it('should support components', () => {
@@ -513,11 +513,11 @@ describe('ReactPropTypes', function() {
 
   describe('React Component Types', function() {
     beforeEach(function() {
-      MyComponent = React.createClass({
-        render: function() {
+      MyComponent = class extends React.Component {
+        render() {
           return <div />;
-        },
-      });
+        }
+      };
     });
 
     it('should warn for invalid values', function() {
@@ -1048,13 +1048,13 @@ describe('ReactPropTypes', function() {
 
     it('should have been called with the right params', function() {
       var spy = jasmine.createSpy();
-      Component = React.createClass({
-        propTypes: {num: spy},
+      Component = class extends React.Component {
+        static propTypes = {num: spy};
 
-        render: function() {
+        render() {
           return <div />;
-        },
-      });
+        }
+      };
 
       var instance = <Component num={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
@@ -1065,13 +1065,13 @@ describe('ReactPropTypes', function() {
 
     it('should have been called even if the prop is not present', function() {
       var spy = jasmine.createSpy();
-      Component = React.createClass({
-        propTypes: {num: spy},
+      Component = class extends React.Component {
+        static propTypes = {num: spy};
 
-        render: function() {
+        render() {
           return <div />;
-        },
-      });
+        }
+      };
 
       var instance = <Component bla={5} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
@@ -1089,13 +1089,13 @@ describe('ReactPropTypes', function() {
           }
         }
       );
-      Component = React.createClass({
-        propTypes: {num: spy},
+      Component = class extends React.Component {
+        static propTypes = {num: spy};
 
-        render: function() {
+        render() {
           return <div />;
-        },
-      });
+        }
+      };
 
       var instance = <Component num={6} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
@@ -1116,13 +1116,13 @@ describe('ReactPropTypes', function() {
             return null;
           }
         );
-        Component = React.createClass({
-          propTypes: {num: spy},
+        Component = class extends React.Component {
+          static propTypes = {num: spy};
 
-          render: function() {
+          render() {
             return <div />;
-          },
-        });
+          }
+        };
 
         var instance = <Component num={5} />;
         instance = ReactTestUtils.renderIntoDocument(instance);

@@ -103,22 +103,26 @@ describe('ReactComponentTreeDevtool', () => {
 
   describe('mount', () => {
     it('uses displayName or Unknown for classic components', () => {
-      var Foo = React.createClass({
+      class Foo extends React.Component {
         render() {
           return null;
-        },
-      });
+        }
+      }
+
       Foo.displayName = 'Bar';
-      var Baz = React.createClass({
+
+      class Baz extends React.Component {
         render() {
           return null;
-        },
-      });
-      var Qux = React.createClass({
+        }
+      }
+
+      class Qux extends React.Component {
         render() {
           return null;
-        },
-      });
+        }
+      }
+
       delete Qux.displayName;
 
       var element = <div><Foo /><Baz /><Qux /></div>;
@@ -306,11 +310,12 @@ describe('ReactComponentTreeDevtool', () => {
     });
 
     it('reports a tree with composites correctly', () => {
-      var Qux = React.createClass({
+      class Qux extends React.Component {
         render() {
           return null;
-        },
-      });
+        }
+      }
+
       function Foo() {
         return {
           render() {
@@ -1361,11 +1366,11 @@ describe('ReactComponentTreeDevtool', () => {
 
     describe('class component', () => {
       it('updates with a host child', () => {
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
@@ -1392,11 +1397,11 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from null to a host child', () => {
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo>{null}</Foo>;
         var treeBefore = {
@@ -1420,11 +1425,11 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from a host child to null', () => {
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
@@ -1448,17 +1453,17 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from a host child to a composite child', () => {
-        var Bar = React.createClass({
+        class Bar extends React.Component {
           render() {
             return null;
-          },
-        });
+          }
+        }
 
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
@@ -1485,17 +1490,17 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from a composite child to a host child', () => {
-        var Bar = React.createClass({
+        class Bar extends React.Component {
           render() {
             return null;
-          },
-        });
+          }
+        }
 
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
@@ -1522,17 +1527,17 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from null to a composite child', () => {
-        var Bar = React.createClass({
+        class Bar extends React.Component {
           render() {
             return null;
-          },
-        });
+          }
+        }
 
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo>{null}</Foo>;
         var treeBefore = {
@@ -1556,17 +1561,17 @@ describe('ReactComponentTreeDevtool', () => {
       });
 
       it('updates from a composite child to null', () => {
-        var Bar = React.createClass({
+        class Bar extends React.Component {
           render() {
             return null;
-          },
-        });
+          }
+        }
 
-        var Foo = React.createClass({
+        class Foo extends React.Component {
           render() {
             return this.props.children;
-          },
-        });
+          }
+        }
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {

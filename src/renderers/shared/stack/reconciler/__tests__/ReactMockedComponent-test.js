@@ -36,21 +36,17 @@ describe('ReactMockedComponent', function() {
   });
 
   it('should allow an implicitly mocked component to be updated', () => {
-    var Wrapper = React.createClass({
+    class Wrapper extends React.Component {
+      state = {foo: 1};
 
-      getInitialState: function() {
-        return {foo: 1};
-      },
-
-      update: function() {
+      update = () => {
         this.setState({foo: 2});
-      },
+      };
 
-      render: function() {
+      render() {
         return <div><AutoMockedComponent prop={this.state.foo} /></div>;
-      },
-
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
@@ -73,21 +69,18 @@ describe('ReactMockedComponent', function() {
   });
 
   it('should allow an explicitly mocked component to be updated', () => {
-    var Wrapper = React.createClass({
+    class Wrapper extends React.Component {
+      state = {foo: 1};
 
-      getInitialState: function() {
-        return {foo: 1};
-      },
-
-      update: function() {
+      update = () => {
         this.setState({foo: 2});
-      },
+      };
 
-      render: function() {
+      render() {
         return <div><MockedComponent prop={this.state.foo} /></div>;
-      },
+      }
+    }
 
-    });
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
     var found = ReactTestUtils.findRenderedComponentWithType(

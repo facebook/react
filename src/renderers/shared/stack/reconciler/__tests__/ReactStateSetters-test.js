@@ -22,15 +22,13 @@ describe('ReactStateSetters', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
-    TestComponent = React.createClass({
-      getInitialState: function() {
-        return {foo: 'foo'};
-      },
+    TestComponent = class extends React.Component {
+      state = {foo: 'foo'};
 
-      render: function() {
+      render() {
         return <div />;
-      },
-    });
+      }
+    };
 
     TestComponentWithMixin = React.createClass({
       mixins: [ReactStateSetters.Mixin],

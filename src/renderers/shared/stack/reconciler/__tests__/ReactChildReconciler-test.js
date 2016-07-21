@@ -32,11 +32,11 @@ describe('ReactChildReconciler', function() {
   it('warns for duplicated keys', function() {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
+    class Component extends React.Component {
       render() {
         return <div>{[<div key="1" />, <div key="1" />]}</div>;
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
@@ -49,23 +49,23 @@ describe('ReactChildReconciler', function() {
   it('warns for duplicated keys with component stack info', function() {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <div>{[<div key="1" />, <div key="1" />]}</div>;
-      },
-    });
+      }
+    }
 
-    var Parent = React.createClass({
-      render: function() {
+    class Parent extends React.Component {
+      render() {
         return React.cloneElement(this.props.child);
-      },
-    });
+      }
+    }
 
-    var GrandParent = React.createClass({
-      render: function() {
+    class GrandParent extends React.Component {
+      render() {
         return <Parent child={<Component />} />;
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 

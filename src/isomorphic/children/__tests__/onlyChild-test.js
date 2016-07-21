@@ -22,15 +22,15 @@ describe('onlyChild', function() {
     React = require('React');
     ReactFragment = require('ReactFragment');
     onlyChild = require('onlyChild');
-    WrapComponent = React.createClass({
-      render: function() {
+    WrapComponent = class extends React.Component {
+      render() {
         return (
           <div>
             {onlyChild(this.props.children, this.props.mapFn, this)}
           </div>
         );
-      },
-    });
+      }
+    };
   });
 
   it('should fail when passed two children', function() {

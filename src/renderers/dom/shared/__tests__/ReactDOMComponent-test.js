@@ -116,14 +116,14 @@ describe('ReactDOMComponent', function() {
       spyOn(console, 'error');
 
       var style = {border: '1px solid black'};
-      var App = React.createClass({
-        getInitialState: function() {
-          return {style: style};
-        },
-        render: function() {
+
+      class App extends React.Component {
+        state = {style: style};
+
+        render() {
           return <div style={this.state.style}>asd</div>;
-        },
-      });
+        }
+      }
 
       var stub = ReactTestUtils.renderIntoDocument(<App />);
       style.position = 'absolute';
@@ -186,11 +186,12 @@ describe('ReactDOMComponent', function() {
 
     it('should not warn for "0" as a unitless style value', function() {
       spyOn(console, 'error');
-      var Component = React.createClass({
-        render: function() {
+
+      class Component extends React.Component {
+        render() {
           return <div style={{margin: '0'}} />;
-        },
-      });
+        }
+      }
 
       ReactTestUtils.renderIntoDocument(<Component />);
       expect(console.error.calls.count()).toBe(0);
@@ -755,11 +756,12 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should not duplicate uppercased selfclosing tags', function() {
-      var Container = React.createClass({
-        render: function() {
+      class Container extends React.Component {
+        render() {
           return React.createElement('BR', null);
-        },
-      });
+        }
+      }
+
       var returnedValue = ReactDOMServer.renderToString(<Container/>);
       expect(returnedValue).not.toContain('</BR>');
     });
@@ -944,11 +946,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn for children on void elements', function() {
-      var X = React.createClass({
-        render: function() {
+      class X extends React.Component {
+        render() {
           return <input>moo</input>;
-        },
-      });
+        }
+      }
 
       var container = document.createElement('div');
       expect(function() {
@@ -1039,11 +1041,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should report component containing invalid styles', function() {
-      var Animal = React.createClass({
-        render: function() {
+      class Animal extends React.Component {
+        render() {
           return <div style={1}></div>;
-        },
-      });
+        }
+      }
 
       expect(function() {
         ReactDOM.render(<Animal/>, container);
@@ -1123,15 +1125,16 @@ describe('ReactDOMComponent', function() {
     });
 
     it('unmounts children before unsetting DOM node info', function() {
-      var Inner = React.createClass({
-        render: function() {
+      class Inner extends React.Component {
+        render() {
           return <span />;
-        },
-        componentWillUnmount: function() {
+        }
+
+        componentWillUnmount() {
           // Should not throw
           expect(ReactDOM.findDOMNode(this).nodeName).toBe('SPAN');
-        },
-      });
+        }
+      }
 
       var container = document.createElement('div');
       ReactDOM.render(<div><Inner /></div>, container);
@@ -1219,16 +1222,19 @@ describe('ReactDOMComponent', function() {
 
     it('warns nicely for table rows', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
-        render: function() {
+
+      class Row extends React.Component {
+        render() {
           return <tr />;
-        },
-      });
-      var Foo = React.createClass({
-        render: function() {
+        }
+      }
+
+      class Foo extends React.Component {
+        render() {
           return <table><Row /> </table>;
-        },
-      });
+        }
+      }
+
       ReactTestUtils.renderIntoDocument(<Foo />);
 
       expect(console.error.calls.count()).toBe(2);
@@ -1251,16 +1257,18 @@ describe('ReactDOMComponent', function() {
       var FancyRow = React.createClass({
         render: () => <Row />,
       });
-      var Table = React.createClass({
-        render: function() {
+
+      class Table extends React.Component {
+        render() {
           return <table>{this.props.children}</table>;
-        },
-      });
-      var FancyTable = React.createClass({
-        render: function() {
+        }
+      }
+
+      class FancyTable extends React.Component {
+        render() {
           return <Table>{this.props.children}</Table>;
-        },
-      });
+        }
+      }
 
       var Viz1 = React.createClass({
         render: () => <table><FancyRow /></table>,
@@ -1304,11 +1312,12 @@ describe('ReactDOMComponent', function() {
         'See FancyTable > Table > table > tr.'
       );
 
-      var Link = React.createClass({
-        render: function() {
+      class Link extends React.Component {
+        render() {
           return <a>{this.props.children}</a>;
-        },
-      });
+        }
+      }
+
       ReactTestUtils.renderIntoDocument(<Link><div><Link /></div></Link>);
       expect(console.error.calls.count()).toBe(6);
       expect(console.error.calls.argsFor(5)[0]).toContain(
@@ -1434,35 +1443,35 @@ describe('ReactDOMComponent', function() {
       spyOn(console, 'error');
       var container = document.createElement('div');
 
-      var Parent = React.createClass({
-        render: function() {
+      class Parent extends React.Component {
+        render() {
           return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
-        },
-      });
+        }
+      }
 
-      var Child1 = React.createClass({
-        render: function() {
+      class Child1 extends React.Component {
+        render() {
           return <div class="paladin">Child1</div>;
-        },
-      });
+        }
+      }
 
-      var Child2 = React.createClass({
-        render: function() {
+      class Child2 extends React.Component {
+        render() {
           return <div>Child2</div>;
-        },
-      });
+        }
+      }
 
-      var Child3 = React.createClass({
-        render: function() {
+      class Child3 extends React.Component {
+        render() {
           return <div onclick="1">Child3</div>;
-        },
-      });
+        }
+      }
 
-      var Child4 = React.createClass({
-        render: function() {
+      class Child4 extends React.Component {
+        render() {
           return <div>Child4</div>;
-        },
-      });
+        }
+      }
 
       ReactDOMServer.renderToString(<Parent />, container);
 
@@ -1479,7 +1488,6 @@ describe('ReactDOMComponent', function() {
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
       expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
-
     });
   });
 });

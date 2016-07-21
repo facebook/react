@@ -24,19 +24,17 @@ describe('ReactCompositeComponentNestedState-state', function() {
   });
 
   it('should provide up to date values for props', function() {
-    var ParentComponent = React.createClass({
-      getInitialState: function() {
-        return {color: 'blue'};
-      },
+    class ParentComponent extends React.Component {
+      state = {color: 'blue'};
 
-      handleColor: function(color) {
+      handleColor = (color) => {
         this.props.logger('parent-handleColor', this.state.color);
         this.setState({color: color}, function() {
           this.props.logger('parent-after-setState', this.state.color);
         });
-      },
+      };
 
-      render: function() {
+      render() {
         this.props.logger('parent-render', this.state.color);
         return (
           <ChildComponent
@@ -45,16 +43,17 @@ describe('ReactCompositeComponentNestedState-state', function() {
             onSelectColor={this.handleColor}
           />
         );
-      },
-    });
+      }
+    }
 
-    var ChildComponent = React.createClass({
-      getInitialState: function() {
-        this.props.logger('getInitialState', this.props.color);
-        return {hue: 'dark ' + this.props.color};
-      },
+    class ChildComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        props.logger('getInitialState', props.color);
+        this.state = {hue: 'dark ' + props.color};
+      }
 
-      handleHue: function(shade, color) {
+      handleHue = (shade, color) => {
         this.props.logger('handleHue', this.state.hue, this.props.color);
         this.props.onSelectColor(color);
         this.setState(function(state, props) {
@@ -64,9 +63,9 @@ describe('ReactCompositeComponentNestedState-state', function() {
         }, function() {
           this.props.logger('after-setState', this.state.hue, this.props.color);
         });
-      },
+      };
 
-      render: function() {
+      render() {
         this.props.logger('render', this.state.hue, this.props.color);
         return (
           <div>
@@ -84,8 +83,8 @@ describe('ReactCompositeComponentNestedState-state', function() {
             </button>
           </div>
         );
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     document.body.appendChild(container);

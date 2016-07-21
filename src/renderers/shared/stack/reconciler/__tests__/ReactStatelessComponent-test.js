@@ -35,11 +35,11 @@ describe('ReactStatelessComponent', function() {
   });
 
   it('should update stateless component', function() {
-    var Parent = React.createClass({
+    class Parent extends React.Component {
       render() {
         return <StatelessComponent {...this.props} />;
-      },
-    });
+      }
+    }
 
     var el = document.createElement('div');
     ReactDOM.render(<Parent name="A" />, el);
@@ -60,33 +60,33 @@ describe('ReactStatelessComponent', function() {
   });
 
   it('should pass context thru stateless component', function() {
-    var Child = React.createClass({
-      contextTypes: {
+    class Child extends React.Component {
+      static contextTypes = {
         test: React.PropTypes.string.isRequired,
-      },
+      };
 
-      render: function() {
+      render() {
         return <div>{this.context.test}</div>;
-      },
-    });
+      }
+    }
 
     function Parent() {
       return <Child />;
     }
 
-    var GrandParent = React.createClass({
-      childContextTypes: {
+    class GrandParent extends React.Component {
+      static childContextTypes = {
         test: React.PropTypes.string.isRequired,
-      },
+      };
 
       getChildContext() {
         return {test: this.props.test};
-      },
+      }
 
-      render: function() {
+      render() {
         return <Parent />;
-      },
-    });
+      }
+    }
 
     var el = document.createElement('div');
     ReactDOM.render(<GrandParent test="test" />, el);
@@ -149,12 +149,14 @@ describe('ReactStatelessComponent', function() {
   it('should warn when given a ref', function() {
     spyOn(console, 'error');
 
-    var Parent = React.createClass({
-      displayName: 'Parent',
-      render: function() {
+    class Parent extends React.Component {
+      static displayName = 'Parent';
+
+      render() {
         return <StatelessComponent name="A" ref="stateless"/>;
-      },
-    });
+      }
+    }
+
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
     expect(console.error.calls.count()).toBe(1);
@@ -206,17 +208,20 @@ describe('ReactStatelessComponent', function() {
   });
 
   it('should receive context', function() {
-    var Parent = React.createClass({
-      childContextTypes: {
+    class Parent extends React.Component {
+      static childContextTypes = {
         lang: React.PropTypes.string,
-      },
-      getChildContext: function() {
+      };
+
+      getChildContext() {
         return {lang: 'en'};
-      },
-      render: function() {
+      }
+
+      render() {
         return <Child />;
-      },
-    });
+      }
+    }
+
     function Child(props, context) {
       return <div>{context.lang}</div>;
     }

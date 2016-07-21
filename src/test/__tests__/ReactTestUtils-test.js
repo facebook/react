@@ -26,16 +26,16 @@ describe('ReactTestUtils', function() {
   });
 
   it('should have shallow rendering', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return (
           <div>
             <span className="child1" />
             <span className="child2" />
           </div>
         );
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
@@ -68,11 +68,11 @@ describe('ReactTestUtils', function() {
   });
 
   it('should throw for invalid elements', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     expect(() => shallowRenderer.render(SomeComponent)).toThrowError(
@@ -106,11 +106,11 @@ describe('ReactTestUtils', function() {
   });
 
   it('can shallow render to null', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return null;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
@@ -119,11 +119,11 @@ describe('ReactTestUtils', function() {
   });
 
   it('can shallow render with a ref', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return <div ref="hello" />;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     // Shouldn't crash.
@@ -131,16 +131,14 @@ describe('ReactTestUtils', function() {
   });
 
   it('lets you update shallowly rendered components', function() {
-    var SomeComponent = React.createClass({
-      getInitialState: function() {
-        return {clicked: false};
-      },
+    class SomeComponent extends React.Component {
+      state = {clicked: false};
 
-      onClick: function() {
+      onClick = () => {
         this.setState({clicked: true});
-      },
+      };
 
-      render: function() {
+      render() {
         var className = this.state.clicked ? 'was-clicked' : '';
 
         if (this.props.aNew === 'prop') {
@@ -160,8 +158,8 @@ describe('ReactTestUtils', function() {
             </div>
           );
         }
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
@@ -183,14 +181,15 @@ describe('ReactTestUtils', function() {
   });
 
   it('can access the mounted component instance', function() {
-    var SimpleComponent = React.createClass({
-      someMethod: function() {
+    class SimpleComponent extends React.Component {
+      someMethod = () => {
         return this.props.n;
-      },
-      render: function() {
+      };
+
+      render() {
         return <div>{this.props.n}</div>;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent n={5} />);
@@ -198,14 +197,15 @@ describe('ReactTestUtils', function() {
   });
 
   it('can shallowly render components with contextTypes', function() {
-    var SimpleComponent = React.createClass({
-      contextTypes: {
+    class SimpleComponent extends React.Component {
+      static contextTypes = {
         name: React.PropTypes.string,
-      },
-      render: function() {
+      };
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SimpleComponent />);
@@ -213,14 +213,14 @@ describe('ReactTestUtils', function() {
   });
 
   it('can shallowly render components with ref as function', function() {
-    var SimpleComponent = React.createClass({
-      getInitialState: function() {
-        return {clicked: false};
-      },
-      handleUserClick: function() {
+    class SimpleComponent extends React.Component {
+      state = {clicked: false};
+
+      handleUserClick = () => {
         this.setState({ clicked: true });
-      },
-      render: function() {
+      };
+
+      render() {
         return (
           <div
             ref={() => {}}
@@ -228,8 +228,8 @@ describe('ReactTestUtils', function() {
             className={this.state.clicked ? 'clicked' : ''}
           />
         );
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -244,14 +244,15 @@ describe('ReactTestUtils', function() {
   });
 
   it('can setState in componentWillMount when shallow rendering', function() {
-    var SimpleComponent = React.createClass({
+    class SimpleComponent extends React.Component {
       componentWillMount() {
         this.setState({groovy: 'doovy'});
-      },
+      }
+
       render() {
         return <div>{this.state.groovy}</div>;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SimpleComponent />);
@@ -259,14 +260,15 @@ describe('ReactTestUtils', function() {
   });
 
   it('can pass context when shallowly rendering', function() {
-    var SimpleComponent = React.createClass({
-      contextTypes: {
+    class SimpleComponent extends React.Component {
+      static contextTypes = {
         name: React.PropTypes.string,
-      },
-      render: function() {
+      };
+
+      render() {
         return <div>{this.context.name}</div>;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SimpleComponent />, {
@@ -277,14 +279,16 @@ describe('ReactTestUtils', function() {
 
   it('can fail context when shallowly rendering', function() {
     spyOn(console, 'error');
-    var SimpleComponent = React.createClass({
-      contextTypes: {
+
+    class SimpleComponent extends React.Component {
+      static contextTypes = {
         name: React.PropTypes.string.isRequired,
-      },
-      render: function() {
+      };
+
+      render() {
         return <div>{this.context.name}</div>;
-      },
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent />);
@@ -299,11 +303,12 @@ describe('ReactTestUtils', function() {
   });
 
   it('can scryRenderedDOMComponentsWithClass with TextComponent', function() {
-    var Wrapper = React.createClass({
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         return <div>Hello <span>Jim</span></div>;
-      },
-    });
+      }
+    }
+
     var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
@@ -313,11 +318,12 @@ describe('ReactTestUtils', function() {
   });
 
   it('can scryRenderedDOMComponentsWithClass with className contains \\n', function() {
-    var Wrapper = React.createClass({
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         return <div>Hello <span className={'x\ny'}>Jim</span></div>;
-      },
-    });
+      }
+    }
+
     var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
@@ -327,11 +333,12 @@ describe('ReactTestUtils', function() {
   });
 
   it('can scryRenderedDOMComponentsWithClass with multiple classes', function() {
-    var Wrapper = React.createClass({
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         return <div>Hello <span className={'x y z'}>Jim</span></div>;
-      },
-    });
+      }
+    }
+
     var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults1 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
@@ -368,11 +375,11 @@ describe('ReactTestUtils', function() {
   });
 
   it('traverses children in the correct order', function() {
-    var Wrapper = React.createClass({
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         return <div>{this.props.children}</div>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     ReactDOM.render(
@@ -425,8 +432,8 @@ describe('ReactTestUtils', function() {
 
     // Full-page components (html, head, body) can't be rendered into a div
     // directly...
-    var Root = React.createClass({
-      render: function() {
+    class Root extends React.Component {
+      render() {
         return (
           <html ref="html">
             <head ref="head">
@@ -437,8 +444,8 @@ describe('ReactTestUtils', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     var markup = ReactDOMServer.renderToString(<Root />);
     var testDocument = getTestDocument(markup);
@@ -470,15 +477,15 @@ describe('ReactTestUtils', function() {
   });
 
   it('should change the value of an input field in a component', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return (
           <div>
             <input type="text" ref="input" onChange={this.props.handleChange} />
           </div>
         );
-      },
-    });
+      }
+    }
 
     var obj = {
       handler: function(e) {
@@ -497,15 +504,16 @@ describe('ReactTestUtils', function() {
   });
 
   it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return (
           <div onClick={this.props.handleClick}>
             hello, world.
           </div>
         );
-      },
-    });
+      }
+    }
+
     var handler = jasmine.createSpy('spy');
     var shallowRenderer = ReactTestUtils.createRenderer();
     var result = shallowRenderer.render(<SomeComponent handleClick={handler} />);
@@ -522,14 +530,15 @@ describe('ReactTestUtils', function() {
 
     var CLIENT_X = 100;
 
-    var Component = React.createClass({
-      handleClick: function(e) {
+    class Component extends React.Component {
+      handleClick = (e) => {
         expect(e.clientX).toBe(CLIENT_X);
-      },
-      render: function() {
+      };
+
+      render() {
         return <div onClick={this.handleClick} />;
-      },
-    });
+      }
+    }
 
     var element = document.createElement('div');
     var instance = ReactDOM.render(<Component />, element);
@@ -542,16 +551,17 @@ describe('ReactTestUtils', function() {
 
   it('can scry with stateless components involved', function() {
     var Stateless = () => <div><hr /></div>;
-    var SomeComponent = React.createClass({
-      render: function() {
+
+    class SomeComponent extends React.Component {
+      render() {
         return (
           <div>
             <Stateless />
             <hr />
           </div>
         );
-      },
-    });
+      }
+    }
 
     var inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
     var hrs = ReactTestUtils.scryRenderedDOMComponentsWithTag(inst, 'hr');
