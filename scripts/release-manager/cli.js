@@ -19,6 +19,9 @@ const vorpal = new Vorpal();
 // TODO: Make this an argument to the script
 const PATH_TO_REPO = path.resolve('../../../react');
 
+// Quick dry run opt-in. This allows quick debugging of execInRepo without
+// actually running the command, ensuring no accidental publishing.
+const DRY_RUN = false;
 
 
 // HELPERS
@@ -33,6 +36,12 @@ function writeTo(file, data) {
 
 // Wrapper around exec so we don't have to worry about paths
 function execInRepo(command) {
+  vorpal.log(chalk.gray(`Executing ${chalk.underline(command)}`));
+
+  if (DRY_RUN) {
+    return '';
+  }
+
   return execSync(command, {
     cwd: PATH_TO_REPO,
     encoding: 'utf8',
