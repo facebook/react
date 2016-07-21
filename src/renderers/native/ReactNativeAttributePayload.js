@@ -321,7 +321,7 @@ function diffProperties(
     if (!attributeConfig) {
       if (__DEV__) {
         warning(
-          enableStrictAttributeValidation === true && propKey !== 'children',
+          enableStrictAttributeValidation !== true || propKey === 'children',
           'unsupported attribute: ' + propKey
         );
       }
