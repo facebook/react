@@ -536,8 +536,8 @@ function mixSpecIntoComponent(Constructor, spec, isFromMixin) {
       }
 
       if (__DEV__) {
-        // Add verbose displayName to the function as well as the method, which helps when looking
-        // at profiling tools and debugging.
+        // Add verbose displayName to the function as well as the method,
+        // which helps when looking at profiling tools and debugging.
         var displayName = isFromMixin ?
           'Mixin' :
           Constructor.displayName || 'Anonymous';
