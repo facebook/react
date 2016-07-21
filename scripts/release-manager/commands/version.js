@@ -47,11 +47,8 @@ module.exports = function(vorpal, app) {
     .command('version')
     .description('Update the version of React, useful while publishing')
     .action(function (args, actionCB) {
-      const PATH_TO_PACKAGE = path.join(app.PATH_TO_REPO, 'package.json');
 
-      let packageJSON = JSON.parse(fs.readFileSync(PATH_TO_PACKAGE, 'utf8'));
-
-      let currentVersion = packageJSON.version;
+      let currentVersion = app.getReactVersion()
 
       // TODO: See if we can do a better job for handling pre* bumps. The ones
       // semver adds are of the form -0, but we've used -alpha.0 or -rc.0.

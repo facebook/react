@@ -60,6 +60,10 @@ function gitCherryPickMerge(sha) {
   }
 }
 
+function getReactVersion() {
+  return (JSON.parse(fs.readFileSync(path.join(PATH_TO_REPO, 'package.json'), 'utf8'))).version;
+}
+
 const app = {
   vorpal,
 
@@ -93,6 +97,7 @@ const app = {
     this.writeTo = writeTo;
     this.execInRepo = execInRepo;
     this.gitCherryPickMerge = gitCherryPickMerge;
+    this.getReactVersion = getReactVersion;
 
     // Register commands
     [
