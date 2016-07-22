@@ -80,7 +80,7 @@ We take care of updating Babel, ESLint, and Webpack to stable compatible version
 
 ### Zero Configuration
 
-It is worth repeating: there is no configuration files or complicated folder structures. The tool only generates the files you need to build your app.
+It is worth repeating: there are no configuration files or complicated folder structures. The tool only generates the files you need to build your app.
 
 ```
 hello-world/
