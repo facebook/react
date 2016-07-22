@@ -128,10 +128,10 @@ describe('ReactContextValidator', function() {
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
-    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
-    expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
-    expect(actualComponentWillUpdate).toEqual({foo: 'def'});
-    expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
+    expect(actualComponentWillReceiveProps).toEqual({foo: 'def', bar: 'bar'});
+    expect(actualShouldComponentUpdate).toEqual({foo: 'def', bar: 'bar'});
+    expect(actualComponentWillUpdate).toEqual({foo: 'def', bar: 'bar'});
+    expect(actualComponentDidUpdate).toEqual({foo: 'abc', bar: 'bar'});
   });
 
   it('should check context types', function() {
