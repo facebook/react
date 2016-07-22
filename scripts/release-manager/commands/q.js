@@ -11,4 +11,4 @@ module.exports = function(vorpal, config) {
     .action((args, cb) => {
       vorpal.exec('exit').then(cb);
     });
-}
+};

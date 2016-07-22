@@ -23,6 +23,16 @@ const PATH_TO_REPO = path.resolve('../../../react');
 // actually running the command, ensuring no accidental publishing.
 const DRY_RUN = false;
 
+// Enabled commands
+const COMMANDS = [
+  'init',
+  'docs-prs',
+  'q',
+  'stable-prs',
+  'version',
+  'npm-publish',
+];
+
 
 // HELPERS
 
@@ -65,7 +75,7 @@ function gitCherryPickMerge(sha) {
     // TODO: gracefully handle other cases, like possibility the commit was
     // already cherry-picked and should be skipped.
 
-    execInRepo(`git cherry-pick -x -m1 ${sha}`)
+    execInRepo(`git cherry-pick -x -m1 ${sha}`);
   }
 }
 
@@ -89,7 +99,7 @@ const app = {
     } catch (e) {
       this.config = {
         token: null,
-      }
+      };
       console.error('Could not read .config.json. Rate limits are much stricter as a result. Run init to setup.');
     }
 
@@ -109,14 +119,7 @@ const app = {
     this.getReactVersion = getReactVersion;
 
     // Register commands
-    [
-      'init',
-      'docs-prs',
-      'q',
-      'stable-prs',
-      'version',
-      'npm-publish',
-    ].forEach((command) => {
+    COMMANDS.forEach((command) => {
       vorpal.use(require(`./commands/${command}`)(vorpal, app));
     });
 
@@ -124,7 +127,7 @@ const app = {
       .history('react-release-manager')
       .delimiter('rrm \u2234')
       .show();
-  }
-}
+  },
+};
 
 app.init();

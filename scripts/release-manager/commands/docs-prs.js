@@ -3,7 +3,6 @@
 const chalk = require('chalk');
 
 const DOCS_LABEL = 'Documentation: needs merge to stable';
-const DOCS_URL = 'https://github.com/facebook/react/issues?q=label%3A%22Documentation%3A+needs+merge+to+stable%22+is%3Aclosed'
 
 // FOR DOCS
 // get all issues with label
@@ -24,7 +23,7 @@ module.exports = function(vorpal, app) {
   vorpal
     .command('docs-prs')
     .description('Get list of documentation pull requests that need to be merged to the stable branch')
-    .action(function (args, actionCB) {
+    .action(function(args, actionCB) {
       const query = {
         labels: [DOCS_LABEL].join(), // github-api doesn't join automatically
         state: 'closed',
@@ -63,11 +62,11 @@ module.exports = function(vorpal, app) {
           richPulls.forEach((pr) => {
             // Convert merged_at to real Date for sorting
             pr.merged_at_date = new Date(pr.merged_at);
-          })
+          });
 
           richPulls = richPulls.sort((a, b) => a.merged_at_date - b.merged_at_date);
 
-          this.log(`Found ${chalk.bold(richPulls.length)} pull requests:`)
+          this.log(`Found ${chalk.bold(richPulls.length)} pull requests:`);
           richPulls.forEach((pr) => {
             this.log(`${pr.html_url}: ${chalk.bold(pr.title)}`);
           });
@@ -75,7 +74,7 @@ module.exports = function(vorpal, app) {
           this.prompt({
             name: 'merge',
             type: 'confirm',
-            message: `Merge these ${richPulls.length} pull requests?`
+            message: `Merge these ${richPulls.length} pull requests?`,
           }, (res) => {
             if (res.merge) {
               richPulls.forEach((pr) => {
@@ -89,7 +88,7 @@ module.exports = function(vorpal, app) {
               }, (res) => {
                 if (res.push) {
                   app.execInRepo('git push');
-                  this.log(`Pushed upstream! Removing "${DOCS_LABEL}" label from pull requests.`)
+                  this.log(`Pushed upstream! Removing "${DOCS_LABEL}" label from pull requests.`);
                 }
 
                 // TODO: actually test this
@@ -109,9 +108,9 @@ module.exports = function(vorpal, app) {
                 });
 
                 Promise.all(removeLabelsPromises).then(() => {
-                  this.log('Done!')
+                  this.log('Done!');
                   actionCB();
-                })
+                });
               });
 
             } else {
@@ -125,4 +124,4 @@ module.exports = function(vorpal, app) {
       });
 
     });
-}
+};

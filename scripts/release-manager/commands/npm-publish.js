@@ -10,7 +10,6 @@
 const path = require('path');
 const semver = require('semver');
 
-const chalk = require('chalk');
 const glob = require('glob');
 
 
@@ -18,7 +17,7 @@ module.exports = function(vorpal, app) {
   vorpal
     .command('npm-publish')
     .description('Update the version of React, useful while publishing')
-    .action(function (args) {
+    .action(function(args) {
       return new Promise((resolve, reject) => {
         const currentVersion = app.getReactVersion();
         const isStable = semver.prerelease(currentVersion) === null;
@@ -33,11 +32,11 @@ module.exports = function(vorpal, app) {
           {
             type: 'confirm',
             message: 'Did you run `grunt build` or `grunt release` and bump the version number?',
-            name: 'checklist'
+            name: 'checklist',
           },
         ]).then((answers) => {
           if (!answers.checklist) {
-            return reject('Complete the build process first')
+            return reject('Complete the build process first');
           }
 
           // We'll grab all the tarballs and publish those directly. This
@@ -45,7 +44,7 @@ module.exports = function(vorpal, app) {
           // just npm publish pkg1.tgz && npm publish pkg2.tgz. This
           // avoided the need to cd and publish.
           const tgz = glob.sync('build/packages/*.tgz', {
-            cwd: app.PATH_TO_REPO
+            cwd: app.PATH_TO_REPO,
           });
 
           // Just in case they didn't actually prep this.
@@ -61,14 +60,14 @@ module.exports = function(vorpal, app) {
 
           if (isStable) {
             tgz.forEach((file) => {
-              const pkg = path.parse(file).name
+              const pkg = path.parse(file).name;
               this.log(app.execInRepo(`npm dist-tag add ${pkg}@${currentVersion} latest`));
             });
           }
 
           resolve();
-        })
+        });
       });
 
     });
-}
+};

@@ -15,3 +15,4 @@ build/
 coverage/
 scripts/bench/bench-*.js
 vendor/*
+**/node_modules

@@ -25,8 +25,8 @@ module.exports = function(vorpal, options) {
           {
             name: 'token',
             type: 'input',
-            message: `${chalk.bold('GitHub token?')} ${chalk.grey('(needs "repo" privs)')} `
-          }
+            message: `${chalk.bold('GitHub token?')} ${chalk.grey('(needs "repo" privs)')} `,
+          },
         ]).then((answers) => {
           fs.writeFile(FILENAME, JSON.stringify(answers, null, 2), (err) => {
             if (err) {
@@ -38,4 +38,4 @@ module.exports = function(vorpal, options) {
 
       });
     });
-}
+};
