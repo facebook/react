@@ -7,6 +7,143 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Create Apps with No Configuration</title>
+				<description>&lt;p&gt;&lt;strong&gt;&lt;a href=&quot;https://github.com/facebookincubator/create-react-app&quot;&gt;Create React App&lt;/a&gt;&lt;/strong&gt; is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getting-started&quot;&gt;&lt;/a&gt;Getting Started &lt;a class=&quot;hash-link&quot; href=&quot;#getting-started&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;First, install the global package:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;npm install -g create-react-app
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Node.js 4.x or higher is required.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;creating-an-app&quot;&gt;&lt;/a&gt;Creating an App &lt;a class=&quot;hash-link&quot; href=&quot;#creating-an-app&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Now you can use it to create a new app:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;create-react-app hello-world
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This will take a while as npm installs the transient dependencies, but once it’s done, you will see the list the commands you can run in the created folder:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/2suYgKq.png&quot; alt=&quot;created folder&quot;&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;starting-the-server&quot;&gt;&lt;/a&gt;Starting the Server &lt;a class=&quot;hash-link&quot; href=&quot;#starting-the-server&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Run &lt;code&gt;npm start&lt;/code&gt; to launch the development server. The browser will open automatically with the created app’s URL.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/amyNfCN.png&quot; alt=&quot;compiled successfully&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Create React App uses both Webpack and Babel under the hood.&lt;br&gt;
+The console output is tuned to be minimal to help you focus on the problems:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/FnLVfw6.png&quot; alt=&quot;failed to compile&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;ESLint is also integrated so lint warnings are displayed right in the console:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/Ay2TNeB.png&quot; alt=&quot;compiled with warnings&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;We only picked a small subset of lint rules that often lead to bugs.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-for-production&quot;&gt;&lt;/a&gt;Building for Production &lt;a class=&quot;hash-link&quot; href=&quot;#building-for-production&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;To build an optimized bundle, run &lt;code&gt;npm run build&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/MMCjzE9.png&quot; alt=&quot;npm run build&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;It is minified, correctly envified, and the assets include content hashes for caching.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;one-dependency&quot;&gt;&lt;/a&gt;One Dependency &lt;a class=&quot;hash-link&quot; href=&quot;#one-dependency&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Your &lt;code&gt;package.json&lt;/code&gt; contains only a single build dependency and a few scripts:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;hello-world&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;dependencies&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;react&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;^15.2.1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;react-dom&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;^15.2.1&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;devDependencies&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;react-scripts&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;0.1.0&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;scripts&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;start&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;react-scripts start&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;build&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;react-scripts build&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;eject&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;react-scripts eject&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;zero-configuration&quot;&gt;&lt;/a&gt;Zero Configuration &lt;a class=&quot;hash-link&quot; href=&quot;#zero-configuration&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;It is worth repeating: there is no configuration files or complicated folder structures. The tool only generates the files you need to build your app.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;hello-world/
+  README.md
+  index.html
+  favicon.ico
+  node_modules/
+  package.json
+  src/
+    App.css
+    App.js
+    index.css
+    index.js
+    logo.svg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All the build settings are preconfigured and can’t be changed. Some features, such as testing, are currently missing. This is an intentional limitation, and we recognize it might not work for everybody. And this brings us to the last point.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-lock-in&quot;&gt;&lt;/a&gt;No Lock-In &lt;a class=&quot;hash-link&quot; href=&quot;#no-lock-in&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;We first saw this feature in &lt;a href=&quot;https://github.com/eanplatter/enclave&quot;&gt;Enclave&lt;/a&gt;, and we loved it. We talked to &lt;a href=&quot;https://twitter.com/EanPlatter&quot;&gt;Ean&lt;/a&gt;, and he was excited to collaborate with us. He already sent a few pull requests!&lt;/p&gt;
+
+&lt;p&gt;“Ejecting” lets you leave the comfort of Create React App setup at any time. You run a single command, and all the build dependencies, configs, and scripts are moved right into your project. At this point you can customize everything you want, but effectively you are forking our configuration and going your own way. If you’re experienced with build tooling and prefer to fine-tune everything to your taste, this lets you use Create React App as a boilerplate generator.&lt;/p&gt;
+
+&lt;p&gt;We expect that at early stages, many people will “eject” for one reason or another, but as we learn from them, we will make the default setup more and more compelling while still providing no configuration.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;try-it-out&quot;&gt;&lt;/a&gt;Try It Out! &lt;a class=&quot;hash-link&quot; href=&quot;#try-it-out&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;You can find &lt;a href=&quot;http://github.com/facebookincubator/create-react-app&quot;&gt;&lt;strong&gt;Create React App&lt;/strong&gt;&lt;/a&gt; with additional instructions on GitHub.&lt;/p&gt;
+
+&lt;p&gt;This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.&lt;/p&gt;
+
+&lt;p&gt;We welcome you to participate in this experiment. Help us build the React tooling that more people can use. We are always &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/issues/11&quot;&gt;open to feedback&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-backstory&quot;&gt;&lt;/a&gt;The Backstory &lt;a class=&quot;hash-link&quot; href=&quot;#the-backstory&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;React was one of the first libraries to embrace transpiling JavaScript. As a result, even though you can &lt;a href=&quot;https://github.com/facebook/react/blob/3fd582643ef3d222a00a0c756292c15b88f9f83c/examples/basic-jsx/index.html&quot;&gt;learn React without any tooling&lt;/a&gt;, the React ecosystem has commonly become associated with an overwhelming explosion of tools.&lt;/p&gt;
+
+&lt;p&gt;Eric Clemmons called this phenomenon the “&lt;a href=&quot;https://medium.com/@ericclemmons/javascript-fatigue-48d4011b6fc4&quot;&gt;JavaScript Fatigue&lt;/a&gt;”:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Ultimately, the problem is that by choosing React (and inherently JSX), you’ve unwittingly opted into a confusing nest of build tools, boilerplate, linters, &amp;amp; time-sinks to deal with before you ever get to create anything.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It is tempting to write code in ES2015 and JSX. It is sensible to use a bundler to keep the codebase modular, and a linter to catch the common mistakes. It is nice to have a development server with fast rebuilds, and a command to produce optimized bundles for production.&lt;/p&gt;
+
+&lt;p&gt;Combining these tools requires some experience with each of them. Even so, it is far too easy to get dragged into fighting small incompatibilities, unsatisfied peerDependencies, and illegible configuration files.&lt;/p&gt;
+
+&lt;p&gt;Many of those tools are plugin platforms and don’t directly acknowledge each other’s existence. They leave it up to the users to wire them together. The tools mature and change independently, and tutorials quickly get out of date.&lt;/p&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; data-lang=&quot;en&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;Marc was almost ready to implement his &amp;quot;hello world&amp;quot; React app &lt;a href=&quot;https://t.co/ptdg4yteF1&quot;&gt;pic.twitter.com/ptdg4yteF1&lt;/a&gt;&lt;/p&gt;&amp;mdash; Thomas Fuchs (@thomasfuchs) &lt;a href=&quot;https://twitter.com/thomasfuchs/status/708675139253174273&quot;&gt;March 12, 2016&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;This doesn’t mean those tools aren’t great. To many of us, they have become indispensable, and we very much appreciate the effort of their maintainers. They already have too much on their plates to worry about the state of the React ecosystem.&lt;/p&gt;
+
+&lt;p&gt;Still, we knew it was frustrating to spend days setting up a project when all you wanted was to learn React. We wanted to fix this.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;could-we-fix-this&quot;&gt;&lt;/a&gt;Could We Fix This? &lt;a class=&quot;hash-link&quot; href=&quot;#could-we-fix-this&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We found ourselves in an unusual dilemma.&lt;/p&gt;
+
+&lt;p&gt;So far, &lt;a href=&quot;/react/contributing/design-principles.html#dogfooding&quot;&gt;our strategy&lt;/a&gt; has been to only release the code that we are using at Facebook. This helped us ensure that every project is battle-tested and has clearly defined scope and priorities.&lt;/p&gt;
+
+&lt;p&gt;However, tooling at Facebook is different than at many smaller companies. Linting, transpilation, and packaging are all handled by powerful remote development servers, and product engineers don’t need to configure them. While we wish we could give a dedicated server to every user of React, even Facebook cannot scale that well!&lt;/p&gt;
+
+&lt;p&gt;The React community is very important to us. We knew that we couldn’t fix the problem within the limits of our open source philosophy. This is why we decided to make an exception, and to ship something that we didn’t use ourselves, but that we thought would be useful to the community.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-quest-for-a-react-cli&quot;&gt;&lt;/a&gt;The Quest for a React &lt;abbr title=&quot;Command Line Interface&quot;&gt;CLI&lt;/abbr&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#the-quest-for-a-react-cli&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Having just attended &lt;a href=&quot;http://embercamp.com/&quot;&gt;EmberCamp&lt;/a&gt; a week ago, I was excited about &lt;a href=&quot;https://ember-cli.com/&quot;&gt;Ember CLI&lt;/a&gt;. Ember users have a great “getting started” experience thanks to a curated set of tools united under a single command-line interface. I have heard similar feedback about &lt;a href=&quot;https://github.com/elm-lang/elm-reactor&quot;&gt;Elm Reactor&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Providing a cohesive curated experience is valuable by itself, even if the user could in theory assemble those parts themselves. Kathy Sierra &lt;a href=&quot;http://seriouspony.com/blog/2013/7/24/your-app-makes-me-fat&quot;&gt;explains it best&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;If your UX asks the user to make &lt;em&gt;choices&lt;/em&gt;, for example, even if those choices are both clear and useful, the act of &lt;em&gt;deciding&lt;/em&gt; is a cognitive drain. And not just &lt;em&gt;while&lt;/em&gt; they’re deciding... even &lt;em&gt;after&lt;/em&gt; we choose, an unconscious cognitive background thread is slowly consuming/leaking resources, “Was &lt;em&gt;that&lt;/em&gt; the right choice?”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I never tried to write a command-line tool for React apps, and neither has &lt;a href=&quot;http://twitter.com/vjeux&quot;&gt;Christopher&lt;/a&gt;. We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.&lt;/p&gt;
+
+&lt;p&gt;We knew that such projects traditionally haven’t been very successful in the React ecosystem. Christopher told me that multiple “React CLI” projects have started and failed at Facebook. The community tools with similar goals also exist, but so far they have not yet gained enough traction.&lt;/p&gt;
+
+&lt;p&gt;Still, we decided it was worth another shot. Christopher and I created a very rough proof of concept on the weekend, and &lt;a href=&quot;https://twitter.com/lacker&quot;&gt;Kevin&lt;/a&gt; soon joined us.&lt;/p&gt;
+
+&lt;p&gt;We invited some of the community members to collaborate with us, and we have spent this week working on this tool. We hope that you’ll enjoy using it! &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/issues/11&quot;&gt;Let us know what you think.&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;We would like to express our gratitude to &lt;a href=&quot;https://twitter.com/mxstbr&quot;&gt;Max Stoiber&lt;/a&gt;, &lt;a href=&quot;https://twitter.com/jbscript&quot;&gt;Jonny Buchanan&lt;/a&gt;, &lt;a href=&quot;https://twitter.com/eanplatter&quot;&gt;Ean Platter&lt;/a&gt;, &lt;a href=&quot;https://github.com/tylermcginnis&quot;&gt;Tyler McGinnis&lt;/a&gt;, &lt;a href=&quot;https://github.com/kentcdodds&quot;&gt;Kent C. Dodds&lt;/a&gt;, and &lt;a href=&quot;https://twitter.com/ericclemmons&quot;&gt;Eric Clemmons&lt;/a&gt; for their early feedback, ideas, and contributions.&lt;/p&gt;
+</description>
+				<pubDate>2016-07-22T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/07/22/create-apps-with-no-configuration.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/07/22/create-apps-with-no-configuration.html</guid>
+			</item>
+		
+			<item>
 				<title>Mixins Considered Harmful</title>
 				<description>&lt;p&gt;“How do I share the code between several components?” is one of the first questions that people ask when they learn React. Our answer has always been to use component composition for code reuse. You can define a component and use it in several other components.&lt;/p&gt;
 
@@ -1031,64 +1168,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 				<pubDate>2016-01-12T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html</guid>
-			</item>
-		
-			<item>
-				<title>(A =&gt; B) !=&gt; (B =&gt; A)</title>
-				<description>&lt;p&gt;The documentation for &lt;code&gt;componentWillReceiveProps&lt;/code&gt; states that &lt;code&gt;componentWillReceiveProps&lt;/code&gt; will be invoked when the props change as the result of a rerender. Some people assume this means &amp;quot;if &lt;code&gt;componentWillReceiveProps&lt;/code&gt; is called, then the props must have changed&amp;quot;, but that conclusion is logically incorrect.&lt;/p&gt;
-
-&lt;p&gt;The guiding principle is one of my favorites from formal logic/mathematics:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;A implies B does not imply B implies A&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;Example: &amp;quot;If I eat moldy food, then I will get sick&amp;quot; does not imply &amp;quot;if I am sick, then I must have eaten moldy food&amp;quot;. There are many other reasons I could be feeling sick. For instance, maybe the flu is circulating around the office. Similarly, there are many reasons that &lt;code&gt;componentWillReceiveProps&lt;/code&gt; might get called, even if the props didn’t change.&lt;/p&gt;
-
-&lt;p&gt;If you don’t believe me, call &lt;code&gt;ReactDOM.render()&lt;/code&gt; three times with the exact same props, and try to predict the number of times &lt;code&gt;componentWillReceiveProps&lt;/code&gt; will get called:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;componentWillReceiveProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;componentWillReceiveProps&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Bar&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getElementById&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;container&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;drinks&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;In this case, the answer is &amp;quot;2&amp;quot;. React calls &lt;code&gt;componentWillReceiveProps&lt;/code&gt; twice (once for each of the two updates). Both times, the value of &amp;quot;drinks&amp;quot; is printed (ie. the props didn’t change).&lt;/p&gt;
-
-&lt;p&gt;To understand why, we need to think about what &lt;em&gt;could&lt;/em&gt; have happened. The data &lt;em&gt;could&lt;/em&gt; have changed between the initial render and the two subsequent updates, if the code had performed a mutation like this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;drinks&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;food&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;noise&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;ReactDOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;mydata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;React has no way of knowing that the data didn’t change. Therefore, React needs to call &lt;code&gt;componentWillReceiveProps&lt;/code&gt;, because the component needs to be notified of the new props (even if the new props happen to be the same as the old props).&lt;/p&gt;
-
-&lt;p&gt;You might think that React could just use smarter checks for equality, but there are some issues with this idea:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;The old &lt;code&gt;mydata&lt;/code&gt; and the new &lt;code&gt;mydata&lt;/code&gt; are actually the same physical object (only the object’s internal value changed). Since the references are triple-equals-equal, doing an equality check doesn’t tell us if the value has changed. The only possible solution would be to have created a deep copy of the data, and then later do a deep comparison - but this can be prohibitively expensive for large data structures (especially ones with cycles).&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;mydata&lt;/code&gt; object might contain references to functions which have captured variables within closures. There is no way for React to peek into these closures, and thus no way for React to copy them and/or verify equality.&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;mydata&lt;/code&gt; object might contain references to objects which are re-instantiated during the parent&amp;#39;s render (ie. not triple-equals-equal) but are conceptually equal (ie. same keys and same values). A deep-compare (expensive) could detect this, except that functions present a problem again because there is no reliable way to compare two functions to see if they are semantically equivalent.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Given the language constraints, it is sometimes impossible for us to achieve meaningful equality semantics. In such cases, React will call &lt;code&gt;componentWillReceiveProps&lt;/code&gt; (even though the props might not have changed) so the component has an opportunity to examine the new props and act accordingly.&lt;/p&gt;
-
-&lt;p&gt;As a result, your implementation of &lt;code&gt;componentWillReceiveProps&lt;/code&gt; MUST NOT assume that your props have changed. If you want an operation (such as a network request) to occur only when props have changed, your &lt;code&gt;componentWillReceiveProps&lt;/code&gt; code needs to check to see if the props actually changed.&lt;/p&gt;
-</description>
-				<pubDate>2016-01-08T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/01/08/A-implies-B-does-not-imply-B-implies-A.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/01/08/A-implies-B-does-not-imply-B-implies-A.html</guid>
 			</item>
 		
 	</channel>
