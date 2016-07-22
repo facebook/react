@@ -167,8 +167,8 @@ ReactElement.createElement = function(type, config, children) {
         /* eslint-disable no-proto */
         config.__proto__ == null || config.__proto__ === Object.prototype,
         /* eslint-enable no-proto */
-        'React.createElement(...): Expected props argument to be a plain object. ' +
-        'Properties defined in its prototype chain will be ignored.'
+        'React.createElement(...): Expected props argument of ' + displayName(type) +
+        ' to be a plain object. Properties defined in its prototype chain will be ignored.'
       );
     }
 
@@ -213,10 +213,6 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
   if (__DEV__) {
-    var displayName = typeof type === 'function' ?
-      (type.displayName || type.name || 'Unknown') :
-      type;
-
     // Create dummy `key` and `ref` property to `props` to warn users against its use
     var warnAboutAccessingKey = function() {
       if (!specialPropKeyWarningShown) {
@@ -227,7 +223,7 @@ ReactElement.createElement = function(type, config, children) {
           'in `undefined` being returned. If you need to access the same ' +
           'value within the child component, you should pass it as a different ' +
           'prop. (https://fb.me/react-special-props)',
-          displayName
+          displayName(type)
         );
       }
       return undefined;
@@ -243,7 +239,7 @@ ReactElement.createElement = function(type, config, children) {
           'in `undefined` being returned. If you need to access the same ' +
           'value within the child component, you should pass it as a different ' +
           'prop. (https://fb.me/react-special-props)',
-          displayName
+          displayName(type)
         );
       }
       return undefined;
@@ -407,5 +403,11 @@ ReactElement.isValidElement = function(object) {
 };
 
 ReactElement.REACT_ELEMENT_TYPE = REACT_ELEMENT_TYPE;
+
+function displayName(type) {
+  return typeof type === 'function' ?
+    (type.displayName || type.name || 'ReactElement') :
+    type;
+}
 
 module.exports = ReactElement;

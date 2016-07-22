@@ -195,7 +195,8 @@ describe('ReactElement', function() {
     React.createElement('div', Object.create({foo: 1}));
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'React.createElement(...): Expected props argument to be a plain object. ' +
+      'React.createElement(...): Expected props argument of div ' +
+      'to be a plain object. ' +
       'Properties defined in its prototype chain will be ignored.'
     );
   });
