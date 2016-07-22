@@ -18,28 +18,28 @@
 &lt;p&gt;Now you can use it to create a new app:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;create-react-app hello-world
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This will take a while as npm installs the transient dependencies, but once it’s done, you will see the list the commands you can run in the created folder:&lt;/p&gt;
+&lt;p&gt;This will take a while as npm installs the transient dependencies, but once it’s done, you will see a list of commands you can run in the created folder:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/2suYgKq.png&quot; alt=&quot;created folder&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/created-folder.png&quot; alt=&quot;created folder&quot;&gt;&lt;/p&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;starting-the-server&quot;&gt;&lt;/a&gt;Starting the Server &lt;a class=&quot;hash-link&quot; href=&quot;#starting-the-server&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Run &lt;code&gt;npm start&lt;/code&gt; to launch the development server. The browser will open automatically with the created app’s URL.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/amyNfCN.png&quot; alt=&quot;compiled successfully&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png&quot; alt=&quot;compiled successfully&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;Create React App uses both Webpack and Babel under the hood.&lt;br&gt;
 The console output is tuned to be minimal to help you focus on the problems:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/FnLVfw6.png&quot; alt=&quot;failed to compile&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/failed-to-compile.png&quot; alt=&quot;failed to compile&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;ESLint is also integrated so lint warnings are displayed right in the console:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/Ay2TNeB.png&quot; alt=&quot;compiled with warnings&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/compiled-with-warnings.png&quot; alt=&quot;compiled with warnings&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;We only picked a small subset of lint rules that often lead to bugs.&lt;/p&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-for-production&quot;&gt;&lt;/a&gt;Building for Production &lt;a class=&quot;hash-link&quot; href=&quot;#building-for-production&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;To build an optimized bundle, run &lt;code&gt;npm run build&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/MMCjzE9.png&quot; alt=&quot;npm run build&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/npm-run-build.png&quot; alt=&quot;npm run build&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;It is minified, correctly envified, and the assets include content hashes for caching.&lt;/p&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;one-dependency&quot;&gt;&lt;/a&gt;One Dependency &lt;a class=&quot;hash-link&quot; href=&quot;#one-dependency&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
@@ -62,7 +62,7 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.&lt;/p&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;zero-configuration&quot;&gt;&lt;/a&gt;Zero Configuration &lt;a class=&quot;hash-link&quot; href=&quot;#zero-configuration&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;It is worth repeating: there is no configuration files or complicated folder structures. The tool only generates the files you need to build your app.&lt;/p&gt;
+&lt;p&gt;It is worth repeating: there are no configuration files or complicated folder structures. The tool only generates the files you need to build your app.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;hello-world/
   README.md
   index.html
@@ -84,7 +84,7 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 
 &lt;p&gt;We expect that at early stages, many people will “eject” for one reason or another, but as we learn from them, we will make the default setup more and more compelling while still providing no configuration.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;try-it-out&quot;&gt;&lt;/a&gt;Try It Out! &lt;a class=&quot;hash-link&quot; href=&quot;#try-it-out&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;You can find &lt;a href=&quot;http://github.com/facebookincubator/create-react-app&quot;&gt;&lt;strong&gt;Create React App&lt;/strong&gt;&lt;/a&gt; with additional instructions on GitHub.&lt;/p&gt;
+&lt;p&gt;You can find &lt;a href=&quot;https://github.com/facebookincubator/create-react-app&quot;&gt;&lt;strong&gt;Create React App&lt;/strong&gt;&lt;/a&gt; with additional instructions on GitHub.&lt;/p&gt;
 
 &lt;p&gt;This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.&lt;/p&gt;
 
@@ -128,7 +128,7 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;If your UX asks the user to make &lt;em&gt;choices&lt;/em&gt;, for example, even if those choices are both clear and useful, the act of &lt;em&gt;deciding&lt;/em&gt; is a cognitive drain. And not just &lt;em&gt;while&lt;/em&gt; they’re deciding... even &lt;em&gt;after&lt;/em&gt; we choose, an unconscious cognitive background thread is slowly consuming/leaking resources, “Was &lt;em&gt;that&lt;/em&gt; the right choice?”&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;I never tried to write a command-line tool for React apps, and neither has &lt;a href=&quot;http://twitter.com/vjeux&quot;&gt;Christopher&lt;/a&gt;. We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.&lt;/p&gt;
+&lt;p&gt;I never tried to write a command-line tool for React apps, and neither has &lt;a href=&quot;https://twitter.com/vjeux&quot;&gt;Christopher&lt;/a&gt;. We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.&lt;/p&gt;
 
 &lt;p&gt;We knew that such projects traditionally haven’t been very successful in the React ecosystem. Christopher told me that multiple “React CLI” projects have started and failed at Facebook. The community tools with similar goals also exist, but so far they have not yet gained enough traction.&lt;/p&gt;
 

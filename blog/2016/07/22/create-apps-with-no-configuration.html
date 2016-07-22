@@ -132,28 +132,28 @@
 <p>Now you can use it to create a new app:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh">create-react-app hello-world
 </code></pre></div>
-<p>This will take a while as npm installs the transient dependencies, but once it’s done, you will see the list the commands you can run in the created folder:</p>
+<p>This will take a while as npm installs the transient dependencies, but once it’s done, you will see a list of commands you can run in the created folder:</p>
 
-<p><img src="http://i.imgur.com/2suYgKq.png" alt="created folder"></p>
+<p><img src="/react/img/blog/create-apps-with-no-configuration/created-folder.png" alt="created folder"></p>
 <h3><a class="anchor" name="starting-the-server"></a>Starting the Server <a class="hash-link" href="#starting-the-server">#</a></h3>
 <p>Run <code>npm start</code> to launch the development server. The browser will open automatically with the created app’s URL.</p>
 
-<p><img src="http://i.imgur.com/amyNfCN.png" alt="compiled successfully"></p>
+<p><img src="/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png" alt="compiled successfully"></p>
 
 <p>Create React App uses both Webpack and Babel under the hood.<br>
 The console output is tuned to be minimal to help you focus on the problems:</p>
 
-<p><img src="http://i.imgur.com/FnLVfw6.png" alt="failed to compile"></p>
+<p><img src="/react/img/blog/create-apps-with-no-configuration/failed-to-compile.png" alt="failed to compile"></p>
 
 <p>ESLint is also integrated so lint warnings are displayed right in the console:</p>
 
-<p><img src="http://i.imgur.com/Ay2TNeB.png" alt="compiled with warnings"></p>
+<p><img src="/react/img/blog/create-apps-with-no-configuration/compiled-with-warnings.png" alt="compiled with warnings"></p>
 
 <p>We only picked a small subset of lint rules that often lead to bugs.</p>
 <h3><a class="anchor" name="building-for-production"></a>Building for Production <a class="hash-link" href="#building-for-production">#</a></h3>
 <p>To build an optimized bundle, run <code>npm run build</code>:</p>
 
-<p><img src="http://i.imgur.com/MMCjzE9.png" alt="npm run build"></p>
+<p><img src="/react/img/blog/create-apps-with-no-configuration/npm-run-build.png" alt="npm run build"></p>
 
 <p>It is minified, correctly envified, and the assets include content hashes for caching.</p>
 <h3><a class="anchor" name="one-dependency"></a>One Dependency <a class="hash-link" href="#one-dependency">#</a></h3>
@@ -176,7 +176,7 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 </code></pre></div>
 <p>We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.</p>
 <h3><a class="anchor" name="zero-configuration"></a>Zero Configuration <a class="hash-link" href="#zero-configuration">#</a></h3>
-<p>It is worth repeating: there is no configuration files or complicated folder structures. The tool only generates the files you need to build your app.</p>
+<p>It is worth repeating: there are no configuration files or complicated folder structures. The tool only generates the files you need to build your app.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">hello-world/
   README.md
   index.html
@@ -198,7 +198,7 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 
 <p>We expect that at early stages, many people will “eject” for one reason or another, but as we learn from them, we will make the default setup more and more compelling while still providing no configuration.</p>
 <h2><a class="anchor" name="try-it-out"></a>Try It Out! <a class="hash-link" href="#try-it-out">#</a></h2>
-<p>You can find <a href="http://github.com/facebookincubator/create-react-app"><strong>Create React App</strong></a> with additional instructions on GitHub.</p>
+<p>You can find <a href="https://github.com/facebookincubator/create-react-app"><strong>Create React App</strong></a> with additional instructions on GitHub.</p>
 
 <p>This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.</p>
 
@@ -242,7 +242,7 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>If your UX asks the user to make <em>choices</em>, for example, even if those choices are both clear and useful, the act of <em>deciding</em> is a cognitive drain. And not just <em>while</em> they’re deciding... even <em>after</em> we choose, an unconscious cognitive background thread is slowly consuming/leaking resources, “Was <em>that</em> the right choice?”</p>
 </blockquote>
 
-<p>I never tried to write a command-line tool for React apps, and neither has <a href="http://twitter.com/vjeux">Christopher</a>. We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.</p>
+<p>I never tried to write a command-line tool for React apps, and neither has <a href="https://twitter.com/vjeux">Christopher</a>. We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.</p>
 
 <p>We knew that such projects traditionally haven’t been very successful in the React ecosystem. Christopher told me that multiple “React CLI” projects have started and failed at Facebook. The community tools with similar goals also exist, but so far they have not yet gained enough traction.</p>
 
