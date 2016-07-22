@@ -25,8 +25,8 @@ function updateJSON(path, fields, value) {
   let data;
   try {
     data = JSON.parse(fs.readFileSync(path, 'utf8'));
-  } catch(e) {
-    this.log(chalk.color.red('ERROR') + ` ${path} doesn't exist… skipping.`)
+  } catch (e) {
+    this.log(chalk.color.red('ERROR') + ` ${path} doesn't exist… skipping.`);
   }
   fields.forEach((field) => {
     let fieldPath = field.split('.');
@@ -46,19 +46,19 @@ module.exports = function(vorpal, app) {
   vorpal
     .command('version')
     .description('Update the version of React, useful while publishing')
-    .action(function (args, actionCB) {
+    .action(function(args, actionCB) {
 
-      let currentVersion = app.getReactVersion()
+      let currentVersion = app.getReactVersion();
 
       // TODO: See if we can do a better job for handling pre* bumps. The ones
       // semver adds are of the form -0, but we've used -alpha.0 or -rc.0.
       // 'prerelease' will increment those properly (but otherwise has the same problem).
       // Live with it for now since it won't be super common. Write docs.
-      let choices = ['prerelease' , 'patch', 'minor', 'major'].map((release) => {
+      let choices = ['prerelease', 'patch', 'minor', 'major'].map((release) => {
         let version = semver.inc(currentVersion, release);
         return {
           value: version,
-          name:`${chalk.bold(version)} (${release})`
+          name:`${chalk.bold(version)} (${release})`,
         };
       });
       choices.push('Other');
@@ -74,8 +74,8 @@ module.exports = function(vorpal, app) {
           type: 'input',
           name: 'version',
           message: `New version (currently ${chalk.bold(currentVersion)}): `,
-          when: (res) => res.version === 'Other'
-        }
+          when: (res) => res.version === 'Other',
+        },
       ]).then((res) => {
         let newVersion = semver.valid(res.version);
 
@@ -118,7 +118,7 @@ module.exports = function(vorpal, app) {
         // We also need to update src/ReactVersion.js which has the version in
         // string form in JS code. We'll just do a string replace.
 
-        const PATH_TO_REACTVERSION =  path.join(app.PATH_TO_REPO, 'src/ReactVersion.js');
+        const PATH_TO_REACTVERSION = path.join(app.PATH_TO_REPO, 'src/ReactVersion.js');
 
         let reactVersionContents = fs.readFileSync(PATH_TO_REACTVERSION, 'utf8');
 
@@ -148,8 +148,8 @@ module.exports = function(vorpal, app) {
             app.execInRepo(`git tag v${newVersion}`);
           }
           actionCB();
-        })
+        });
       });
 
     });
-}
+};

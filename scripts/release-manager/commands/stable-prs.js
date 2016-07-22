@@ -34,7 +34,7 @@ module.exports = function(vorpal, app) {
   vorpal
     .command('stable-prs')
     .description('Get list of stable pull requests that need to be merged to the stable branch')
-    .action(function (args, actionCB) {
+    .action(function(args, actionCB) {
       // TODO: stop assuming this all fits into a single
       const query = {
         milestone: MILESTONE_NUMBER,
@@ -63,7 +63,7 @@ module.exports = function(vorpal, app) {
             return true;
           }
 
-          return issue.labels.some((label) => LABELS[label.name])
+          return issue.labels.some((label) => LABELS[label.name]);
         });
 
         // We don't enough data about the pull request (merge sha or merge time) so we
@@ -98,11 +98,11 @@ module.exports = function(vorpal, app) {
           richPulls.forEach((pr) => {
             // Convert merged_at to real Date for sorting
             pr.merged_at_date = new Date(pr.merged_at);
-          })
+          });
 
           richPulls = richPulls.sort((a, b) => a.merged_at_date - b.merged_at_date);
 
-          this.log(`Found ${chalk.bold(richPulls.length)} pull requests:`)
+          this.log(`Found ${chalk.bold(richPulls.length)} pull requests:`);
 
           promptForPRs.call(this, app, richPulls, 0).then(() => {
 
@@ -113,7 +113,7 @@ module.exports = function(vorpal, app) {
 
             const milestonePromises = richPulls.map((pr) => {
               return app.ghissues.editIssue(pr.number, {
-                milestone: TARGET_MILESTONE_NUMBER
+                milestone: TARGET_MILESTONE_NUMBER,
               });
             });
             Promise.all(milestonePromises).then(actionCB);
@@ -123,7 +123,7 @@ module.exports = function(vorpal, app) {
       });
 
     });
-}
+};
 
 
 // TODO: pull this out to some shared place. We can reuse this for docs.
@@ -165,7 +165,7 @@ function promptForPRs(app, prs, start) {
 
       // Make sure we resolve in case there were no issues
       if (!failed) {
-        resolve()
+        resolve();
       }
     });
   });
