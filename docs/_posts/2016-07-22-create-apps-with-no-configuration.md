@@ -25,7 +25,7 @@ Now you can use it to create a new app:
 create-react-app hello-world
 ```
 
-This will take a while as npm installs the transient dependencies, but once it’s done, you will see the list the commands you can run in the created folder:
+This will take a while as npm installs the transient dependencies, but once it’s done, you will see the list of the commands you can run in the created folder:
 
 ![created folder](http://i.imgur.com/2suYgKq.png)
 
