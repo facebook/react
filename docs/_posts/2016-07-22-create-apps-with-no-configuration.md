@@ -27,22 +27,22 @@ create-react-app hello-world
 
 This will take a while as npm installs the transient dependencies, but once it’s done, you will see the list the commands you can run in the created folder:
 
-![created folder](http://i.imgur.com/2suYgKq.png)
+![created folder](/react/img/blog/create-apps-with-no-configuration/created-folder.png)
 
 ### Starting the Server
 
 Run `npm start` to launch the development server. The browser will open automatically with the created app’s URL.
 
-![compiled successfully](http://i.imgur.com/amyNfCN.png)
+![compiled successfully](/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png)
 
 Create React App uses both Webpack and Babel under the hood.  
 The console output is tuned to be minimal to help you focus on the problems:
 
-![failed to compile](http://i.imgur.com/FnLVfw6.png)
+![failed to compile](/react/img/blog/create-apps-with-no-configuration/failed-to-compile.png)
 
 ESLint is also integrated so lint warnings are displayed right in the console:
 
-![compiled with warnings](http://i.imgur.com/Ay2TNeB.png)
+![compiled with warnings](/react/img/blog/create-apps-with-no-configuration/compiled-with-warnings.png)
 
 We only picked a small subset of lint rules that often lead to bugs.
 
@@ -50,7 +50,7 @@ We only picked a small subset of lint rules that often lead to bugs.
 
 To build an optimized bundle, run `npm run build`:
 
-![npm run build](http://i.imgur.com/MMCjzE9.png)
+![npm run build](/react/img/blog/create-apps-with-no-configuration/npm-run-build.png)
 
 It is minified, correctly envified, and the assets include content hashes for caching.
 
@@ -109,7 +109,7 @@ We expect that at early stages, many people will “eject” for one reason or a
 
 ## Try It Out!
 
-You can find [**Create React App**](http://github.com/facebookincubator/create-react-app) with additional instructions on GitHub.
+You can find [**Create React App**](https://github.com/facebookincubator/create-react-app) with additional instructions on GitHub.
 
 This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.
 
@@ -154,7 +154,7 @@ Providing a cohesive curated experience is valuable by itself, even if the user 
 
 >If your UX asks the user to make *choices*, for example, even if those choices are both clear and useful, the act of *deciding* is a cognitive drain. And not just *while* they’re deciding... even *after* we choose, an unconscious cognitive background thread is slowly consuming/leaking resources, “Was *that* the right choice?”
 
-I never tried to write a command-line tool for React apps, and neither has [Christopher](http://twitter.com/vjeux). We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.
+I never tried to write a command-line tool for React apps, and neither has [Christopher](https://twitter.com/vjeux). We were chatting on Messenger about this idea, and we decided to work together on it for a week as a hackathon project.
 
 We knew that such projects traditionally haven’t been very successful in the React ecosystem. Christopher told me that multiple “React CLI” projects have started and failed at Facebook. The community tools with similar goals also exist, but so far they have not yet gained enough traction.
 
