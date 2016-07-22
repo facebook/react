@@ -2,7 +2,7 @@
 id: communicate-between-components
 title: Communicate Between Components
 layout: tips
-permalink: communicate-between-components.html
+permalink: tips/communicate-between-components.html
 prev: false-in-jsx.html
 next: expose-component-functions.html
 ---

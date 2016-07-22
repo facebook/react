@@ -236,11 +236,13 @@ function createArrayOfTypeChecker(typeChecker) {
 
 function createElementTypeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
-    if (!ReactElement.isValidElement(props[propName])) {
+    var propValue = props[propName];
+    if (!ReactElement.isValidElement(propValue)) {
       var locationName = ReactPropTypeLocationNames[location];
+      var propType = getPropType(propValue);
       return new Error(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected a single ReactElement.`
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${propType}\` supplied to \`${componentName}\`, expected a single ReactElement.`
       );
     }
     return null;

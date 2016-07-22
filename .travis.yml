@@ -1,8 +1,11 @@
 ---
+sudo: required
+dist: trusty
 language: node_js
 node_js:
 - 4
-sudo: false
+rvm:
+- 2.2.3
 cache:
   directories:
   - docs/vendor/bundle

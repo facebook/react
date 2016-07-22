@@ -1,7 +1,7 @@
 ---
 id: advanced-performance-it-IT
 title: Performance Avanzata
-permalink: advanced-performance-it-IT.html
+permalink: docs/advanced-performance-it-IT.html
 prev: perf-it-IT.html
 ---
 

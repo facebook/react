@@ -1,7 +1,7 @@
 ---
 id: multiple-components-ko-KR
 title: 복합 컴포넌트
-permalink: multiple-components-ko-KR.html
+permalink: docs/multiple-components-ko-KR.html
 prev: interactivity-and-dynamic-uis-ko-KR.html
 next: reusable-components-ko-KR.html
 ---

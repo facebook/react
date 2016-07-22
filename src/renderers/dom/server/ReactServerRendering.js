@@ -25,6 +25,8 @@ var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
+var pendingTransactions = 0;
+
 /**
  * @param {ReactElement} element
  * @return {string} the HTML markup
@@ -36,10 +38,9 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
+    pendingTransactions++;
+
     return transaction.perform(function() {
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onBeginFlush();
-      }
       var componentInstance = instantiateReactComponent(element, true);
       var markup = ReactReconciler.mountComponent(
         componentInstance,
@@ -52,7 +53,6 @@ function renderToStringImpl(element, makeStaticMarkup) {
         ReactInstrumentation.debugTool.onUnmountComponent(
           componentInstance._debugID
         );
-        ReactInstrumentation.debugTool.onEndFlush();
       }
       if (!makeStaticMarkup) {
         markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
@@ -60,10 +60,15 @@ function renderToStringImpl(element, makeStaticMarkup) {
       return markup;
     }, null);
   } finally {
+    pendingTransactions--;
     ReactServerRenderingTransaction.release(transaction);
     // Revert to the DOM batching strategy since these two renderers
     // currently share these stateful modules.
-    ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
+    if (!pendingTransactions) {
+      ReactUpdates.injection.injectBatchingStrategy(
+        ReactDefaultBatchingStrategy
+      );
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 ---
 id: conferences
 title: Conferences
-permalink: conferences.html
+permalink: docs/conferences.html
 prev: thinking-in-react.html
 next: videos.html
 ---

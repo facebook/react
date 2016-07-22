@@ -1,7 +1,7 @@
 ---
 id: top-level-api-it-IT
 title: API di Livello Elevato
-permalink: top-level-api-it-IT.html
+permalink: docs/top-level-api-it-IT.html
 next: component-api-it-IT.html
 redirect_from: "/docs/reference.html"
 ---

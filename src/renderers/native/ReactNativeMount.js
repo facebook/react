@@ -138,10 +138,6 @@ var ReactNativeMount = {
     var instance = instantiateReactComponent(nextWrappedElement, false);
     ReactNativeMount._instancesByContainerID[containerTag] = instance;
 
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginFlush();
-    }
-
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
@@ -156,7 +152,6 @@ var ReactNativeMount = {
       ReactInstrumentation.debugTool.onMountRootComponent(
         instance._renderedComponent._debugID
       );
-      ReactInstrumentation.debugTool.onEndFlush();
     }
     var component = instance.getPublicInstance();
     if (callback) {

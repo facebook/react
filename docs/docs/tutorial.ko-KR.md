@@ -1,7 +1,7 @@
 ---
 id: tutorial-ko-KR
 title: 튜토리얼
-permalink: tutorial-ko-KR.html
+permalink: docs/tutorial-ko-KR.html
 prev: getting-started-ko-KR.html
 next: thinking-in-react-ko-KR.html
 ---

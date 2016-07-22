@@ -1,7 +1,7 @@
 ---
 id: forms-ko-KR
 title: 폼
-permalink: forms-ko-KR.html
+permalink: docs/forms-ko-KR.html
 prev: transferring-props-ko-KR.html
 next: working-with-the-browser-ko-KR.html
 ---

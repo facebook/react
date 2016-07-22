@@ -278,12 +278,6 @@ function testPropsSequence(sequence) {
 describe('ReactMultiChildReconcile', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
-
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactInstanceMap = require('ReactInstanceMap');
-    mapObject = require('mapObject');
   });
 
   it('should reset internal state if removed then readded', function() {

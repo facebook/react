@@ -1,7 +1,7 @@
 ---
 id: advanced-performance
 title: 先進的なパフォーマンス
-permalink: advanced-performance-ja-JP.html
+permalink: docs/advanced-performance-ja-JP.html
 prev: perf-ja-JP.html
 ---
 

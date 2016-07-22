@@ -25,6 +25,16 @@ module.exports = function() {
     entries: entries,
     debug: config.debug, // sourcemaps
     standalone: config.standalone, // global
+    insertGlobalVars: {
+      // We can remove this when we remove the few direct
+      // process.env.NODE_ENV checks against "test".
+      // The intention is to avoid embedding Browserify's `process` shim
+      // because we don't really need it.
+      // See https://github.com/facebook/react/pull/7245 for context.
+      process: function() {
+        return 'undefined';
+      },
+    },
   };
 
   var bundle = browserify(options);

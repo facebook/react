@@ -1,7 +1,7 @@
 ---
 id: events
 title: Event System
-permalink: events.html
+permalink: docs/events.html
 prev: tags-and-attributes.html
 next: dom-differences.html
 ---
@@ -253,7 +253,10 @@ number deltaZ
 Event names:
 
 ```
-onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted 
+onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay 
+onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend 
+onTimeUpdate onVolumeChange onWaiting
 ```
 
 

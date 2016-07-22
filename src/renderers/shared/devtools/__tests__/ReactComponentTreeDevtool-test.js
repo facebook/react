@@ -1848,5 +1848,5 @@ describe('ReactComponentTreeDevtool', () => {
       }
       ReactDOM.render(<Foo />, el);
     });
-  })
+  });
 });

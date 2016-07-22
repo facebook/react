@@ -1,7 +1,7 @@
 ---
 id: reusable-components
 title: Reusable Components
-permalink: reusable-components.html
+permalink: docs/reusable-components.html
 prev: multiple-components.html
 next: transferring-props.html
 ---

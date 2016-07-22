@@ -1,7 +1,7 @@
 ---
 id: interactivity-and-dynamic-uis-zh-CN
 title: 动态交互式用户界面
-permalink: interactivity-and-dynamic-uis-zh-CN.html
+permalink: docs/interactivity-and-dynamic-uis-zh-CN.html
 prev: jsx-gotchas-zh-CN.html
 next: multiple-components-zh-CN.html
 ---
@@ -19,7 +19,7 @@ var LikeButton = React.createClass({
     this.setState({liked: !this.state.liked});
   },
   render: function() {
-    var text = this.state.liked ? 'like' : 'haven\'t liked';
+    var text = this.state.liked ? 'liked' : 'haven\'t liked';
     return (
       <p onClick={this.handleClick}>
         You {text} this. Click to toggle.

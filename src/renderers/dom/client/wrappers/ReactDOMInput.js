@@ -64,6 +64,9 @@ var ReactDOMInput = {
       // Make sure we set .type before any other properties (setting .value
       // before .type means .value is lost in IE11 and below)
       type: undefined,
+      // Make sure we set .step before .value (setting .value before .step
+      // means .value is rounded on mount, based upon step precision)
+      step: undefined,
     }, DisabledInputUtils.getHostProps(inst, props), {
       defaultChecked: undefined,
       defaultValue: undefined,
@@ -237,10 +240,14 @@ var ReactDOMInput = {
     // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
     // We need to temporarily unset name to avoid disrupting radio button groups.
     var name = node.name;
-    node.name = undefined;
+    if (name !== '') {
+      node.name = '';
+    }
     node.defaultChecked = !node.defaultChecked;
     node.defaultChecked = !node.defaultChecked;
-    node.name = name;
+    if (name !== '') {
+      node.name = name;
+    }
   },
 };
 

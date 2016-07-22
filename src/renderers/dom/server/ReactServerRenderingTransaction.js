@@ -13,6 +13,7 @@
 
 var PooledClass = require('PooledClass');
 var Transaction = require('Transaction');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactServerUpdateQueue = require('ReactServerUpdateQueue');
 
 
@@ -22,6 +23,13 @@ var ReactServerUpdateQueue = require('ReactServerUpdateQueue');
  * each other.
  */
 var TRANSACTION_WRAPPERS = [];
+
+if (__DEV__) {
+  TRANSACTION_WRAPPERS.push({
+    initialize: ReactInstrumentation.debugTool.onBeginFlush,
+    close: ReactInstrumentation.debugTool.onEndFlush,
+  });
+}
 
 var noopCallbackQueue = {
   enqueue: function() {},

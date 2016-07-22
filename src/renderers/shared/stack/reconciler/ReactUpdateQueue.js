@@ -40,6 +40,7 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   var internalInstance = ReactInstanceMap.get(publicInstance);
   if (!internalInstance) {
     if (__DEV__) {
+      var ctor = publicInstance.constructor;
       // Only warn when we have a callerName. Otherwise we should be silent.
       // We're probably calling from enqueueCallback. We don't want to warn
       // there because we already warned for the corresponding lifecycle method.
@@ -50,7 +51,7 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
         'This is a no-op. Please check the code for the %s component.',
         callerName,
         callerName,
-        publicInstance.constructor.displayName
+        ctor && (ctor.displayName || ctor.name) || 'ReactClass'
       );
     }
     return null;

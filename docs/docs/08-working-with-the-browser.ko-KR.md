@@ -1,7 +1,7 @@
 ---
 id: working-with-the-browser-ko-KR
 title: 브라우저에서의 동작
-permalink: working-with-the-browser-ko-KR.html
+permalink: docs/working-with-the-browser-ko-KR.html
 prev: forms-ko-KR.html
 next: more-about-refs-ko-KR.html
 ---

@@ -117,11 +117,19 @@ function traverseAllChildrenImpl(
         }
       } else {
         if (__DEV__) {
+          var mapsAsChildrenAddendum = '';
+          if (ReactCurrentOwner.current) {
+            var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
+            if (mapsAsChildrenOwnerName) {
+              mapsAsChildrenAddendum = ' Check the render method of `' + mapsAsChildrenOwnerName + '`.';
+            }
+          }
           warning(
             didWarnAboutMaps,
             'Using Maps as children is not yet fully supported. It is an ' +
             'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.'
+            'sequence / iterable of keyed ReactElements instead.%s',
+            mapsAsChildrenAddendum
           );
           didWarnAboutMaps = true;
         }

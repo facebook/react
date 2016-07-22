@@ -1,6 +1,7 @@
 ---
 layout: single
 title: JSX Compiler Service
+permalink: jsx-compiler.html
 id: jsx-compiler
 ---
 

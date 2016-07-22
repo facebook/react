@@ -1,6 +1,7 @@
 ---
 id: tutorial-it-IT
 title: Tutorial
+permalink: docs/tutorial-it-IT.html
 prev: getting-started-it-IT.html
 next: thinking-in-react-it-IT.html
 ---

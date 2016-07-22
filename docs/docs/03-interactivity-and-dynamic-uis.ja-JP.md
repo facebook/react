@@ -1,7 +1,7 @@
 ---
 id: interactivity-and-dynamic-uis
 title: 相互作用と動的なUI
-permalink: interactivity-and-dynamic-uis-ja-JP.html
+permalink: docs/interactivity-and-dynamic-uis-ja-JP.html
 prev: jsx-gotchas-ja-JP.html
 next: multiple-components-ja-JP.html
 ---
@@ -20,7 +20,7 @@ var LikeButton = React.createClass({
     this.setState({liked: !this.state.liked});
   },
   render: function() {
-    var text = this.state.liked ? 'like' : 'haven\'t liked';
+    var text = this.state.liked ? 'liked' : 'haven\'t liked';
     return (
       <p onClick={this.handleClick}>
         You {text} this. Click to toggle.

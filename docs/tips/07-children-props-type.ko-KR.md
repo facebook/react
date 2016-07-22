@@ -2,7 +2,7 @@
 id: children-props-type-ko-KR
 title: 자식 속성들의 타입
 layout: tips
-permalink: children-props-type-ko-KR.html
+permalink: tips/children-props-type-ko-KR.html
 prev: style-props-value-px-ko-KR.html
 next: controlled-input-null-value-ko-KR.html
 ---

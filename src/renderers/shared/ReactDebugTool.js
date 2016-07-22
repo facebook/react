@@ -52,6 +52,8 @@ var currentTimerStartTime = null;
 var currentTimerNestedFlushDuration = null;
 var currentTimerType = null;
 
+var lifeCycleTimerHasWarned = false;
+
 function clearHistory() {
   ReactComponentTreeDevtool.purgeUnmountedComponents();
   ReactHostOperationHistoryDevtool.clearHistory();
@@ -79,7 +81,7 @@ function resetMeasurements() {
   var previousMeasurements = currentFlushMeasurements || [];
   var previousOperations = ReactHostOperationHistoryDevtool.getHistory();
 
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     currentFlushStartTime = null;
     currentFlushMeasurements = null;
     clearHistory();
@@ -106,18 +108,21 @@ function checkDebugID(debugID) {
 }
 
 function beginLifeCycleTimer(debugID, timerType) {
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     return;
   }
-  warning(
-    !currentTimerType,
-    'There is an internal error in the React performance measurement code. ' +
-    'Did not expect %s timer to start while %s timer is still in ' +
-    'progress for %s instance.',
-    timerType,
-    currentTimerType || 'no',
-    (debugID === currentTimerDebugID) ? 'the same' : 'another'
-  );
+  if (currentTimerType && !lifeCycleTimerHasWarned) {
+    warning(
+      false,
+      'There is an internal error in the React performance measurement code. ' +
+      'Did not expect %s timer to start while %s timer is still in ' +
+      'progress for %s instance.',
+      timerType,
+      currentTimerType || 'no',
+      (debugID === currentTimerDebugID) ? 'the same' : 'another'
+    );
+    lifeCycleTimerHasWarned = true;
+  }
   currentTimerStartTime = performanceNow();
   currentTimerNestedFlushDuration = 0;
   currentTimerDebugID = debugID;
@@ -125,23 +130,28 @@ function beginLifeCycleTimer(debugID, timerType) {
 }
 
 function endLifeCycleTimer(debugID, timerType) {
-  if (!isProfiling || currentFlushNesting === 0) {
+  if (currentFlushNesting === 0) {
     return;
   }
-  warning(
-    currentTimerType === timerType,
-    'There is an internal error in the React performance measurement code. ' +
-    'We did not expect %s timer to stop while %s timer is still in ' +
-    'progress for %s instance. Please report this as a bug in React.',
-    timerType,
-    currentTimerType || 'no',
-    (debugID === currentTimerDebugID) ? 'the same' : 'another'
-  );
-  currentFlushMeasurements.push({
-    timerType,
-    instanceID: debugID,
-    duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
-  });
+  if (currentTimerType !== timerType && !lifeCycleTimerHasWarned) {
+    warning(
+      false,
+      'There is an internal error in the React performance measurement code. ' +
+      'We did not expect %s timer to stop while %s timer is still in ' +
+      'progress for %s instance. Please report this as a bug in React.',
+      timerType,
+      currentTimerType || 'no',
+      (debugID === currentTimerDebugID) ? 'the same' : 'another'
+    );
+    lifeCycleTimerHasWarned = true;
+  }
+  if (isProfiling) {
+    currentFlushMeasurements.push({
+      timerType,
+      instanceID: debugID,
+      duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+    });
+  }
   currentTimerStartTime = null;
   currentTimerNestedFlushDuration = null;
   currentTimerDebugID = null;
@@ -194,6 +204,7 @@ var ReactDebugTool = {
     isProfiling = true;
     flushHistory.length = 0;
     resetMeasurements();
+    ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
   },
   endProfiling() {
     if (!isProfiling) {
@@ -202,6 +213,7 @@ var ReactDebugTool = {
 
     isProfiling = false;
     resetMeasurements();
+    ReactDebugTool.removeDevtool(ReactHostOperationHistoryDevtool);
   },
   getFlushHistory() {
     return flushHistory;
@@ -235,6 +247,12 @@ var ReactDebugTool = {
   onEndReconcilerTimer(debugID, timerType) {
     checkDebugID(debugID);
     emitEvent('onEndReconcilerTimer', debugID, timerType);
+  },
+  onError(debugID) {
+    if (currentTimerDebugID != null) {
+      endLifeCycleTimer(currentTimerDebugID, currentTimerType);
+    }
+    emitEvent('onError', debugID);
   },
   onBeginProcessingChildContext() {
     emitEvent('onBeginProcessingChildContext');
@@ -309,7 +327,6 @@ var ReactDebugTool = {
 
 ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
 ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
 ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {

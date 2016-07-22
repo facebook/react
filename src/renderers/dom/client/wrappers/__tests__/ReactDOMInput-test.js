@@ -111,6 +111,35 @@ describe('ReactDOMInput', function() {
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
+  it('should render name attribute if it is supplied', function() {
+    var container = document.createElement('div');
+    var node = ReactDOM.render(<input type="text" name="name" />, container);
+    expect(node.name).toBe('name');
+    expect(container.firstChild.getAttribute('name')).toBe('name');
+  });
+
+  it('should render name attribute if it is supplied for SSR', function() {
+    var element = <input type="text" name="name" />;
+    var markup = ReactDOMServer.renderToString(element);
+    var div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('name')).toBe('name');
+  });
+
+  it('should not render name attribute if it is not supplied', function() {
+    var container = document.createElement('div');
+    ReactDOM.render(<input type="text" />, container);
+    expect(container.firstChild.getAttribute('name')).toBe(null);
+  });
+
+  it('should not render name attribute if it is not supplied for SSR', function() {
+    var element = <input type="text" />;
+    var markup = ReactDOMServer.renderToString(element);
+    var div = document.createElement('div');
+    div.innerHTML = markup;
+    expect(div.firstChild.getAttribute('name')).toBe(null);
+  });
+
   it('should display "foobar" for `defaultValue` of `objToString`', function() {
     var objToString = {
       toString: function() {
@@ -681,7 +710,7 @@ describe('ReactDOMInput', function() {
         value="value"
         defaultChecked={true}
         checked={false}
-        onChange={() => null} 
+        onChange={() => null}
       />, container);
     expect(console.error.calls.count()).toBe(0);
   });
@@ -698,7 +727,7 @@ describe('ReactDOMInput', function() {
     );
   });
 
-  it('sets type before value always', function() {
+  it('sets type and step before value always', function() {
     if (!ReactDOMFeatureFlags.useCreateElement) {
       return;
     }
@@ -720,17 +749,17 @@ describe('ReactDOMInput', function() {
       return el;
     });
 
-    ReactTestUtils.renderIntoDocument(<input value="hi" type="radio" />);
-    // Setting value before type does bad things. Make sure we set type first.
+    ReactTestUtils.renderIntoDocument(<input value="0" type="range" min="0" max="100" step="1" />);
     expect(log).toEqual([
       'set data-reactroot',
       'set type',
+      'set step',
       'set value',
+      'set min',
+      'set max',
       'set value',
-      'set name',
       'set checked',
       'set checked',
-      'set name',
     ]);
   });
 

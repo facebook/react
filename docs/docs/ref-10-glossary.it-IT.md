@@ -1,7 +1,7 @@
 ---
 id: glossary-it-IT
 title: Terminologia del DOM (Virtuale)
-permalink: glossary-it-IT.html
+permalink: docs/glossary-it-IT.html
 prev: webcomponents.html
 ---
 
