@@ -769,4 +769,25 @@ describe('ReactDOMInput', function() {
     );
     expect(input.value).toBe('hi');
   });
+
+  it('does not raise a validation warning when it switches types', function() {
+    var Input = React.createClass({
+      getInitialState() {
+        return { type: 'number', value: 1000 };
+      },
+      render() {
+        var { value, type } = this.state;
+        return (<input onChange={() => {}} type={type} value={value} />);
+      },
+    });
+
+    var input = ReactTestUtils.renderIntoDocument(<Input />);
+    var node = ReactDOM.findDOMNode(input);
+
+    // If the value is set before the type, a validation warning will raise and
+    // the value will not be assigned.
+    input.setState({ type: 'text', value: 'Test' });
+    expect(node.value).toEqual('Test');
+  });
+
 });
