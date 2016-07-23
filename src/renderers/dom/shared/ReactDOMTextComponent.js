@@ -48,6 +48,11 @@ var ReactDOMTextComponent = function(text) {
   this._mountIndex = 0;
   this._closingComment = null;
   this._commentNodes = null;
+
+  if (__DEV__) {
+    // validateDOMNesting uses this:
+    this._isWhitespace = typeof text === 'string' && text.trim().length === 0;
+  }
 };
 
 Object.assign(ReactDOMTextComponent.prototype, {

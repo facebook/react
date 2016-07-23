@@ -327,8 +327,8 @@ if (__DEV__) {
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
 
-    var invalidParent =
-      isTagValidWithParent(childTag, parentTag) ? null : parentInfo;
+    var invalidParent = childInstance._isWhitespace ?
+      null : isTagValidWithParent(childTag, parentTag) ? null : parentInfo;
     var invalidAncestor =
       invalidParent ? null : findInvalidAncestorForTag(childTag, ancestorInfo);
     var problematic = invalidParent || invalidAncestor;
