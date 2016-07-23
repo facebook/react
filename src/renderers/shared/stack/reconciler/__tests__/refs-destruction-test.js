@@ -25,8 +25,8 @@ describe('refs-destruction', function() {
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
-    TestComponent = React.createClass({
-      render: function() {
+    TestComponent = class extends React.Component {
+      render() {
         return (
           <div>
             {this.props.destroy ? null :
@@ -36,8 +36,8 @@ describe('refs-destruction', function() {
             }
           </div>
         );
-      },
-    });
+      }
+    };
   });
 
   it('should remove refs when destroying the parent', function() {
@@ -61,16 +61,18 @@ describe('refs-destruction', function() {
   });
 
   it('should not error when destroying child with ref asynchronously', function() {
-    var Modal = React.createClass({
-      componentDidMount: function() {
+    class Modal extends React.Component {
+      componentDidMount() {
         this.div = document.createElement('div');
         document.body.appendChild(this.div);
         this.componentDidUpdate();
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         ReactDOM.render(<div>{this.props.children}</div>, this.div);
-      },
-      componentWillUnmount: function() {
+      }
+
+      componentWillUnmount() {
         var self = this;
         // some async animation
         setTimeout(function() {
@@ -79,23 +81,27 @@ describe('refs-destruction', function() {
           }).not.toThrow();
           document.body.removeChild(self.div);
         }, 0);
-      },
+      }
+
       render() {
         return null;
-      },
-    });
-    var AppModal = React.createClass({
-      render: function() {
+      }
+    }
+
+    class AppModal extends React.Component {
+      render() {
         return (<Modal>
           <a ref="ref"/>
         </Modal>);
-      },
-    });
-    var App = React.createClass({
-      render: function() {
+      }
+    }
+
+    class App extends React.Component {
+      render() {
         return this.props.hidden ? null : <AppModal onClose={this.close}/>;
-      },
-    });
+      }
+    }
+
     var container = document.createElement('div');
     ReactDOM.render(<App />, container);
     ReactDOM.render(<App hidden={true}/>, container);

@@ -542,13 +542,13 @@ describe('traverseAllChildren', function() {
   it('should warn for using maps as children with owner info', function() {
     spyOn(console, 'error');
 
-    var Parent = React.createClass({
+    class Parent extends React.Component {
       render() {
         return (
           <div>{new Map([['foo', 0], ['bar', 1]])}</div>
         );
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(<Parent />);
 

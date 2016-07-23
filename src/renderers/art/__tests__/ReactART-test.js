@@ -60,8 +60,8 @@ describe('ReactART', function() {
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
 
-    TestComponent = React.createClass({
-      render: function() {
+    TestComponent = class extends React.Component {
+      render() {
 
         var a =
           <Shape
@@ -96,7 +96,7 @@ describe('ReactART', function() {
           </Surface>
         );
       }
-    });
+    };
   });
 
   it('should have the correct lifecycle state', function() {
@@ -185,16 +185,16 @@ describe('ReactART', function() {
   it('should be able to reorder many components', function() {
     var container = document.createElement('div');
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         var chars = this.props.chars.split('');
         return (
           <Surface>
             {chars.map((text) => <Shape key={text} title={text} />)}
           </Surface>
         );
-      },
-    });
+      }
+    }
 
     // Mini multi-child stress test: lots of reorders, some adds, some removes.
     var before = 'abcdefghijklmnopqrst';
@@ -212,14 +212,17 @@ describe('ReactART', function() {
 
   it('renders composite with lifecycle inside group', function() {
     var mounted = false;
-    var CustomShape = React.createClass({
-      render: function() {
+
+    class CustomShape extends React.Component {
+      render() {
         return <Shape />;
-      },
-      componentDidMount: function() {
+      }
+
+      componentDidMount() {
         mounted = true;
       }
-    });
+    }
+
     ReactTestUtils.renderIntoDocument(
       <Surface>
         <Group>
@@ -231,17 +234,20 @@ describe('ReactART', function() {
   });
 
   it('resolves refs before componentDidMount', function() {
-    var CustomShape = React.createClass({
-      render: function() {
+    class CustomShape extends React.Component {
+      render() {
         return <Shape />;
       }
-    });
+    }
+
     var ref = null;
-    var Outer = React.createClass({
-      componentDidMount: function() {
+
+    class Outer extends React.Component {
+      componentDidMount() {
         ref = this.refs.test;
-      },
-      render: function() {
+      }
+
+      render() {
         return (
           <Surface>
             <Group>
@@ -250,26 +256,31 @@ describe('ReactART', function() {
           </Surface>
         );
       }
-    });
+    }
+
     ReactTestUtils.renderIntoDocument(<Outer />);
     expect(ref.constructor).toBe(CustomShape);
   });
 
   it('resolves refs before componentDidUpdate', function() {
-    var CustomShape = React.createClass({
-      render: function() {
+    class CustomShape extends React.Component {
+      render() {
         return <Shape />;
       }
-    });
+    }
+
     var ref = {};
-    var Outer = React.createClass({
-      componentDidMount: function() {
+
+    class Outer extends React.Component {
+      componentDidMount() {
         ref = this.refs.test;
-      },
-      componentDidUpdate: function() {
+      }
+
+      componentDidUpdate() {
         ref = this.refs.test;
-      },
-      render: function() {
+      }
+
+      render() {
         return (
           <Surface>
             <Group>
@@ -278,7 +289,8 @@ describe('ReactART', function() {
           </Surface>
         );
       }
-    });
+    }
+
     var container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(ref).not.toBeDefined();

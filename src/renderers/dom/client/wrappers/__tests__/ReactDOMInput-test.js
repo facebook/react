@@ -272,8 +272,8 @@ describe('ReactDOMInput', function() {
   });
 
   it('should control radio buttons', function() {
-    var RadioGroup = React.createClass({
-      render: function() {
+    class RadioGroup extends React.Component {
+      render() {
         return (
           <div>
             <input
@@ -301,8 +301,8 @@ describe('ReactDOMInput', function() {
             </form>
           </div>
         );
-      },
-    });
+      }
+    }
 
     var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);
     var aNode = ReactDOM.findDOMNode(stub.refs.a);

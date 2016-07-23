@@ -49,11 +49,11 @@ describe('ReactDOMProduction', function() {
   });
 
   it('should handle a simple flow', function() {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <span>{this.props.children}</span>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     var inst = ReactDOM.render(
@@ -88,11 +88,12 @@ describe('ReactDOMProduction', function() {
 
   it('should throw with an error code in production', function() {
     expect(function() {
-      var Component = React.createClass({
-        render: function() {
+      class Component extends React.Component {
+        render() {
           return ['this is wrong'];
-        },
-      });
+        }
+      }
+
       var container = document.createElement('div');
       ReactDOM.render(<Component />, container);
     }).toThrowError(
