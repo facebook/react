@@ -75,11 +75,12 @@ describe('ReactServerRendering', function() {
     });
 
     it('should generate comment markup for component returns null', function() {
-      var NullComponent = React.createClass({
-        render: function() {
+      class NullComponent extends React.Component {
+        render() {
           return null;
-        },
-      });
+        }
+      }
+
       var response = ReactServerRendering.renderToString(<NullComponent />);
       expect(response).toBe('<!-- react-empty: 1 -->');
     });
@@ -95,16 +96,18 @@ describe('ReactServerRendering', function() {
     });
 
     it('should render composite components', function() {
-      var Parent = React.createClass({
-        render: function() {
+      class Parent extends React.Component {
+        render() {
           return <div><Child name="child" /></div>;
-        },
-      });
-      var Child = React.createClass({
-        render: function() {
+        }
+      }
+
+      class Child extends React.Component {
+        render() {
           return <span>My name is {this.props.name}</span>;
-        },
-      });
+        }
+      }
+
       var response = ReactServerRendering.renderToString(
         <Parent />
       );
@@ -123,37 +126,47 @@ describe('ReactServerRendering', function() {
     it('should only execute certain lifecycle methods', function() {
       function runTest() {
         var lifecycle = [];
-        var TestComponent = React.createClass({
-          componentWillMount: function() {
-            lifecycle.push('componentWillMount');
-          },
-          componentDidMount: function() {
-            lifecycle.push('componentDidMount');
-          },
-          getInitialState: function() {
+
+        class TestComponent extends React.Component {
+          constructor(props) {
+            super(props);
             lifecycle.push('getInitialState');
-            return {name: 'TestComponent'};
-          },
-          render: function() {
+            this.state = {name: 'TestComponent'};
+          }
+
+          componentWillMount() {
+            lifecycle.push('componentWillMount');
+          }
+
+          componentDidMount() {
+            lifecycle.push('componentDidMount');
+          }
+
+          render() {
             lifecycle.push('render');
             return <span>Component name: {this.state.name}</span>;
-          },
-          componentWillUpdate: function() {
+          }
+
+          componentWillUpdate() {
             lifecycle.push('componentWillUpdate');
-          },
-          componentDidUpdate: function() {
+          }
+
+          componentDidUpdate() {
             lifecycle.push('componentDidUpdate');
-          },
-          shouldComponentUpdate: function() {
+          }
+
+          shouldComponentUpdate() {
             lifecycle.push('shouldComponentUpdate');
-          },
-          componentWillReceiveProps: function() {
+          }
+
+          componentWillReceiveProps() {
             lifecycle.push('componentWillReceiveProps');
-          },
-          componentWillUnmount: function() {
+          }
+
+          componentWillUnmount() {
             lifecycle.push('componentWillUnmount');
-          },
-        });
+          }
+        }
 
         var response = ReactServerRendering.renderToString(
           <TestComponent />
@@ -186,19 +199,21 @@ describe('ReactServerRendering', function() {
       var mountCount = 0;
       var numClicks = 0;
 
-      var TestComponent = React.createClass({
-        componentDidMount: function() {
+      class TestComponent extends React.Component {
+        componentDidMount() {
           mountCount++;
-        },
-        click: function() {
+        }
+
+        click = () => {
           numClicks++;
-        },
-        render: function() {
+        };
+
+        render() {
           return (
             <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
           );
-        },
-      });
+        }
+      }
 
       var element = document.createElement('div');
       ReactDOM.render(<TestComponent />, element);
@@ -274,17 +289,17 @@ describe('ReactServerRendering', function() {
 
   describe('renderToStaticMarkup', function() {
     it('should not put checksum and React ID on components', function() {
-      var NestedComponent = React.createClass({
-        render: function() {
+      class NestedComponent extends React.Component {
+        render() {
           return <div>inner text</div>;
-        },
-      });
+        }
+      }
 
-      var TestComponent = React.createClass({
-        render: function() {
+      class TestComponent extends React.Component {
+        render() {
           return <span><NestedComponent /></span>;
-        },
-      });
+        }
+      }
 
       var response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
@@ -294,11 +309,11 @@ describe('ReactServerRendering', function() {
     });
 
     it('should not put checksum and React ID on text components', function() {
-      var TestComponent = React.createClass({
-        render: function() {
+      class TestComponent extends React.Component {
+        render() {
           return <span>{'hello'} {'world'}</span>;
-        },
-      });
+        }
+      }
 
       var response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
@@ -320,37 +335,47 @@ describe('ReactServerRendering', function() {
     it('should only execute certain lifecycle methods', function() {
       function runTest() {
         var lifecycle = [];
-        var TestComponent = React.createClass({
-          componentWillMount: function() {
-            lifecycle.push('componentWillMount');
-          },
-          componentDidMount: function() {
-            lifecycle.push('componentDidMount');
-          },
-          getInitialState: function() {
+
+        class TestComponent extends React.Component {
+          constructor(props) {
+            super(props);
             lifecycle.push('getInitialState');
-            return {name: 'TestComponent'};
-          },
-          render: function() {
+            this.state = {name: 'TestComponent'};
+          }
+
+          componentWillMount() {
+            lifecycle.push('componentWillMount');
+          }
+
+          componentDidMount() {
+            lifecycle.push('componentDidMount');
+          }
+
+          render() {
             lifecycle.push('render');
             return <span>Component name: {this.state.name}</span>;
-          },
-          componentWillUpdate: function() {
+          }
+
+          componentWillUpdate() {
             lifecycle.push('componentWillUpdate');
-          },
-          componentDidUpdate: function() {
+          }
+
+          componentDidUpdate() {
             lifecycle.push('componentDidUpdate');
-          },
-          shouldComponentUpdate: function() {
+          }
+
+          shouldComponentUpdate() {
             lifecycle.push('shouldComponentUpdate');
-          },
-          componentWillReceiveProps: function() {
+          }
+
+          componentWillReceiveProps() {
             lifecycle.push('componentWillReceiveProps');
-          },
-          componentWillUnmount: function() {
+          }
+
+          componentWillUnmount() {
             lifecycle.push('componentWillUnmount');
-          },
-        });
+          }
+        }
 
         var response = ReactServerRendering.renderToStaticMarkup(
           <TestComponent />
@@ -381,14 +406,15 @@ describe('ReactServerRendering', function() {
     });
 
     it('allows setState in componentWillMount without using DOM', function() {
-      var Component = React.createClass({
-        componentWillMount: function() {
+      class Component extends React.Component {
+        componentWillMount() {
           this.setState({text: 'hello, world'});
-        },
-        render: function() {
+        }
+
+        render() {
           return <div>{this.state.text}</div>;
-        },
-      });
+        }
+      }
 
       ReactReconcileTransaction.prototype.perform = function() {
         // We shouldn't ever be calling this on the server
@@ -401,25 +427,27 @@ describe('ReactServerRendering', function() {
     });
 
     it('renders components with different batching strategies', function() {
-      var StaticComponent = React.createClass({
-        render: function() {
+      class StaticComponent extends React.Component {
+        render() {
           const staticContent = ReactServerRendering.renderToStaticMarkup(
             <div>
               <img src="foo-bar.jpg" />
             </div>
           );
           return <div dangerouslySetInnerHTML={{__html: staticContent}} />;
-        },
-      });
+        }
+      }
 
-      var Component = React.createClass({
-        componentWillMount: function() {
+      class Component extends React.Component {
+        componentWillMount() {
           this.setState({text: 'hello, world'});
-        },
-        render: function() {
+        }
+
+        render() {
           return <div>{this.state.text}</div>;
-        },
-      });
+        }
+      }
+
       expect(
         ReactServerRendering.renderToString.bind(
           ReactServerRendering,
@@ -485,17 +513,18 @@ describe('ReactServerRendering', function() {
   });
 
   it('warns with a no-op when an async forceUpdate is triggered', function() {
-    var Baz = React.createClass({
-      componentWillMount: function() {
+    class Baz extends React.Component {
+      componentWillMount() {
         this.forceUpdate();
         setTimeout(() => {
           this.forceUpdate();
         });
-      },
-      render: function() {
+      }
+
+      render() {
         return <div onClick={() => {}}></div>;
-      },
-    });
+      }
+    }
 
     spyOn(console, 'error');
     ReactServerRendering.renderToString(<Baz />);

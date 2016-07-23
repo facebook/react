@@ -184,18 +184,16 @@ describe('ReactEventListener', function() {
   });
 
   it('should not fire duplicate events for a React DOM tree', function() {
-    var Wrapper = React.createClass({
-
-      getInner: function() {
+    class Wrapper extends React.Component {
+      getInner = () => {
         return this.refs.inner;
-      },
+      };
 
-      render: function() {
+      render() {
         var inner = <div ref="inner">Inner</div>;
         return <div><div id="outer">{inner}</div></div>;
-      },
-
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 

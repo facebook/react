@@ -21,37 +21,37 @@ describe('renderSubtreeIntoContainer', function() {
   it('should pass context when rendering subtree elsewhere', function() {
     var portal = document.createElement('div');
 
-    var Component = React.createClass({
-      contextTypes: {
+    class Component extends React.Component {
+      static contextTypes = {
         foo: React.PropTypes.string.isRequired,
-      },
+      };
 
-      render: function() {
+      render() {
         return <div>{this.context.foo}</div>;
-      },
-    });
+      }
+    }
 
-    var Parent = React.createClass({
-      childContextTypes: {
+    class Parent extends React.Component {
+      static childContextTypes = {
         foo: React.PropTypes.string.isRequired,
-      },
+      };
 
-      getChildContext: function() {
+      getChildContext() {
         return {
           foo: 'bar',
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return null;
-      },
+      }
 
-      componentDidMount: function() {
+      componentDidMount() {
         expect(function() {
           renderSubtreeIntoContainer(this, <Component />, portal);
         }.bind(this)).not.toThrow();
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(<Parent />);
     expect(portal.firstChild.innerHTML).toBe('bar');
@@ -60,37 +60,37 @@ describe('renderSubtreeIntoContainer', function() {
   it('should throw if parentComponent is invalid', function() {
     var portal = document.createElement('div');
 
-    var Component = React.createClass({
-      contextTypes: {
+    class Component extends React.Component {
+      static contextTypes = {
         foo: React.PropTypes.string.isRequired,
-      },
+      };
 
-      render: function() {
+      render() {
         return <div>{this.context.foo}</div>;
-      },
-    });
+      }
+    }
 
-    var Parent = React.createClass({
-      childContextTypes: {
+    class Parent extends React.Component {
+      static childContextTypes = {
         foo: React.PropTypes.string.isRequired,
-      },
+      };
 
-      getChildContext: function() {
+      getChildContext() {
         return {
           foo: 'bar',
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return null;
-      },
+      }
 
-      componentDidMount: function() {
+      componentDidMount() {
         expect(function() {
           renderSubtreeIntoContainer(<Parent />, <Component />, portal);
         }).toThrowError('parentComponentmust be a valid React Component');
-      },
-    });
+      }
+    }
   });
 
   it('should update context if it changes due to setState', function() {
@@ -98,48 +98,46 @@ describe('renderSubtreeIntoContainer', function() {
     document.body.appendChild(container);
     var portal = document.createElement('div');
 
-    var Component = React.createClass({
-      contextTypes: {
+    class Component extends React.Component {
+      static contextTypes = {
         foo: React.PropTypes.string.isRequired,
         getFoo: React.PropTypes.func.isRequired,
-      },
+      };
 
-      render: function() {
+      render() {
         return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
-      },
-    });
+      }
+    }
 
-    var Parent = React.createClass({
-      childContextTypes: {
+    class Parent extends React.Component {
+      static childContextTypes = {
         foo: React.PropTypes.string.isRequired,
         getFoo: React.PropTypes.func.isRequired,
-      },
+      };
 
-      getChildContext: function() {
+      state = {
+        bar: 'initial',
+      };
+
+      getChildContext() {
         return {
           foo: this.state.bar,
           getFoo: () => this.state.bar,
         };
-      },
+      }
 
-      getInitialState: function() {
-        return {
-          bar: 'initial',
-        };
-      },
-
-      render: function() {
+      render() {
         return null;
-      },
+      }
 
-      componentDidMount: function() {
+      componentDidMount() {
         renderSubtreeIntoContainer(this, <Component />, portal);
-      },
+      }
 
       componentDidUpdate() {
         renderSubtreeIntoContainer(this, <Component />, portal);
-      },
-    });
+      }
+    }
 
     var instance = ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
@@ -152,42 +150,42 @@ describe('renderSubtreeIntoContainer', function() {
     document.body.appendChild(container);
     var portal = document.createElement('div');
 
-    var Component = React.createClass({
-      contextTypes: {
+    class Component extends React.Component {
+      static contextTypes = {
         foo: React.PropTypes.string.isRequired,
         getFoo: React.PropTypes.func.isRequired,
-      },
+      };
 
-      render: function() {
+      render() {
         return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
-      },
-    });
+      }
+    }
 
-    var Parent = React.createClass({
-      childContextTypes: {
+    class Parent extends React.Component {
+      static childContextTypes = {
         foo: React.PropTypes.string.isRequired,
         getFoo: React.PropTypes.func.isRequired,
-      },
+      };
 
-      getChildContext: function() {
+      getChildContext() {
         return {
           foo: this.props.bar,
           getFoo: () => this.props.bar,
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return null;
-      },
+      }
 
-      componentDidMount: function() {
+      componentDidMount() {
         renderSubtreeIntoContainer(this, <Component />, portal);
-      },
+      }
 
       componentDidUpdate() {
         renderSubtreeIntoContainer(this, <Component />, portal);
-      },
-    });
+      }
+    }
 
     ReactDOM.render(<Parent bar="initial" />, container);
     expect(portal.firstChild.innerHTML).toBe('initial-initial');

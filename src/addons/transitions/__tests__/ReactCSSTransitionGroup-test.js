@@ -271,8 +271,8 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should clear transition timeouts when unmounted', function() {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return (
           <ReactCSSTransitionGroup
             transitionName="yolo"
@@ -280,8 +280,8 @@ describe('ReactCSSTransitionGroup', function() {
             {this.props.children}
           </ReactCSSTransitionGroup>
         );
-      },
-    });
+      }
+    }
 
     ReactDOM.render(<Component/>, container);
     ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
@@ -293,23 +293,21 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should handle unmounted elements properly', function() {
-    var Child = React.createClass({
+    class Child extends React.Component {
       render() {
         if (!this.props.show) {
           return null;
         }
         return <div />;
-      },
-    });
+      }
+    }
 
-    var Component = React.createClass({
-      getInitialState() {
-        return { showChild: true };
-      },
+    class Component extends React.Component {
+      state = { showChild: true };
 
       componentDidMount() {
         this.setState({ showChild: false });
-      },
+      }
 
       render() {
         return (
@@ -321,8 +319,8 @@ describe('ReactCSSTransitionGroup', function() {
             <Child show={this.state.showChild} />
           </ReactCSSTransitionGroup>
         );
-      },
-    });
+      }
+    }
 
     ReactDOM.render(<Component/>, container);
 

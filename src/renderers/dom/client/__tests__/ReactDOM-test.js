@@ -123,14 +123,14 @@ describe('ReactDOM', function() {
       this.a = 1;
       this.b = 2;
     }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
+
+    class A extends React.Component {
+      state = {};
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
@@ -152,14 +152,14 @@ describe('ReactDOM', function() {
       this.a = 1;
       this.b = 2;
     }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
+
+    class A extends React.Component {
+      state = {};
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var myDiv = document.createElement('div');
     ReactDOM.render(<A />, myDiv);
