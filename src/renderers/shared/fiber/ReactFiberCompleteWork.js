@@ -67,6 +67,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     // the linked list of fibers that has the individual output values.
     returnFiber.output = (child && !child.sibling) ? child.output : child;
     returnFiber.memoizedProps = returnFiber.pendingProps;
+    returnFiber.memoizedState = returnFiber.pendingState;
   }
 
   function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
