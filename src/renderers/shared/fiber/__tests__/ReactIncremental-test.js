@@ -556,4 +556,36 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Content', 'Bar', 'Middle']);
 
   });
+
+  it('can update in the middle of a tree using setState', () => {
+    let instance;
+    let states = [];
+
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { string: 'a' };
+        instance = this;
+      }
+      render() {
+        states.push(this.state.string);
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(states).toEqual(['a']);
+    instance.setState({ string: 'b' });
+    ReactNoop.flush();
+    expect(states).toEqual(['a', 'b']);
+  });
 });

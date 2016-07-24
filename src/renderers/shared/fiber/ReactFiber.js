@@ -76,6 +76,10 @@ export type Fiber = Instance & {
   pendingProps: any, // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
+  // Local state for class components. May need better naming to disambiguate
+  // from stateNode.
+  pendingState: any,
+  memoizedState: any, // The state used to create the output.
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
@@ -151,6 +155,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     pendingProps: null,
     memoizedProps: null,
+    pendingState: null,
+    memoizedState: null,
     output: null,
 
     nextEffect: null,
@@ -192,6 +198,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
     alt.ref = fiber.ref;
     alt.pendingProps = fiber.pendingProps; // TODO: Pass as argument.
+    alt.pendingState = fiber.pendingState;
     alt.pendingWorkPriority = priorityLevel;
 
     alt.child = fiber.child;
@@ -217,6 +224,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
+  alt.pendingState = fiber.pendingState;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;

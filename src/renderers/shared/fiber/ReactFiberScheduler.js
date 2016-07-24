@@ -29,9 +29,19 @@ var {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+export type Scheduler = {
+  scheduleLowPriWork: (root : FiberRoot, priority : PriorityLevel) => void
+};
 
-  const { beginWork } = ReactFiberBeginWork(config);
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+  // Use a closure to circumvent the circular dependency between the scheduler
+  // and ReactFiberBeginWork. Don't know if there's a better way to do this.
+  let scheduler;
+  function getScheduler(): Scheduler {
+    return scheduler;
+  }
+
+  const { beginWork } = ReactFiberBeginWork(config, getScheduler);
   const { completeWork } = ReactFiberCompleteWork(config);
   const { commitWork } = ReactFiberCommitWork(config);
 
@@ -133,6 +143,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
+      workInProgress.pendingState = null;
+      if (current) {
+        current.pendingState = null;
+      }
 
       const returnFiber = workInProgress.return;
 
@@ -259,7 +273,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   }
   */
 
-  return {
+  scheduler = {
     scheduleLowPriWork: scheduleLowPriWork,
   };
+  return scheduler;
 };
