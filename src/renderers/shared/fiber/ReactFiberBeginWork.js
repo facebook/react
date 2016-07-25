@@ -18,7 +18,7 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { Scheduler } from 'ReactFiberScheduler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { PendingState } from 'ReactFiberPendingState';
+import type { StateQueue } from 'ReactFiberStateQueue';
 
 var {
   reconcileChildFibers,
@@ -42,11 +42,12 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  createPendingState,
-  mergePendingState,
-} = require('ReactFiberPendingState');
+  createStateQueue,
+  addToQueue,
+  mergeStateQueue,
+} = require('ReactFiberStateQueue');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler: () => Scheduler) {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler : () => Scheduler) {
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -113,9 +114,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     return workInProgress.child;
   }
 
-  function scheduleUpdate(fiber: Fiber, pendingState: PendingState, priorityLevel : PriorityLevel): void {
+  function scheduleUpdate(fiber: Fiber, stateQueue: StateQueue, priorityLevel : PriorityLevel): void {
     const { scheduleLowPriWork } = getScheduler();
-    fiber.pendingState = pendingState;
+    fiber.stateQueue = stateQueue;
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
           fiber.pendingWorkPriority >= priorityLevel) {
@@ -138,26 +139,20 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   const updater = {
     enqueueSetState(instance, partialState) {
       const fiber = instance._fiber;
-      let pendingState = fiber.pendingState;
+      let stateQueue = fiber.stateQueue;
 
       // Append to pending state queue
-      const nextPendingStateNode = createPendingState(partialState);
-      if (pendingState === null) {
-        pendingState = nextPendingStateNode;
+      if (stateQueue === null) {
+        stateQueue = createStateQueue(partialState);
       } else {
-        if (pendingState.tail === null) {
-          pendingState.next = nextPendingStateNode;
-        } else {
-          pendingState.tail.next = nextPendingStateNode;
-        }
-        pendingState.tail = nextPendingStateNode;
+        addToQueue(stateQueue, partialState);
       }
 
       // Must schedule an update on both alternates, because we don't know tree
       // is current.
-      scheduleUpdate(fiber, pendingState, LowPriority);
+      scheduleUpdate(fiber, stateQueue, LowPriority);
       if (fiber.alternate) {
-        scheduleUpdate(fiber.alternate, pendingState, LowPriority);
+        scheduleUpdate(fiber.alternate, stateQueue, LowPriority);
       }
     },
   };
@@ -171,12 +166,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       props = current.memoizedProps;
     }
     // Compute the state using the memoized state and the pending state queue.
-    var pendingState = workInProgress.pendingState;
+    var stateQueue = workInProgress.stateQueue;
     var state;
     if (!current) {
-      state = mergePendingState(null, pendingState);
+      state = mergeStateQueue(null, props, stateQueue);
     } else {
-      state = mergePendingState(current.memoizedState, pendingState);
+      state = mergeStateQueue(current.memoizedState, props, stateQueue);
     }
 
     var instance = workInProgress.stateNode;
@@ -186,7 +181,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       state = instance.state || null;
       // The initial state must be added to the pending state queue in case
       // setState is called before the initial render.
-      workInProgress.pendingState = createPendingState(state);
+      workInProgress.stateQueue = createStateQueue(state);
       // The instance needs access to the fiber so that it can schedule updates
       instance._fiber = workInProgress;
       instance.updater = updater;
@@ -334,9 +329,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
 
     if ((workInProgress.pendingProps === null || (
       workInProgress.memoizedProps !== null &&
-      workInProgress.pendingProps === workInProgress.memoizedProps &&
+      workInProgress.pendingProps === workInProgress.memoizedProps
       )) &&
-      workInProgress.pendingState === null
+      workInProgress.stateQueue === null
       ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }

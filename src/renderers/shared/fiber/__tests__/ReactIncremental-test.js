@@ -616,4 +616,41 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
   });
+
+  it('can use updater form of setState', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { num: 1 };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({ multiplier }) {
+      return (
+        <div>
+          <Bar multiplier={multiplier} />
+        </div>
+      );
+    }
+
+    function updater(state, props) {
+      return { num: state.num * props.multiplier };
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(1);
+    instance.setState(updater);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(2);
+    ReactNoop.render(<Foo multiplier={3} />);
+    instance.setState(updater);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(6);
+  });
 });
