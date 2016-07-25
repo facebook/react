@@ -18,7 +18,7 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('ReactElementValidator', function() {
+describe('ReactElementValidatorDev', function() {
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }

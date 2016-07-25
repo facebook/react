@@ -13,7 +13,7 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
@@ -222,7 +222,7 @@ var ReactUpdateQueue = {
    */
   enqueueSetState: function(publicInstance, partialState) {
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetState();
+      ReactInstrumentationDev.debugTool.onSetState();
       warning(
         partialState != null,
         'setState(...): You passed an undefined or null state object; ' +

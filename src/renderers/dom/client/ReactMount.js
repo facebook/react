@@ -21,7 +21,7 @@ var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
@@ -171,11 +171,11 @@ function batchedMountComponentIntoNode(
  */
 function unmountComponentFromNode(instance, container, safely) {
   if (__DEV__) {
-    ReactInstrumentation.debugTool.onBeginFlush();
+    ReactInstrumentationDev.debugTool.onBeginFlush();
   }
   ReactReconciler.unmountComponent(instance, safely);
   if (__DEV__) {
-    ReactInstrumentation.debugTool.onEndFlush();
+    ReactInstrumentationDev.debugTool.onEndFlush();
   }
 
   if (container.nodeType === DOC_NODE_TYPE) {
@@ -357,7 +357,7 @@ var ReactMount = {
 
     if (__DEV__) {
       // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
+      ReactInstrumentationDev.debugTool.onMountRootComponent(
         componentInstance._renderedComponent._debugID
       );
     }
@@ -705,7 +705,7 @@ var ReactMount = {
     if (__DEV__) {
       var hostNode = ReactDOMComponentTree.getInstanceFromNode(container.firstChild);
       if (hostNode._debugID !== 0) {
-        ReactInstrumentation.debugTool.onHostOperation(
+        ReactInstrumentationDev.debugTool.onHostOperation(
           hostNode._debugID,
           'mount',
           markup.toString()

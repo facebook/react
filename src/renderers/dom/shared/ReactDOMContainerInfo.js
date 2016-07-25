@@ -11,7 +11,7 @@
 
 'use strict';
 
-var validateDOMNesting = require('validateDOMNesting');
+var validateDOMNestingDev = require('validateDOMNestingDev');
 
 var DOC_NODE_TYPE = 9;
 
@@ -28,7 +28,7 @@ function ReactDOMContainerInfo(topLevelWrapper, node) {
   };
   if (__DEV__) {
     info._ancestorInfo = node ?
-      validateDOMNesting.updatedAncestorInfo(null, info._tag, null) : null;
+      validateDOMNestingDev.updatedAncestorInfo(null, info._tag, null) : null;
   }
   return info;
 }

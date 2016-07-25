@@ -13,7 +13,7 @@
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactElement = require('ReactElement');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
@@ -50,7 +50,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
         emptyObject
       );
       if (__DEV__) {
-        ReactInstrumentation.debugTool.onUnmountComponent(
+        ReactInstrumentationDev.debugTool.onUnmountComponent(
           componentInstance._debugID
         );
       }

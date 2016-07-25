@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactInstrumentation
+ * @providesModule ReactInstrumentationDev
  */
 
 'use strict';
 
-var ReactDebugTool = require('ReactDebugTool');
+var ReactDebugToolDev = require('ReactDebugToolDev');
 
-module.exports = {debugTool: ReactDebugTool};
+module.exports = {debugTool: ReactDebugToolDev};

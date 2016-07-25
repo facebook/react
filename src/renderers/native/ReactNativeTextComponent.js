@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
@@ -30,7 +30,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
 
   mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
+      ReactInstrumentationDev.debugTool.onSetText(this._debugID, this._stringText);
     }
 
     // TODO: hostParent should have this context already. Stop abusing context.
@@ -71,7 +71,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
           {text: this._stringText}
         );
         if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
+          ReactInstrumentationDev.debugTool.onSetText(
             this._debugID,
             nextStringText
           );

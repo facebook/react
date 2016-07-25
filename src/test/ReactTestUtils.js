@@ -23,7 +23,7 @@ var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
@@ -410,11 +410,9 @@ NoopInternalComponent.prototype = {
 
 var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
-  if (__DEV__) {
-    this._debugID = nextDebugID++;
-    var displayName = element.type.displayName || element.type.name || 'Unknown';
-    ReactInstrumentation.debugTool.onSetDisplayName(this._debugID, displayName);
-  }
+  this._debugID = nextDebugID++;
+  var displayName = element.type.displayName || element.type.name || 'Unknown';
+  ReactInstrumentationDev.debugTool.onSetDisplayName(this._debugID, displayName);
 
   this.construct(element);
 };

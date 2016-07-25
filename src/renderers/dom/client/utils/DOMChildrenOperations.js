@@ -15,7 +15,7 @@ var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setInnerHTML = require('setInnerHTML');
@@ -123,7 +123,7 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
   }
 
   if (__DEV__) {
-    ReactInstrumentation.debugTool.onHostOperation(
+    ReactInstrumentationDev.debugTool.onHostOperation(
       ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
       'replace text',
       stringText
@@ -136,7 +136,7 @@ if (__DEV__) {
   dangerouslyReplaceNodeWithMarkup = function(oldChild, markup, prevInstance) {
     Danger.dangerouslyReplaceNodeWithMarkup(oldChild, markup);
     if (prevInstance._debugID !== 0) {
-      ReactInstrumentation.debugTool.onHostOperation(
+      ReactInstrumentationDev.debugTool.onHostOperation(
         prevInstance._debugID,
         'replace with',
         markup.toString()
@@ -144,7 +144,7 @@ if (__DEV__) {
     } else {
       var nextInstance = ReactDOMComponentTree.getInstanceFromNode(markup.node);
       if (nextInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onHostOperation(
+        ReactInstrumentationDev.debugTool.onHostOperation(
           nextInstance._debugID,
           'mount',
           markup.toString()
@@ -186,7 +186,7 @@ var DOMChildrenOperations = {
             getNodeAfter(parentNode, update.afterNode)
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
+            ReactInstrumentationDev.debugTool.onHostOperation(
               parentNodeDebugID,
               'insert child',
               {toIndex: update.toIndex, content: update.content.toString()}
@@ -200,7 +200,7 @@ var DOMChildrenOperations = {
             getNodeAfter(parentNode, update.afterNode)
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
+            ReactInstrumentationDev.debugTool.onHostOperation(
               parentNodeDebugID,
               'move child',
               {fromIndex: update.fromIndex, toIndex: update.toIndex}
@@ -213,7 +213,7 @@ var DOMChildrenOperations = {
             update.content
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
+            ReactInstrumentationDev.debugTool.onHostOperation(
               parentNodeDebugID,
               'replace children',
               update.content.toString()
@@ -226,7 +226,7 @@ var DOMChildrenOperations = {
             update.content
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
+            ReactInstrumentationDev.debugTool.onHostOperation(
               parentNodeDebugID,
               'replace text',
               update.content.toString()
@@ -236,7 +236,7 @@ var DOMChildrenOperations = {
         case ReactMultiChildUpdateTypes.REMOVE_NODE:
           removeChild(parentNode, update.fromNode);
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
+            ReactInstrumentationDev.debugTool.onHostOperation(
               parentNodeDebugID,
               'remove child',
               {fromIndex: update.fromIndex}

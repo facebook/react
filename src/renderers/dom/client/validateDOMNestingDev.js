@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule validateDOMNesting
+ * @providesModule validateDOMNestingDev
  */
 
 'use strict';
@@ -14,7 +14,7 @@
 var emptyFunction = require('emptyFunction');
 var warning = require('warning');
 
-var validateDOMNesting = emptyFunction;
+var validateDOMNestingDev = emptyFunction;
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -322,7 +322,7 @@ if (__DEV__) {
 
   var didWarn = {};
 
-  validateDOMNesting = function(childTag, childInstance, ancestorInfo) {
+  validateDOMNestingDev = function(childTag, childInstance, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
@@ -418,10 +418,10 @@ if (__DEV__) {
     }
   };
 
-  validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
+  validateDOMNestingDev.updatedAncestorInfo = updatedAncestorInfo;
 
   // For testing
-  validateDOMNesting.isTagValidInContext = function(tag, ancestorInfo) {
+  validateDOMNestingDev.isTagValidInContext = function(tag, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
@@ -432,4 +432,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = validateDOMNesting;
+module.exports = validateDOMNestingDev;

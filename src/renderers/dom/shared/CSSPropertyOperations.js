@@ -13,7 +13,7 @@
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
@@ -193,7 +193,7 @@ var CSSPropertyOperations = {
    */
   setValueForStyles: function(node, styles, component) {
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation(
+      ReactInstrumentationDev.debugTool.onHostOperation(
         component._debugID,
         'update styles',
         styles

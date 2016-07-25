@@ -13,7 +13,7 @@
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -155,7 +155,7 @@ if (__DEV__) {
   };
   setParentForInstrumentation = function(child) {
     if (child._debugID !== 0) {
-      ReactInstrumentation.debugTool.onSetParent(
+      ReactInstrumentationDev.debugTool.onSetParent(
         child._debugID,
         getDebugID(this)
       );
@@ -166,7 +166,7 @@ if (__DEV__) {
     // TODO: React Native empty components are also multichild.
     // This means they still get into this method but don't have _debugID.
     if (debugID !== 0) {
-      ReactInstrumentation.debugTool.onSetChildren(
+      ReactInstrumentationDev.debugTool.onSetChildren(
         debugID,
         children ? Object.keys(children).map(key => children[key]._debugID) : []
       );

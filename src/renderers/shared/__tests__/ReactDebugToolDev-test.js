@@ -11,12 +11,12 @@
 
 'use strict';
 
-describe('ReactDebugTool', function() {
-  var ReactDebugTool;
+describe('ReactDebugToolDev', function() {
+  var ReactDebugToolDev;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
-    ReactDebugTool = require('ReactDebugTool');
+    ReactDebugToolDev = require('ReactDebugToolDev');
   });
 
   it('should add and remove devtools', () => {
@@ -25,61 +25,61 @@ describe('ReactDebugTool', function() {
     var devtool1 = {onTestEvent: handler1};
     var devtool2 = {onTestEvent: handler2};
 
-    ReactDebugTool.addDevtool(devtool1);
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.addDevtool(devtool1);
+    ReactDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(1);
     expect(handler2.calls.count()).toBe(0);
 
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(2);
     expect(handler2.calls.count()).toBe(0);
 
-    ReactDebugTool.addDevtool(devtool2);
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.addDevtool(devtool2);
+    ReactDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(3);
     expect(handler2.calls.count()).toBe(1);
 
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(2);
 
-    ReactDebugTool.removeDevtool(devtool1);
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.removeDevtool(devtool1);
+    ReactDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
 
-    ReactDebugTool.removeDevtool(devtool2);
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.removeDevtool(devtool2);
+    ReactDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
   });
 
   it('warns once when an error is thrown in devtool', () => {
     spyOn(console, 'error');
-    ReactDebugTool.addDevtool({
+    ReactDebugToolDev.addDevtool({
       onTestEvent() {
         throw new Error('Hi.');
       },
     });
 
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.onTestEvent();
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'exception thrown by devtool while handling ' +
       'onTestEvent: Error: Hi.'
     );
 
-    ReactDebugTool.onTestEvent();
+    ReactDebugToolDev.onTestEvent();
     expect(console.error.calls.count()).toBe(1);
   });
 
   it('returns isProfiling state', () => {
-    expect(ReactDebugTool.isProfiling()).toBe(false);
+    expect(ReactDebugToolDev.isProfiling()).toBe(false);
 
-    ReactDebugTool.beginProfiling();
-    expect(ReactDebugTool.isProfiling()).toBe(true);
+    ReactDebugToolDev.beginProfiling();
+    expect(ReactDebugToolDev.isProfiling()).toBe(true);
 
-    ReactDebugTool.endProfiling();
-    expect(ReactDebugTool.isProfiling()).toBe(false);
+    ReactDebugToolDev.endProfiling();
+    expect(ReactDebugToolDev.isProfiling()).toBe(false);
   });
 });

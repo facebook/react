@@ -32,7 +32,7 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
@@ -43,7 +43,7 @@ var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
-var validateDOMNesting = require('validateDOMNesting');
+var validateDOMNestingDev = require('validateDOMNestingDev');
 var warning = require('warning');
 
 var Flags = ReactDOMComponentFlags;
@@ -265,7 +265,7 @@ if (__DEV__) {
 
     if (content == null) {
       if (hasExistingContent) {
-        ReactInstrumentation.debugTool.onUnmountComponent(this._contentDebugID);
+        ReactInstrumentationDev.debugTool.onUnmountComponent(this._contentDebugID);
       }
       this._contentDebugID = null;
       return;
@@ -274,17 +274,17 @@ if (__DEV__) {
     this._contentDebugID = contentDebugID;
     var text = '' + content;
 
-    ReactInstrumentation.debugTool.onSetDisplayName(contentDebugID, '#text');
-    ReactInstrumentation.debugTool.onSetParent(contentDebugID, debugID);
-    ReactInstrumentation.debugTool.onSetText(contentDebugID, text);
+    ReactInstrumentationDev.debugTool.onSetDisplayName(contentDebugID, '#text');
+    ReactInstrumentationDev.debugTool.onSetParent(contentDebugID, debugID);
+    ReactInstrumentationDev.debugTool.onSetText(contentDebugID, text);
 
     if (hasExistingContent) {
-      ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
-      ReactInstrumentation.debugTool.onUpdateComponent(contentDebugID);
+      ReactInstrumentationDev.debugTool.onBeforeUpdateComponent(contentDebugID, content);
+      ReactInstrumentationDev.debugTool.onUpdateComponent(contentDebugID);
     } else {
-      ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content);
-      ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
-      ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
+      ReactInstrumentationDev.debugTool.onBeforeMountComponent(contentDebugID, content);
+      ReactInstrumentationDev.debugTool.onMountComponent(contentDebugID);
+      ReactInstrumentationDev.debugTool.onSetChildren(debugID, [contentDebugID]);
     }
   };
 }
@@ -612,10 +612,10 @@ ReactDOMComponent.Mixin = {
       if (parentInfo) {
         // parentInfo should always be present except for the top-level
         // component when server rendering
-        validateDOMNesting(this._tag, this, parentInfo);
+        validateDOMNestingDev(this._tag, this, parentInfo);
       }
       this._ancestorInfo =
-        validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
+        validateDOMNestingDev.updatedAncestorInfo(parentInfo, this._tag, this);
     }
 
     var mountImage;
@@ -715,7 +715,7 @@ ReactDOMComponent.Mixin = {
 
     if (__DEV__) {
       if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        var callback = () => ReactInstrumentationDev.debugTool.onComponentHasMounted(this._debugID);
         transaction.getReactMountReady().enqueue(callback, this);
       }
     }
@@ -952,7 +952,7 @@ ReactDOMComponent.Mixin = {
 
     if (__DEV__) {
       if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
+        var callback = () => ReactInstrumentationDev.debugTool.onComponentHasUpdated(this._debugID);
         transaction.getReactMountReady().enqueue(callback, this);
       }
     }
@@ -1130,7 +1130,7 @@ ReactDOMComponent.Mixin = {
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
       this.updateTextContent('');
       if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
+        ReactInstrumentationDev.debugTool.onSetChildren(this._debugID, []);
       }
     }
 
@@ -1146,7 +1146,7 @@ ReactDOMComponent.Mixin = {
         this.updateMarkup('' + nextHtml);
       }
       if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
+        ReactInstrumentationDev.debugTool.onSetChildren(this._debugID, []);
       }
     } else if (nextChildren != null) {
       if (__DEV__) {

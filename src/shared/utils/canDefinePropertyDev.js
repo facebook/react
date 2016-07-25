@@ -6,19 +6,19 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule canDefineProperty
+ * @providesModule canDefinePropertyDev
  */
 
 'use strict';
 
-var canDefineProperty = false;
+var canDefinePropertyDev = false;
 if (__DEV__) {
   try {
     Object.defineProperty({}, 'x', {get: function() {}});
-    canDefineProperty = true;
+    canDefinePropertyDev = true;
   } catch (x) {
     // IE will fail on defineProperty
   }
 }
 
-module.exports = canDefineProperty;
+module.exports = canDefinePropertyDev;

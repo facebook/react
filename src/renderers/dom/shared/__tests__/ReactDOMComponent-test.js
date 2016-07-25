@@ -736,7 +736,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should work error event on <source> element', function() {
-      spyOn(console, 'error');  
+      spyOn(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
         <video>

@@ -14,7 +14,7 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -145,10 +145,10 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
       var debugID = nextDebugID++;
       instance._debugID = debugID;
       var displayName = getDisplayName(instance);
-      ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
+      ReactInstrumentationDev.debugTool.onSetDisplayName(debugID, displayName);
       var owner = node && node._owner;
       if (owner) {
-        ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);
+        ReactInstrumentationDev.debugTool.onSetOwner(debugID, owner._debugID);
       }
     } else {
       instance._debugID = 0;

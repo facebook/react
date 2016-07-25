@@ -17,7 +17,7 @@ var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
-var ReactPerf = require('ReactPerf');
+var ReactPerfDev = require('ReactPerfDev');
 var ReactTestUtils = require('ReactTestUtils');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 
@@ -36,7 +36,7 @@ React.addons = {
 };
 
 if (__DEV__) {
-  React.addons.Perf = ReactPerf;
+  React.addons.Perf = ReactPerfDev;
   React.addons.TestUtils = ReactTestUtils;
 }
 

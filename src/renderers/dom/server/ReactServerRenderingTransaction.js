@@ -13,7 +13,7 @@
 
 var PooledClass = require('PooledClass');
 var Transaction = require('Transaction');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactServerUpdateQueue = require('ReactServerUpdateQueue');
 
 
@@ -26,8 +26,8 @@ var TRANSACTION_WRAPPERS = [];
 
 if (__DEV__) {
   TRANSACTION_WRAPPERS.push({
-    initialize: ReactInstrumentation.debugTool.onBeginFlush,
-    close: ReactInstrumentation.debugTool.onEndFlush,
+    initialize: ReactInstrumentationDev.debugTool.onBeginFlush,
+    close: ReactInstrumentationDev.debugTool.onEndFlush,
   });
 }
 

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var validateDOMNesting;
+var validateDOMNestingDev;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#special
 var specialTags = [
@@ -36,11 +36,11 @@ var formattingTags = [
 function isTagStackValid(stack) {
   var ancestorInfo = null;
   for (var i = 0; i < stack.length; i++) {
-    if (!validateDOMNesting.isTagValidInContext(stack[i], ancestorInfo)) {
+    if (!validateDOMNestingDev.isTagValidInContext(stack[i], ancestorInfo)) {
       return false;
     }
     ancestorInfo =
-      validateDOMNesting.updatedAncestorInfo(ancestorInfo, stack[i], null);
+      validateDOMNestingDev.updatedAncestorInfo(ancestorInfo, stack[i], null);
   }
   return true;
 }
@@ -49,7 +49,7 @@ describe('ReactContextValidator', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
-    validateDOMNesting = require('validateDOMNesting');
+    validateDOMNestingDev = require('validateDOMNestingDev');
   });
 
   it('allows any tag with no context', function() {
@@ -57,7 +57,7 @@ describe('ReactContextValidator', function() {
     // tag so we must err on the side of leniency.
     var allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
     allTags.forEach(function(tag) {
-      expect(validateDOMNesting.isTagValidInContext(tag, null)).toBe(true);
+      expect(validateDOMNestingDev.isTagValidInContext(tag, null)).toBe(true);
     });
   });
 
