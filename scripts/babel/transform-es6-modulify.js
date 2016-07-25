@@ -8,6 +8,14 @@
  */
 'use strict';
 
+
+/*
+ * This Babel transform should _ONLY_ be used with Rollup.
+ * It transforms our CommonJS require/export statements to ES6 imports/exports
+ * so that we can use Rollup to bundle our modules to UMD.
+ *
+ * NOTE It requires all require/export statements to be on the top-level.
+ */
 var basename = require('path').basename;
 
 function getFileLoc(path, file) {
@@ -18,7 +26,7 @@ function getFileLoc(path, file) {
   var fileName = file.file.opts.filename;
   var moduleName = basename(fileName);
   return (
-    'Check line ' + startLinePos + ' at `' + fileName +
+    'Check line ' + startLinePos + ' at `/build/modules/' + fileName +
     '` and the original `' + moduleName + '` module under `/src`.'
   );
 }
