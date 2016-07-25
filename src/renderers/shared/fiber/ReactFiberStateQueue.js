@@ -26,15 +26,19 @@ exports.createStateQueue = function(partialState : mixed) : StateQueue {
   };
 };
 
-exports.addToQueue = function(queue : StateQueue, partialState : mixed) {
+exports.addToQueue = function(queue : StateQueue, partialState : mixed): StateQueue {
   const node = exports.createStateQueue(partialState);
+  if (queue === null) {
+    return node;
+  }
   if (queue.tail === null) {
     queue.next = node;
   } else {
     queue.tail.next = node;
   }
   queue.tail = node;
-}
+  return queue;
+};
 
 exports.mergeStateQueue = function(prevState : any, props : any, queue : StateQueue) : any {
   if (queue === null) {
