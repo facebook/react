@@ -31,6 +31,8 @@ const COMMANDS = [
   'stable-prs',
   'version',
   'npm-publish',
+  'npm-check-access',
+  'npm-grant-access',
 ];
 
 
