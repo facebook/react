@@ -14,9 +14,9 @@
 
 export type StateQueue = {
   partialState: any,
-  next: StateQueue,
-  tail: StateQueue
-} | null;
+  next: StateQueue | null,
+  tail: StateQueue | null
+};
 
 exports.createStateQueue = function(partialState : mixed) : StateQueue {
   return {
@@ -28,9 +28,6 @@ exports.createStateQueue = function(partialState : mixed) : StateQueue {
 
 exports.addToQueue = function(queue : StateQueue, partialState : mixed): StateQueue {
   const node = exports.createStateQueue(partialState);
-  if (queue === null) {
-    return node;
-  }
   if (queue.tail === null) {
     queue.next = node;
   } else {
@@ -40,8 +37,8 @@ exports.addToQueue = function(queue : StateQueue, partialState : mixed): StateQu
   return queue;
 };
 
-exports.mergeStateQueue = function(prevState : any, props : any, queue : StateQueue) : any {
-  if (queue === null) {
+exports.mergeStateQueue = function(prevState : any, props : any, queue : ?StateQueue) : any {
+  if (!queue) {
     return prevState;
   }
   let state = Object.assign({}, prevState);
