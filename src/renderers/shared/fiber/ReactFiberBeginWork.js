@@ -117,10 +117,23 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   function scheduleUpdate(fiber: Fiber, stateQueue: StateQueue, priorityLevel : PriorityLevel): void {
     const { scheduleLowPriWork } = getScheduler();
     fiber.stateQueue = stateQueue;
+    // Schedule update on the alternate as well, since we don't know which tree
+    // is current.
+    // $FlowFixMe: Intersection issue. Don't know why it's only happening here.
+    const { alternate } = fiber;
+    if (alternate !== null) {
+      alternate.stateQueue = stateQueue;
+    }
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
           fiber.pendingWorkPriority >= priorityLevel) {
         fiber.pendingWorkPriority = priorityLevel;
+      }
+      if (alternate !== null) {
+        if (alternate.pendingWorkPriority === NoWork ||
+            alternate.pendingWorkPriority >= priorityLevel) {
+          alternate.pendingWorkPriority = priorityLevel;
+        }
       }
       // Duck type root
       if (fiber.stateNode && fiber.stateNode.containerInfo) {
@@ -139,21 +152,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   const updater = {
     enqueueSetState(instance, partialState) {
       const fiber = instance._fiber;
-      let stateQueue = fiber.stateQueue;
-
-      // Append to pending state queue
-      if (stateQueue === null) {
-        stateQueue = createStateQueue(partialState);
-      } else {
-        addToQueue(stateQueue, partialState);
-      }
-
-      // Must schedule an update on both alternates, because we don't know tree
-      // is current.
+      const stateQueue = addToQueue(fiber.stateQueue, partialState);
       scheduleUpdate(fiber, stateQueue, LowPriority);
-      if (fiber.alternate) {
-        scheduleUpdate(fiber.alternate, stateQueue, LowPriority);
-      }
     },
   };
 
