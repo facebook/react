@@ -67,7 +67,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     // the linked list of fibers that has the individual output values.
     returnFiber.output = (child && !child.sibling) ? child.output : child;
     returnFiber.memoizedProps = returnFiber.pendingProps;
-    returnFiber.memoizedState = returnFiber.pendingState;
   }
 
   function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
@@ -133,6 +132,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return null;
       case ClassComponent:
         transferOutput(workInProgress.child, workInProgress);
+        // Don't use the pending state queue to compute the memoized state. We
+        // already merged it and assigned it to the instance. Copy it from there.
+        const state = workInProgress.stateNode.state;
+        workInProgress.memoizedState = state;
         return null;
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);

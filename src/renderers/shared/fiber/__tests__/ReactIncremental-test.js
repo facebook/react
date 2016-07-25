@@ -559,16 +559,13 @@ describe('ReactIncremental', () => {
 
   it('can update in the middle of a tree using setState', () => {
     let instance;
-    let states = [];
-
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { string: 'a' };
+        this.state = { a: 'a' };
         instance = this;
       }
       render() {
-        states.push(this.state.string);
         return <div>{this.props.children}</div>;
       }
     }
@@ -583,9 +580,40 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(states).toEqual(['a']);
-    instance.setState({ string: 'b' });
+    expect(instance.state).toEqual({ a: 'a' });
+    instance.setState({ b: 'b' });
     ReactNoop.flush();
-    expect(states).toEqual(['a', 'b']);
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+  });
+
+  it('can queue multiple state updates', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { a: 'a' };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    // Call setState multiple times before flushing
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.setState({ d: 'd' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
   });
 });

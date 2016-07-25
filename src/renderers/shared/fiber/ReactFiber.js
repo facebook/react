@@ -15,6 +15,7 @@
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { PendingState } from 'ReactFiberPendingState';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -76,10 +77,11 @@ export type Fiber = Instance & {
   pendingProps: any, // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
-  // Local state for class components. May need better naming to disambiguate
-  // from stateNode.
-  pendingState: any,
-  memoizedState: any, // The state used to create the output.
+  // Local state for class components. Either null or a linked list of partial
+  // state objects.
+  pendingState: PendingState,
+  // The state used to create the output. This is a full state object.
+  memoizedState: any,
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
