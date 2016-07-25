@@ -132,8 +132,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return null;
       case ClassComponent:
         transferOutput(workInProgress.child, workInProgress);
-        // Don't use the pending state queue to compute the memoized state. We
-        // already merged it and assigned it to the instance. Copy it from there.
+        // Don't use the state queue to compute the memoized state. We already
+        // merged it and assigned it to the instance. Copy it from there.
         const state = workInProgress.stateNode.state;
         workInProgress.memoizedState = state;
         return null;
