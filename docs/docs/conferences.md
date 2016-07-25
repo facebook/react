@@ -48,6 +48,11 @@ September 15 in Tel Aviv, Israel
 
 [Website](http://react-next.com/) - [Schedule](http://react-next.com/#schedule)
 
+### ReactNL 2016
+October 13 in Amsterdam, The Netherlands
+
+[Website](http://reactnl.org/)
+
 ### Reactive 2016
 October 26-28 in Bratislava, Slovakia
 
