@@ -78,7 +78,7 @@ export type Fiber = Instance & {
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
   // A queue of local state updates.
-  stateQueue: StateQueue,
+  stateQueue: ?StateQueue,
   // The state used to create the output. This is a full state object.
   memoizedState: any,
   // Output is the return value of this fiber, or a linked list of return values
