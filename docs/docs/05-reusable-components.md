@@ -132,7 +132,7 @@ var ComponentWithDefaultProps = React.createClass({
 });
 ```
 
-The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the owner component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
 ## Transferring Props: A Shortcut
 
