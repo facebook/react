@@ -152,7 +152,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   const updater = {
     enqueueSetState(instance, partialState) {
       const fiber = instance._fiber;
-      const stateQueue = addToQueue(fiber.stateQueue, partialState);
+      const stateQueue = fiber.stateQueue ?
+        addToQueue(fiber.stateQueue, partialState) :
+        createStateQueue(partialState);
       scheduleUpdate(fiber, stateQueue, LowPriority);
     },
   };
@@ -181,7 +183,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       state = instance.state || null;
       // The initial state must be added to the pending state queue in case
       // setState is called before the initial render.
-      workInProgress.stateQueue = createStateQueue(state);
+      if (state !== null) {
+        workInProgress.stateQueue = createStateQueue(state);
+      }
       // The instance needs access to the fiber so that it can schedule updates
       instance._fiber = workInProgress;
       instance.updater = updater;
