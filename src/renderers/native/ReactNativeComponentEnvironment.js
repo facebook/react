@@ -21,15 +21,6 @@ var ReactNativeComponentEnvironment = {
   replaceNodeWithMarkup: ReactNativeDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
 
   /**
-   * Nothing to do for UIKit bridge.
-   *
-   * @private
-   */
-  unmountIDFromEnvironment: function(/*rootNodeID*/) {
-
-  },
-
-  /**
    * @param {DOMElement} Element to clear.
    */
   clearNode: function(/*containerView*/) {

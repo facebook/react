@@ -23,8 +23,6 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -1212,7 +1210,6 @@ ReactDOMComponent.Mixin = {
     this.unmountChildren(safely);
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
-    ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
     this._rootNodeID = null;
     this._domID = null;
     this._wrapperState = null;
