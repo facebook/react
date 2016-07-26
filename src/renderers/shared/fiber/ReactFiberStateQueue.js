@@ -12,23 +12,32 @@
 
 'use strict';
 
-export type StateQueue = {
+type StateQueueNode = {
   partialState: any,
-  next: StateQueue | null,
-  tail: StateQueue | null
+  callback: ?Function,
+  next: ?StateQueueNode,
+};
+
+export type StateQueue = StateQueueNode & {
+  tail: ?StateQueueNode
 };
 
 exports.createStateQueue = function(partialState : mixed) : StateQueue {
   return {
     partialState,
+    callback: null,
     next: null,
     tail: null,
   };
 };
 
-exports.addToQueue = function(queue : StateQueue, partialState : mixed): StateQueue {
-  const node = exports.createStateQueue(partialState);
-  if (queue.tail === null) {
+exports.addToQueue = function(queue : StateQueue, partialState : mixed) : StateQueue {
+  const node = {
+    partialState,
+    callback: null,
+    next: null,
+  };
+  if (!queue.tail) {
     queue.next = node;
   } else {
     queue.tail.next = node;
@@ -37,16 +46,17 @@ exports.addToQueue = function(queue : StateQueue, partialState : mixed): StateQu
   return queue;
 };
 
-exports.mergeStateQueue = function(prevState : any, props : any, queue : ?StateQueue) : any {
-  if (!queue) {
+exports.mergeStateQueue = function(queue : ?StateQueue, prevState : any, props : any) : any {
+  let node : ?StateQueueNode = queue;
+  if (!node) {
     return prevState;
   }
   let state = Object.assign({}, prevState);
   do {
-    const partialState = typeof queue.partialState === 'function' ?
-      queue.partialState(state, props) :
-      queue.partialState;
+    const partialState = typeof node.partialState === 'function' ?
+      node.partialState(state, props) :
+      node.partialState;
     state = Object.assign(state, partialState);
-  } while (queue = queue.next);
+  } while (node = node.next);
   return state;
 };
