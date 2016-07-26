@@ -249,7 +249,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed prop type: Required prop `prop` was specified in ' +
+      'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
     );
@@ -264,7 +264,7 @@ describe('ReactJSXElementValidator', function() {
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed prop type: Required prop `prop` was specified in ' +
+      'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
     );
@@ -281,7 +281,8 @@ describe('ReactJSXElementValidator', function() {
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
       'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `RequiredPropComponent`.\n' +
+      'The prop `prop` is marked as required in `RequiredPropComponent`, but ' +
+      'its value is `undefined`.\n' +
       '    in RequiredPropComponent (at **)'
     );
 

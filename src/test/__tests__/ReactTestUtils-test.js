@@ -296,8 +296,8 @@ describe('ReactTestUtils', function() {
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
-      'Warning: Failed context type: Required context `name` was not ' +
-      'specified in `SimpleComponent`.\n' +
+      'Warning: Failed context type: The context `name` is marked as ' +
+      'required in `SimpleComponent`, but its value is `undefined`.\n' +
       '    in SimpleComponent (at **)'
     );
   });

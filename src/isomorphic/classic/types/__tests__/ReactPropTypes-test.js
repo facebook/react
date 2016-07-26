@@ -36,10 +36,10 @@ function typeCheckFail(declaration, value, message) {
 }
 
 function typeCheckFailRequiredValues(declaration) {
-  var specifiedButIsNullMsg = 'Required prop `testProp` was specified in ' +
-  '`testComponent`, but its value is `null`.';
-  var unspecifiedMsg =
-    'Required prop `testProp` was not specified in `testComponent`.';
+  var specifiedButIsNullMsg = 'The prop `testProp` is marked as required in ' +
+    '`testComponent`, but its value is `null`.';
+  var unspecifiedMsg = 'The prop `testProp` is marked as required in ' +
+    '`testComponent`, but its value is \`undefined\`.';
   var props1 = {testProp: null};
   var error1 = declaration(
     props1,
@@ -941,7 +941,8 @@ describe('ReactPropTypes', function() {
       typeCheckFail(
         PropTypes.shape({key: PropTypes.number.isRequired}),
         {},
-        'Required prop `testProp.key` was not specified in `testComponent`.'
+        'The prop `testProp.key` is marked as required in `testComponent`, ' +
+          'but its value is `undefined`.'
       );
     });
 
@@ -952,7 +953,8 @@ describe('ReactPropTypes', function() {
           secondKey: PropTypes.number.isRequired,
         }),
         {},
-        'Required prop `testProp.key` was not specified in `testComponent`.'
+        'The prop `testProp.key` is marked as required in `testComponent`, ' +
+          'but its value is `undefined`.'
       );
     });
 
