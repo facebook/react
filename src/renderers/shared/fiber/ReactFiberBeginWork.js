@@ -46,6 +46,7 @@ var {
   addToQueue,
   mergeStateQueue,
 } = require('ReactFiberStateQueue');
+var ReactInstanceMap = require('ReactInstanceMap');
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler : () => Scheduler) {
 
@@ -149,7 +150,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   // Class component state updater
   const updater = {
     enqueueSetState(instance, partialState) {
-      const fiber = instance._fiber;
+      const fiber = ReactInstanceMap.get(instance);
       const stateQueue = fiber.stateQueue ?
         addToQueue(fiber.stateQueue, partialState) :
         createStateQueue(partialState);
@@ -182,7 +183,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         workInProgress.stateQueue = createStateQueue(state);
       }
       // The instance needs access to the fiber so that it can schedule updates
-      instance._fiber = workInProgress;
+      ReactInstanceMap.set(instance, workInProgress);
       instance.updater = updater;
     } else if (typeof instance.shouldComponentUpdate === 'function') {
       if (workInProgress.memoizedProps !== null) {
