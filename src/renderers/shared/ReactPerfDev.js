@@ -14,44 +14,51 @@
 var ReactDebugToolDev = require('ReactDebugToolDev');
 var warning = require('warning');
 
-var ReactPerfDev = {};
+var alreadyWarned = false;
+
+var warnInProductionAndReturnDefault = (val) => () => {
+  if (alreadyWarned) {
+    return val;
+  }
+  alreadyWarned = true;
+  if (typeof console !== 'undefined') {
+    console.error(
+      'ReactPerf is not supported in the production builds of React. ' +
+      'To collect measurements, please use the development build of React instead.'
+    );
+  }
+  return val;
+};
+
+var ReactPerfDev = {
+  getLastMeasurements: warnInProductionAndReturnDefault([]),
+  getExclusive: warnInProductionAndReturnDefault([]),
+  getInclusive: warnInProductionAndReturnDefault([]),
+  getWasted: warnInProductionAndReturnDefault([]),
+  getOperations: warnInProductionAndReturnDefault([]),
+  printExclusive: warnInProductionAndReturnDefault(undefined),
+  printInclusive: warnInProductionAndReturnDefault(undefined),
+  printWasted: warnInProductionAndReturnDefault(undefined),
+  printOperations: warnInProductionAndReturnDefault(undefined),
+  start: warnInProductionAndReturnDefault(undefined),
+  stop: warnInProductionAndReturnDefault(undefined),
+  isRunning: warnInProductionAndReturnDefault(false),
+  // Deprecated:
+  printDOM: warnInProductionAndReturnDefault(undefined),
+  getMeasurementsSummaryMap: warnInProductionAndReturnDefault([]),
+};
 
 if (__DEV__) {
-  var alreadyWarned = false;
-
   var roundFloat = function(val, base = 2) {
     var n = Math.pow(10, base);
     return Math.floor(val * n) / n;
   };
 
-  var warnInProduction = function() {
-    if (alreadyWarned) {
-      return;
-    }
-    alreadyWarned = true;
-    if (typeof console !== 'undefined') {
-      console.error(
-        'ReactPerf is not supported in the production builds of React. ' +
-        'To collect measurements, please use the development build of React instead.'
-      );
-    }
-  };
-
   var getLastMeasurements = function() {
-    if (!__DEV__) {
-      warnInProduction();
-      return [];
-    }
-
     return ReactDebugToolDev.getFlushHistory();
   };
 
   var getExclusive = function(flushHistory = getLastMeasurements()) {
-    if (!__DEV__) {
-      warnInProduction();
-      return [];
-    }
-
     var aggregatedStats = {};
     var affectedIDs = {};
 
@@ -102,11 +109,6 @@ if (__DEV__) {
   };
 
   var getInclusive = function(flushHistory = getLastMeasurements()) {
-    if (!__DEV__) {
-      warnInProduction();
-      return [];
-    }
-
     var aggregatedStats = {};
     var affectedIDs = {};
 
@@ -175,11 +177,6 @@ if (__DEV__) {
   };
 
   var getWasted = function(flushHistory = getLastMeasurements()) {
-    if (!__DEV__) {
-      warnInProduction();
-      return [];
-    }
-
     var aggregatedStats = {};
     var affectedIDs = {};
 
@@ -273,11 +270,6 @@ if (__DEV__) {
   };
 
   var getOperations = function(flushHistory = getLastMeasurements()) {
-    if (!__DEV__) {
-      warnInProduction();
-      return [];
-    }
-
     var stats = [];
     flushHistory.forEach((flush, flushIndex) => {
       var {operations, treeSnapshot} = flush;
@@ -301,11 +293,6 @@ if (__DEV__) {
   };
 
   var printExclusive = function(flushHistory) {
-    if (!__DEV__) {
-      warnInProduction();
-      return;
-    }
-
     var stats = getExclusive(flushHistory);
     var table = stats.map(item => {
       var {key, instanceCount, totalDuration} = item;
@@ -327,11 +314,6 @@ if (__DEV__) {
   };
 
   var printInclusive = function(flushHistory) {
-    if (!__DEV__) {
-      warnInProduction();
-      return;
-    }
-
     var stats = getInclusive(flushHistory);
     var table = stats.map(item => {
       var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
@@ -346,11 +328,6 @@ if (__DEV__) {
   };
 
   var printWasted = function(flushHistory) {
-    if (!__DEV__) {
-      warnInProduction();
-      return;
-    }
-
     var stats = getWasted(flushHistory);
     var table = stats.map(item => {
       var {key, instanceCount, inclusiveRenderDuration, renderCount} = item;
@@ -365,11 +342,6 @@ if (__DEV__) {
   };
 
   var printOperations = function(flushHistory) {
-    if (!__DEV__) {
-      warnInProduction();
-      return;
-    }
-
     var stats = getOperations(flushHistory);
     var table = stats.map(stat => ({
       'Owner > Node': stat.key,
@@ -407,29 +379,14 @@ if (__DEV__) {
   };
 
   var start = function() {
-    if (!__DEV__) {
-      warnInProduction();
-      return;
-    }
-
     ReactDebugToolDev.beginProfiling();
   };
 
   var stop = function() {
-    if (!__DEV__) {
-      warnInProduction();
-      return;
-    }
-
     ReactDebugToolDev.endProfiling();
   };
 
   var isRunning = function() {
-    if (!__DEV__) {
-      warnInProduction();
-      return false;
-    }
-
     return ReactDebugToolDev.isProfiling();
   };
 

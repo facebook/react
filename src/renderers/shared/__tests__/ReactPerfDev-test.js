@@ -446,29 +446,6 @@ describe('ReactPerfDev', function() {
     expect(ReactPerfDev.isRunning()).toBe(false);
   });
 
-  it('should print console error only once', () => {
-    __DEV__ = false;
-
-    spyOn(console, 'error');
-
-    expect(ReactPerfDev.getLastMeasurements()).toEqual([]);
-    expect(ReactPerfDev.getExclusive()).toEqual([]);
-    expect(ReactPerfDev.getInclusive()).toEqual([]);
-    expect(ReactPerfDev.getWasted()).toEqual([]);
-    expect(ReactPerfDev.getOperations()).toEqual([]);
-    expect(ReactPerfDev.printExclusive()).toEqual(undefined);
-    expect(ReactPerfDev.printInclusive()).toEqual(undefined);
-    expect(ReactPerfDev.printWasted()).toEqual(undefined);
-    expect(ReactPerfDev.printOperations()).toEqual(undefined);
-    expect(ReactPerfDev.start()).toBe(undefined);
-    expect(ReactPerfDev.stop()).toBe(undefined);
-    expect(ReactPerfDev.isRunning()).toBe(false);
-
-    expect(console.error.calls.count()).toBe(1);
-
-    __DEV__ = true;
-  });
-
   it('should work when measurement starts during reconciliation', () => {
     // https://github.com/facebook/react/issues/6949#issuecomment-230371009
     class Measurer extends React.Component {
@@ -515,5 +492,47 @@ describe('ReactPerfDev', function() {
       inclusiveRenderDuration: 2,
       renderCount: 2,
     }]);
+  });
+});
+
+describe('ReactPerfDev in production', () => {
+  var ReactPerfDev;
+  var oldProcess;
+
+  beforeEach(function() {
+    __DEV__ = false;
+    oldProcess = process;
+    global.process = {env: {NODE_ENV: 'production'}};
+
+    jest.resetModuleRegistry();
+    ReactPerfDev = require('ReactPerfDev');
+  });
+
+  afterEach(function() {
+    __DEV__ = true;
+    global.process = oldProcess;
+  });
+
+  it('should be disabled in production and print console error only once', () => {
+    __DEV__ = false;
+
+    spyOn(console, 'error');
+
+    expect(ReactPerfDev.getLastMeasurements()).toEqual([]);
+    expect(ReactPerfDev.getExclusive()).toEqual([]);
+    expect(ReactPerfDev.getInclusive()).toEqual([]);
+    expect(ReactPerfDev.getWasted()).toEqual([]);
+    expect(ReactPerfDev.getOperations()).toEqual([]);
+    expect(ReactPerfDev.printExclusive()).toEqual(undefined);
+    expect(ReactPerfDev.printInclusive()).toEqual(undefined);
+    expect(ReactPerfDev.printWasted()).toEqual(undefined);
+    expect(ReactPerfDev.printOperations()).toEqual(undefined);
+    expect(ReactPerfDev.start()).toBe(undefined);
+    expect(ReactPerfDev.stop()).toBe(undefined);
+    expect(ReactPerfDev.isRunning()).toBe(false);
+
+    expect(console.error.calls.count()).toBe(1);
+
+    __DEV__ = true;
   });
 });
