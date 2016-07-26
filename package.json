@@ -108,5 +108,8 @@
     "unmockedModulePathPatterns": [
       ""
     ]
+  },
+  "dependencies": {
+    "process": "^0.11.2"
   }
 }

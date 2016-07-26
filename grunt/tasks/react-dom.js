@@ -7,9 +7,9 @@ var LICENSE_TEMPLATE =
   grunt.file.read('./grunt/data/header-template-extended.txt');
 
 function build(name, filename) {
-  var srcFile = `vendor/${filename}.js`;
-  var destFile = `build/${filename}.js`;
-  var destFileMin = `build/${filename}.min.js`;
+  var srcFile = 'vendor/' + filename + '.js';
+  var destFile = 'build/' + filename + '.js';
+  var destFileMin = 'build/' + filename + '.min.js';
   var templateData = {
     package: name,
     version: grunt.config.data.pkg.version,
