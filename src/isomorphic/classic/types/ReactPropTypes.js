@@ -144,10 +144,13 @@ function createChainableTypeChecker(validate) {
     if (props[propName] == null) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
-        return new Error(
-          `Required ${locationName} \`${propFullName}\` was not specified in ` +
-          `\`${componentName}\`.`
-        );
+        var message = `Required ${locationName} \`${propFullName}\` was not specified in ` +
+          `\`${componentName}\`.`;
+        var lowerPropName = propName.toLowerCase();
+        if (props[lowerPropName] != null) {
+          message += ` Did you mistype \`${lowerPropName}\`?`
+        }
+        return new Error(message);
       }
       return null;
     } else {
