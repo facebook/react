@@ -524,7 +524,7 @@ describe('traverseAllChildren', function() {
       '{a, b}). If you meant to render a collection of children, use an ' +
       'array instead or wrap the object using createFragment(object) from ' +
       'the React add-ons.  If using arrow notation, this may be caused by ' +
-      'failing to wrap your properties in brackets. '
+      'failing to wrap your properties in brackets.'
     );
   });
 
