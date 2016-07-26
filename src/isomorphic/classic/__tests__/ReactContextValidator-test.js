@@ -152,7 +152,8 @@ describe('ReactContextValidator', function() {
     expect(console.error.calls.count()).toBe(1);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed context type: ' +
-      'Required context `foo` was not specified in `Component`.\n' +
+      'The context `foo` is marked as required in `Component`, but its value ' +
+      'is `undefined`.\n' +
       '    in Component (at **)'
     );
 
@@ -229,7 +230,8 @@ describe('ReactContextValidator', function() {
     expect(console.error.calls.count()).toBe(1);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed childContext type: ' +
-      'Required child context `foo` was not specified in `Component`.\n' +
+      'The child context `foo` is marked as required in `Component`, but its ' +
+      'value is `undefined`.\n' +
       '    in Component (at **)'
     );
 
