@@ -21,7 +21,7 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
 // nor polyfill, then a plain number is used for performance.
 var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
+  Infinity;
 
 var RESERVED_PROPS = {
   key: true,
