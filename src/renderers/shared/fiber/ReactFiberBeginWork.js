@@ -119,20 +119,18 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     fiber.stateQueue = stateQueue;
     // Schedule update on the alternate as well, since we don't know which tree
     // is current.
-    // $FlowFixMe: Intersection issue. Don't know why it's only happening here.
-    const { alternate } = fiber;
-    if (alternate !== null) {
-      alternate.stateQueue = stateQueue;
+    if (fiber.alternate !== null) {
+      fiber.alternate.stateQueue = stateQueue;
     }
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
           fiber.pendingWorkPriority >= priorityLevel) {
         fiber.pendingWorkPriority = priorityLevel;
       }
-      if (alternate !== null) {
-        if (alternate.pendingWorkPriority === NoWork ||
-            alternate.pendingWorkPriority >= priorityLevel) {
-          alternate.pendingWorkPriority = priorityLevel;
+      if (fiber.alternate !== null) {
+        if (fiber.alternate.pendingWorkPriority === NoWork ||
+            fiber.alternate.pendingWorkPriority >= priorityLevel) {
+          fiber.alternate.pendingWorkPriority = priorityLevel;
         }
       }
       // Duck type root
@@ -169,12 +167,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     }
     // Compute the state using the memoized state and the pending state queue.
     var stateQueue = workInProgress.stateQueue;
-    var state;
-    if (!current) {
-      state = mergeStateQueue(null, props, stateQueue);
-    } else {
-      state = mergeStateQueue(current.memoizedState, props, stateQueue);
-    }
+    var state = current ?
+       mergeStateQueue(stateQueue, current.memoizedState, props) :
+       mergeStateQueue(stateQueue, null, props);
 
     var instance = workInProgress.stateNode;
     if (!instance) {

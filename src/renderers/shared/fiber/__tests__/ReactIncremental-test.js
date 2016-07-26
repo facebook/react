@@ -648,8 +648,8 @@ describe('ReactIncremental', () => {
     instance.setState(updater);
     ReactNoop.flush();
     expect(instance.state.num).toEqual(2);
-    ReactNoop.render(<Foo multiplier={3} />);
     instance.setState(updater);
+    ReactNoop.render(<Foo multiplier={3} />);
     ReactNoop.flush();
     expect(instance.state.num).toEqual(6);
   });
