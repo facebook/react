@@ -1208,6 +1208,76 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('warns nicely for unnecessary whitespace in table', () => {
+      spyOn(console, 'error');
+      var body = <tbody><tr>test</tr></tbody>;
+      ReactTestUtils.renderIntoDocument(<table> {body} </table>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child of <table>. ' +
+        'See table > span. ' +
+        'Remove unnecessary whitespace inside <table> ' +
+        'as it is internally transformed into <span>'
+      );
+    });
+
+    it('warns nicely for unnecessary whitespace in tbody', () => {
+      spyOn(console, 'error');
+      var rows = <tr>test</tr>;
+      ReactTestUtils.renderIntoDocument(<table><tbody> {rows} </tbody></table>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child of <tbody>. ' +
+        'See tbody > span. ' +
+        'Remove unnecessary whitespace inside <tbody> ' +
+        'as it is internally transformed into <span>'
+      );
+    });
+
+    it('warns nicely for unnecessary whitespace in thead', () => {
+      spyOn(console, 'error');
+      var rows = <tr>test</tr>;
+      ReactTestUtils.renderIntoDocument(<table><thead> {rows} </thead></table>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child of <thead>. ' +
+        'See thead > span. ' +
+        'Remove unnecessary whitespace inside <thead> ' +
+        'as it is internally transformed into <span>'
+      );
+    });
+
+    it('warns nicely for unnecessary whitespace in tfoot', () => {
+      spyOn(console, 'error');
+      var rows = <tr>test</tr>;
+      ReactTestUtils.renderIntoDocument(<table><tfoot> {rows} </tfoot></table>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child of <tfoot>. ' +
+        'See tfoot > span. ' +
+        'Remove unnecessary whitespace inside <tfoot> ' +
+        'as it is internally transformed into <span>'
+      );
+    });
+
+    it('warns nicely for unnecessary whitespace in tr', () => {
+      spyOn(console, 'error');
+      var td = <td>test</td>;
+      ReactTestUtils.renderIntoDocument(<table><tbody><tr> {td} </tr></tbody></table>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child of <tr>. ' +
+        'See tr > span. ' +
+        'Remove unnecessary whitespace inside <tr> ' +
+        'as it is internally transformed into <span>'
+      );
+    });
+
     it('warns on invalid nesting at root', () => {
       spyOn(console, 'error');
       var p = document.createElement('p');
