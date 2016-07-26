@@ -158,7 +158,8 @@ function traverseAllChildrenImpl(
         addendum =
           ' If you meant to render a collection of children, use an array ' +
           'instead or wrap the object using createFragment(object) from the ' +
-          'React add-ons.';
+          'React add-ons.  If using arrow notation, this may be caused by failing ' +
+          'to wrap your properties in brackets. ';
         if (children._isReactElement) {
           addendum =
             ' It looks like you\'re using an element created by a different ' +
