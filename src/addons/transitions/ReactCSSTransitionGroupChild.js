@@ -53,7 +53,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
     leaveTimeout: React.PropTypes.number,
   },
 
-  transition: function(animationType, finishCallback, userSpecifiedDelay) {
+  transition: function(animationType, finishCallback, userSpecifiedDelay, endListener) {
     var node = ReactDOM.findDOMNode(this);
 
     if (!node) {
@@ -66,8 +66,18 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var className = this.props.name[animationType] || this.props.name + '-' + animationType;
     var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
     var timeout = null;
+    var boundEndListenerWrapper = function(listener) {
+      return function(e) {
+        if (e && e.target !== node) {
+          return;
+        }
 
-    var endListener = function(e) {
+        clearTimeout(timeout);
+        listener(e, node);
+      };
+    };
+
+    endListener = (typeof endListener === 'function') ? boundEndListenerWrapper(endListener.bind(this)) : function(e) {
       if (e && e.target !== node) {
         return;
       }
