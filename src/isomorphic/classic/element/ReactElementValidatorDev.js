@@ -231,29 +231,26 @@ if (__DEV__) {
       // Legacy hook TODO: Warn if this is accessed
       validatedFactory.type = type;
 
-      if (__DEV__) {
-        if (canDefinePropertyDev) {
-          Object.defineProperty(
-            validatedFactory,
-            'type',
-            {
-              enumerable: false,
-              get: function() {
-                warning(
-                  false,
-                  'Factory.type is deprecated. Access the class directly ' +
-                  'before passing it to createFactory.'
-                );
-                Object.defineProperty(this, 'type', {
-                  value: type,
-                });
-                return type;
-              },
-            }
-          );
-        }
+      if (canDefinePropertyDev) {
+        Object.defineProperty(
+          validatedFactory,
+          'type',
+          {
+            enumerable: false,
+            get: function() {
+              warning(
+                false,
+                'Factory.type is deprecated. Access the class directly ' +
+                'before passing it to createFactory.'
+              );
+              Object.defineProperty(this, 'type', {
+                value: type,
+              });
+              return type;
+            },
+          }
+        );
       }
-
 
       return validatedFactory;
     },
