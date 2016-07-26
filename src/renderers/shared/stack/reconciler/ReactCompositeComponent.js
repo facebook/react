@@ -16,7 +16,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactReconciler = require('ReactReconciler');
@@ -62,14 +62,14 @@ function warnIfInvalidElement(Component, element) {
 function invokeComponentDidMountWithTimer() {
   var publicInstance = this._instance;
   if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+    ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
       this._debugID,
       'componentDidMount'
     );
   }
   publicInstance.componentDidMount();
   if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+    ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
       this._debugID,
       'componentDidMount'
     );
@@ -79,14 +79,14 @@ function invokeComponentDidMountWithTimer() {
 function invokeComponentDidUpdateWithTimer(prevProps, prevState, prevContext) {
   var publicInstance = this._instance;
   if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+    ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
       this._debugID,
       'componentDidUpdate'
     );
   }
   publicInstance.componentDidUpdate(prevProps, prevState, prevContext);
   if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+    ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
       this._debugID,
       'componentDidUpdate'
     );
@@ -369,7 +369,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       if (this._debugID) {
-        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        var callback = (component) => ReactInstrumentationDev.debugTool.onComponentHasMounted(this._debugID);
         transaction.getReactMountReady().enqueue(callback, this);
       }
     }
@@ -416,7 +416,7 @@ var ReactCompositeComponentMixin = {
     if (doConstruct) {
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
             this._debugID,
             'ctor'
           );
@@ -425,7 +425,7 @@ var ReactCompositeComponentMixin = {
       instanceOrElement = new Component(publicProps, publicContext, updateQueue);
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'ctor'
           );
@@ -436,7 +436,7 @@ var ReactCompositeComponentMixin = {
       // but we'll count this as time spent rendering as the more common case.
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
             this._debugID,
             'render'
           );
@@ -445,7 +445,7 @@ var ReactCompositeComponentMixin = {
       instanceOrElement = Component(publicProps, publicContext, updateQueue);
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'render'
           );
@@ -469,7 +469,7 @@ var ReactCompositeComponentMixin = {
     } catch (e) {
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onError();
+          ReactInstrumentationDev.debugTool.onError();
         }
       }
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
@@ -495,7 +495,7 @@ var ReactCompositeComponentMixin = {
     if (inst.componentWillMount) {
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
             this._debugID,
             'componentWillMount'
           );
@@ -504,7 +504,7 @@ var ReactCompositeComponentMixin = {
       inst.componentWillMount();
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'componentWillMount'
           );
@@ -531,7 +531,7 @@ var ReactCompositeComponentMixin = {
     this._renderedComponent = child;
     if (__DEV__) {
       if (child._debugID !== 0 && this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetParent(
+        ReactInstrumentationDev.debugTool.onSetParent(
           child._debugID,
           this._debugID
         );
@@ -548,7 +548,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       if (this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetChildren(
+        ReactInstrumentationDev.debugTool.onSetChildren(
           this._debugID,
           child._debugID !== 0 ? [child._debugID] : []
         );
@@ -578,7 +578,7 @@ var ReactCompositeComponentMixin = {
       inst._calledComponentWillUnmount = true;
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
             this._debugID,
             'componentWillUnmount'
           );
@@ -592,7 +592,7 @@ var ReactCompositeComponentMixin = {
       }
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'componentWillUnmount'
           );
@@ -687,11 +687,11 @@ var ReactCompositeComponentMixin = {
     var Component = this._currentElement.type;
     var inst = this._instance;
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginProcessingChildContext();
+      ReactInstrumentationDev.debugTool.onBeginProcessingChildContext();
     }
     var childContext = inst.getChildContext && inst.getChildContext();
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onEndProcessingChildContext();
+      ReactInstrumentationDev.debugTool.onEndProcessingChildContext();
     }
     if (childContext) {
       invariant(
@@ -837,7 +837,7 @@ var ReactCompositeComponentMixin = {
     if (willReceive && inst.componentWillReceiveProps) {
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
             this._debugID,
             'componentWillReceiveProps'
           );
@@ -846,7 +846,7 @@ var ReactCompositeComponentMixin = {
       inst.componentWillReceiveProps(nextProps, nextContext);
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'componentWillReceiveProps'
           );
@@ -861,7 +861,7 @@ var ReactCompositeComponentMixin = {
       if (inst.shouldComponentUpdate) {
         if (__DEV__) {
           if (this._debugID !== 0) {
-            ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+            ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
               this._debugID,
               'shouldComponentUpdate'
             );
@@ -870,7 +870,7 @@ var ReactCompositeComponentMixin = {
         shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
         if (__DEV__) {
           if (this._debugID !== 0) {
-            ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+            ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
               this._debugID,
               'shouldComponentUpdate'
             );
@@ -981,7 +981,7 @@ var ReactCompositeComponentMixin = {
     if (inst.componentWillUpdate) {
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
             this._debugID,
             'componentWillUpdate'
           );
@@ -990,7 +990,7 @@ var ReactCompositeComponentMixin = {
       inst.componentWillUpdate(nextProps, nextState, nextContext);
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+          ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
             this._debugID,
             'componentWillUpdate'
           );
@@ -1022,7 +1022,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
+        var callback = () => ReactInstrumentationDev.debugTool.onComponentHasUpdated(this._debugID);
         transaction.getReactMountReady().enqueue(callback, this);
       }
     }
@@ -1058,7 +1058,7 @@ var ReactCompositeComponentMixin = {
       this._renderedComponent = child;
       if (__DEV__) {
         if (child._debugID !== 0 && this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetParent(
+          ReactInstrumentationDev.debugTool.onSetParent(
             child._debugID,
             this._debugID
           );
@@ -1075,7 +1075,7 @@ var ReactCompositeComponentMixin = {
 
       if (__DEV__) {
         if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetChildren(
+          ReactInstrumentationDev.debugTool.onSetChildren(
             this._debugID,
             child._debugID !== 0 ? [child._debugID] : []
           );
@@ -1111,7 +1111,7 @@ var ReactCompositeComponentMixin = {
 
     if (__DEV__) {
       if (this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
+        ReactInstrumentationDev.debugTool.onBeginLifeCycleTimer(
           this._debugID,
           'render'
         );
@@ -1120,7 +1120,7 @@ var ReactCompositeComponentMixin = {
     var renderedComponent = inst.render();
     if (__DEV__) {
       if (this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+        ReactInstrumentationDev.debugTool.onEndLifeCycleTimer(
           this._debugID,
           'render'
         );

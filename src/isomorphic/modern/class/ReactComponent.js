@@ -13,7 +13,7 @@
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var canDefineProperty = require('canDefineProperty');
+var canDefinePropertyDev = require('canDefinePropertyDev');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
@@ -111,7 +111,7 @@ if (__DEV__) {
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
-    if (canDefineProperty) {
+    if (canDefinePropertyDev) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(

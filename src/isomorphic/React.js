@@ -17,6 +17,7 @@ var ReactPureComponent = require('ReactPureComponent');
 var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
+var ReactElementValidatorDev = require('ReactElementValidatorDev');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
@@ -28,10 +29,9 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
-  var ReactElementValidator = require('ReactElementValidator');
-  createElement = ReactElementValidator.createElement;
-  createFactory = ReactElementValidator.createFactory;
-  cloneElement = ReactElementValidator.cloneElement;
+  createElement = ReactElementValidatorDev.createElement;
+  createFactory = ReactElementValidatorDev.createFactory;
+  cloneElement = ReactElementValidatorDev.cloneElement;
 }
 
 var __spread = Object.assign;

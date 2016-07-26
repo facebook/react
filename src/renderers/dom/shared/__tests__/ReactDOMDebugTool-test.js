@@ -11,12 +11,12 @@
 
 'use strict';
 
-describe('ReactDOMDebugTool', function() {
-  var ReactDOMDebugTool;
+describe('ReactDOMDebugToolDev', function() {
+  var ReactDOMDebugToolDev;
 
   beforeEach(function() {
     jest.resetModuleRegistry();
-    ReactDOMDebugTool = require('ReactDOMDebugTool');
+    ReactDOMDebugToolDev = require('ReactDOMDebugToolDev');
   });
 
   it('should add and remove devtools', () => {
@@ -25,51 +25,51 @@ describe('ReactDOMDebugTool', function() {
     var devtool1 = {onTestEvent: handler1};
     var devtool2 = {onTestEvent: handler2};
 
-    ReactDOMDebugTool.addDevtool(devtool1);
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.addDevtool(devtool1);
+    ReactDOMDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(1);
     expect(handler2.calls.count()).toBe(0);
 
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(2);
     expect(handler2.calls.count()).toBe(0);
 
-    ReactDOMDebugTool.addDevtool(devtool2);
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.addDevtool(devtool2);
+    ReactDOMDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(3);
     expect(handler2.calls.count()).toBe(1);
 
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(2);
 
-    ReactDOMDebugTool.removeDevtool(devtool1);
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.removeDevtool(devtool1);
+    ReactDOMDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
 
-    ReactDOMDebugTool.removeDevtool(devtool2);
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.removeDevtool(devtool2);
+    ReactDOMDebugToolDev.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
   });
 
   it('warns once when an error is thrown in devtool', () => {
     spyOn(console, 'error');
-    ReactDOMDebugTool.addDevtool({
+    ReactDOMDebugToolDev.addDevtool({
       onTestEvent() {
         throw new Error('Hi.');
       },
     });
 
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.onTestEvent();
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'exception thrown by devtool while handling ' +
       'onTestEvent: Error: Hi.'
     );
 
-    ReactDOMDebugTool.onTestEvent();
+    ReactDOMDebugToolDev.onTestEvent();
     expect(console.error.calls.count()).toBe(1);
   });
 });

@@ -12,7 +12,7 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactReconciler = require('ReactReconciler');
@@ -149,7 +149,7 @@ var ReactNativeMount = {
     );
     if (__DEV__) {
       // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
+      ReactInstrumentationDev.debugTool.onMountRootComponent(
         instance._renderedComponent._debugID
       );
     }
@@ -206,12 +206,12 @@ var ReactNativeMount = {
       return false;
     }
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginFlush();
+      ReactInstrumentationDev.debugTool.onBeginFlush();
     }
     ReactNativeMount.unmountComponentFromNode(instance, containerTag);
     delete ReactNativeMount._instancesByContainerID[containerTag];
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onEndFlush();
+      ReactInstrumentationDev.debugTool.onEndFlush();
     }
     return true;
   },

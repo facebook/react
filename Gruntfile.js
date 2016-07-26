@@ -11,7 +11,7 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    browserify: require('./grunt/config/browserify'),
+    rollup: require('./grunt/config/rollup'),
     npm: require('./grunt/config/npm'),
     clean: [
       './build',
@@ -69,8 +69,8 @@ module.exports = function(grunt) {
     spawnGulp(['react:clean'], null, this.async());
   });
 
-  // Our own browserify-based tasks to build a single JS file build.
-  grunt.registerMultiTask('browserify', require('./grunt/tasks/browserify'));
+  // Our own Rollup-based tasks to build a single JS file build.
+  grunt.registerMultiTask('rollup', require('./grunt/tasks/rollup'));
 
   grunt.registerMultiTask('npm', require('./grunt/tasks/npm'));
 
@@ -98,20 +98,20 @@ module.exports = function(grunt) {
   grunt.registerTask('build:basic', [
     'build-modules',
     'version-check',
-    'browserify:basic',
+    'rollup:basic',
   ]);
   grunt.registerTask('build:addons', [
     'build-modules',
-    'browserify:addons',
+    'rollup:addons',
   ]);
   grunt.registerTask('build:min', [
     'build-modules',
     'version-check',
-    'browserify:min',
+    'rollup:min',
   ]);
   grunt.registerTask('build:addons-min', [
     'build-modules',
-    'browserify:addonsMin',
+    'rollup:addonsMin',
   ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
@@ -133,10 +133,10 @@ module.exports = function(grunt) {
     'delete-build-modules',
     'build-modules',
     'version-check',
-    'browserify:basic',
-    'browserify:addons',
-    'browserify:min',
-    'browserify:addonsMin',
+    'rollup:basic',
+    'rollup:addons',
+    'rollup:min',
+    'rollup:addonsMin',
     'build:react-dom',
     'npm-react:release',
     'npm-react:pack',

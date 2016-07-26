@@ -11,10 +11,10 @@
 
 'use strict';
 
-describe('ReactPerf', function() {
+describe('ReactPerfDev', function() {
   var React;
   var ReactDOM;
-  var ReactPerf;
+  var ReactPerfDev;
   var ReactTestUtils;
   var emptyFunction;
 
@@ -36,7 +36,7 @@ describe('ReactPerf', function() {
 
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactPerf = require('ReactPerf');
+    ReactPerfDev = require('ReactPerfDev');
     ReactTestUtils = require('ReactTestUtils');
     emptyFunction = require('emptyFunction');
 
@@ -78,17 +78,17 @@ describe('ReactPerf', function() {
   });
 
   function measure(fn) {
-    ReactPerf.start();
+    ReactPerfDev.start();
     fn();
-    ReactPerf.stop();
+    ReactPerfDev.stop();
 
     // Make sure none of the methods crash.
-    ReactPerf.getWasted();
-    ReactPerf.getInclusive();
-    ReactPerf.getExclusive();
-    ReactPerf.getOperations();
+    ReactPerfDev.getWasted();
+    ReactPerfDev.getInclusive();
+    ReactPerfDev.getExclusive();
+    ReactPerfDev.getOperations();
 
-    return ReactPerf.getLastMeasurements();
+    return ReactPerfDev.getLastMeasurements();
   }
 
   it('should count no-op update as waste', function() {
@@ -98,7 +98,7 @@ describe('ReactPerf', function() {
       ReactDOM.render(<App />, container);
     });
 
-    var summary = ReactPerf.getWasted(measurements);
+    var summary = ReactPerfDev.getWasted(measurements);
     expect(summary).toEqual([{
       key: 'App',
       instanceCount: 1,
@@ -122,7 +122,7 @@ describe('ReactPerf', function() {
       ReactDOM.render(<App flipSecond={true} />, container);
     });
 
-    var summary = ReactPerf.getWasted(measurements);
+    var summary = ReactPerfDev.getWasted(measurements);
     expect(summary).toEqual([{
       key: 'App > Box',
       instanceCount: 1,
@@ -133,7 +133,7 @@ describe('ReactPerf', function() {
 
   function expectNoWaste(fn) {
     var measurements = measure(fn);
-    var summary = ReactPerf.getWasted(measurements);
+    var summary = ReactPerfDev.getWasted(measurements);
     expect(summary).toEqual([]);
   }
 
@@ -261,7 +261,7 @@ describe('ReactPerf', function() {
       ReactDOM.render(<Div><Div key="a" /></Div>, container);
       ReactDOM.render(<Div><Div key="b" /></Div>, container);
     });
-    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+    expect(ReactPerfDev.getExclusive(measurements)).toEqual([{
       key: 'Div',
       instanceCount: 3,
       counts: { ctor: 3, render: 4 },
@@ -278,7 +278,7 @@ describe('ReactPerf', function() {
       instance.setState({});
       ReactDOM.unmountComponentAtNode(container);
     });
-    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+    expect(ReactPerfDev.getExclusive(measurements)).toEqual([{
       key: 'LifeCycle',
       instanceCount: 1,
       totalDuration: 14,
@@ -316,7 +316,7 @@ describe('ReactPerf', function() {
     var measurements = measure(() => {
       ReactDOM.render(<Foo />, container);
     });
-    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+    expect(ReactPerfDev.getExclusive(measurements)).toEqual([{
       key: 'Foo',
       instanceCount: 1,
       totalDuration: 1,
@@ -349,7 +349,7 @@ describe('ReactPerf', function() {
       ReactDOM.render(<Portal />, container);
     });
 
-    expect(ReactPerf.getExclusive(measurements)).toEqual([{
+    expect(ReactPerfDev.getExclusive(measurements)).toEqual([{
       key: 'Portal',
       instanceCount: 1,
       totalDuration: 6,
@@ -388,104 +388,81 @@ describe('ReactPerf', function() {
   it('warns once when using getMeasurementsSummaryMap', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
-    ReactPerf.getMeasurementsSummaryMap(measurements);
+    ReactPerfDev.getMeasurementsSummaryMap(measurements);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
       '`ReactPerf.getWasted(...)` instead.'
     );
 
-    ReactPerf.getMeasurementsSummaryMap(measurements);
+    ReactPerfDev.getMeasurementsSummaryMap(measurements);
     expect(console.error.calls.count()).toBe(1);
   });
 
   it('warns once when using printDOM', function() {
     var measurements = measure(() => {});
     spyOn(console, 'error');
-    ReactPerf.printDOM(measurements);
+    ReactPerfDev.printDOM(measurements);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.printDOM(...)` is deprecated. Use ' +
       '`ReactPerf.printOperations(...)` instead.'
     );
 
-    ReactPerf.printDOM(measurements);
+    ReactPerfDev.printDOM(measurements);
     expect(console.error.calls.count()).toBe(1);
   });
 
   it('returns isRunning state', () => {
-    expect(ReactPerf.isRunning()).toBe(false);
+    expect(ReactPerfDev.isRunning()).toBe(false);
 
-    ReactPerf.start();
-    expect(ReactPerf.isRunning()).toBe(true);
+    ReactPerfDev.start();
+    expect(ReactPerfDev.isRunning()).toBe(true);
 
-    ReactPerf.stop();
-    expect(ReactPerf.isRunning()).toBe(false);
+    ReactPerfDev.stop();
+    expect(ReactPerfDev.isRunning()).toBe(false);
   });
 
   it('start has no effect when already running', () => {
-    expect(ReactPerf.isRunning()).toBe(false);
+    expect(ReactPerfDev.isRunning()).toBe(false);
 
-    ReactPerf.start();
-    expect(ReactPerf.isRunning()).toBe(true);
+    ReactPerfDev.start();
+    expect(ReactPerfDev.isRunning()).toBe(true);
 
-    ReactPerf.start();
-    expect(ReactPerf.isRunning()).toBe(true);
+    ReactPerfDev.start();
+    expect(ReactPerfDev.isRunning()).toBe(true);
 
-    ReactPerf.stop();
-    expect(ReactPerf.isRunning()).toBe(false);
+    ReactPerfDev.stop();
+    expect(ReactPerfDev.isRunning()).toBe(false);
   });
 
   it('stop has no effect when already stopped', () => {
-    expect(ReactPerf.isRunning()).toBe(false);
+    expect(ReactPerfDev.isRunning()).toBe(false);
 
-    ReactPerf.stop();
-    expect(ReactPerf.isRunning()).toBe(false);
+    ReactPerfDev.stop();
+    expect(ReactPerfDev.isRunning()).toBe(false);
 
-    ReactPerf.stop();
-    expect(ReactPerf.isRunning()).toBe(false);
-  });
-
-  it('should print console error only once', () => {
-    __DEV__ = false;
-
-    spyOn(console, 'error');
-
-    expect(ReactPerf.getLastMeasurements()).toEqual([]);
-    expect(ReactPerf.getExclusive()).toEqual([]);
-    expect(ReactPerf.getInclusive()).toEqual([]);
-    expect(ReactPerf.getWasted()).toEqual([]);
-    expect(ReactPerf.getOperations()).toEqual([]);
-    expect(ReactPerf.printExclusive()).toEqual(undefined);
-    expect(ReactPerf.printInclusive()).toEqual(undefined);
-    expect(ReactPerf.printWasted()).toEqual(undefined);
-    expect(ReactPerf.printOperations()).toEqual(undefined);
-    expect(ReactPerf.start()).toBe(undefined);
-    expect(ReactPerf.stop()).toBe(undefined);
-    expect(ReactPerf.isRunning()).toBe(false);
-
-    expect(console.error.calls.count()).toBe(1);
-
-    __DEV__ = true;
+    ReactPerfDev.stop();
+    expect(ReactPerfDev.isRunning()).toBe(false);
   });
 
   it('should work when measurement starts during reconciliation', () => {
     // https://github.com/facebook/react/issues/6949#issuecomment-230371009
     class Measurer extends React.Component {
       componentWillMount() {
-        ReactPerf.start();
+        ReactPerfDev.start();
       }
 
       componentDidMount() {
-        ReactPerf.stop();
+        ReactPerfDev.stop();
       }
 
       componentWillUpdate() {
-        ReactPerf.start();
+        ReactPerfDev.start();
       }
 
       componentDidUpdate() {
-        ReactPerf.stop();
+        ReactPerfDev.stop();
       }
 
       render() {
@@ -496,10 +473,10 @@ describe('ReactPerf', function() {
 
     var container = document.createElement('div');
     ReactDOM.render(<Measurer><App /></Measurer>, container);
-    expect(ReactPerf.getWasted()).toEqual([]);
+    expect(ReactPerfDev.getWasted()).toEqual([]);
 
     ReactDOM.render(<Measurer><App /></Measurer>, container);
-    expect(ReactPerf.getWasted()).toEqual([{
+    expect(ReactPerfDev.getWasted()).toEqual([{
       key: 'Measurer',
       instanceCount: 1,
       inclusiveRenderDuration: 4,
@@ -515,5 +492,47 @@ describe('ReactPerf', function() {
       inclusiveRenderDuration: 2,
       renderCount: 2,
     }]);
+  });
+});
+
+describe('ReactPerfDev in production', () => {
+  var ReactPerfDev;
+  var oldProcess;
+
+  beforeEach(function() {
+    __DEV__ = false;
+    oldProcess = process;
+    global.process = {env: {NODE_ENV: 'production'}};
+
+    jest.resetModuleRegistry();
+    ReactPerfDev = require('ReactPerfDev');
+  });
+
+  afterEach(function() {
+    __DEV__ = true;
+    global.process = oldProcess;
+  });
+
+  it('should be disabled in production and print console error only once', () => {
+    __DEV__ = false;
+
+    spyOn(console, 'error');
+
+    expect(ReactPerfDev.getLastMeasurements()).toEqual([]);
+    expect(ReactPerfDev.getExclusive()).toEqual([]);
+    expect(ReactPerfDev.getInclusive()).toEqual([]);
+    expect(ReactPerfDev.getWasted()).toEqual([]);
+    expect(ReactPerfDev.getOperations()).toEqual([]);
+    expect(ReactPerfDev.printExclusive()).toEqual(undefined);
+    expect(ReactPerfDev.printInclusive()).toEqual(undefined);
+    expect(ReactPerfDev.printWasted()).toEqual(undefined);
+    expect(ReactPerfDev.printOperations()).toEqual(undefined);
+    expect(ReactPerfDev.start()).toBe(undefined);
+    expect(ReactPerfDev.stop()).toBe(undefined);
+    expect(ReactPerfDev.isRunning()).toBe(false);
+
+    expect(console.error.calls.count()).toBe(1);
+
+    __DEV__ = true;
   });
 });

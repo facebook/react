@@ -14,11 +14,11 @@
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ReactInstrumentationDev = require('ReactInstrumentationDev');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
-var validateDOMNesting = require('validateDOMNesting');
+var validateDOMNestingDev = require('validateDOMNestingDev');
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -67,7 +67,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
     context
   ) {
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
+      ReactInstrumentationDev.debugTool.onSetText(this._debugID, this._stringText);
 
       var parentInfo;
       if (hostParent != null) {
@@ -78,7 +78,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
       if (parentInfo) {
         // parentInfo should always be present except for the top-level
         // component when server rendering
-        validateDOMNesting('#text', this, parentInfo);
+        validateDOMNestingDev('#text', this, parentInfo);
       }
     }
 
@@ -144,7 +144,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
         );
 
         if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
+          ReactInstrumentationDev.debugTool.onSetText(
             this._debugID,
             nextStringText
           );

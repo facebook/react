@@ -11,25 +11,25 @@
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactComponentTreeDevtoolDev = require('ReactComponentTreeDevtoolDev');
 
 function getRootDisplayNames() {
-  return ReactComponentTreeDevtool.getRootIDs()
-    .map(ReactComponentTreeDevtool.getDisplayName);
+  return ReactComponentTreeDevtoolDev.getRootIDs()
+    .map(ReactComponentTreeDevtoolDev.getDisplayName);
 }
 
 function getRegisteredDisplayNames() {
-  return ReactComponentTreeDevtool.getRegisteredIDs()
-    .map(ReactComponentTreeDevtool.getDisplayName);
+  return ReactComponentTreeDevtoolDev.getRegisteredIDs()
+    .map(ReactComponentTreeDevtoolDev.getDisplayName);
 }
 
 function expectTree(rootID, expectedTree, parentPath) {
-  var displayName = ReactComponentTreeDevtool.getDisplayName(rootID);
-  var ownerID = ReactComponentTreeDevtool.getOwnerID(rootID);
-  var parentID = ReactComponentTreeDevtool.getParentID(rootID);
-  var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
-  var text = ReactComponentTreeDevtool.getText(rootID);
-  var element = ReactComponentTreeDevtool.getElement(rootID);
+  var displayName = ReactComponentTreeDevtoolDev.getDisplayName(rootID);
+  var ownerID = ReactComponentTreeDevtoolDev.getOwnerID(rootID);
+  var parentID = ReactComponentTreeDevtoolDev.getParentID(rootID);
+  var childIDs = ReactComponentTreeDevtoolDev.getChildIDs(rootID);
+  var text = ReactComponentTreeDevtoolDev.getText(rootID);
+  var element = ReactComponentTreeDevtoolDev.getElement(rootID);
   var path = parentPath ? `${parentPath} > ${displayName}` : displayName;
 
   function expectEqual(actual, expected, name) {
@@ -46,14 +46,14 @@ function expectTree(rootID, expectedTree, parentPath) {
 
   if (expectedTree.parentDisplayName !== undefined) {
     expectEqual(
-      ReactComponentTreeDevtool.getDisplayName(parentID),
+      ReactComponentTreeDevtoolDev.getDisplayName(parentID),
       expectedTree.parentDisplayName,
       'parentDisplayName'
     );
   }
   if (expectedTree.ownerDisplayName !== undefined) {
     expectEqual(
-      ReactComponentTreeDevtool.getDisplayName(ownerID),
+      ReactComponentTreeDevtoolDev.getDisplayName(ownerID),
       expectedTree.ownerDisplayName,
       'ownerDisplayName'
     );

@@ -103,29 +103,6 @@ function getDeclarationErrorAddendum(owner) {
  * this outside of the ReactDOM controlled form components.
  */
 var LinkedValueUtils = {
-  checkPropTypes: function(tagName, props, owner) {
-    for (var propName in propTypes) {
-      if (propTypes.hasOwnProperty(propName)) {
-        var error = propTypes[propName](
-          props,
-          propName,
-          tagName,
-          ReactPropTypeLocations.prop,
-          null,
-          ReactPropTypesSecret
-        );
-      }
-      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-        // Only monitor this failure once because there tends to be a lot of the
-        // same error.
-        loggedTypeFailures[error.message] = true;
-
-        var addendum = getDeclarationErrorAddendum(owner);
-        warning(false, 'Failed form propType: %s%s', error.message, addendum);
-      }
-    }
-  },
-
   /**
    * @param {object} inputProps Props for form component
    * @return {*} current value of the input either from value prop or link.
@@ -167,5 +144,30 @@ var LinkedValueUtils = {
     }
   },
 };
+
+if (__DEV__) {
+  LinkedValueUtils.checkPropTypes = function(tagName, props, owner) {
+    for (var propName in propTypes) {
+      if (propTypes.hasOwnProperty(propName)) {
+        var error = propTypes[propName](
+          props,
+          propName,
+          tagName,
+          ReactPropTypeLocations.prop,
+          null,
+          ReactPropTypesSecret
+        );
+      }
+      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+        // Only monitor this failure once because there tends to be a lot of the
+        // same error.
+        loggedTypeFailures[error.message] = true;
+
+        var addendum = getDeclarationErrorAddendum(owner);
+        warning(false, 'Failed form propType: %s%s', error.message, addendum);
+      }
+    }
+  };
+}
 
 module.exports = LinkedValueUtils;

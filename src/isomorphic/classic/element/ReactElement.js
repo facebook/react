@@ -14,7 +14,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var warning = require('warning');
-var canDefineProperty = require('canDefineProperty');
+var canDefinePropertyDev = require('canDefinePropertyDev');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
@@ -103,7 +103,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     // the validation flag non-enumerable (where possible, which should
     // include every environment we run tests in), so the test framework
     // ignores it.
-    if (canDefineProperty) {
+    if (canDefinePropertyDev) {
       Object.defineProperty(element._store, 'validated', {
         configurable: false,
         enumerable: false,
