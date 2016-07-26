@@ -1208,6 +1208,19 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('warns nicely for unnecessary whitespace in tbody', () => {
+      spyOn(console, 'error');
+      var rows = <tr>test</tr>;
+      ReactTestUtils.renderIntoDocument(<table><tbody> {rows} </tbody></table>);
+
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.calls[0].args[0]).toBe(
+        'Warning: validateDOMNesting(...): <span> cannot appear as a child of <tbody>. ' +
+        'See tbody > span. ' +
+        'Remove unnecessary whitespace inside <tbody></tbody>'
+      );
+    });
+
     it('warns on invalid nesting at root', () => {
       spyOn(console, 'error');
       var p = document.createElement('p');
