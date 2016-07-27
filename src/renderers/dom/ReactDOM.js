@@ -67,6 +67,14 @@ if (
 
 if (__DEV__) {
   var ExecutionEnvironment = require('ExecutionEnvironment');
+  if (
+    ExecutionEnvironment.canUseDOM &&
+    typeof window.__showWarning === 'undefined'
+  ) {
+    // install the `__showWarning` global hook for yellow box
+    window.__showWarning = require('reactShowWarningDOM');
+  }
+
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // First check if devtools is not installed
