@@ -54,7 +54,7 @@ function insertLazyTreeChildAt(parentNode, childTree, referenceNode) {
 
 function moveChild(parentNode, childNode, referenceNode) {
   if (Array.isArray(childNode)) {
-    moveDelimitedText(parentNode, childNode[0], childNode[1], referenceNode);
+    moveDelimitedNodes(parentNode, childNode[0], childNode[1], referenceNode);
   } else {
     insertChildAt(parentNode, childNode, referenceNode);
   }
@@ -64,13 +64,13 @@ function removeChild(parentNode, childNode) {
   if (Array.isArray(childNode)) {
     var closingComment = childNode[1];
     childNode = childNode[0];
-    removeDelimitedText(parentNode, childNode, closingComment);
+    removeDelimitedNodes(parentNode, childNode, closingComment);
     parentNode.removeChild(closingComment);
   }
   parentNode.removeChild(childNode);
 }
 
-function moveDelimitedText(
+function moveDelimitedNodes(
   parentNode,
   openingComment,
   closingComment,
@@ -87,7 +87,7 @@ function moveDelimitedText(
   }
 }
 
-function removeDelimitedText(parentNode, startNode, closingComment) {
+function removeDelimitedNodes(parentNode, startNode, closingComment) {
   while (true) {
     var node = startNode.nextSibling;
     if (node === closingComment) {
@@ -117,9 +117,9 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
       // Set the text content of the first node after the opening comment, and
       // remove all following nodes up until the closing comment.
       setTextContent(nodeAfterComment, stringText);
-      removeDelimitedText(parentNode, nodeAfterComment, closingComment);
+      removeDelimitedNodes(parentNode, nodeAfterComment, closingComment);
     } else {
-      removeDelimitedText(parentNode, openingComment, closingComment);
+      removeDelimitedNodes(parentNode, openingComment, closingComment);
     }
   }
 
@@ -128,6 +128,26 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
       ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
       'replace text',
       stringText
+    );
+  }
+}
+
+function replaceDelimitedHTML(openingComment, closingComment, firstNode, stringMarkup) {
+  var parentNode = openingComment.parentNode;
+  removeDelimitedNodes(parentNode, openingComment, closingComment);
+
+  var node = firstNode;
+  while (node) {
+    var nextSibling = node.nextSibling
+    insertChildAt(parentNode, node, closingComment);
+    node = nextSibling;
+  }
+
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onNativeOperation(
+      ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
+      'replace html',
+      stringMarkup
     );
   }
 }
@@ -152,6 +172,7 @@ var DOMChildrenOperations = {
   dangerouslyReplaceNodeWithMarkup: dangerouslyReplaceNodeWithMarkup,
 
   replaceDelimitedText: replaceDelimitedText,
+  replaceDelimitedHTML: replaceDelimitedHTML,
 
   /**
    * Updates a component's children by processing a series of updates. The
