@@ -74,13 +74,13 @@ const ReactDOMYellowBoxMessage = ({onSnoozeByType, onSnoozeByInstance, instance,
           onChange={onSelectChange}
         >
           <option value="noop" disabled={true}>Snooze</option>
-          <optgroup label="Snooze this type of warning for...">
-            <option value="type-10-mins">10 minutes</option>
-            <option value="type-24-hrs">24 hours</option>
-          </optgroup>
           <optgroup label="Snooze this warning instance for...">
             <option value="instance-10-mins">10 mins</option>
             <option value="instance-24-hrs">24 hours</option>
+          </optgroup>
+          <optgroup label="Snooze this type of warning for...">
+            <option value="type-10-mins">10 minutes</option>
+            <option value="type-24-hrs">24 hours</option>
           </optgroup>
         </select>
       </div>
