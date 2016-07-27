@@ -53,9 +53,13 @@ exports.mergeStateQueue = function(queue : ?StateQueue, prevState : any, props :
   }
   let state = Object.assign({}, prevState);
   do {
-    const partialState = typeof node.partialState === 'function' ?
-      node.partialState(state, props) :
-      node.partialState;
+    let partialState;
+    if (typeof node.partialState === 'function') {
+      const updateFn = node.partialState;
+      partialState = updateFn(state, props);
+    } else {
+      partialState = node.partialState;
+    }
     state = Object.assign(state, partialState);
   } while (node = node.next);
   return state;
