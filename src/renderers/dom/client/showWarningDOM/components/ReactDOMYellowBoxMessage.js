@@ -36,7 +36,7 @@ const styles = {
   },
 };
 
-const ReactDOMYellowBoxMessage = ({onSnoozeByType, onSnoozeByInstance, instance, count}: {
+const ReactDOMYellowBoxMessage = ({onSnoozeByType, onSnoozeByInstance, instance}: {
   onSnoozeByType: (snoozeDuration: Milliseconds) => void,
   onSnoozeByInstance: (snoozeDuration: Milliseconds) => void,
   instance: Instance,
