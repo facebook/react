@@ -49,11 +49,6 @@ const detectLocalStorage = (): boolean => {
 
 const canUseLocalStorage = detectLocalStorage();
 
-const sprintf = (format: Format, args: Array<string>): Instance => {
-  let index = 0;
-  return format.replace(/%s/g, match => args[index++]);
-};
-
 /*
  * we only save snooze data to localStorage.
  * here we read it from localStorage and remove expired timestamps
@@ -106,20 +101,23 @@ const warningStore = getAndUpdateWarningStore();
 /*
  * updates the in-memory warningStore. doesn't touch the snooze part.
  */
-const updateWarningStore = (format: Format, args: Array<string>): void => {
+const updateWarningStore = (
+  instance: Instance,
+  format: Format,
+  args: Array<string>,
+): void => {
   const {instanceList} = warningStore;
-  const newInstance = sprintf(format, args);
 
   for (let i = 0; i < instanceList.length; i++) {
     const cursor = instanceList[i];
-    if (cursor.instance === newInstance) { // already exists
+    if (cursor.instance === instance) { // already exists
       return;
     }
   }
 
   instanceList.push({
     format,
-    instance: newInstance,
+    instance,
   });
 };
 
@@ -222,8 +220,12 @@ const updateSnoozeForInstance = (instance: Instance) => (snoozeDuration: Millise
 /*
  * main entry for `warning` (fbjs) to call.
  */
-const reactShowWarningDOM = (format: Format, args: Array<string>): void => {
-  updateWarningStore(format, args);
+const reactShowWarningDOM = ({message, format, args}: {
+  message: Instance,
+  format: Format,
+  args: Array<string>,
+}): void => {
+  updateWarningStore(message, format, args);
   renderYellowBox();
 };
 
