@@ -470,14 +470,14 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name=""></a>从属关系 <a class="hash-link" href="#">#</a></h2>
-<p>上面例子中，<code>Avatar</code> 拥有 <code>PagePic</code> 和 <code>PageLink</code> 的实例。<code>拥有者</code> 就是给其它组件设置 <code>props</code> 的那个组件。更正式地说，如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。</p>
+<p>上面例子中，<code>Avatar</code> 拥有 <code>PagePic</code> 和 <code>PageLink</code> 的实例。<code>拥有者</code> 就是给其它组件设置 <code>props</code> 的那个组件。更正式地说，如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们的拥有者所设置的值保持一致。这是保持用户界面一致性的基本不变量。</p>
 
-<p>把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，<code>Avatar</code> 拥有 <code>div</code>、<code>PagePic</code> 和 <code>PageLink</code> 实例，<code>div</code> 是 <code>PagePic</code> 和 <code>PageLink</code> 实例的<strong>父级</strong>（但不是拥有者）。</p>
+<p>把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是 DOM 里的标签的关系。在上一个例子中，<code>Avatar</code> 拥有 <code>div</code>、<code>PagePic</code> 和 <code>PageLink</code> 实例，<code>div</code> 是 <code>PagePic</code> 和 <code>PageLink</code> 实例的<strong>父级</strong>（但不是拥有者）。</p>
 <h2><a class="anchor" name=""></a>子级 <a class="hash-link" href="#">#</a></h2>
 <p>实例化 React 组件时，你可以在开始标签和结束标签之间引用在React 组件或者Javascript 表达式：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
-<p><code>Parent</code> 能通过专门的 <code>this.props.children</code>  props 读取子级。<strong><code>this.props.children</code> 是一个不透明的数据结构：</strong> 通过 <a href="/react/docs/top-level-api.html#react.children">React.Children 工具类</a> 来操作。</p>
+<p><code>Parent</code> 能通过专门的 <code>this.props.children</code>  prop 读取子级。<strong><code>this.props.children</code> 是一个不透明的数据结构：</strong> 通过 <a href="/react/docs/top-level-api.html#react.children">React.Children 工具类</a> 来操作。</p>
 <h3><a class="anchor" name="reconciliation"></a>子级校正（Reconciliation） <a class="hash-link" href="#reconciliation">#</a></h3>
 <p><strong>校正就是每次 render 方法调用后 React 更新 DOM 的过程。</strong> 一般情况下，子级会根据它们被渲染的顺序来做校正。例如，下面代码描述了两次渲染的过程：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">// 第一次渲染
@@ -518,8 +518,9 @@
     <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>当 React 校正带有 key 的子级时，它会确保它们被重新排序（而不是破坏）或者删除（而不是重用）。
-<code>务必</code> 把 <code>key</code> 添加到子级数组里组件本身上，而不是每个子级内部最外层 HTML 上：</p>
+<p>当 React 校正带有 key 的子级时，它会确保它们被重新排序（而不是破坏）或者删除（而不是重用）。</p>
+
+<p>务必把 <code>key</code> 添加到子级数组中的组件本身上，而不是数组中每个子级组件内部的最外层 HTML 上：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 错误！</span>
 <span class="kd">var</span> <span class="nx">ListItemWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -555,9 +556,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>也可以传递ReactFragment 对象 来做有 key 的子级。详见<a href="create-fragment.html">Keyed Fragments</a></p>
+<p>也可以传递 ReactFragment 对象来做有 key 的子级。详见<a href="create-fragment.html">Keyed Fragments</a></p>
 <h2><a class="anchor" name=""></a>数据流 <a class="hash-link" href="#">#</a></h2>
-<p>React 里，数据通过上面介绍过的 <code>props</code> 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者通过它的 <code>props</code> 或 <code>state</code> 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有被使用的地方自动反映出来。</p>
+<p>React 里，数据通过上面介绍过的 <code>props</code> 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者们通过它们的 <code>props</code> 或 <code>state</code> 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有它们被使用的地方反映出来。</p>
 <h2><a class="anchor" name=""></a>性能提醒 <a class="hash-link" href="#">#</a></h2>
 <p>你或许会担心如果一个拥有者有大量子级时，对于数据变化做出响应非常耗费性能。值得庆幸的是执行 JavaScript  非常的快，而且 <code>render()</code> 方法一般比较简单，所以在大部分应用里这样做速度极快。此外，性能的瓶颈大多是因为 DOM 更新，而非 JS 执行，而且 React 会通过批量更新和变化检测来优化性能。</p>
 

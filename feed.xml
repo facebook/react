@@ -18,7 +18,7 @@
 &lt;p&gt;Now you can use it to create a new app:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;create-react-app hello-world
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This will take a while as npm installs the transient dependencies, but once it’s done, you will see a list of commands you can run in the created folder:&lt;/p&gt;
+&lt;p&gt;This will take a while as npm installs the transitive dependencies, but once it’s done, you will see a list of commands you can run in the created folder:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/created-folder.png&quot; alt=&quot;created folder&quot;&gt;&lt;/p&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;starting-the-server&quot;&gt;&lt;/a&gt;Starting the Server &lt;a class=&quot;hash-link&quot; href=&quot;#starting-the-server&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;

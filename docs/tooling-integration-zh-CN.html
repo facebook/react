@@ -431,60 +431,13 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>每个项目使用一个不同的系统来建立和部署JavaScript.我们努力使React尽可能环境无关。</p>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2><h3><a class="anchor" name="cdn-hosted-react"></a>CDN-hosted React <a class="hash-link" href="#cdn-hosted-react">#</a></h3>
-<p>我们提供了CDN-hosted版本的React<a href="/react/downloads.html">在我们的下载页面</a>.这些预构建的文件使用UMD模块格式。将他们放进一个简单的<code>&lt;script&gt;</code> 标签将会注入一个<code>React</code> 全局变量到你的环境里。这也同样在CommonJS 和 AMD 环境里开箱即用。</p>
-<h3><a class="anchor" name="-master"></a>使用 master <a class="hash-link" href="#-master">#</a></h3>
-<p>我们<a href="https://github.com/facebook/react">在我们的 GitHub repository</a>有从<code>master</code>构建的说明。我们在<code>build/modules</code> 下构建了一个CommonJS模块的树，你可以把它放到任何支持CommonJS的环境或者打包工具里。</p>
-<h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="jsx"></a>浏览器中的JSX转化 <a class="hash-link" href="#jsx">#</a></h3>
-<p>如果你喜欢使用JSX，Babel5 提供了被称为browser.js 用于开发的一个浏览器内的 ES6 和 JSX 转换器，它可以从 <a href="http://cdnjs.com/libraries/babel-core/5.8.34">CDNJS</a> 引用。Include <code>&lt;script type=&quot;text/babel&quot;&gt;</code> 标记来使用 JSX 转换器.</p>
+    <p>我们尽可能使 React 与环境无关。大家可以在各种语言（JavaScript, TypeScript, ClojureScript, etc）与各种环境(web, iOS, Android, NodeJS, Nashorn, etc)中使用 React。这里有很多工具来帮助你创建优秀的应用。在这一节中我们介绍一些在 React 中最流行的工具。</p>
 
-<blockquote>
-<p>注意:</p>
-
-<p>浏览器中的JSX转换器相当大并且导致额外的本可避免的客户端计算。不要在生产环境中使用 - 见下一节。</p>
-</blockquote>
-<h3><a class="anchor" name="--jsx"></a>投入生产: 预编译 JSX <a class="hash-link" href="#--jsx">#</a></h3>
-<p>如果你有<a href="https://www.npmjs.com/">npm</a>，你可以运行 <code>npm install -g babel-cli</code>. Babel 对React v0.12+ 有内建支持。 标签被自动转化为它们的等价物<code>React.createElement(...)</code>, <code>displayName</code> 被自动推断并添加到所有的React.createClass 调用。</p>
-
-<p>这个工具会把使用JSX语法的文件转化为简单的可直接在浏览器运行的JavaScript文件。它同样将为你监视目录并自动转化文件当他们变动时；例如：<code>babel --watch src/ --out-dir lib/</code>.</p>
-
-<p>从 Babel 6 开始，默认不再包含转换。这意味这必须在运行 <code>babel</code> 命令时指定选项，或者 <code>.babelrc</code> 必须指定选项。附加的捆绑了一大批转化的包(presets)也同样需要被安装.协同React工作最常用的是 <code>es2015</code> 和 <code>react</code> presets.更多关于 Babel 变化的信息可以在 <a href="http://babeljs.io/blog/2015/10/29/6.0.0/">Babel 6 博客发布的信息</a>上找到.</p>
-
-<p>这里是一个要使用ES2015 语法和 React 你该怎样做的例子：</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install babel-preset-es2015 babel-preset-react
-babel --presets es2015,react --watch src/ --out-dir lib/
-</code></pre></div>
-<p>默认模式下带有<code>.js</code>后缀的JSX文件被转化。运行 <code>babel --help</code> 获取更多关于如何使用 Babel 的信息。</p>
-
-<p>输出的例子：</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ cat test.jsx
-var HelloMessage = React.createClass({
-  render: function() {
-    return &lt;div&gt;Hello {this.props.name}&lt;/div&gt;;
-  }
-});
-
-ReactDOM.render(&lt;HelloMessage name=&quot;John&quot; /&gt;, mountNode);
-$ babel test.jsx
-&quot;use strict&quot;;
-
-var HelloMessage = React.createClass({
-  displayName: &quot;HelloMessage&quot;,
-
-  render: function render() {
-    return React.createElement(
-      &quot;div&quot;,
-      null,
-      &quot;Hello &quot;,
-      this.props.name
-    );
-  }
-});
-
-ReactDOM.render(React.createElement(HelloMessage, { name: &quot;John&quot; }), mountNode);
-</code></pre></div><h3><a class="anchor" name=""></a>有帮助的开源项目 <a class="hash-link" href="#">#</a></h3>
-<p>开源社区已经创建了一些集成JSX到数个编辑器和构建系统的工具。全部列表请见<a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> 。</p>
+<ul>
+<li><a href="/react/docs/language-tooling.html">语言工具</a> 描述如何设置例如 Babel 的工具来编译 JSX。</li>
+<li><a href="/react/docs/package-management.html">包管理</a> 讲述如何设置将 React 配置为项目中的依赖。</li>
+<li><a href="/react/docs/environments.html">服务端环境</a> 讲述如何为 React 配置服务端渲染环境。</li>
+</ul>
 
 
     <div class="docs-prevnext">

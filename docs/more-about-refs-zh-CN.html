@@ -435,7 +435,7 @@
 
 <p>让我们来看看怎样取得一个ref，然后深入完整的例子。</p>
 <h2><a class="anchor" name="-reactdom.render--ref"></a>从 ReactDOM.render 返回的 ref <a class="hash-link" href="#-reactdom.render--ref">#</a></h2>
-<p>不要被 你在你的组件（它返回一个虚拟的DOM元素）里定义的 <code>render()</code> 迷惑了， <a href="/react/docs/top-level-api.html#reactdom.render">ReactDOM.render()</a> 会返回一个对你的组件的 <strong>backing instance</strong> 的引用（或者 <code>null</code> for <a href="/react/docs/reusable-components.html#stateless-functions">stateless components</a>).</p>
+<p>不要被你在你的组件（它返回一个虚拟的DOM元素）里定义的 <code>render()</code> 迷惑了， <a href="/react/docs/top-level-api.html#reactdom.render">ReactDOM.render()</a> 会返回一个对你的组件的 <strong>backing instance</strong> 的引用（<a href="/react/docs/reusable-components.html#stateless-functions">无状态组件</a> 返回 <code>null</code>).</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
 </code></pre></div>
 <p>记住，不管怎样，JSX不会返回一个组件的实例！它只是一个 <strong>ReactElement</strong>: 一个轻量级的表达，告诉React被挂载的组件应该长什么样。</p>
@@ -476,7 +476,7 @@
 </code></pre></div>
 <p>当连接一个ref到一个DOM组件如 <code>&lt;div /&gt;</code>，你取回DOM节点;当连接一个ref到一个复合组件如 <code>&lt;TextInput /&gt;</code>，你会得到React类的实例。在后一种情况下，你可以调用任何那个组件的类暴露的方法。</p>
 
-<p>注意当被引用的组件卸载和每当ref变动，旧的ref将会被以<code>null</code>做参数调用。这阻止了在实例被保存的情况下的内存泄露，如第一个例子。注意当像在这里的例子，使用内联函数表达式写refs，React在每次更新都看到不同的函数对象，ref将会被以<code>null</code> 立即调用在它被以组件实例调用前。</p>
+<p>注意当被引用的组件卸载和每当ref变动，旧的ref将会被以<code>null</code>做参数调用。这阻止了在实例被保存的情况下的内存泄露，如第二个例子。注意当像在这里的例子，使用内联函数表达式写refs，React在每次更新都看到不同的函数对象，ref将会被以<code>null</code> 立即调用在它被以组件实例调用前。</p>
 <h2><a class="anchor" name="ref-string-"></a>ref String 属性 <a class="hash-link" href="#ref-string-">#</a></h2>
 <p>React同样支持使用一个字符串（代替回调函数）在任意组件上作为一个 ref prop，尽管这个方法在这点上主要是遗留物。</p>
 
@@ -484,7 +484,7 @@
 <li><p>赋值<code>ref</code>属性为任何从<code>render</code> 返回的东西，比如：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div></li>
-<li><p>在其他一些代码中（典型的事件处理代码），通过<code>this.refs</code>访问 <strong>支持实例(backing instance)</strong>，如：</p>
+<li><p>在其他一些代码中（典型的如事件处理的代码），通过<code>this.refs</code>访问 <strong>支持实例(backing instance)</strong>，如：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">input</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">inputValue</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">inputRect</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">();</span>
@@ -522,7 +522,7 @@
 
 <p>对于复合组件，引用会指向一个组件类的实例所以你可以调用那个类定义的任何方法。如果你需要访问那个组件的底层的DOM节点，你可以使用 <a href="/react/docs/top-level-api.html#reactdom.finddomnode">ReactDOM.findDOMNode</a> 作为一个 <code>安全舱口</code> 但是我们不推荐这样，因为它打破了封装，在大多数情况下都有一个清晰的方法来以React模式构建你的代码.</p>
 <h2><a class="anchor" name=""></a>总结 <a class="hash-link" href="#">#</a></h2>
-<p>Refs是一种很好的发送消息给特定子实例(通过流式的Reactive <code>props</code> 和 <code>state</code>来做会不方便)的方式。它们应该，不论怎样，不是你数据流通你的应用的首选。默认情况下，使用响应式数据流，并为本身不是reactive的用例保存<code>ref</code>s。</p>
+<p>Refs是一种很好的发送消息给特定子实例(通过流式的Reactive <code>props</code> 和 <code>state</code>来做会不方便)的方式。它们应该，不论怎样，不是你的应用中数据流通的首选。默认情况下，使用响应式数据流，并为本身不是reactive的用例保存<code>ref</code>。</p>
 <h3><a class="anchor" name=""></a>优点: <a class="hash-link" href="#">#</a></h3>
 <ul>
 <li>你可以在你的组件类里定义任何的公开方法（比如在一个Typeahead的重置方法）然后通过refs调用那些公开方法（比如<code>this.refs.myTypeahead.reset()</code>）。在大多数情况下，使用内建的React数据流更清晰，而不是使用强制的ref。</li>

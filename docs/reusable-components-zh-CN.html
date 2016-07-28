@@ -527,7 +527,7 @@
 </code></pre></div>
 <p>当父级没有传入 props 时，<code>getDefaultProps()</code> 可以保证  <code>this.props.value</code> 有默认值，注意 <code>getDefaultProps</code> 的结果会被 <em>缓存</em>。得益于此，你可以直接使用 props，而不必写手动编写一些重复或无意义的代码。</p>
 <h2><a class="anchor" name="-props"></a>传递 Props：捷径 <a class="hash-link" href="#-props">#</a></h2>
-<p>有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想 复制任何传进你的组件的HTML属性 到底层的HTML元素上。为了减少输入，你可以用 JSX <em>spread</em>  语法来完成：</p>
+<p>有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想复制任何传进你的组件的HTML属性到底层的HTML元素上。为了减少输入，你可以用 JSX <em>spread</em>  语法来完成：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// 这样会把 CheckList 所有的 props 复制到 &lt;a&gt;</span>
@@ -542,9 +542,9 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="mixins"></a>Mixins <a class="hash-link" href="#mixins">#</a></h2>
-<p>组件是 React 里复用代码最佳方式，但是有时一些复杂的组件间也需要共用一些功能。有时会被称为 <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">跨切面关注点</a>。React 使用 <code>mixins</code> 来解决这类问题。</p>
+<p>组件是 React 里复用代码的最佳方式，但是有时一些不同的组件间也需要共用一些功能。有时会被称为 <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">跨切面关注点</a>。React 使用 <code>mixins</code> 来解决这类问题。</p>
 
-<p>一个通用的场景是：一个组件需要定期更新。用 <code>setInterval()</code> 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供 <a href="/react/docs/working-with-the-browser.html#component-lifecycle">生命周期方法</a> 来告知组件创建或销毁的时间。下面来做一个简单的 mixin，使用 <code>setInterval()</code> 并保证在组件销毁时清理定时器。</p>
+<p>一个通用的场景是：一个组件需要定期更新。用 <code>setInterval()</code> 做很容易，但当不需要它的时候取消定时器来节省内存是非常重要的。React 提供 <a href="/react/docs/working-with-the-browser.html#component-lifecycle">生命周期方法</a> 来告知你组件创建或销毁的时间。下面来做一个简单的 mixin，使用 <code>setInterval()</code> 并保证在组件销毁时清理定时器。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SetIntervalMixin</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span> <span class="o">=</span> <span class="p">[];</span>
@@ -584,7 +584,7 @@
 </code></pre></div>
 <p>关于 mixin 值得一提的优点是，如果一个组件使用了多个 mixin，并用有多个 mixin 定义了同样的生命周期方法（如：多个 mixin 都需要在组件销毁时做资源清理操作），所有这些生命周期方法都保证会被执行到。方法执行顺序是：首先按 mixin 引入顺序执行 mixin 里方法，最后执行组件内定义的方法。</p>
 <h2><a class="anchor" name="es6-classes"></a>ES6 Classes <a class="hash-link" href="#es6-classes">#</a></h2>
-<p>你也可以以一个简单的JavaScript 类来定义你的React classes。使用ES6 class的例子:</p>
+<p>你也可以以一个简单的 JavaScript 类来定义你的React classes。使用ES6 class的例子:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
@@ -592,9 +592,9 @@
 <span class="p">}</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
-<p>API近似于 <code>React.createClass</code> 除了 <code>getInitialState</code>。 你应该在构造函数里设置你的<code>state</code>，而不是提供一个单独的  <code>getInitialState</code> 方法。</p>
+<p>API近似于 <code>React.createClass</code> 除了 <code>getInitialState</code>。 你应该在构造函数里设置你的<code>state</code>，而不是提供一个单独的  <code>getInitialState</code> 方法。就像 <code>getInitialState</code> 的返回值，你赋给 <code>this.state</code> 的值会被作为组件的初始 state。</p>
 
-<p>另一个不同是 <code>propTypes</code> 和 <code>defaultProps</code> 在构造函数而不是class body里被定义为属性。</p>
+<p>另一个不同是 <code>propTypes</code> 和 <code>defaultProps</code> 是在构造函数里被定义为属性，而不是在 class body 里。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">export</span> <span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
@@ -614,9 +614,27 @@
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
 </code></pre></div><h3><a class="anchor" name=""></a>无自动绑定 <a class="hash-link" href="#">#</a></h3>
-<p>方法遵循正式的ES6 class的语义，意味着它们不会自动绑定<code>this</code>到实例上。你必须显示的使用<code>.bind(this)</code> or <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions">箭头函数</a> <code>=&gt;</code>.</p>
+<p>方法遵循正式的ES6 class的语义，意味着它们不会自动绑定<code>this</code>到实例上。你必须显示的使用<code>.bind(this)</code> or <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions">箭头函数</a> <code>=&gt;</code>：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 你可以使用 bind() 来绑定 `this`</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
+
+<span class="c1">// 或者你可以使用箭头函数</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">()}</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>我们建议你在构造函数中绑定事件处理器，这样对于所有实例它们只需绑定一次：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span><span class="p">};</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">tick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>现在你可以直接使用 <code>this.tick</code> 因为它已经在构造函数里绑定过一次了。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 它已经在构造函数里绑定过了</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">}</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>这对应用的性能有帮助，特别是当你用 <a href="/react/docs/shallow-compare.html">浅层比较</a> 实现 <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate()</a> 时。</p>
 <h3><a class="anchor" name="-mixins"></a>没有 Mixins <a class="hash-link" href="#-mixins">#</a></h3>
-<p>不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易支持这些用例不依靠mixins。</p>
+<p>不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易不依靠mixins支持这些用例。</p>
 <h2><a class="anchor" name=""></a>无状态函数 <a class="hash-link" href="#">#</a></h2>
 <p>你也可以用 JavaScript 函数来定义你的 React 类。例如使用无状态函数语法：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">HelloMessage</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
@@ -629,7 +647,7 @@
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>这个简化的组件API旨在用于那些纯函数态的组件 。这些组件必须没有保持任何内部状态，没有备份实例，也没有组件生命周期方法。他们纯粹的函数式的转化他们的输入，没有引用。
-然而，你仍然可以以设置为函数的properties的方式来指定 <code>.propTypes</code> 和 <code>.defaultProps</code>，就像你在ES6类里设置他们那样。</p>
+然而，你仍然可以以设置函数 properties 的方式来指定 <code>.propTypes</code> 和 <code>.defaultProps</code>，就像你在ES6类里设置他们那样。</p>
 
 <blockquote>
 <p>注意：</p>

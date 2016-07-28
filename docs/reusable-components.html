@@ -542,7 +542,7 @@
   <span class="cm">/* ... */</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The result of <code>getDefaultProps()</code> will be cached and used to ensure that <code>this.props.value</code> will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.</p>
+<p>The result of <code>getDefaultProps()</code> will be cached and used to ensure that <code>this.props.value</code> will have a value if it was not specified by the owner component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.</p>
 <h2><a class="anchor" name="transferring-props-a-shortcut"></a>Transferring Props: A Shortcut <a class="hash-link" href="#transferring-props-a-shortcut">#</a></h2>
 <p>A common type of React component is one that extends a basic HTML element in a simple way. Often you&#39;ll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX <em>spread</em> syntax to achieve this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>

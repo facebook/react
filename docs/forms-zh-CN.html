@@ -431,7 +431,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>诸如 <code>&lt;input&gt;</code>、<code>&lt;textarea&gt;</code>、<code>&lt;option&gt;</code> 这样的表单组件不同于其他组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。</p>
+    <p>诸如 <code>&lt;input&gt;</code>、<code>&lt;textarea&gt;</code>、<code>&lt;option&gt;</code> 这样的表单组件不同于其他原生组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。</p>
 
 <p>关于 <code>&lt;form&gt;</code> 事件详情请查看 <a href="/react/docs/events-zh-CN.html#form-events">表单事件</a>。</p>
 <h2><a class="anchor" name=""></a>交互属性 <a class="hash-link" href="#">#</a></h2>
@@ -492,7 +492,7 @@
 
 <p>受控组件不维持一个自己的内部状态;它单纯的基于 props 渲染。</p>
 <h3><a class="anchor" name=""></a>复选框与单选按钮的潜在问题 <a class="hash-link" href="#">#</a></h3>
-<p>当心，在力图标准化复选框与单选按钮的变换处理中，React使用<code>click</code> 事件代替 <code>change</code> 事件。在大多数情况下它们表现的如同预期，除了在<code>change</code> handler中调用<code>preventDefault</code> 。<code>preventDefault</code> 阻止了浏览器视觉上更新输入，即使<code>checked</code>被触发。变通的方式是要么移除<code>preventDefault</code>的调用，要么把<code>checked</code> 的触发放在一个<code>setTimeout</code>里。</p>
+<p>当心，在力图标准化复选框与单选按钮的变换处理中，React使用 <code>click</code> 事件代替 <code>change</code> 事件。在大多数情况下它们表现的如同预期，除了在<code>change</code> handler中调用<code>preventDefault</code> 。<code>preventDefault</code> 阻止了浏览器视觉上更新输入，即使<code>checked</code>被触发。变通的方式是要么移除<code>preventDefault</code>的调用，要么把<code>checked</code> 的触发放在一个<code>setTimeout</code>里。</p>
 <h2><a class="anchor" name=""></a>不受控组件 <a class="hash-link" href="#">#</a></h2>
 <p>一个没有 <code>value</code> 属性的 <code>&lt;input&gt;</code> 是一个不<em>受控</em>组件:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -508,7 +508,7 @@
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>这个例子会像上面的 <strong>不受控组件</strong> 例子一样运行。</p>
+<p>这个例子会像上面的 <strong>受控组件</strong> 例子一样运行。</p>
 
 <p>同样的， <code>&lt;input type=&quot;checkbox&quot;&gt;</code> 和 <code>&lt;input type=&quot;radio&quot;&gt;</code> 支持 <code>defaultChecked</code> 、 <code>&lt;select&gt;</code> 支持 <code>defaultValue</code>.</p>
 
@@ -528,18 +528,18 @@
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;title&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Untitled&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>既然这个方法描述了在任意时间点上的视图，那么文本输入框的值就应该<em>始终</em>为 <code>Untitled</code>。</p>
+<p>由于这个方法描述了在任意时间点上的视图，那么文本输入框的值就应该<em>始终</em>为 <code>Untitled</code>。</p>
 <h3><a class="anchor" name="-lttextareagt--value-"></a>为什么 <code>&lt;textarea&gt;</code> 使用 <code>value</code> 属性？ <a class="hash-link" href="#-lttextareagt--value-">#</a></h3>
 <p>在 HTML 中， <code>&lt;textarea&gt;</code> 的值通常使用子节点设置：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 反例：在 React 中不要这样使用！ --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
 </code></pre></div>
-<p>对 HTML 而言，让开发者设置多行的值很容易。但是，React 是 JavaScript，没有字符串限制，可以使用 <code>\n</code> 实现换行。简言之，React 已经有 <code>value</code>、<code>defaultValue</code> 属性，<code>&lt;/textarea&gt;</code> 组件的子节点扮演什么角色就有点模棱两可了。基于此， 设置 <code>&lt;textarea&gt;</code> 值时不应该使用子节点：</p>
+<p>对 HTML 而言，让开发者设置多行的值很容易。但是，由于 React 是 JavaScript，没有字符串限制，可以使用 <code>\n</code> 实现换行。简言之，React 已经有 <code>value</code>、<code>defaultValue</code> 属性，<code>&lt;textarea&gt;</code> 组件的子节点扮演什么角色就有点模棱两可了。基于此， 设置 <code>&lt;textarea&gt;</code> 值时不应该使用子节点：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>如果 <em>非要</em> 使用子节点，效果和使用 <code>defaultValue</code> 一样。</p>
 <h3><a class="anchor" name="-ltselectgt--value-"></a>为什么 <code>&lt;select&gt;</code> 使用 <code>value</code> 属性 <a class="hash-link" href="#-ltselectgt--value-">#</a></h3>
-<p>HTML 中 <code>&lt;select&gt;</code> 通常使用 <code>&lt;option&gt;</code> 的 <code>selected</code> 属性设置选中状态；React 为了更方面的控制组件，采用以下方式代替：</p>
+<p>HTML 中 <code>&lt;select&gt;</code> 通常使用 <code>&lt;option&gt;</code> 的 <code>selected</code> 属性设置选中状态；React 为了更方便地控制组件，采用以下方式代替：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
