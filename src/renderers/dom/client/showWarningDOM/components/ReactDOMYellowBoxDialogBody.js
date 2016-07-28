@@ -13,7 +13,7 @@
 
 const React = require('React');
 
-const YellowBoxMessage = require('ReactDOMYellowBoxMessage');
+const ReactDOMYellowBoxMessage = require('ReactDOMYellowBoxMessage');
 
 import type {Format, Instance, Milliseconds, InstanceInfo} from 'reactShowWarningDOM';
 
@@ -31,7 +31,7 @@ const ReactDOMYellowBoxDialogBody = ({data, onSnoozeByType, onSnoozeByInstance}:
 }) => (
   <div style={styles.root}>
     {data.map(({instance, format}) =>
-      <YellowBoxMessage
+      <ReactDOMYellowBoxMessage
         key={instance}
         onSnoozeByType={onSnoozeByType(format)}
         onSnoozeByInstance={onSnoozeByInstance(instance)}
