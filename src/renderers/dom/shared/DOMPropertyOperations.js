@@ -160,6 +160,10 @@ var DOMPropertyOperations = {
           (propertyInfo.hasOverloadedBooleanValue && value === true)
         ) {
           node.setAttribute(attributeName, '');
+        } else if (attributeName === 'value') {
+          if (node.value != value) {
+            node.value = '' + value;
+          }
         } else {
           node.setAttribute(attributeName, '' + value);
         }
