@@ -342,10 +342,6 @@ var ReactCompositeComponentMixin = {
       this.getName() || 'ReactCompositeComponent'
     );
 
-    this._pendingStateQueue = null;
-    this._pendingReplaceState = false;
-    this._pendingForceUpdate = false;
-
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
