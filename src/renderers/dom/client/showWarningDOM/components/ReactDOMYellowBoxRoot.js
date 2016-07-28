@@ -13,8 +13,8 @@
 
 const React = require('React');
 
-const YellowBoxDialogHeader = require('ReactDOMYellowBoxDialogHeader');
-const YellowBoxDialogBody = require('ReactDOMYellowBoxDialogBody');
+const ReactDOMYellowBoxDialogHeader = require('ReactDOMYellowBoxDialogHeader');
+const ReactDOMYellowBoxDialogBody = require('ReactDOMYellowBoxDialogBody');
 
 import type {Format, Instance, Milliseconds, InstanceInfo} from 'reactShowWarningDOM';
 
@@ -58,8 +58,8 @@ const ReactDOMYellowBoxRoot = ({data, onIgnoreAll, onSnoozeByType, onSnoozeByIns
 }) => (
   <div style={styles.root}>
     <div style={styles.dialogRoot}>
-      <YellowBoxDialogHeader onIgnoreAll={onIgnoreAll} />
-      <YellowBoxDialogBody
+      <ReactDOMYellowBoxDialogHeader onIgnoreAll={onIgnoreAll} />
+      <ReactDOMYellowBoxDialogBody
         data={data}
         onSnoozeByType={onSnoozeByType}
         onSnoozeByInstance={onSnoozeByInstance}
