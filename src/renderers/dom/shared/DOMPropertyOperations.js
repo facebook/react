@@ -161,8 +161,8 @@ var DOMPropertyOperations = {
         ) {
           node.setAttribute(attributeName, '');
         } else if (attributeName === 'value') {
-          if (node.value != value) {
-            node.value = '' + value;
+          if (node.value !== value) {
+            node.setAttribute(attributeName, '' + value);
           }
         } else {
           node.setAttribute(attributeName, '' + value);
