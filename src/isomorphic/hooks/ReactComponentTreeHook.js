@@ -86,7 +86,7 @@ var ReactComponentTreeHook = {
         var nextChild = tree[nextChildID];
         invariant(
           nextChild,
-          'Expected devtool events to fire for the child ' +
+          'Expected hook events to fire for the child ' +
           'before its parent includes it in onSetChildren().'
         );
         invariant(

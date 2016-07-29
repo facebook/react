@@ -32,7 +32,7 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
     } catch (e) {
       warning(
         handlerDoesThrowForEvent[handlerFunctionName],
-        'exception thrown by devtool while handling %s: %s',
+        'exception thrown by hook while handling %s: %s',
         handlerFunctionName,
         e + '\n' + e.stack
       );
@@ -182,12 +182,12 @@ function resumeCurrentLifeCycleTimer() {
 }
 
 var ReactDebugTool = {
-  addDevtool(devtool) {
-    eventHandlers.push(devtool);
+  addHook(hook) {
+    eventHandlers.push(hook);
   },
-  removeDevtool(devtool) {
+  removeHook(hook) {
     for (var i = 0; i < eventHandlers.length; i++) {
-      if (eventHandlers[i] === devtool) {
+      if (eventHandlers[i] === hook) {
         eventHandlers.splice(i, 1);
         i--;
       }
@@ -204,7 +204,7 @@ var ReactDebugTool = {
     isProfiling = true;
     flushHistory.length = 0;
     resetMeasurements();
-    ReactDebugTool.addDevtool(ReactHostOperationHistoryHook);
+    ReactDebugTool.addHook(ReactHostOperationHistoryHook);
   },
   endProfiling() {
     if (!isProfiling) {
@@ -213,7 +213,7 @@ var ReactDebugTool = {
 
     isProfiling = false;
     resetMeasurements();
-    ReactDebugTool.removeDevtool(ReactHostOperationHistoryHook);
+    ReactDebugTool.removeHook(ReactHostOperationHistoryHook);
   },
   getFlushHistory() {
     return flushHistory;
@@ -325,9 +325,9 @@ var ReactDebugTool = {
   },
 };
 
-ReactDebugTool.addDevtool(ReactInvalidSetStateWarningHook);
-ReactDebugTool.addDevtool(ReactComponentTreeHook);
-ReactDebugTool.addDevtool(ReactChildrenMutationWarningHook);
+ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
+ReactDebugTool.addHook(ReactComponentTreeHook);
+ReactDebugTool.addHook(ReactChildrenMutationWarningHook);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {
   ReactDebugTool.beginProfiling();

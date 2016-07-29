@@ -87,7 +87,7 @@ describe('ReactComponentTreeHook', () => {
       ReactDOMServer.renderToString(<Wrapper />);
       expectWrapperTreeToEqual(null);
 
-      // To test it, we tell the devtool to ignore next purge
+      // To test it, we tell the hook to ignore next purge
       // so the cleanup request by ReactDebugTool is ignored.
       // This lets us make assertions on the actual tree.
       ReactComponentTreeHook._preventPurging = true;

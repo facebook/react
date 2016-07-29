@@ -86,7 +86,7 @@ describe('ReactHostOperationHistoryHook', () => {
       ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
-      // Empty DOM components should be invisible to devtools.
+      // Empty DOM components should be invisible to hooks.
       assertHistoryMatches([]);
     });
 
@@ -106,7 +106,7 @@ describe('ReactHostOperationHistoryHook', () => {
       ReactDOM.render(<Foo />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      // Since empty components should be invisible to devtools,
+      // Since empty components should be invisible to hooks,
       // we record a "mount" event rather than a "replace with".
       assertHistoryMatches([{
         instanceID: inst._debugID,

@@ -29,7 +29,7 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
     } catch (e) {
       warning(
         handlerDoesThrowForEvent[handlerFunctionName],
-        'exception thrown by devtool while handling %s: %s',
+        'exception thrown by hook while handling %s: %s',
         handlerFunctionName,
         e + '\n' + e.stack
       );
@@ -39,14 +39,14 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
 }
 
 var ReactDOMDebugTool = {
-  addDevtool(devtool) {
-    ReactDebugTool.addDevtool(devtool);
-    eventHandlers.push(devtool);
+  addHook(hook) {
+    ReactDebugTool.addHook(hook);
+    eventHandlers.push(hook);
   },
-  removeDevtool(devtool) {
-    ReactDebugTool.removeDevtool(devtool);
+  removeHook(hook) {
+    ReactDebugTool.removeHook(hook);
     for (var i = 0; i < eventHandlers.length; i++) {
-      if (eventHandlers[i] === devtool) {
+      if (eventHandlers[i] === hook) {
         eventHandlers.splice(i, 1);
         i--;
       }
@@ -66,7 +66,7 @@ var ReactDOMDebugTool = {
   },
 };
 
-ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyHook);
-ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropHook);
+ReactDOMDebugTool.addHook(ReactDOMUnknownPropertyHook);
+ReactDOMDebugTool.addHook(ReactDOMNullInputValuePropHook);
 
 module.exports = ReactDOMDebugTool;
