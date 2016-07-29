@@ -863,6 +863,8 @@
 <span class="p">});</span>
 </code></pre></div><h4><a class="anchor" name="events"></a>Events <a class="hash-link" href="#events">#</a></h4>
 <p>React attaches event handlers to components using a camelCase naming convention. We attach <code>onChange</code> handlers to the two <code>&lt;input&gt;</code> elements. Now, as the user enters text into the <code>&lt;input&gt;</code> fields, the attached <code>onChange</code> callbacks are fired and the <code>state</code> of the component is modified. Subsequently, the rendered value of the <code>input</code> element will be updated to reflect the current component <code>state</code>.</p>
+
+<p>(The astute reader may be surprised that these event handlers work as described, given that the method references are not explicitly bound to <code>this</code>. <code>React.createClass(...)</code> <a href="/react/docs/interactivity-and-dynamic-uis.html#under-the-hood-autobinding-and-event-delegation">automatically binds</a> each method to its component instance, obviating the need for explicit binding.)</p>
 <h4><a class="anchor" name="submitting-the-form"></a>Submitting the form <a class="hash-link" href="#submitting-the-form">#</a></h4>
 <p>Let&#39;s make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let&#39;s listen for the form&#39;s submit event and clear it.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
