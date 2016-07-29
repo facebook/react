@@ -1,6 +1,7 @@
 ---
 title: Don't Call PropTypes Warning
 layout: single
+permalink: warnings/dont-call-proptypes.html
 ---
 
 In a future major release of React, the code that implements PropType validation functions will be stripped in production. Once this happens, any code that calls these functions manually (that isn't stripped in production) will throw an error.
