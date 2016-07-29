@@ -17,6 +17,7 @@ const chalk = require('chalk');
 //    - packages/react-addons/package.json (version, peerDependencies.react)
 //    - packages/react-dom/package.json (version, peerDependencies.react)
 //    - packages/react-native-renderer/package.json (version, peerDependencies.react)
+//    - packages/react-native-renderer/package.json (version, peerDependencies.react)
 //    - src/ReactVersion.js (module.exports)
 // 4. Commit?
 
@@ -110,6 +111,10 @@ module.exports = function(vorpal, app) {
           {
             file: 'packages/react-native-renderer/package.json',
             fields: ['version', 'dependencies.react'],
+          },
+          {
+            file: 'packages/react-test-renderer/package.json',
+            fields: ['version', 'peerDependencies.react'],
           },
         ].forEach((opts) => {
           updateJSON.apply(this, [path.join(app.PATH_TO_REPO, opts.file), opts.fields, newVersion]);
