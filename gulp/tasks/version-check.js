@@ -27,6 +27,8 @@ module.exports = function(gulp, plugins) {
       'packages/react-addons/package.json (react dependency)':
         // Get the "version" without the range bit
         addonsData.peerDependencies.react.slice(1),
+      'packages/react-test-renderer/package.json':
+        require('../../packages/react-test-renderer/package.json').version,
       'src/ReactVersion.js': require('../../src/ReactVersion'),
     };
 

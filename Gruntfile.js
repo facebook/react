@@ -90,6 +90,10 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
+  var npmReactTestRendererTasks = require('./grunt/tasks/npm-react-test');
+  grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
+
   grunt.registerTask('version-check', function() {
     // Use gulp here.
     spawnGulp(['version-check'], null, this.async());
@@ -146,6 +150,8 @@ module.exports = function(grunt) {
     'npm-react-native:pack',
     'npm-react-addons:release',
     'npm-react-addons:pack',
+    'npm-react-test:release',
+    'npm-react-test:pack',
     'compare_size',
   ]);
 
