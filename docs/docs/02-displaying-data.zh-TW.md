@@ -1,7 +1,7 @@
 ---
 id: displaying-data-zh-TW
 title: Displaying Data
-permalink: displaying-data-zh-TW.html
+permalink: docs/displaying-data-zh-TW.html
 prev: why-react-zh-TW.html
 next: jsx-in-depth-zh-TW.html
 ---
