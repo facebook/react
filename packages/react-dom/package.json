@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "15.2.1",
+  "version": "15.3.0-rc.3",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -14,6 +14,6 @@
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {},
   "peerDependencies": {
-    "react": "^15.2.1"
+    "react": "^15.3.0-rc.3"
   }
 }

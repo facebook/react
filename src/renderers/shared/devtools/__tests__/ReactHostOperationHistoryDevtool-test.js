@@ -34,7 +34,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
 
   afterEach(() => {
     ReactPerf.stop();
-  })
+  });
 
   function assertHistoryMatches(expectedHistory) {
     var actualHistory = ReactHostOperationHistoryDevtool.getHistory();

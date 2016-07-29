@@ -15,11 +15,14 @@ describe('traverseAllChildren', function() {
   var traverseAllChildren;
   var React;
   var ReactFragment;
+  var ReactTestUtils;
+
   beforeEach(function() {
     jest.resetModuleRegistry();
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
     ReactFragment = require('ReactFragment');
+    ReactTestUtils = require('ReactTestUtils');
   });
 
   function frag(obj) {
@@ -536,4 +539,24 @@ describe('traverseAllChildren', function() {
     );
   });
 
+  it('should warn for using maps as children with owner info', function() {
+    spyOn(console, 'error');
+
+    var Parent = React.createClass({
+      render() {
+        return (
+          <div>{new Map([['foo', 0], ['bar', 1]])}</div>
+        );
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<Parent />);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Using Maps as children is not yet fully supported. It is an ' +
+      'experimental feature that might be removed. Convert it to a sequence ' +
+      '/ iterable of keyed ReactElements instead. Check the render method of `Parent`.'
+    );
+  });
 });

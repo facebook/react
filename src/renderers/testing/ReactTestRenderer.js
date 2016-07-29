@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactMultiChild = require('ReactMultiChild');
@@ -62,6 +63,11 @@ ReactTestComponent.prototype.receiveComponent = function(
   this.updateChildren(nextElement.props.children, transaction, context);
 };
 ReactTestComponent.prototype.getHostNode = function() {};
+ReactTestComponent.prototype.getPublicInstance = function() {
+  // I can't say this makes a ton of sense but it seems better than throwing.
+  // Maybe we'll revise later if someone has a good use case.
+  return null;
+};
 ReactTestComponent.prototype.unmountComponent = function() {};
 ReactTestComponent.prototype.toJSON = function() {
   var {children, ...props} = this._currentElement.props;
@@ -123,6 +129,11 @@ ReactHostComponent.injection.injectGenericComponentClass(ReactTestComponent);
 ReactHostComponent.injection.injectTextComponentClass(ReactTestTextComponent);
 ReactEmptyComponent.injection.injectEmptyComponentFactory(function() {
   return new ReactTestEmptyComponent();
+});
+
+ReactComponentEnvironment.injection.injectEnvironment({
+  processChildrenUpdates: function() {},
+  replaceNodeWithMarkup: function() {},
 });
 
 var ReactTestRenderer = {

@@ -169,7 +169,10 @@ var ReactNoop = {
     }
 
     function logFiber(fiber : Fiber, depth) {
-      console.log('  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']');
+      console.log(
+        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), 
+        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
+      );
       if (fiber.child) {
         logFiber(fiber.child, depth + 1);
       }

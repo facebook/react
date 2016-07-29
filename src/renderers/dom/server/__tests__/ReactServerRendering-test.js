@@ -399,6 +399,37 @@ describe('ReactServerRendering', function() {
       );
       expect(markup.indexOf('hello, world') >= 0).toBe(true);
     });
+
+    it('renders components with different batching strategies', function() {
+      var StaticComponent = React.createClass({
+        render: function() {
+          const staticContent = ReactServerRendering.renderToStaticMarkup(
+            <div>
+              <img src="foo-bar.jpg" />
+            </div>
+          );
+          return <div dangerouslySetInnerHTML={{__html: staticContent}} />;
+        },
+      });
+
+      var Component = React.createClass({
+        componentWillMount: function() {
+          this.setState({text: 'hello, world'});
+        },
+        render: function() {
+          return <div>{this.state.text}</div>;
+        },
+      });
+      expect(
+        ReactServerRendering.renderToString.bind(
+          ReactServerRendering,
+          <div>
+            <StaticComponent />
+            <Component />
+          </div>
+        )
+      ).not.toThrow();
+    });
   });
 
   it('warns with a no-op when an async setState is triggered', function() {

@@ -116,10 +116,6 @@ var expectClickLogsLengthToBe = function(instance, length) {
 describe('reactiverefs', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
-
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   /**
@@ -163,10 +159,6 @@ describe('reactiverefs', function() {
 describe('ref swapping', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
-
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   var RefHopsAround = React.createClass({
@@ -247,5 +239,39 @@ describe('ref swapping', function() {
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(!!instance.refs).toBe(true);
+  });
+
+  function testRefCall() {
+    var refCalled = 0;
+    function Inner(props) {
+      return <a ref={props.saveA} />;
+    }
+    var Outer = React.createClass({
+      saveA() {
+        refCalled++;
+      },
+      componentDidMount() {
+        this.setState({});
+      },
+      render() {
+        return <Inner saveA={this.saveA} />;
+      },
+    });
+    ReactTestUtils.renderIntoDocument(<Outer />);
+    expect(refCalled).toBe(1);
+  }
+
+  it('ref called correctly for stateless component when __DEV__ = false', function() {
+    var originalDev = __DEV__;
+    __DEV__ = false;
+    testRefCall();
+    __DEV__ = originalDev;
+  });
+
+  it('ref called correctly for stateless component when __DEV__ = true', function() {
+    var originalDev = __DEV__;
+    __DEV__ = true;
+    testRefCall();
+    __DEV__ = originalDev;
   });
 });

@@ -558,4 +558,23 @@ describe('ReactTestUtils', function() {
     expect(hrs.length).toBe(2);
   });
 
+  describe('Simulate', () => {
+    it('should set the type of the event', () => {
+      let event;
+      const stub = jest.genMockFn().mockImpl((e) => {
+        e.persist();
+        event = e;
+      });
+
+      const container = document.createElement('div');
+      const instance = ReactDOM.render(<div onKeyDown={stub} />, container);
+      const node = ReactDOM.findDOMNode(instance);
+
+      ReactTestUtils.Simulate.keyDown(node);
+
+      expect(event.type).toBe('keydown');
+      expect(event.nativeEvent.type).toBe('keydown');
+    });
+  });
+
 });

@@ -1,19 +1,20 @@
 {
-  "name": "react-native-renderer",
+  "name": "react-test-renderer",
   "version": "15.3.0-rc.3",
-  "description": "React package for use inside react-native.",
+  "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react",
-    "react-native"
+    "react-native",
+    "react-testing"
   ],
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://facebook.github.io/react-native/",
-  "dependencies": {
+  "homepage": "https://facebook.github.io/react/",
+  "peerDependencies": {
     "react": "^15.3.0-rc.3"
   }
 }
