@@ -53,13 +53,13 @@ sass:
 gems:
 - jekyll-redirect-from
 - jekyll-paginate
-react_version: 15.2.1
+react_version: 15.3.0
 react_hashes:
-  dev: g2900ZIpFKhyIsz+bnx4YDEfAISugYRU58ljeAgI8TZ0A0AkRLGUCN7OmjF16Cj+
-  prod: ICzDcvbNpMy31akJ8WzksHoK9tl1iRIUPRCaBRN+sn/k40TNGjs9IvgPN0SekkDT
-  addons_dev: js+Yc2Nd259A4+UPokRNVOXJdipY9oIrkkDdFJAZzZxgryRJLkWYDrJVgM97aweF
-  addons_prod: DaNE8gIDQr8RWDoa4y9HX/70fzdOBzpV/e+7RJtMN1MnXEiCMpiIFtutJml6mvPC
-  dom_dev: LD1cH7LXOdrrq5dOOiE2N/HdgCyrw3nmUMq6oPFCJKUfWO3i7AozvBKz7G3maMHt
-  dom_prod: 1dLXeik7kFcDPXbz3rX9dibLTGh/D8dpAOL5X2Ml09pH8wpQlpL+JOgOnzAMCO4T
-  dom_server_dev: WJt1y2JljJEQ1OgpupP2ly0GgIwi7Aodp+n+/fv2bakpgWpXMnLklj5rSouRJt59
-  dom_server_prod: Y6UDASOvQhWWBwXy/Ccp4vSAt0YAp+ymuRXBX4hffy+pMlOgjXzryIjbiceIB6GF
+  dev: R8v794QN9hrNjnivoQ3Mf7nMGVwFIHBkUmBanB40ZBIMttZbBEUatXNosjytvPUC
+  prod: asiNTW+3f/iCKtm+05EX+4V4n6R5R1fyAY9M8Md0DLHodFResXMSBlt8ns9iJaPK
+  addons_dev: iR3HmJX+5siYwRvy6ZXWWN/dNP4IuItUsfk0JJmwxaBIYtWHZhK/2N7wrAcxmpS8
+  addons_prod: A/63GcxBS05SAxTWB0+wQKyQl8RVEH3nOuBuxwg/WV6yI5qpfEy4ksn90bqJdFJY
+  dom_dev: PKr8yTHUBD0chzmoJ6ZYtB1nB87GTEWPmuDlDV7iARDrYGki2fmVB0ae3vf3LX0O
+  dom_prod: TBEslZF7tpwiuBgt/ajgWUKvDGuCExkmEoWygscHE/OOajWS24BLAaf2/z7lj/9n
+  dom_server_dev: UxEqwIE5+BLQKOqKHnPfJBOrSDo7HyocIl6sTb6taLayrVmDuhQ5VM4iauS54BbK
+  dom_server_prod: hOLRkO2HGPRi0d73qKZWueHZyDD/6BID0CJax9kNUNaAvMR4atbNIcYfk2BoM8T3
