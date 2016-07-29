@@ -14,6 +14,7 @@ const PACKAGES = [
   'react-addons-update',
   'react-dom',
   'react-native-renderer',
+  'react-test-renderer',
   'react',
 ];
 
