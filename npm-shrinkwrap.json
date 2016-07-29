@@ -1,6 +1,6 @@
 {
   "name": "react-build",
-  "version": "15.3.0-rc.3",
+  "version": "15.3.0",
   "dependencies": {
     "art": {
       "version": "0.10.1",
