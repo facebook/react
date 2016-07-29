@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactHostOperationHistoryDevtool
+ * @providesModule ReactHostOperationHistoryHook
  */
 
 'use strict';
 
 var history = [];
 
-var ReactHostOperationHistoryDevtool = {
+var ReactHostOperationHistoryHook = {
   onHostOperation(debugID, type, payload) {
     history.push({
       instanceID: debugID,
@@ -23,7 +23,7 @@ var ReactHostOperationHistoryDevtool = {
   },
 
   clearHistory() {
-    if (ReactHostOperationHistoryDevtool._preventClearing) {
+    if (ReactHostOperationHistoryHook._preventClearing) {
       // Should only be used for tests.
       return;
     }
@@ -36,4 +36,4 @@ var ReactHostOperationHistoryDevtool = {
   },
 };
 
-module.exports = ReactHostOperationHistoryDevtool;
+module.exports = ReactHostOperationHistoryHook;

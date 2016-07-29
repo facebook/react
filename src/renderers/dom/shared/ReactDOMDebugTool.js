@@ -11,8 +11,8 @@
 
 'use strict';
 
-var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
-var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
 var ReactDebugTool = require('ReactDebugTool');
 
 var warning = require('warning');
@@ -66,7 +66,7 @@ var ReactDOMDebugTool = {
   },
 };
 
-ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
-ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
+ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyHook);
+ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropHook);
 
 module.exports = ReactDOMDebugTool;

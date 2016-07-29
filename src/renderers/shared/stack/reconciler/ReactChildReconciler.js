@@ -19,7 +19,7 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
-var ReactComponentTreeDevtool;
+var ReactComponentTreeHook;
 
 if (
   typeof process !== 'undefined' &&
@@ -31,15 +31,15 @@ if (
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeDevtool = require('ReactComponentTreeDevtool')
+  ReactComponentTreeHook = require('ReactComponentTreeHook')
 }
 
 function instantiateChild(childInstances, child, name, selfDebugID) {
   // We found a component instance.
   var keyUnique = (childInstances[name] === undefined);
   if (__DEV__) {
-    if (!ReactComponentTreeDevtool) {
-      ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+    if (!ReactComponentTreeHook) {
+      ReactComponentTreeHook = require('ReactComponentTreeHook');
     }
     warning(
       keyUnique,
@@ -47,7 +47,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
       '`%s`. Child keys must be unique; when two children share a key, only ' +
       'the first child will be used.%s',
       KeyEscapeUtils.unescape(name),
-      ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
+      ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
     );
   }
   if (child != null && keyUnique) {
