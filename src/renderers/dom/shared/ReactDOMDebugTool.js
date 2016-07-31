@@ -13,6 +13,9 @@
 
 var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
 var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
+var ReactDOMDuplicateSelectValuesDevtool = require('ReactDOMDuplicateSelectValuesDevtool');
+
 var ReactDebugTool = require('ReactDebugTool');
 
 var warning = require('warning');
@@ -68,5 +71,6 @@ var ReactDOMDebugTool = {
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
 ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
+ReactDOMDebugTool.addDevtool(ReactDOMDuplicateSelectValuesDevtool);
 
 module.exports = ReactDOMDebugTool;
