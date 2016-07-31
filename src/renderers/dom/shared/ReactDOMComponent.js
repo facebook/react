@@ -642,16 +642,15 @@ ReactDOMComponent.Mixin = {
           this._currentElement.type
         );
       }
-			// Check if the component is using shady-dom
-			// see discussion in https://github.com/facebook/react/issues/7325
-			if(__DEV__) {
-				warning(
-		      !el.shadyRoot,
-		      `Element ${this._currentElement.type} is using shady-dom. ` +
-					'React is not special-cased to support shady-root. Use shadow-dom instead. ' +
-					'see https://github.com/facebook/react/issues/7325 for more info.'
-		    );
-			}
+      // Check if the component is using shady-dom
+      // see discussion in https://github.com/facebook/react/issues/7325
+      if (__DEV__) {
+        warning(
+        !el.shadyRoot,
+        'Element  `%s` is using shady-dom. React is not special-cased to support shady-root. Use shadow-dom instead. ',
+        this._currentElement.type
+        );
+      }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
       if (!this._hostParent) {
