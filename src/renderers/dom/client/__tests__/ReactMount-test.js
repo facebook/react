@@ -19,6 +19,11 @@ var ReactTestUtils;
 var WebComponents;
 
 describe('ReactMount', function() {
+
+  function normalizeCodeLocInfo(str) {
+    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(function() {
     jest.resetModuleRegistry();
 
@@ -163,6 +168,29 @@ describe('ReactMount', function() {
       'Rendering components directly into document.body is discouraged'
     );
   });
+
+  it('should warn when component does not follow proper case convention',
+    function() {
+      var container = document.createElement('container');
+      var myDiv = <div>React</div>;
+      var mySvg = <svg><polygon points="-145.6 556.9 104.8-145.6 429"/></svg>;
+      var centered = React.createClass({
+        render: function() {
+          return <div/>;
+        },
+      });
+      spyOn(console, 'error');
+      ReactDOM.render(myDiv, container);
+      ReactDOM.render(mySvg, container);
+      ReactDOM.render(<centered/>, container);
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown element centered. Did you miss-spell an HTML tag name? ' +
+        'If you are using a custom component, make sure your custom component ' +
+        'starts with an upper-case letter.' +
+        '\n    in centered (at **)'
+      );
+    });
 
   it('should account for escaping on a checksum mismatch', function() {
     var div = document.createElement('div');

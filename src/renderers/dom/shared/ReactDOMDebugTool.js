@@ -13,6 +13,7 @@
 
 var ReactDOMNullInputValuePropDevtool = require('ReactDOMNullInputValuePropDevtool');
 var ReactDOMUnknownPropertyDevtool = require('ReactDOMUnknownPropertyDevtool');
+var ReactDOMUnknownComponentDevtool = require('ReactDOMUnknownComponentDevtool');
 var ReactDebugTool = require('ReactDebugTool');
 
 var warning = require('warning');
@@ -68,5 +69,6 @@ var ReactDOMDebugTool = {
 
 ReactDOMDebugTool.addDevtool(ReactDOMUnknownPropertyDevtool);
 ReactDOMDebugTool.addDevtool(ReactDOMNullInputValuePropDevtool);
+ReactDOMDebugTool.addDevtool(ReactDOMUnknownComponentDevtool);
 
 module.exports = ReactDOMDebugTool;
