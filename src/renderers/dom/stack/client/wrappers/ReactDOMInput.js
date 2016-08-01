@@ -188,8 +188,9 @@ var ReactDOMInput = {
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = props.value;
     if (value != null) {
-      // To avoid side effects (such as losing text selection), only set value if changed
-      if (value != node.value) {
+      // Use loose coercion to prevent replacement on comparisons like
+      // '3e1' == 30 in Chrome (~52).
+      if (value != node.value) { // eslint-disable-line
         // Cast `value` to a string to ensure the value is set correctly. While
         // browsers typically do this as necessary, jsdom doesn't.
         node.value = '' + value;

@@ -161,7 +161,9 @@ var DOMPropertyOperations = {
         ) {
           node.setAttribute(attributeName, '');
         } else if (attributeName === 'value' && node.hasAttribute('value')) {
-          if (node.value != value) {
+          // Use loose coercion to prevent replacement on comparisons like
+          // '3e1' == 30 in Chrome (~52).
+          if (node.value != value) { // eslint-disable-line
             node.setAttribute(attributeName, '' + value);
           }
         } else {
