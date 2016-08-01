@@ -325,10 +325,6 @@ var ReactDebugTool = {
   },
 };
 
-// TODO remove these when RN/www gets updated
-ReactDebugTool.addDevtool = ReactDebugTool.addHook;
-ReactDebugTool.removeDevtool = ReactDebugTool.removeHook;
-
 ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
 ReactDebugTool.addHook(ReactComponentTreeHook);
 ReactDebugTool.addHook(ReactChildrenMutationWarningHook);
