@@ -11,25 +11,25 @@
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 function getRootDisplayNames() {
-  return ReactComponentTreeDevtool.getRootIDs()
-    .map(ReactComponentTreeDevtool.getDisplayName);
+  return ReactComponentTreeHook.getRootIDs()
+    .map(ReactComponentTreeHook.getDisplayName);
 }
 
 function getRegisteredDisplayNames() {
-  return ReactComponentTreeDevtool.getRegisteredIDs()
-    .map(ReactComponentTreeDevtool.getDisplayName);
+  return ReactComponentTreeHook.getRegisteredIDs()
+    .map(ReactComponentTreeHook.getDisplayName);
 }
 
 function expectTree(rootID, expectedTree, parentPath) {
-  var displayName = ReactComponentTreeDevtool.getDisplayName(rootID);
-  var ownerID = ReactComponentTreeDevtool.getOwnerID(rootID);
-  var parentID = ReactComponentTreeDevtool.getParentID(rootID);
-  var childIDs = ReactComponentTreeDevtool.getChildIDs(rootID);
-  var text = ReactComponentTreeDevtool.getText(rootID);
-  var element = ReactComponentTreeDevtool.getElement(rootID);
+  var displayName = ReactComponentTreeHook.getDisplayName(rootID);
+  var ownerID = ReactComponentTreeHook.getOwnerID(rootID);
+  var parentID = ReactComponentTreeHook.getParentID(rootID);
+  var childIDs = ReactComponentTreeHook.getChildIDs(rootID);
+  var text = ReactComponentTreeHook.getText(rootID);
+  var element = ReactComponentTreeHook.getElement(rootID);
   var path = parentPath ? `${parentPath} > ${displayName}` : displayName;
 
   function expectEqual(actual, expected, name) {
@@ -46,14 +46,14 @@ function expectTree(rootID, expectedTree, parentPath) {
 
   if (expectedTree.parentDisplayName !== undefined) {
     expectEqual(
-      ReactComponentTreeDevtool.getDisplayName(parentID),
+      ReactComponentTreeHook.getDisplayName(parentID),
       expectedTree.parentDisplayName,
       'parentDisplayName'
     );
   }
   if (expectedTree.ownerDisplayName !== undefined) {
     expectEqual(
-      ReactComponentTreeDevtool.getDisplayName(ownerID),
+      ReactComponentTreeHook.getDisplayName(ownerID),
       expectedTree.ownerDisplayName,
       'ownerDisplayName'
     );

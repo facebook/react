@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMUnknownPropertyDevtool
+ * @providesModule ReactDOMUnknownPropertyHook
  */
 
 'use strict';
 
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
 
@@ -73,7 +73,7 @@ if (__DEV__) {
         'Unknown DOM property %s. Did you mean %s?%s',
         name,
         standardName,
-        ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+        ReactComponentTreeHook.getStackAddendumByID(debugID)
       );
       return true;
     } else if (registrationName != null) {
@@ -82,7 +82,7 @@ if (__DEV__) {
         'Unknown event handler property %s. Did you mean `%s`?%s',
         name,
         registrationName,
-        ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+        ReactComponentTreeHook.getStackAddendumByID(debugID)
       );
       return true;
     } else {
@@ -115,7 +115,7 @@ var warnUnknownProperties = function(debugID, element) {
       'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       element.type,
-      ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+      ReactComponentTreeHook.getStackAddendumByID(debugID)
     );
   } else if (unknownProps.length > 1) {
     warning(
@@ -124,7 +124,7 @@ var warnUnknownProperties = function(debugID, element) {
       'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       element.type,
-      ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+      ReactComponentTreeHook.getStackAddendumByID(debugID)
     );
   }
 };
@@ -139,7 +139,7 @@ function handleElement(debugID, element) {
   warnUnknownProperties(debugID, element);
 }
 
-var ReactDOMUnknownPropertyDevtool = {
+var ReactDOMUnknownPropertyHook = {
   onBeforeMountComponent(debugID, element) {
     handleElement(debugID, element);
   },
@@ -148,4 +148,4 @@ var ReactDOMUnknownPropertyDevtool = {
   },
 };
 
-module.exports = ReactDOMUnknownPropertyDevtool;
+module.exports = ReactDOMUnknownPropertyHook;
