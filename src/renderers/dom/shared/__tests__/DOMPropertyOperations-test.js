@@ -294,6 +294,19 @@ describe('DOMPropertyOperations', () => {
       // some browsers)
       expect(stubNode.className).toBe('');
     });
+
+    it('should not update numeric values when the input.value is loosely the same', function() {
+      stubNode.setAttribute('type', 'number');
+      stubNode.setAttribute('value', '3e1');
+      // Keep in sync. The comparison occurs between setAttribute and value.
+      stubNode.value = '3e1';
+
+      spyOn(stubNode, 'setAttribute');
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+
+      expect(stubNode.setAttribute.calls.count()).toBe(0);
+    });
   });
 
   describe('deleteValueForProperty', () => {
