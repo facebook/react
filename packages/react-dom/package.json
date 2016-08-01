@@ -15,5 +15,13 @@
   "dependencies": {},
   "peerDependencies": {
     "react": "^16.0.0-alpha"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "README.md",
+    "dist/",
+    "index.js",
+    "server.js"
+  ]
 }
