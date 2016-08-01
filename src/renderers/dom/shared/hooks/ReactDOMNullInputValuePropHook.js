@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMNullInputValuePropDevtool
+ * @providesModule ReactDOMNullInputValuePropHook
  */
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
 
@@ -31,14 +31,14 @@ function handleElement(debugID, element) {
       'Consider using the empty string to clear the component or `undefined` ' +
       'for uncontrolled components.%s',
       element.type,
-      ReactComponentTreeDevtool.getStackAddendumByID(debugID)
+      ReactComponentTreeHook.getStackAddendumByID(debugID)
     );
 
     didWarnValueNull = true;
   }
 }
 
-var ReactDOMUnknownPropertyDevtool = {
+var ReactDOMNullInputValuePropHook = {
   onBeforeMountComponent(debugID, element) {
     handleElement(debugID, element);
   },
@@ -47,4 +47,4 @@ var ReactDOMUnknownPropertyDevtool = {
   },
 };
 
-module.exports = ReactDOMUnknownPropertyDevtool;
+module.exports = ReactDOMNullInputValuePropHook;

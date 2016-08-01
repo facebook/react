@@ -19,7 +19,7 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
@@ -104,7 +104,7 @@ function validateExplicitKey(element, parentType) {
     '%s%s See https://fb.me/react-warning-keys for more information.%s',
     currentComponentErrorInfo,
     childOwner,
-    ReactComponentTreeDevtool.getCurrentStackAddendum(element)
+    ReactComponentTreeHook.getCurrentStackAddendum(element)
   );
 }
 

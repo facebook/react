@@ -11,10 +11,10 @@
 
 'use strict';
 
-var ReactInvalidSetStateWarningDevTool = require('ReactInvalidSetStateWarningDevTool');
-var ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
-var ReactChildrenMutationWarningDevtool = require('ReactChildrenMutationWarningDevtool');
+var ReactInvalidSetStateWarningHook = require('ReactInvalidSetStateWarningHook');
+var ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactChildrenMutationWarningHook = require('ReactChildrenMutationWarningHook');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var performanceNow = require('performanceNow');
@@ -32,7 +32,7 @@ function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
     } catch (e) {
       warning(
         handlerDoesThrowForEvent[handlerFunctionName],
-        'exception thrown by devtool while handling %s: %s',
+        'exception thrown by hook while handling %s: %s',
         handlerFunctionName,
         e + '\n' + e.stack
       );
@@ -55,21 +55,21 @@ var currentTimerType = null;
 var lifeCycleTimerHasWarned = false;
 
 function clearHistory() {
-  ReactComponentTreeDevtool.purgeUnmountedComponents();
-  ReactHostOperationHistoryDevtool.clearHistory();
+  ReactComponentTreeHook.purgeUnmountedComponents();
+  ReactHostOperationHistoryHook.clearHistory();
 }
 
 function getTreeSnapshot(registeredIDs) {
   return registeredIDs.reduce((tree, id) => {
-    var ownerID = ReactComponentTreeDevtool.getOwnerID(id);
-    var parentID = ReactComponentTreeDevtool.getParentID(id);
+    var ownerID = ReactComponentTreeHook.getOwnerID(id);
+    var parentID = ReactComponentTreeHook.getParentID(id);
     tree[id] = {
-      displayName: ReactComponentTreeDevtool.getDisplayName(id),
-      text: ReactComponentTreeDevtool.getText(id),
-      updateCount: ReactComponentTreeDevtool.getUpdateCount(id),
-      childIDs: ReactComponentTreeDevtool.getChildIDs(id),
+      displayName: ReactComponentTreeHook.getDisplayName(id),
+      text: ReactComponentTreeHook.getText(id),
+      updateCount: ReactComponentTreeHook.getUpdateCount(id),
+      childIDs: ReactComponentTreeHook.getChildIDs(id),
       // Text nodes don't have owners but this is close enough.
-      ownerID: ownerID || ReactComponentTreeDevtool.getOwnerID(parentID),
+      ownerID: ownerID || ReactComponentTreeHook.getOwnerID(parentID),
       parentID,
     };
     return tree;
@@ -79,7 +79,7 @@ function getTreeSnapshot(registeredIDs) {
 function resetMeasurements() {
   var previousStartTime = currentFlushStartTime;
   var previousMeasurements = currentFlushMeasurements || [];
-  var previousOperations = ReactHostOperationHistoryDevtool.getHistory();
+  var previousOperations = ReactHostOperationHistoryHook.getHistory();
 
   if (currentFlushNesting === 0) {
     currentFlushStartTime = null;
@@ -89,7 +89,7 @@ function resetMeasurements() {
   }
 
   if (previousMeasurements.length || previousOperations.length) {
-    var registeredIDs = ReactComponentTreeDevtool.getRegisteredIDs();
+    var registeredIDs = ReactComponentTreeHook.getRegisteredIDs();
     flushHistory.push({
       duration: performanceNow() - previousStartTime,
       measurements: previousMeasurements || [],
@@ -182,12 +182,12 @@ function resumeCurrentLifeCycleTimer() {
 }
 
 var ReactDebugTool = {
-  addDevtool(devtool) {
-    eventHandlers.push(devtool);
+  addHook(hook) {
+    eventHandlers.push(hook);
   },
-  removeDevtool(devtool) {
+  removeHook(hook) {
     for (var i = 0; i < eventHandlers.length; i++) {
-      if (eventHandlers[i] === devtool) {
+      if (eventHandlers[i] === hook) {
         eventHandlers.splice(i, 1);
         i--;
       }
@@ -204,7 +204,7 @@ var ReactDebugTool = {
     isProfiling = true;
     flushHistory.length = 0;
     resetMeasurements();
-    ReactDebugTool.addDevtool(ReactHostOperationHistoryDevtool);
+    ReactDebugTool.addHook(ReactHostOperationHistoryHook);
   },
   endProfiling() {
     if (!isProfiling) {
@@ -213,7 +213,7 @@ var ReactDebugTool = {
 
     isProfiling = false;
     resetMeasurements();
-    ReactDebugTool.removeDevtool(ReactHostOperationHistoryDevtool);
+    ReactDebugTool.removeHook(ReactHostOperationHistoryHook);
   },
   getFlushHistory() {
     return flushHistory;
@@ -325,9 +325,13 @@ var ReactDebugTool = {
   },
 };
 
-ReactDebugTool.addDevtool(ReactInvalidSetStateWarningDevTool);
-ReactDebugTool.addDevtool(ReactComponentTreeDevtool);
-ReactDebugTool.addDevtool(ReactChildrenMutationWarningDevtool);
+// TODO remove these when RN/www gets updated
+ReactDebugTool.addDevtool = ReactDebugTool.addHook;
+ReactDebugTool.removeDevtool = ReactDebugTool.removeHook;
+
+ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
+ReactDebugTool.addHook(ReactComponentTreeHook);
+ReactDebugTool.addHook(ReactChildrenMutationWarningHook);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {
   ReactDebugTool.beginProfiling();

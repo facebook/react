@@ -19,13 +19,13 @@ describe('ReactDOMDebugTool', function() {
     ReactDOMDebugTool = require('ReactDOMDebugTool');
   });
 
-  it('should add and remove devtools', () => {
+  it('should add and remove hooks', () => {
     var handler1 = jasmine.createSpy('spy');
     var handler2 = jasmine.createSpy('spy');
-    var devtool1 = {onTestEvent: handler1};
-    var devtool2 = {onTestEvent: handler2};
+    var hook1 = {onTestEvent: handler1};
+    var hook2 = {onTestEvent: handler2};
 
-    ReactDOMDebugTool.addDevtool(devtool1);
+    ReactDOMDebugTool.addHook(hook1);
     ReactDOMDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(1);
     expect(handler2.calls.count()).toBe(0);
@@ -34,7 +34,7 @@ describe('ReactDOMDebugTool', function() {
     expect(handler1.calls.count()).toBe(2);
     expect(handler2.calls.count()).toBe(0);
 
-    ReactDOMDebugTool.addDevtool(devtool2);
+    ReactDOMDebugTool.addHook(hook2);
     ReactDOMDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(3);
     expect(handler2.calls.count()).toBe(1);
@@ -43,20 +43,20 @@ describe('ReactDOMDebugTool', function() {
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(2);
 
-    ReactDOMDebugTool.removeDevtool(devtool1);
+    ReactDOMDebugTool.removeHook(hook1);
     ReactDOMDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
 
-    ReactDOMDebugTool.removeDevtool(devtool2);
+    ReactDOMDebugTool.removeHook(hook2);
     ReactDOMDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
   });
 
-  it('warns once when an error is thrown in devtool', () => {
+  it('warns once when an error is thrown in hook', () => {
     spyOn(console, 'error');
-    ReactDOMDebugTool.addDevtool({
+    ReactDOMDebugTool.addHook({
       onTestEvent() {
         throw new Error('Hi.');
       },
@@ -65,7 +65,7 @@ describe('ReactDOMDebugTool', function() {
     ReactDOMDebugTool.onTestEvent();
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'exception thrown by devtool while handling ' +
+      'exception thrown by hook while handling ' +
       'onTestEvent: Error: Hi.'
     );
 

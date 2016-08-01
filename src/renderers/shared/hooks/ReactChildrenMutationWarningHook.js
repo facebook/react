@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactChildrenMutationWarningDevtool
+ * @providesModule ReactChildrenMutationWarningHook
  */
 
 'use strict';
 
-var ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
 
@@ -42,11 +42,11 @@ function handleElement(debugID, element) {
   warning(
     Array.isArray(element._shadowChildren) && !isMutated,
     'Component\'s children should not be mutated.%s',
-    ReactComponentTreeDevtool.getStackAddendumByID(debugID),
+    ReactComponentTreeHook.getStackAddendumByID(debugID),
   );
 }
 
-var ReactDOMUnknownPropertyDevtool = {
+var ReactDOMUnknownPropertyHook = {
   onBeforeMountComponent(debugID, element) {
     elements[debugID] = element;
   },
@@ -63,4 +63,4 @@ var ReactDOMUnknownPropertyDevtool = {
   },
 };
 
-module.exports = ReactDOMUnknownPropertyDevtool;
+module.exports = ReactDOMUnknownPropertyHook;

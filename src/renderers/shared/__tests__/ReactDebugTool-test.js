@@ -19,13 +19,13 @@ describe('ReactDebugTool', function() {
     ReactDebugTool = require('ReactDebugTool');
   });
 
-  it('should add and remove devtools', () => {
+  it('should add and remove hooks', () => {
     var handler1 = jasmine.createSpy('spy');
     var handler2 = jasmine.createSpy('spy');
-    var devtool1 = {onTestEvent: handler1};
-    var devtool2 = {onTestEvent: handler2};
+    var hook1 = {onTestEvent: handler1};
+    var hook2 = {onTestEvent: handler2};
 
-    ReactDebugTool.addDevtool(devtool1);
+    ReactDebugTool.addHook(hook1);
     ReactDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(1);
     expect(handler2.calls.count()).toBe(0);
@@ -34,7 +34,7 @@ describe('ReactDebugTool', function() {
     expect(handler1.calls.count()).toBe(2);
     expect(handler2.calls.count()).toBe(0);
 
-    ReactDebugTool.addDevtool(devtool2);
+    ReactDebugTool.addHook(hook2);
     ReactDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(3);
     expect(handler2.calls.count()).toBe(1);
@@ -43,20 +43,20 @@ describe('ReactDebugTool', function() {
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(2);
 
-    ReactDebugTool.removeDevtool(devtool1);
+    ReactDebugTool.removeHook(hook1);
     ReactDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
 
-    ReactDebugTool.removeDevtool(devtool2);
+    ReactDebugTool.removeHook(hook2);
     ReactDebugTool.onTestEvent();
     expect(handler1.calls.count()).toBe(4);
     expect(handler2.calls.count()).toBe(3);
   });
 
-  it('warns once when an error is thrown in devtool', () => {
+  it('warns once when an error is thrown in hook', () => {
     spyOn(console, 'error');
-    ReactDebugTool.addDevtool({
+    ReactDebugTool.addHook({
       onTestEvent() {
         throw new Error('Hi.');
       },
@@ -65,7 +65,7 @@ describe('ReactDebugTool', function() {
     ReactDebugTool.onTestEvent();
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'exception thrown by devtool while handling ' +
+      'exception thrown by hook while handling ' +
       'onTestEvent: Error: Hi.'
     );
 

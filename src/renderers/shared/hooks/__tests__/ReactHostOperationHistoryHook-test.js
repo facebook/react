@@ -11,13 +11,13 @@
 
 'use strict';
 
-describe('ReactHostOperationHistoryDevtool', () => {
+describe('ReactHostOperationHistoryHook', () => {
   var React;
   var ReactPerf;
   var ReactDOM;
   var ReactDOMComponentTree;
   var ReactDOMFeatureFlags;
-  var ReactHostOperationHistoryDevtool;
+  var ReactHostOperationHistoryHook;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -27,7 +27,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactHostOperationHistoryDevtool = require('ReactHostOperationHistoryDevtool');
+    ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
 
     ReactPerf.start();
   });
@@ -37,14 +37,14 @@ describe('ReactHostOperationHistoryDevtool', () => {
   });
 
   function assertHistoryMatches(expectedHistory) {
-    var actualHistory = ReactHostOperationHistoryDevtool.getHistory();
+    var actualHistory = ReactHostOperationHistoryHook.getHistory();
     expect(actualHistory).toEqual(expectedHistory);
   }
 
   describe('mount', () => {
     it('gets recorded for host roots', () => {
       var node = document.createElement('div');
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div><p>Hi.</p></div>, node);
 
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -63,7 +63,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       }
       var node = document.createElement('div');
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -83,10 +83,10 @@ describe('ReactHostOperationHistoryDevtool', () => {
       }
       var node = document.createElement('div');
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
-      // Empty DOM components should be invisible to devtools.
+      // Empty DOM components should be invisible to hooks.
       assertHistoryMatches([]);
     });
 
@@ -96,7 +96,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         return element;
       }
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
 
       var node = document.createElement('div');
       element = null;
@@ -106,7 +106,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<Foo />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      // Since empty components should be invisible to devtools,
+      // Since empty components should be invisible to hooks,
       // we record a "mount" event rather than a "replace with".
       assertHistoryMatches([{
         instanceID: inst._debugID,
@@ -120,7 +120,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
     it('gets recorded during mount', () => {
       var node = document.createElement('div');
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div style={{
         color: 'red',
         backgroundColor: 'yellow',
@@ -155,7 +155,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div style={{ color: 'red' }} />, node);
       ReactDOM.render(<div style={{
         color: 'blue',
@@ -188,7 +188,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div />, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div style={{
         color: 'red',
         backgroundColor: 'yellow',
@@ -214,7 +214,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       it('gets recorded during mount', () => {
         var node = document.createElement('div');
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div className="rad" tabIndex={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -247,7 +247,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<div />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div className="rad" />, node);
         ReactDOM.render(<div className="mad" tabIndex={42} />, node);
         ReactDOM.render(<div tabIndex={43} />, node);
@@ -282,7 +282,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<div />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div disabled={true} />, node);
         ReactDOM.render(<div disabled={false} />, node);
 
@@ -302,7 +302,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       it('gets recorded during mount', () => {
         var node = document.createElement('div');
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div data-x="rad" data-y={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -335,7 +335,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<div />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div data-x="rad" />, node);
         ReactDOM.render(<div data-x="mad" data-y={42} />, node);
         ReactDOM.render(<div data-y={43} />, node);
@@ -368,7 +368,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       it('gets recorded during mount', () => {
         var node = document.createElement('div');
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<my-component className="rad" tabIndex={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
@@ -401,7 +401,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<my-component />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<my-component className="rad" />, node);
         ReactDOM.render(<my-component className="mad" tabIndex={42} />, node);
         ReactDOM.render(<my-component tabIndex={43} />, node);
@@ -438,7 +438,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<div>Hi.</div>, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div>Bye.</div>, node);
 
         assertHistoryMatches([{
@@ -453,7 +453,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<div dangerouslySetInnerHTML={{__html: 'Hi.'}} />, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div>Bye.</div>, node);
 
         assertHistoryMatches([{
@@ -468,7 +468,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         ReactDOM.render(<div><span /><p /></div>, node);
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div>Bye.</div>, node);
 
         assertHistoryMatches([{
@@ -490,7 +490,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         var node = document.createElement('div');
         ReactDOM.render(<div>Hi.</div>, node);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div>Hi.</div>, node);
 
         assertHistoryMatches([]);
@@ -504,7 +504,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         var inst1 = ReactDOMComponentTree.getInstanceFromNode(node.firstChild.childNodes[0]);
         var inst2 = ReactDOMComponentTree.getInstanceFromNode(node.firstChild.childNodes[3]);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div>{'Bye.'}{43}</div>, node);
 
         assertHistoryMatches([{
@@ -522,7 +522,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         var node = document.createElement('div');
         ReactDOM.render(<div>{'Hi.'}{42}</div>, node);
 
-        ReactHostOperationHistoryDevtool._preventClearing = true;
+        ReactHostOperationHistoryHook._preventClearing = true;
         ReactDOM.render(<div>{'Hi.'}{42}</div>, node);
 
         assertHistoryMatches([]);
@@ -544,7 +544,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
 
       element = <span />;
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       assertHistoryMatches([{
@@ -567,7 +567,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
       element = null;
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       assertHistoryMatches([{
@@ -589,7 +589,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
 
       element = <div />;
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<Foo />, node);
 
       assertHistoryMatches([]);
@@ -602,7 +602,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div>Hi.</div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />,
         node
@@ -623,7 +623,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       );
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Bye.'}} />,
         node
@@ -641,7 +641,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span /><p /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />,
         node
@@ -669,7 +669,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
         node
       );
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />,
         node
@@ -685,7 +685,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div><span /><p /></div>, node);
 
       assertHistoryMatches([{
@@ -702,7 +702,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span key="a" /><p key="b" /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div><p key="b" /><span key="a" /></div>, node);
 
       assertHistoryMatches([{
@@ -719,7 +719,7 @@ describe('ReactHostOperationHistoryDevtool', () => {
       ReactDOM.render(<div><span key="a" /><p key="b" /></div>, node);
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
 
-      ReactHostOperationHistoryDevtool._preventClearing = true;
+      ReactHostOperationHistoryHook._preventClearing = true;
       ReactDOM.render(<div><span key="a" /></div>, node);
 
       assertHistoryMatches([{
