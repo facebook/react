@@ -108,12 +108,14 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should warn when using hyphenated style names', function() {
-    var Comp = React.createClass({
-      displayName: 'Comp',
-      render: function() {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
         return <div style={{ 'background-color': 'crimson' }}/>;
-      },
-    });
+      }
+    }
+
     spyOn(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
@@ -125,12 +127,14 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should warn when updating hyphenated style names', function() {
-    var Comp = React.createClass({
-      displayName: 'Comp',
-      render: function() {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
         return <div style={this.props.style} />;
-      },
-    });
+      }
+    }
+
     spyOn(console, 'error');
     var styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
@@ -152,16 +156,18 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('warns when miscapitalizing vendored style names', function() {
-    var Comp = React.createClass({
-      displayName: 'Comp',
-      render: function() {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
         return (<div style={{
           msTransform: 'translate3d(0, 0, 0)',
           oTransform: 'translate3d(0, 0, 0)',
           webkitTransform: 'translate3d(0, 0, 0)',
         }} />);
-      },
-    });
+      }
+    }
+
     spyOn(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
@@ -178,17 +184,19 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should warn about style having a trailing semicolon', function() {
-    var Comp = React.createClass({
-      displayName: 'Comp',
-      render: function() {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
         return (<div style={{
           fontFamily: 'Helvetica, arial',
           backgroundImage: 'url(foo;bar)',
           backgroundColor: 'blue;',
           color: 'red;   ',
         }} />);
-      },
-    });
+      }
+    }
+
     spyOn(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
@@ -204,12 +212,14 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should warn about style containing a NaN value', function() {
-    var Comp = React.createClass({
-      displayName: 'Comp',
-      render: function() {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
         return <div style={{ fontSize: NaN }}/>;
-      },
-    });
+      }
+    }
+
     spyOn(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);

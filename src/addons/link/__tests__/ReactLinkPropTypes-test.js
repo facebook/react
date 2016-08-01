@@ -18,8 +18,8 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';
-var requiredMessage =
-  'Required prop `testProp` was not specified in `testComponent`.';
+var requiredMessage = 'The prop `testProp` is marked as required in ' +
+  '`testComponent`, but its value is `undefined`.';
 
 function typeCheckFail(declaration, value, message) {
   var props = {testProp: value};
@@ -53,22 +53,26 @@ describe('ReactLink', function() {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'The prop `testProp.value` is marked as required in `testComponent`, ' +
+        'but its value is `undefined`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: 123},
-      'Required prop `testProp.requestChange` was not specified in `testComponent`.'
+      'The prop `testProp.requestChange` is marked as required in ' +
+        '`testComponent`, but its value is `undefined`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {requestChange: emptyFunction},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'The prop `testProp.value` is marked as required in `testComponent`, ' +
+        'but its value is `undefined`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: null, requestChange: null},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'The prop `testProp.value` is marked as required in `testComponent`, ' +
+        'but its value is `null`.'
     );
   });
 
@@ -122,12 +126,14 @@ describe('ReactLink', function() {
   });
 
   it('should warn for missing required values', function() {
-    typeCheckFail(LinkPropTypes.link().isRequired, null, requiredMessage);
+    var specifiedButIsNullMsg = 'The prop `testProp` is marked as required ' +
+      'in `testComponent`, but its value is `null`.';
+    typeCheckFail(LinkPropTypes.link().isRequired, null, specifiedButIsNullMsg);
     typeCheckFail(LinkPropTypes.link().isRequired, undefined, requiredMessage);
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string).isRequired,
       null,
-      requiredMessage
+      specifiedButIsNullMsg
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string).isRequired,

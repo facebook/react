@@ -1,7 +1,7 @@
 ---
 id: multiple-components-zh-CN
 title: 复合组件
-permalink: multiple-components-zh-CN.html
+permalink: docs/multiple-components-zh-CN.html
 prev: interactivity-and-dynamic-uis-zh-CN.html
 next: reusable-components-zh-CN.html
 ---
@@ -54,9 +54,9 @@ ReactDOM.render(
 
 ## 从属关系
 
-上面例子中，`Avatar` 拥有 `PagePic` 和 `PageLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的基本不变量。
+上面例子中，`Avatar` 拥有 `PagePic` 和 `PageLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们的拥有者所设置的值保持一致。这是保持用户界面一致性的基本不变量。
 
-把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`PagePic` 和 `PageLink` 实例，`div` 是 `PagePic` 和 `PageLink` 实例的**父级**（但不是拥有者）。
+把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是 DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`PagePic` 和 `PageLink` 实例，`div` 是 `PagePic` 和 `PageLink` 实例的**父级**（但不是拥有者）。
 
 ## 子级
 
@@ -66,7 +66,7 @@ ReactDOM.render(
 <Parent><Child /></Parent>
 ```
 
-`Parent` 能通过专门的 `this.props.children`  props 读取子级。**`this.props.children` 是一个不透明的数据结构：** 通过 [React.Children 工具类](/react/docs/top-level-api.html#react.children) 来操作。
+`Parent` 能通过专门的 `this.props.children`  prop 读取子级。**`this.props.children` 是一个不透明的数据结构：** 通过 [React.Children 工具类](/react/docs/top-level-api.html#react.children) 来操作。
 
 ### 子级校正（Reconciliation）
 
@@ -123,7 +123,8 @@ ReactDOM.render(
 ```
 
 当 React 校正带有 key 的子级时，它会确保它们被重新排序（而不是破坏）或者删除（而不是重用）。
-`务必` 把 `key` 添加到子级数组里组件本身上，而不是每个子级内部最外层 HTML 上：
+
+务必把 `key` 添加到子级数组中的组件本身上，而不是数组中每个子级组件内部的最外层 HTML 上：
 
 ```javascript
 // 错误！
@@ -164,11 +165,11 @@ var MyComponent = React.createClass({
 });
 ```
 
-也可以传递ReactFragment 对象 来做有 key 的子级。详见[Keyed Fragments](create-fragment.html)
+也可以传递 ReactFragment 对象来做有 key 的子级。详见[Keyed Fragments](create-fragment.html)
 
 ## 数据流
 
-React 里，数据通过上面介绍过的 `props` 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者通过它的 `props` 或 `state` 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有被使用的地方自动反映出来。
+React 里，数据通过上面介绍过的 `props` 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者们通过它们的 `props` 或 `state` 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有它们被使用的地方反映出来。
 
 
 ## 性能提醒

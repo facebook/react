@@ -34,25 +34,25 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
-    LowerLevelComposite = React.createClass({
-      render: function() {
+    LowerLevelComposite = class extends React.Component {
+      render() {
         return (
           <div>
             {this.props.children}
           </div>
         );
-      },
-    });
+      }
+    };
 
-    MyCompositeComponent = React.createClass({
-      render: function() {
+    MyCompositeComponent = class extends React.Component {
+      render() {
         return (
           <LowerLevelComposite>
             {this.props.children}
           </LowerLevelComposite>
         );
-      },
-    });
+      }
+    };
 
     expectSingleChildlessDiv = function(instance) {
       reactComponentExpect(instance)

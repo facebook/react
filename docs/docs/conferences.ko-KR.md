@@ -1,7 +1,7 @@
 ---
 id: conferences-ko-KR
 title: 컨퍼런스들
-permalink: conferences-ko-KR.html
+permalink: docs/conferences-ko-KR.html
 prev: thinking-in-react-ko-KR.html
 next: videos-ko-KR.html
 ---

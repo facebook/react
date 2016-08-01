@@ -144,9 +144,15 @@ function createChainableTypeChecker(validate) {
     if (props[propName] == null) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
+        if (props[propName] === null) {
+          return new Error(
+            `The ${locationName} \`${propFullName}\` is marked as required ` +
+            `in \`${componentName}\`, but its value is \`null\`.`
+          );
+        }
         return new Error(
-          `Required ${locationName} \`${propFullName}\` was not specified in ` +
-          `\`${componentName}\`.`
+          `The ${locationName} \`${propFullName}\` is marked as required in ` +
+          `\`${componentName}\`, but its value is \`undefined\`.`
         );
       }
       return null;
@@ -236,11 +242,13 @@ function createArrayOfTypeChecker(typeChecker) {
 
 function createElementTypeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
-    if (!ReactElement.isValidElement(props[propName])) {
+    var propValue = props[propName];
+    if (!ReactElement.isValidElement(propValue)) {
       var locationName = ReactPropTypeLocationNames[location];
+      var propType = getPropType(propValue);
       return new Error(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected a single ReactElement.`
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${propType}\` supplied to \`${componentName}\`, expected a single ReactElement.`
       );
     }
     return null;

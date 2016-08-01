@@ -1,6 +1,7 @@
 ---
 id: getting-started
 title: Getting Started
+permalink: docs/getting-started.html
 next: tutorial.html
 redirect_from: "docs/index.html"
 ---

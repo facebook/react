@@ -281,8 +281,8 @@ describe('ReactDOMInput', function() {
   });
 
   it('should control radio buttons', function() {
-    var RadioGroup = React.createClass({
-      render: function() {
+    class RadioGroup extends React.Component {
+      render() {
         return (
           <div>
             <input
@@ -310,8 +310,8 @@ describe('ReactDOMInput', function() {
             </form>
           </div>
         );
-      },
-    });
+      }
+    }
 
     var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);
     var aNode = ReactDOM.findDOMNode(stub.refs.a);
@@ -727,7 +727,7 @@ describe('ReactDOMInput', function() {
     );
   });
 
-  it('sets type before value always', function() {
+  it('sets type and step before value always', function() {
     if (!ReactDOMFeatureFlags.useCreateElement) {
       return;
     }
@@ -749,12 +749,14 @@ describe('ReactDOMInput', function() {
       return el;
     });
 
-    ReactTestUtils.renderIntoDocument(<input value="hi" type="radio" />);
-    // Setting value before type does bad things. Make sure we set type first.
+    ReactTestUtils.renderIntoDocument(<input value="0" type="range" min="0" max="100" step="1" />);
     expect(log).toEqual([
       'set data-reactroot',
       'set type',
+      'set step',
       'set value',
+      'set min',
+      'set max',
       'set value',
       'set checked',
       'set checked',
@@ -767,4 +769,25 @@ describe('ReactDOMInput', function() {
     );
     expect(input.value).toBe('hi');
   });
+
+  it('does not raise a validation warning when it switches types', function() {
+    var Input = React.createClass({
+      getInitialState() {
+        return { type: 'number', value: 1000 };
+      },
+      render() {
+        var { value, type } = this.state;
+        return (<input onChange={() => {}} type={type} value={value} />);
+      },
+    });
+
+    var input = ReactTestUtils.renderIntoDocument(<Input />);
+    var node = ReactDOM.findDOMNode(input);
+
+    // If the value is set before the type, a validation warning will raise and
+    // the value will not be assigned.
+    input.setState({ type: 'text', value: 'Test' });
+    expect(node.value).toEqual('Test');
+  });
+
 });

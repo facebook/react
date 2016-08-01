@@ -1,7 +1,7 @@
 ---
 id: reconciliation
 title: Reconciliation
-permalink: reconciliation.html
+permalink: docs/reconciliation.html
 prev: special-non-dom-attributes.html
 next: webcomponents.html
 ---

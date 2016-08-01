@@ -1,7 +1,7 @@
 ---
 id: getting-started-it-IT
 title: Primi Passi
-permalink: getting-started-it-IT.html
+permalink: docs/getting-started-it-IT.html
 next: tutorial-it-IT.html
 redirect_from: "docs/index.html"
 ---

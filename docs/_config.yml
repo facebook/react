@@ -5,21 +5,37 @@ url: https://facebook.github.io
 baseurl: "/react"
 permalink: "/blog/:year/:month/:day/:title.html"
 paginate_path: "/blog/page:num/"
-relative_permalinks: true
 paginate: 5
 timezone: America/Los_Angeles
 highlighter: pygments
 defaults:
 - scope:
     path: ''
-    type: post
+    type: posts
   values:
     layout: post
+    sectionid: blog
+- scope:
+    path: blog
+    type: pages
+  values:
+    sectionid: blog
 - scope:
     path: docs
-    type: page
+    type: pages
   values:
     layout: docs
+    sectionid: docs
+- scope:
+    path: tips
+    type: pages
+  values:
+    sectionid: docs
+- scope:
+    path: contributing
+    type: pages
+  values:
+    sectionid: docs
 exclude:
 - Gemfile
 - Gemfile.lock
@@ -36,13 +52,14 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
-react_version: 15.1.0
+- jekyll-paginate
+react_version: 15.3.0
 react_hashes:
-  dev: vck4RVcD/d8oCyYODNkyY5bF8we4hBqLNCQzIsK1n4eN+WTWkSMaXH8Bl0ByIaMd
-  prod: SA/uTNKFAqs8tVn1gROCqtn9Y/waa33EiLYKD7iALN+MDxP1DWBEWPCPmSkYzdsa
-  addons_dev: Bhsz0xzA1wDnGOSV7KbIL0pKaNOZ5KdPxqVOZTwVyU5NfUGDgN56LTVPVrGi3cMy
-  addons_prod: Gi+revrP36Zmqp/aqipOToEggqK5NWoKz1B1SUgiA1/OwV+pR8FqnU/VdfzizfUf
-  dom_dev: 0D/X+kBzzy9hGstygpjpkksS9+WWyG0B/ZfKROdwJ4h6BbJLCnL8lodLYYXxEunS
-  dom_prod: eZbWlQZOpUJXnnogcw4IRZvbGDRjAOpZvOEe932rEg0fhFmXXnaN9bLP/x1RbB6D
-  dom_server_dev: oo6/aLeY4xKtb+MetozfT9WlfPcJq6wnqeIT6suwaeA/qPaSG7B1wWvM8WLATV7Z
-  dom_server_prod: m3fk/O7t/S25hafVhhsrQ7YwjLJdqNNZwgYsAXft24YSrPXysowaoqpQokZO1lsI
+  dev: R8v794QN9hrNjnivoQ3Mf7nMGVwFIHBkUmBanB40ZBIMttZbBEUatXNosjytvPUC
+  prod: asiNTW+3f/iCKtm+05EX+4V4n6R5R1fyAY9M8Md0DLHodFResXMSBlt8ns9iJaPK
+  addons_dev: iR3HmJX+5siYwRvy6ZXWWN/dNP4IuItUsfk0JJmwxaBIYtWHZhK/2N7wrAcxmpS8
+  addons_prod: A/63GcxBS05SAxTWB0+wQKyQl8RVEH3nOuBuxwg/WV6yI5qpfEy4ksn90bqJdFJY
+  dom_dev: PKr8yTHUBD0chzmoJ6ZYtB1nB87GTEWPmuDlDV7iARDrYGki2fmVB0ae3vf3LX0O
+  dom_prod: TBEslZF7tpwiuBgt/ajgWUKvDGuCExkmEoWygscHE/OOajWS24BLAaf2/z7lj/9n
+  dom_server_dev: UxEqwIE5+BLQKOqKHnPfJBOrSDo7HyocIl6sTb6taLayrVmDuhQ5VM4iauS54BbK
+  dom_server_prod: hOLRkO2HGPRi0d73qKZWueHZyDD/6BID0CJax9kNUNaAvMR4atbNIcYfk2BoM8T3

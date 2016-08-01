@@ -2,7 +2,7 @@
 id: componentWillReceiveProps-not-triggered-after-mounting-ko-KR
 title: 마운트 후에는 componentWillReceiveProps가 실행되지 않음.
 layout: tips
-permalink: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
+permalink: tips/componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
 prev: controlled-input-null-value-ko-KR.html
 next: props-in-getInitialState-as-anti-pattern-ko-KR.html
 ---

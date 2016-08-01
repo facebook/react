@@ -1,7 +1,7 @@
 ---
 id: tutorial-zh-CN
 title: 教程
-permalink: tutorial-zh-CN.html
+permalink: docs/tutorial-zh-CN.html
 prev: getting-started-zh-CN.html
 next: thinking-in-react-zh-CN.html
 ---

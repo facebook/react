@@ -60,11 +60,12 @@ describe('ReactMount', function() {
   });
 
   it('throws when given a factory', function() {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+
     expect(function() {
       ReactTestUtils.renderIntoDocument(Component);
     }).toThrowError(
@@ -206,11 +207,13 @@ describe('ReactMount', function() {
 
   it('should warn if render removes React-rendered children', function() {
     var container = document.createElement('container');
-    var Component = React.createClass({
-      render: function() {
+
+    class Component extends React.Component {
+      render() {
         return <div><div /></div>;
-      },
-    });
+      }
+    }
+
     ReactDOM.render(<Component />, container);
 
     // Test that blasting away children throws a warning
@@ -281,17 +284,17 @@ describe('ReactMount', function() {
   it('marks top-level mounts', function() {
     var ReactFeatureFlags = require('ReactFeatureFlags');
 
-    var Foo = React.createClass({
-      render: function() {
+    class Foo extends React.Component {
+      render() {
         return <Bar />;
-      },
-    });
+      }
+    }
 
-    var Bar = React.createClass({
-      render: function() {
+    class Bar extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     try {
       ReactFeatureFlags.logTopLevelRenders = true;

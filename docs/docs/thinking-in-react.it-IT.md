@@ -1,6 +1,7 @@
 ---
 id: thinking-in-react-it-IT
 title: Pensare in React
+permalink: docs/thinking-in-react-it-IT.html
 prev: tutorial-it-IT.html
 next: conferences-it-IT.html
 redirect_from: 'blog/2013/11/05/thinking-in-react.html'

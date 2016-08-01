@@ -1,7 +1,7 @@
 ---
 id: addons
 title: アドオン
-permalink: addons-ja-JP.html
+permalink: docs/addons-ja-JP.html
 prev: tooling-integration-ja-JP.html
 next: animation-ja-JP.html
 ---

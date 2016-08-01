@@ -1,7 +1,7 @@
 ---
 id: tooling-integration
 title: インテグレーションツール
-permalink: tooling-integration-ja-JP.html
+permalink: docs/tooling-integration-ja-JP.html
 prev: more-about-refs-ja-JP.html
 next: addons-ja-JP.html
 ---

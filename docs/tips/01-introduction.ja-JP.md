@@ -2,7 +2,7 @@
 id: introduction-ja-JP
 title: イントロダクション
 layout: tips
-permalink: introduction-ja-JP.html
+permalink: tips/introduction-ja-JP.html
 next: inline-styles-ja-JP.html
 ---
 

@@ -48,12 +48,11 @@ describe('ReactIdentity', function() {
   });
 
   it('should use composite identity', function() {
-
-    var Wrapper = React.createClass({
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         return <a>{this.props.children}</a>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     var node1;
@@ -71,19 +70,16 @@ describe('ReactIdentity', function() {
   });
 
   function renderAComponentWithKeyIntoContainer(key, container) {
-
-    var Wrapper = React.createClass({
-
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         var s1 = <span ref="span1" key={key} />;
         var s2 = <span ref="span2" />;
 
         var map = {};
         map[key] = s2;
         return <div>{[s1, frag(map)]}</div>;
-      },
-
-    });
+      }
+    }
 
     var instance = ReactDOM.render(<Wrapper />, container);
     var span1 = instance.refs.span1;
@@ -135,8 +131,8 @@ describe('ReactIdentity', function() {
     var instance1 = <span />;
     var instance2 = <span />;
 
-    var TestComponent = React.createClass({
-      render: function() {
+    class TestComponent extends React.Component {
+      render() {
         return (
           <div>
             {instance2}
@@ -144,16 +140,14 @@ describe('ReactIdentity', function() {
             {this.props.children[1]}
           </div>
         );
-      },
-    });
+      }
+    }
 
-    var TestContainer = React.createClass({
-
-      render: function() {
+    class TestContainer extends React.Component {
+      render() {
         return <TestComponent>{instance0}{instance1}</TestComponent>;
-      },
-
-    });
+      }
+    }
 
     expect(function() {
 
@@ -167,8 +161,8 @@ describe('ReactIdentity', function() {
     var instance1 = <span />;
     var instance2 = <span />;
 
-    var TestComponent = React.createClass({
-      render: function() {
+    class TestComponent extends React.Component {
+      render() {
         return (
           <div>
             {instance2}
@@ -176,20 +170,18 @@ describe('ReactIdentity', function() {
             {this.props.children[1]}
           </div>
         );
-      },
-    });
+      }
+    }
 
-    var TestContainer = React.createClass({
-
-      render: function() {
+    class TestContainer extends React.Component {
+      render() {
         return (
           <div>
             <TestComponent>{instance0}{instance1}</TestComponent>
           </div>
         );
-      },
-
-    });
+      }
+    }
 
     expect(function() {
 
@@ -199,24 +191,22 @@ describe('ReactIdentity', function() {
   });
 
   it('should let text nodes retain their uniqueness', function() {
-    var TestComponent = React.createClass({
-      render: function() {
+    class TestComponent extends React.Component {
+      render() {
         return <div>{this.props.children}<span /></div>;
-      },
-    });
+      }
+    }
 
-    var TestContainer = React.createClass({
-
-      render: function() {
+    class TestContainer extends React.Component {
+      render() {
         return (
           <TestComponent>
             <div />
             {'second'}
           </TestComponent>
         );
-      },
-
-    });
+      }
+    }
 
     expect(function() {
 
@@ -226,33 +216,28 @@ describe('ReactIdentity', function() {
   });
 
   it('should retain key during updates in composite components', function() {
-
-    var TestComponent = React.createClass({
-      render: function() {
+    class TestComponent extends React.Component {
+      render() {
         return <div>{this.props.children}</div>;
-      },
-    });
+      }
+    }
 
-    var TestContainer = React.createClass({
+    class TestContainer extends React.Component {
+      state = {swapped: false};
 
-      getInitialState: function() {
-        return {swapped: false};
-      },
-
-      swap: function() {
+      swap = () => {
         this.setState({swapped: true});
-      },
+      };
 
-      render: function() {
+      render() {
         return (
           <TestComponent>
             {this.state.swapped ? this.props.second : this.props.first}
             {this.state.swapped ? this.props.first : this.props.second}
           </TestComponent>
         );
-      },
-
-    });
+      }
+    }
 
     var instance0 = <span key="A" />;
     var instance1 = <span key="B" />;
@@ -270,7 +255,6 @@ describe('ReactIdentity', function() {
 
     expect(beforeA).toBe(afterA);
     expect(beforeB).toBe(afterB);
-
   });
 
   it('should not allow implicit and explicit keys to collide', function() {

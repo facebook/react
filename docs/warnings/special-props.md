@@ -1,6 +1,7 @@
 ---
 title: Special Props Warning
 layout: single
+permalink: warnings/special-props.html
 ---
 
 Most props on a JSX element are passed on to the component, however, there are two special props (`ref` and `key`) which are used by React, and are thus not forwarded to the component.

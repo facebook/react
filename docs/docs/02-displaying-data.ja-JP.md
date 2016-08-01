@@ -1,7 +1,7 @@
 ---
 id: displaying-data-ja-JP
 title: データを表示する
-permalink: displaying-data-ja-JP.html
+permalink: docs/displaying-data-ja-JP.html
 prev: why-react-ja-JP.html
 next: jsx-in-depth-ja-JP.html
 
