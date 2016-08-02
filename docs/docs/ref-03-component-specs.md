@@ -140,9 +140,11 @@ Use this as an opportunity to react to a prop transition before `render()` is ca
 
 ```javascript
 componentWillReceiveProps: function(nextProps) {
-  this.setState({
-    likesIncreasing: nextProps.likeCount > this.props.likeCount
-  });
+  if (nextProps.initialLikeCount !== this.props.initialLikeCount) {
+    this.setState({
+      likeCount: nextProps.initialLikeCount
+    });
+  }
 }
 ```
 
