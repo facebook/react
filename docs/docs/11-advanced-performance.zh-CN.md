@@ -1,8 +1,9 @@
 ---
-id: advanced-performance
+id: advanced-performance-zh-CN
 title: 高级性能表现
-permalink: docs/advanced-performance.html
-prev: shallow-compare.html
+permalink: docs/advanced-performance-zh-CN.html
+prev: perf-zh-CN.html
+next: context-zh-CN.html
 next: context.html
 ---
 
