@@ -297,24 +297,28 @@ describe('ReactElementValidator', function() {
     React.createElement(123);
     expect(console.error.calls.count()).toBe(4);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
+        '(for composite components). See ' +
+        'https://facebook.github.io/react/warning/create-element-types.html'
     );
     expect(console.error.calls.argsFor(1)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
+        '(for composite components). See ' +
+        'https://facebook.github.io/react/warning/create-element-types.html'
     );
     expect(console.error.calls.argsFor(2)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
+        '(for composite components). See ' +
+        'https://facebook.github.io/react/warning/create-element-types.html'
     );
     expect(console.error.calls.argsFor(3)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
+        '(for composite components). See ' +
+        'https://facebook.github.io/react/warning/create-element-types.html'
     );
     React.createElement('div');
     expect(console.error.calls.count()).toBe(4);
@@ -336,10 +340,11 @@ describe('ReactElementValidator', function() {
     );
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components). Check the render method of ' +
-      '`ParentComp`.'
+      'Warning: React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
+        '(for composite components). See ' +
+        'https://facebook.github.io/react/warning/create-element-types.html ' +
+        'Check the render method of `ParentComp`.'
     );
   });
 
@@ -537,9 +542,10 @@ describe('ReactElementValidator', function() {
     void <Foo>{[<div />]}</Foo>;
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
+        '(for composite components). See ' +
+        'https://facebook.github.io/react/warning/create-element-types.html'
     );
   });
 
