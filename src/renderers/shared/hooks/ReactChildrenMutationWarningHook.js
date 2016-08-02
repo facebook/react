@@ -46,7 +46,7 @@ function handleElement(debugID, element) {
   );
 }
 
-var ReactDOMUnknownPropertyHook = {
+var ReactChildrenMutationWarningHook = {
   onBeforeMountComponent(debugID, element) {
     elements[debugID] = element;
   },
@@ -63,4 +63,4 @@ var ReactDOMUnknownPropertyHook = {
   },
 };
 
-module.exports = ReactDOMUnknownPropertyHook;
+module.exports = ReactChildrenMutationWarningHook;
