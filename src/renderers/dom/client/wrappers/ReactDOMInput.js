@@ -235,13 +235,15 @@ var ReactDOMInput = {
       case 'submit':
       case 'reset':
         break;
+      case 'color':
       case 'date':
       case 'datetime':
       case 'datetime-local':
       case 'month':
       case 'time':
       case 'week':
-        // this fixes the no-show issue on iOS Safari: https://github.com/facebook/react/issues/7233
+        // This fixes the no-show issue on iOS Safari and Android Chrome:
+        // https://github.com/facebook/react/issues/7233
         node.value = '';
         node.value = node.defaultValue;
         break;
