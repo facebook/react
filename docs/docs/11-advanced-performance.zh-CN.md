@@ -140,11 +140,11 @@ React.createClass({
 
 ## Immutable-js来救赎
 
-[Immutable-js](https://github.com/facebook/immutable-js)是Lee Byron写的JavaScript集合类型的库，最近被Facebook开源，它通过*结构共享*提供*不可变持续性*集合类型。一起看下这些特性的含义:
+[Immutable-js](https://github.com/facebook/immutable-js)是Lee Byron写的JavaScript集合类型的库，最近被Facebook开源，它通过*结构共享*提供*不可变持久化*集合类型。一起看下这些特性的含义:
 
 * *Immutable*: 一旦创建，集合就不能再改变。
 * *Persistent*: 新的集合类型可以通过之前的集合创建，比如set产生改变的集合。创建新的集合之后源集合仍然有效。
-* *Structural Sharing*: 新的集合会使用尽量多的源集合的结构，减少复制来节省空间和性能友好。如果新的集合和源集合相等，一般会返回源集合。
+* *Structural Sharing*: 新的集合会使用尽量多的源集合的结构，减少复制来节省空间和性能友好。如果新的集合和源集合相等，一般会返回源结构。
 
 不可变让跟踪改变非常简单；每次改变都是产生新的对象，所以我们仅需要对象的引用是否改变，比如，在这段简单的JavaScript代码：
 
