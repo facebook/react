@@ -82,6 +82,21 @@ describe('ReactDOMInput', function() {
     expect(node.defaultValue).toBe('1');
   });
 
+  it('should update `defaultValue` for uncontrolled date/time input', function() {
+    var container = document.createElement('div');
+
+    var node = ReactDOM.render(<input type="date" defaultValue="1980-01-01" />, container);
+
+    expect(node.value).toBe('1980-01-01');
+
+    ReactDOM.render(<input type="date" defaultValue="2000-01-01" />, container);
+
+    expect(node.value).toBe('1980-01-01');
+    expect(node.defaultValue).toBe('2000-01-01');
+
+    ReactDOM.render(<input type="date" />, container);
+  });
+
   it('should take `defaultValue` when changing to uncontrolled input', function() {
     var container = document.createElement('div');
 
@@ -790,4 +805,42 @@ describe('ReactDOMInput', function() {
     expect(node.value).toEqual('Test');
   });
 
+  it('resets value of date/time input to fix bugs in iOS Safari', function() {
+    // https://github.com/facebook/react/issues/7233
+    if (!ReactDOMFeatureFlags.useCreateElement) {
+      return;
+    }
+
+    function strify(x) {
+      return JSON.stringify(x, null, 2);
+    }
+
+    var log = [];
+    var originalCreateElement = document.createElement;
+    spyOn(document, 'createElement').and.callFake(function(type) {
+      var el = originalCreateElement.apply(this, arguments);
+      if (type === 'input') {
+        Object.defineProperty(el, 'value', {
+          set: function(val) {
+            log.push(`node.value = ${strify(val)}`);
+          },
+        });
+        spyOn(el, 'setAttribute').and.callFake(function(name, val) {
+          log.push(`node.setAttribute(${strify(name)}, ${strify(val)})`);
+        });
+      }
+      return el;
+    });
+
+    ReactTestUtils.renderIntoDocument(<input type="date" defaultValue="1980-01-01" />);
+    expect(log).toEqual([
+      'node.setAttribute("data-reactroot", "")',
+      'node.setAttribute("type", "date")',
+      'node.setAttribute("value", "1980-01-01")',
+      'node.value = ""',
+      'node.value = ""',
+      'node.setAttribute("checked", "")',
+      'node.setAttribute("checked", "")',
+    ]);
+  });
 });
