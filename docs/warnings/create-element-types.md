@@ -23,7 +23,7 @@ Ensure that your component is not of the following types: undefined, boolean, nu
 let Foo;
 
 if (false) {
-  Foo = <div />
+  Foo = () => <div />;
 }
 
 export default Foo; // Foo is undefined
