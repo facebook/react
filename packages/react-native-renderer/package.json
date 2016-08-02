@@ -15,5 +15,11 @@
   "homepage": "https://facebook.github.io/react-native/",
   "dependencies": {
     "react": "^15.3.0"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "README.md",
+    "index.js"
+  ]
 }

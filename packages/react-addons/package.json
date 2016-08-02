@@ -11,5 +11,11 @@
   "dependencies": {},
   "peerDependencies": {
     "react": "^15.3.0"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "README.md",
+    "index.js"
+  ],
 }
