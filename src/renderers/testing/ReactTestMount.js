@@ -130,6 +130,18 @@ ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
   return inst.toJSON();
 };
+ReactTestInstance.prototype.find = function(selector) {
+  var inst = getHostComponentFromComposite(this._component);
+  return inst.find(selector, false);
+};
+ReactTestInstance.prototype.findAll = function(selector) {
+  var inst = getHostComponentFromComposite(this._component);
+  return inst.findAll(selector);
+};
+ReactTestInstance.prototype.findByProps = function(props) {
+  var inst = getHostComponentFromComposite(this._component);
+  return inst.findByProps(props);
+};
 
 /**
  * As soon as `ReactMount` is refactored to not rely on the DOM, we can share

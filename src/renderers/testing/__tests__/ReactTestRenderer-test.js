@@ -198,4 +198,134 @@ describe('ReactTestRenderer', function() {
     expect(log).toEqual([null]);
   });
 
+  describe('selectors API', function() {
+    it('finds one element by name', function() {
+      class Component extends React.Component {
+        render() {
+          return (
+            <div>
+              <div>one element</div>
+              <myelement id={1} />
+              <span>
+                <div>
+                  <myelement id={2}/>
+                </div>
+              </span>
+            </div>
+          );
+        }
+      }
+
+      var renderer = ReactTestRenderer.create(<Component />);
+
+      var myelement = renderer.find('myelement');
+      expect(myelement.getProps().id).toEqual(1);
+    });
+
+    it('concatenates finders', function() {
+      class Component extends React.Component {
+        render() {
+          return (
+            <div>
+              <div>one element</div>
+              <myelement id={1} />
+              <span>
+                <div>
+                  <myelement id={2}/>
+                </div>
+              </span>
+            </div>
+          );
+        }
+      }
+
+      var renderer = ReactTestRenderer.create(<Component />);
+
+      var myelement = renderer.find('span').find('myelement');
+      expect(myelement.getProps().id).toEqual(2);
+    });
+
+    it('finds all elements by name', function() {
+      class Component extends React.Component {
+        render() {
+          return (
+            <div>
+              <div>one element</div>
+              <myelement id={1} />
+              <span>
+                <div>
+                  <myelement id={2}/>
+                </div>
+              </span>
+            </div>
+          );
+        }
+      }
+
+      var renderer = ReactTestRenderer.create(<Component />);
+
+      var myelements = renderer.findAll('myelement');
+      expect(myelements.length).toBe(2);
+      expect(myelements[0].getProps().id).toBe(1);
+      expect(myelements[1].getProps().id).toBe(2);
+    });
+
+    it('finds an element by props', function() {
+      class Component extends React.Component {
+        render() {
+          return (
+            <div>
+              <div>one element</div>
+              <myelement className={'found'} id={1} />
+              <span>
+                <div>
+                  <myelement className={'found'} id={2} another={true} />
+                </div>
+              </span>
+            </div>
+          );
+        }
+      }
+
+      var renderer = ReactTestRenderer.create(<Component />);
+
+      var myelement = renderer.findByProps({
+        className: 'found',
+        id: 2,
+      });
+      expect(myelement.getProps()).toEqual({
+        className: 'found',
+        id: 2,
+        another: true,
+      });
+    });
+
+    it('can use finders to trigger events', function() {
+      class Component extends React.Component {
+        constructor() {
+          super();
+          this.state = { clicked: 0 };
+        }
+
+        render() {
+          return (
+            <div>
+              <span>{this.state.clicked}</span>
+              <myelement onClick={this._onClick}/>
+            </div>
+          );
+        }
+        _onClick = () => {
+          this.setState({clicked: 1});
+        }
+      }
+
+      var renderer = ReactTestRenderer.create(<Component />);
+
+      expect(renderer.find('span').getChildren()[0].toJSON()).toEqual(0);
+
+      renderer.find('myelement').getProps().onClick();
+      expect(renderer.find('span').getChildren()[0].toJSON()).toEqual(1);
+    });
+  });
 });
