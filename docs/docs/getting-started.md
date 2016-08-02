@@ -34,7 +34,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
