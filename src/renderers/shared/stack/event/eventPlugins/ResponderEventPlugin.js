@@ -494,7 +494,7 @@ var ResponderEventPlugin = {
         console.error(
           'Ended a touch event which was not counted in `trackedTouchCount`.'
         );
-        return;
+        return null;
       }
     }
 
