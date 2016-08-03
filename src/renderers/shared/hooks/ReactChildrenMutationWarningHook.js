@@ -15,8 +15,6 @@ var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
 
-var elements = {};
-
 function handleElement(debugID, element) {
   if (element == null) {
     return;
@@ -47,19 +45,11 @@ function handleElement(debugID, element) {
 }
 
 var ReactChildrenMutationWarningHook = {
-  onBeforeMountComponent(debugID, element) {
-    elements[debugID] = element;
-  },
-  onBeforeUpdateComponent(debugID, element) {
-    elements[debugID] = element;
-  },
-  onComponentHasMounted(debugID) {
-    handleElement(debugID, elements[debugID]);
-    delete elements[debugID];
+  onMountComponent(debugID) {
+    handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
   onComponentHasUpdated(debugID) {
-    handleElement(debugID, elements[debugID]);
-    delete elements[debugID];
+    handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
 };
 
