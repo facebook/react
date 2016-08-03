@@ -525,7 +525,7 @@ function makeSimulator(eventType) {
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
-    fakeNativeEvent.type = eventType.toLowerCase();
+    fakeNativeEvent.type = eventType.toString();
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
