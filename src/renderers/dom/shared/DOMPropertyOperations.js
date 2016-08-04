@@ -134,10 +134,7 @@ var DOMPropertyOperations = {
     var propertyInfo = DOMProperty.getProperty(name)
 
     if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod) {
-        mutationMethod(node, value);
-      } else if (shouldIgnoreValue(propertyInfo, value)) {
+      if (shouldIgnoreValue(propertyInfo, value)) {
         this.deleteValueForProperty(node, name);
         return;
       } else if (propertyInfo.mustUseProperty) {
@@ -225,10 +222,7 @@ var DOMPropertyOperations = {
     var propertyInfo = DOMProperty.getProperty(name);
 
     if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod) {
-        mutationMethod(node, undefined);
-      } else if (propertyInfo.mustUseProperty) {
+      if (propertyInfo.mustUseProperty) {
         var propName = propertyInfo.propertyName;
         if (propertyInfo.hasBooleanValue) {
           node[propName] = false;

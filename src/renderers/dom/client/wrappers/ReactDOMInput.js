@@ -249,6 +249,7 @@ var ReactDOMInput = {
 
 function _handleChange(event) {
   var props = this._currentElement.props;
+
   var returnValue = LinkedValueUtils.executeOnChange(props, event);
 
   // Here we use asap to wait until all updates have propagated, which

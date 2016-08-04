@@ -260,6 +260,7 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.hasAttribute('data-foo')).toBe(false);
     });
 
+<<<<<<< a2e0258ebfc05358cd87ecd335a848eb7f6a1ab5
     it('should use mutation method where applicable', () => {
       var foobarSetter = jest.fn();
       // inject foobar DOM property

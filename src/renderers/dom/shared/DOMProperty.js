@@ -52,9 +52,6 @@ var DOMPropertyInjection = {
    * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
    * Property names not specified use the normalized name.
    *
-   * DOMMutationMethods: Properties that require special mutation methods. If
-   * `value` is undefined, the mutation method should unset the property.
-   *
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
@@ -63,7 +60,6 @@ var DOMPropertyInjection = {
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
     if (domPropertyConfig.isCustomAttribute) {
       DOMProperty._isCustomAttributeFunctions.push(
@@ -77,7 +73,7 @@ var DOMPropertyInjection = {
       var propConfig = property[1];
 
       invariant(
-        !DOMProperty.properties.filter(i => i.propertyName === propName).length,
+        !DOMProperty.propertyOrder.hasOwnProperty(propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
         '\'%s\' which has already been injected. You may be accidentally ' +
         'injecting the same DOM property config twice, or you may be ' +
@@ -89,7 +85,6 @@ var DOMPropertyInjection = {
         attributeName: lowerCased,
         attributeNamespace: null,
         propertyName: propName,
-        mutationMethod: null,
 
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
         noMarkup: checkMask(propConfig, Injection.NO_MARKUP),
@@ -127,10 +122,6 @@ var DOMPropertyInjection = {
 
       if (DOMPropertyNames.hasOwnProperty(propName)) {
         propertyInfo.propertyName = DOMPropertyNames[propName];
-      }
-
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 
       DOMProperty.propertyOrder[propName] = DOMProperty.properties.push(propertyInfo) - 1;
@@ -174,11 +165,10 @@ var DOMProperty = {
    * propertyName:
    *   Used on DOM node instances. (This includes properties that mutate due to
    *   external factors.)
-   * mutationMethod:
-   *   If non-null, used instead of the property or `setAttribute()` after
-   *   initial render.
    * mustUseProperty:
    *   Whether the property must be accessed and mutated as an object property.
+   * noMarkup:
+   *   Whether the property will generate HTML when rendered to a string.
    * hasBooleanValue:
    *   Whether the property should be removed when set to a falsey value.
    * hasNumericValue:
