@@ -12,7 +12,9 @@
 'use strict';
 
 var React = require('React');
-var ReactDOM = require('ReactDOM');
+// For the browser build we need to lazily load this since the DOM package
+// instantiates after the addons package.
+var ReactDOM = null;
 
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
@@ -124,6 +126,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   componentWillMount: function() {
+    if (!ReactDOM) {
+      ReactDOM = require('ReactDOM');
+    }
     this.classNameAndNodeQueue = [];
     this.transitionTimeouts = [];
   },

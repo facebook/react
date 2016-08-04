@@ -12,7 +12,9 @@
 'use strict';
 
 var React = require('React');
-var ReactInstanceMap = require('ReactInstanceMap');
+// We need to lazily require this for the browser build because the DOM
+// renderer gets initialized after the main React bundle.
+var ReactInstanceMap = null;
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var emptyFunction = require('emptyFunction');
@@ -45,6 +47,9 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentWillMount: function() {
+    if (!ReactInstanceMap) {
+      ReactInstanceMap = require('ReactInstanceMap');
+    }
     this.currentlyTransitioningKeys = {};
     this.keysToEnter = [];
     this.keysToLeave = [];

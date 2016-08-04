@@ -34,8 +34,20 @@ React.addons = {
 };
 
 if (__DEV__) {
-  React.addons.Perf = require('ReactPerf');
-  React.addons.TestUtils = require('ReactTestUtils');
+  // We need to lazily require these modules for the browser build since they
+  // will depend on DOM internals which hasn't loaded yet.
+  Object.defineProperty(React.addons, 'Perf', {
+    enumerable: true,
+    get: function() {
+      return require('ReactPerf');
+    },
+  });
+  Object.defineProperty(React.addons, 'TestUtils', {
+    enumerable: true,
+    get: function() {
+      return require('ReactTestUtils');
+    },
+  });
 }
 
 module.exports = React;
