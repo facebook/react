@@ -47,7 +47,6 @@ describe('ReactDOMInput', () => {
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
-    expect(node.getAttribute('value')).toBe('0');
     expect(node.value).toBe('0');
   });
 
@@ -917,6 +916,7 @@ describe('ReactDOMInput', () => {
     expect(log).toEqual([
       'node.setAttribute("data-reactroot", "")',
       'node.setAttribute("type", "date")',
+      'node.value = "1980-01-01"',
       'node.setAttribute("value", "1980-01-01")',
       'node.value = ""',
       'node.value = ""',

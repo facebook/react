@@ -88,10 +88,10 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.getProperty(name)
+
     if (propertyInfo) {
-      if (shouldIgnoreValue(propertyInfo, value)) {
+      if (propertyInfo.noMarkup || shouldIgnoreValue(propertyInfo, value)) {
         return '';
       }
       var attributeName = propertyInfo.attributeName;
@@ -131,8 +131,8 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.getProperty(name)
+
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
@@ -141,9 +141,12 @@ var DOMPropertyOperations = {
         this.deleteValueForProperty(node, name);
         return;
       } else if (propertyInfo.mustUseProperty) {
-        // Contrary to `setAttribute`, object properties are properly
-        // `toString`ed by IE8/9.
-        node[propertyInfo.propertyName] = value;
+        var propValue = node[propertyInfo.propertyName]
+        if (propValue == '' || propValue != value) {
+          // Contrary to `setAttribute`, object properties are properly
+          // `toString`ed by IE8/9.
+          node[propertyInfo.propertyName] = value;
+        }
       } else {
         var attributeName = propertyInfo.attributeName;
         var namespace = propertyInfo.attributeNamespace;
@@ -219,8 +222,8 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.getProperty(name);
+
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {

@@ -37,7 +37,7 @@ if (__DEV__) {
   var warnedProperties = {};
 
   var validateProperty = function(tagName, name, debugID) {
-    if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
+    if (DOMProperty.getProperty(name) || DOMProperty.isCustomAttribute(name)) {
       return true;
     }
     if (reactProps.hasOwnProperty(name) && reactProps[name] ||

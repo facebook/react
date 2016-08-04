@@ -502,7 +502,7 @@ describe('ReactDOMComponent', () => {
 
     it('should not incur unnecessary DOM mutations for string properties', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<div value="" />, container);
+      ReactDOM.render(<div itemProp="" />, container);
 
       var node = container.firstChild;
 
@@ -514,19 +514,19 @@ describe('ReactDOMComponent', () => {
         nodeValueSetter(key, value);
       };
 
-      ReactDOM.render(<div value="foo" />, container);
+      ReactDOM.render(<div itemProp="foo" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
-      ReactDOM.render(<div value="foo" />, container);
+      ReactDOM.render(<div itemProp="foo" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
-      ReactDOM.render(<div value={null} />, container);
+      ReactDOM.render(<div itemProp={null} />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
-      ReactDOM.render(<div value="" />, container);
+      ReactDOM.render(<div itemProp="" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(2);
 
       ReactDOM.render(<div />, container);

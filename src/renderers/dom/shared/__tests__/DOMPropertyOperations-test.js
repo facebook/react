@@ -264,7 +264,7 @@ describe('DOMPropertyOperations', () => {
       var foobarSetter = jest.fn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
-        Properties: {foobar: null},
+        Properties: [['foobar', null]],
         DOMMutationMethods: {
           foobar: foobarSetter,
         },
@@ -320,7 +320,9 @@ describe('DOMPropertyOperations', () => {
       // Suppose 'foobar' is a property that corresponds to the underlying
       // 'className' property:
       DOMProperty.injection.injectDOMPropertyConfig({
-        Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
+        Properties: [
+          ['foobar', DOMProperty.injection.MUST_USE_PROPERTY]
+        ],
         DOMPropertyNames: {
           foobar: 'className',
         },
@@ -421,7 +423,7 @@ describe('DOMPropertyOperations', () => {
         isCustomAttribute: function(name) {
           return name.indexOf('foo-') === 0;
         },
-        Properties: {foobar: null},
+        Properties: [['foobar', null]],
       });
 
       // Ensure old attributes still work
@@ -449,7 +451,7 @@ describe('DOMPropertyOperations', () => {
       // It should complain about double injections.
       expect(function() {
         DOMProperty.injection.injectDOMPropertyConfig(
-          {Properties: {foobar: null}}
+          {Properties: [['foobar', null]]}
         );
       }).toThrow();
     });

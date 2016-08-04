@@ -15,7 +15,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
-
+var ReactDOMComponent = require('ReactDOMComponent');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -59,20 +59,7 @@ var ReactDOMInput = {
     var value = LinkedValueUtils.getValue(props);
     var checked = LinkedValueUtils.getChecked(props);
 
-    var hostProps = Object.assign({
-      // Make sure we set .type before any other properties (setting .value
-      // before .type means .value is lost in IE11 and below)
-      type: undefined,
-      // Make sure we set .step before .value (setting .value before .step
-      // means .value is rounded on mount, based upon step precision)
-      step: undefined,
-      // Make sure we set .min & .max before .value (to ensure proper order
-      // in corner cases such as min or max deriving from value, e.g. Issue #7170)
-      min: undefined,
-      max: undefined,
-    }, props, {
-      defaultChecked: undefined,
-      defaultValue: undefined,
+    var hostProps = Object.assign({}, props, {
       value: value != null ? value : inst._wrapperState.initialValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
       onChange: inst._wrapperState.onChange,
@@ -199,25 +186,13 @@ var ReactDOMInput = {
       );
     }
 
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    var value = LinkedValueUtils.getValue(props);
+    var value = LinkedValueUtils.getValue(props)
     if (value != null) {
-
-      // Cast `value` to a string to ensure the value is set correctly. While
-      // browsers typically do this as necessary, jsdom doesn't.
-      var newValue = '' + value;
-
-      // To avoid side effects (such as losing text selection), only set value if changed
-      if (newValue !== node.value) {
-        node.value = newValue;
-      }
-    } else {
-      if (props.value == null && props.defaultValue != null) {
-        node.defaultValue = '' + props.defaultValue;
-      }
-      if (props.checked == null && props.defaultChecked != null) {
-        node.defaultChecked = !!props.defaultChecked;
-      }
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(inst),
+        'value',
+        value
+      );
     }
   },
 
@@ -274,7 +249,6 @@ var ReactDOMInput = {
 
 function _handleChange(event) {
   var props = this._currentElement.props;
-
   var returnValue = LinkedValueUtils.executeOnChange(props, event);
 
   // Here we use asap to wait until all updates have propagated, which

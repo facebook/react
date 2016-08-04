@@ -23,6 +23,7 @@ var DOMPropertyInjection = {
    * specifies how the associated DOM property should be accessed or rendered.
    */
   MUST_USE_PROPERTY: 0x1,
+  NO_MARKUP: 0x2,
   HAS_BOOLEAN_VALUE: 0x4,
   HAS_NUMERIC_VALUE: 0x8,
   HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
@@ -58,7 +59,7 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Injection = DOMPropertyInjection;
-    var Properties = domPropertyConfig.Properties || {};
+    var Properties = domPropertyConfig.Properties || [];
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
@@ -70,18 +71,19 @@ var DOMPropertyInjection = {
       );
     }
 
-    for (var propName in Properties) {
+    Properties.forEach(function(property) {
+      var propName = property[0]
+      var lowerCased = propName.toLowerCase();
+      var propConfig = property[1];
+
       invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
+        !DOMProperty.properties.filter(i => i.propertyName === propName).length,
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
         '\'%s\' which has already been injected. You may be accidentally ' +
         'injecting the same DOM property config twice, or you may be ' +
         'injecting two configs that have conflicting property names.',
         propName
       );
-
-      var lowerCased = propName.toLowerCase();
-      var propConfig = Properties[propName];
 
       var propertyInfo = {
         attributeName: lowerCased,
@@ -90,6 +92,7 @@ var DOMPropertyInjection = {
         mutationMethod: null,
 
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
+        noMarkup: checkMask(propConfig, Injection.NO_MARKUP),
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
         hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
         hasPositiveNumericValue:
@@ -97,6 +100,7 @@ var DOMPropertyInjection = {
         hasOverloadedBooleanValue:
           checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
       };
+
       invariant(
         propertyInfo.hasBooleanValue + propertyInfo.hasNumericValue +
           propertyInfo.hasOverloadedBooleanValue <= 1,
@@ -129,8 +133,8 @@ var DOMPropertyInjection = {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 
-      DOMProperty.properties[propName] = propertyInfo;
-    }
+      DOMProperty.propertyOrder[propName] = DOMProperty.properties.push(propertyInfo) - 1;
+    })
   },
 };
 
@@ -188,7 +192,21 @@ var DOMProperty = {
    *   Removed when strictly equal to false; present without a value when
    *   strictly equal to true; present with a value otherwise.
    */
-  properties: {},
+  properties: [],
+
+  propertyOrder: {},
+
+  getProperty: function (name) {
+    var slot = DOMProperty.propertyOrder[name];
+
+    return slot != null ? DOMProperty.properties[slot] : null
+  },
+
+  getPropertyAssignmentOrder(props) {
+    return Object.keys(props).sort(function (a, b) {
+      return DOMProperty.propertyOrder[a] > DOMProperty.propertyOrder[b] ? 1 : -1
+    })
+  },
 
   /**
    * Mapping from lowercase property names to the properly cased version, used
