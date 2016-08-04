@@ -12,9 +12,7 @@
 'use strict';
 
 var React = require('React');
-// We need to lazily require this for the browser build because the DOM
-// renderer gets initialized after the main React bundle.
-var ReactInstanceMap = null;
+var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var emptyFunction = require('emptyFunction');
@@ -47,9 +45,6 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentWillMount: function() {
-    if (!ReactInstanceMap) {
-      ReactInstanceMap = require('ReactInstanceMap');
-    }
     this.currentlyTransitioningKeys = {};
     this.keysToEnter = [];
     this.keysToLeave = [];
@@ -69,7 +64,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       nextChildMapping = ReactTransitionChildMapping.getChildMapping(
         nextProps.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       nextChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -142,7 +137,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
         this.props.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -182,7 +177,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
         this.props.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -223,7 +218,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
         this.props.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(

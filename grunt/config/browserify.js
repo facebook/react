@@ -7,6 +7,7 @@ var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
 var derequire = require('derequire');
+var aliasify = require('aliasify');
 var globalShim = require('browserify-global-shim');
 var collapser = require('bundle-collapser/plugin');
 
@@ -14,7 +15,6 @@ var envifyDev = envify({NODE_ENV: process.env.NODE_ENV || 'development'});
 var envifyProd = envify({NODE_ENV: process.env.NODE_ENV || 'production'});
 
 var SECRET_INTERNALS_NAME = 'React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED';
-var SECRET_DOM_INTERNALS_NAME = 'ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED';
 
 var shimSharedModules = globalShim.configure({
   './ReactCurrentOwner': SECRET_INTERNALS_NAME + '.ReactCurrentOwner',
@@ -25,25 +25,10 @@ var shimSharedModules = globalShim.configure({
   './ReactChildren': 'React.Children',
 });
 
-// Shim references to ReactDOM internals from addons.
-var shimDOM = globalShim.configure({
-  './ReactDOM': 'ReactDOM',
-  './ReactInstanceMap': SECRET_DOM_INTERNALS_NAME + '.ReactInstanceMap',
-
-  // TestUtils pulls in a bunch of internals.
-  './EventConstants': SECRET_DOM_INTERNALS_NAME + '.EventConstants',
-  './EventPluginHub': SECRET_DOM_INTERNALS_NAME + '.EventPluginHub',
-  './EventPluginRegistry': SECRET_DOM_INTERNALS_NAME + '.EventPluginRegistry',
-  './EventPropagators': SECRET_DOM_INTERNALS_NAME + '.EventPropagators',
-  './ReactDefaultInjection': SECRET_DOM_INTERNALS_NAME + '.ReactDefaultInjection',
-  './ReactDOMComponentTree': SECRET_DOM_INTERNALS_NAME + '.ReactDOMComponentTree',
-  './ReactBrowserEventEmitter': SECRET_DOM_INTERNALS_NAME + '.ReactBrowserEventEmitter',
-  './ReactCompositeComponent': SECRET_DOM_INTERNALS_NAME + '.ReactCompositeComponent',
-  './ReactInstrumentation': SECRET_DOM_INTERNALS_NAME + '.ReactInstrumentation',
-  './ReactReconciler': SECRET_DOM_INTERNALS_NAME + '.ReactReconciler',
-  './ReactUpdates': SECRET_DOM_INTERNALS_NAME + '.ReactUpdates',
-  './SyntheticEvent': SECRET_DOM_INTERNALS_NAME + '.SyntheticEvent',
-  './findDOMNode': SECRET_DOM_INTERNALS_NAME + '.findDOMNode',
+var shimDOMModules = aliasify.configure({
+  'aliases': {
+    './ReactAddonsDOMDependencies': './build/modules/ReactAddonsDOMDependenciesUMDShim.js',
+  },
 });
 
 var SIMPLE_TEMPLATE =
@@ -121,7 +106,7 @@ var addons = {
   debug: false,
   standalone: 'React',
   packageName: 'React (with addons)',
-  transforms: [shimDOM],
+  transforms: [shimDOMModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
   after: [derequire, simpleBannerify],
@@ -135,7 +120,7 @@ var addonsMin = {
   debug: false,
   standalone: 'React',
   packageName: 'React (with addons)',
-  transforms: [shimDOM, envifyProd, uglifyify],
+  transforms: [shimDOMModules, envifyProd, uglifyify],
   globalTransforms: [envifyProd],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle

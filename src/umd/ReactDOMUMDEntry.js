@@ -20,23 +20,13 @@ var ReactDOMUMDEntry = Object.assign({
 }, ReactDOM);
 
 if (__DEV__) {
-  // These are used by ReactTestUtils in ReactWithAddons. Ugh.
   Object.assign(
     ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
-      EventConstants: require('EventConstants'),
-      EventPluginHub: require('EventPluginHub'),
-      EventPluginRegistry: require('EventPluginRegistry'),
-      EventPropagators: require('EventPropagators'),
-      ReactDefaultInjection: require('ReactDefaultInjection'),
-      ReactDOMComponentTree: require('ReactDOMComponentTree'),
-      ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
-      ReactCompositeComponent: require('ReactCompositeComponent'),
-      ReactInstrumentation: require('ReactInstrumentation'),
-      ReactReconciler: require('ReactReconciler'),
-      ReactUpdates: require('ReactUpdates'),
-      SyntheticEvent: require('SyntheticEvent'),
-      findDOMNode: require('findDOMNode'),
+      // ReactPerf and ReactTestUtils currently only work with the DOM renderer
+      // so we expose them from here, but only in DEV mode.
+      ReactPerf: require('ReactPerf'),
+      ReactTestUtils: require('ReactTestUtils'),
     }
   );
 }
