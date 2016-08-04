@@ -18,7 +18,7 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { Scheduler } from 'ReactFiberScheduler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { StateQueue } from 'ReactFiberStateQueue';
+import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var {
   reconcileChildFibers,
@@ -42,10 +42,10 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  createStateQueue,
+  createUpdateQueue,
   addToQueue,
-  mergeStateQueue,
-} = require('ReactFiberStateQueue');
+  mergeUpdateQueue,
+} = require('ReactFiberUpdateQueue');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler : () => Scheduler) {
@@ -115,13 +115,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     return workInProgress.child;
   }
 
-  function scheduleUpdate(fiber: Fiber, stateQueue: StateQueue, priorityLevel : PriorityLevel): void {
+  function scheduleUpdate(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel): void {
     const { scheduleLowPriWork } = getScheduler();
-    fiber.stateQueue = stateQueue;
+    fiber.updateQueue = updateQueue;
     // Schedule update on the alternate as well, since we don't know which tree
     // is current.
     if (fiber.alternate !== null) {
-      fiber.alternate.stateQueue = stateQueue;
+      fiber.alternate.updateQueue = updateQueue;
     }
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
@@ -151,10 +151,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   const updater = {
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
-      const stateQueue = fiber.stateQueue ?
-        addToQueue(fiber.stateQueue, partialState) :
-        createStateQueue(partialState);
-      scheduleUpdate(fiber, stateQueue, LowPriority);
+      const updateQueue = fiber.updateQueue ?
+        addToQueue(fiber.updateQueue, partialState) :
+        createUpdateQueue(partialState);
+      scheduleUpdate(fiber, updateQueue, LowPriority);
     },
   };
 
@@ -166,21 +166,22 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     if (!props && current) {
       props = current.memoizedProps;
     }
-    // Compute the state using the memoized state and the pending state queue.
-    var stateQueue = workInProgress.stateQueue;
-    var state = current ?
-       mergeStateQueue(stateQueue, current.memoizedState, props) :
-       mergeStateQueue(stateQueue, null, props);
+    // Compute the state using the memoized state and the update queue.
+    var updateQueue = workInProgress.updateQueue;
+    var previousState = current ? current.memoizedState : null;
+    var state = updateQueue ?
+      mergeUpdateQueue(updateQueue, previousState, props) :
+      previousState;
 
     var instance = workInProgress.stateNode;
     if (!instance) {
       var ctor = workInProgress.type;
       workInProgress.stateNode = instance = new ctor(props);
       state = instance.state || null;
-      // The initial state must be added to the pending state queue in case
+      // The initial state must be added to the update queue in case
       // setState is called before the initial render.
       if (state !== null) {
-        workInProgress.stateQueue = createStateQueue(state);
+        workInProgress.updateQueue = createUpdateQueue(state);
       }
       // The instance needs access to the fiber so that it can schedule updates
       ReactInstanceMap.set(instance, workInProgress);
@@ -331,8 +332,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       workInProgress.memoizedProps !== null &&
       workInProgress.pendingProps === workInProgress.memoizedProps
       )) &&
-      workInProgress.stateQueue === null
-      ) {
+      workInProgress.updateQueue === null) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
