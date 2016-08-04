@@ -403,6 +403,27 @@ describe('DOMPropertyOperations', () => {
         stubNode.options[1].selected
       ).toBe(false);
     });
+
+    it('should not update numeric values when the input.value is loosely the same', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'type', 'number');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+
+      Object.defineProperty(stubNode, 'value', {
+        get() {
+          return this._value;
+        },
+        set(value) {
+          if (value == this._value) {
+            throw 'Should not have overriden value ' + this._value + ' with ' + value
+          }
+
+          this._value = value
+        }
+      })
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 3e1);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '3e1');
+    });
   });
 
   describe('injectDOMPropertyConfig', () => {
@@ -457,4 +478,5 @@ describe('DOMPropertyOperations', () => {
       }).toThrow();
     });
   });
+
 });
