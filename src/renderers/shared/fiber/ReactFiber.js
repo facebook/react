@@ -15,7 +15,7 @@
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { StateQueue } from 'ReactFiberStateQueue';
+import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -78,7 +78,7 @@ export type Fiber = Instance & {
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
   // A queue of local state updates.
-  stateQueue: ?StateQueue,
+  updateQueue: ?UpdateQueue,
   // The state used to create the output. This is a full state object.
   memoizedState: any,
   // Output is the return value of this fiber, or a linked list of return values
@@ -156,7 +156,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     pendingProps: null,
     memoizedProps: null,
-    stateQueue: null,
+    updateQueue: null,
     memoizedState: null,
     output: null,
 
@@ -199,7 +199,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
     alt.ref = fiber.ref;
     alt.pendingProps = fiber.pendingProps; // TODO: Pass as argument.
-    alt.stateQueue = fiber.stateQueue;
+    alt.updateQueue = fiber.updateQueue;
     alt.pendingWorkPriority = priorityLevel;
 
     alt.child = fiber.child;
@@ -225,7 +225,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
-  alt.stateQueue = fiber.stateQueue;
+  alt.updateQueue = fiber.updateQueue;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;

@@ -6,53 +6,59 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactFiberStateQueue
+ * @providesModule ReactFiberUpdateQueue
  * @flow
  */
 
 'use strict';
 
-type StateQueueNode = {
+type UpdateQueueNode = {
   partialState: any,
   callback: ?Function,
-  next: ?StateQueueNode,
+  next: ?UpdateQueueNode,
 };
 
-export type StateQueue = StateQueueNode & {
-  tail: ?StateQueueNode
+export type UpdateQueue = UpdateQueueNode & {
+  tail: UpdateQueueNode
 };
 
-exports.createStateQueue = function(partialState : mixed) : StateQueue {
-  return {
+exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
+  const queue = {
     partialState,
     callback: null,
     next: null,
-    tail: null,
+    tail: (null : any),
   };
+  queue.tail = queue;
+  return queue;
 };
 
-exports.addToQueue = function(queue : StateQueue, partialState : mixed) : StateQueue {
+exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
   const node = {
     partialState,
     callback: null,
     next: null,
   };
-  if (!queue.tail) {
-    queue.next = node;
-  } else {
-    queue.tail.next = node;
-  }
+  queue.tail.next = node;
   queue.tail = node;
   return queue;
 };
 
-exports.mergeStateQueue = function(queue : ?StateQueue, prevState : any, props : any) : any {
-  let node : ?StateQueueNode = queue;
-  if (!node) {
-    return prevState;
+exports.callCallbacks = function(queue : UpdateQueue, partialState : mixed) {
+  let node : ?UpdateQueueNode = queue;
+  while (node) {
+    if (node.callback) {
+      const { callback } = node;
+      callback();
+    }
+    node = node.next;
   }
+};
+
+exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props : any) : any {
+  let node : ?UpdateQueueNode = queue;
   let state = Object.assign({}, prevState);
-  do {
+  while (node) {
     let partialState;
     if (typeof node.partialState === 'function') {
       const updateFn = node.partialState;
@@ -61,6 +67,7 @@ exports.mergeStateQueue = function(queue : ?StateQueue, prevState : any, props :
       partialState = node.partialState;
     }
     state = Object.assign(state, partialState);
-  } while (node = node.next);
+    node = node.next;
+  }
   return state;
 };
