@@ -682,4 +682,44 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     expect(instance.state).toEqual({ d: 'd' });
   });
+
+  it('can forceUpdate', () => {
+    const ops = [];
+
+    function Baz() {
+      ops.push('Baz');
+      return <div />;
+    }
+
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+      }
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        ops.push('Bar');
+        return <Baz />;
+      }
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+    instance.forceUpdate();
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
+  });
 });
