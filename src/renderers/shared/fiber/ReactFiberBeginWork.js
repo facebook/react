@@ -163,6 +163,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       updateQueue.isReplace = true;
       scheduleUpdate(fiber, updateQueue, LowPriority);
     },
+    enqueueForceUpdate(instance) {
+      const fiber = ReactInstanceMap.get(instance);
+      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
+      updateQueue.isForced = true;
+      scheduleUpdate(fiber, updateQueue, LowPriority);
+    },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       let updateQueue = fiber.updateQueue ?
@@ -204,7 +210,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       // The instance needs access to the fiber so that it can schedule updates
       ReactInstanceMap.set(instance, workInProgress);
       instance.updater = updater;
-    } else if (typeof instance.shouldComponentUpdate === 'function') {
+    } else if (typeof instance.shouldComponentUpdate === 'function' &&
+               !(updateQueue && updateQueue.isForced)) {
       if (workInProgress.memoizedProps !== null) {
         // Reset the props, in case this is a ping-pong case rather than a
         // completed update case. For the completed update case, the instance
