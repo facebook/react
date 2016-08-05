@@ -20,6 +20,7 @@ type UpdateQueueNode = {
 };
 
 export type UpdateQueue = UpdateQueueNode & {
+  isReplace: boolean,
   tail: UpdateQueueNode
 };
 
@@ -29,6 +30,7 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
     callback: null,
     callbackWasCalled: false,
     next: null,
+    isReplace: false,
     tail: (null : any),
   };
   queue.tail = queue;
@@ -69,7 +71,7 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
 
 exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props : any) : any {
   let node : ?UpdateQueueNode = queue;
-  let state = Object.assign({}, prevState);
+  let state = queue.isReplace ? null : Object.assign({}, prevState);
   while (node) {
     let partialState;
     if (typeof node.partialState === 'function') {
@@ -78,7 +80,7 @@ exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props 
     } else {
       partialState = node.partialState;
     }
-    state = Object.assign(state, partialState);
+    state = Object.assign(state || {}, partialState);
     node = node.next;
   }
   return state;
