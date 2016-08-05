@@ -21,6 +21,7 @@ type UpdateQueueNode = {
 
 export type UpdateQueue = UpdateQueueNode & {
   isReplace: boolean,
+  isForced: boolean,
   tail: UpdateQueueNode
 };
 
@@ -31,6 +32,7 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
     callbackWasCalled: false,
     next: null,
     isReplace: false,
+    isForced: false,
     tail: (null : any),
   };
   queue.tail = queue;
