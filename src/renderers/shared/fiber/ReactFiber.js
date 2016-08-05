@@ -100,12 +100,9 @@ export type Fiber = Instance & {
   // memory if we need to.
   alternate: ?Fiber,
 
-  // Keeps track if we've completed this node or if we're currently in the
-  // middle of processing it. We really should know this based on pendingProps
-  // or something else. We could also reuse the tag for this purpose. However,
-  // I'm not really sure so I'll use a flag for now.
-  // TODO: Find another way to infer this flag.
-  hasWorkInProgress: bool,
+  // Keeps track of the children that are currently being processed but have not
+  // yet completed.
+  childInProgress: ?Fiber,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
@@ -145,7 +142,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     pendingWorkPriority: NoWork,
 
-    hasWorkInProgress: false,
+    childInProgress: null,
 
     alternate: null,
 
@@ -167,6 +164,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   if (alt) {
     alt.stateNode = fiber.stateNode;
     alt.child = fiber.child;
+    alt.childInProgress = fiber.childInProgress;
     alt.sibling = fiber.sibling;
     alt.ref = alt.ref;
     alt.pendingProps = fiber.pendingProps;
@@ -186,8 +184,11 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.type = fiber.type;
   alt.stateNode = fiber.stateNode;
   alt.child = fiber.child;
+  alt.childInProgress = fiber.childInProgress;
   alt.sibling = fiber.sibling;
   alt.ref = alt.ref;
+  // pendingProps is here for symmetry but is unnecessary in practice for now.
+  alt.pendingProps = fiber.pendingProps;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.alternate = fiber;
@@ -201,13 +202,13 @@ exports.createHostContainerFiber = function() {
 };
 
 exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) {
-  const fiber = exports.createFiberFromElementType(element.type, element.key);
+  const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromElementType = function(type : mixed, key : null | string) {
+function createFiberFromElementType(type : mixed, key : null | string) {
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
@@ -224,7 +225,9 @@ exports.createFiberFromElementType = function(type : mixed, key : null | string)
     throw new Error('Unknown component type: ' + typeof type);
   }
   return fiber;
-};
+}
+
+exports.createFiberFromElementType = createFiberFromElementType;
 
 exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) {
   const fiber = createFiber(CoroutineComponent, coroutine.key);

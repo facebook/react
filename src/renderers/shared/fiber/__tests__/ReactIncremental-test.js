@@ -18,7 +18,6 @@ describe('ReactIncremental', function() {
   beforeEach(function() {
     React = require('React');
     ReactNoop = require('ReactNoop');
-    spyOn(console, 'log');
   });
 
   it('should render a simple component', function() {
@@ -284,7 +283,6 @@ describe('ReactIncremental', function() {
   });
 
   it('can resume work in a bailed subtree within one pass', function() {
-
     var ops = [];
 
     function Bar(props) {
@@ -292,11 +290,16 @@ describe('ReactIncremental', function() {
       return <div>{props.children}</div>;
     }
 
-    function Tester() {
-      // This component is just here to ensure that the bail out is
-      // in fact in effect in the expected place for this test.
-      ops.push('Tester');
-      return <div />;
+    class Tester extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        // This component is just here to ensure that the bail out is
+        // in fact in effect in the expected place for this test.
+        ops.push('Tester');
+        return <div />;
+      }
     }
 
     function Middle(props) {
@@ -304,23 +307,30 @@ describe('ReactIncremental', function() {
       return <span>{props.children}</span>;
     }
 
-    var middleContent = (
-      <aaa>
-        <Tester />
-        <bbb hidden={true}>
-          <ccc>
-            <Middle>Hi</Middle>
-          </ccc>
-        </bbb>
-      </aaa>
-    );
+    // Should content not just bail out on current, not workInProgress?
+
+    class Content extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return [
+          <Tester unused={this.props.unused} />,
+          <bbb hidden={true}>
+            <ccc>
+              <Middle>Hi</Middle>
+            </ccc>
+          </bbb>,
+        ];
+      }
+    }
 
     function Foo(props) {
       ops.push('Foo');
       return (
         <div hidden={props.text === 'bar'}>
           <Bar>{props.text}</Bar>
-          {middleContent}
+          <Content unused={props.text} />
           <Bar>{props.text}</Bar>
         </div>
       );
@@ -350,7 +360,6 @@ describe('ReactIncremental', function() {
     // after them which is not correct.
     ReactNoop.flush();
     expect(ops).toEqual(['Bar', 'Middle', 'Bar']);
-
   });
 
   it('can reuse work done after being preempted', function() {
@@ -375,19 +384,23 @@ describe('ReactIncremental', function() {
       </div>
     );
 
+    var step0 = (
+      <div>
+        <Middle>Hi</Middle>
+        <Bar>{'Foo'}</Bar>
+        <Middle>There</Middle>
+      </div>
+    );
+
     function Foo(props) {
       ops.push('Foo');
       return (
         <div>
-          <Bar>{props.text}</Bar>
+          <Bar>{props.text2}</Bar>
           <div hidden={true}>
             {
               props.step === 0 ?
-                <div>
-                  <Middle>Hi</Middle>
-                  <Bar>{props.text}</Bar>
-                  <Middle>There</Middle>
-                </div>
+                step0
                 : middleContent
             }
           </div>
@@ -395,13 +408,111 @@ describe('ReactIncremental', function() {
       );
     }
 
-    // Start rendering an update
+    // Init
+    ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
+    ReactNoop.flushLowPri(55);
+
+    // We only finish the higher priority work. So the low pri content
+    // has not yet finished mounting.
+    expect(ops).toEqual(['Foo', 'Bar', 'Middle', 'Bar']);
+
+    ops = [];
+
+    // Interupt the rendering with a quick update. This should not touch the
+    // middle content.
+    ReactNoop.render(<Foo text="foo" text2="bar" step={0} />);
+    ReactNoop.flush();
+
+    // We've now rendered the entire tree but we didn't have to redo the work
+    // done by the first Middle and Bar already.
+    expect(ops).toEqual(['Foo', 'Bar', 'Middle']);
+
+    ops = [];
+
+    // Make a quick update which will schedule low priority work to
+    // update the middle content.
+    ReactNoop.render(<Foo text="bar" text2="bar" step={1} />);
+    ReactNoop.flushLowPri(30);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // The middle content is now pending rendering...
+    ReactNoop.flushLowPri(30);
+    expect(ops).toEqual(['Middle', 'Bar']);
+
+    ops = [];
+
+    // but we'll interupt it to render some higher priority work.
+    // The middle content will bailout so it remains untouched.
+    ReactNoop.render(<Foo text="foo" text2="bar" step={1} />);
+    ReactNoop.flushLowPri(30);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // Since we did nothing to the middle subtree during the interuption,
+    // we should be able to reuse the reconciliation work that we already did
+    // without restarting.
+    ReactNoop.flush();
+    expect(ops).toEqual(['Middle']);
+
+  });
+
+  it('can reuse work if shouldComponentUpdate is false, after being preempted', function() {
+
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    class Middle extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        return this.props.children !== nextProps.children;
+      }
+      render() {
+        ops.push('Middle');
+        return <span>{this.props.children}</span>;
+      }
+    }
+
+    class Content extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        return this.props.step !== nextProps.step;
+      }
+      render() {
+        ops.push('Content');
+        return (
+          <div>
+            <Middle>{this.props.step === 0 ? 'Hi' : 'Hello'}</Middle>
+            <Bar>{this.props.step === 0 ? this.props.text : '-'}</Bar>
+            <Middle>{this.props.step === 0 ? 'There' : 'World'}</Middle>
+          </div>
+        );
+      }
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar>{props.text}</Bar>
+          <div hidden={true}>
+            <Content step={props.step} text={props.text} />
+          </div>
+        </div>
+      );
+    }
 
     // Init
     ReactNoop.render(<Foo text="foo" step={0} />);
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Foo', 'Bar', 'Middle', 'Bar', 'Middle']);
+    expect(ops).toEqual(['Foo', 'Bar', 'Content', 'Middle', 'Bar', 'Middle']);
 
     ops = [];
 
@@ -416,7 +527,7 @@ describe('ReactIncremental', function() {
 
     // The middle content is now pending rendering...
     ReactNoop.flushLowPri(30);
-    expect(ops).toEqual(['Middle', 'Bar']);
+    expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
 
     ops = [];
 
@@ -433,8 +544,16 @@ describe('ReactIncremental', function() {
     // we should be able to reuse the reconciliation work that we already did
     // without restarting.
     ReactNoop.flush();
-    expect(ops).toEqual(['Middle']);
+    // TODO: Content never fully completed its render so can't completely bail
+    // out on the entire subtree. However, we could do a shallow bail out and
+    // not rerender Content, but keep going down the incomplete tree.
+    // Normally shouldComponentUpdate->false is not enough to determine that we
+    // can safely reuse the old props, but I think in this case it would be ok,
+    // since it is a resume of already started work.
+    // Because of the above we can also not reuse the work of Bar because the
+    // rerender of Content will generate a new element which will mean we don't
+    // auto-bail out from Bar.
+    expect(ops).toEqual(['Content', 'Bar', 'Middle']);
 
   });
-
 });
