@@ -16,7 +16,7 @@ import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 
-type DOMContainerElement = Element & { _reactRootContainer: Object };
+type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
 type Props = { };
@@ -89,6 +89,16 @@ var ReactDOM = {
       container._reactRootContainer = DOMRenderer.mountContainer(element, container);
     } else {
       DOMRenderer.updateContainer(element, container._reactRootContainer);
+    }
+  },
+
+  unmountComponentAtNode(container : DOMContainerElement) {
+    const root = container._reactRootContainer;
+    if (root) {
+      // TODO: Is it safe to reset this now or should I wait since this
+      // unmount could be deferred?
+      container._reactRootContainer = null;
+      DOMRenderer.unmountContainer(root);
     }
   },
 

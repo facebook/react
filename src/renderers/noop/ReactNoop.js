@@ -30,8 +30,8 @@ var scheduledLowPriCallback = null;
 const TERMINAL_TAG = 99;
 
 type Container = { rootID: number, children: Array<Instance> };
-type Props = { };
-type Instance = { tag: 99, type: string, id: number, children: Array<Instance> };
+type Props = { prop: any };
+type Instance = { tag: 99, type: string, id: number, children: Array<Instance>, prop: any };
 
 var instanceCounter = 0;
 
@@ -58,17 +58,16 @@ function flattenChildren(children : HostChildren<Instance>) {
 var NoopRenderer = ReactFiberReconciler({
 
   updateContainer(containerInfo : Container, children : HostChildren<Instance>) : void {
-    console.log('Update container #' + containerInfo.rootID);
     containerInfo.children = flattenChildren(children);
   },
 
   createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
-    console.log('Create instance #' + instanceCounter);
     const inst = {
       tag: TERMINAL_TAG,
       id: instanceCounter++,
       type: type,
       children: flattenChildren(children),
+      prop: props.prop,
     };
     // Hide from unit tests
     Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
@@ -77,17 +76,15 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : boolean {
-    console.log('Prepare for update on #' + instance.id);
     return true;
   },
 
   commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
-    console.log('Commit update on #' + instance.id);
     instance.children = flattenChildren(children);
+    instance.prop = newProps.prop;
   },
 
   deleteInstance(instance : Instance) : void {
-    console.log('Delete #' + instance.id);
   },
 
   scheduleHighPriCallback(callback) {
@@ -170,9 +167,21 @@ var ReactNoop = {
 
     function logFiber(fiber : Fiber, depth) {
       console.log(
-        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), 
+        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
         '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
       );
+      const childInProgress = fiber.childInProgress;
+      if (childInProgress) {
+        if (childInProgress === fiber.child) {
+          console.log('  '.repeat(depth + 1) + 'ERROR: IN PROGRESS == CURRENT');
+        } else {
+          console.log('  '.repeat(depth + 1) + 'IN PROGRESS');
+          logFiber(childInProgress, depth + 1);
+          if (fiber.child) {
+            console.log('  '.repeat(depth + 1) + 'CURRENT');
+          }
+        }
+      }
       if (fiber.child) {
         logFiber(fiber.child, depth + 1);
       }

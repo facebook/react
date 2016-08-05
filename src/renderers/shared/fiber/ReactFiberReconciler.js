@@ -73,7 +73,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       container.pendingProps = element;
       container.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(root);
+      scheduleLowPriWork(root, LowPriority);
 
       // It may seem strange that we don't return the root here, but that will
       // allow us to have containers that are in the middle of the tree instead
@@ -88,7 +88,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       root.current.pendingProps = element;
       root.current.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(root);
+      scheduleLowPriWork(root, LowPriority);
     },
 
     unmountContainer(container : OpaqueNode) : void {
@@ -98,7 +98,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       root.current.pendingProps = [];
       root.current.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(root);
+      scheduleLowPriWork(root, LowPriority);
     },
 
     getPublicRootInstance(container : OpaqueNode) : (C | null) {
