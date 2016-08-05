@@ -29,7 +29,7 @@ var didWarnUncontrolledToControlled = false;
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
-    ReactDOMInput.updateWrapper(this);
+    ReactDOMInput.updateWrapper(this, true);
   }
 }
 
@@ -143,7 +143,7 @@ var ReactDOMInput = {
     }
   },
 
-  updateWrapper: function(inst) {
+  updateWrapper: function(inst, forceUpdate) {
     var props = inst._currentElement.props;
 
     if (__DEV__) {
@@ -176,59 +176,32 @@ var ReactDOMInput = {
       }
     }
 
-    // TODO: Shouldn't this be getChecked(props)?
-    var checked = props.checked;
-    if (checked != null) {
-      DOMPropertyOperations.setValueForProperty(
-        ReactDOMComponentTree.getNodeFromInstance(inst),
-        'checked',
-        checked || false
-      );
-    }
+    if (forceUpdate === true) {
+      // TODO: Shouldn't this be getChecked(props)?
+      var checked = props.checked;
+      if (checked != null) {
+        DOMPropertyOperations.setValueForProperty(
+          ReactDOMComponentTree.getNodeFromInstance(inst),
+          'checked',
+          checked || false
+        );
+      }
 
-    var value = LinkedValueUtils.getValue(props)
-    if (value != null) {
-      DOMPropertyOperations.setValueForProperty(
-        ReactDOMComponentTree.getNodeFromInstance(inst),
-        'value',
-        value
-      );
+      var value = LinkedValueUtils.getValue(props)
+      if (value != null) {
+        DOMPropertyOperations.setValueForProperty(
+          ReactDOMComponentTree.getNodeFromInstance(inst),
+          'value',
+          value
+        );
+      }
     }
   },
 
   postMountWrapper: function(inst) {
-    var props = inst._currentElement.props;
-
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-
-    // Detach value from defaultValue. We won't do anything if we're working on
-    // submit or reset inputs as those values & defaultValues are linked. They
-    // are not resetable nodes so this operation doesn't matter and actually
-    // removes browser-default values (eg "Submit Query") when no value is
-    // provided.
-
-    switch (props.type) {
-      case 'submit':
-      case 'reset':
-        break;
-      case 'color':
-      case 'date':
-      case 'datetime':
-      case 'datetime-local':
-      case 'month':
-      case 'time':
-      case 'week':
-        // This fixes the no-show issue on iOS Safari and Android Chrome:
-        // https://github.com/facebook/react/issues/7233
-        node.value = '';
-        node.value = node.defaultValue;
-        break;
-      default:
-        node.value = node.value;
-        break;
-    }
 
     // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
     // this is needed to work around a chrome bug where setting defaultChecked
