@@ -47,14 +47,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           throw new Error('This should only be done during updates.');
         }
         // Commit the work prepared earlier.
-        let child;
-        if (finishedWork.wasDeprioritized) {
-          // If this was a down priority, we need to preserve the old child in
-          // the output.
-          child = finishedWork.alternate ? finishedWork.alternate.child : null;
-        } else {
-          child = finishedWork.child;
-        }
+        const child = finishedWork.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = finishedWork.memoizedProps;
         const current = finishedWork.alternate;

@@ -56,9 +56,26 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
       // because it is the highest priority for the whole subtree.
       // TODO: Coroutines can have work in their stateNode which is another
       // type of child that needs to be searched for work.
-      if (current.child) {
-        // Ensure we have a work in progress copy to backtrack through.
+      if (current.childInProgress) {
+        let workInProgress = current.childInProgress;
+        while (workInProgress) {
+          workInProgress.return = current.alternate;
+          workInProgress = workInProgress.sibling;
+        }
+        workInProgress = current.childInProgress;
+        while (workInProgress) {
+          // Don't bother drilling further down this tree if there is no child.
+          if (workInProgress.pendingWorkPriority !== NoWork &&
+              workInProgress.pendingWorkPriority <= priorityLevel &&
+              workInProgress.pendingProps !== null) {
+            return workInProgress;
+          }
+          workInProgress = workInProgress.sibling;
+        }
+      } else if (current.child) {
         let currentChild = current.child;
+        currentChild.return = current;
+        // Ensure we have a work in progress copy to backtrack through.
         let workInProgress = current.alternate;
         if (!workInProgress) {
           throw new Error('Should have wip now');
@@ -74,7 +91,7 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
           currentChild.pendingWorkPriority
         );
         cloneSiblings(currentChild, workInProgress.child, workInProgress);
-        current = current.child;
+        current = currentChild;
         continue;
       }
       // If we match the priority but has no child and no work to do,
@@ -82,6 +99,12 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
       current.pendingWorkPriority = NoWork;
     }
     if (current === currentRoot) {
+      if (current.pendingWorkPriority <= priorityLevel) {
+        // If this subtree had work left to do, we would have returned it by
+        // now. This could happen if a child with pending work gets cleaned up
+        // but we don't clear the flag then. It is safe to reset it now.
+        current.pendingWorkPriority = NoWork;
+      }
       return null;
     }
     while (!current.sibling) {
@@ -96,6 +119,7 @@ exports.findNextUnitOfWorkAtPriority = function(currentRoot : Fiber, priorityLev
         current.pendingWorkPriority = NoWork;
       }
     }
+    current.sibling.return = current.return;
     current = current.sibling;
   }
   return null;

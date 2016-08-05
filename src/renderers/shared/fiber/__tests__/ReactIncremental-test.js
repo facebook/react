@@ -283,7 +283,6 @@ describe('ReactIncremental', function() {
   });
 
   it('can resume work in a bailed subtree within one pass', function() {
-
     var ops = [];
 
     function Bar(props) {
@@ -307,6 +306,8 @@ describe('ReactIncremental', function() {
       ops.push('Middle');
       return <span>{props.children}</span>;
     }
+
+    // Should content not just bail out on current, not workInProgress?
 
     class Content extends React.Component {
       shouldComponentUpdate() {
@@ -359,7 +360,6 @@ describe('ReactIncremental', function() {
     // after them which is not correct.
     ReactNoop.flush();
     expect(ops).toEqual(['Bar', 'Middle', 'Bar']);
-
   });
 
   it('can reuse work done after being preempted', function() {
@@ -384,19 +384,23 @@ describe('ReactIncremental', function() {
       </div>
     );
 
+    var step0 = (
+      <div>
+        <Middle>Hi</Middle>
+        <Bar>{'Foo'}</Bar>
+        <Middle>There</Middle>
+      </div>
+    );
+
     function Foo(props) {
       ops.push('Foo');
       return (
         <div>
-          <Bar>{props.text}</Bar>
+          <Bar>{props.text2}</Bar>
           <div hidden={true}>
             {
               props.step === 0 ?
-                <div>
-                  <Middle>Hi</Middle>
-                  <Bar>{props.text}</Bar>
-                  <Middle>There</Middle>
-                </div>
+                step0
                 : middleContent
             }
           </div>
@@ -405,16 +409,29 @@ describe('ReactIncremental', function() {
     }
 
     // Init
-    ReactNoop.render(<Foo text="foo" step={0} />);
+    ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
+    ReactNoop.flushLowPri(55);
+
+    // We only finish the higher priority work. So the low pri content
+    // has not yet finished mounting.
+    expect(ops).toEqual(['Foo', 'Bar', 'Middle', 'Bar']);
+
+    ops = [];
+
+    // Interupt the rendering with a quick update. This should not touch the
+    // middle content.
+    ReactNoop.render(<Foo text="foo" text2="bar" step={0} />);
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Foo', 'Bar', 'Middle', 'Bar', 'Middle']);
+    // We've now rendered the entire tree but we didn't have to redo the work
+    // done by the first Middle and Bar already.
+    expect(ops).toEqual(['Foo', 'Bar', 'Middle']);
 
     ops = [];
 
     // Make a quick update which will schedule low priority work to
     // update the middle content.
-    ReactNoop.render(<Foo text="bar" step={1} />);
+    ReactNoop.render(<Foo text="bar" text2="bar" step={1} />);
     ReactNoop.flushLowPri(30);
 
     expect(ops).toEqual(['Foo', 'Bar']);
@@ -429,7 +446,7 @@ describe('ReactIncremental', function() {
 
     // but we'll interupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
-    ReactNoop.render(<Foo text="foo" step={1} />);
+    ReactNoop.render(<Foo text="foo" text2="bar" step={1} />);
     ReactNoop.flushLowPri(30);
 
     expect(ops).toEqual(['Foo', 'Bar']);

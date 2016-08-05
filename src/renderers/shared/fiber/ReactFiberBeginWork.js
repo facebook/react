@@ -16,7 +16,10 @@ import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 
-var { reconcileChildFibers } = require('ReactChildFiber');
+var {
+  reconcileChildFibers,
+  reconcileChildFibersInPlace,
+} = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -38,12 +41,34 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   function reconcileChildren(current, workInProgress, nextChildren) {
     const priority = workInProgress.pendingWorkPriority;
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      current ? current.child : null,
-      nextChildren,
-      priority
-    );
+    reconcileChildrenAtPriority(current, workInProgress, nextChildren, priority);
+  }
+
+  function reconcileChildrenAtPriority(current, workInProgress, nextChildren, priorityLevel) {
+    if (current && current.childInProgress) {
+      workInProgress.childInProgress = reconcileChildFibersInPlace(
+        workInProgress,
+        current.childInProgress,
+        nextChildren,
+        priorityLevel
+      );
+      // This is now invalid because we reused nodes.
+      current.childInProgress = null;
+    } else if (workInProgress.childInProgress) {
+      workInProgress.childInProgress = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.childInProgress,
+        nextChildren,
+        priorityLevel
+      );
+    } else {
+      workInProgress.childInProgress = reconcileChildFibers(
+        workInProgress,
+        current ? current.child : null,
+        nextChildren,
+        priorityLevel
+      );
+    }
   }
 
   function updateFunctionalComponent(current, workInProgress) {
@@ -68,13 +93,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           return bailoutOnCurrent(current, workInProgress);
         }
       }
-      if (!workInProgress.hasWorkInProgress && workInProgress.memoizedProps) {
+      if (!workInProgress.childInProgress && workInProgress.memoizedProps) {
         // Reset the props, in case this is a ping-pong case rather than a
         // completed update case. For the completed update case, the instance
         // props will already be the memoizedProps.
         instance.props = workInProgress.memoizedProps;
         if (!instance.shouldComponentUpdate(props)) {
-          return bailoutOnAlreadyFinishedWork(workInProgress);
+          return bailoutOnAlreadyFinishedWork(current, workInProgress);
         }
       }
     }
@@ -82,7 +107,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     var nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
     workInProgress.pendingWorkPriority = NoWork;
-    return workInProgress.child;
+    return workInProgress.childInProgress;
   }
 
   function updateHostComponent(current, workInProgress) {
@@ -93,25 +118,19 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // If this host component is hidden, we can reconcile its children at
       // the lowest priority and bail out from this particular pass. Unless, we're
       // currently reconciling the lowest priority.
-      workInProgress.child = reconcileChildFibers(
-        workInProgress,
-        current ? current.child : null,
-        nextChildren,
-        OffscreenPriority
-      );
+      // If we have a child in progress already, we reconcile against that set
+      // to retain any work within it. We'll recreate any component that was in
+      // the current set and next set but not in the previous in progress set.
+      // TODO: This attaches a node that hasn't completed rendering so it
+      // becomes part of the render tree, even though it never completed. Its
+      // `output` property is unpredictable because of it.
+      reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
       workInProgress.pendingWorkPriority = OffscreenPriority;
-      workInProgress.wasDeprioritized = true;
       return null;
     } else {
-      workInProgress.child = reconcileChildFibers(
-        workInProgress,
-        current ? current.child : null,
-        nextChildren,
-        priority
-      );
+      reconcileChildren(current, workInProgress, nextChildren);
       workInProgress.pendingWorkPriority = NoWork;
-      workInProgress.wasDeprioritized = false;
-      return workInProgress.child;
+      return workInProgress.childInProgress;
     }
   }
 
@@ -193,6 +212,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     workInProgress.pendingProps = null;
     workInProgress.pendingWorkPriority = NoWork;
     workInProgress.stateNode = current.stateNode;
+    workInProgress.childInProgress = current.childInProgress;
     if (current.child) {
       // If we bail out but still has work with the current priority in this
       // subtree, we need to go find it right now. If we don't, we won't flush
@@ -213,7 +233,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  function bailoutOnAlreadyFinishedWork(workInProgress : Fiber) : ?Fiber {
+  function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     // If we started this work before, and finished it, or if we're in a
     // ping-pong update scenario, this version could already be what we're
     // looking for. In that case, we should be able to just bail out.
@@ -225,10 +245,15 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     workInProgress.nextEffect = null;
     workInProgress.lastEffect = null;
 
-    if (workInProgress.child && workInProgress.child.alternate) {
-      // On the way up here, we reset the child node to be the current one.
-      // Therefore we have to reuse the alternate. This is super weird.
-      let child = workInProgress.child.alternate;
+    if (workInProgress.child) {
+      // On the way up here, we reset the child node to be the current one by
+      // cloning. However, it is really the original child that represents the
+      // already completed work. Therefore we have to reuse the alternate.
+      // But if we don't have a current, this was not cloned. This is super weird.
+      const child = !current ? workInProgress.child : workInProgress.child.alternate;
+      if (!child) {
+        throw new Error('We must have a current child to be able to use this.');
+      }
       workInProgress.child = child;
       // Ensure that the effects of reused work are preserved.
       reuseChildrenEffects(workInProgress, child);
@@ -256,58 +281,49 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       return bailoutOnCurrent(current, workInProgress);
     }
 
-    if (!workInProgress.hasWorkInProgress &&
+    if (!workInProgress.childInProgress &&
         workInProgress.pendingProps === workInProgress.memoizedProps) {
-      return bailoutOnAlreadyFinishedWork(workInProgress);
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    let nextWork;
     switch (workInProgress.tag) {
       case IndeterminateComponent:
         mountIndeterminateComponent(current, workInProgress);
-        workInProgress.hasWorkInProgress = true;
-        return workInProgress.child;
+        return workInProgress.childInProgress;
       case FunctionalComponent:
         updateFunctionalComponent(current, workInProgress);
-        workInProgress.hasWorkInProgress = true;
-        return workInProgress.child;
+        return workInProgress.childInProgress;
       case ClassComponent:
-        nextWork = updateClassComponent(current, workInProgress);
-        workInProgress.hasWorkInProgress = true;
-        return nextWork;
+        return updateClassComponent(current, workInProgress);
       case HostContainer:
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        workInProgress.hasWorkInProgress = true;
         workInProgress.pendingWorkPriority = NoWork;
-        if (workInProgress.child) {
+        if (workInProgress.childInProgress) {
           return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child
+            workInProgress.childInProgress.alternate,
+            workInProgress.childInProgress
           );
         }
         return null;
       case HostComponent:
-        nextWork = updateHostComponent(current, workInProgress);
-        workInProgress.hasWorkInProgress = true;
-        return nextWork;
+        return updateHostComponent(current, workInProgress);
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;
         // Intentionally fall through since this is now the same.
       case CoroutineComponent:
         updateCoroutineComponent(current, workInProgress);
-        workInProgress.hasWorkInProgress = true;
         // This doesn't take arbitrary time so we could synchronously just begin
         // eagerly do the work of workInProgress.child as an optimization.
-        if (workInProgress.child) {
+        if (workInProgress.childInProgress) {
           return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child
+            workInProgress.childInProgress.alternate,
+            workInProgress.childInProgress
           );
         }
-        return workInProgress.child;
+        return workInProgress.childInProgress;
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.

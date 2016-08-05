@@ -143,15 +143,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         markForPreEffect(workInProgress);
         return null;
       case HostComponent:
-        let child;
         let newProps = workInProgress.pendingProps;
-        if (workInProgress.wasDeprioritized) {
-          // If this was a down priority, we need to preserve the old child in
-          // the output.
-          child = current ? current.child : null;
-        } else {
-          child = workInProgress.child;
-        }
+        const child = workInProgress.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to

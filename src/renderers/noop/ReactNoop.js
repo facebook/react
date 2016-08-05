@@ -167,9 +167,21 @@ var ReactNoop = {
 
     function logFiber(fiber : Fiber, depth) {
       console.log(
-        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'), 
+        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
         '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
       );
+      const childInProgress = fiber.childInProgress;
+      if (childInProgress) {
+        if (childInProgress === fiber.child) {
+          console.log('  '.repeat(depth + 1) + 'ERROR: IN PROGRESS == CURRENT');
+        } else {
+          console.log('  '.repeat(depth + 1) + 'IN PROGRESS');
+          logFiber(childInProgress, depth + 1);
+          if (fiber.child) {
+            console.log('  '.repeat(depth + 1) + 'CURRENT');
+          }
+        }
+      }
       if (fiber.child) {
         logFiber(fiber.child, depth + 1);
       }
