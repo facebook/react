@@ -653,4 +653,33 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     expect(instance.state.num).toEqual(6);
   });
+
+  it('can replaceState', () => {
+    let instance;
+    const Bar = React.createClass({
+      getInitialState() {
+        instance = this;
+        return { a: 'a' };
+      },
+      render() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.replaceState({ d: 'd' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ d: 'd' });
+  });
 });
