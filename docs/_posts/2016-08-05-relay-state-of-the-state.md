@@ -76,6 +76,6 @@ Ultimately, we're making these changes because we believe they make Relay better
 If you made it this far, congrats and thanks for reading! We'll be sharing more information about these changes in some upcoming talks:
 
 - [Greg Hurrell](https://github.com/wincent) will presenting a Relay "Deep Dive" at the [Silicon Valley ReactJS Meetup](http://www.meetup.com/Silicon-Valley-ReactJS-Meetup/events/232236845/) on August 17th.
-- I ([@josephsavona](https://github.com/josephsavona)) will be talking about Relay at [React Rally](http://www.reactrally.com (http://www.reactrally.com/)) on August 25th.
+- I ([@josephsavona](https://github.com/josephsavona)) will be speaking about Relay at [React Rally](http://www.reactrally.com) on August 25th.
 
 We can't wait to share the new code with you and are working as fast as we can to do so!
