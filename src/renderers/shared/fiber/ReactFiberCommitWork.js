@@ -22,6 +22,7 @@ var {
   HostContainer,
   HostComponent,
 } = ReactTypeOfWork;
+var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
@@ -31,6 +32,14 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
+        if (finishedWork.callbackList) {
+          const { callbackList } = finishedWork;
+          finishedWork.callbackList = null;
+          if (finishedWork.alternate) {
+            finishedWork.alternate.callbackList = null;
+          }
+          callCallbacks(callbackList, finishedWork.stateNode);
+        }
         // TODO: Fire componentDidMount/componentDidUpdate, update refs
         return;
       }

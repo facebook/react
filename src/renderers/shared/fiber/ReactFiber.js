@@ -81,6 +81,8 @@ export type Fiber = Instance & {
   updateQueue: ?UpdateQueue,
   // The state used to create the output. This is a full state object.
   memoizedState: any,
+  // Linked list of callbacks to call after updates are committed.
+  callbackList: ?UpdateQueue,
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
@@ -158,6 +160,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     memoizedProps: null,
     updateQueue: null,
     memoizedState: null,
+    callbackList: null,
     output: null,
 
     nextEffect: null,
@@ -200,6 +203,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.ref = fiber.ref;
     alt.pendingProps = fiber.pendingProps; // TODO: Pass as argument.
     alt.updateQueue = fiber.updateQueue;
+    alt.callbackList = fiber.callbackList;
     alt.pendingWorkPriority = priorityLevel;
 
     alt.child = fiber.child;
@@ -226,6 +230,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
   alt.updateQueue = fiber.updateQueue;
+  alt.callbackList = fiber.callbackList;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;

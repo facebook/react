@@ -46,7 +46,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  /*
   // TODO: It's possible this will create layout thrash issues because mutations
   // of the DOM and life-cycles are interleaved. E.g. if a componentDidMount
   // of a sibling reads, then the next sibling updates and reads etc.
@@ -59,7 +58,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
     workInProgress.lastEffect = workInProgress;
   }
-  */
 
   function transferOutput(child : ?Fiber, returnFiber : Fiber) {
     // If we have a single result, we just pass that through as the output to
@@ -133,9 +131,16 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       case ClassComponent:
         transferOutput(workInProgress.child, workInProgress);
         // Don't use the state queue to compute the memoized state. We already
-        // merged it and assigned it to the instance. Copy it from there.
+        // merged it and assigned it to the instance. Transfer it from there.
         const state = workInProgress.stateNode.state;
         workInProgress.memoizedState = state;
+        // Transfer update queue to callbackList field so callbacks can be
+        // called during commit phase.
+        workInProgress.callbackList = workInProgress.updateQueue;
+        if (current) {
+          current.callbackList = workInProgress.callbackList;
+        }
+        markForPostEffect(workInProgress);
         return null;
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);
