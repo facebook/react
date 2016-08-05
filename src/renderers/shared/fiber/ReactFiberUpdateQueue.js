@@ -15,6 +15,7 @@
 type UpdateQueueNode = {
   partialState: any,
   callback: ?Function,
+  callbackWasCalled: boolean,
   next: ?UpdateQueueNode,
 };
 
@@ -26,6 +27,7 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
   const queue = {
     partialState,
     callback: null,
+    callbackWasCalled: false,
     next: null,
     tail: (null : any),
   };
@@ -37,6 +39,7 @@ exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : Updat
   const node = {
     partialState,
     callback: null,
+    callbackWasCalled: false,
     next: null,
   };
   queue.tail.next = node;
@@ -44,12 +47,21 @@ exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : Updat
   return queue;
 };
 
-exports.callCallbacks = function(queue : UpdateQueue, partialState : mixed) {
+exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) : UpdateQueue {
+  if (queue.tail.callback) {
+    // If the tail already as a callback, add an empty node to queue
+    exports.addToQueue(queue, null);
+  }
+  queue.tail.callback = callback;
+  return queue;
+};
+
+exports.callCallbacks = function(queue : UpdateQueue, context : any) {
   let node : ?UpdateQueueNode = queue;
   while (node) {
-    if (node.callback) {
-      const { callback } = node;
-      callback();
+    if (node.callback && !node.callbackWasCalled) {
+      node.callbackWasCalled = true;
+      node.callback.call(context);
     }
     node = node.next;
   }
