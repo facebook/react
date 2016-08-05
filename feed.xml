@@ -7,6 +7,86 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Relay: State of the State</title>
+				<description>&lt;p&gt;This month marks a year since we released Relay and we&amp;#39;d like to share an update on the project and what&amp;#39;s next.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-year-in-review&quot;&gt;&lt;/a&gt;A Year In Review &lt;a class=&quot;hash-link&quot; href=&quot;#a-year-in-review&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;A year after launch, we&amp;#39;re incredibly excited to see an active community forming around Relay and that companies such as Twitter are &lt;a href=&quot;https://fabric.io/blog/building-fabric-mission-control-with-graphql-and-relay&quot;&gt;using Relay in production&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;For a project like mission control, GraphQL and Relay were a near-perfect solution, and the cost of building it any other way justified the investment.&lt;/p&gt;
+
+&lt;p&gt;-- &lt;cite&gt;Fin Hopkins&lt;/cite&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This kind of positive feedback is really encouraging (I&amp;#39;ll admit to re-reading that post far too many times), and great motivation for us to keep going and make Relay even better.&lt;/p&gt;
+
+&lt;p&gt;With the community&amp;#39;s help we&amp;#39;ve already come a long way since the technical preview. Here are some highlights:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;In March we added support for server-side rendering and for creating multiple instances of Relay on a single page. This was a coordinated effort over the course of several months by community members &lt;a href=&quot;https://github.com/denvned&quot;&gt;Denis Nedelyaev&lt;/a&gt; and &lt;a href=&quot;https://github.com/devknoll&quot;&gt;Gerald Monaco&lt;/a&gt; (now at Facebook).&lt;/li&gt;
+&lt;li&gt;Also in March we added support for React Native. While we use Relay and React Native together internally, they didn&amp;#39;t quite work together in open-source out of the box. We owe a big thanks to &lt;a href=&quot;https://github.com/skevy&quot;&gt;Adam Miskiewicz&lt;/a&gt;, &lt;a href=&quot;https://github.com/boourns&quot;&gt;Tom Burns&lt;/a&gt;, &lt;a href=&quot;https://github.com/gre&quot;&gt;Gaëtan Renaudeau&lt;/a&gt;, &lt;a href=&quot;https://github.com/davidaurelio&quot;&gt;David Aurelio&lt;/a&gt;, &lt;a href=&quot;https://github.com/martinbigio&quot;&gt;Martín Bigio&lt;/a&gt;, &lt;a href=&quot;https://github.com/zpao&quot;&gt;Paul O’Shannessy&lt;/a&gt;, &lt;a href=&quot;https://github.com/spicyj&quot;&gt;Ben Alpert&lt;/a&gt;, and many others who helped track down and resolve issues. Finally, thanks to &lt;a href=&quot;https://github.com/steveluscher&quot;&gt;Steven Luscher&lt;/a&gt; for coordinating this effort and building the first Relay/ReactNative example app.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also seen some great open-source projects spring up around Relay:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/denvned&quot;&gt;Denis Nedelyaev&lt;/a&gt; created &lt;a href=&quot;https://github.com/denvned/isomorphic-relay/&quot;&gt;isomorphic-relay&lt;/a&gt;, a package that helps developers build server-rendered Relay apps where data is prepared on the server and then used to bootstrap the app on the client.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/taion&quot;&gt;Jimmy Jia&lt;/a&gt; created &lt;a href=&quot;https://github.com/relay-tools/react-router-relay&quot;&gt;react-router-relay&lt;/a&gt; to integrate Relay data-fetching into React Router.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/nodkz&quot;&gt;Pavel Chertorogov&lt;/a&gt; released &lt;a href=&quot;https://github.com/nodkz/react-relay-network-layer&quot;&gt;relay-network-layer&lt;/a&gt;, which adds features such as batching query requests, middleware, authentication, logging, and more.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is just a small sampling of the community&amp;#39;s contributions. So far we&amp;#39;ve merged over 300 PRs - about 25% of our commits - from over 80 of you. These PRs have improved everything from the website and docs down the very core of the framework. We&amp;#39;re humbled by these outstanding contributions and excited to keep working with each of you!&lt;/p&gt;
+&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;retrospective-amp-roadmap&quot;&gt;&lt;/a&gt;Retrospective &amp;amp; Roadmap &lt;a class=&quot;hash-link&quot; href=&quot;#retrospective-amp-roadmap&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;Earlier this year we paused to reflect on the state of the project. What was working well? What could be improved? What features should we add, and what could we remove? A few themes emerged: performance on mobile, developer experience, and empowering the community.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;mobile-perf&quot;&gt;&lt;/a&gt;Mobile Perf &lt;a class=&quot;hash-link&quot; href=&quot;#mobile-perf&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;First, Relay was built to serve the needs of product developers at Facebook. In 2016, that means helping developers to build apps that work well on &lt;a href=&quot;https://newsroom.fb.com/news/2015/10/news-feed-fyi-building-for-all-connectivity/&quot;&gt;mobile devices connecting on slower networks&lt;/a&gt;. For example, people in developing markets commonly use &lt;a href=&quot;https://code.facebook.com/posts/307478339448736/year-class-a-classification-system-for-android/&quot;&gt;2011 year-class phones&lt;/a&gt; and connect via &lt;a href=&quot;https://code.facebook.com/posts/952628711437136/classes-performance-and-network-segmentation-on-android/&quot;&gt;2G class networks&lt;/a&gt;. These scenarios present their own challenges.&lt;/p&gt;
+
+&lt;p&gt;Therefore, one of our primary goals this year is to optimize Relay for performance on low-end mobile devices &lt;em&gt;first&lt;/em&gt;, knowing that this can translate to improved performance on high-end devices as well. In addition to standard approaches such as benchmarking, profiling, and optimizations, we&amp;#39;re also working on big-picture changes.&lt;/p&gt;
+
+&lt;p&gt;For example, in today&amp;#39;s Relay, here&amp;#39;s what happens when an app is opened. First, React Native starts initializing the JavaScript context (loading and parsing your code and then running it). When this finishes, the app executes and Relay sees that you need data. It constructs and prints the query, uploads the query text to the server, processes the response, and renders your app. (Note that this process applies on the web, except that the code has to be &lt;em&gt;downloaded&lt;/em&gt; instead of loaded from the device.)&lt;/p&gt;
+
+&lt;p&gt;Ideally, though, we could begin fetching data as soon as the native code had loaded - in parallel with the JS context initialization. By the time your JS code was ready to run, the data-fetching would already be under way. To do this we would need a way to determine &lt;em&gt;statically&lt;/em&gt; - at build time - what query an application would send.&lt;/p&gt;
+
+&lt;p&gt;The key is that GraphQL is already static - we just need to fully embrace this fact. More on this later.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;developer-experience&quot;&gt;&lt;/a&gt;Developer Experience &lt;a class=&quot;hash-link&quot; href=&quot;#developer-experience&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Next, we&amp;#39;ve paid attention to the community&amp;#39;s feedback and know that, to put it simply, Relay could be &amp;quot;easier&amp;quot; to use (and &amp;quot;simpler&amp;quot; too). This isn&amp;#39;t entirely surprising to us - Relay was originally designed as a routing library and gradually morphed into a data-fetching library. Concepts like Relay &amp;quot;routes&amp;quot;, for example, no longer serve as critical a role and are just one more concept that developers have to learn about. Another example is mutations: while writes &lt;em&gt;are&lt;/em&gt; inherently more complex than reads, our API doesn&amp;#39;t make the simple things simple enough.&lt;/p&gt;
+
+&lt;p&gt;Alongside our focus on mobile performance, we&amp;#39;ve also kept the developer experience in mind as we evolve Relay core.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;empowering-the-community&quot;&gt;&lt;/a&gt;Empowering the Community &lt;a class=&quot;hash-link&quot; href=&quot;#empowering-the-community&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Finally, we want to make it easier for people in the community to develop useful libraries that work with Relay. By comparison, React&amp;#39;s small surface area - components - allows developers to build cool things like routing, higher-order components, or reusable text editors. For Relay, this would mean having the framework provide core primitives that users can build upon. We want it to be possible for the community to integrate Relay with view libraries other than React, or to build real-time subscriptions as a complementary library.&lt;/p&gt;
+&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-next&quot;&gt;&lt;/a&gt;What&amp;#39;s Next &lt;a class=&quot;hash-link&quot; href=&quot;#whats-next&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;These were big goals, and also a bit scary; we knew that incremental improvements would only allow us to move so fast. So in April we started a project to build a new implementation of Relay core targeting low-end mobile devices from the start.&lt;/p&gt;
+
+&lt;p&gt;As you can guess since we&amp;#39;re writing this, the experiment was a success. The result is a new core that retains the best parts of Relay today - colocated components &amp;amp; data-dependencies, automatic data/view consistency, declarative data-fetching - while improving performance on mobile devices and addressing several common areas of confusion.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;re currently focused on shipping the first applications using the new core: ironing out bugs, refining the API changes and developer experience, and adding any missing features. We&amp;#39;re excited to bring these changes to open source, and will do so once we&amp;#39;ve proven them in production. We&amp;#39;ll go into more detail in some upcoming talks - links below - but for now here&amp;#39;s an overview:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Static Queries&lt;/strong&gt;: By adding a couple of Relay-specific directives, we&amp;#39;ve been able to retain the expressivity of current Relay queries using static syntax (concretely: you know what query an app will execute just by looking at the source text, without having to run that code). For starters this will allow Relay apps to start fetching data in parallel with JavaScript initialization. But it also unlocks other possibilities: knowing the query ahead of time means that we can generate optimized code for handling query responses, for example, or for reading query data from an offline cache.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Expressive Mutations&lt;/strong&gt;: We&amp;#39;ll continue to support a higher-level mutation API for common cases, but will also provide a lower-level API that allows &amp;quot;raw&amp;quot; data access where necessary. If you need to order a list of cached elements, for example, there will be a way to &lt;code&gt;sort()&lt;/code&gt; it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Route-less Relay&lt;/strong&gt;: Routes will be gone in open source. Instead of a route with multiple query definitions, you&amp;#39;ll just provide a single query with as many root fields as you want.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Cache Eviction/Garbage Collection&lt;/strong&gt;: The API and architecture is designed from the start to allow removing cached data that is no longer referenced by a mounted view.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Stepping back, we recognize that any API changes will require an investment on your part. To make the transition easier, though, &lt;em&gt;we will continue to support the current API for the foreseeable future&lt;/em&gt; (we&amp;#39;re still using it too). And as much as possible we will open-source the tools that we use to migrate our own code. Ideas that we&amp;#39;re exploring include codemods, an interoperability layer for the old/new APIs, and tutorials &amp;amp; guides to ease migration.&lt;/p&gt;
+
+&lt;p&gt;Ultimately, we&amp;#39;re making these changes because we believe they make Relay better all around: simpler for developers building apps and faster for the people using them.&lt;/p&gt;
+&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;conclusion&quot;&gt;&lt;/a&gt;Conclusion &lt;a class=&quot;hash-link&quot; href=&quot;#conclusion&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;If you made it this far, congrats and thanks for reading! We&amp;#39;ll be sharing more information about these changes in some upcoming talks:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/wincent&quot;&gt;Greg Hurrell&lt;/a&gt; will presenting a Relay &amp;quot;Deep Dive&amp;quot; at the &lt;a href=&quot;http://www.meetup.com/Silicon-Valley-ReactJS-Meetup/events/232236845/&quot;&gt;Silicon Valley ReactJS Meetup&lt;/a&gt; on August 17th.&lt;/li&gt;
+&lt;li&gt;I (&lt;a href=&quot;https://github.com/josephsavona&quot;&gt;@josephsavona&lt;/a&gt;) will be talking about Relay at &lt;a href=&quot;http://www.reactrally.com%20(http://www.reactrally.com/)&quot;&gt;React Rally&lt;/a&gt; on August 25th.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We can&amp;#39;t wait to share the new code with you and are working as fast as we can to do so!&lt;/p&gt;
+</description>
+				<pubDate>2016-08-05T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/08/05/relay-state-of-the-state.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/08/05/relay-state-of-the-state.html</guid>
+			</item>
+		
+			<item>
 				<title>Create Apps with No Configuration</title>
 				<description>&lt;p&gt;&lt;strong&gt;&lt;a href=&quot;https://github.com/facebookincubator/create-react-app&quot;&gt;Create React App&lt;/a&gt;&lt;/strong&gt; is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getting-started&quot;&gt;&lt;/a&gt;Getting Started &lt;a class=&quot;hash-link&quot; href=&quot;#getting-started&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
@@ -1155,19 +1235,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 				<pubDate>2016-02-19T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html</guid>
-			</item>
-		
-			<item>
-				<title>Discontinuing IE 8 Support in React DOM</title>
-				<description>&lt;p&gt;Since its 2013 release, React has supported all popular browsers, including Internet Explorer 8 and above. We handle normalizing many quirks present in old browser versions, including event system differences, so that your app code doesn&amp;#39;t have to worry about most browser bugs.&lt;/p&gt;
-
-&lt;p&gt;Today, Microsoft &lt;a href=&quot;https://www.microsoft.com/en-us/WindowsForBusiness/End-of-IE-support&quot;&gt;discontinued support for older versions of IE&lt;/a&gt;. Starting with React v15, we&amp;#39;re discontinuing React DOM&amp;#39;s support for IE 8. We&amp;#39;ve heard that most React DOM apps already don&amp;#39;t support old versions of Internet Explorer, so this shouldn&amp;#39;t affect many people. This change will help us develop faster and make React DOM even better. (We won&amp;#39;t actively remove IE 8–related code quite yet, but we will deprioritize new bugs that are reported. If you need to support IE 8 we recommend you stay on React v0.14.)&lt;/p&gt;
-
-&lt;p&gt;React DOM will continue to support IE 9 and above for the foreseeable future.&lt;/p&gt;
-</description>
-				<pubDate>2016-01-12T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html</guid>
 			</item>
 		
 	</channel>
