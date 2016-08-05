@@ -157,6 +157,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         createUpdateQueue(partialState);
       scheduleUpdate(fiber, updateQueue, LowPriority);
     },
+    enqueueReplaceState(instance, state) {
+      const fiber = ReactInstanceMap.get(instance);
+      const updateQueue = createUpdateQueue(state);
+      updateQueue.isReplace = true;
+      scheduleUpdate(fiber, updateQueue, LowPriority);
+    },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       let updateQueue = fiber.updateQueue ?
