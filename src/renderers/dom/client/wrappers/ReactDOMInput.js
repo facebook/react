@@ -29,7 +29,7 @@ var didWarnUncontrolledToControlled = false;
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
-    ReactDOMInput.updateWrapper(this, true);
+    ReactDOMInput.updateWrapper(this);
   }
 }
 
@@ -143,7 +143,7 @@ var ReactDOMInput = {
     }
   },
 
-  updateWrapper: function(inst, forceUpdate) {
+  updateWrapper: function(inst) {
     var props = inst._currentElement.props;
 
     if (__DEV__) {
@@ -176,25 +176,23 @@ var ReactDOMInput = {
       }
     }
 
-    if (forceUpdate === true) {
-      // TODO: Shouldn't this be getChecked(props)?
-      var checked = props.checked;
-      if (checked != null) {
-        DOMPropertyOperations.setValueForProperty(
-          ReactDOMComponentTree.getNodeFromInstance(inst),
-          'checked',
-          checked || false
-        );
-      }
+    // TODO: Shouldn't this be getChecked(props)?
+    var checked = props.checked;
+    if (checked != null) {
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(inst),
+        'checked',
+        checked || false
+      );
+    }
 
-      var value = LinkedValueUtils.getValue(props);
-      if (value != null) {
-        DOMPropertyOperations.setValueForProperty(
-          ReactDOMComponentTree.getNodeFromInstance(inst),
-          'value',
-          value
-        );
-      }
+    var value = LinkedValueUtils.getValue(props);
+    if (value != null) {
+      DOMPropertyOperations.setValueForProperty(
+        ReactDOMComponentTree.getNodeFromInstance(inst),
+        'value',
+        value
+      );
     }
   },
 
