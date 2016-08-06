@@ -132,14 +132,14 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         transferOutput(workInProgress.child, workInProgress);
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
-        const state = workInProgress.stateNode.state;
+        // Also need to transfer the props, because pendingProps will be null
+        // in the case of an update
+        const { state, props } = workInProgress.stateNode;
         workInProgress.memoizedState = state;
+        workInProgress.memoizedProps = props;
         // Transfer update queue to callbackList field so callbacks can be
         // called during commit phase.
         workInProgress.callbackList = workInProgress.updateQueue;
-        if (current) {
-          current.callbackList = workInProgress.callbackList;
-        }
         markForPostEffect(workInProgress);
         return null;
       case HostContainer:
