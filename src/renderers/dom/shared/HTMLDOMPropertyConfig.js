@@ -227,6 +227,21 @@ var HTMLDOMPropertyConfig = {
   },
   DOMPropertyNames: {
   },
+  DOMMutationMethods: {
+    value: function(node, next) {
+      if (next == null) {
+        next = '';
+      } else if (next === 0) {
+        // Since we use loose type checking below, zero is
+        // falsy, so we need to manually cover it
+        next = '0';
+      }
+
+      if (node.value != next) { // eslint-disable-line eqeqeq
+        node.value = next;
+      }
+    },
+  },
 };
 
 module.exports = HTMLDOMPropertyConfig;
