@@ -654,6 +654,44 @@ describe('ReactIncremental', () => {
     expect(instance.state.num).toEqual(6);
   });
 
+  it('can call setState inside update callback', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { num: 1 };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({ multiplier }) {
+      return (
+        <div>
+          <Bar multiplier={multiplier} />
+        </div>
+      );
+    }
+
+    function updater(state, props) {
+      return { num: state.num * props.multiplier };
+    }
+
+    function callback() {
+      this.setState({ called: true });
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    instance.setState(updater);
+    instance.setState(updater, callback);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(4);
+    expect(instance.state.called).toEqual(true);
+  });
+
   it('can replaceState', () => {
     let instance;
     const Bar = React.createClass({
