@@ -60,6 +60,7 @@
     "jest": "^12.1.1",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
+    "object-is": "^1.0.1",
     "platform": "^1.1.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
