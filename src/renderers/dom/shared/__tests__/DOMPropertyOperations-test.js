@@ -260,12 +260,11 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.hasAttribute('data-foo')).toBe(false);
     });
 
-<<<<<<< a2e0258ebfc05358cd87ecd335a848eb7f6a1ab5
-    it('should use mutation method where applicable', () => {
+    it('should use mutation method where applicable', function() {
       var foobarSetter = jest.fn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
-        Properties: [['foobar', null]],
+        Properties: {foobar: null},
         DOMMutationMethods: {
           foobar: foobarSetter,
         },
