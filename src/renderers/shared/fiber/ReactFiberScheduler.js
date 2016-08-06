@@ -144,9 +144,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
       workInProgress.updateQueue = null;
-      if (current) {
-        current.updateQueue = null;
-      }
 
       const returnFiber = workInProgress.return;
 
