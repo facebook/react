@@ -15,7 +15,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
-var ReactDOMComponent = require('ReactDOMComponent');
+
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -187,7 +187,7 @@ var ReactDOMInput = {
         );
       }
 
-      var value = LinkedValueUtils.getValue(props)
+      var value = LinkedValueUtils.getValue(props);
       if (value != null) {
         DOMPropertyOperations.setValueForProperty(
           ReactDOMComponentTree.getNodeFromInstance(inst),

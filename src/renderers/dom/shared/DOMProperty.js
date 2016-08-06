@@ -56,7 +56,8 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Injection = DOMPropertyInjection;
-    var Properties = domPropertyConfig.Properties || [];
+    var Properties = domPropertyConfig.Properties || {};
+    var Priority = domPropertyConfig.Priority || [];
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
@@ -67,19 +68,18 @@ var DOMPropertyInjection = {
       );
     }
 
-    Properties.forEach(function(property) {
-      var propName = property[0]
-      var lowerCased = propName.toLowerCase();
-      var propConfig = property[1];
-
+    for (var propName in Properties) {
       invariant(
-        !DOMProperty.propertyOrder.hasOwnProperty(propName),
+        !DOMProperty.properties.hasOwnProperty(propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
         '\'%s\' which has already been injected. You may be accidentally ' +
         'injecting the same DOM property config twice, or you may be ' +
         'injecting two configs that have conflicting property names.',
         propName
       );
+
+      var lowerCased = propName.toLowerCase();
+      var propConfig = Properties[propName];
 
       var propertyInfo = {
         attributeName: lowerCased,
@@ -95,7 +95,6 @@ var DOMPropertyInjection = {
         hasOverloadedBooleanValue:
           checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
       };
-
       invariant(
         propertyInfo.hasBooleanValue + propertyInfo.hasNumericValue +
           propertyInfo.hasOverloadedBooleanValue <= 1,
@@ -124,8 +123,12 @@ var DOMPropertyInjection = {
         propertyInfo.propertyName = DOMPropertyNames[propName];
       }
 
-      DOMProperty.propertyOrder[propName] = DOMProperty.properties.push(propertyInfo) - 1;
-    })
+      DOMProperty.properties[propName] = propertyInfo;
+
+      var order = Priority.indexOf(propName);
+
+      DOMProperty.propertyOrder[propName] = order < 0 ? Infinity : order;
+    }
   },
 };
 
@@ -182,20 +185,14 @@ var DOMProperty = {
    *   Removed when strictly equal to false; present without a value when
    *   strictly equal to true; present with a value otherwise.
    */
-  properties: [],
+  properties: {},
 
   propertyOrder: {},
 
-  getProperty: function (name) {
-    var slot = DOMProperty.propertyOrder[name];
-
-    return slot != null ? DOMProperty.properties[slot] : null
-  },
-
   getPropertyAssignmentOrder(props) {
-    return Object.keys(props).sort(function (a, b) {
-      return DOMProperty.propertyOrder[a] > DOMProperty.propertyOrder[b] ? 1 : -1
-    })
+    return Object.keys(props).sort(function(a, b) {
+      return DOMProperty.propertyOrder[a] > DOMProperty.propertyOrder[b] ? 1 : -1;
+    });
   },
 
   /**

@@ -948,7 +948,6 @@ ReactDOMComponent.Mixin = {
     var propKey;
     var styleName;
     var styleUpdates;
-
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey) ||
@@ -979,13 +978,13 @@ ReactDOMComponent.Mixin = {
           );
         }
       } else if (
-          DOMProperty.getProperty(propKey)||
+          DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
 
-    DOMProperty.getPropertyAssignmentOrder(nextProps).forEach(function (propKey) {
+    DOMProperty.getPropertyAssignmentOrder(nextProps).forEach((propKey) => {
       var nextProp = nextProps[propKey];
       var lastProp =
         propKey === STYLE ? this._previousStyleCopy :
@@ -1045,7 +1044,7 @@ ReactDOMComponent.Mixin = {
           );
         }
       } else if (
-          DOMProperty.getProperty(propKey) ||
+          DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
@@ -1057,7 +1056,7 @@ ReactDOMComponent.Mixin = {
           DOMPropertyOperations.deleteValueForProperty(node, propKey);
         }
       }
-    }, this);
+    });
 
     if (styleUpdates) {
       CSSPropertyOperations.setValueForStyles(

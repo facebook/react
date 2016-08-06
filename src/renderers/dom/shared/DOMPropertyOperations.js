@@ -88,8 +88,8 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = DOMProperty.getProperty(name)
-
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
     if (propertyInfo) {
       if (propertyInfo.noMarkup || shouldIgnoreValue(propertyInfo, value)) {
         return '';
@@ -131,15 +131,15 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.getProperty(name)
-
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
     if (propertyInfo) {
       if (shouldIgnoreValue(propertyInfo, value)) {
         this.deleteValueForProperty(node, name);
         return;
       } else if (propertyInfo.mustUseProperty) {
-        var propValue = node[propertyInfo.propertyName]
-        if (propValue == '' || propValue != value) {
+        var propValue = node[propertyInfo.propertyName];
+        if (propValue === '' || propValue != value) { // eslint-disable-line eqeqeq
           // Contrary to `setAttribute`, object properties are properly
           // `toString`ed by IE8/9.
           node[propertyInfo.propertyName] = value;
@@ -219,8 +219,8 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.getProperty(name);
-
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
+        DOMProperty.properties[name] : null;
     if (propertyInfo) {
       if (propertyInfo.mustUseProperty) {
         var propName = propertyInfo.propertyName;
