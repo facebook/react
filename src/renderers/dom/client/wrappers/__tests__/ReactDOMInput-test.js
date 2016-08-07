@@ -829,6 +829,7 @@ describe('ReactDOMInput', () => {
     }
     var log = [];
     var originalCreateElement = document.createElement;
+
     spyOn(document, 'createElement').and.callFake(function(type) {
       var el = originalCreateElement.apply(this, arguments);
       if (type === 'input') {
@@ -852,9 +853,7 @@ describe('ReactDOMInput', () => {
       'set step',
       'set min',
       'set max',
-      'set value',
-      'set checked',
-      'set checked',
+      'set value'
     ]);
   });
 

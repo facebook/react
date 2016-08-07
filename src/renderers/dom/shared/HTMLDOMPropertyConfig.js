@@ -241,6 +241,25 @@ var HTMLDOMPropertyConfig = {
         node.value = next;
       }
     },
+
+    // Chrome ~50 does not properly detatch defaultChecked, this is needed to
+    // work around a where setting defaultChecked will sometimes influence the
+    // value of checked (even after detachment).
+    // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
+    defaultChecked: function(node, next) {
+      // The property priority list mandates that `checked` be assigned
+      // before `defaultChecked`. Additionally, ReactDOMInput ensures that
+      // `checked` assigns `defaultChecked` if it is not otherwise specified.
+      // This means that we can always force checked to be the original without
+      // any influence from `defaultChecked`.
+      var checked = node.checked;
+      node.defaultChecked = next;
+
+      // No need to touch the DOM again if the property is the same
+      if (checked !== next) {
+        node.checked = checked;
+      }
+    },
   },
 };
 

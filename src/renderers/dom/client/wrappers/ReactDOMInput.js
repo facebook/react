@@ -29,7 +29,7 @@ var didWarnUncontrolledToControlled = false;
 function forceUpdateIfMounted() {
   if (this._rootNodeID) {
     // DOM component is still mounted; update
-    ReactDOMInput.updateWrapper(this);
+    ReactDOMInput.enforceControlledInputValue(this);
   }
 }
 
@@ -175,6 +175,14 @@ var ReactDOMInput = {
         didWarnControlledToUncontrolled = true;
       }
     }
+  },
+
+  // Ensure that there is no disconnect between an input's property
+  // value and component state. This should run during `onChange`.
+  enforceControlledInputValue: function(inst) {
+    var props = inst._currentElement.props;
+
+    ReactDOMInput.updateWrapper(inst);
 
     // TODO: Shouldn't this be getChecked(props)?
     var checked = props.checked;
@@ -194,28 +202,7 @@ var ReactDOMInput = {
         value
       );
     }
-  },
-
-  postMountWrapper: function(inst) {
-    // This is in postMount because we need access to the DOM node, which is not
-    // available until after the component has mounted.
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-
-    // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
-    // this is needed to work around a chrome bug where setting defaultChecked
-    // will sometimes influence the value of checked (even after detachment).
-    // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
-    // We need to temporarily unset name to avoid disrupting radio button groups.
-    var name = node.name;
-    if (name !== '') {
-      node.name = '';
-    }
-    node.defaultChecked = !node.defaultChecked;
-    node.defaultChecked = !node.defaultChecked;
-    if (name !== '') {
-      node.name = name;
-    }
-  },
+  }
 };
 
 function _handleChange(event) {
