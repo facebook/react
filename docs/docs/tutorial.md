@@ -62,7 +62,7 @@ For the remainder of this tutorial, we'll be writing our JavaScript code in this
 
 > Note:
 >
-> We included jQuery here because we want to simplify the code of our future ajax calls, but it's **NOT** mandatory for React to work.
+> We included jQuery here because we want to simplify the code of our future AJAX calls, but it's **NOT** mandatory for React to work.
 
 ### Your first component
 
