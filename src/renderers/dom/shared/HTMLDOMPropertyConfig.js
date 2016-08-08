@@ -238,13 +238,14 @@ var HTMLDOMPropertyConfig = {
       }
 
       if (node.value != next) { // eslint-disable-line eqeqeq
+        // Set value directly cause it has already been modified
         node.value = next;
       }
     },
 
-    // Chrome ~50 does not properly detatch defaultChecked, this is needed to
-    // work around a where setting defaultChecked will sometimes influence the
-    // value of checked (even after detachment).
+    // Chrome ~50 does not properly detatch defaultChecked, this mutation method
+    // is a work around to mitigate a bug where setting defaultChecked changes
+    // the value of checked, even after detachment:
     // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
     defaultChecked: function(node, next) {
       // The property priority list mandates that `checked` be assigned
@@ -257,7 +258,7 @@ var HTMLDOMPropertyConfig = {
 
       // No need to touch the DOM again if the property is the same
       if (checked !== next) {
-        node.checked = checked;
+        node.checked = next;
       }
     },
   },

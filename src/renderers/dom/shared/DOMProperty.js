@@ -72,6 +72,8 @@ var DOMPropertyInjection = {
       );
     }
 
+    DOMProperty.priority = DOMProperty.priority.concat(Priority);
+
     for (var propName in Properties) {
       invariant(
         !DOMProperty.properties.hasOwnProperty(propName),
@@ -133,10 +135,6 @@ var DOMPropertyInjection = {
       }
 
       DOMProperty.properties[propName] = propertyInfo;
-
-      var order = Priority.indexOf(propName);
-
-      DOMProperty.propertyOrder[propName] = order < 0 ? Infinity : order;
     }
   },
 };
@@ -199,12 +197,26 @@ var DOMProperty = {
    */
   properties: {},
 
-  propertyOrder: {},
+  priority: [],
 
-  getPropertyAssignmentOrder(props) {
-    return Object.keys(props).sort(function(a, b) {
-      return DOMProperty.propertyOrder[a] > DOMProperty.propertyOrder[b] ? 1 : -1;
-    });
+  enumerateInOrder(props, callback) {
+    var priority = DOMProperty.priority;
+
+    // First enumerate over props in the priority list
+    for (var i = 0, len = priority.length; i < len; i++) {
+      var propName = priority[i];
+
+      if (props.hasOwnProperty(propName)) {
+        callback(propName);
+      }
+    }
+
+    // The enumerate over every other property
+    for (var propKey in props) {
+      if (props.hasOwnProperty(propKey) && priority.indexOf(propKey) < 0) {
+        callback(propKey);
+      }
+    }
   },
 
   /**

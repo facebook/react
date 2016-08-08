@@ -975,13 +975,12 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    DOMProperty.getPropertyAssignmentOrder(nextProps).forEach((propKey) => {
+    DOMProperty.enumerateInOrder(nextProps, (propKey) => {
       var nextProp = nextProps[propKey];
       var lastProp =
         propKey === STYLE ? this._previousStyleCopy :
         lastProps != null ? lastProps[propKey] : undefined;
-      if (!nextProps.hasOwnProperty(propKey) ||
-          nextProp === lastProp ||
+      if (nextProp === lastProp ||
           nextProp == null && lastProp == null) {
         return;
       }
