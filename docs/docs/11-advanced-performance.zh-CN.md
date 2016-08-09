@@ -11,13 +11,13 @@ next: context.html
 
 ## 使用production版本
 
-如果你在你的React app中进行性能测试或在寻找性能问题，一定要确定你在使用[minified production build](/react/downloads.html)。开发者版本包括额外的警告信息对你在开发你的app的时候很有用，但是它比较慢，因为要进行多余处理。
+如果你在你的React app中进行性能测试或在寻找性能问题，一定要确定你在使用[minified production build](/react/downloads.html)。开发者版本包括额外的警告信息，这对你在开发你的app的时候很有用，但是因为要进行额外的处理，所以它也会比较慢。
 
 ## 避免更新DOM
 
 React使用虚拟DOM，它是在浏览器中的DOM子树的渲染描述，这个平行的描述让React避免创建和操作DOM节点，这些远比操作一个JavaScript对象慢。当一个组件的props或state改变，React会构造一个新的虚拟DOM和旧的进行对比来决定真实DOM更新的必要性，只有在它们不相等的时候，React才会使用尽量少的改动更新DOM。
 
-在此之上，React提供了生命周期函数，`shouldComponentUpdate`，在重新渲染机制回路（虚拟DOM对比和DOM更新）之前会被触发，给开发者减短这个这个过程回路的能力。这个函数默认返回`true`，让React执行更新。
+在此之上，React提供了生命周期函数，`shouldComponentUpdate`，在重新渲染机制回路（虚拟DOM对比和DOM更新）之前会被触发，赋予开发者跳过这个过程的能力。这个函数默认返回`true`，让React执行更新。
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
@@ -27,7 +27,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 一定要记住，React会非常频繁的调用这个函数，所以要确保它的执行速度够快。
 
-假如你有个带有多个聊天线的消息应用，如果只有一条线发生改变，如果我们在`ChatThread`组件执行`shouldComponentUpdate`，React可以跳过其他线的重新渲染步骤。
+假如你有个带有多个对话的消息应用，如果只有一个对话发生改变，如果我们在`ChatThread`组件执行`shouldComponentUpdate`，React可以跳过其他对话的重新渲染步骤。
 
 
 ```javascript
@@ -174,7 +174,7 @@ x === y; // false
 
 如果你在使用[Flux](https://facebook.github.io/flux/)，你应该开始使用immutable-js写你的stores，看一下[full API](https://facebook.github.io/immutable-js/docs/#/)。
 
-让我们看一个可行的方式，使用不可变数据结构来给聊天示例创建数据结构。首先我们要给每个要建模的实体定义一个`Record`。Records仅仅是一个不可变容器，里面保存一系列具体数据:
+让我们看一个可行的方式，使用不可变数据结构来给消息示例创建数据结构。首先我们要给每个要建模的实体定义一个`Record`。Records仅仅是一个不可变容器，里面保存一系列具体数据:
 
 ```javascript
 var User = Immutable.Record({
