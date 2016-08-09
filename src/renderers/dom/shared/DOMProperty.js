@@ -197,6 +197,10 @@ var DOMProperty = {
    */
   properties: {},
 
+  /**
+   * Some elements need specific attribute insertion order. This property
+   * stores that configuration.
+   */
   order: {},
 
   /**
