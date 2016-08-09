@@ -168,6 +168,9 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.pendingProps = fiber.pendingProps;
     alt.pendingWorkPriority = priorityLevel;
 
+    alt.memoizedProps = fiber.memoizedProps;
+    alt.output = fiber.output;
+
     // Whenever we clone, we do so to get a new work in progress.
     // This ensures that we've reset these in the new tree.
     alt.nextEffect = null;
@@ -188,6 +191,9 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   alt.pendingProps = fiber.pendingProps;
   alt.pendingWorkPriority = priorityLevel;
+
+  alt.memoizedProps = fiber.memoizedProps;
+  alt.output = fiber.output;
 
   alt.alternate = fiber;
   fiber.alternate = alt;
