@@ -27,20 +27,23 @@ var HTMLDOMPropertyConfig = {
     new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$')
   ),
 
-  Priority: [
-    // Make sure we set .type before any other form properties (setting .value
-    // before .type means .value is lost in IE11 and below)
-    'type',
-    // Make sure we set .step before .value (setting .value before .step
-    // means .value is rounded on mount: based upon step precision)
-    'step',
-    'min',
-    'max',
-    'value',
-    'defaultValue',
-    'checked',
-    'defaultChecked',
-  ],
+  Order: {
+    input: [
+      // Make sure we set .type before any other form properties (setting .value
+      // before .type means .value is lost in IE11 and below)
+      'type',
+      // Make sure we set .step before .value (setting .value before .step
+      // means .value is rounded on mount: based upon step precision)
+      'step'
+      // Min and max need to be set before value for range inputs.
+      'min',
+      'max',
+      'value',
+      'defaultValue',
+      'checked',
+      'defaultChecked',
+    ],
+  },
 
   Properties: {
     /**

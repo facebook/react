@@ -202,7 +202,7 @@ var ReactDOMInput = {
         value
       );
     }
-  }
+  },
 };
 
 function _handleChange(event) {

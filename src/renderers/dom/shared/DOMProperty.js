@@ -60,7 +60,6 @@ var DOMPropertyInjection = {
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Injection = DOMPropertyInjection;
     var Properties = domPropertyConfig.Properties || {};
-    var Priority = domPropertyConfig.Priority || [];
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
@@ -72,7 +71,8 @@ var DOMPropertyInjection = {
       );
     }
 
-    DOMProperty.priority = DOMProperty.priority.concat(Priority);
+    // Some tags must assign properties in a specific order. Assign that here:
+    Object.assign(DOMProperty.order, domPropertyConfig.Order);
 
     for (var propName in Properties) {
       invariant(
@@ -197,27 +197,7 @@ var DOMProperty = {
    */
   properties: {},
 
-  priority: [],
-
-  enumerateInOrder(props, callback) {
-    var priority = DOMProperty.priority;
-
-    // First enumerate over props in the priority list
-    for (var i = 0, len = priority.length; i < len; i++) {
-      var propName = priority[i];
-
-      if (props.hasOwnProperty(propName)) {
-        callback(propName);
-      }
-    }
-
-    // The enumerate over every other property
-    for (var propKey in props) {
-      if (props.hasOwnProperty(propKey) && priority.indexOf(propKey) < 0) {
-        callback(propKey);
-      }
-    }
-  },
+  order: {},
 
   /**
    * Mapping from lowercase property names to the properly cased version, used

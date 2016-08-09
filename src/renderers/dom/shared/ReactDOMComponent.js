@@ -937,6 +937,8 @@ ReactDOMComponent.Mixin = {
    */
   _updateDOMProperties: function(lastProps, nextProps, transaction) {
     var propKey;
+    var nextProp;
+    var lastProp;
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
@@ -975,15 +977,41 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    DOMProperty.enumerateInOrder(nextProps, (propKey) => {
-      var nextProp = nextProps[propKey];
-      var lastProp =
+    var ordered = DOMProperty.order[this._tag];
+    if (ordered != null) {
+      for (var i = 0, len = ordered.length; i < len; i++) {
+        propKey = ordered[i];
+
+        if (nextProps.hasOwnProperty(propKey)) {
+          lastProp = lastProps ? lastProps[propKey] : undefined;
+          nextProp = nextProps[propKey];
+
+          if (lastProp !== nextProp) {
+            DOMPropertyOperations.setValueForProperty(
+              getNode(this),
+              propKey,
+              nextProp
+            );
+          }
+        }
+      }
+    }
+
+    for (propKey in nextProps) {
+      if (ordered != null && ordered.indexOf(propKey) >= 0) {
+        continue;
+      }
+
+      nextProp = nextProps[propKey];
+      lastProp =
         propKey === STYLE ? this._previousStyleCopy :
         lastProps != null ? lastProps[propKey] : undefined;
+
       if (nextProp === lastProp ||
           nextProp == null && lastProp == null) {
-        return;
+        continue;
       }
+
       if (propKey === STYLE) {
         if (nextProp) {
           if (__DEV__) {
@@ -1034,19 +1062,15 @@ ReactDOMComponent.Mixin = {
           );
         }
       } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
-        var node = getNode(this);
-        // If we're updating to null or undefined, we should remove the property
-        // from the DOM node instead of inadvertently setting to a string. This
-        // brings us in line with the same behavior we have on initial render.
-        if (nextProp != null) {
-          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
-        } else {
-          DOMPropertyOperations.deleteValueForProperty(node, propKey);
-        }
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
+        DOMPropertyOperations.setValueForProperty(
+          getNode(this),
+          propKey,
+          nextProp
+        );
       }
-    });
+    }
 
     if (styleUpdates) {
       CSSPropertyOperations.setValueForStyles(
