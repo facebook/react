@@ -34,12 +34,11 @@ var HTMLDOMPropertyConfig = {
       'type',
       // Make sure we set .step before .value (setting .value before .step
       // means .value is rounded on mount: based upon step precision)
-      'step'
+      'step',
       // Min and max need to be set before value for range inputs.
       'min',
       'max',
       'value',
-      'defaultValue',
       'checked',
       'defaultChecked',
     ],
