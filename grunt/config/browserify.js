@@ -22,6 +22,7 @@ var shimSharedModules = globalShim.configure({
   // The methods we used here are exposed on the main React export.
   // TODO: Change all renderer code to require the isomorphic React directly
   // instead of these internals.
+  './React': 'React',
   './ReactElement': 'React',
   './ReactPropTypes': 'React.PropTypes',
   './ReactChildren': 'React.Children',
