@@ -12,7 +12,7 @@
 'use strict';
 
 var React = require('React');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var emptyFunction = require('emptyFunction');
@@ -64,7 +64,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       nextChildMapping = ReactTransitionChildMapping.getChildMapping(
         nextProps.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       nextChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -137,7 +137,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
         this.props.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -177,7 +177,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
         this.props.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -218,7 +218,7 @@ var ReactTransitionGroup = React.createClass({
     if (__DEV__) {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(
         this.props.children,
-        ReactInstanceMap.get(this)._debugID
+        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
       );
     } else {
       currentChildMapping = ReactTransitionChildMapping.getChildMapping(

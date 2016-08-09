@@ -12,7 +12,7 @@
 'use strict';
 
 var React = require('React');
-var ReactDOM = require('ReactDOM');
+var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
@@ -54,7 +54,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   transition: function(animationType, finishCallback, userSpecifiedDelay) {
-    var node = ReactDOM.findDOMNode(this);
+    var node = ReactAddonsDOMDependencies.getReactDOM().findDOMNode(this);
 
     if (!node) {
       if (finishCallback) {
