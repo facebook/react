@@ -237,6 +237,7 @@ if (__DEV__) {
 TopLevelWrapper.prototype.render = function() {
   return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounting is the process of initializing a React component by creating its
