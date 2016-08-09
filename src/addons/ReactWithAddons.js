@@ -13,6 +13,7 @@
 
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
+var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
@@ -34,8 +35,20 @@ React.addons = {
 };
 
 if (__DEV__) {
-  React.addons.Perf = require('ReactPerf');
-  React.addons.TestUtils = require('ReactTestUtils');
+  // For the UMD build we get these lazily from the global since they're tied
+  // to the DOM renderer and it hasn't loaded yet.
+  Object.defineProperty(React.addons, 'Perf', {
+    enumerable: true,
+    get: function() {
+      return ReactAddonsDOMDependencies.getReactPerf();
+    },
+  });
+  Object.defineProperty(React.addons, 'TestUtils', {
+    enumerable: true,
+    get: function() {
+      return ReactAddonsDOMDependencies.getReactTestUtils();
+    },
+  });
 }
 
 module.exports = React;

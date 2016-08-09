@@ -18,10 +18,13 @@ var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactReconciler = require('ReactReconciler');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
+if (__DEV__) {
+  var ReactPropTypeLocations = require('ReactPropTypeLocations');
+  var checkReactTypeSpec = require('checkReactTypeSpec');
+}
+
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var shallowEqual = require('shallowEqual');
@@ -729,14 +732,16 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _checkContextTypes: function(typeSpecs, values, location) {
-    checkReactTypeSpec(
-      typeSpecs,
-      values,
-      location,
-      this.getName(),
-      null,
-      this._debugID
-    );
+    if (__DEV__) {
+      checkReactTypeSpec(
+        typeSpecs,
+        values,
+        location,
+        this.getName(),
+        null,
+        this._debugID
+      );
+    }
   },
 
   receiveComponent: function(nextElement, transaction, nextContext) {

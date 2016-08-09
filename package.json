@@ -3,6 +3,7 @@
   "private": true,
   "version": "16.0.0-alpha",
   "devDependencies": {
+    "aliasify": "^2.0.0",
     "art": "^0.10.1",
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
@@ -33,6 +34,7 @@
     "babel-traverse": "^6.9.0",
     "babylon": "6.8.0",
     "browserify": "^13.0.0",
+    "browserify-global-shim": "^1.0.3",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
