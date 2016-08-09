@@ -1006,12 +1006,11 @@ ReactDOMComponent.Mixin = {
       lastProp =
         propKey === STYLE ? this._previousStyleCopy :
         lastProps != null ? lastProps[propKey] : undefined;
-
-      if (nextProp === lastProp ||
+      if (!nextProps.hasOwnProperty(propKey) ||
+          nextProp === lastProp ||
           nextProp == null && lastProp == null) {
         continue;
       }
-
       if (propKey === STYLE) {
         if (nextProp) {
           if (__DEV__) {
@@ -1062,16 +1061,19 @@ ReactDOMComponent.Mixin = {
           );
         }
       } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)) {
-        DOMPropertyOperations.setValueForProperty(
-          getNode(this),
-          propKey,
-          nextProp
-        );
+          DOMProperty.properties[propKey] ||
+          DOMProperty.isCustomAttribute(propKey)) {
+        var node = getNode(this);
+        // If we're updating to null or undefined, we should remove the property
+        // from the DOM node instead of inadvertently setting to a string. This
+        // brings us in line with the same behavior we have on initial render.
+        if (nextProp != null) {
+          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
+        } else {
+          DOMPropertyOperations.deleteValueForProperty(node, propKey);
+        }
       }
     }
-
     if (styleUpdates) {
       CSSPropertyOperations.setValueForStyles(
         getNode(this),
