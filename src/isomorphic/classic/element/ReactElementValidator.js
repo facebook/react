@@ -181,6 +181,31 @@ function validatePropTypes(element) {
   }
 }
 
+/**
+ * Given an element, freeze `type` and `defaultProps` (Only used in DEV)
+ *
+ * @param {ReactElement} element
+ */
+function freezeTypeAndDefaultProps(element) {
+  var type = element.type;
+  if (typeof type !== 'function' || type.wasTaggedReactComponent) {
+    return;
+  }
+  if (canDefineProperty) {
+    Object.defineProperty(type, 'wasTaggedReactComponent', { value: true });
+    Object.defineProperty(type, 'defaultProps', {
+      writable: false,
+      configurable: false,
+    });
+  } else {
+    type.wasTaggedReactComponent = true;
+  }
+  if (Object.freeze) {
+    Object.freeze(type);
+    Object.freeze(type.defaultProps);
+  }
+}
+
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
@@ -216,6 +241,10 @@ var ReactElementValidator = {
     }
 
     validatePropTypes(element);
+
+    if (__DEV__) {
+      freezeTypeAndDefaultProps(element);
+    }
 
     return element;
   },

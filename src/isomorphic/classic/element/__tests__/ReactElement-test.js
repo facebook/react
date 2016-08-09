@@ -54,6 +54,9 @@ describe('ReactElement', function() {
     expect(element.ref).toBe(null);
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
+    expect(Object.isFrozen(element.type)).toBe(true);
+    expect(Object.isFrozen(element.type.defaultProps)).toBe(true);
+    expect(element.type.wasTaggedReactComponent).toBe(true);
     expect(element.props).toEqual({});
   });
 
@@ -166,6 +169,8 @@ describe('ReactElement', function() {
     expect(element.ref).toBe(null);
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
+    expect(Object.isFrozen(element.type)).toBe(true);
+    expect(Object.isFrozen(element.type.defaultProps)).toBe(true);
     expect(element.props).toEqual({});
   });
 
@@ -211,6 +216,8 @@ describe('ReactElement', function() {
     expect(element.ref).toBe('34');
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
+    expect(Object.isFrozen(element.type)).toBe(true);
+    expect(Object.isFrozen(element.type.defaultProps)).toBe(true);
     expect(element.props).toEqual({foo: '56'});
   });
 
@@ -225,6 +232,8 @@ describe('ReactElement', function() {
     expect(element.ref).toBe(null);
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
+    expect(Object.isFrozen(element.type)).toBe(true);
+    expect(Object.isFrozen(element.type.defaultProps)).toBe(true);
     expect(element.props).toEqual({foo: '12'});
   });
 
@@ -240,6 +249,8 @@ describe('ReactElement', function() {
     expect(element.ref).toBe(null);
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
+    expect(Object.isFrozen(element.type)).toBe(true);
+    expect(Object.isFrozen(element.type.defaultProps)).toBe(true);
     expect(element.props).toEqual({foo: '56'});
   });
 
@@ -260,6 +271,8 @@ describe('ReactElement', function() {
     expect(element.ref).toBe(null);
     expect(Object.isFrozen(element)).toBe(true);
     expect(Object.isFrozen(element.props)).toBe(true);
+    expect(Object.isFrozen(element.type)).toBe(true);
+    expect(Object.isFrozen(element.type.defaultProps)).toBe(true);
     expect(element.props).toEqual({foo: '56'});
   });
 
