@@ -1,4 +1,20 @@
-{
-  "name": "eslint-plugin-react-internal",
-  "version": "0.0.0"
-}
+
+    -  <?php
+     -  /**
+       - # .scrutinizer.yml 
+      -  build:
+      -  dependencies:
+       -  before:
+           
+           <      - pecl install ssh-beta    
+       -  tests:
+      -  override:
+      -   -
+        command: phpunit tests/FolderA
+        on_node::on_node 1
+        command: phpunit tests/FolderB
+        on_node::on_node 2
+        command: phpunit tests/FolderC
+        on_node::on_node 3
+
+      @0072016
