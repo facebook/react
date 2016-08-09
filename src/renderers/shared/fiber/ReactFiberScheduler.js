@@ -66,22 +66,25 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     // roots for high priority work before moving on to lower priorities.
     let root = nextScheduledRoot;
     while (root) {
-      cloneFiber(root.current, root.current.pendingWorkPriority);
+      let rootInProgress = cloneFiber(
+        root.current,
+        root.current.pendingWorkPriority
+      );
       // Find the highest possible priority work to do.
       // This loop is unrolled just to satisfy Flow's enum constraint.
       // We could make arbitrary many idle priority levels but having
       // too many just means flushing changes too often.
-      let work = findNextUnitOfWorkAtPriority(root.current, HighPriority);
+      let work = findNextUnitOfWorkAtPriority(rootInProgress, HighPriority);
       if (work) {
         nextPriorityLevel = HighPriority;
         return work;
       }
-      work = findNextUnitOfWorkAtPriority(root.current, LowPriority);
+      work = findNextUnitOfWorkAtPriority(rootInProgress, LowPriority);
       if (work) {
         nextPriorityLevel = LowPriority;
         return work;
       }
-      work = findNextUnitOfWorkAtPriority(root.current, OffscreenPriority);
+      work = findNextUnitOfWorkAtPriority(rootInProgress, OffscreenPriority);
       if (work) {
         nextPriorityLevel = OffscreenPriority;
         return work;
@@ -114,6 +117,21 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
+  function resetWorkPriority(workInProgress : Fiber) {
+    let newPriority = NoWork;
+    let child = workInProgress.childInProgress || workInProgress.child;
+    while (child) {
+      // Ensure that remaining work priority bubbles up.
+      if (child.pendingWorkPriority !== NoWork &&
+          (newPriority === NoWork ||
+          newPriority > child.pendingWorkPriority)) {
+        newPriority = child.pendingWorkPriority;
+      }
+      child = child.sibling;
+    }
+    workInProgress.pendingWorkPriority = newPriority;
+  }
+
   function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
@@ -123,6 +141,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
 
+      resetWorkPriority(workInProgress);
+
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
@@ -130,12 +150,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       const returnFiber = workInProgress.return;
 
       if (returnFiber) {
-        // Ensure that remaining work priority bubbles up.
-        if (workInProgress.pendingWorkPriority !== NoWork &&
-            (returnFiber.pendingWorkPriority === NoWork ||
-            returnFiber.pendingWorkPriority > workInProgress.pendingWorkPriority)) {
-          returnFiber.pendingWorkPriority = workInProgress.pendingWorkPriority;
-        }
         // Ensure that the first and last effect of the parent corresponds
         // to the children's first and last effect. This probably relies on
         // children completing in order.

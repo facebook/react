@@ -63,6 +63,7 @@ function ChildReconciler(shouldClone) {
           // Will fix reconciliation properly later.
           const clone = shouldClone ? cloneFiber(existingChild, priority) : existingChild;
           if (!shouldClone) {
+            // TODO: This might be lowering the priority of nested unfinished work.
             clone.pendingWorkPriority = priority;
           }
           clone.pendingProps = element.props;
@@ -134,6 +135,7 @@ function ChildReconciler(shouldClone) {
           // Get the clone of the existing fiber.
           const clone = shouldClone ? cloneFiber(existingChild, priority) : existingChild;
           if (!shouldClone) {
+            // TODO: This might be lowering the priority of nested unfinished work.
             clone.pendingWorkPriority = priority;
           }
           clone.pendingProps = element.props;
