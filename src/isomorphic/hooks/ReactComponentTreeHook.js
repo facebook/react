@@ -39,7 +39,7 @@ function remove(id) {
   delete itemByKey[key];
 }
 
-function update(id, updater) {
+function getOrCreate(id) {
   var key = getKeyFromID(id);
   if (!itemByKey[key]) {
     itemByKey[key] = {
@@ -53,7 +53,7 @@ function update(id, updater) {
       updateCount: 0,
     };
   }
-  updater(itemByKey[key]);
+  return itemByKey[key];
 }
 
 function purgeDeep(id) {
@@ -95,75 +95,82 @@ function describeID(id) {
 
 var ReactComponentTreeHook = {
   onSetDisplayName(id, displayName) {
-    update(id, item => item.displayName = displayName);
+    var item = getOrCreate(id);
+    item.displayName = displayName;
   },
 
   onSetChildren(id, nextChildIDs) {
-    update(id, item => {
-      item.childIDs = nextChildIDs;
+    var item = getOrCreate(id);
+    item.childIDs = nextChildIDs;
 
-      nextChildIDs.forEach(nextChildID => {
-        var nextChild = get(nextChildID);
-        invariant(
-          nextChild,
-          'Expected hook events to fire for the child ' +
-          'before its parent includes it in onSetChildren().'
-        );
-        invariant(
-          nextChild.displayName != null,
-          'Expected onSetDisplayName() to fire for the child ' +
-          'before its parent includes it in onSetChildren().'
-        );
-        invariant(
-          nextChild.childIDs != null || nextChild.text != null,
-          'Expected onSetChildren() or onSetText() to fire for the child ' +
-          'before its parent includes it in onSetChildren().'
-        );
-        invariant(
-          nextChild.isMounted,
-          'Expected onMountComponent() to fire for the child ' +
-          'before its parent includes it in onSetChildren().'
-        );
-        if (nextChild.parentID == null) {
-          nextChild.parentID = id;
-          // TODO: This shouldn't be necessary but mounting a new root during in
-          // componentWillMount currently causes not-yet-mounted components to
-          // be purged from our tree data so their parent ID is missing.
-        }
-        invariant(
-          nextChild.parentID === id,
-          'Expected onSetParent() and onSetChildren() to be consistent (%s ' +
-          'has parents %s and %s).',
-          nextChildID,
-          nextChild.parentID,
-          id
-        );
-      });
-    });
+    for (var i = 0; i < nextChildIDs.length; i++) {
+      var nextChildID = nextChildIDs[i];
+      var nextChild = get(nextChildID);
+      invariant(
+        nextChild,
+        'Expected hook events to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      invariant(
+        nextChild.displayName != null,
+        'Expected onSetDisplayName() to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      invariant(
+        nextChild.childIDs != null || nextChild.text != null,
+        'Expected onSetChildren() or onSetText() to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      invariant(
+        nextChild.isMounted,
+        'Expected onMountComponent() to fire for the child ' +
+        'before its parent includes it in onSetChildren().'
+      );
+      if (nextChild.parentID == null) {
+        nextChild.parentID = id;
+        // TODO: This shouldn't be necessary but mounting a new root during in
+        // componentWillMount currently causes not-yet-mounted components to
+        // be purged from our tree data so their parent ID is missing.
+      }
+      invariant(
+        nextChild.parentID === id,
+        'Expected onSetParent() and onSetChildren() to be consistent (%s ' +
+        'has parents %s and %s).',
+        nextChildID,
+        nextChild.parentID,
+        id
+      );
+    }
   },
 
   onSetOwner(id, ownerID) {
-    update(id, item => item.ownerID = ownerID);
+    var item = getOrCreate(id);
+    item.ownerID = ownerID;
   },
 
   onSetParent(id, parentID) {
-    update(id, item => item.parentID = parentID);
+    var item = getOrCreate(id);
+    item.parentID = parentID;
   },
 
   onSetText(id, text) {
-    update(id, item => item.text = text);
+    var item = getOrCreate(id);
+    item.text = text;
   },
 
   onBeforeMountComponent(id, element) {
-    update(id, item => item.element = element);
+    var item = getOrCreate(id);
+    item.element = element;
   },
 
   onBeforeUpdateComponent(id, element) {
-    update(id, item => item.element = element);
+    var item = getOrCreate(id);
+    item.element = element;
   },
 
   onMountComponent(id) {
-    update(id, item => item.isMounted = true);
+    var item = getOrCreate(id);
+    item.isMounted = true;
   },
 
   onMountRootComponent(id) {
@@ -171,11 +178,13 @@ var ReactComponentTreeHook = {
   },
 
   onUpdateComponent(id) {
-    update(id, item => item.updateCount++);
+    var item = get(id);
+    item.updateCount++;
   },
 
   onUnmountComponent(id) {
-    update(id, item => item.isMounted = false);
+    var item = get(id);
+    item.isMounted = false;
     unmountedIDs[id] = true;
     delete rootIDs[id];
   },
