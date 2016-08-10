@@ -270,16 +270,12 @@ if (__DEV__) {
     }
 
     this._contentDebugID = contentDebugID;
-    var text = '' + content;
-
-    ReactInstrumentation.debugTool.onSetDisplayName(contentDebugID, '#text');
-    ReactInstrumentation.debugTool.onSetParent(contentDebugID, debugID);
-    ReactInstrumentation.debugTool.onSetText(contentDebugID, text);
-
     if (hasExistingContent) {
       ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
       ReactInstrumentation.debugTool.onUpdateComponent(contentDebugID);
     } else {
+      ReactInstrumentation.debugTool.onInstantiateComponent(contentDebugID, content);
+      ReactInstrumentation.debugTool.onSetParent(contentDebugID, debugID);
       ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content);
       ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
       ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);

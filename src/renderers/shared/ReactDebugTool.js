@@ -283,26 +283,18 @@ var ReactDebugTool = {
   onSetState() {
     emitEvent('onSetState');
   },
-  onSetDisplayName(debugID, displayName) {
-    checkDebugID(debugID);
-    emitEvent('onSetDisplayName', debugID, displayName);
-  },
   onSetChildren(debugID, childDebugIDs) {
     checkDebugID(debugID);
     childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onSetOwner(debugID, ownerDebugID) {
-    checkDebugID(debugID);
-    emitEvent('onSetOwner', debugID, ownerDebugID);
-  },
   onSetParent(debugID, parentDebugID) {
     checkDebugID(debugID);
     emitEvent('onSetParent', debugID, parentDebugID);
   },
-  onSetText(debugID, text) {
+  onInstantiateComponent(debugID, element) {
     checkDebugID(debugID);
-    emitEvent('onSetText', debugID, text);
+    emitEvent('onInstantiateComponent', debugID, element);
   },
   onMountRootComponent(debugID) {
     checkDebugID(debugID);

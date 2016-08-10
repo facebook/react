@@ -41,21 +41,6 @@ function getDeclarationErrorAddendum(owner) {
   return '';
 }
 
-function getDisplayName(instance) {
-  var element = instance._currentElement;
-  if (element == null) {
-    return '#empty';
-  } else if (typeof element === 'string' || typeof element === 'number') {
-    return '#text';
-  } else if (typeof element.type === 'string') {
-    return element.type;
-  } else if (instance.getName) {
-    return instance.getName() || 'Unknown';
-  } else {
-    return element.type.displayName || element.type.name || 'Unknown';
-  }
-}
-
 /**
  * Check if the type reference is a known internal type. I.e. not a user
  * provided composite type.
@@ -144,12 +129,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
     if (shouldHaveDebugID) {
       var debugID = nextDebugID++;
       instance._debugID = debugID;
-      var displayName = getDisplayName(instance);
-      ReactInstrumentation.debugTool.onSetDisplayName(debugID, displayName);
-      var owner = node && node._owner;
-      if (owner) {
-        ReactInstrumentation.debugTool.onSetOwner(debugID, owner._debugID);
-      }
+      ReactInstrumentation.debugTool.onInstantiateComponent(debugID, node);
     } else {
       instance._debugID = 0;
     }

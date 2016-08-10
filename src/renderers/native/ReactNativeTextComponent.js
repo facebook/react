@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
@@ -29,10 +28,6 @@ var ReactNativeTextComponent = function(text) {
 Object.assign(ReactNativeTextComponent.prototype, {
 
   mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
-    }
-
     // TODO: hostParent should have this context already. Stop abusing context.
     invariant(
       context.isInAParentText,
@@ -70,12 +65,6 @@ Object.assign(ReactNativeTextComponent.prototype, {
           'RCTRawText',
           {text: this._stringText}
         );
-        if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
-            this._debugID,
-            nextStringText
-          );
-        }
       }
     }
   },
