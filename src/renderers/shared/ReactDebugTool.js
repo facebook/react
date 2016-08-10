@@ -104,7 +104,9 @@ function resetMeasurements() {
 }
 
 function checkDebugID(debugID) {
-  warning(debugID, 'ReactDebugTool: debugID may not be empty.');
+  if (!debugID) {
+    warning(false, 'ReactDebugTool: debugID may not be empty.');
+  }
 }
 
 function beginLifeCycleTimer(debugID, timerType) {
