@@ -135,10 +135,26 @@ var ReactComponentTreeHook = {
   },
 
   onBeforeMountComponent(id, element) {
+    invariant(
+      !tree[id],
+      'Expected the item to not exist in the tree.'
+    );
     updateTree(id, item => item.element = element);
   },
 
   onBeforeUpdateComponent(id, element) {
+    invariant(
+      tree[id],
+      'Expected the item to exist in the tree.'
+    );
+    invariant(
+      tree[id].element,
+      'Expected the item to have an associated element.'
+    );
+    invariant(
+      tree[id].element.type === element.type,
+      'Expected element type to match during the update.'
+    );
     updateTree(id, item => item.element = element);
   },
 
