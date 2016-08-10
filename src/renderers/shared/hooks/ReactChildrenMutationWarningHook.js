@@ -37,11 +37,13 @@ function handleElement(debugID, element) {
       isMutated = true;
     }
   }
-  warning(
-    Array.isArray(element._shadowChildren) && !isMutated,
-    'Component\'s children should not be mutated.%s',
-    ReactComponentTreeHook.getStackAddendumByID(debugID),
-  );
+  if (!Array.isArray(element._shadowChildren) || isMutated) {
+    warning(
+      false,
+      'Component\'s children should not be mutated.%s',
+      ReactComponentTreeHook.getStackAddendumByID(debugID),
+    );
+  }
 }
 
 var ReactChildrenMutationWarningHook = {
