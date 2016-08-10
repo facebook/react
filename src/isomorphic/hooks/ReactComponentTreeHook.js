@@ -16,13 +16,33 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var invariant = require('invariant');
 var warning = require('warning');
 
-var tree = {};
+var itemByKey = {};
 var unmountedIDs = {};
 var rootIDs = {};
 
-function updateTree(id, update) {
-  if (!tree[id]) {
-    tree[id] = {
+// Use non-numeric keys to prevent V8 performance issues:
+// https://github.com/facebook/react/pull/7232
+function getKeyFromID(id) {
+  return '.' + id;
+}
+function getIDFromKey(key) {
+  return parseInt(key.substr(1), 10);
+}
+
+function get(id) {
+  var key = getKeyFromID(id);
+  return itemByKey[key];
+}
+
+function remove(id) {
+  var key = getKeyFromID(id);
+  delete itemByKey[key];
+}
+
+function update(id, updater) {
+  var key = getKeyFromID(id);
+  if (!itemByKey[key]) {
+    itemByKey[key] = {
       element: null,
       parentID: null,
       ownerID: null,
@@ -33,14 +53,14 @@ function updateTree(id, update) {
       updateCount: 0,
     };
   }
-  update(tree[id]);
+  updater(itemByKey[key]);
 }
 
 function purgeDeep(id) {
-  var item = tree[id];
+  var item = get(id);
   if (item) {
     var {childIDs} = item;
-    delete tree[id];
+    remove(id);
     childIDs.forEach(purgeDeep);
   }
 }
@@ -75,15 +95,15 @@ function describeID(id) {
 
 var ReactComponentTreeHook = {
   onSetDisplayName(id, displayName) {
-    updateTree(id, item => item.displayName = displayName);
+    update(id, item => item.displayName = displayName);
   },
 
   onSetChildren(id, nextChildIDs) {
-    updateTree(id, item => {
+    update(id, item => {
       item.childIDs = nextChildIDs;
 
       nextChildIDs.forEach(nextChildID => {
-        var nextChild = tree[nextChildID];
+        var nextChild = get(nextChildID);
         invariant(
           nextChild,
           'Expected hook events to fire for the child ' +
@@ -123,27 +143,27 @@ var ReactComponentTreeHook = {
   },
 
   onSetOwner(id, ownerID) {
-    updateTree(id, item => item.ownerID = ownerID);
+    update(id, item => item.ownerID = ownerID);
   },
 
   onSetParent(id, parentID) {
-    updateTree(id, item => item.parentID = parentID);
+    update(id, item => item.parentID = parentID);
   },
 
   onSetText(id, text) {
-    updateTree(id, item => item.text = text);
+    update(id, item => item.text = text);
   },
 
   onBeforeMountComponent(id, element) {
-    updateTree(id, item => item.element = element);
+    update(id, item => item.element = element);
   },
 
   onBeforeUpdateComponent(id, element) {
-    updateTree(id, item => item.element = element);
+    update(id, item => item.element = element);
   },
 
   onMountComponent(id) {
-    updateTree(id, item => item.isMounted = true);
+    update(id, item => item.isMounted = true);
   },
 
   onMountRootComponent(id) {
@@ -151,11 +171,11 @@ var ReactComponentTreeHook = {
   },
 
   onUpdateComponent(id) {
-    updateTree(id, item => item.updateCount++);
+    update(id, item => item.updateCount++);
   },
 
   onUnmountComponent(id) {
-    updateTree(id, item => item.isMounted = false);
+    update(id, item => item.isMounted = false);
     unmountedIDs[id] = true;
     delete rootIDs[id];
   },
@@ -173,7 +193,7 @@ var ReactComponentTreeHook = {
   },
 
   isMounted(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.isMounted : false;
   },
 
@@ -209,44 +229,44 @@ var ReactComponentTreeHook = {
   },
 
   getChildIDs(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.childIDs : [];
   },
 
   getDisplayName(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.displayName : 'Unknown';
   },
 
   getElement(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.element : null;
   },
 
   getOwnerID(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.ownerID : null;
   },
 
   getParentID(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.parentID : null;
   },
 
   getSource(id) {
-    var item = tree[id];
+    var item = get(id);
     var element = item ? item.element : null;
     var source = element != null ? element._source : null;
     return source;
   },
 
   getText(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.text : null;
   },
 
   getUpdateCount(id) {
-    var item = tree[id];
+    var item = get(id);
     return item ? item.updateCount : 0;
   },
 
@@ -255,7 +275,7 @@ var ReactComponentTreeHook = {
   },
 
   getRegisteredIDs() {
-    return Object.keys(tree);
+    return Object.keys(itemByKey).map(getIDFromKey);
   },
 };
 
