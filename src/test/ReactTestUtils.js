@@ -384,6 +384,7 @@ var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
   this._debugID = nextDebugID++;
+  ReactInstrumentation.debugTool.onInstantiateComponent(this._debugID, element);
 };
 
 NoopInternalComponent.prototype = {
@@ -412,8 +413,7 @@ var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
     this._debugID = nextDebugID++;
-    var displayName = element.type.displayName || element.type.name || 'Unknown';
-    ReactInstrumentation.debugTool.onSetDisplayName(this._debugID, displayName);
+    ReactInstrumentation.debugTool.onInstantiateComponent(this._debugID, element);
   }
 
   this.construct(element);
