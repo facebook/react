@@ -188,13 +188,15 @@ var ReactElementValidator = {
                     (type !== null && typeof type === 'object');
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(
-      validType,
-      'React.createElement: type should not be null, undefined, boolean, or ' +
-        'number. It should be a string (for DOM elements) or a ReactClass ' +
-        '(for composite components).%s',
-      getDeclarationErrorAddendum()
-    );
+    if (!validType) {
+      warning(
+        false,
+        'React.createElement: type should not be null, undefined, boolean, or ' +
+          'number. It should be a string (for DOM elements) or a ReactClass ' +
+          '(for composite components).%s',
+        getDeclarationErrorAddendum()
+      );
+    }
 
     var element = ReactElement.createElement.apply(this, arguments);
 

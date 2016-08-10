@@ -51,14 +51,16 @@ function flattenSingleChildIntoContext(
       if (!ReactComponentTreeHook) {
         ReactComponentTreeHook = require('ReactComponentTreeHook');
       }
-      warning(
-        keyUnique,
-        'flattenChildren(...): Encountered two children with the same key, ' +
-        '`%s`. Child keys must be unique; when two children share a key, only ' +
-        'the first child will be used.%s',
-        KeyEscapeUtils.unescape(name),
-        ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
-      );
+      if (!keyUnique) {
+        warning(
+          false,
+          'flattenChildren(...): Encountered two children with the same key, ' +
+          '`%s`. Child keys must be unique; when two children share a key, only ' +
+          'the first child will be used.%s',
+          KeyEscapeUtils.unescape(name),
+          ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
+        );
+      }
     }
     if (keyUnique && child != null) {
       result[name] = child;
