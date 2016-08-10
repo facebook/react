@@ -73,6 +73,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       // TODO: This should not override the pendingWorkPriority if there is
       // higher priority work in the subtree.
       container.pendingProps = element;
+      container.pendingUpdatePriority = LowPriority;
       container.pendingWorkPriority = LowPriority;
 
       scheduleLowPriWork(root, LowPriority);
@@ -88,6 +89,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       const root : FiberRoot = (container.stateNode : any);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = element;
+      root.current.pendingUpdatePriority = LowPriority;
       root.current.pendingWorkPriority = LowPriority;
 
       scheduleLowPriWork(root, LowPriority);
@@ -98,6 +100,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       const root : FiberRoot = (container.stateNode : any);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = [];
+      root.current.pendingUpdatePriority = LowPriority;
       root.current.pendingWorkPriority = LowPriority;
 
       scheduleLowPriWork(root, LowPriority);

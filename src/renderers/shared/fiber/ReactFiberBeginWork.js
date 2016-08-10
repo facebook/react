@@ -64,7 +64,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   }
 
   function reconcileChildren(current, workInProgress, nextChildren) {
-    const priorityLevel = workInProgress.pendingWorkPriority;
+    const priorityLevel = workInProgress.pendingUpdatePriority;
     reconcileChildrenAtPriority(current, workInProgress, nextChildren, priorityLevel);
   }
 
@@ -124,14 +124,29 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     if (fiber.alternate) {
       fiber.alternate.updateQueue = updateQueue;
     }
+
+    // Set the update priority of the fiber and its alternate
+    if (fiber.pendingUpdatePriority === NoWork ||
+        fiber.pendingUpdatePriority > priorityLevel) {
+      fiber.pendingUpdatePriority = priorityLevel;
+    }
+    if (fiber.alternate) {
+      if (fiber.alternate.pendingUpdatePriority === NoWork ||
+          fiber.alternate.pendingUpdatePriority > priorityLevel) {
+        fiber.alternate.pendingUpdatePriority = priorityLevel;
+      }
+    }
+
+    // For this fiber and all its ancestors and their alternates, set the
+    // work (subtree) priority
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority >= priorityLevel) {
+          fiber.pendingWorkPriority > priorityLevel) {
         fiber.pendingWorkPriority = priorityLevel;
       }
       if (fiber.alternate) {
         if (fiber.alternate.pendingWorkPriority === NoWork ||
-            fiber.alternate.pendingWorkPriority >= priorityLevel) {
+            fiber.alternate.pendingWorkPriority > priorityLevel) {
           fiber.alternate.pendingWorkPriority = priorityLevel;
         }
       }
@@ -235,7 +250,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   function updateHostComponent(current, workInProgress) {
     const nextChildren = workInProgress.pendingProps.children;
     if (workInProgress.pendingProps.hidden &&
-        workInProgress.pendingWorkPriority !== OffscreenPriority) {
+        workInProgress.pendingUpdatePriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
       // We'll rerender the children later at the lower priority.
 
@@ -311,7 +326,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   */
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
-    const priorityLevel = workInProgress.pendingWorkPriority;
+    const priorityLevel = workInProgress.pendingUpdatePriority;
 
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this

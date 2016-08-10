@@ -692,6 +692,51 @@ describe('ReactIncremental', function() {
     expect(instance.state.called).toEqual(true);
   });
 
+  it('can setState without overriding its parents\' priority', () => {
+    let ops = [];
+    let instance;
+    class Baz extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+        this.state = { num: 0 };
+      }
+      render() {
+        ops.push('Baz');
+        return <span />;
+      }
+    }
+
+    function Bar({ id }) {
+      ops.push('Bar' + id);
+      return <div />;
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return [
+        <section hidden={true}>
+          <Bar id={1} />
+          <Baz />
+        </section>,
+        <Bar id={2} />,
+      ];
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar2', 'Bar1', 'Baz']);
+    ops = [];
+    ReactNoop.render(<Foo />);
+    // Even though Baz is in a hidden subtree, calling setState gives it a
+    // higher priority. It should not affect the priority of anything else in
+    // the subtree.
+    instance.setState({ num: 1 });
+    ReactNoop.flush();
+    // Baz should come before Bar1 because it has higher priority
+    expect(ops).toEqual(['Foo', 'Bar2', 'Baz', 'Bar1']);
+  });
+
   it('can replaceState', () => {
     let instance;
     const Bar = React.createClass({

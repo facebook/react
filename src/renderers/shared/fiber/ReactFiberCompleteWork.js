@@ -113,7 +113,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
     var currentFirstChild = current ? current.stateNode : null;
     // Inherit the priority of the returnFiber.
-    const priority = workInProgress.pendingWorkPriority;
+    const priority = workInProgress.pendingUpdatePriority;
     workInProgress.stateNode = reconcileChildFibers(
       workInProgress,
       currentFirstChild,

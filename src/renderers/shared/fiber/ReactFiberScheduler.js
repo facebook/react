@@ -75,8 +75,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     let highestPriorityLevel = NoWork;
     while (root) {
       if (highestPriorityLevel === NoWork ||
-          highestPriorityLevel > root.current.pendingWorkPriority) {
-        highestPriorityLevel = root.current.pendingWorkPriority;
+          highestPriorityLevel > root.current.pendingUpdatePriority) {
+        highestPriorityLevel = root.current.pendingUpdatePriority;
         highestPriorityRoot = root;
       }
       // We didn't find anything to do in this root, so let's try the next one.
@@ -137,6 +137,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
 
+      workInProgress.pendingUpdatePriority = NoWork;
       resetWorkPriority(workInProgress);
 
       // The work is now done. We don't need this anymore. This flags
