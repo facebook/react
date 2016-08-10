@@ -17,37 +17,43 @@ var ReactDebugTool = require('ReactDebugTool');
 
 var warning = require('warning');
 
-var eventHandlers = [];
-var handlerDoesThrowForEvent = {};
+var hooks = [];
+var didHookThrowForEvent = {};
 
-function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
-  eventHandlers.forEach(function(handler) {
-    try {
-      if (handler[handlerFunctionName]) {
-        handler[handlerFunctionName](arg1, arg2, arg3, arg4, arg5);
-      }
-    } catch (e) {
-      warning(
-        handlerDoesThrowForEvent[handlerFunctionName],
-        'exception thrown by hook while handling %s: %s',
-        handlerFunctionName,
-        e + '\n' + e.stack
-      );
-      handlerDoesThrowForEvent[handlerFunctionName] = true;
+function callHook(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
+  try {
+    fn.call(context, arg1, arg2, arg3, arg4, arg5);
+  } catch (e) {
+    warning(
+      didHookThrowForEvent[event],
+      'Exception thrown by hook while handling %s: %s',
+      event,
+      e + '\n' + e.stack
+    );
+    didHookThrowForEvent[event] = true;
+  }
+}
+
+function emitEvent(event, arg1, arg2, arg3, arg4, arg5) {
+  for (var i = 0; i < hooks.length; i++) {
+    var hook = hooks[i];
+    var fn = hook[event];
+    if (fn) {
+      callHook(event, fn, hook, arg1, arg2, arg3, arg4, arg5);
     }
-  });
+  }
 }
 
 var ReactDOMDebugTool = {
   addHook(hook) {
     ReactDebugTool.addHook(hook);
-    eventHandlers.push(hook);
+    hooks.push(hook);
   },
   removeHook(hook) {
     ReactDebugTool.removeHook(hook);
-    for (var i = 0; i < eventHandlers.length; i++) {
-      if (eventHandlers[i] === hook) {
-        eventHandlers.splice(i, 1);
+    for (var i = 0; i < hooks.length; i++) {
+      if (hooks[i] === hook) {
+        hooks.splice(i, 1);
         i--;
       }
     }
