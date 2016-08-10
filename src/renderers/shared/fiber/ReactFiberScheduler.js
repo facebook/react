@@ -25,6 +25,8 @@ var { cloneFiber } = require('ReactFiber');
 
 var {
   NoWork,
+  LowPriority,
+  HighPriority,
 } = require('ReactPriorityLevel');
 
 var timeHeuristicForUnitOfWork = 1;
@@ -45,8 +47,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   const { completeWork } = ReactFiberCompleteWork(config);
   const { commitWork } = ReactFiberCommitWork(config);
 
-  // const scheduleHighPriCallback = config.scheduleHighPriCallback;
+  const scheduleHighPriCallback = config.scheduleHighPriCallback;
   const scheduleLowPriCallback = config.scheduleLowPriCallback;
+
+  // The default priority to use for updates.
+  let defaultPriority : PriorityLevel = LowPriority;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -243,6 +248,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       nextUnitOfWork = null;
     }
 
+    // Set the priority on the root, without deprioritizing
+    if (root.current.pendingWorkPriority === NoWork ||
+        priority <= root.current.pendingWorkPriority) {
+      root.current.pendingWorkPriority = priority;
+    }
+
     if (root.isScheduled) {
       // If we're already scheduled, we can bail out.
       return;
@@ -260,18 +271,73 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  /*
   function performHighPriWork() {
-    // There is no such thing as high pri work yet.
+    // Always start from the root
+    nextUnitOfWork = findNextUnitOfWork();
+    while (nextUnitOfWork &&
+           nextPriorityLevel !== NoWork) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      if (!nextUnitOfWork) {
+        // Keep searching for high pri work until there's no more left
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+      // Stop if the next unit of work is low priority
+      if (nextPriorityLevel > HighPriority) {
+        scheduleLowPriCallback(performLowPriWork);
+        return;
+      }
+    }
   }
 
-  function ensureHighPriIsScheduled() {
-    scheduleHighPriCallback(performHighPriWork);
+  function scheduleHighPriWork(root: FiberRoot, priorityLevel : PriorityLevel) {
+    // Set the priority on the root, without deprioritizing
+    if (root.current.pendingWorkPriority === NoWork ||
+        priorityLevel <= root.current.pendingWorkPriority) {
+      root.current.pendingWorkPriority = priorityLevel;
+    }
+
+    if (root.isScheduled) {
+      // If we're already scheduled, we can bail out.
+      return;
+    }
+    root.isScheduled = true;
+    if (lastScheduledRoot) {
+      // Schedule ourselves to the end.
+      lastScheduledRoot.nextScheduledRoot = root;
+      lastScheduledRoot = root;
+    } else {
+      // We're the only work scheduled.
+      nextScheduledRoot = root;
+      lastScheduledRoot = root;
+      scheduleHighPriCallback(performHighPriWork);
+    }
   }
-  */
+
+  function scheduleWork(root : FiberRoot) {
+    if (defaultPriority === NoWork) {
+      return;
+    }
+    if (defaultPriority >= LowPriority) {
+      scheduleLowPriWork(root, defaultPriority);
+      return;
+    }
+    scheduleHighPriWork(root, defaultPriority);
+  }
+
+  function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
+    const previousDefaultPriority = defaultPriority;
+    defaultPriority = priorityLevel;
+    try {
+      fn();
+    } finally {
+      defaultPriority = previousDefaultPriority;
+    }
+  }
 
   scheduler = {
+    scheduleWork: scheduleWork,
     scheduleLowPriWork: scheduleLowPriWork,
+    performWithPriority: performWithPriority,
   };
   return scheduler;
 };

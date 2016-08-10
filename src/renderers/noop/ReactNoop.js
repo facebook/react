@@ -24,6 +24,9 @@ import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var {
+  HighPriority,
+} = require('ReactPriorityLevel');
 
 var scheduledHighPriCallback = null;
 var scheduledLowPriCallback = null;
@@ -145,6 +148,10 @@ var ReactNoop = {
   flush() {
     ReactNoop.flushHighPri();
     ReactNoop.flushLowPri();
+  },
+
+  performHighPriWork(fn: Function) {
+    NoopRenderer.performWithPriority(HighPriority, fn);
   },
 
   // Logs the current state of the tree.

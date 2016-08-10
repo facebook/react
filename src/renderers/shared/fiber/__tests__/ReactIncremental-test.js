@@ -218,6 +218,63 @@ describe('ReactIncremental', () => {
 
   });
 
+  it('can deprioritize a tree from high to low pri without dropping work', () => {
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    function Middle(props) {
+      ops.push('Middle');
+      return <span>{props.children}</span>;
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar>{props.text}</Bar>
+          <section hidden={true}>
+            <Middle>{props.text}</Middle>
+          </section>
+          <Bar>{props.text}</Bar>
+          <footer hidden={true}>
+            <Middle>Footer</Middle>
+          </footer>
+        </div>
+      );
+    }
+
+    // Init
+    ReactNoop.performHighPriWork(() => {
+      ReactNoop.render(<Foo text="foo" />);
+    });
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle', 'Middle']);
+
+    ops = [];
+
+    // Render the high priority work (everying except the hidden trees).
+    ReactNoop.performHighPriWork(() => {
+      ReactNoop.render(<Foo text="foo" />);
+    });
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flushHighPri();
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+
+    ops = [];
+
+    // The hidden content was deprioritized from high to low priority. A low
+    // priority callback should have been scheduled. Flush it now.
+    ReactNoop.flushLowPri();
+
+    expect(ops).toEqual(['Middle', 'Middle']);
+  });
+
   it('can resume work in a subtree even when a parent bails out', () => {
 
     var ops = [];
