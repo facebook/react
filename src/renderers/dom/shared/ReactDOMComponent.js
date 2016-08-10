@@ -270,8 +270,6 @@ if (__DEV__) {
     }
 
     this._contentDebugID = contentDebugID;
-    var text = '' + content;
-
     if (hasExistingContent) {
       ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
       ReactInstrumentation.debugTool.onUpdateComponent(contentDebugID);

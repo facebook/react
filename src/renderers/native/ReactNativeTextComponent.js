@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
