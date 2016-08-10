@@ -67,8 +67,6 @@ Object.assign(ReactDOMTextComponent.prototype, {
     context
   ) {
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
-
       var parentInfo;
       if (hostParent != null) {
         parentInfo = hostParent._ancestorInfo;
@@ -142,13 +140,6 @@ Object.assign(ReactDOMTextComponent.prototype, {
           commentNodes[1],
           nextStringText
         );
-
-        if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
-            this._debugID,
-            nextStringText
-          );
-        }
       }
     }
   },

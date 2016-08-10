@@ -39,21 +39,16 @@ function remove(id) {
   delete itemByKey[key];
 }
 
-function getOrCreate(id) {
+function create(id, element) {
   var key = getKeyFromID(id);
-  if (!itemByKey[key]) {
-    itemByKey[key] = {
-      element: null,
-      parentID: null,
-      ownerID: null,
-      text: null,
-      childIDs: [],
-      displayName: 'Unknown',
-      isMounted: false,
-      updateCount: 0,
-    };
-  }
-  return itemByKey[key];
+  itemByKey[key] = {
+    element,
+    parentID: null,
+    text: null,
+    childIDs: [],
+    isMounted: false,
+    updateCount: 0,
+  };
 }
 
 function purgeDeep(id) {
@@ -76,6 +71,18 @@ function describeComponentFrame(name, source, ownerName) {
   );
 }
 
+function getDisplayName(element) {
+  if (element == null) {
+    return '#empty';
+  } else if (typeof element === 'string' || typeof element === 'number') {
+    return '#text';
+  } else if (typeof element.type === 'string') {
+    return element.type;
+  } else {
+    return element.type.displayName || element.type.name || 'Unknown';
+  }
+}
+
 function describeID(id) {
   var name = ReactComponentTreeHook.getDisplayName(id);
   var element = ReactComponentTreeHook.getElement(id);
@@ -94,13 +101,8 @@ function describeID(id) {
 }
 
 var ReactComponentTreeHook = {
-  onSetDisplayName(id, displayName) {
-    var item = getOrCreate(id);
-    item.displayName = displayName;
-  },
-
   onSetChildren(id, nextChildIDs) {
-    var item = getOrCreate(id);
+    var item = get(id);
     item.childIDs = nextChildIDs;
 
     for (var i = 0; i < nextChildIDs.length; i++) {
@@ -112,13 +114,10 @@ var ReactComponentTreeHook = {
         'before its parent includes it in onSetChildren().'
       );
       invariant(
-        nextChild.displayName != null,
-        'Expected onSetDisplayName() to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
-      );
-      invariant(
-        nextChild.childIDs != null || nextChild.text != null,
-        'Expected onSetChildren() or onSetText() to fire for the child ' +
+        nextChild.childIDs != null ||
+        typeof nextChild.element !== 'object' ||
+        nextChild.element == null,
+        'Expected onSetChildren() to fire for a container child ' +
         'before its parent includes it in onSetChildren().'
       );
       invariant(
@@ -143,33 +142,32 @@ var ReactComponentTreeHook = {
     }
   },
 
-  onSetOwner(id, ownerID) {
-    var item = getOrCreate(id);
-    item.ownerID = ownerID;
-  },
-
   onSetParent(id, parentID) {
-    var item = getOrCreate(id);
+    var item = get(id);
     item.parentID = parentID;
   },
 
-  onSetText(id, text) {
-    var item = getOrCreate(id);
-    item.text = text;
+  onInstantiateComponent(id, element) {
+    create(id, element);
   },
 
   onBeforeMountComponent(id, element) {
-    var item = getOrCreate(id);
+    var item = get(id);
     item.element = element;
   },
 
   onBeforeUpdateComponent(id, element) {
-    var item = getOrCreate(id);
+    var item = get(id);
+    if (!item || !item.isMounted) {
+      // We may end up here as a result of setState() in componentWillUnmount().
+      // In this case, ignore the element.
+      return;
+    }
     item.element = element;
   },
 
   onMountComponent(id) {
-    var item = getOrCreate(id);
+    var item = get(id);
     item.isMounted = true;
   },
 
@@ -179,6 +177,11 @@ var ReactComponentTreeHook = {
 
   onUpdateComponent(id) {
     var item = get(id);
+    if (!item || !item.isMounted) {
+      // We may end up here as a result of setState() in componentWillUnmount().
+      // In this case, ignore the element.
+      return;
+    }
     item.updateCount++;
   },
 
@@ -243,8 +246,11 @@ var ReactComponentTreeHook = {
   },
 
   getDisplayName(id) {
-    var item = get(id);
-    return item ? item.displayName : 'Unknown';
+    var element = ReactComponentTreeHook.getElement(id);
+    if (!element) {
+      return null;
+    }
+    return getDisplayName(element);
   },
 
   getElement(id) {
@@ -253,8 +259,11 @@ var ReactComponentTreeHook = {
   },
 
   getOwnerID(id) {
-    var item = get(id);
-    return item ? item.ownerID : null;
+    var element = ReactComponentTreeHook.getElement(id);
+    if (!element || !element._owner) {
+      return null;
+    }
+    return element._owner._debugID;
   },
 
   getParentID(id) {
@@ -270,8 +279,14 @@ var ReactComponentTreeHook = {
   },
 
   getText(id) {
-    var item = get(id);
-    return item ? item.text : null;
+    var element = ReactComponentTreeHook.getElement(id);
+    if (typeof element === 'string') {
+      return element;
+    } else if (typeof element === 'number') {
+      return '' + element;
+    } else {
+      return null;
+    }
   },
 
   getUpdateCount(id) {
