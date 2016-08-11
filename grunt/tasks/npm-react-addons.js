@@ -6,46 +6,55 @@ var path = require('path');
 
 var addons = {
   CSSTransitionGroup: {
+    peerDependency: 'react',
     module: 'ReactCSSTransitionGroup',
     name: 'css-transition-group',
     docs: 'animation',
   },
   LinkedStateMixin: {
+    peerDependency: 'react',
     module: 'LinkedStateMixin',
     name: 'linked-state-mixin',
     docs: 'two-way-binding-helpers',
   },
   Perf: {
+    peerDependency: 'react-dom',
     module: 'ReactPerf',
     name: 'perf',
     docs: 'perf',
   },
   PureRenderMixin: {
+    peerDependency: 'react',
     module: 'ReactComponentWithPureRenderMixin',
     name: 'pure-render-mixin',
     docs: 'pure-render-mixin',
   },
   TestUtils: {
+    peerDependency: 'react-dom',
     module: 'ReactTestUtils',
     name: 'test-utils',
     docs: 'test-utils',
   },
   TransitionGroup: {
+    peerDependency: 'react',
     module: 'ReactTransitionGroup',
     name: 'transition-group',
     docs: 'animation',
   },
   createFragment: {
+    peerDependency: 'react',
     module: 'ReactFragment',
     method: 'create',
     name: 'create-fragment',
     docs: 'create-fragment',
   },
   shallowCompare: {
+    peerDependency: 'react',
     module: 'shallowCompare',
     name: 'shallow-compare',
   },
   updates: {
+    peerDependency: 'react',
     module: 'update',
     name: 'update',
     docs: 'update',
@@ -54,9 +63,11 @@ var addons = {
 
 function generateSource(info) {
   var pieces = [
-    "module.exports = require('react/lib/",
+    'module.exports = require(\'',
+    info.peerDependency,
+    '/lib/',
     info.module,
-    "')",
+    '\')',
   ];
   if (info.method) {
     pieces.push('.', info.method);
@@ -77,6 +88,12 @@ function buildReleases() {
 
     var pkgData = Object.assign({}, pkgTemplate);
     pkgData.name = pkgName;
+
+    var version = pkgTemplate.peerDependencies.react;
+    if (info.peerDependency !== 'react') {
+      pkgData.peerDependencies = {};
+      pkgData.peerDependencies[info.peerDependency] = version;
+    }
 
     grunt.file.mkdir(destDir);
     var link = info.docs ? info.docs : 'addons';

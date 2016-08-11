@@ -14,12 +14,17 @@
   },
   "homepage": "https://facebook.github.io/react-native/",
   "dependencies": {
+    "fbjs": "^0.8.1",
+    "object-assign": "^4.1.0"
+  },
+  "peerDependencies": {
     "react": "^16.0.0-alpha"
   },
   "files": [
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js"
+    "index.js",
+    "lib/"
   ]
 }

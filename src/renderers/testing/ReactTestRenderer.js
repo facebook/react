@@ -20,8 +20,6 @@ var ReactTestMount = require('ReactTestMount');
 var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
-
 /**
  * Drill down (through composites and empty components) until we get a native or
  * native text component.
@@ -141,7 +139,6 @@ var ReactTestRenderer = {
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
-  unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   /* eslint-enable camelcase */
 };
 
