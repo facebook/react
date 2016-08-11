@@ -140,7 +140,6 @@ function processQueue(inst, updateQueue) {
   );
 }
 
-var setParentForInstrumentation = emptyFunction;
 var setChildrenForInstrumentation = emptyFunction;
 if (__DEV__) {
   var getDebugID = function(inst) {
@@ -152,14 +151,6 @@ if (__DEV__) {
       }
     }
     return inst._debugID;
-  };
-  setParentForInstrumentation = function(child) {
-    if (child._debugID !== 0) {
-      ReactInstrumentation.debugTool.onSetParent(
-        child._debugID,
-        getDebugID(this)
-      );
-    }
   };
   setChildrenForInstrumentation = function(children) {
     var debugID = getDebugID(this);
@@ -193,11 +184,12 @@ var ReactMultiChild = {
 
     _reconcilerInstantiateChildren: function(nestedChildren, transaction, context) {
       if (__DEV__) {
+        var selfDebugID = getDebugID(this);
         if (this._currentElement) {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
             return ReactChildReconciler.instantiateChildren(
-              nestedChildren, transaction, context, this._debugID
+              nestedChildren, transaction, context, selfDebugID
             );
           } finally {
             ReactCurrentOwner.current = null;
@@ -218,11 +210,13 @@ var ReactMultiChild = {
       context
     ) {
       var nextChildren;
+      var selfDebugID = 0;
       if (__DEV__) {
+        selfDebugID = getDebugID(this);
         if (this._currentElement) {
           try {
             ReactCurrentOwner.current = this._currentElement._owner;
-            nextChildren = flattenChildren(nextNestedChildrenElements, this._debugID);
+            nextChildren = flattenChildren(nextNestedChildrenElements, selfDebugID);
           } finally {
             ReactCurrentOwner.current = null;
           }
@@ -234,12 +228,13 @@ var ReactMultiChild = {
             transaction,
             this,
             this._hostContainerInfo,
-            context
+            context,
+            selfDebugID
           );
           return nextChildren;
         }
       }
-      nextChildren = flattenChildren(nextNestedChildrenElements);
+      nextChildren = flattenChildren(nextNestedChildrenElements, selfDebugID);
       ReactChildReconciler.updateChildren(
         prevChildren,
         nextChildren,
@@ -248,7 +243,8 @@ var ReactMultiChild = {
         transaction,
         this,
         this._hostContainerInfo,
-        context
+        context,
+        selfDebugID
       );
       return nextChildren;
     },
@@ -272,15 +268,17 @@ var ReactMultiChild = {
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
+          var selfDebugID = 0;
           if (__DEV__) {
-            setParentForInstrumentation.call(this, child);
+            selfDebugID = getDebugID(this);
           }
           var mountImage = ReactReconciler.mountComponent(
             child,
             transaction,
             this,
             this._hostContainerInfo,
-            context
+            context,
+            selfDebugID
           );
           child._mountIndex = index++;
           mountImages.push(mountImage);

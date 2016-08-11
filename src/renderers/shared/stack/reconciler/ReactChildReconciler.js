@@ -75,7 +75,7 @@ var ReactChildReconciler = {
     nestedChildNodes,
     transaction,
     context,
-    selfDebugID // __DEV__ only
+    selfDebugID // 0 in production and for roots
   ) {
     if (nestedChildNodes == null) {
       return null;
@@ -117,7 +117,9 @@ var ReactChildReconciler = {
     transaction,
     hostParent,
     hostContainerInfo,
-    context) {
+    context,
+    selfDebugID // 0 in production and for roots
+  ) {
     // We currently don't have a way to track moves here but if we use iterators
     // instead of for..in we can zip the iterators and check if an item has
     // moved.
@@ -156,7 +158,8 @@ var ReactChildReconciler = {
           transaction,
           hostParent,
           hostContainerInfo,
-          context
+          context,
+          selfDebugID
         );
         mountImages.push(nextChildMountImage);
       }

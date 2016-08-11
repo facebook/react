@@ -273,9 +273,7 @@ if (__DEV__) {
       ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
       ReactInstrumentation.debugTool.onUpdateComponent(contentDebugID);
     } else {
-      ReactInstrumentation.debugTool.onInstantiateComponent(contentDebugID, content);
-      ReactInstrumentation.debugTool.onSetParent(contentDebugID, debugID);
-      ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content);
+      ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content, debugID);
       ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
       ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
     }
@@ -700,13 +698,6 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
-
     return mountImage;
   },
 
@@ -935,13 +926,6 @@ ReactDOMComponent.Mixin = {
         // reconciliation
         transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
         break;
-    }
-
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
     }
   },
 

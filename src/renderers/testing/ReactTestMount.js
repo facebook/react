@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
@@ -160,12 +159,6 @@ var ReactTestMount = {
       batchedMountComponentIntoNode,
       instance
     );
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        instance._renderedComponent._debugID
-      );
-    }
     return new ReactTestInstance(instance);
   },
 

@@ -367,13 +367,6 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
-
     return markup;
   },
 
@@ -529,21 +522,18 @@ var ReactCompositeComponentMixin = {
       nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
     );
     this._renderedComponent = child;
-    if (__DEV__) {
-      if (child._debugID !== 0 && this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetParent(
-          child._debugID,
-          this._debugID
-        );
-      }
-    }
 
+    var selfDebugID = 0;
+    if (__DEV__) {
+      selfDebugID = this._debugID;
+    }
     var markup = ReactReconciler.mountComponent(
       child,
       transaction,
       hostParent,
       hostContainerInfo,
-      this._processChildContext(context)
+      this._processChildContext(context),
+      selfDebugID
     );
 
     if (__DEV__) {
@@ -1019,13 +1009,6 @@ var ReactCompositeComponentMixin = {
         );
       }
     }
-
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
   },
 
   /**
@@ -1056,21 +1039,18 @@ var ReactCompositeComponentMixin = {
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
       this._renderedComponent = child;
-      if (__DEV__) {
-        if (child._debugID !== 0 && this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetParent(
-            child._debugID,
-            this._debugID
-          );
-        }
-      }
 
+      var selfDebugID = 0;
+      if (__DEV__) {
+        selfDebugID = this._debugID;
+      }
       var nextMarkup = ReactReconciler.mountComponent(
         child,
         transaction,
         this._hostParent,
         this._hostContainerInfo,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        selfDebugID
       );
 
       if (__DEV__) {
