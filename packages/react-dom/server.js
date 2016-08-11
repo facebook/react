@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('react/lib/ReactDOMServer');
+module.exports = require('./lib/ReactDOMServer');
