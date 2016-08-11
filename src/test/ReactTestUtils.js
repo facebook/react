@@ -19,7 +19,6 @@ var React = require('React');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -61,7 +60,7 @@ function findAllInRenderedTreeInternal(inst, test) {
       );
     }
   } else if (
-    ReactElement.isValidElement(currentElement) &&
+    React.isValidElement(currentElement) &&
     typeof currentElement.type === 'function'
   ) {
     ret = ret.concat(
@@ -92,12 +91,12 @@ var ReactTestUtils = {
   },
 
   isElement: function(element) {
-    return ReactElement.isValidElement(element);
+    return React.isValidElement(element);
   },
 
   isElementOfType: function(inst, convenienceConstructor) {
     return (
-      ReactElement.isValidElement(inst) &&
+      React.isValidElement(inst) &&
       inst.type === convenienceConstructor
     );
   },
@@ -108,7 +107,7 @@ var ReactTestUtils = {
 
   isDOMComponentElement: function(inst) {
     return !!(inst &&
-              ReactElement.isValidElement(inst) &&
+              React.isValidElement(inst) &&
               !!inst.tagName);
   },
 
@@ -136,7 +135,7 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentElement: function(inst) {
-    if (!ReactElement.isValidElement(inst)) {
+    if (!React.isValidElement(inst)) {
       return false;
     }
     // We check the prototype of the type that will get mounted, not the
@@ -440,7 +439,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   ReactDefaultInjection.inject();
 
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'ReactShallowRenderer render(): Invalid component element.%s',
     typeof element === 'function' ?
       ' Instead of passing a component class, make sure to instantiate ' +

@@ -10,9 +10,9 @@
  */
 'use strict';
 
+var React = require('React');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactElement = require('ReactElement');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
@@ -80,7 +80,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
  */
 function renderToString(element) {
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.'
   );
   return renderToStringImpl(element, false);
@@ -93,7 +93,7 @@ function renderToString(element) {
  */
 function renderToStaticMarkup(element) {
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.'
   );
   return renderToStringImpl(element, true);

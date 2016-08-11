@@ -11,9 +11,9 @@
 
 'use strict';
 
+var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -49,7 +49,7 @@ StatelessComponent.prototype.render = function() {
 function warnIfInvalidElement(Component, element) {
   if (__DEV__) {
     warning(
-      element === null || element === false || ReactElement.isValidElement(element),
+      element === null || element === false || React.isValidElement(element),
       '%s(...): A valid React element (or null) must be returned. You may have ' +
       'returned undefined, an array or some other invalid object.',
       Component.displayName || Component.name || 'Component'
@@ -229,7 +229,7 @@ var ReactCompositeComponentMixin = {
       invariant(
         inst === null ||
         inst === false ||
-        ReactElement.isValidElement(inst),
+        React.isValidElement(inst),
         '%s(...): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
         Component.displayName || Component.name || 'Component'
@@ -1145,7 +1145,7 @@ var ReactCompositeComponentMixin = {
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedComponent === null || renderedComponent === false ||
-      ReactElement.isValidElement(renderedComponent),
+      React.isValidElement(renderedComponent),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'

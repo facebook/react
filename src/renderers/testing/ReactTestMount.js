@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
+var React = require('React');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
@@ -31,9 +31,9 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounts this component and inserts it into the DOM.
@@ -88,14 +88,9 @@ ReactTestInstance.prototype.update = function(nextElement) {
     this._component,
     "ReactTestRenderer: .update() can't be called after unmount."
   );
-  var nextWrappedElement = new ReactElement(
+  var nextWrappedElement = React.createElement(
     TopLevelWrapper,
-    null,
-    null,
-    null,
-    null,
-    null,
-    nextElement
+    { child: nextElement }
   );
   var component = this._component;
   ReactUpdates.batchedUpdates(function() {
@@ -139,14 +134,9 @@ var ReactTestMount = {
   render: function(
     nextElement: ReactElement
   ): ?ReactElement<any, any, any> {
-    var nextWrappedElement = new ReactElement(
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      { child: nextElement }
     );
 
     var instance = instantiateReactComponent(nextWrappedElement, false);

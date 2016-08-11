@@ -19,13 +19,8 @@ var SECRET_INTERNALS_NAME = 'React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_
 var shimSharedModulesFiles = {
   './ReactCurrentOwner': SECRET_INTERNALS_NAME + '.ReactCurrentOwner',
   './ReactComponentTreeHook': SECRET_INTERNALS_NAME + '.ReactComponentTreeHook',
-  // The methods we used here are exposed on the main React export.
-  // TODO: Change all renderer code to require the isomorphic React directly
-  // instead of these internals.
+  // Use the global, anywhere we require React
   './React': 'React',
-  './ReactElement': 'React',
-  './ReactPropTypes': 'React.PropTypes',
-  './ReactChildren': 'React.Children',
 };
 
 // We can access these as absolute or relative. We need to shim both.

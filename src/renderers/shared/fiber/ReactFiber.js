@@ -26,8 +26,6 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
-var ReactElement = require('ReactElement');
-
 var {
   NoWork,
 } = require('ReactPriorityLevel');
@@ -201,7 +199,8 @@ exports.createHostContainerFiber = function() {
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) {
+exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) {
+// $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
   const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
