@@ -137,6 +137,16 @@ module.exports = function(grunt) {
     'version-check',
     'browserify:domServerMin',
   ]);
+  grunt.registerTask('build:dom-fiber', [
+    'build-modules',
+    'version-check',
+    'browserify:domFiber',
+  ]);
+  grunt.registerTask('build:dom-fiber-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domFiberMin',
+  ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
     'build-modules',
@@ -164,6 +174,8 @@ module.exports = function(grunt) {
     'browserify:domMin',
     'browserify:domServer',
     'browserify:domServerMin',
+    'browserify:domFiber',
+    'browserify:domFiberMin',
     'npm-react:release',
     'npm-react:pack',
     'npm-react-dom:release',

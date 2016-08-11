@@ -16,6 +16,8 @@ import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 
+var warning = require('warning');
+
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
@@ -56,9 +58,9 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(
-    domElement : Instance, 
-    oldProps : Props, 
-    newProps : Props, 
+    domElement : Instance,
+    oldProps : Props,
+    newProps : Props,
     children : HostChildren<Instance>
   ) : boolean {
     return true;
@@ -82,9 +84,21 @@ var DOMRenderer = ReactFiberReconciler({
 
 });
 
+var warned = false;
+
+function warnAboutUnstableUse() {
+  warning(
+    warned,
+    'You are using React DOM Fiber which is an experimental renderer. ' +
+    'It is likely to have bugs, breaking changes and is unsupported.'
+  );
+  warned = true;
+}
+
 var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement) {
+    warnAboutUnstableUse();
     if (!container._reactRootContainer) {
       container._reactRootContainer = DOMRenderer.mountContainer(element, container);
     } else {
@@ -93,6 +107,7 @@ var ReactDOM = {
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {
+    warnAboutUnstableUse();
     const root = container._reactRootContainer;
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this
