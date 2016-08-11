@@ -50,7 +50,7 @@ var ReactChildrenMutationWarningHook = {
   onMountComponent(debugID) {
     handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
-  onComponentHasUpdated(debugID) {
+  onUpdateComponent(debugID) {
     handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
 };

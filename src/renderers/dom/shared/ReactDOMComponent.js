@@ -935,13 +935,6 @@ ReactDOMComponent.Mixin = {
         transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
         break;
     }
-
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
   },
 
   /**
