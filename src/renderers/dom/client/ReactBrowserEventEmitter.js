@@ -189,6 +189,15 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
       ReactEventListener.setHandleTopLevel(
         ReactBrowserEventEmitter.handleTopLevel
       );
+      ReactEventListener.setDocumentResetCallback(function(doc) {
+        // This must be called during a document reset (@see ReactEventListener.resetDocument)
+        // after unmounting the last component, otherwise the next render will be visible,
+        // but document level event listeners will be missing, and input (clicks, typing etc)
+        // wont work.
+        reactTopListenersCounter = 0;
+        alreadyListeningTo = {};
+        delete doc[topListenersIDKey];
+      });
       ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
     },
   },
@@ -234,12 +243,36 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
    *
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {object} contentDocumentHandle Document which owns the container
+   * @return {function} A function that removes ALL listeners that were added.
    */
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
     var dependencies =
       EventPluginRegistry.registrationNameDependencies[registrationName];
+
+    // aggregates handler remove functions...
+    var listenerRemovers = [];
+    var trapBubbledEvent = function(topLevelType, handlerBaseName) {
+      var remover = ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+        topLevelType,
+        handlerBaseName,
+        mountAt
+      );
+      if (remover && remover.remove) {
+        listenerRemovers.push(remover.remove);
+      }
+    };
+    var trapCapturedEvent = function(topLevelType, handlerBaseName, handle) {
+      var remover = ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+        topLevelType,
+        handlerBaseName,
+        handle
+      );
+      if (remover && remover.remove) {
+        listenerRemovers.push(remover.remove);
+      }
+    };
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0; i < dependencies.length; i++) {
@@ -250,13 +283,13 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           )) {
         if (dependency === topLevelTypes.topWheel) {
           if (isEventSupported('wheel')) {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            trapBubbledEvent(
               topLevelTypes.topWheel,
               'wheel',
               mountAt
             );
           } else if (isEventSupported('mousewheel')) {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            trapBubbledEvent(
               topLevelTypes.topWheel,
               'mousewheel',
               mountAt
@@ -264,7 +297,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           } else {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            trapBubbledEvent(
               topLevelTypes.topWheel,
               'DOMMouseScroll',
               mountAt
@@ -273,13 +306,13 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
         } else if (dependency === topLevelTypes.topScroll) {
 
           if (isEventSupported('scroll', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            trapCapturedEvent(
               topLevelTypes.topScroll,
               'scroll',
               mountAt
             );
           } else {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            trapBubbledEvent(
               topLevelTypes.topScroll,
               'scroll',
               ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
@@ -289,12 +322,12 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             dependency === topLevelTypes.topBlur) {
 
           if (isEventSupported('focus', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            trapCapturedEvent(
               topLevelTypes.topFocus,
               'focus',
               mountAt
             );
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            trapCapturedEvent(
               topLevelTypes.topBlur,
               'blur',
               mountAt
@@ -302,12 +335,12 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
             // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            trapBubbledEvent(
               topLevelTypes.topFocus,
               'focusin',
               mountAt
             );
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            trapBubbledEvent(
               topLevelTypes.topBlur,
               'focusout',
               mountAt
@@ -318,7 +351,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           isListening[topLevelTypes.topBlur] = true;
           isListening[topLevelTypes.topFocus] = true;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
-          ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+          trapBubbledEvent(
             dependency,
             topEventMapping[dependency],
             mountAt
@@ -328,6 +361,14 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
         isListening[dependency] = true;
       }
     }
+
+    return function() {
+      listenerRemovers.forEach(
+        function(remover) {
+          remover();
+        }
+      );
+    };
   },
 
   trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {

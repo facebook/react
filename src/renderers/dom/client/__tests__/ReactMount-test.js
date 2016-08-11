@@ -14,6 +14,7 @@
 var React;
 var ReactDOM;
 var ReactDOMServer;
+var ReactEventListener;
 var ReactMount;
 var ReactTestUtils;
 var WebComponents;
@@ -25,6 +26,7 @@ describe('ReactMount', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
+    ReactEventListener = require('ReactEventListener');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -279,6 +281,71 @@ describe('ReactMount', function() {
     expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(2);
     ReactDOM.unmountComponentAtNode(container);
     expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
+  });
+
+  it('only calls ReactEventListener.resetDocument when without any roots', function() {
+    var mustResetNow = false;
+    var documentResetted = false;
+
+    ReactEventListener.setDocumentResetCallback(function() {
+      expect(mustResetNow).toBe(true);
+      documentResetted = true;
+    });
+
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    ReactDOM.render(<span />, container);
+
+    mustResetNow = true;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(documentResetted).toBe(true);
+
+    // second time...
+    mustResetNow = false;
+    documentResetted=false;
+    ReactDOM.render(<span />, container);
+
+    mustResetNow = true;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(documentResetted).toBe(true);
+  });
+
+  it('multiple containers only calls ReactEventListener.resetDocument when without any roots', function() {
+    var mustResetNow = false;
+    var documentResetted = false;
+    ReactEventListener.setDocumentResetCallback(function() {
+      expect(mustResetNow).toBe(true);
+      documentResetted = true;
+    });
+
+    var container1 = document.createElement('div');
+    document.body.appendChild(container1);
+    ReactDOM.render(<span />, container1);
+
+    var container2 = document.createElement('div');
+    document.body.appendChild(container2);
+    ReactDOM.render(<span />, container2);
+
+    ReactDOM.unmountComponentAtNode(container1);
+
+    mustResetNow = true;
+    ReactDOM.unmountComponentAtNode(container2);
+    expect(documentResetted).toBe(true);
+  });
+
+  it('only calls ReactEventListener.resetDocument when without any roots #2', function() {
+    var documentResetted = false;
+    ReactEventListener.setDocumentResetCallback(function() {
+      documentResetted=true;
+    });
+
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    ReactDOM.render(<div />, container);
+    ReactDOM.render(<span />, container);
+
+    ReactDOM.unmountComponentAtNode(container);
+    expect(documentResetted).toBe(true);
   });
 
   it('marks top-level mounts', function() {

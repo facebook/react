@@ -30,6 +30,7 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactEventListener = require('ReactEventListener');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
@@ -222,7 +223,11 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
   var containerInfo = inst._hostContainerInfo;
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-  listenTo(registrationName, doc);
+  var listenerRemover = listenTo(registrationName, doc, !isDocumentFragment);
+  if (!isDocumentFragment) {
+    ReactEventListener.addDocumentEventListenerRemover(listenerRemover);
+  }
+
   transaction.getReactMountReady().enqueue(putListener, {
     inst: inst,
     registrationName: registrationName,

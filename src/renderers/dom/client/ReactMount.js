@@ -19,6 +19,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactElement = require('ReactElement');
+var ReactEventListener = require('ReactEventListener');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -582,6 +583,10 @@ var ReactMount = {
       container,
       false
     );
+
+    if (Object.keys(instancesByReactRootID).length===0) {
+      ReactEventListener.resetDocument(container.ownerDocument);
+    }
     return true;
   },
 
