@@ -370,13 +370,6 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
-
     return markup;
   },
 

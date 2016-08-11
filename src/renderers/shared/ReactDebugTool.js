@@ -272,10 +272,6 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onHostOperation', debugID, type, payload);
   },
-  onComponentHasMounted(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onComponentHasMounted', debugID);
-  },
   onComponentHasUpdated(debugID) {
     checkDebugID(debugID);
     emitEvent('onComponentHasUpdated', debugID);

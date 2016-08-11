@@ -706,13 +706,6 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
-
     return mountImage;
   },
 
