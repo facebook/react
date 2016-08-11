@@ -46,9 +46,8 @@ var ReactReconciler = {
   ) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
-          internalInstance._debugID,
-          'mountComponent'
+        ReactInstrumentation.debugTool.onBeforeMountComponent(
+          internalInstance._debugID
         );
       }
     }
@@ -64,10 +63,6 @@ var ReactReconciler = {
     }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onEndReconcilerTimer(
-          internalInstance._debugID,
-          'mountComponent'
-        );
         ReactInstrumentation.debugTool.onMountComponent(
           internalInstance._debugID
         );
@@ -93,9 +88,8 @@ var ReactReconciler = {
   unmountComponent: function(internalInstance, safely) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
-          internalInstance._debugID,
-          'unmountComponent'
+        ReactInstrumentation.debugTool.onBeforeUnmountComponent(
+          internalInstance._debugID
         );
       }
     }
@@ -103,10 +97,6 @@ var ReactReconciler = {
     internalInstance.unmountComponent(safely);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onEndReconcilerTimer(
-          internalInstance._debugID,
-          'unmountComponent'
-        );
         ReactInstrumentation.debugTool.onUnmountComponent(
           internalInstance._debugID
         );
@@ -150,10 +140,6 @@ var ReactReconciler = {
           internalInstance._debugID,
           nextElement
         );
-        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
-          internalInstance._debugID,
-          'receiveComponent'
-        );
       }
     }
 
@@ -176,10 +162,6 @@ var ReactReconciler = {
 
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onEndReconcilerTimer(
-          internalInstance._debugID,
-          'receiveComponent'
-        );
         ReactInstrumentation.debugTool.onUpdateComponent(
           internalInstance._debugID
         );
@@ -214,10 +196,6 @@ var ReactReconciler = {
     }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onBeginReconcilerTimer(
-          internalInstance._debugID,
-          'performUpdateIfNecessary'
-        );
         ReactInstrumentation.debugTool.onBeforeUpdateComponent(
           internalInstance._debugID,
           internalInstance._currentElement
@@ -227,10 +205,6 @@ var ReactReconciler = {
     internalInstance.performUpdateIfNecessary(transaction);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onEndReconcilerTimer(
-          internalInstance._debugID,
-          'performUpdateIfNecessary'
-        );
         ReactInstrumentation.debugTool.onUpdateComponent(
           internalInstance._debugID
         );

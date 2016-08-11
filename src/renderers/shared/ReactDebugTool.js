@@ -248,14 +248,6 @@ var ReactDebugTool = {
     endLifeCycleTimer(debugID, timerType);
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
-  onBeginReconcilerTimer(debugID, timerType) {
-    checkDebugID(debugID);
-    emitEvent('onBeginReconcilerTimer', debugID, timerType);
-  },
-  onEndReconcilerTimer(debugID, timerType) {
-    checkDebugID(debugID);
-    emitEvent('onEndReconcilerTimer', debugID, timerType);
-  },
   onError(debugID) {
     if (currentTimerDebugID != null) {
       endLifeCycleTimer(currentTimerDebugID, currentTimerType);
@@ -296,6 +288,10 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onMountRootComponent', debugID);
   },
+  onBeforeMountComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onBeforeMountComponent', debugID);
+  },
   onMountComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onMountComponent', debugID);
@@ -307,6 +303,10 @@ var ReactDebugTool = {
   onUpdateComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onUpdateComponent', debugID);
+  },
+  onBeforeUnmountComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onBeforeUnmountComponent', debugID);
   },
   onUnmountComponent(debugID) {
     checkDebugID(debugID);
