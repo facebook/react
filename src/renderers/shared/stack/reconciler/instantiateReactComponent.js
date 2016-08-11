@@ -14,7 +14,6 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
-var ReactInstrumentation = require('ReactInstrumentation');
 
 var invariant = require('invariant');
 var warning = require('warning');

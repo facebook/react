@@ -144,6 +144,10 @@ var ReactComponentTreeHook = {
 
   onBeforeMountComponent(id, element, parentID) {
     create(id, element, parentID);
+
+    if (parentID === 0) {
+      rootIDs[id] = true;
+    }
   },
 
   onBeforeUpdateComponent(id, element) {
@@ -159,10 +163,6 @@ var ReactComponentTreeHook = {
   onMountComponent(id) {
     var item = get(id);
     item.isMounted = true;
-  },
-
-  onMountRootComponent(id) {
-    rootIDs[id] = true;
   },
 
   onUpdateComponent(id) {

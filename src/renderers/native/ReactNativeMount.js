@@ -152,12 +152,6 @@ var ReactNativeMount = {
       instance,
       containerTag
     );
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        instance._renderedComponent._debugID
-      );
-    }
     var component = instance.getPublicInstance();
     if (callback) {
       callback.call(component);
