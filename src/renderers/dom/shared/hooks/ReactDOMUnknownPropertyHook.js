@@ -140,7 +140,7 @@ function handleElement(debugID, element) {
 }
 
 var ReactDOMUnknownPropertyHook = {
-  onBeforeMountComponent(debugID, element) {
+  onInstantiateComponent(debugID, element) {
     handleElement(debugID, element);
   },
   onBeforeUpdateComponent(debugID, element) {

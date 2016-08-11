@@ -46,10 +46,6 @@ var ReactReconciler = {
   ) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onBeforeMountComponent(
-          internalInstance._debugID,
-          internalInstance._currentElement
-        );
         ReactInstrumentation.debugTool.onBeginReconcilerTimer(
           internalInstance._debugID,
           'mountComponent'

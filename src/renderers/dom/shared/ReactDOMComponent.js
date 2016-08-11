@@ -276,7 +276,6 @@ if (__DEV__) {
     } else {
       ReactInstrumentation.debugTool.onInstantiateComponent(contentDebugID, content);
       ReactInstrumentation.debugTool.onSetParent(contentDebugID, debugID);
-      ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content);
       ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
       ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
     }

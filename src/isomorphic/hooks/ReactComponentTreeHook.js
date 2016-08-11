@@ -151,11 +151,6 @@ var ReactComponentTreeHook = {
     create(id, element);
   },
 
-  onBeforeMountComponent(id, element) {
-    var item = get(id);
-    item.element = element;
-  },
-
   onBeforeUpdateComponent(id, element) {
     var item = get(id);
     if (!item || !item.isMounted) {

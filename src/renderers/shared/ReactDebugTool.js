@@ -300,10 +300,6 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onMountRootComponent', debugID);
   },
-  onBeforeMountComponent(debugID, element) {
-    checkDebugID(debugID);
-    emitEvent('onBeforeMountComponent', debugID, element);
-  },
   onMountComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onMountComponent', debugID);
