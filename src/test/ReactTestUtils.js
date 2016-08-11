@@ -384,7 +384,9 @@ var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
   this._debugID = nextDebugID++;
-  ReactInstrumentation.debugTool.onInstantiateComponent(this._debugID, element);
+  if (__DEV__) {
+    ReactInstrumentation.debugTool.onInstantiateComponent(this._debugID, element);
+  }
 };
 
 NoopInternalComponent.prototype = {
