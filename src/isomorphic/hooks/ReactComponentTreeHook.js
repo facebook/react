@@ -39,11 +39,11 @@ function remove(id) {
   delete itemByKey[key];
 }
 
-function create(id, element) {
+function create(id, element, parentID) {
   var key = getKeyFromID(id);
   itemByKey[key] = {
     element,
-    parentID: null,
+    parentID,
     text: null,
     childIDs: [],
     isMounted: false,
@@ -133,8 +133,8 @@ var ReactComponentTreeHook = {
       }
       invariant(
         nextChild.parentID === id,
-        'Expected onSetParent() and onSetChildren() to be consistent (%s ' +
-        'has parents %s and %s).',
+        'Expected onBeforeMountComponent() parent and onSetChildren() to ' +
+        'be consistent (%s has parents %s and %s).',
         nextChildID,
         nextChild.parentID,
         id
@@ -142,18 +142,12 @@ var ReactComponentTreeHook = {
     }
   },
 
-  onSetParent(id, parentID) {
-    var item = get(id);
-    item.parentID = parentID;
-  },
+  onBeforeMountComponent(id, element, parentID) {
+    create(id, element, parentID);
 
-  onInstantiateComponent(id, element) {
-    create(id, element);
-  },
-
-  onBeforeMountComponent(id, element) {
-    var item = get(id);
-    item.element = element;
+    if (parentID === 0) {
+      rootIDs[id] = true;
+    }
   },
 
   onBeforeUpdateComponent(id, element) {
@@ -171,10 +165,6 @@ var ReactComponentTreeHook = {
     item.isMounted = true;
   },
 
-  onMountRootComponent(id) {
-    rootIDs[id] = true;
-  },
-
   onUpdateComponent(id) {
     var item = get(id);
     if (!item || !item.isMounted) {
@@ -187,7 +177,14 @@ var ReactComponentTreeHook = {
 
   onUnmountComponent(id) {
     var item = get(id);
-    item.isMounted = false;
+    if (item) {
+      // We need to check if it exists.
+      // `item` might not exist if it is inside an error boundary, and a sibling
+      // error boundary child threw while mounting. Then this instance never
+      // got a chance to mount, but it still gets an unmounting event during
+      // the error boundary cleanup.
+      item.isMounted = false;
+    }
     unmountedIDs[id] = true;
     delete rootIDs[id];
   },

@@ -109,7 +109,10 @@ function resetMeasurements() {
   currentFlushMeasurements = [];
 }
 
-function checkDebugID(debugID) {
+function checkDebugID(debugID, allowRoot = false) {
+  if (allowRoot && debugID === 0) {
+    return;
+  }
   if (!debugID) {
     warning(false, 'ReactDebugTool: debugID may not be empty.');
   }
@@ -248,14 +251,6 @@ var ReactDebugTool = {
     endLifeCycleTimer(debugID, timerType);
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
-  onBeginReconcilerTimer(debugID, timerType) {
-    checkDebugID(debugID);
-    emitEvent('onBeginReconcilerTimer', debugID, timerType);
-  },
-  onEndReconcilerTimer(debugID, timerType) {
-    checkDebugID(debugID);
-    emitEvent('onEndReconcilerTimer', debugID, timerType);
-  },
   onError(debugID) {
     if (currentTimerDebugID != null) {
       endLifeCycleTimer(currentTimerDebugID, currentTimerType);
@@ -272,14 +267,6 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onHostOperation', debugID, type, payload);
   },
-  onComponentHasMounted(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onComponentHasMounted', debugID);
-  },
-  onComponentHasUpdated(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onComponentHasUpdated', debugID);
-  },
   onSetState() {
     emitEvent('onSetState');
   },
@@ -288,21 +275,10 @@ var ReactDebugTool = {
     childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onSetParent(debugID, parentDebugID) {
+  onBeforeMountComponent(debugID, element, parentDebugID) {
     checkDebugID(debugID);
-    emitEvent('onSetParent', debugID, parentDebugID);
-  },
-  onInstantiateComponent(debugID, element) {
-    checkDebugID(debugID);
-    emitEvent('onInstantiateComponent', debugID, element);
-  },
-  onMountRootComponent(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onMountRootComponent', debugID);
-  },
-  onBeforeMountComponent(debugID, element) {
-    checkDebugID(debugID);
-    emitEvent('onBeforeMountComponent', debugID, element);
+    checkDebugID(parentDebugID, true);
+    emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
   },
   onMountComponent(debugID) {
     checkDebugID(debugID);
@@ -315,6 +291,10 @@ var ReactDebugTool = {
   onUpdateComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onUpdateComponent', debugID);
+  },
+  onBeforeUnmountComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onBeforeUnmountComponent', debugID);
   },
   onUnmountComponent(debugID) {
     checkDebugID(debugID);

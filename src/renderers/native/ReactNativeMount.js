@@ -56,7 +56,8 @@ function mountComponentIntoNode(
     transaction,
     null,
     ReactNativeContainerInfo(containerTag),
-    emptyObject
+    emptyObject,
+    0 /* parentDebugID */
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactNativeMount._mountImageIntoNode(markup, containerTag);
@@ -147,12 +148,6 @@ var ReactNativeMount = {
       instance,
       containerTag
     );
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        instance._renderedComponent._debugID
-      );
-    }
     var component = instance.getPublicInstance();
     if (callback) {
       callback.call(component);
