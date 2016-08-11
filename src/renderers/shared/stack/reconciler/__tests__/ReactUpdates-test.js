@@ -1147,4 +1147,10 @@ describe('ReactUpdates', function() {
     ReactDOM.render(<App />, document.createElement('div'));
   });
 
+  it('unstable_batchedUpdates should return value from a callback', function() {
+    var result = ReactDOM.unstable_batchedUpdates(function() {
+      return 42;
+    });
+    expect(result).toEqual(42);
+  });
 });

@@ -117,12 +117,31 @@ module.exports = function(grunt) {
     'build-modules',
     'browserify:addonsMin',
   ]);
+  grunt.registerTask('build:dom', [
+    'build-modules',
+    'version-check',
+    'browserify:dom',
+  ]);
+  grunt.registerTask('build:dom-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domMin',
+  ]);
+  grunt.registerTask('build:dom-server', [
+    'build-modules',
+    'version-check',
+    'browserify:domServer',
+  ]);
+  grunt.registerTask('build:dom-server-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domServerMin',
+  ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
     'build-modules',
     'npm-react:release',
   ]);
-  grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
 
   var jestTasks = require('./grunt/tasks/jest');
   grunt.registerTask('jest:normal', jestTasks.normal);
@@ -141,7 +160,10 @@ module.exports = function(grunt) {
     'browserify:addons',
     'browserify:min',
     'browserify:addonsMin',
-    'build:react-dom',
+    'browserify:dom',
+    'browserify:domMin',
+    'browserify:domServer',
+    'browserify:domServerMin',
     'npm-react:release',
     'npm-react:pack',
     'npm-react-dom:release',
