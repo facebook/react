@@ -24,7 +24,7 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
     hostParent,
     hostContainerInfo,
     context,
-    parentDebugID // __DEV__ only
+    parentDebugID // 0 in production and for roots
   ) {
     return ReactReconciler.mountComponent(
       this._renderedComponent,

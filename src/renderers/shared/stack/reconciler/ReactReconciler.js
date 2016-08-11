@@ -43,7 +43,7 @@ var ReactReconciler = {
     hostParent,
     hostContainerInfo,
     context,
-    parentDebugID // __DEV__ only
+    parentDebugID // 0 in production and for roots
   ) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {

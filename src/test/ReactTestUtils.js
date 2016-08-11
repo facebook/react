@@ -493,11 +493,7 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
     );
   } else {
     var instance = new ShallowComponentWrapper(element);
-    var parentDebugID;
-    if (__DEV__) {
-      parentDebugID = 0;
-    }
-    ReactReconciler.mountComponent(instance, transaction, null, null, context, parentDebugID);
+    ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
     this._instance = instance;
   }
 };

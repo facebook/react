@@ -210,8 +210,7 @@ var ReactMultiChild = {
       context
     ) {
       var nextChildren;
-      var selfDebugID;
-
+      var selfDebugID = 0;
       if (__DEV__) {
         selfDebugID = getDebugID(this);
         if (this._currentElement) {
@@ -269,7 +268,7 @@ var ReactMultiChild = {
       for (var name in children) {
         if (children.hasOwnProperty(name)) {
           var child = children[name];
-          var selfDebugID;
+          var selfDebugID = 0;
           if (__DEV__) {
             selfDebugID = getDebugID(this);
           }

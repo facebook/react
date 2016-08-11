@@ -526,7 +526,7 @@ var ReactCompositeComponentMixin = {
     );
     this._renderedComponent = child;
 
-    var selfDebugID;
+    var selfDebugID = 0;
     if (__DEV__) {
       selfDebugID = this._debugID;
     }
@@ -1045,7 +1045,7 @@ var ReactCompositeComponentMixin = {
       );
       this._renderedComponent = child;
 
-      var selfDebugID;
+      var selfDebugID = 0;
       if (__DEV__) {
         selfDebugID = this._debugID;
       }
