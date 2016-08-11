@@ -5,7 +5,7 @@ var grunt = require('grunt');
 
 var src = 'packages/react/';
 var dest = 'build/packages/react/';
-var modSrc = 'build/modules/';
+var modSrc = 'build/node_modules/react/lib';
 var lib = dest + 'lib/';
 var dist = dest + 'dist/';
 var distFiles = [
