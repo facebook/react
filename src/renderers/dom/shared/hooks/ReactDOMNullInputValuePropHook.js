@@ -39,7 +39,7 @@ function handleElement(debugID, element) {
 }
 
 var ReactDOMNullInputValuePropHook = {
-  onInstantiateComponent(debugID, element) {
+  onBeforeMountComponent(debugID, element) {
     handleElement(debugID, element);
   },
   onBeforeUpdateComponent(debugID, element) {

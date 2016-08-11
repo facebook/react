@@ -109,12 +109,17 @@ function mountComponentIntoNode(
     console.time(markerName);
   }
 
+  var parentDebugID;
+  if (__DEV__) {
+    parentDebugID = 0; // top-level component has no parent
+  }
   var markup = ReactReconciler.mountComponent(
     wrapperInstance,
     transaction,
     null,
     ReactDOMContainerInfo(wrapperInstance, container),
-    context
+    context,
+    parentDebugID
   );
 
   if (markerName) {

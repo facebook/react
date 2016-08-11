@@ -109,7 +109,10 @@ function resetMeasurements() {
   currentFlushMeasurements = [];
 }
 
-function checkDebugID(debugID) {
+function checkDebugID(debugID, allowRoot = false) {
+  if (allowRoot && debugID === 0) {
+    return;
+  }
   if (!debugID) {
     warning(false, 'ReactDebugTool: debugID may not be empty.');
   }
@@ -272,21 +275,14 @@ var ReactDebugTool = {
     childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onSetParent(debugID, parentDebugID) {
-    checkDebugID(debugID);
-    emitEvent('onSetParent', debugID, parentDebugID);
-  },
-  onInstantiateComponent(debugID, element) {
-    checkDebugID(debugID);
-    emitEvent('onInstantiateComponent', debugID, element);
-  },
   onMountRootComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onMountRootComponent', debugID);
   },
-  onBeforeMountComponent(debugID) {
+  onBeforeMountComponent(debugID, element, parentDebugID) {
     checkDebugID(debugID);
-    emitEvent('onBeforeMountComponent', debugID);
+    checkDebugID(parentDebugID, true);
+    emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
   },
   onMountComponent(debugID) {
     checkDebugID(debugID);

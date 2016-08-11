@@ -383,9 +383,9 @@ var nextDebugID = 1;
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
-  this._debugID = nextDebugID++;
+
   if (__DEV__) {
-    ReactInstrumentation.debugTool.onInstantiateComponent(this._debugID, element);
+    this._debugID = nextDebugID++;
   }
 };
 
@@ -415,7 +415,6 @@ var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
     this._debugID = nextDebugID++;
-    ReactInstrumentation.debugTool.onInstantiateComponent(this._debugID, element);
   }
 
   this.construct(element);
@@ -495,7 +494,11 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
     );
   } else {
     var instance = new ShallowComponentWrapper(element);
-    ReactReconciler.mountComponent(instance, transaction, null, null, context);
+    var parentDebugID;
+    if (__DEV__) {
+      parentDebugID = 0;
+    }
+    ReactReconciler.mountComponent(instance, transaction, null, null, context, parentDebugID);
     this._instance = instance;
   }
 };

@@ -51,12 +51,17 @@ function mountComponentIntoNode(
     componentInstance,
     containerTag,
     transaction) {
+  var parentDebugID;
+  if (__DEV__) {
+    parentDebugID = 0; // top-level component has no parent
+  }
   var markup = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
     null,
     ReactNativeContainerInfo(containerTag),
-    emptyObject
+    emptyObject,
+    parentDebugID
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactNativeMount._mountImageIntoNode(markup, containerTag);

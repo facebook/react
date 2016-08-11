@@ -42,12 +42,17 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, true);
+      var parentDebugID;
+      if (__DEV__) {
+        parentDebugID = 0; // top-level component has no parent
+      }
       var markup = ReactReconciler.mountComponent(
         componentInstance,
         transaction,
         null,
         ReactDOMContainerInfo(),
-        emptyObject
+        emptyObject,
+        parentDebugID
       );
       if (__DEV__) {
         ReactInstrumentation.debugTool.onUnmountComponent(

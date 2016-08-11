@@ -525,21 +525,18 @@ var ReactCompositeComponentMixin = {
       nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
     );
     this._renderedComponent = child;
-    if (__DEV__) {
-      if (child._debugID !== 0 && this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetParent(
-          child._debugID,
-          this._debugID
-        );
-      }
-    }
 
+    var selfDebugID;
+    if (__DEV__) {
+      selfDebugID = this._debugID;
+    }
     var markup = ReactReconciler.mountComponent(
       child,
       transaction,
       hostParent,
       hostContainerInfo,
-      this._processChildContext(context)
+      this._processChildContext(context),
+      selfDebugID
     );
 
     if (__DEV__) {
@@ -1047,21 +1044,18 @@ var ReactCompositeComponentMixin = {
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
       this._renderedComponent = child;
-      if (__DEV__) {
-        if (child._debugID !== 0 && this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetParent(
-            child._debugID,
-            this._debugID
-          );
-        }
-      }
 
+      var selfDebugID;
+      if (__DEV__) {
+        selfDebugID = this._debugID;
+      }
       var nextMarkup = ReactReconciler.mountComponent(
         child,
         transaction,
         this._hostParent,
         this._hostContainerInfo,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        selfDebugID
       );
 
       if (__DEV__) {

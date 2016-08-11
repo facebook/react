@@ -42,12 +42,15 @@ var ReactReconciler = {
     transaction,
     hostParent,
     hostContainerInfo,
-    context
+    context,
+    parentDebugID // __DEV__ only
   ) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onBeforeMountComponent(
-          internalInstance._debugID
+          internalInstance._debugID,
+          internalInstance._currentElement,
+          parentDebugID
         );
       }
     }
@@ -55,7 +58,8 @@ var ReactReconciler = {
       transaction,
       hostParent,
       hostContainerInfo,
-      context
+      context,
+      parentDebugID
     );
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {
