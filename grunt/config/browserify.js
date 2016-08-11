@@ -35,6 +35,18 @@ for (var key in shimSharedModulesFiles) {
 
 var shimSharedModules = globalShim.configure(shimSharedModulesFiles);
 
+// Fiber needs the symbol from ReactElement right now. So we can't shim
+// ReactElement. Otherwise this would just be the same as above.
+// TODO: Refactor this so that Fiber can access the symbol without bringing in
+// the rest of ReactElement.
+var shimSharedModulesFiberFiles = {};
+for (var key in shimSharedModulesFiles) {
+  if (!/ReactElement/.test(key)) {
+    shimSharedModulesFiberFiles[key] = shimSharedModulesFiles[key];
+  }
+}
+var shimSharedModulesFiber = globalShim.configure(shimSharedModulesFiberFiles);
+
 var shimDOMModules = aliasify.configure({
   'aliases': {
     './ReactAddonsDOMDependencies': {relative: './ReactAddonsDOMDependenciesUMDShim'},
@@ -204,6 +216,38 @@ var domServerMin = {
   after: [minify, bannerify],
 };
 
+var domFiber = {
+  entries: [
+    './build/node_modules/react-dom/lib/ReactDOMFiber.js',
+  ],
+  outfile: './build/react-dom-fiber.js',
+  debug: false,
+  standalone: 'ReactDOMFiber',
+  // Apply as global transform so that we also envify fbjs and any other deps
+  transforms: [shimSharedModulesFiber],
+  globalTransforms: [envifyDev],
+  plugins: [collapser],
+  after: [derequire, simpleBannerify],
+};
+
+var domFiberMin = {
+  entries: [
+    './build/node_modules/react-dom/lib/ReactDOMFiber.js',
+  ],
+  outfile: './build/react-dom-fiber.min.js',
+  debug: false,
+  standalone: 'ReactDOMFiber',
+  // Envify twice. The first ensures that when we uglifyify, we have the right
+  // conditions to exclude requires. The global transform runs on deps.
+  transforms: [shimSharedModulesFiber, envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
+  plugins: [collapser],
+  // No need to derequire because the minifier will mangle
+  // the "require" calls.
+
+  after: [minify, bannerify],
+};
+
 module.exports = {
   basic: basic,
   min: min,
@@ -213,4 +257,6 @@ module.exports = {
   domMin: domMin,
   domServer: domServer,
   domServerMin: domServerMin,
+  domFiber: domFiber,
+  domFiberMin: domFiberMin,
 };
