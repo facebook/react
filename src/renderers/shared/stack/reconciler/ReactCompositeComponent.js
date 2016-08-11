@@ -40,8 +40,12 @@ var CompositeTypes = {
 function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
+  var rerender= this.updater.enqueueForceUpdate.bind(this.updater, this);
+  var fakeComponent={
+    render: rerender,
+  };
   var Component = ReactInstanceMap.get(this)._currentElement.type;
-  var element = Component(this.props, this.context, this.updater);
+  var element = Component.call(fakeComponent, this.props, this.context, this.updater);
   warnIfInvalidElement(Component, element);
   return element;
 };
@@ -221,21 +225,12 @@ var ReactCompositeComponentMixin = {
       updateQueue
     );
     var renderedElement;
-
-    // Support functional components
-    if (!doConstruct && (inst == null || inst.render == null)) {
-      renderedElement = inst;
-      warnIfInvalidElement(Component, renderedElement);
-      invariant(
-        inst === null ||
-        inst === false ||
-        ReactElement.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
-        Component.displayName || Component.name || 'Component'
-      );
-      inst = new StatelessComponent(Component);
+    
+    if (inst._compositeType === CompositeTypes.StatelessFunctional) {
+      renderedElement = inst._element;
       this._compositeType = CompositeTypes.StatelessFunctional;
+      delete inst._compositeType;
+      delete inst._element;
     } else {
       if (isPureComponent(Component)) {
         this._compositeType = CompositeTypes.PureClass;
@@ -438,7 +433,34 @@ var ReactCompositeComponentMixin = {
           );
         }
       }
-      instanceOrElement = Component(publicProps, publicContext, updateQueue);
+      
+      
+      // Support functional components
+      var fakeComponent={
+        render() {
+          instanceOrElement.updater.enqueueForceUpdate(instanceOrElement);
+        },
+      };      
+      
+      instanceOrElement = Component.call(fakeComponent, publicProps, publicContext, updateQueue);
+                     
+      // Support functional components
+      if (!doConstruct && (instanceOrElement == null || instanceOrElement.render == null)) {
+        var renderedElement = instanceOrElement;
+        warnIfInvalidElement(Component, renderedElement);
+        invariant(
+          instanceOrElement === null ||
+          instanceOrElement === false ||
+          ReactElement.isValidElement(instanceOrElement),
+          '%s(...): A valid React element (or null) must be returned. You may have ' +
+          'returned undefined, an array or some other invalid object.',
+          Component.displayName || Component.name || 'Component'
+        );
+        instanceOrElement = new StatelessComponent(Component);
+        instanceOrElement._compositeType = CompositeTypes.StatelessFunctional;
+        instanceOrElement._element = renderedElement;
+      } 
+      
       if (__DEV__) {
         if (this._debugID !== 0) {
           ReactInstrumentation.debugTool.onEndLifeCycleTimer(
