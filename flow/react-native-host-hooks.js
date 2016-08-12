@@ -40,4 +40,6 @@ declare module 'UIManager' {
   declare function setChildren() : void;
   declare function updateView() : void;
 }
-declare module 'View' { }
+declare module 'View' {
+  declare var exports : typeof ReactComponent;
+}

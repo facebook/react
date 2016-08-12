@@ -18,9 +18,7 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 
 import type { ReactNodeList } from 'ReactTypes';
 
-var {
-  REACT_ELEMENT_TYPE,
-} = require('ReactElement');
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {
   REACT_COROUTINE_TYPE,
   REACT_YIELD_TYPE,

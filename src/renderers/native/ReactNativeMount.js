@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
+var React = require('React');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
@@ -35,9 +35,9 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounts this component and inserts it into the DOM.
@@ -99,25 +99,20 @@ var ReactNativeMount = {
    * @param {containerTag} containerView Handle to native view tag
    */
   renderComponent: function(
-    nextElement: ReactElement,
+    nextElement: ReactElement<*>,
     containerTag: number,
     callback?: ?(() => void)
   ): ?ReactComponent<any, any, any> {
-    var nextWrappedElement = new ReactElement(
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      { child: nextElement }
     );
 
     var topRootNodeID = containerTag;
     var prevComponent = ReactNativeMount._instancesByContainerID[topRootNodeID];
     if (prevComponent) {
       var prevWrappedElement = prevComponent._currentElement;
-      var prevElement = prevWrappedElement.props;
+      var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement, emptyObject);
         if (callback) {

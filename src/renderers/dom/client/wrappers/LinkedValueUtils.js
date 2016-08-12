@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactPropTypes = require('ReactPropTypes');
+var React = require('React');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
@@ -84,7 +84,7 @@ var propTypes = {
       'set either `onChange` or `readOnly`.'
     );
   },
-  onChange: ReactPropTypes.func,
+  onChange: React.PropTypes.func,
 };
 
 var loggedTypeFailures = {};

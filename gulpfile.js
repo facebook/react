@@ -111,20 +111,11 @@ var moduleMapReact = Object.assign(
 );
 
 var rendererSharedState = {
+  // Alias
+  React: 'react/lib/React',
   // Shared state
   ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
   ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
-
-  // TODO: Move to shared since these are actually shared and can be copied.
-  ReactPropTypeLocations: 'react/lib/ReactPropTypeLocations',
-  ReactPropTypesSecret: 'react/lib/ReactPropTypesSecret',
-  checkReactTypeSpec: 'react/lib/checkReactTypeSpec',
-
-  // TODO: Update the source to just use the React module.
-  React: 'react/lib/React',
-  ReactElement: 'react/lib/ReactElement',
-  ReactPropTypes: 'react/lib/ReactPropTypes',
-  ReactChildren: 'react/lib/ReactChildren',
 };
 
 var moduleMapReactDOM = Object.assign(
