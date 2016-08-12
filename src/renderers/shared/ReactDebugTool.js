@@ -20,30 +20,31 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var performanceNow = require('performanceNow');
 var warning = require('warning');
 
-var hooks = [];
-var didHookThrowForEvent = {};
+var handlersForEvent = {};
+var didHandlerThrowForEvent = {};
 
-function callHook(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
+function callHandler(handler, event, arg1, arg2, arg3, arg4, arg5) {
   try {
-    fn.call(context, arg1, arg2, arg3, arg4, arg5);
+    handler(arg1, arg2, arg3, arg4, arg5);
   } catch (e) {
     warning(
-      didHookThrowForEvent[event],
+      didHandlerThrowForEvent[event],
       'Exception thrown by hook while handling %s: %s',
       event,
       e + '\n' + e.stack
     );
-    didHookThrowForEvent[event] = true;
+    didHandlerThrowForEvent[event] = true;
   }
 }
 
 function emitEvent(event, arg1, arg2, arg3, arg4, arg5) {
-  for (var i = 0; i < hooks.length; i++) {
-    var hook = hooks[i];
-    var fn = hook[event];
-    if (fn) {
-      callHook(event, fn, hook, arg1, arg2, arg3, arg4, arg5);
-    }
+  var handlers = handlersForEvent[event];
+  if (!handlers) {
+    return;
+  }
+  for (var i = 0; i < handlers.length; i++) {
+    var handler = handlers[i];
+    callHandler(handler, event, arg1, arg2, arg3, arg4, arg5);
   }
 }
 
@@ -194,14 +195,26 @@ function resumeCurrentLifeCycleTimer() {
 
 var ReactDebugTool = {
   addHook(hook) {
-    hooks.push(hook);
+    for (var event in hook) {
+      if (!hook.hasOwnProperty(event)) {
+        continue;
+      }
+
+      var handler = hook[event];
+      handlersForEvent[event] = handlersForEvent[event] || [];
+      handlersForEvent[event].push(handler);
+    }
   },
   removeHook(hook) {
-    for (var i = 0; i < hooks.length; i++) {
-      if (hooks[i] === hook) {
-        hooks.splice(i, 1);
-        i--;
+    for (var event in hook) {
+      if (!hook.hasOwnProperty(event) || !handlersForEvent[event]) {
+        continue;
       }
+
+      var handler = hook[event];
+      handlersForEvent[event] = handlersForEvent[event].filter(h =>
+        h !== handler
+      );
     }
   },
   isProfiling() {
