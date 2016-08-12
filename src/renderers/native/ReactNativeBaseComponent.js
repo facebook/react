@@ -59,7 +59,7 @@ ReactNativeBaseComponent.Mixin = {
     ReactNativeComponentTree.uncacheNode(this);
     deleteAllListeners(this);
     this.unmountChildren();
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
   },
 
   /**

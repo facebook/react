@@ -22,7 +22,7 @@ var ReactNativeTextComponent = function(text) {
   this._currentElement = text;
   this._stringText = '' + text;
   this._hostParent = null;
-  this._rootNodeID = null;
+  this._rootNodeID = 0;
 };
 
 Object.assign(ReactNativeTextComponent.prototype, {
@@ -73,7 +73,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
     ReactNativeComponentTree.uncacheNode(this);
     this._currentElement = null;
     this._stringText = null;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
   },
 
 });
