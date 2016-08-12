@@ -1,7 +1,7 @@
 ---
 id: why-react-zh-CN
 title: 为什么使用 React?
-permalink: why-react-zh-CN.html
+permalink: docs/why-react-zh-CN.html
 next: displaying-data-zh-CN.html
 ---
 React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript 库。很多人选择将 React 认为是 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)** 中的 **V**（视图）。

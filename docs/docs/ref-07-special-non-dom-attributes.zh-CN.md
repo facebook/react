@@ -1,7 +1,7 @@
 ---
 id: special-non-dom-attributes-zh-CN
 title: 特殊的 Non-DOM Attributes
-permalink: special-non-dom-attributes-zh-CN.html
+permalink: docs/special-non-dom-attributes-zh-CN.html
 prev: dom-differences-zh-CN.html
 next: reconciliation-zh-CN.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: tutorial-ja-JP
 title: チュートリアル
-permalink: tutorial-ja-JP.html
+permalink: docs/tutorial-ja-JP.html
 prev: getting-started-ja-JP.html
 next: thinking-in-react-ja-JP.html
 ---
@@ -41,10 +41,12 @@ next: thinking-in-react-ja-JP.html
   <head>
     <meta charset="UTF-8" />
     <title>React Tutorial</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
+    <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+
   </head>
   <body>
     <div id="content"></div>
@@ -223,11 +225,11 @@ Markdown はインラインでテキストをフォーマットする簡単な�
 <head>
   <meta charset="UTF-8" />
   <title>Hello React</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
+  <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+  <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+  <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+  <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
+  <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
 </head>
 ```
 

@@ -6,7 +6,7 @@
 module Authors
   class Generator < Jekyll::Generator
     def generate(site)
-      site.posts.each do |post|
+      site.posts.docs.each do |post|
         authors = []
         if post['author'].kind_of?(Array)
           for author in post['author']

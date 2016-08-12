@@ -1,7 +1,7 @@
 ---
 id: interactivity-and-dynamic-uis-ko-KR
 title: 상호 작용 및 동적 UI
-permalink: interactivity-and-dynamic-uis-ko-KR.html
+permalink: docs/interactivity-and-dynamic-uis-ko-KR.html
 prev: jsx-gotchas-ko-KR.html
 next: multiple-components-ko-KR.html
 ---
@@ -19,7 +19,7 @@ var LikeButton = React.createClass({
     this.setState({liked: !this.state.liked});
   },
   render: function() {
-    var text = this.state.liked ? 'like' : 'haven\'t liked';
+    var text = this.state.liked ? 'liked' : 'haven\'t liked';
     return (
       <p onClick={this.handleClick}>
         You {text} this. Click to toggle.

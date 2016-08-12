@@ -1,7 +1,7 @@
 ---
 id: thinking-in-react-ko-KR
 title: 리액트로 생각해보기
-permalink: thinking-in-react-ko-KR.html
+permalink: docs/thinking-in-react-ko-KR.html
 prev: tutorial-ko-KR.html
 next: videos-ko-KR.html
 ---

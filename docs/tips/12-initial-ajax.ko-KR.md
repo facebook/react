@@ -2,7 +2,7 @@
 id: initial-ajax-ko-KR
 title: AJAX를 통해 초기 데이터 읽어오기
 layout: tips
-permalink: initial-ajax-ko-KR.html
+permalink: tips/initial-ajax-ko-KR.html
 prev: dom-event-listeners-ko-KR.html
 next: false-in-jsx-ko-KR.html
 ---

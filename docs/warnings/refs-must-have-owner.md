@@ -1,6 +1,7 @@
 ---
 title: Refs Must Have Owner Warning
 layout: single
+permalink: warnings/refs-must-have-owner.html
 ---
 
 You are probably here because you got the following error messages:

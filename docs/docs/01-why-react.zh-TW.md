@@ -1,7 +1,7 @@
 ---
 id: why-react-zh-TW
 title: Why React?
-permalink: why-react-zh-TW.html
+permalink: docs/why-react-zh-TW.html
 next: displaying-data.html
 ---
 React是Facebook和Instagram用來建立使用者介面的JavaScript函式庫. 很多人認為React就是處理 **[MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)**架構中 **V** 的部份.

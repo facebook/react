@@ -1,7 +1,7 @@
 ---
 id: advanced-performance-ko-KR
 title: 성능 심화
-permalink: advanced-performance-ko-KR.html
+permalink: docs/advanced-performance-ko-KR.html
 prev: perf-ko-KR.html
 next: context-ko-KR.html
 ---

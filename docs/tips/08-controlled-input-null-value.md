@@ -2,7 +2,7 @@
 id: controlled-input-null-value
 title: Value of null for Controlled Input
 layout: tips
-permalink: controlled-input-null-value.html
+permalink: tips/controlled-input-null-value.html
 prev: children-props-type.html
 next: componentWillReceiveProps-not-triggered-after-mounting.html
 ---

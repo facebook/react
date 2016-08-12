@@ -1,7 +1,7 @@
 ---
 id: component-specs-ko-KR
 title:  컴포넌트 명세와 생명주기
-permalink: component-specs-ko-KR.html
+permalink: docs/component-specs-ko-KR.html
 prev: component-api-ko-KR.html
 next: tags-and-attributes-ko-KR.html
 ---

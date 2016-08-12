@@ -1,7 +1,7 @@
 ---
 id: tooling-integration
 title: Tooling Integration
-permalink: tooling-integration.html
+permalink: docs/tooling-integration.html
 prev: more-about-refs.html
 next: language-tooling.html
 ---
