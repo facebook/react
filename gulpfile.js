@@ -31,7 +31,7 @@ var paths = {
     src: [
       'src/umd/ReactUMDEntry.js',
       'src/umd/ReactWithAddonsUMDEntry.js',
-      'src/umd/shims/ReactAddonsDOMDependenciesUMDShim.js',
+      'src/umd/shims/**/*.js',
 
       'src/isomorphic/**/*.js',
       'src/addons/**/*.js',
