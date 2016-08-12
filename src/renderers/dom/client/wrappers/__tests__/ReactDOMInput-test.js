@@ -837,7 +837,8 @@ describe('ReactDOMInput', function() {
       'node.setAttribute("data-reactroot", "")',
       'node.setAttribute("type", "date")',
       'node.setAttribute("value", "1980-01-01")',
-      'node.value = undefined',
+      'node.value = ""',
+      'node.value = ""',
       'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
