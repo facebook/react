@@ -634,7 +634,7 @@ describe('ReactDOMComponent', function() {
 
       var NodeStub = function(initialProps) {
         this._currentElement = {props: initialProps};
-        this._rootNodeID = 'test';
+        this._rootNodeID = 1;
       };
       Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
@@ -690,7 +690,7 @@ describe('ReactDOMComponent', function() {
 
       var NodeStub = function(initialProps) {
         this._currentElement = {props: initialProps};
-        this._rootNodeID = 'test';
+        this._rootNodeID = 1;
       };
       Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
