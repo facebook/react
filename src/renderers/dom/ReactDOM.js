@@ -135,4 +135,13 @@ if (__DEV__) {
   }
 }
 
+if (__DEV__) {
+  var ReactInstrumentation = require('ReactInstrumentation');
+  var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+
+  ReactInstrumentation.debugTool.addHook(ReactDOMUnknownPropertyHook);
+  ReactInstrumentation.debugTool.addHook(ReactDOMNullInputValuePropHook);
+}
+
 module.exports = ReactDOM;
