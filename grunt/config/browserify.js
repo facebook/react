@@ -8,39 +8,18 @@ var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
 var derequire = require('derequire');
 var aliasify = require('aliasify');
-var globalShim = require('browserify-global-shim');
 var collapser = require('bundle-collapser/plugin');
 
 var envifyDev = envify({NODE_ENV: process.env.NODE_ENV || 'development'});
 var envifyProd = envify({NODE_ENV: process.env.NODE_ENV || 'production'});
 
-var SECRET_INTERNALS_NAME = 'React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED';
-
-var shimSharedModulesFiles = {
-  './ReactCurrentOwner': SECRET_INTERNALS_NAME + '.ReactCurrentOwner',
-  './ReactComponentTreeHook': SECRET_INTERNALS_NAME + '.ReactComponentTreeHook',
-  // Use the global, anywhere we require React
-  './React': 'React',
-};
-
-// We can access these as absolute or relative. We need to shim both.
-for (var key in shimSharedModulesFiles) {
-  shimSharedModulesFiles[key.replace(/^\.\//, 'react/lib/')] = shimSharedModulesFiles[key];
-}
-
-var shimSharedModules = globalShim.configure(shimSharedModulesFiles);
-
-// Fiber needs the symbol from ReactElement right now. So we can't shim
-// ReactElement. Otherwise this would just be the same as above.
-// TODO: Refactor this so that Fiber can access the symbol without bringing in
-// the rest of ReactElement.
-var shimSharedModulesFiberFiles = {};
-for (var key in shimSharedModulesFiles) {
-  if (!/ReactElement/.test(key)) {
-    shimSharedModulesFiberFiles[key] = shimSharedModulesFiles[key];
-  }
-}
-var shimSharedModulesFiber = globalShim.configure(shimSharedModulesFiberFiles);
+var shimSharedModules = aliasify.configure({
+  'aliases': {
+    'react/lib/React': 'react/lib/ReactUMDShim',
+    'react/lib/ReactCurrentOwner': 'react/lib/ReactCurrentOwnerUMDShim',
+    'react/lib/ReactComponentTreeHook': 'react/lib/ReactComponentTreeHookUMDShim',
+  },
+});
 
 var shimDOMModules = aliasify.configure({
   'aliases': {
@@ -219,7 +198,7 @@ var domFiber = {
   debug: false,
   standalone: 'ReactDOMFiber',
   // Apply as global transform so that we also envify fbjs and any other deps
-  transforms: [shimSharedModulesFiber],
+  transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
   after: [derequire, simpleBannerify],
@@ -234,7 +213,7 @@ var domFiberMin = {
   standalone: 'ReactDOMFiber',
   // Envify twice. The first ensures that when we uglifyify, we have the right
   // conditions to exclude requires. The global transform runs on deps.
-  transforms: [shimSharedModulesFiber, envifyProd, uglifyify],
+  transforms: [shimSharedModules, envifyProd, uglifyify],
   globalTransforms: [envifyProd],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
