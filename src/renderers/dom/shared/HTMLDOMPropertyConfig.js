@@ -35,7 +35,8 @@ var HTMLDOMPropertyConfig = {
       // Make sure we set .step before .value (setting .value before .step
       // means .value is rounded on mount: based upon step precision)
       'step',
-      // Min and max need to be set before value for range inputs.
+      // Fix bug in range inputs initial render
+      // https://github.com/facebook/react/issues/7170
       'min',
       'max',
       'value',
