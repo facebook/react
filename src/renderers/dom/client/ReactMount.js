@@ -13,12 +13,12 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
+var React = require('React');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -388,7 +388,7 @@ var ReactMount = {
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     ReactUpdateQueue.validateCallback(callback, 'ReactDOM.render');
     invariant(
-      ReactElement.isValidElement(nextElement),
+      React.isValidElement(nextElement),
       'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
@@ -415,7 +415,7 @@ var ReactMount = {
       'for your app.'
     );
 
-    var nextWrappedElement = ReactElement.createElement(
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
       { child: nextElement }
     );

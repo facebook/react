@@ -17,11 +17,7 @@ var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var RESERVED_PROPS = {
   key: true,
@@ -405,7 +401,5 @@ ReactElement.isValidElement = function(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
-
-ReactElement.REACT_ELEMENT_TYPE = REACT_ELEMENT_TYPE;
 
 module.exports = ReactElement;

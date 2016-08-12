@@ -16,7 +16,6 @@
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeDefaultInjection = require('ReactNativeDefaultInjection');
 
-var ReactElement = require('ReactElement');
 var ReactNativeMount = require('ReactNativeMount');
 var ReactUpdates = require('ReactUpdates');
 
@@ -25,7 +24,7 @@ var findNodeHandle = require('findNodeHandle');
 ReactNativeDefaultInjection.inject();
 
 var render = function(
-  element: ReactElement,
+  element: ReactElement<any>,
   mountInto: number,
   callback?: ?(() => void)
 ): ?ReactComponent<any, any, any> {
