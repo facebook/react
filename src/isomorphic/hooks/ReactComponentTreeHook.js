@@ -16,9 +16,17 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var invariant = require('invariant');
 var warning = require('warning');
 
-var itemByKey = {};
-var unmountedIDs = {};
-var rootIDs = {};
+var itemMap;
+var itemByKey;
+
+var canUseMap = typeof Map === 'function' && typeof Array.from === 'function';
+if (canUseMap) {
+  itemMap = new Map();
+} else {
+  itemByKey = {};
+}
+
+var unmountedIDs = [];
 
 // Use non-numeric keys to prevent V8 performance issues:
 // https://github.com/facebook/react/pull/7232
@@ -30,18 +38,24 @@ function getIDFromKey(key) {
 }
 
 function get(id) {
+  if (canUseMap) {
+    return itemMap.get(id);
+  }
   var key = getKeyFromID(id);
   return itemByKey[key];
 }
 
 function remove(id) {
+  if (canUseMap) {
+    itemMap.delete(id);
+    return;
+  }
   var key = getKeyFromID(id);
   delete itemByKey[key];
 }
 
 function create(id, element, parentID) {
-  var key = getKeyFromID(id);
-  itemByKey[key] = {
+  var item = {
     element,
     parentID,
     text: null,
@@ -49,6 +63,12 @@ function create(id, element, parentID) {
     isMounted: false,
     updateCount: 0,
   };
+  if (canUseMap) {
+    itemMap.set(id, item);
+    return;
+  }
+  var key = getKeyFromID(id);
+  itemByKey[key] = item;
 }
 
 function purgeDeep(id) {
@@ -144,10 +164,6 @@ var ReactComponentTreeHook = {
 
   onBeforeMountComponent(id, element, parentID) {
     create(id, element, parentID);
-
-    if (parentID === 0) {
-      rootIDs[id] = true;
-    }
   },
 
   onBeforeUpdateComponent(id, element) {
@@ -185,8 +201,7 @@ var ReactComponentTreeHook = {
       // the error boundary cleanup.
       item.isMounted = false;
     }
-    unmountedIDs[id] = true;
-    delete rootIDs[id];
+    unmountedIDs.push(id);
   },
 
   purgeUnmountedComponents() {
@@ -195,10 +210,11 @@ var ReactComponentTreeHook = {
       return;
     }
 
-    for (var id in unmountedIDs) {
+    for (var i = 0; i < unmountedIDs.length; i++) {
+      var id = unmountedIDs[i];
       purgeDeep(id);
     }
-    unmountedIDs = {};
+    unmountedIDs.length = 0;
   },
 
   isMounted(id) {
@@ -292,11 +308,20 @@ var ReactComponentTreeHook = {
   },
 
   getRootIDs() {
-    return Object.keys(rootIDs);
+    var registeredIDs = ReactComponentTreeHook.getRegisteredIDs();
+    return registeredIDs.filter(ReactComponentTreeHook.isRootID);
   },
 
   getRegisteredIDs() {
+    if (canUseMap) {
+      return Array.from(itemMap.keys());
+    }
     return Object.keys(itemByKey).map(getIDFromKey);
+  },
+
+  isRootID(id) {
+    var parentID = ReactComponentTreeHook.getParentID(id);
+    return parentID === 0;
   },
 };
 
