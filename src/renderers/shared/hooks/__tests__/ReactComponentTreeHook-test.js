@@ -46,14 +46,19 @@ describe('ReactComponentTreeHook', () => {
       }
     }
 
-    function expectWrapperTreeToEqual(expectedTree) {
+    function expectWrapperTreeToEqual(expectedTree, andStayMounted) {
       ReactComponentTreeTestUtils.expectTree(rootInstance._debugID, {
         displayName: 'Wrapper',
         children: expectedTree ? [expectedTree] : [],
       });
+      var rootDisplayNames = ReactComponentTreeTestUtils.getRootDisplayNames();
+      var registeredDisplayNames = ReactComponentTreeTestUtils.getRegisteredDisplayNames();
       if (!expectedTree) {
-        expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-        expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+        expect(rootDisplayNames).toEqual([]);
+        expect(registeredDisplayNames).toEqual([]);
+      } else if (andStayMounted) {
+        expect(rootDisplayNames).toContain('Wrapper');
+        expect(registeredDisplayNames).toContain('Wrapper');
       }
     }
 
@@ -64,12 +69,12 @@ describe('ReactComponentTreeHook', () => {
 
       // Mount a new tree or update the existing tree.
       ReactDOM.render(<Wrapper />, node);
-      expectWrapperTreeToEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree, true);
 
       // Purging should have no effect
       // on the tree we expect to see.
       ReactComponentTreeHook.purgeUnmountedComponents();
-      expectWrapperTreeToEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree, true);
     });
 
     // Unmounting the root node should purge
@@ -1862,6 +1867,109 @@ describe('ReactComponentTreeHook', () => {
         }
       }
       ReactDOM.render(<Foo />, el);
+    });
+  });
+
+  describe('in environment without Map and Array.from', () => {
+    var realMap;
+    var realArrayFrom;
+
+    beforeEach(() => {
+      realMap = global.Map;
+      realArrayFrom = Array.from;
+
+      global.Map = undefined;
+      Array.from = undefined;
+
+      jest.resetModuleRegistry();
+
+      React = require('React');
+      ReactDOM = require('ReactDOM');
+      ReactDOMServer = require('ReactDOMServer');
+      ReactInstanceMap = require('ReactInstanceMap');
+      ReactComponentTreeHook = require('ReactComponentTreeHook');
+      ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
+    });
+
+    afterEach(() => {
+      global.Map = realMap;
+      Array.from = realArrayFrom;
+    });
+
+    it('works', () => {
+      class Qux extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      function Foo() {
+        return {
+          render() {
+            return <Qux />;
+          },
+        };
+      }
+      function Bar({children}) {
+        return <h1>{children}</h1>;
+      }
+      class Baz extends React.Component {
+        render() {
+          return (
+            <div>
+              <Foo />
+              <Bar>
+                <span>Hi,</span>
+                Mom
+              </Bar>
+              <a href="#">Click me.</a>
+            </div>
+          );
+        }
+      }
+
+      var element = <Baz />;
+      var tree = {
+        displayName: 'Baz',
+        element,
+        children: [{
+          displayName: 'div',
+          children: [{
+            displayName: 'Foo',
+            element: <Foo />,
+            children: [{
+              displayName: 'Qux',
+              element: <Qux />,
+              children: [],
+            }],
+          }, {
+            displayName: 'Bar',
+            children: [{
+              displayName: 'h1',
+              children: [{
+                displayName: 'span',
+                children: [{
+                  displayName: '#text',
+                  element: 'Hi,',
+                  text: 'Hi,',
+                }],
+              }, {
+                displayName: '#text',
+                text: 'Mom',
+                element: 'Mom',
+              }],
+            }],
+          }, {
+            displayName: 'a',
+            children: [{
+              displayName: '#text',
+              text: 'Click me.',
+              element: 'Click me.',
+            }],
+          }],
+        }],
+      };
+      assertTreeMatches([element, tree]);
     });
   });
 });

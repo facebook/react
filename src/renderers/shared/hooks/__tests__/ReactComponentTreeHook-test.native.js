@@ -70,14 +70,19 @@ describe('ReactComponentTreeHook', () => {
       }
     }
 
-    function expectWrapperTreeToEqual(expectedTree) {
+    function expectWrapperTreeToEqual(expectedTree, andStayMounted) {
       ReactComponentTreeTestUtils.expectTree(rootInstance._debugID, {
         displayName: 'Wrapper',
         children: expectedTree ? [expectedTree] : [],
       });
+      var rootDisplayNames = ReactComponentTreeTestUtils.getRootDisplayNames();
+      var registeredDisplayNames = ReactComponentTreeTestUtils.getRegisteredDisplayNames();
       if (!expectedTree) {
-        expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-        expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+        expect(rootDisplayNames).toEqual([]);
+        expect(registeredDisplayNames).toEqual([]);
+      } else if (andStayMounted) {
+        expect(rootDisplayNames).toContain('Wrapper');
+        expect(registeredDisplayNames).toContain('Wrapper');
       }
     }
 
@@ -88,12 +93,12 @@ describe('ReactComponentTreeHook', () => {
 
       // Mount a new tree or update the existing tree.
       ReactNative.render(<Wrapper />, 1);
-      expectWrapperTreeToEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree, true);
 
       // Purging should have no effect
       // on the tree we expect to see.
       ReactComponentTreeHook.purgeUnmountedComponents();
-      expectWrapperTreeToEqual(expectedTree);
+      expectWrapperTreeToEqual(expectedTree, true);
     });
 
     // Unmounting the root node should purge

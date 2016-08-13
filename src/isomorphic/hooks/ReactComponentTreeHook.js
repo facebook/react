@@ -16,9 +16,46 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var invariant = require('invariant');
 var warning = require('warning');
 
-var itemByKey = {};
-var unmountedIDs = {};
-var rootIDs = {};
+function isNative(fn) {
+  // Based on isNative() from Lodash
+  var funcToString = Function.prototype.toString;
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var reIsNative = RegExp('^' + funcToString
+    // Take an example native function source for comparison
+    .call(hasOwnProperty)
+    // Strip regex characters so we can use it for regex
+    .replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+    // Remove hasOwnProperty from the template to make it generic
+    .replace(
+      /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
+      '$1.*?'
+    ) + '$'
+  );
+  try {
+    var source = funcToString.call(fn);
+    return reIsNative.test(source);
+  } catch (err) {
+    return false;
+  }
+}
+
+var itemMap;
+var itemByKey;
+
+var canUseMap = (
+  typeof Array.from === 'function' &&
+  typeof Map === 'function' &&
+  isNative(Map)
+);
+
+if (canUseMap) {
+  itemMap = new Map();
+} else {
+  itemByKey = {};
+}
+
+var unmountedIDs = [];
+var rootIDs = [];
 
 // Use non-numeric keys to prevent V8 performance issues:
 // https://github.com/facebook/react/pull/7232
@@ -30,18 +67,24 @@ function getIDFromKey(key) {
 }
 
 function get(id) {
+  if (canUseMap) {
+    return itemMap.get(id);
+  }
   var key = getKeyFromID(id);
   return itemByKey[key];
 }
 
 function remove(id) {
+  if (canUseMap) {
+    itemMap.delete(id);
+    return;
+  }
   var key = getKeyFromID(id);
   delete itemByKey[key];
 }
 
 function create(id, element, parentID) {
-  var key = getKeyFromID(id);
-  itemByKey[key] = {
+  var item = {
     element,
     parentID,
     text: null,
@@ -49,6 +92,12 @@ function create(id, element, parentID) {
     isMounted: false,
     updateCount: 0,
   };
+  if (canUseMap) {
+    itemMap.set(id, item);
+    return;
+  }
+  var key = getKeyFromID(id);
+  itemByKey[key] = item;
 }
 
 function purgeDeep(id) {
@@ -144,10 +193,6 @@ var ReactComponentTreeHook = {
 
   onBeforeMountComponent(id, element, parentID) {
     create(id, element, parentID);
-
-    if (parentID === 0) {
-      rootIDs[id] = true;
-    }
   },
 
   onBeforeUpdateComponent(id, element) {
@@ -163,6 +208,9 @@ var ReactComponentTreeHook = {
   onMountComponent(id) {
     var item = get(id);
     item.isMounted = true;
+    if (item.parentID === 0) {
+      rootIDs.push(id);
+    }
   },
 
   onUpdateComponent(id) {
@@ -184,9 +232,14 @@ var ReactComponentTreeHook = {
       // got a chance to mount, but it still gets an unmounting event during
       // the error boundary cleanup.
       item.isMounted = false;
+      if (item.parentID === 0) {
+        var indexInRootIDs = rootIDs.indexOf(id);
+        if (indexInRootIDs !== -1) {
+          rootIDs.splice(indexInRootIDs, 1);
+        }
+      }
     }
-    unmountedIDs[id] = true;
-    delete rootIDs[id];
+    unmountedIDs.push(id);
   },
 
   purgeUnmountedComponents() {
@@ -195,10 +248,11 @@ var ReactComponentTreeHook = {
       return;
     }
 
-    for (var id in unmountedIDs) {
+    for (var i = 0; i < unmountedIDs.length; i++) {
+      var id = unmountedIDs[i];
       purgeDeep(id);
     }
-    unmountedIDs = {};
+    unmountedIDs.length = 0;
   },
 
   isMounted(id) {
@@ -292,10 +346,13 @@ var ReactComponentTreeHook = {
   },
 
   getRootIDs() {
-    return Object.keys(rootIDs);
+    return rootIDs;
   },
 
   getRegisteredIDs() {
+    if (canUseMap) {
+      return Array.from(itemMap.keys());
+    }
     return Object.keys(itemByKey).map(getIDFromKey);
   },
 };
