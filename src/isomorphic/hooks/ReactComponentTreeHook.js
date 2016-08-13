@@ -16,10 +16,38 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var invariant = require('invariant');
 var warning = require('warning');
 
+function isNative(fn) {
+  // Based on isNative() from Lodash
+  var funcToString = Function.prototype.toString;
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
+  var reIsNative = RegExp('^' + funcToString
+    // Take an example native function source for comparison
+    .call(hasOwnProperty)
+    // Strip regex characters so we can use it for regex
+    .replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+    // Remove hasOwnProperty from the template to make it generic
+    .replace(
+      /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
+      '$1.*?'
+    ) + '$'
+  );
+  try {
+    var source = funcToString.call(fn);
+    return reIsNative.test(source);
+  } catch (err) {
+    return false;
+  }
+}
+
 var itemMap;
 var itemByKey;
 
-var canUseMap = typeof Map === 'function' && typeof Array.from === 'function';
+var canUseMap = (
+  typeof Array.from === 'function' &&
+  typeof Map === 'function' &&
+  isNative(Map)
+);
+
 if (canUseMap) {
   itemMap = new Map();
 } else {
