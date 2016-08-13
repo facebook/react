@@ -1721,6 +1721,16 @@ describe('ReactComponentTreeHook', () => {
     expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
+  it('registers inlined text nodes', () => {
+    var node = document.createElement('div');
+
+    ReactDOM.render(<div>hi</div>, node);
+    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(['div', '#text']);
+
+    ReactDOM.unmountComponentAtNode(node);
+    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+  });
+
   describe('stack addenda', () => {
     it('gets created', () => {
       function getAddendum(element) {
