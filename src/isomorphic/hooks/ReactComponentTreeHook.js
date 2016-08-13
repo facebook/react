@@ -27,6 +27,7 @@ if (canUseMap) {
 }
 
 var unmountedIDs = [];
+var rootIDs = [];
 
 // Use non-numeric keys to prevent V8 performance issues:
 // https://github.com/facebook/react/pull/7232
@@ -179,6 +180,9 @@ var ReactComponentTreeHook = {
   onMountComponent(id) {
     var item = get(id);
     item.isMounted = true;
+    if (item.parentID === 0) {
+      rootIDs.push(id);
+    }
   },
 
   onUpdateComponent(id) {
@@ -200,6 +204,12 @@ var ReactComponentTreeHook = {
       // got a chance to mount, but it still gets an unmounting event during
       // the error boundary cleanup.
       item.isMounted = false;
+      if (item.parentID === 0) {
+        var indexInRootIDs = rootIDs.indexOf(id);
+        if (indexInRootIDs !== -1) {
+          rootIDs.splice(indexInRootIDs, 1);
+        }
+      }
     }
     unmountedIDs.push(id);
   },
@@ -308,8 +318,7 @@ var ReactComponentTreeHook = {
   },
 
   getRootIDs() {
-    var registeredIDs = ReactComponentTreeHook.getRegisteredIDs();
-    return registeredIDs.filter(ReactComponentTreeHook.isRootID);
+    return rootIDs;
   },
 
   getRegisteredIDs() {
@@ -317,11 +326,6 @@ var ReactComponentTreeHook = {
       return Array.from(itemMap.keys());
     }
     return Object.keys(itemByKey).map(getIDFromKey);
-  },
-
-  isRootID(id) {
-    var parentID = ReactComponentTreeHook.getParentID(id);
-    return parentID === 0;
   },
 };
 
