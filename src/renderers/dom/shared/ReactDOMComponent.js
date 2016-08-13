@@ -259,7 +259,8 @@ if (__DEV__) {
   setContentChildForInstrumentation = function(content) {
     var hasExistingContent = this._contentDebugID != null;
     var debugID = this._debugID;
-    var contentDebugID = debugID + '#text';
+    // This ID represents the inlined child that has no backing instance:
+    var contentDebugID = -debugID;
 
     if (content == null) {
       if (hasExistingContent) {
