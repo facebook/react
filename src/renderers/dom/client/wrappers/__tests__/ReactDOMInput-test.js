@@ -853,7 +853,6 @@ describe('ReactDOMInput', () => {
       'set min',
       'set max',
       'set value',
-      'set value' // second time is post mount
     ]);
   });
 

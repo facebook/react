@@ -236,11 +236,6 @@ function putListener() {
   );
 }
 
-function inputPostMount() {
-  var inst = this;
-  ReactDOMInput.postMountWrapper(inst);
-}
-
 function textareaPostMount() {
   var inst = this;
   ReactDOMTextarea.postMountWrapper(inst);
@@ -654,10 +649,6 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
-        transaction.getReactMountReady().enqueue(
-          inputPostMount,
-          this
-        );
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,

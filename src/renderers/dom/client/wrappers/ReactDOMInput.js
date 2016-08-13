@@ -177,17 +177,6 @@ var ReactDOMInput = {
     }
   },
 
-  postMountWrapper: function(inst) {
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    var props = inst._currentElement.props;
-
-    // Values derived from markup, like setting innerHTML or working
-    // from server-rendered markup, will not have value assigned as a
-    // property. It needs to be directly assigned to detatch it from
-    // default value.
-    node.value = node.value;
-  },
-
   // Ensure that there is no disconnect between an input's property
   // value and component state. This should run during `onChange`.
   enforceControlledInputValue: function(inst) {

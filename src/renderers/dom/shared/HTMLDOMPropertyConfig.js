@@ -41,7 +41,6 @@ var HTMLDOMPropertyConfig = {
       'max',
       'value',
       'checked',
-      'defaultChecked',
     ],
   },
 
@@ -244,6 +243,19 @@ var HTMLDOMPropertyConfig = {
         // Set value directly cause it has already been modified
         node.value = next;
       }
+    },
+
+    defaultValue: function(node, next) {
+      // If a value is present, intentially re-assign it to detatch it
+      // from defaultValue. Values derived from server-rendered markup
+      // will not had a prior changes to assign value as a property.
+      //
+      // Make an exception for multi-selects
+      if (!node.multiple && node.value !== '') {
+        node.value = node.value;
+      }
+
+      node.defaultValue = next;
     },
 
     // Chrome ~50 does not properly detatch defaultChecked, this mutation method
