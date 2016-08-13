@@ -443,7 +443,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### Bug Fixes
 
-* Immutabilty Helpers: Ensure it supports `hasOwnProperty` as an object key
+* Immutability Helpers: Ensure it supports `hasOwnProperty` as an object key
 
 ### React Tools
 
