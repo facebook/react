@@ -65,7 +65,6 @@ function defineKeyPropWarningGetter(props, displayName) {
         displayName
       );
     }
-    return undefined;
   };
   warnAboutAccessingKey.isReactWarning = true;
   Object.defineProperty(props, 'key', {
@@ -87,7 +86,6 @@ function defineRefPropWarningGetter(props, displayName) {
         displayName
       );
     }
-    return undefined;
   };
   warnAboutAccessingRef.isReactWarning = true;
   Object.defineProperty(props, 'ref', {
