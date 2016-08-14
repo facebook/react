@@ -1870,15 +1870,18 @@ describe('ReactComponentTreeHook', () => {
     });
   });
 
-  describe('in environment without Map and Array.from', () => {
+  describe('in environment without Map, Set and Array.from', () => {
     var realMap;
+    var realSet;
     var realArrayFrom;
 
     beforeEach(() => {
       realMap = global.Map;
+      realSet = global.Set;
       realArrayFrom = Array.from;
 
       global.Map = undefined;
+      global.Set = undefined;
       Array.from = undefined;
 
       jest.resetModuleRegistry();
@@ -1893,6 +1896,7 @@ describe('ReactComponentTreeHook', () => {
 
     afterEach(() => {
       global.Map = realMap;
+      global.Set = realSet;
       Array.from = realArrayFrom;
     });
 

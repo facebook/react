@@ -39,23 +39,29 @@ function isNative(fn) {
   }
 }
 
-var itemMap;
-var itemByKey;
-
-var canUseMap = (
+var canUseCollections = (
   typeof Array.from === 'function' &&
   typeof Map === 'function' &&
-  isNative(Map)
+  typeof Set === 'function' &&
+  isNative(Map) &&
+  isNative(Set)
 );
 
-if (canUseMap) {
+var itemMap;
+var rootIDSet;
+
+var itemByKey;
+var rootByKey;
+
+if (canUseCollections) {
   itemMap = new Map();
+  rootIDSet = new Set();
 } else {
   itemByKey = {};
+  rootByKey = {};
 }
 
 var unmountedIDs = [];
-var rootIDs = [];
 
 // Use non-numeric keys to prevent V8 performance issues:
 // https://github.com/facebook/react/pull/7232
@@ -67,20 +73,21 @@ function getIDFromKey(key) {
 }
 
 function get(id) {
-  if (canUseMap) {
+  if (canUseCollections) {
     return itemMap.get(id);
+  } else {
+    var key = getKeyFromID(id);
+    return itemByKey[key];
   }
-  var key = getKeyFromID(id);
-  return itemByKey[key];
 }
 
 function remove(id) {
-  if (canUseMap) {
+  if (canUseCollections) {
     itemMap.delete(id);
-    return;
+  } else {
+    var key = getKeyFromID(id);
+    delete itemByKey[key];
   }
-  var key = getKeyFromID(id);
-  delete itemByKey[key];
 }
 
 function create(id, element, parentID) {
@@ -92,12 +99,47 @@ function create(id, element, parentID) {
     isMounted: false,
     updateCount: 0,
   };
-  if (canUseMap) {
+
+  if (canUseCollections) {
     itemMap.set(id, item);
-    return;
+  } else {
+    var key = getKeyFromID(id);
+    itemByKey[key] = item;
   }
-  var key = getKeyFromID(id);
-  itemByKey[key] = item;
+}
+
+function addRoot(id) {
+  if (canUseCollections) {
+    rootIDSet.add(id);
+  } else {
+    var key = getKeyFromID(id);
+    rootByKey[key] = true;
+  }
+}
+
+function removeRoot(id) {
+  if (canUseCollections) {
+    rootIDSet.delete(id);
+  } else {
+    var key = getKeyFromID(id);
+    delete rootByKey[key];
+  }
+}
+
+function getRegisteredIDs() {
+  if (canUseCollections) {
+    return Array.from(itemMap.keys());
+  } else {
+    return Object.keys(itemByKey).map(getIDFromKey);
+  }
+}
+
+function getRootIDs() {
+  if (canUseCollections) {
+    return Array.from(rootIDSet.keys());
+  } else {
+    return Object.keys(rootByKey).map(getIDFromKey);
+  }
 }
 
 function purgeDeep(id) {
@@ -208,8 +250,9 @@ var ReactComponentTreeHook = {
   onMountComponent(id) {
     var item = get(id);
     item.isMounted = true;
-    if (item.parentID === 0) {
-      rootIDs.push(id);
+    var isRoot = item.parentID === 0;
+    if (isRoot) {
+      addRoot(id);
     }
   },
 
@@ -232,11 +275,9 @@ var ReactComponentTreeHook = {
       // got a chance to mount, but it still gets an unmounting event during
       // the error boundary cleanup.
       item.isMounted = false;
-      if (item.parentID === 0) {
-        var indexInRootIDs = rootIDs.indexOf(id);
-        if (indexInRootIDs !== -1) {
-          rootIDs.splice(indexInRootIDs, 1);
-        }
+      var isRoot = item.parentID === 0;
+      if (isRoot) {
+        removeRoot(id);
       }
     }
     unmountedIDs.push(id);
@@ -345,16 +386,9 @@ var ReactComponentTreeHook = {
     return item ? item.updateCount : 0;
   },
 
-  getRootIDs() {
-    return rootIDs;
-  },
+  getRegisteredIDs,
 
-  getRegisteredIDs() {
-    if (canUseMap) {
-      return Array.from(itemMap.keys());
-    }
-    return Object.keys(itemByKey).map(getIDFromKey);
-  },
+  getRootIDs,
 };
 
 module.exports = ReactComponentTreeHook;
