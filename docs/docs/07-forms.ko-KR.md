@@ -8,7 +8,7 @@ next: working-with-the-browser-ko-KR.html
 
 `<input>`, `<textarea>`, `<option>` 같은 폼 컴포넌트는 다른 네이티브 컴포넌트와 다릅니다. 왜냐하면, 사용자의 상호작용에 의해 변경될 수 있기 때문이죠. 이런 컴포넌트들은 사용자의 상호작용에 반응하여 폼을 더 쉽게 관리할 수 있도록 인터페이스를 제공합니다.
 
-`<form>` 이벤트에 관한 정보는 [폼 이벤트](/react/docs/events-ko-KR.html#form-events)를 보세요.
+`<form>` 이벤트에 관한 정보는 [폼 이벤트](/react/docs/events-ko-KR.html#폼-이벤트)를 보세요.
 
 ## Props의 상호작용
 
@@ -32,7 +32,6 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
 >
 > `<input>`, `<textarea>`에서는 `onChange`가 DOM의 [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) 이벤트 핸들러와 같은 기능을 제공하므로 일반적인 경우에는 `onChange`를 사용하세요.
 
-<a name="controlled-components"></a>
 ## 제어되는(controlled) 컴포넌트
 
 `value`가 설정된 `<input>`은 *제어되는* 컴포넌트입니다. 제어되는 `<input>`에서, 렌더 엘리먼트의 값은 항상 `value` prop을 반영합니다. 예를 들어,
@@ -100,7 +99,7 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
 
 > 주의:
 >
-> `defaultValue`, `defaultChecked` prop은 최초 렌더에서만 사용됩니다. 뒤에 일어나는 렌더에서 값을 업데이트할 필요가 있다면,  [제어되는(controlled) 컴포넌트](#controlled-components)를 사용하셔야 합니다.
+> `defaultValue`, `defaultChecked` prop은 최초 렌더에서만 사용됩니다. 뒤에 일어나는 렌더에서 값을 업데이트할 필요가 있다면,  [제어되는(controlled) 컴포넌트](#제어되는controlled-컴포넌트)를 사용하셔야 합니다.
 
 ## 심화 주제
 

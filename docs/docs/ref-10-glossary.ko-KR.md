@@ -7,9 +7,9 @@ prev: webcomponents-ko-KR.html
 
 다음은 React에서 사용되는 용어들로, 이 다섯 가지의 타입을 구별하는 것은 중요합니다.
 
-- [ReactElement / ReactElement 팩토리](#react-elements)
-- [ReactNode](#react-nodes)
-- [ReactComponent / ReactComponent 클래스](#react-components)
+- [ReactElement / ReactElement 팩토리](#react-엘리먼트)
+- [ReactNode](#react-노드)
+- [ReactComponent / ReactComponent 클래스](#react-컴포넌트)
 
 ## React 엘리먼트
 

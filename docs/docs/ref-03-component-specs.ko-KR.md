@@ -12,7 +12,7 @@ next: tags-and-attributes-ko-KR.html
 
 > 주의:
 >
-> 그냥 JavaScript 클래스를 컴포넌트 클래스로 사용할 수도 있습니다. 이 클래스는 구현할 수 있는 메소드가 거의 같지만 약간의 차이가 있습니다. 차이에 관한 더 자세한 정보는 [ES6 클래스](/react/docs/reusable-components-ko-KR.html#es6-classes)를 읽어보세요.
+> 그냥 JavaScript 클래스를 컴포넌트 클래스로 사용할 수도 있습니다. 이 클래스는 구현할 수 있는 메소드가 거의 같지만 약간의 차이가 있습니다. 차이에 관한 더 자세한 정보는 [ES6 클래스](/react/docs/reusable-components-ko-KR.html#es6-클래스)를 읽어보세요.
 
 ### render
 
@@ -98,10 +98,9 @@ MyComponent.customMethod('bar');  // true
 string displayName
 ```
 
-`displayName` 문자열은 디버그 메시지에 사용됩니다. JSX는 이 값을 자동으로 설정합니다. [JSX 깊이 알기](/react/docs/jsx-in-depth-ko-KR.html#the-transform)를 참고하세요.
+`displayName` 문자열은 디버그 메시지에 사용됩니다. JSX는 이 값을 자동으로 설정합니다. [JSX 깊이 알기](/react/docs/jsx-in-depth-ko-KR.html#변환)를 참고하세요.
 
 
-<a name="lifecycle-methods"></a>
 ## 생명주기 메소드
 
 컴포넌트의 생명주기에서 특정 시점마다 실행되는 메소드들입니다.
@@ -152,7 +151,6 @@ componentWillReceiveProps: function(nextProps) {
 > `componentWillReceiveState`에 해당하는 메소드는 없습니다. prop이 변할 때 state가 바뀔 수는 있지만, 그 역은 불가능합니다. state의 변화에 따라 작업을 실행해야 하면 `componentWillUpdate`를 사용하세요.
 
 
-<a name="updating-shouldcomponentupdate"></a>
 ### 업데이트 시: shouldComponentUpdate
 
 ```javascript
