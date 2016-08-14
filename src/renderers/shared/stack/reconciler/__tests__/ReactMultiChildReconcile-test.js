@@ -16,8 +16,6 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
 
-var mapObject = require('mapObject');
-
 var stripEmptyValues = function(obj) {
   var ret = {};
   var name;
@@ -163,9 +161,10 @@ class FriendsStatusDisplay extends React.Component {
 
 
 function getInternalStateByUserName(statusDisplays) {
-  return mapObject(statusDisplays, function(statusDisplay, key) {
-    return statusDisplay.getInternalState();
-  });
+  return Object.keys(statusDisplays).reduce((acc, key) => {
+    acc[key] = statusDisplays[key].getInternalState();
+    return acc;
+  }, {});
 }
 
 /**
