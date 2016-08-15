@@ -40,11 +40,22 @@ function isNative(fn) {
 }
 
 var canUseCollections = (
+  // Array.from
   typeof Array.from === 'function' &&
+  // Map
   typeof Map === 'function' &&
-  typeof Set === 'function' &&
   isNative(Map) &&
-  isNative(Set)
+  // Map.prototype.keys
+  Map.prototype != null &&
+  typeof Map.prototype.keys === 'function' &&
+  isNative(Map.prototype.keys) &&
+  // Set
+  typeof Set === 'function' &&
+  isNative(Set) &&
+  // Set.prototype.keys
+  Set.prototype != null &&
+  typeof Set.prototype.keys === 'function' &&
+  isNative(Set.prototype.keys)
 );
 
 var itemMap;
