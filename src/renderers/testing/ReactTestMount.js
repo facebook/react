@@ -137,8 +137,8 @@ ReactTestInstance.prototype.toJSON = function() {
 var ReactTestMount = {
 
   render: function(
-    nextElement: ReactElement
-  ): ?ReactElement<any, any, any> {
+    nextElement: ReactElement<any>
+  ): ReactTestInstance {
     var nextWrappedElement = new ReactElement(
       TopLevelWrapper,
       null,
