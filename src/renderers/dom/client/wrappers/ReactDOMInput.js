@@ -67,6 +67,10 @@ var ReactDOMInput = {
       // Make sure we set .step before .value (setting .value before .step
       // means .value is rounded on mount, based upon step precision)
       step: undefined,
+      // Make sure we set .min & .max before .value (to ensure proper order
+      // in corner cases such as min or max deriving from value, e.g. Issue #7170)
+      min: undefined,
+      max: undefined,
     }, DisabledInputUtils.getHostProps(inst, props), {
       defaultChecked: undefined,
       defaultValue: undefined,
