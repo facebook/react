@@ -742,7 +742,7 @@ describe('ReactDOMInput', function() {
     );
   });
 
-  it('sets type and step before value always', function() {
+  it('sets type, step, min, max before value always', function() {
     if (!ReactDOMFeatureFlags.useCreateElement) {
       return;
     }
@@ -769,9 +769,9 @@ describe('ReactDOMInput', function() {
       'set data-reactroot',
       'set type',
       'set step',
-      'set value',
       'set min',
       'set max',
+      'set value',
       'set value',
       'set checked',
       'set checked',
