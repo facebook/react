@@ -155,12 +155,12 @@ describe('ReactClass-mixin', function() {
 
   it('should override mixin prop types with class prop types', function() {
     // Sanity check...
-    expect(componentPropValidator).toNotBe(mixinPropValidator);
+    expect(componentPropValidator).not.toBe(mixinPropValidator);
     // Actually check...
     expect(TestComponentWithPropTypes.propTypes)
       .toBeDefined();
     expect(TestComponentWithPropTypes.propTypes.value)
-      .toNotBe(mixinPropValidator);
+      .not.toBe(mixinPropValidator);
     expect(TestComponentWithPropTypes.propTypes.value)
       .toBe(componentPropValidator);
   });
@@ -205,7 +205,7 @@ describe('ReactClass-mixin', function() {
     var instance = <Component />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow(
+    }).toThrowError(
       'mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the ' +
       'same key: `x`. This conflict may be due to a mixin; in particular, ' +
       'this may be caused by two getInitialState() or getDefaultProps() ' +
@@ -276,7 +276,7 @@ describe('ReactClass-mixin', function() {
           return <span />;
         },
       });
-    }).toThrow(
+    }).toThrowError(
       'ReactClass: You are attempting to define `abc` on your component more ' +
       'than once. This conflict may be due to a mixin.'
     );
@@ -304,9 +304,97 @@ describe('ReactClass-mixin', function() {
           return <span />;
         },
       });
-    }).toThrow(
+    }).toThrowError(
       'ReactClass: You are attempting to define `abc` on your component ' +
       'more than once. This conflict may be due to a mixin.'
+    );
+  });
+
+  it('should warn if the mixin is undefined', function() {
+    spyOn(console, 'error');
+
+    React.createClass({
+      mixins: [undefined],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got undefined.'
+    );
+  });
+
+  it('should warn if the mixin is null', function() {
+    spyOn(console, 'error');
+
+    React.createClass({
+      mixins: [null],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got null.'
+    );
+  });
+
+  it('should warn if an undefined mixin is included in another mixin', function() {
+    spyOn(console, 'error');
+
+    var mixinA = {
+      mixins: [undefined],
+    };
+
+    React.createClass({
+      mixins: [mixinA],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got undefined.'
+    );
+  });
+
+  it('should warn if a null mixin is included in another mixin', function() {
+    spyOn(console, 'error');
+
+    var mixinA = {
+      mixins: [null],
+    };
+
+    React.createClass({
+      mixins: [mixinA],
+
+      render: function() {
+        return <span />;
+      },
+    });
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
+      'either null or not an object. Check the mixins included by the ' +
+      'component, as well as any mixins they include themselves. ' +
+      'Expected object but got null.'
     );
   });
 
@@ -319,7 +407,7 @@ describe('ReactClass-mixin', function() {
           return <span />;
         },
       });
-    }).toThrow(
+    }).toThrowError(
       'ReactClass: You\'re attempting to use a component as a mixin. ' +
       'Instead, just use a regular object.'
     );
@@ -340,7 +428,7 @@ describe('ReactClass-mixin', function() {
           return <span />;
         },
       });
-    }).toThrow(
+    }).toThrowError(
       'ReactClass: You\'re attempting to use a component class or function ' +
       'as a mixin. Instead, just use a regular object.'
     );

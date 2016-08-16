@@ -1,7 +1,7 @@
 ---
 id: component-api-zh-CN
 title: 组件 API
-permalink: component-api-zh-CN.html
+permalink: docs/component-api-zh-CN.html
 prev: top-level-api-zh-CN.html
 next: component-specs-zh-CN.html
 ---
@@ -81,21 +81,6 @@ void forceUpdate(
 通常你应该试着避免所有对 `forceUpdate()` 的使用并且在 `render()` 里只从 `this.props` 和 `this.state` 读取。这会使你的组件 "纯粹" 并且你的组件会更简单和高效。
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-如果这个组件已经被挂载到了 DOM，它返回相应的浏览器原生的 DOM 元素。这个方法对于读取 DOM 的值很有用，比如表单域的值和执行 DOM 的测量。如果 `render` 返回 `null` 或者 `false` 的时候，`this.getDOMNode()` 返回 `null`。
-
-> Note:
->
-> getDOMNode 被废弃了，已经被 [ReactDOM.findDOMNode()] 替换(/react/docs/top-level-api-zh-CN.html#reactdom.finddomnode).
->
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
-
-
 ### isMounted
 
 ```javascript
@@ -107,40 +92,3 @@ boolean isMounted()
 > 注意:
 >
 > 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除,所以你也要移除它 [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html)
-
-
-### setProps
-
-```javascript
-void setProps(
-  object nextProps,
-  [function callback]
-)
-```
-
-当和一个外部的 JavaScript 应用整合的时候，你也许会想用 `ReactDOM.render()` 给 React 组件标示一个改变。
-
-在根组件上调用 `setProps()` 会改变他的属性并触发一次重绘。另外，你可以提供一个可选的回调函数，一旦 `setProps` 完成并且组件被重绘它就执行。
-
-> 注意:
->
-> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用. 取代调用 `setProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
->
-> 如果可能，上述的在同一个节点上再次调用 `ReactDOM.render()` 的方法是优先替代的。它往往使更新更容易理解。（两种方法并没有显著的性能区别。）
->
-> 这个方法仅能在根组件上被调用。也就是说，它仅在直接传给 `ReactDOM.render()` 的组件上可用，在它的子级上不可用。如果你倾向于在子组件上使用 `setProps()`，不要利用响应式更新，而是当子组件在 `render()` 中创建的时候传入新的 prop 到子组件中。
-
-### replaceProps
-
-```javascript
-void replaceProps(
-  object nextProps,
-  [function callback]
-)
-```
-
-类似于 `setProps()`，但是删除任何先前存在的 props，而不是合并这两个对象。
-
-> 注意:
->
-> 这个方法被弃用了并会很快移除.这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用.  取代调用 `replaceProps`,试着以新的 props 再次调用 `ReactDOM.render()`. 更多的注意事项,见我们的[blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)

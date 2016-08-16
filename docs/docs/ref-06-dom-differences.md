@@ -1,7 +1,7 @@
 ---
 id: dom-differences
 title: DOM Differences
-permalink: dom-differences.html
+permalink: docs/dom-differences.html
 prev: events.html
 next: special-non-dom-attributes.html
 ---

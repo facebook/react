@@ -1,7 +1,7 @@
 ---
 id: why-react-ja-JP
 title: なぜReactを使うのでしょうか？
-permalink: why-react-ja-JP.html
+permalink: docs/why-react-ja-JP.html
 next: displaying-data-ja-JP.html
 
 ---

@@ -1,7 +1,7 @@
 ---
 id: component-api-ko-KR
 title: 컴포넌트 API
-permalink: component-api-ko-KR.html
+permalink: docs/component-api-ko-KR.html
 prev: top-level-api-ko-KR.html
 next: component-specs-ko-KR.html
 ---
@@ -15,7 +15,7 @@ React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 
 
 ```javascript
 void setState(
-  function|object nextState, 
+  function|object nextState,
   [function callback]
 )
 ```
@@ -55,7 +55,7 @@ setState(function(previousState, currentProps) {
 
 ```javascript
 void replaceState(
-  object nextState, 
+  object nextState,
   [function callback]
 )
 ```
@@ -82,21 +82,6 @@ void forceUpdate(
 특별한 경우가 아니면 `forceUpdate()`는 되도록 피하시고 `render()`에서는 `this.props`와 `this.state`에서만 읽어오세요. 그렇게 하는 것이 컴포넌트를 "순수"하게 하고 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴하였다면 `this.getDOMNode()`는 `null`을 리턴합니다.
-
-> 주의:
->
-> getDOMNode는 [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode)로 교체되었습니다.
->
-> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
-
-
 ### isMounted
 
 ```javascript
@@ -104,44 +89,6 @@ boolean isMounted()
 ```
 
 `isMounted()`는 컴포넌트가 DOM에 렌더링되었으면 `true`를, 아니면 `false`를 리턴합니다. 비동기적으로 `setState()`나 `forceUpdate()`를 호출할 때 이 메소드를 사용하여 오류를 방지할 수 있습니다.
-
-> 주의:
->
-> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
-
-
-### setProps
-
-```javascript
-void setProps(
-  object nextProps, 
-  [function callback]
-)
-```
-
-외부 JavaScript 애플리케이션과 연동하는 경우 `ReactDOM.render()`로 렌더링된 React 컴포넌트에 변경을 알리고 싶을 때가 있습니다.
-
-최상위 컴포넌트에서 `setProps()`를 호출하면 프로퍼티를 변경하고 렌더를 다시 발생합니다. 거기에 콜백 함수를 넘기면 `setProps`가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.
-
-> 주의:
->
-> 가능하다면 이것 대신 `ReactDOM.render()`를 같은 노드에서 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)
->
-> 이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, `ReactDOM.render()`에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 `setProps()`를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 `render()` 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.
->
-> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
-
-
-### replaceProps
-
-```javascript
-void replaceProps(
-  object nextProps, 
-  function callback]
-)
-```
-
-`setProps()`와 비슷하지만 두 객체를 합치는 대신 이전에 존재하던 props를 삭제합니다.
 
 > 주의:
 >

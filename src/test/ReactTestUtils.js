@@ -19,10 +19,10 @@ var React = require('React');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -60,7 +60,7 @@ function findAllInRenderedTreeInternal(inst, test) {
       );
     }
   } else if (
-    ReactElement.isValidElement(currentElement) &&
+    React.isValidElement(currentElement) &&
     typeof currentElement.type === 'function'
   ) {
     ret = ret.concat(
@@ -91,12 +91,12 @@ var ReactTestUtils = {
   },
 
   isElement: function(element) {
-    return ReactElement.isValidElement(element);
+    return React.isValidElement(element);
   },
 
   isElementOfType: function(inst, convenienceConstructor) {
     return (
-      ReactElement.isValidElement(inst) &&
+      React.isValidElement(inst) &&
       inst.type === convenienceConstructor
     );
   },
@@ -107,7 +107,7 @@ var ReactTestUtils = {
 
   isDOMComponentElement: function(inst) {
     return !!(inst &&
-              ReactElement.isValidElement(inst) &&
+              React.isValidElement(inst) &&
               !!inst.tagName);
   },
 
@@ -135,7 +135,7 @@ var ReactTestUtils = {
   },
 
   isCompositeComponentElement: function(inst) {
-    if (!ReactElement.isValidElement(inst)) {
+    if (!React.isValidElement(inst)) {
       return false;
     }
     // We check the prototype of the type that will get mounted, not the
@@ -376,9 +376,15 @@ ReactShallowRenderer.prototype.getMountedInstance = function() {
   return this._instance ? this._instance._instance : null;
 };
 
+var nextDebugID = 1;
+
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
+
+  if (__DEV__) {
+    this._debugID = nextDebugID++;
+  }
 };
 
 NoopInternalComponent.prototype = {
@@ -391,7 +397,7 @@ NoopInternalComponent.prototype = {
     this._currentElement = element;
   },
 
-  getNativeNode: function() {
+  getHostNode: function() {
     return undefined;
   },
 
@@ -404,6 +410,11 @@ NoopInternalComponent.prototype = {
 };
 
 var ShallowComponentWrapper = function(element) {
+  // TODO: Consolidate with instantiateReactComponent
+  if (__DEV__) {
+    this._debugID = nextDebugID++;
+  }
+
   this.construct(element);
 };
 Object.assign(
@@ -428,7 +439,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   ReactDefaultInjection.inject();
 
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'ReactShallowRenderer render(): Invalid component element.%s',
     typeof element === 'function' ?
       ' Instead of passing a component class, make sure to instantiate ' +
@@ -467,16 +478,21 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 ReactShallowRenderer.prototype.unmount = function() {
   if (this._instance) {
-    this._instance.unmountComponent(false);
+    ReactReconciler.unmountComponent(this._instance, false);
   }
 };
 
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (this._instance) {
-    this._instance.receiveComponent(element, transaction, context);
+    ReactReconciler.receiveComponent(
+      this._instance,
+      element,
+      transaction,
+      context
+    );
   } else {
     var instance = new ShallowComponentWrapper(element);
-    instance.mountComponent(transaction, null, null, context);
+    ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
     this._instance = instance;
   }
 };
@@ -508,6 +524,8 @@ function makeSimulator(eventType) {
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
+    fakeNativeEvent.type = eventType.toLowerCase();
+
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
     var event = new SyntheticEvent(

@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
@@ -22,27 +21,23 @@ var ReactNativeTextComponent = function(text) {
   // This is really a ReactText (ReactNode), not a ReactElement
   this._currentElement = text;
   this._stringText = '' + text;
-  this._nativeParent = null;
-  this._rootNodeID = null;
+  this._hostParent = null;
+  this._rootNodeID = 0;
 };
 
 Object.assign(ReactNativeTextComponent.prototype, {
 
-  mountComponent: function(transaction, nativeParent, nativeContainerInfo, context) {
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
-    }
-
-    // TODO: nativeParent should have this context already. Stop abusing context.
+  mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
+    // TODO: hostParent should have this context already. Stop abusing context.
     invariant(
       context.isInAParentText,
       'RawText "%s" must be wrapped in an explicit <Text> component.',
       this._stringText
     );
-    this._nativeParent = nativeParent;
+    this._hostParent = hostParent;
     var tag = ReactNativeTagHandles.allocateTag();
     this._rootNodeID = tag;
-    var nativeTopRootTag = nativeContainerInfo._tag;
+    var nativeTopRootTag = hostContainerInfo._tag;
     UIManager.createView(
       tag,
       'RCTRawText',
@@ -55,7 +50,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
     return tag;
   },
 
-  getNativeNode: function() {
+  getHostNode: function() {
     return this._rootNodeID;
   },
 
@@ -70,12 +65,6 @@ Object.assign(ReactNativeTextComponent.prototype, {
           'RCTRawText',
           {text: this._stringText}
         );
-        if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
-            this._debugID,
-            nextStringText
-          );
-        }
       }
     }
   },
@@ -84,7 +73,7 @@ Object.assign(ReactNativeTextComponent.prototype, {
     ReactNativeComponentTree.uncacheNode(this);
     this._currentElement = null;
     this._stringText = null;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
   },
 
 });

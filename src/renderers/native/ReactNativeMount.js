@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
+var React = require('React');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
@@ -35,9 +35,9 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounts this component and inserts it into the DOM.
@@ -56,7 +56,8 @@ function mountComponentIntoNode(
     transaction,
     null,
     ReactNativeContainerInfo(containerTag),
-    emptyObject
+    emptyObject,
+    0 /* parentDebugID */
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   ReactNativeMount._mountImageIntoNode(markup, containerTag);
@@ -98,27 +99,22 @@ var ReactNativeMount = {
    * @param {containerTag} containerView Handle to native view tag
    */
   renderComponent: function(
-    nextElement: ReactElement,
+    nextElement: ReactElement<*>,
     containerTag: number,
     callback?: ?(() => void)
-  ): ?ReactComponent {
-    var nextWrappedElement = new ReactElement(
+  ): ?ReactComponent<any, any, any> {
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      { child: nextElement }
     );
 
     var topRootNodeID = containerTag;
     var prevComponent = ReactNativeMount._instancesByContainerID[topRootNodeID];
     if (prevComponent) {
       var prevWrappedElement = prevComponent._currentElement;
-      var prevElement = prevWrappedElement.props;
+      var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
-        ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement);
+        ReactUpdateQueue.enqueueElementInternal(prevComponent, nextWrappedElement, emptyObject);
         if (callback) {
           ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
         }
@@ -135,18 +131,8 @@ var ReactNativeMount = {
 
     ReactNativeTagHandles.assertRootTag(containerTag);
 
-    var instance = instantiateReactComponent(nextWrappedElement);
+    var instance = instantiateReactComponent(nextWrappedElement, false);
     ReactNativeMount._instancesByContainerID[containerTag] = instance;
-
-    if (__DEV__) {
-      // Mute future events from the top level wrapper.
-      // It is an implementation detail that devtools should not know about.
-      instance._debugID = 0;
-
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onBeginFlush();
-      }
-    }
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -157,13 +143,6 @@ var ReactNativeMount = {
       instance,
       containerTag
     );
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        instance._renderedComponent._debugID
-      );
-      ReactInstrumentation.debugTool.onEndFlush();
-    }
     var component = instance.getPublicInstance();
     if (callback) {
       callback.call(component);
@@ -175,7 +154,7 @@ var ReactNativeMount = {
    * @param {View} view View tree image.
    * @param {number} containerViewID View to insert sub-view into.
    */
-  _mountImageIntoNode: function(mountImage, containerID) {
+  _mountImageIntoNode: function(mountImage : number, containerID : number) {
     // Since we now know that the `mountImage` has been mounted, we can
     // mark it as such.
     var childTag = mountImage;
@@ -216,8 +195,14 @@ var ReactNativeMount = {
     if (!instance) {
       return false;
     }
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onBeginFlush();
+    }
     ReactNativeMount.unmountComponentFromNode(instance, containerTag);
     delete ReactNativeMount._instancesByContainerID[containerTag];
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onEndFlush();
+    }
     return true;
   },
 
@@ -231,7 +216,7 @@ var ReactNativeMount = {
    * @see {ReactNativeMount.unmountComponentAtNode}
    */
   unmountComponentFromNode: function(
-    instance: ReactComponent,
+    instance: ReactComponent<any, any, any>,
     containerID: number
   ) {
     // Call back into native to remove all of the subviews from this container

@@ -2,7 +2,7 @@
 id: props-in-getInitialState-as-anti-pattern-ko-KR
 title: getInitialState의 Props는 안티패턴
 layout: tips
-permalink: props-in-getInitialState-as-anti-pattern-ko-KR.html
+permalink: tips/props-in-getInitialState-as-anti-pattern-ko-KR.html
 prev: componentWillReceiveProps-not-triggered-after-mounting-ko-KR.html
 next: dom-event-listeners-ko-KR.html
 ---

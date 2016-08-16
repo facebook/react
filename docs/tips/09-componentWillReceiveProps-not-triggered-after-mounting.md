@@ -2,7 +2,7 @@
 id: componentWillReceiveProps-not-triggered-after-mounting
 title: componentWillReceiveProps Not Triggered After Mounting
 layout: tips
-permalink: componentWillReceiveProps-not-triggered-after-mounting.html
+permalink: tips/componentWillReceiveProps-not-triggered-after-mounting.html
 prev: controlled-input-null-value.html
 next: props-in-getInitialState-as-anti-pattern.html
 ---

@@ -1,7 +1,7 @@
 ---
 id: displaying-data-it-IT
 title: Visualizzare Dati
-permalink: displaying-data-it-IT.html
+permalink: docs/displaying-data-it-IT.html
 prev: why-react-it-IT.html
 next: jsx-in-depth-it-IT.html
 ---
@@ -19,8 +19,9 @@ Diamo un'occhiata ad un esempio davvero semplice. Creiamo un file dal nome `hell
   <head>
     <meta charset="UTF-8" />
     <title>Hello React</title>
-    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>

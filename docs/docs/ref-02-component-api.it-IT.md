@@ -1,7 +1,7 @@
 ---
 id: component-api-it-IT
 title: API dei Componenti
-permalink: component-api-it-IT.html
+permalink: docs/component-api-it-IT.html
 prev: top-level-api-it-IT.html
 next: component-specs-it-IT.html
 ---
@@ -81,21 +81,6 @@ Chiamare `forceUpdate()` causerà la chiamata di `render()` sul componente, salt
 Normalmente dovresti cercare di evitare l'uso di `forceUpdate()` e leggere soltanto `this.props` e `this.state` all'interno di `render()`. Ciò rende il tuo componente "puro" e la tua applicazione molto più semplice ed efficiente.
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-Se questo componente è stato montato nel DOM, restituisce il corrispondente elemento DOM nativo del browser. Questo metodo è utile per leggere valori dal DOM, come valori dei campi dei moduli ed effettuare misure sul DOM. Quando `render` restituisce `null` o `false`, `this.getDOMNode()` restituisce `null`.
-
-> Nota:
->
-> getDOMNode è deprecato ed è stato sostituito da [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode).
->
-> Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React.
-
-
 ### isMounted
 
 ```javascript
@@ -103,43 +88,6 @@ boolean isMounted()
 ```
 
 `isMounted()` restituisce `true` se il rendering del componente è stato effettuato nel DOM, `false` altrimenti. Puoi usare questo metodo come guardia per chiamate asincrone a `setState()` o `forceUpdate()`.
-
-> Nota:
->
-> Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React.
-
-
-### setProps
-
-```javascript
-void setProps(
-  object nextProps,
-  [function callback]
-)
-```
-
-Quando stai integrando con un'applicazione JavaScript esterna puoi voler segnalare un cambiamento a un componente React il cui rendering è stato effettuato con `ReactDOM.render()`.
-
-Chiamare `setProps()` su un componente al livello radice cambierà le sue proprietà e scatenerà un ri-rendering. Inoltre, puoi fornire una funzione callback opzionale che verrà eseguita quando `setProps` ha terminato e il rendering del componente è terminato.
-
-> Nota:
->
-> Quando possibile, l'approccio dichiarativo di invocare nuovamente `ReactDOM.render()` sullo stesso nodo è preferibile. Quest'ultimo tende a rendere gli aggiornamenti più comprensibili. (Non vi è una differenza significativa di prestazioni tra i due approcci.)
->
-> Questo metodo può essere chiamato soltanto su un componente al livello radice. Ovvero, è disponibile soltanto sul componente passato direttamente a `ReactDOM.render()` e nessuno dei suoi figli. Se il tuo intento è usare `setProps()` su un componente figlio, approfitta degli aggiornamenti reattivi e passa la nuova proprietà al componente figlio quando viene creato in `render()`.
->
-> Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React.
-
-### replaceProps
-
-```javascript
-void replaceProps(
-  object nextProps,
-  [function callback]
-)
-```
-
-Come `setProps()` ma elimina ogni proprietà preesistente anziché riunire i due oggetti.
 
 > Nota:
 >

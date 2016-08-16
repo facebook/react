@@ -75,11 +75,12 @@ describe('ReactServerRendering', function() {
     });
 
     it('should generate comment markup for component returns null', function() {
-      var NullComponent = React.createClass({
-        render: function() {
+      class NullComponent extends React.Component {
+        render() {
           return null;
-        },
-      });
+        }
+      }
+
       var response = ReactServerRendering.renderToString(<NullComponent />);
       expect(response).toBe('<!-- react-empty: 1 -->');
     });
@@ -95,16 +96,18 @@ describe('ReactServerRendering', function() {
     });
 
     it('should render composite components', function() {
-      var Parent = React.createClass({
-        render: function() {
+      class Parent extends React.Component {
+        render() {
           return <div><Child name="child" /></div>;
-        },
-      });
-      var Child = React.createClass({
-        render: function() {
+        }
+      }
+
+      class Child extends React.Component {
+        render() {
           return <span>My name is {this.props.name}</span>;
-        },
-      });
+        }
+      }
+
       var response = ReactServerRendering.renderToString(
         <Parent />
       );
@@ -123,37 +126,47 @@ describe('ReactServerRendering', function() {
     it('should only execute certain lifecycle methods', function() {
       function runTest() {
         var lifecycle = [];
-        var TestComponent = React.createClass({
-          componentWillMount: function() {
-            lifecycle.push('componentWillMount');
-          },
-          componentDidMount: function() {
-            lifecycle.push('componentDidMount');
-          },
-          getInitialState: function() {
+
+        class TestComponent extends React.Component {
+          constructor(props) {
+            super(props);
             lifecycle.push('getInitialState');
-            return {name: 'TestComponent'};
-          },
-          render: function() {
+            this.state = {name: 'TestComponent'};
+          }
+
+          componentWillMount() {
+            lifecycle.push('componentWillMount');
+          }
+
+          componentDidMount() {
+            lifecycle.push('componentDidMount');
+          }
+
+          render() {
             lifecycle.push('render');
             return <span>Component name: {this.state.name}</span>;
-          },
-          componentWillUpdate: function() {
+          }
+
+          componentWillUpdate() {
             lifecycle.push('componentWillUpdate');
-          },
-          componentDidUpdate: function() {
+          }
+
+          componentDidUpdate() {
             lifecycle.push('componentDidUpdate');
-          },
-          shouldComponentUpdate: function() {
+          }
+
+          shouldComponentUpdate() {
             lifecycle.push('shouldComponentUpdate');
-          },
-          componentWillReceiveProps: function() {
+          }
+
+          componentWillReceiveProps() {
             lifecycle.push('componentWillReceiveProps');
-          },
-          componentWillUnmount: function() {
+          }
+
+          componentWillUnmount() {
             lifecycle.push('componentWillUnmount');
-          },
-        });
+          }
+        }
 
         var response = ReactServerRendering.renderToString(
           <TestComponent />
@@ -186,19 +199,21 @@ describe('ReactServerRendering', function() {
       var mountCount = 0;
       var numClicks = 0;
 
-      var TestComponent = React.createClass({
-        componentDidMount: function() {
+      class TestComponent extends React.Component {
+        componentDidMount() {
           mountCount++;
-        },
-        click: function() {
+        }
+
+        click = () => {
           numClicks++;
-        },
-        render: function() {
+        };
+
+        render() {
           return (
             <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
           );
-        },
-      });
+        }
+      }
 
       var element = document.createElement('div');
       ReactDOM.render(<TestComponent />, element);
@@ -250,7 +265,7 @@ describe('ReactServerRendering', function() {
       spyOn(console, 'error');
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.calls.count()).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -266,7 +281,7 @@ describe('ReactServerRendering', function() {
           ReactServerRendering,
           'not a component'
         )
-      ).toThrow(
+      ).toThrowError(
         'renderToString(): You must pass a valid ReactElement.'
       );
     });
@@ -274,17 +289,17 @@ describe('ReactServerRendering', function() {
 
   describe('renderToStaticMarkup', function() {
     it('should not put checksum and React ID on components', function() {
-      var NestedComponent = React.createClass({
-        render: function() {
+      class NestedComponent extends React.Component {
+        render() {
           return <div>inner text</div>;
-        },
-      });
+        }
+      }
 
-      var TestComponent = React.createClass({
-        render: function() {
+      class TestComponent extends React.Component {
+        render() {
           return <span><NestedComponent /></span>;
-        },
-      });
+        }
+      }
 
       var response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
@@ -294,11 +309,11 @@ describe('ReactServerRendering', function() {
     });
 
     it('should not put checksum and React ID on text components', function() {
-      var TestComponent = React.createClass({
-        render: function() {
+      class TestComponent extends React.Component {
+        render() {
           return <span>{'hello'} {'world'}</span>;
-        },
-      });
+        }
+      }
 
       var response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
@@ -320,37 +335,47 @@ describe('ReactServerRendering', function() {
     it('should only execute certain lifecycle methods', function() {
       function runTest() {
         var lifecycle = [];
-        var TestComponent = React.createClass({
-          componentWillMount: function() {
-            lifecycle.push('componentWillMount');
-          },
-          componentDidMount: function() {
-            lifecycle.push('componentDidMount');
-          },
-          getInitialState: function() {
+
+        class TestComponent extends React.Component {
+          constructor(props) {
+            super(props);
             lifecycle.push('getInitialState');
-            return {name: 'TestComponent'};
-          },
-          render: function() {
+            this.state = {name: 'TestComponent'};
+          }
+
+          componentWillMount() {
+            lifecycle.push('componentWillMount');
+          }
+
+          componentDidMount() {
+            lifecycle.push('componentDidMount');
+          }
+
+          render() {
             lifecycle.push('render');
             return <span>Component name: {this.state.name}</span>;
-          },
-          componentWillUpdate: function() {
+          }
+
+          componentWillUpdate() {
             lifecycle.push('componentWillUpdate');
-          },
-          componentDidUpdate: function() {
+          }
+
+          componentDidUpdate() {
             lifecycle.push('componentDidUpdate');
-          },
-          shouldComponentUpdate: function() {
+          }
+
+          shouldComponentUpdate() {
             lifecycle.push('shouldComponentUpdate');
-          },
-          componentWillReceiveProps: function() {
+          }
+
+          componentWillReceiveProps() {
             lifecycle.push('componentWillReceiveProps');
-          },
-          componentWillUnmount: function() {
+          }
+
+          componentWillUnmount() {
             lifecycle.push('componentWillUnmount');
-          },
-        });
+          }
+        }
 
         var response = ReactServerRendering.renderToStaticMarkup(
           <TestComponent />
@@ -375,20 +400,21 @@ describe('ReactServerRendering', function() {
           ReactServerRendering,
           'not a component'
         )
-      ).toThrow(
+      ).toThrowError(
         'renderToStaticMarkup(): You must pass a valid ReactElement.'
       );
     });
 
     it('allows setState in componentWillMount without using DOM', function() {
-      var Component = React.createClass({
-        componentWillMount: function() {
+      class Component extends React.Component {
+        componentWillMount() {
           this.setState({text: 'hello, world'});
-        },
-        render: function() {
+        }
+
+        render() {
           return <div>{this.state.text}</div>;
-        },
-      });
+        }
+      }
 
       ReactReconcileTransaction.prototype.perform = function() {
         // We shouldn't ever be calling this on the server
@@ -399,5 +425,151 @@ describe('ReactServerRendering', function() {
       );
       expect(markup.indexOf('hello, world') >= 0).toBe(true);
     });
+
+    it('renders components with different batching strategies', function() {
+      class StaticComponent extends React.Component {
+        render() {
+          const staticContent = ReactServerRendering.renderToStaticMarkup(
+            <div>
+              <img src="foo-bar.jpg" />
+            </div>
+          );
+          return <div dangerouslySetInnerHTML={{__html: staticContent}} />;
+        }
+      }
+
+      class Component extends React.Component {
+        componentWillMount() {
+          this.setState({text: 'hello, world'});
+        }
+
+        render() {
+          return <div>{this.state.text}</div>;
+        }
+      }
+
+      expect(
+        ReactServerRendering.renderToString.bind(
+          ReactServerRendering,
+          <div>
+            <StaticComponent />
+            <Component />
+          </div>
+        )
+      ).not.toThrow();
+    });
+  });
+
+  it('warns with a no-op when an async setState is triggered', function() {
+    class Foo extends React.Component {
+      componentWillMount() {
+        this.setState({text: 'hello'});
+        setTimeout(() => {
+          this.setState({text: 'error'});
+        });
+      }
+      render() {
+        return <div onClick={() => {}}>{this.state.text}</div>;
+      }
+    }
+
+    spyOn(console, 'error');
+    ReactServerRendering.renderToString(<Foo />);
+    jest.runOnlyPendingTimers();
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.mostRecent().args[0]).toBe(
+      'Warning: setState(...): Can only update a mounting component.' +
+      ' This usually means you called setState() outside componentWillMount() on the server.' +
+      ' This is a no-op. Please check the code for the Foo component.'
+    );
+    var markup = ReactServerRendering.renderToStaticMarkup(<Foo />);
+    expect(markup).toBe('<div>hello</div>');
+  });
+
+  it('warns with a no-op when an async replaceState is triggered', function() {
+    var Bar = React.createClass({
+      componentWillMount: function() {
+        this.replaceState({text: 'hello'});
+        setTimeout(() => {
+          this.replaceState({text: 'error'});
+        });
+      },
+      render: function() {
+        return <div onClick={() => {}}>{this.state.text}</div>;
+      },
+    });
+
+    spyOn(console, 'error');
+    ReactServerRendering.renderToString(<Bar />);
+    jest.runOnlyPendingTimers();
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.mostRecent().args[0]).toBe(
+      'Warning: replaceState(...): Can only update a mounting component. ' +
+      'This usually means you called replaceState() outside componentWillMount() on the server. ' +
+      'This is a no-op. Please check the code for the Bar component.'
+    );
+    var markup = ReactServerRendering.renderToStaticMarkup(<Bar />);
+    expect(markup).toBe('<div>hello</div>');
+  });
+
+  it('warns with a no-op when an async forceUpdate is triggered', function() {
+    class Baz extends React.Component {
+      componentWillMount() {
+        this.forceUpdate();
+        setTimeout(() => {
+          this.forceUpdate();
+        });
+      }
+
+      render() {
+        return <div onClick={() => {}}></div>;
+      }
+    }
+
+    spyOn(console, 'error');
+    ReactServerRendering.renderToString(<Baz />);
+    jest.runOnlyPendingTimers();
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.mostRecent().args[0]).toBe(
+      'Warning: forceUpdate(...): Can only update a mounting component. ' +
+      'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
+      'This is a no-op. Please check the code for the Baz component.'
+    );
+    var markup = ReactServerRendering.renderToStaticMarkup(<Baz />);
+    expect(markup).toBe('<div></div>');
+  });
+
+  it('warns when children are mutated before render', function() {
+    function normalizeCodeLocInfo(str) {
+      return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    }
+
+    spyOn(console, 'error');
+    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
+    var element = <div>{children}</div>;
+    children[1] = <p key={1} />; // Mutation is illegal
+    ReactServerRendering.renderToString(element);
+    expect(console.error.calls.count()).toBe(1);
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Component\'s children should not be mutated.\n    in div (at **)'
+    );
+  });
+
+  it('should warn when children are mutated', function() {
+    function normalizeCodeLocInfo(str) {
+      return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    }
+
+    spyOn(console, 'error');
+    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
+    function Wrapper(props) {
+      props.children[1] = <p key={1} />; // Mutation is illegal
+      return <div>{props.children}</div>;
+    }
+    ReactServerRendering.renderToString(<Wrapper>{children}</Wrapper>);
+    expect(console.error.calls.count()).toBe(1);
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Component\'s children should not be mutated.\n    in Wrapper (at **)'
+    );
   });
 });

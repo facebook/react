@@ -1,7 +1,7 @@
 ---
 id: webcomponents-zh-CN
 title: Web Components
-permalink: webcomponents-zh-CN.html
+permalink: docs/webcomponents-zh-CN.html
 prev: reconciliation-zh-CN.html
 next: glossary-zh-CN.html
 ---
@@ -36,7 +36,7 @@ class HelloMessage extends React.Component{
 
 ```javascript
 var proto = Object.create(HTMLElement.prototype, {
-  createdCallback: {
+  attachedCallback: {
     value: function() {
       var mountPoint = document.createElement('span');
       this.createShadowRoot().appendChild(mountPoint);

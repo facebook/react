@@ -1,6 +1,7 @@
 ---
 id: tutorial-it-IT
 title: Tutorial
+permalink: docs/tutorial-it-IT.html
 prev: getting-started-it-IT.html
 next: thinking-in-react-it-IT.html
 ---
@@ -40,10 +41,11 @@ Per questo tutorial renderemo il tutto il più semplice possibile. Incluso nel p
   <head>
     <meta charset="utf-8" />
     <title>React Tutorial</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
+    <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -226,43 +228,45 @@ Per prima cosa, aggiungiamo la libreria di terze parti **marked** alla tua appli
 <head>
   <meta charset="utf-8" />
   <title>React Tutorial</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+  <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+  <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+  <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+  <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
+  <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
 </head>
 ```
 
 Successivamente, convertiamo il testo del commento da Markdown e scriviamolo:
 
-```javascript{9}
+```javascript{4,10}
 // tutorial6.js
 var Comment = React.createClass({
   render: function() {
+    var md = new Remarkable();
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {marked(this.props.children.toString())}
+        {md.render(this.props.children.toString())}
       </div>
     );
   }
 });
 ```
 
-Tutto ciò che stiamo facendo qui è chiamare la libreria marked. Dobbiamo convertire `this.props.children` dal testo racchiuso di React a una stringa che marked è in grado di capire, quindi vi chiamiamo esplicitamente `toString()`.
+Tutto ciò che stiamo facendo qui è chiamare la libreria remarkable. Dobbiamo convertire `this.props.children` dal testo racchiuso di React a una stringa che remarkable è in grado di capire, quindi vi chiamiamo esplicitamente `toString()`.
 
 Ma c'è un problema! I nostri commenti visualizzati appaiono come segue nel browser: "`<p>`Questo è un `<em>`altro`</em>` commento`</p>`". Noi vogliamo che questi tag vengano in realtà visualizzati come HTML.
 
 Questo è il risultato della protezione di React da parte di un [attacco XSS](https://en.wikipedia.org/wiki/Cross-site_scripting). C'è una maniera di aggirare questo comportamento, ma il framework ti avvisa di non farlo:
 
-```javascript{3-6,14}
+```javascript{3-7,15}
 // tutorial7.js
 var Comment = React.createClass({
   rawMarkup: function() {
-    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    var md = new Remarkable();
+    var rawMarkup = md.render(this.props.children.toString());
     return { __html: rawMarkup };
   },
 
@@ -279,9 +283,9 @@ var Comment = React.createClass({
 });
 ```
 
-Questa è una speciale API che rende intenzionalmente difficile inserire HTML nativo, ma per marked ci avvantaggeremo di questa possibilità.
+Questa è una speciale API che rende intenzionalmente difficile inserire HTML nativo, ma per remarkable ci avvantaggeremo di questa possibilità.
 
-**Ricorda:** usando questa funzionalità stai assumendo che marked sia sicuro. In questo caso, passiamo `sanitize: true` che istruisce marked a fare l'escape di ogni markup HTML nel sorgente, anziché restituirlo inalterato.
+**Ricorda:** usando questa funzionalità stai assumendo che remarkable sia sicuro.
 
 ### Collega il modello dei dati
 
@@ -325,7 +329,7 @@ var CommentList = React.createClass({
   render: function() {
     var commentNodes = this.props.data.map(function (comment) {
       return (
-        <Comment author={comment.author}>
+        <Comment author={comment.author} key={comment.id}>
           {comment.text}
         </Comment>
       );

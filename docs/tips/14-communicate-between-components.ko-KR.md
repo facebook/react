@@ -2,7 +2,7 @@
 id: communicate-between-components-ko-KR
 title: 컴포넌트간의 통신
 layout: tips
-permalink: communicate-between-components-ko-KR.html
+permalink: tips/communicate-between-components-ko-KR.html
 prev: false-in-jsx-ko-KR.html
 next: expose-component-functions-ko-KR.html
 ---

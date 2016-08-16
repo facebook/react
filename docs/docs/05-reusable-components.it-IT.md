@@ -1,7 +1,7 @@
 ---
 id: reusable-components-it-IT
 title: Componenti Riutilizzabili
-permalink: reusable-components-it-IT.html
+permalink: docs/reusable-components-it-IT.html
 prev: multiple-components-it-IT.html
 next: transferring-props-it-IT.html
 ---
@@ -24,6 +24,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // Tutto ciò che può essere mostrato: numeri, stringhe, elementi, o un array
     // (o frammento) contenente questi tipi.

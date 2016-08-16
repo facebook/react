@@ -15,12 +15,9 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var RESERVED_PROPS = {
   key: true,
@@ -30,6 +27,72 @@ var RESERVED_PROPS = {
 };
 
 var specialPropKeyWarningShown, specialPropRefWarningShown;
+
+function hasValidRef(config) {
+  if (__DEV__) {
+    if (hasOwnProperty.call(config, 'ref')) {
+      var getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
+    }
+  }
+  return config.ref !== undefined;
+}
+
+function hasValidKey(config) {
+  if (__DEV__) {
+    if (hasOwnProperty.call(config, 'key')) {
+      var getter = Object.getOwnPropertyDescriptor(config, 'key').get;
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
+    }
+  }
+  return config.key !== undefined;
+}
+
+function defineKeyPropWarningGetter(props, displayName) {
+  var warnAboutAccessingKey = function() {
+    if (!specialPropKeyWarningShown) {
+      specialPropKeyWarningShown = true;
+      warning(
+        false,
+        '%s: `key` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+        displayName
+      );
+    }
+  };
+  warnAboutAccessingKey.isReactWarning = true;
+  Object.defineProperty(props, 'key', {
+    get: warnAboutAccessingKey,
+    configurable: true,
+  });
+}
+
+function defineRefPropWarningGetter(props, displayName) {
+  var warnAboutAccessingRef = function() {
+    if (!specialPropRefWarningShown) {
+      specialPropRefWarningShown = true;
+      warning(
+        false,
+        '%s: `ref` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+        displayName
+      );
+    }
+  };
+  warnAboutAccessingRef.isReactWarning = true;
+  Object.defineProperty(props, 'ref', {
+    get: warnAboutAccessingRef,
+    configurable: true,
+  });
+}
 
 /**
  * Factory method to create a new React element. This no longer adheres to
@@ -72,6 +135,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
     element._store = {};
+    var shadowChildren = Array.isArray(props.children) ? props.children.slice(0) : props.children;
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
@@ -91,6 +155,12 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
         writable: false,
         value: self,
       });
+      Object.defineProperty(element, '_shadowChildren', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: shadowChildren,
+      });
       // Two elements created in two different places should be considered
       // equal for testing purposes and therefore we hide it from enumeration.
       Object.defineProperty(element, '_source', {
@@ -102,6 +172,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     } else {
       element._store.validated = false;
       element._self = self;
+      element._shadowChildren = shadowChildren;
       element._source = source;
     }
     if (Object.freeze) {
@@ -137,19 +208,20 @@ ReactElement.createElement = function(type, config, children) {
         'React.createElement(...): Expected props argument to be a plain object. ' +
         'Properties defined in its prototype chain will be ignored.'
       );
-      ref = !config.hasOwnProperty('ref') ||
-        Object.getOwnPropertyDescriptor(config, 'ref').get ? null : config.ref;
-      key = !config.hasOwnProperty('key') ||
-        Object.getOwnPropertyDescriptor(config, 'key').get ? null : '' + config.key;
-    } else {
-      ref = config.ref === undefined ? null : config.ref;
-      key = config.key === undefined ? null : '' + config.key;
     }
+
+    if (hasValidRef(config)) {
+      ref = config.ref;
+    }
+    if (hasValidKey(config)) {
+      key = '' + config.key;
+    }
+
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
-      if (config.hasOwnProperty(propName) &&
+      if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         props[propName] = config[propName];
       }
@@ -179,47 +251,18 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
   if (__DEV__) {
-    // Create dummy `key` and `ref` property to `props` to warn users
-    // against its use
-    if (typeof props.$$typeof === 'undefined' ||
-        props.$$typeof !== REACT_ELEMENT_TYPE) {
-      if (!props.hasOwnProperty('key')) {
-        Object.defineProperty(props, 'key', {
-          get: function() {
-            if (!specialPropKeyWarningShown) {
-              specialPropKeyWarningShown = true;
-              warning(
-                false,
-                '%s: `key` is not a prop. Trying to access it will result ' +
-                  'in `undefined` being returned. If you need to access the same ' +
-                  'value within the child component, you should pass it as a different ' +
-                  'prop. (https://fb.me/react-special-props)',
-                typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
-              );
-            }
-            return undefined;
-          },
-          configurable: true,
-        });
-      }
-      if (!props.hasOwnProperty('ref')) {
-        Object.defineProperty(props, 'ref', {
-          get: function() {
-            if (!specialPropRefWarningShown) {
-              specialPropRefWarningShown = true;
-              warning(
-                false,
-                '%s: `ref` is not a prop. Trying to access it will result ' +
-                  'in `undefined` being returned. If you need to access the same ' +
-                  'value within the child component, you should pass it as a different ' +
-                  'prop. (https://fb.me/react-special-props)',
-                typeof type === 'function' && 'displayName' in type ? type.displayName : 'Element'
-              );
-            }
-            return undefined;
-          },
-          configurable: true,
-        });
+    if (key || ref) {
+      if (typeof props.$$typeof === 'undefined' ||
+          props.$$typeof !== REACT_ELEMENT_TYPE) {
+        var displayName = typeof type === 'function' ?
+          (type.displayName || type.name || 'Unknown') :
+          type;
+        if (key) {
+          defineKeyPropWarningGetter(props, displayName);
+        }
+        if (ref) {
+          defineRefPropWarningGetter(props, displayName);
+        }
       }
     }
   }
@@ -296,21 +339,23 @@ ReactElement.cloneElement = function(element, config, children) {
         'Properties defined in its prototype chain will be ignored.'
       );
     }
-    if (config.ref !== undefined) {
+
+    if (hasValidRef(config)) {
       // Silently steal the ref from the parent.
       ref = config.ref;
       owner = ReactCurrentOwner.current;
     }
-    if (config.key !== undefined) {
+    if (hasValidKey(config)) {
       key = '' + config.key;
     }
+
     // Remaining properties override existing props
     var defaultProps;
     if (element.type && element.type.defaultProps) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
-      if (config.hasOwnProperty(propName) &&
+      if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props

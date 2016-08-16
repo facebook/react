@@ -1,7 +1,7 @@
 ---
 id: component-api
 title: Component API
-permalink: component-api.html
+permalink: docs/component-api.html
 prev: top-level-api.html
 next: component-specs.html
 ---
@@ -81,21 +81,6 @@ Calling `forceUpdate()` will cause `render()` to be called on the component, ski
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your component "pure" and your application much simpler and more efficient.
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
-
-> Note:
->
-> getDOMNode is deprecated and has been replaced with [ReactDOM.findDOMNode()](/react/docs/top-level-api.html#reactdom.finddomnode).
->
-> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
-
-
 ### isMounted
 
 ```javascript
@@ -107,40 +92,3 @@ boolean isMounted()
 > Note:
 >
 > This method is not available on ES6 `class` components that extend `React.Component`. It will likely be removed entirely in a future version of React, so you might as well [start migrating away from isMounted() now](/react/blog/2015/12/16/ismounted-antipattern.html).
-
-
-### setProps
-
-```javascript
-void setProps(
-  object nextProps,
-  [function callback]
-)
-```
-
-When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `ReactDOM.render()`.
-
-Calling `setProps()` on a root-level component will change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
-
-> Note:
->
-> This method is deprecated and will be removed soon. This method is not available on ES6 `class` components that extend `React.Component`. Instead of calling `setProps`, try invoking ReactDOM.render() again with the new props. For additional notes, see our [blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)
->
-> When possible, the declarative approach of calling `ReactDOM.render()` again on the same node is preferred instead. It tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
->
-> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `ReactDOM.render()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
-
-### replaceProps
-
-```javascript
-void replaceProps(
-  object nextProps,
-  [function callback]
-)
-```
-
-Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
-
-> Note:
->
-> This method is deprecated and will be removed soon. This method is not available on ES6 `class` components that extend `React.Component`. Instead of calling `replaceProps`, try invoking ReactDOM.render() again with the new props. For additional notes, see our [blog post about using the Top Level API](/react/blog/2015/10/01/react-render-and-top-level-api.html)

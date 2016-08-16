@@ -41,8 +41,8 @@ describe('rendering React components at document', function() {
   it('should be able to adopt server markup', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Root = React.createClass({
-      render: function() {
+    class Root extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -53,8 +53,8 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     var markup = ReactDOMServer.renderToString(<Root hello="world" />);
     testDocument = getTestDocument(markup);
@@ -72,8 +72,8 @@ describe('rendering React components at document', function() {
   it('should not be able to unmount component from document node', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Root = React.createClass({
-      render: function() {
+    class Root extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -84,8 +84,8 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     var markup = ReactDOMServer.renderToString(<Root />);
     testDocument = getTestDocument(markup);
@@ -94,7 +94,7 @@ describe('rendering React components at document', function() {
 
     expect(function() {
       ReactDOM.unmountComponentAtNode(testDocument);
-    }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+    }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -102,8 +102,8 @@ describe('rendering React components at document', function() {
   it('should not be able to switch root constructors', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -114,11 +114,11 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
-    var Component2 = React.createClass({
-      render: function() {
+    class Component2 extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -129,8 +129,8 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     var markup = ReactDOMServer.renderToString(<Component />);
     testDocument = getTestDocument(markup);
@@ -142,7 +142,7 @@ describe('rendering React components at document', function() {
     // Reactive update
     expect(function() {
       ReactDOM.render(<Component2 />, testDocument);
-    }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+    }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -150,8 +150,8 @@ describe('rendering React components at document', function() {
   it('should be able to mount into document', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -162,8 +162,8 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     var markup = ReactDOMServer.renderToString(
       <Component text="Hello world" />
@@ -178,8 +178,8 @@ describe('rendering React components at document', function() {
   it('should give helpful errors on state desync', function() {
     expect(testDocument).not.toBeUndefined();
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -190,8 +190,8 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     var markup = ReactDOMServer.renderToString(
       <Component text="Goodbye world" />
@@ -201,7 +201,7 @@ describe('rendering React components at document', function() {
     expect(function() {
       // Notice the text is different!
       ReactDOM.render(<Component text="Hello world" />, testDocument);
-    }).toThrow(
+    }).toThrowError(
       'You\'re trying to render a component to the document using ' +
       'server rendering but the checksum was invalid. This usually ' +
       'means you rendered a different component type or props on ' +
@@ -220,8 +220,8 @@ describe('rendering React components at document', function() {
 
     var container = testDocument;
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return (
           <html>
             <head>
@@ -232,12 +232,12 @@ describe('rendering React components at document', function() {
             </body>
           </html>
         );
-      },
-    });
+      }
+    }
 
     expect(function() {
       ReactDOM.render(<Component />, container);
-    }).toThrow(
+    }).toThrowError(
       'You\'re trying to render a component to the document but you didn\'t ' +
       'use server rendering. We can\'t do this without using server ' +
       'rendering due to cross-browser quirks. See ' +

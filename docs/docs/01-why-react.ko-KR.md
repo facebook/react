@@ -1,7 +1,7 @@
 ---
 id: why-react-ko-KR
 title: 왜 React인가?
-permalink: why-react-ko-KR.html
+permalink: docs/why-react-ko-KR.html
 next: displaying-data-ko-KR.html
 ---
 

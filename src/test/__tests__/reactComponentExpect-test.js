@@ -24,16 +24,16 @@ describe('reactComponentExpect', function() {
   });
 
   it('should detect text components', function() {
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      render() {
         return (
           <div>
             <div>This is a div</div>
             {'This is text'}
           </div>
         );
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
 

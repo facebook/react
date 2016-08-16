@@ -1,7 +1,7 @@
 ---
 id: getting-started-ja-JP
 title: 始めてみましょう
-permalink: getting-started-ja-JP.html
+permalink: docs/getting-started-ja-JP.html
 next: tutorial-ja-JP.html
 redirect_from: "docs/index-ja-JP.html"
 ---
@@ -32,7 +32,7 @@ React でのハッキングを始めるにあたり、一番簡単なものと�
     <meta charset="UTF-8" />
     <title>Hello React!</title>
     <script src="build/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>

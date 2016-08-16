@@ -1,7 +1,7 @@
 ---
 id: reusable-components
 title: 再利用可能なコンポーネント
-permalink: reusable-components-ja-JP.html
+permalink: docs/reusable-components-ja-JP.html
 prev: multiple-components-ja-JP.html
 next: transferring-props-ja-JP.html
 ---
@@ -23,6 +23,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // 何でもレンダリングできます。number、string、要素やそれらを含む配列など。
     optionalNode: React.PropTypes.node,

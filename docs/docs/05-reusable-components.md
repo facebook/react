@@ -1,7 +1,7 @@
 ---
 id: reusable-components
 title: Reusable Components
-permalink: reusable-components.html
+permalink: docs/reusable-components.html
 prev: multiple-components.html
 next: transferring-props.html
 ---
@@ -23,6 +23,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // Anything that can be rendered: numbers, strings, elements or an array
     // (or fragment) containing these types.
@@ -131,7 +132,7 @@ var ComponentWithDefaultProps = React.createClass({
 });
 ```
 
-The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the owner component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
 ## Transferring Props: A Shortcut
 
@@ -213,7 +214,7 @@ class HelloMessage extends React.Component {
 ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-The API is similar to `React.createClass` with the exception of `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
+The API is similar to `React.createClass` with the exception of `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor. Just like the return value of `getInitialState`, the value you assign to `this.state` will be used as the initial state for your component.
 
 Another difference is that `propTypes` and `defaultProps` are defined as properties on the constructor instead of in the class body.
 
@@ -293,7 +294,19 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 This simplified component API is intended for components that are pure functions of their props. These components must not retain internal state, do not have backing instances, and do not have the component lifecycle methods. They are pure functional transforms of their input, with zero boilerplate.
-However, you may still specify `.propTypes` and `.defaultProps` by setting them as properties on the function, just as you would set them on an ES6 class.
+
+However, you may still specify `.propTypes` and `.defaultProps` by setting them as properties on the function, just as you would set them on an ES6 class:
+
+```javascript
+const HelloMessage = (props) => <div>Hello, {props.name}</div>;
+HelloMessage.propTypes = {
+  name: React.PropTypes.string
+}
+HelloMessage.defaultProps = {
+  name: 'John Doe'
+}
+ReactDOM.render(<HelloMessage name="Mădălina"/>, mountNode);
+```
 
 > NOTE:
 >

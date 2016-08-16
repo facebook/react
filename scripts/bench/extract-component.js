@@ -2,11 +2,18 @@
 /*eslint-disable no-debugger */
 
 // Copy and paste this file into your (Chrome) browser console after changing
-// the React root ID. Works on facebook.com as of 10/28/15 (use a test user).
+// the React root ID. Works on facebook.com as of 7/6/16 (use a test user).
+// Then run this to convert the JSX:
+//
+//   ../../node_modules/.bin/babel \
+//     --presets ../../node_modules/babel-preset-react \
+//     --no-babelrc --compact=false \
+//     bench-foo.js -o bench-foo-es5.js
 
 'use strict';
 
-var rootID = '.0';
+var rootID = 5;
+var outputStatelessFunctional = false;
 
 var React = require('React');
 var ReactMount = require('ReactMount');
@@ -28,18 +35,50 @@ function elementMeta(element) {
 }
 
 function print(outerComponent) {
-  function addComposite(name, child) {
-    output += 'var ' + name + ' = React.createClass({\n';
-    output += '  render: function() {\n';
-    if (child.indexOf('\n') !== -1) {
-      output += '    return (\n';
-      output += child.replace(/^|\n/g, '$&      ') + '\n';
-      output += '    );\n';
-    } else {
-      output += '    return ' + child + ';\n';
+  var typeCounter = 0;
+  var elementCounter = 0;
+  var composites = new Map();
+
+  function addComposite(type, child) {
+    var info = composites.get(type);
+    if (!info) {
+      var name = (type.displayName || type.name || 'Component').replace(/(?:^[^a-z]|\W)+/gi, '_') + typeCounter++;
+      if (!/^[A-Z]/.test(name)) {
+        name = '_' + name;
+      }
+      info = {name: name, values: new Map()};
+      composites.set(type, info);
     }
-    output += '  },\n';
-    output += '});\n';
+    var c = elementCounter++;
+    info.values.set(c, child);
+    return '<' + info.name + ' x={' + c + '} />';
+  }
+
+  function printComposite(info) {
+    if (outputStatelessFunctional) {
+      output += 'var ' + info.name + ' = function(props) {\n';
+    } else {
+      output += 'var ' + info.name + ' = React.createClass({\n';
+      output += '  render: function() {\n';
+      output += '    var props = this.props;\n';
+    }
+    for (var [c, child] of info.values) {
+      output += '    if (props.x === ' + c + ') {\n';
+      if (child.indexOf('\n') !== -1) {
+        output += '      return (\n';
+        output += child.replace(/^|\n/g, '$&        ') + '\n';
+        output += '      );\n';
+      } else {
+        output += '      return ' + child + ';\n';
+      }
+      output += '    }\n';
+    }
+    if (outputStatelessFunctional) {
+      output += '};\n';
+    } else {
+      output += '  },\n';
+      output += '});\n';
+    }
     output += '\n';
   }
 
@@ -59,15 +98,8 @@ function print(outerComponent) {
     // Composite component
     if (typeof element.type === 'function') {
       var rendered = printImpl(component._renderedComponent);
-      var name = (component.getName() || 'Component').replace(/(?:^[^a-z]|\W)+/gi, '_') + counter++;
-      if (!/^[A-Z]/.test(name)) {
-        name = '_' + name;
-      }
-      addComposite(name, rendered);
-      var compositeMarkup = '<' + name;
-      compositeMarkup += elementMeta(component._currentElement);
-      compositeMarkup += ' />';
-      return compositeMarkup;
+      return addComposite(component._currentElement.type, rendered)
+        .replace(/(?= \/>$)/, elementMeta(component._currentElement));
     }
 
     // Native component
@@ -112,9 +144,13 @@ function print(outerComponent) {
         var values = keys.map((childKey) => renderedChildren[childKey]);
 
         if (keys.length) {
-          function dump(children) {
+          var dump = function(children) {
             if (typeof children === 'boolean' || children == null) {
               return '' + children;
+            }
+            if (typeof children === 'object' && !Array.isArray(children) && children[Symbol.iterator]) {
+              // TODO: Not quite right.
+              children = Array.from(children);
             }
             if (Array.isArray(children)) {
               return children.length ? (
@@ -130,7 +166,7 @@ function print(outerComponent) {
               debugger;
               throw new Error('hmm');
             }
-          }
+          };
 
           markup += '\n';
           var children = element.props.children;
@@ -159,10 +195,12 @@ function print(outerComponent) {
   }
 
   var output = '(function() {\n\n';
-  var counter = 0;
 
   var tail = printImpl(outerComponent);
-  addComposite('Benchmark', tail);
+  for (var info of composites.values()) {
+    printComposite(info);
+  }
+  printComposite({name: 'Benchmark', values: new Map([[undefined, tail]])});
   output += 'this.Benchmark = Benchmark;\n';
   output += '\n})(this);\n';
   return output;

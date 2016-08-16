@@ -5,6 +5,8 @@ var grunt = require('grunt');
 
 var src = 'packages/react-dom/';
 var dest = 'build/packages/react-dom/';
+var modSrc = 'build/node_modules/react-dom/lib';
+var lib = dest + 'lib/';
 var dist = dest + 'dist/';
 var distFiles = [
   'react-dom.js',
@@ -21,6 +23,7 @@ function buildRelease() {
   // Copy to build/packages/react-dom
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
+    grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
     grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
   );
   mappings.forEach(function(mapping) {

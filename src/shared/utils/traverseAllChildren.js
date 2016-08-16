@@ -12,7 +12,7 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
@@ -21,6 +21,12 @@ var warning = require('warning');
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
+
+/**
+ * This is inlined from ReactElement since this file is shared between
+ * isomorphic and renderers. We could extract this to a
+ *
+ */
 
 /**
  * TODO: Test that a single child and an array with one item have the same key
@@ -71,7 +77,9 @@ function traverseAllChildrenImpl(
   if (children === null ||
       type === 'string' ||
       type === 'number' ||
-      ReactElement.isValidElement(children)) {
+      // The following is inlined from ReactElement. This means we can optimize
+      // some checks. React Fiber also inlines this logic for similar purposes.
+      (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)) {
     callback(
       traverseContext,
       children,
@@ -117,11 +125,19 @@ function traverseAllChildrenImpl(
         }
       } else {
         if (__DEV__) {
+          var mapsAsChildrenAddendum = '';
+          if (ReactCurrentOwner.current) {
+            var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
+            if (mapsAsChildrenOwnerName) {
+              mapsAsChildrenAddendum = ' Check the render method of `' + mapsAsChildrenOwnerName + '`.';
+            }
+          }
           warning(
             didWarnAboutMaps,
             'Using Maps as children is not yet fully supported. It is an ' +
             'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.'
+            'sequence / iterable of keyed ReactElements instead.%s',
+            mapsAsChildrenAddendum
           );
           didWarnAboutMaps = true;
         }

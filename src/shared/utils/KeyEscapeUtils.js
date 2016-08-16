@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule KeyEscapeUtils
+ * @flow
  */
 
 'use strict';
@@ -14,10 +15,10 @@
 /**
  * Escape and wrap key so it is safe to use as a reactid
  *
- * @param {*} key to be escaped.
+ * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key) {
+function escape(key: string): string {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
@@ -39,7 +40,7 @@ function escape(key) {
  * @param {string} key to unescape.
  * @return {string} the unescaped key.
  */
-function unescape(key) {
+function unescape(key: string): string {
   var unescapeRegex = /(=0|=2)/g;
   var unescaperLookup = {
     '=0': '=',

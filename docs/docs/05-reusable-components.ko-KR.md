@@ -1,7 +1,7 @@
 ---
 id: reusable-components-ko-KR
 title: 재사용가능한 컴포넌트
-permalink: reusable-components-ko-KR.html
+permalink: docs/reusable-components-ko-KR.html
 prev: multiple-components-ko-KR.html
 next: transferring-props-ko-KR.html
 ---
@@ -23,6 +23,7 @@ React.createClass({
     optionalNumber: React.PropTypes.number,
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
+    optionalSymbol: React.PropTypes.symbol,
 
     // 렌더링될 수 있는 모든 것: 숫자, 문자열, 요소
     // 이것들을 포함하는 배열(이나 프래그먼트)

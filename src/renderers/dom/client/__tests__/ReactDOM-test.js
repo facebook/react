@@ -115,7 +115,7 @@ describe('ReactDOM', function() {
     spyOn(console, 'error');
     var element = React.DOM.div();
     expect(element.type).toBe('div');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('throws in render() if the mount callback is not a function', function() {
@@ -123,25 +123,25 @@ describe('ReactDOM', function() {
       this.a = 1;
       this.b = 2;
     }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
+
+    class A extends React.Component {
+      state = {};
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var myDiv = document.createElement('div');
-    expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrow(
+    expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => ReactDOM.render(<A />, myDiv, {})).toThrow(
+    expect(() => ReactDOM.render(<A />, myDiv, {})).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrow(
+    expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
@@ -152,27 +152,27 @@ describe('ReactDOM', function() {
       this.a = 1;
       this.b = 2;
     }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
+
+    class A extends React.Component {
+      state = {};
+
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var myDiv = document.createElement('div');
     ReactDOM.render(<A />, myDiv);
 
-    expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrow(
+    expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
-    expect(() => ReactDOM.render(<A />, myDiv, {})).toThrow(
+    expect(() => ReactDOM.render(<A />, myDiv, {})).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
-    expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrow(
+    expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );

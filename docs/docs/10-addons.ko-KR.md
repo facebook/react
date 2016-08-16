@@ -1,7 +1,7 @@
 ---
 id: addons-ko-KR
 title: 애드온
-permalink: addons-ko-KR.html
+permalink: docs/addons-ko-KR.html
 prev: tooling-integration-ko-KR.html
 next: animation-ko-KR.html
 ---

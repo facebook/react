@@ -31,9 +31,9 @@ var createReactNativeComponentClass = function(
   var Constructor = function(element) {
     this._currentElement = element;
     this._topLevelWrapper = null;
-    this._nativeParent = null;
-    this._nativeContainerInfo = null;
-    this._rootNodeID = null;
+    this._hostParent = null;
+    this._hostContainerInfo = null;
+    this._rootNodeID = 0;
     this._renderedChildren = null;
   };
   Constructor.displayName = viewConfig.uiViewClassName;
@@ -42,7 +42,7 @@ var createReactNativeComponentClass = function(
   Constructor.prototype = new ReactNativeBaseComponent(viewConfig);
   Constructor.prototype.constructor = Constructor;
 
-  return ((Constructor: any): ReactClass);
+  return ((Constructor: any): ReactClass<any>);
 };
 
 module.exports = createReactNativeComponentClass;

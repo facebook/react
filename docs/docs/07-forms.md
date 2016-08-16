@@ -1,7 +1,7 @@
 ---
 id: forms
 title: Forms
-permalink: forms.html
+permalink: docs/forms.html
 prev: transferring-props.html
 next: working-with-the-browser.html
 ---

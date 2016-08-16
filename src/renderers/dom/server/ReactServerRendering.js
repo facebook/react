@@ -10,9 +10,9 @@
  */
 'use strict';
 
+var React = require('React');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactElement = require('ReactElement');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
@@ -25,6 +25,8 @@ var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
+var pendingTransactions = 0;
+
 /**
  * @param {ReactElement} element
  * @return {string} the HTML markup
@@ -36,14 +38,17 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
 
+    pendingTransactions++;
+
     return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element);
+      var componentInstance = instantiateReactComponent(element, true);
       var markup = ReactReconciler.mountComponent(
         componentInstance,
         transaction,
         null,
         ReactDOMContainerInfo(),
-        emptyObject
+        emptyObject,
+        0 /* parentDebugID */
       );
       if (__DEV__) {
         ReactInstrumentation.debugTool.onUnmountComponent(
@@ -56,10 +61,15 @@ function renderToStringImpl(element, makeStaticMarkup) {
       return markup;
     }, null);
   } finally {
+    pendingTransactions--;
     ReactServerRenderingTransaction.release(transaction);
     // Revert to the DOM batching strategy since these two renderers
     // currently share these stateful modules.
-    ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
+    if (!pendingTransactions) {
+      ReactUpdates.injection.injectBatchingStrategy(
+        ReactDefaultBatchingStrategy
+      );
+    }
   }
 }
 
@@ -70,7 +80,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
  */
 function renderToString(element) {
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.'
   );
   return renderToStringImpl(element, false);
@@ -83,7 +93,7 @@ function renderToString(element) {
  */
 function renderToStaticMarkup(element) {
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.'
   );
   return renderToStringImpl(element, true);

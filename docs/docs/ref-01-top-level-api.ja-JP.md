@@ -1,7 +1,7 @@
 ---
 id: top-level-api-ja-JP
 title: Top-Level API
-permalink: top-level-api-ja-JP.html
+permalink: docs/top-level-api-ja-JP.html
 next: component-api-ja-JP.html
 redirect_from: "/docs/reference-ja-JP.html"
 ---

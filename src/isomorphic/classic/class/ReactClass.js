@@ -51,11 +51,9 @@ var SpecPolicy = keyMirror({
 });
 
 
-var injectedMixins = [];
-
 /**
  * Composite components are higher-level components that compose other composite
- * or native components.
+ * or host components.
  *
  * To create a new type of `ReactClass`, pass a specification of
  * your new class to `React.createClass`. The only requirement of your class
@@ -436,6 +434,21 @@ function validateMethodOverride(isAlreadyDefined, name) {
  */
 function mixSpecIntoComponent(Constructor, spec) {
   if (!spec) {
+    if (__DEV__) {
+      var typeofSpec = typeof spec;
+      var isMixinValid = typeofSpec === 'object' && spec !== null;
+
+      warning(
+        isMixinValid,
+        '%s: You\'re attempting to include a mixin that is either null ' +
+        'or not an object. Check the mixins included by the component, ' +
+        'as well as any mixins they include themselves. ' +
+        'Expected object but got %s.',
+        Constructor.displayName || 'ReactClass',
+        spec === null ? null : typeofSpec
+      );
+    }
+
     return;
   }
 
@@ -796,10 +809,6 @@ var ReactClass = {
     Constructor.prototype.constructor = Constructor;
     Constructor.prototype.__reactAutoBindPairs = [];
 
-    injectedMixins.forEach(
-      mixSpecIntoComponent.bind(null, Constructor)
-    );
-
     mixSpecIntoComponent(Constructor, spec);
 
     // Initialize the defaultProps property after all mixins have been merged.
@@ -850,12 +859,6 @@ var ReactClass = {
     }
 
     return Constructor;
-  },
-
-  injection: {
-    injectMixin: function(mixin) {
-      injectedMixins.push(mixin);
-    },
   },
 
 };

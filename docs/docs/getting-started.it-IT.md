@@ -1,7 +1,7 @@
 ---
 id: getting-started-it-IT
 title: Primi Passi
-permalink: getting-started-it-IT.html
+permalink: docs/getting-started-it-IT.html
 next: tutorial-it-IT.html
 redirect_from: "docs/index.html"
 ---
@@ -32,7 +32,7 @@ Nella directory principale dello starter kit, crea `helloworld.html` con il segu
     <meta charset="UTF-8" />
     <title>Ciao React!</title>
     <script src="build/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>

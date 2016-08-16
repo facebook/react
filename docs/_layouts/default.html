@@ -32,6 +32,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
   <script src="/react/js/codemirror.js"></script>
   <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
   <script src="/react/js/react.js"></script>
   <script src="/react/js/react-dom.js"></script>
   <script src="/react/js/babel-browser.min.js"></script>
@@ -48,7 +50,7 @@
           React
         </a>
         <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' %} class="active"{% endif %}>Docs</a></li>
+          <li><a href="/react/docs/getting-started.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' or page.sectionid == 'contributing' %} class="active"{% endif %}>Docs</a></li>
           <li><a href="/react/support.html"{% if page.id == 'support' %} class="active"{% endif %}>Support</a></li>
           <li><a href="/react/downloads.html"{% if page.id == 'downloads' %} class="active"{% endif %}>Download</a></li>
           <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
@@ -109,7 +111,7 @@
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=623268441017527";
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
 

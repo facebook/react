@@ -2,7 +2,7 @@
 id: maximum-number-of-jsx-root-nodes
 title: Maximum Number of JSX Root Nodes
 layout: tips
-permalink: maximum-number-of-jsx-root-nodes.html
+permalink: tips/maximum-number-of-jsx-root-nodes.html
 prev: self-closing-tag.html
 next: style-props-value-px.html
 ---

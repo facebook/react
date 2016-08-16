@@ -2,7 +2,7 @@
 id: expose-component-functions-ko-KR
 title: 컴포넌트 함수 드러내기
 layout: tips
-permalink: expose-component-functions-ko-KR.html
+permalink: tips/expose-component-functions-ko-KR.html
 prev: communicate-between-components-ko-KR.html
 next: children-undefined-ko-KR.html
 ---

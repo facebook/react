@@ -13,7 +13,6 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMInstrumentation = require('ReactDOMInstrumentation');
 var ReactInstrumentation = require('ReactInstrumentation');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
@@ -89,9 +88,6 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onCreateMarkupForProperty(name, value);
-    }
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -145,15 +141,9 @@ var DOMPropertyOperations = {
         this.deleteValueForProperty(node, name);
         return;
       } else if (propertyInfo.mustUseProperty) {
-        var propName = propertyInfo.propertyName;
-        // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
-        // property type before comparing; only `value` does and is string.
-        if (!propertyInfo.hasSideEffects ||
-            ('' + node[propName]) !== ('' + value)) {
-          // Contrary to `setAttribute`, object properties are properly
-          // `toString`ed by IE8/9.
-          node[propName] = value;
-        }
+        // Contrary to `setAttribute`, object properties are properly
+        // `toString`ed by IE8/9.
+        node[propertyInfo.propertyName] = value;
       } else {
         var attributeName = propertyInfo.attributeName;
         var namespace = propertyInfo.attributeNamespace;
@@ -174,10 +164,9 @@ var DOMPropertyOperations = {
     }
 
     if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onSetValueForProperty(node, name, value);
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'update attribute',
         payload
@@ -198,10 +187,27 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'update attribute',
         payload
+      );
+    }
+  },
+
+  /**
+   * Deletes an attributes from a node.
+   *
+   * @param {DOMElement} node
+   * @param {string} name
+   */
+  deleteValueForAttribute: function(node, name) {
+    node.removeAttribute(name);
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onHostOperation(
+        ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        'remove attribute',
+        name
       );
     }
   },
@@ -222,13 +228,9 @@ var DOMPropertyOperations = {
       } else if (propertyInfo.mustUseProperty) {
         var propName = propertyInfo.propertyName;
         if (propertyInfo.hasBooleanValue) {
-          // No HAS_SIDE_EFFECTS logic here, only `value` has it and is string.
           node[propName] = false;
         } else {
-          if (!propertyInfo.hasSideEffects ||
-              ('' + node[propName]) !== '') {
-            node[propName] = '';
-          }
+          node[propName] = '';
         }
       } else {
         node.removeAttribute(propertyInfo.attributeName);
@@ -238,8 +240,7 @@ var DOMPropertyOperations = {
     }
 
     if (__DEV__) {
-      ReactDOMInstrumentation.debugTool.onDeleteValueForProperty(node, name);
-      ReactInstrumentation.debugTool.onNativeOperation(
+      ReactInstrumentation.debugTool.onHostOperation(
         ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
         'remove attribute',
         name

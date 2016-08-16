@@ -1,8 +1,11 @@
 ---
+sudo: required
+dist: trusty
 language: node_js
 node_js:
 - 4
-sudo: false
+rvm:
+- 2.2.3
 cache:
   directories:
   - docs/vendor/bundle
@@ -81,6 +84,7 @@ script:
         >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
       ./node_modules/.bin/grunt jest:normal
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      ./node_modules/.bin/gulp react:extract-errors
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi

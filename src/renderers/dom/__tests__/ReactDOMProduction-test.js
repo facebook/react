@@ -8,7 +8,6 @@
  *
  * @emails react-core
  */
-
 'use strict';
 
 describe('ReactDOMProduction', function() {
@@ -37,7 +36,7 @@ describe('ReactDOMProduction', function() {
 
     spyOn(console, 'error');
     warning(false, 'Do cows go moo?');
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should use prod React', function() {
@@ -46,15 +45,15 @@ describe('ReactDOMProduction', function() {
     // no key warning
     void <div>{[<span />]}</div>;
 
-    expect(console.error.argsForCall.length).toBe(0);
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should handle a simple flow', function() {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <span>{this.props.children}</span>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     var inst = ReactDOM.render(
@@ -87,4 +86,21 @@ describe('ReactDOMProduction', function() {
     expect(container.childNodes.length).toBe(0);
   });
 
+  it('should throw with an error code in production', function() {
+    expect(function() {
+      class Component extends React.Component {
+        render() {
+          return ['this is wrong'];
+        }
+      }
+
+      var container = document.createElement('div');
+      ReactDOM.render(<Component />, container);
+    }).toThrowError(
+      'Minified React error #109; visit ' +
+      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
+      ' for the full message or use the non-minified dev environment' +
+      ' for full errors and additional helpful warnings.'
+    );
+  });
 });

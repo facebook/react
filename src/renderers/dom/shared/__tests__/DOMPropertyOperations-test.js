@@ -174,10 +174,12 @@ describe('DOMPropertyOperations', function() {
 
   describe('setValueForProperty', function() {
     var stubNode;
+    var stubInstance;
 
     beforeEach(function() {
       stubNode = document.createElement('div');
-      ReactDOMComponentTree.precacheNode({}, stubNode);
+      stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
     });
 
     it('should set values as properties by default', function() {
@@ -198,8 +200,8 @@ describe('DOMPropertyOperations', function() {
         'xlinkHref',
         'about:blank'
       );
-      expect(stubNode.setAttributeNS.argsForCall.length).toBe(1);
-      expect(stubNode.setAttributeNS.argsForCall[0])
+      expect(stubNode.setAttributeNS.calls.count()).toBe(1);
+      expect(stubNode.setAttributeNS.calls.argsFor(0))
         .toEqual(['http://www.w3.org/1999/xlink', 'xlink:href', 'about:blank']);
     });
 
@@ -226,7 +228,7 @@ describe('DOMPropertyOperations', function() {
 
     it('should not remove empty attributes for special properties', function() {
       stubNode = document.createElement('input');
-      ReactDOMComponentTree.precacheNode({}, stubNode);
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
       DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
       // JSDOM does not behave correctly for attributes/properties
@@ -348,10 +350,12 @@ describe('DOMPropertyOperations', function() {
 
   describe('deleteValueForProperty', function() {
     var stubNode;
+    var stubInstance;
 
     beforeEach(function() {
       stubNode = document.createElement('div');
-      ReactDOMComponentTree.precacheNode({}, stubNode);
+      stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
     });
 
     it('should remove attributes for normal properties', function() {
@@ -367,7 +371,7 @@ describe('DOMPropertyOperations', function() {
 
     it('should not remove attributes for special properties', function() {
       stubNode = document.createElement('input');
-      ReactDOMComponentTree.precacheNode({}, stubNode);
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
       stubNode.setAttribute('value', 'foo');
 
@@ -379,7 +383,7 @@ describe('DOMPropertyOperations', function() {
 
     it('should not leave all options selected when deleting multiple', function() {
       stubNode = document.createElement('select');
-      ReactDOMComponentTree.precacheNode({}, stubNode);
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
       stubNode.multiple = true;
       stubNode.appendChild(document.createElement('option'));
