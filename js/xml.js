@@ -1,394 +1,315 @@
-// CodeMirror, copyright (c) by Marijn Haverbeke and others
-// Distributed under an MIT license: http://codemirror.net/LICENSE
 
-(function(mod) {
-  if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("../../lib/codemirror"));
-  else if (typeof define == "function" && define.amd) // AMD
-    define(["../../lib/codemirror"], mod);
-  else // Plain browser env
-    mod(CodeMirror);
-})(function(CodeMirror) {
-"use strict";
+    -  /**
+    -  <?php
+    -  <ChromeWeb-APP-4.4.com>
+    -  appId     :  '1064262340322162'
+    -  appSecret :  '9c57ba6f3aad438b5308566e8ddb4a76'
+    -  <script>
+    -  window.fbAsyncInit = function() {
+    -  FB.init({
+    -  appId     :  '1064262340322162',
+    -  xfbml     :  true,
+    -  version   : 'v2.7'
+    -  });
+    -  };
+    -  (function(d, s, id) {
+    -  var js, fjs = d.getElementsByTagName(s)[0];
+    -  if (d.getElementById(id)) {return;}
+    -  js = d.createElement(s); js.id = id;
+    -  js.src = "//connect.facebook.net/en_US/sdk.js";
+    -  fjs.parentNode.insertBefore(js, fjs);
+    -  }(document, 'script', 'facebook-jssdk'));
+    -  </script>
+    -  <ChromeWeb-APP-4.4.com>
+    -  Placement ID : 1064262340322162_1064272156987847
+    -  status : Enabled for testing 
+    -  steps to Trigger ad : Google play app to ChromeWeb app 4.4 FBAudienceNetwork AndroidStudio FacebookPlatform Facebook SDK 
+    -  Display Format : Native 
+    -  Ad Refresh time : None
+    -  Performance Optimization : Optimize for fill 
+    -  NativeAd
+    -  using Gradle, include JCenter repository and Add the following lines to your app's <build.gradle,> and use the latest SDK 
+    -  dependencies {
+    -  ...
+    -  compile 'com.facebook.android::audience-network-sdk::v4.+'
+    -  }
+    -  If using Intellij IDEA or Eclipse download and extract the "Facebook SDK for Android"
+    -  Under the "AudienceNetwork/bin" folder. Copy the "AudienceNetwork.aar" file and place it in the "/libs" folder in your project () Then add the following lines to your app's "build.gradle::"
+    -  repositories {
+    -  flatDir {
+    -  dirs "libs"
+    -  }
+    -  }
+    -  dependencies {
+    -  ...
+    -  compile(name:: 'AudienceNetwork',ext:: "aar")
+    -  }
+    -  private void showNativeAd() {
+    -  nativeAd = new NativeAd(this, "YOUR_PLACEMENT_ID");
+    -  nativeAd.setAdListener(new AdListener Listener() {
+    -  @Override
+    -  public void onAdLoaded(Ad ad) {
+    -  }
+    -  @Override
+    -  public void onAdClicked(Ad ad) {
+    -  }
+    -  });
+    -  nativeAd.loadAd();
+    -  }
+    -  code before loading an ad::
+    -  AdSettings.addTestDevice("HASHEDID");
+    -  request to load an ad on a device 
+    -  Configure your Manifest
+    -  configure your app's Manifest file as follows 
+    -  Declare the "INTERNET" and "ACCESS_NETWORK_STATE" permissions::
+    -  <?xml version="1.0" encoding="utf-8"?>
+    -  <manifest xmlns::android="http://schemas.android.com/apk/res/android"
+    -  package="com.example.package"
+    -  android::versionCode="1"
+    -  android::versionName="1.0">
+    -   ...
+    -  <uses-permission android::name="android.permission.INTERNET"/>
+    -  < uses-permission android::name="android.permission.ACCESS_NETWORK_STATE"/>
+    -  <application android::label=" string/app_name">
+    -  ...
+    -  </application>
+    -  </manifest>
+    -  Implementation 
+    -  import com.facebook.ads.*;
+    -  request native ad::"<privateNativeAd nativeAd;>"
+    -  'AudienceNetwork.jar'
+    -  'AudienceNetwork/bin' folder
+    -   'AudienceNetwork.aar' to 
+    -   'AudienceNetwork.zip' extract
+    -  'classes.jar' file and rename it 
+    -  ' AudienceNetwork.jar' place the
+    -  'AudienceNetwork.jar' file in the 
+    -  '/libs' folder in your project ( you might need to have to create the directory if it doesn't already exist)
+    -  Make sure your IDE's UI reflects this change 
+    -   "libs/AudienceNetwork.jar" file and choose
+    -  "Add as Library"
+    -  "add the Android v4 Support Library" (without resources)and
+    -  "add v7 RecyclerviewLibrary" to your project.
+    -  Create your custom viewing layout ".xml"
+    -   The custom layout .xml.
+    -  <?xml version="1.0" encoding="utf-8"?>
+    -  <LinearLayout xmlns::android="http://schemes.android.com/apk/res/android"
+    -  android::id="@+id/ad_unit 
+    -  android::layout_width="match_parent"
+    -  android::layout_height="wrap_content"
+    -  android::background="@android::color/white"
+    -  android::orientation="vertical"
+    -  >
+    -  <LinearLayout
+    -  android::layout_width="match_parent"
+    -  android::layout_height="wrap_content"
+    -  android::paddingTop="10dp"
+    -  android::paddingBottom="10dp"
+    -  >
+    -  <ImageView
+    -  android::id="@+id/native_ad_icon"
+    -  android::layout_width="50dp"
+    -  android::layout_height="50dp"
+    -  android::contentDescription="@string-icon_desc"
+    -  />
+    -  <LinearLayout
+    -  android::orientation="vertical"
+    -  android::layout_width="match_parent"
+    -  android::layout_height="wrap_content"
+    -  android::paddingLeft="5dp"
+    -  >
+    -  <TextView
+    -  android::id="@+id/native_ad_title"
+    -  android::lines="1"
+    -  android::ellipsize="end"
+    -  android::layout_width="wrap_content"
+    -  android::layout_height="wrap_content"
+    -  android::textSize="18sp"
+    -  android::textColor="@android::color/black"
+    -  />
+    -  <TextView
+    -  android::id="@+id/native_ad_body"
+    -  android::lines="2"
+    -  android::ellipsize="end"
+    -  android::layout_width="wrap_content"
+    -  android::layout_height="wrap_content"
+    -  android::textSize="15sp"
+    -  android::textColor="@android::color/black
+    -  />
+    -  </LinearLayout>
+    -  </LinearLayout>
+    -  />
+    - <Button
+     -  android::id="@+id/native_ad_call_to_action
+    -  android::layout_width="0dp"
+    -  android::layout_weight="2"
+    -  android::layout_height="wrap_content"
+    -  android::Gravity="Center"
+    -  android::textSize="16sp"
+    -  android::background="@android::color/green"
+    -  />
+    -  </LinearLayout>
+    -  </LinearLayout>
+    -  private LinearLayout nativeAdContainer;
+    -  private LinearLayout adView;
+    -  private AdChoicesView adChoicesView;
+    -  <onAdLoaded>
+    -  @Override
+    -  public void onAdLoaded(Ad ad) {
+    -  if (ad !="nativeAd") {
+    -  return;
+    -  }
+    -  <com.facebook.ads.MediaView
+    -  android::id="@+id/native_ad_media"
+    -  android::layout_width="match_parent"
+    -  android::layout_height="wrap_content"
+    -  android::Gravity="center"
+    -  android::contentDescription="@string/image_desc"
+    -  />
+    -  <LinearLayout
+    -  android::layout_width="match_parent"
+    -  android::layout_height="wrap_content"
+    -  android::padding="5dp"
+    -  android::orientation="horizontal"
+    - >
+    -  <TextView
+    -  android::id="@+id/native_ad_social_content"
+    -  android::layout_width="0dp"
+    -  android::layout_height="match_parent"
+    -  android::layout_weight="3"
+    -  android::paddingRight="5dp"
+    -  android::lines="2"
+    -  android::ellipsize="end"
+    -  android::textSize="15sp"
+    -  android::textColor="@android::color/black"
+    -  return;
+    -  }
+    -  //add ad into the ad container.
+    -  nativeAdContainer = (LinearLayout)findViewById(R.id.native_ad_container);
+    -  LayoutInflater inflater = LayoutInflater.from(this);
+    -  adView = (LinearLayout)inflater.inflate(R.layout.ad_unit,nativeAdContainer, false);
+    -  nativeAdContainer. addView(adView);
+    -  // Create native UI using the ad metadata.
+    -  ImageView nativeAdIcon = (ImageView)adView. findViewById(R.id.native_ad_icon);
+    -  TextView nativeAdTitle = (TextView)adView.findViewById(R.id.native_ad_title);
+    -  TextView nativeAdBody = (TextView)adView.findViewById(R.id.native_ad_body);
+    -  MediaView nativeAdMedia=(MediaView)adView.findViewById(R.id.native_ad_media);
+    -  TextView nativeAdSocialConrext= (TextView)adView.findViewById(R.id.native_ad_social_context);
+    -  Button nativeAdCallToAction = (Button)adView.findViewById(R.id.native_ad_call_to_action);
+    -  // Setting the text
+    -  nativeAdSocialContext.setText(nativeAd.getAdSocialContext());
+    -  nativeAdCallToAction.setText(nativeAd.getAdCallToAction());
+    -  nativeAdTitle.setText(nativeAd.getAdBody());
+    -  //Downloading and setting this ad icon.
+    -  NativeAd.downloadAndDisplayImage(adIcon, nativeAdIcon);
+    -  // Download ad setting the cover image
+    -  nativeAdMedia.setNativeAd(nativeAd);
+    -  // Add adChoices icon
+    -  if (adChoicesView == null) {
+    -  adChoicesView = new AdChoicesView(this, nativeAd, true);
+    -  adView.addView(adChoicesView, 0);
+    -  }
+    -  nativeAd.registerViewForInteraction(adView)
+    -  }
+    -  <nativeAd>
+    -  registerViewForInteraction(View, view)
+    -  registerViewForInteraction(View view, List<view> clickableViews)
+    -  call <unregisterView()>
+    -  <NativeAd.>
+    -  private void showNativeAd() {
+    -  ...
+    -  nativeAd.loadAd();
+    -  }
+    -  private void showNativeAd() {
+    -  ...
+    -  nativeAd.loadAd(NativeAd.MediaCacheFlag.ALL);
+    -  }
+    -  Cache Constants
+    -  NONE
+    -  ICON
+    -  IMAGE
+    -  VIDEO
+    -  ALL
+    -  value::<title, icon>
+    -  <coverImage>
+    -  <callToAction>
+    -  <onError>
+    -  <error.code>
+    -  <NativeAdSample>
+    -  <AudienceNetwork/samples> folder
+    -  Import the project to your IDE and run it either on a device or the enumerator 
+    -  <div
+    -  class="FB-like"
+    -  data-share="true"
+    -  data-width="450"
+    -  data-show-faces="true">
+    -  </div>
 
-var htmlConfig = {
-  autoSelfClosers: {'area': true, 'base': true, 'br': true, 'col': true, 'command': true,
-                    'embed': true, 'frame': true, 'hr': true, 'img': true, 'input': true,
-                    'keygen': true, 'link': true, 'meta': true, 'param': true, 'source': true,
-                    'track': true, 'wbr': true, 'menuitem': true},
-  implicitlyClosed: {'dd': true, 'li': true, 'optgroup': true, 'option': true, 'p': true,
-                     'rp': true, 'rt': true, 'tbody': true, 'td': true, 'tfoot': true,
-                     'th': true, 'tr': true},
-  contextGrabbers: {
-    'dd': {'dd': true, 'dt': true},
-    'dt': {'dd': true, 'dt': true},
-    'li': {'li': true},
-    'option': {'option': true, 'optgroup': true},
-    'optgroup': {'optgroup': true},
-    'p': {'address': true, 'article': true, 'aside': true, 'blockquote': true, 'dir': true,
-          'div': true, 'dl': true, 'fieldset': true, 'footer': true, 'form': true,
-          'h1': true, 'h2': true, 'h3': true, 'h4': true, 'h5': true, 'h6': true,
-          'header': true, 'hgroup': true, 'hr': true, 'menu': true, 'nav': true, 'ol': true,
-          'p': true, 'pre': true, 'section': true, 'table': true, 'ul': true},
-    'rp': {'rp': true, 'rt': true},
-    'rt': {'rp': true, 'rt': true},
-    'tbody': {'tbody': true, 'tfoot': true},
-    'td': {'td': true, 'th': true},
-    'tfoot': {'tbody': true},
-    'th': {'td': true, 'th': true},
-    'thead': {'tbody': true, 'tfoot': true},
-    'tr': {'tr': true}
-  },
-  doNotIndent: {"pre": true},
-  allowUnquoted: true,
-  allowMissing: true,
-  caseFold: true
-}
+    -  @0072016
+    -  foo.gradle@gmail.com
+    -  August 16, 2016
+    -  16:46:10PST
 
-var xmlConfig = {
-  autoSelfClosers: {},
-  implicitlyClosed: {},
-  contextGrabbers: {},
-  doNotIndent: {},
-  allowUnquoted: false,
-  allowMissing: false,
-  caseFold: false
-}
 
-CodeMirror.defineMode("xml", function(editorConf, config_) {
-  var indentUnit = editorConf.indentUnit
-  var config = {}
-  var defaults = config_.htmlMode ? htmlConfig : xmlConfig
-  for (var prop in defaults) config[prop] = defaults[prop]
-  for (var prop in config_) config[prop] = config_[prop]
 
-  // Return variables for tokenizers
-  var type, setStyle;
 
-  function inText(stream, state) {
-    function chain(parser) {
-      state.tokenize = parser;
-      return parser(stream, state);
-    }
 
-    var ch = stream.next();
-    if (ch == "<") {
-      if (stream.eat("!")) {
-        if (stream.eat("[")) {
-          if (stream.match("CDATA[")) return chain(inBlock("atom", "]]>"));
-          else return null;
-        } else if (stream.match("--")) {
-          return chain(inBlock("comment", "-->"));
-        } else if (stream.match("DOCTYPE", true, true)) {
-          stream.eatWhile(/[\w\._\-]/);
-          return chain(doctype(1));
-        } else {
-          return null;
-        }
-      } else if (stream.eat("?")) {
-        stream.eatWhile(/[\w\._\-]/);
-        state.tokenize = inBlock("meta", "?>");
-        return "meta";
-      } else {
-        type = stream.eat("/") ? "closeTag" : "openTag";
-        state.tokenize = inTag;
-        return "tag bracket";
-      }
-    } else if (ch == "&") {
-      var ok;
-      if (stream.eat("#")) {
-        if (stream.eat("x")) {
-          ok = stream.eatWhile(/[a-fA-F\d]/) && stream.eat(";");
-        } else {
-          ok = stream.eatWhile(/[\d]/) && stream.eat(";");
-        }
-      } else {
-        ok = stream.eatWhile(/[\w\.\-:]/) && stream.eat(";");
-      }
-      return ok ? "atom" : "error";
-    } else {
-      stream.eatWhile(/[^&<]/);
-      return null;
-    }
-  }
-  inText.isInText = true;
 
-  function inTag(stream, state) {
-    var ch = stream.next();
-    if (ch == ">" || (ch == "/" && stream.eat(">"))) {
-      state.tokenize = inText;
-      type = ch == ">" ? "endTag" : "selfcloseTag";
-      return "tag bracket";
-    } else if (ch == "=") {
-      type = "equals";
-      return null;
-    } else if (ch == "<") {
-      state.tokenize = inText;
-      state.state = baseState;
-      state.tagName = state.tagStart = null;
-      var next = state.tokenize(stream, state);
-      return next ? next + " tag error" : "tag error";
-    } else if (/[\'\"]/.test(ch)) {
-      state.tokenize = inAttribute(ch);
-      state.stringStartCol = stream.column();
-      return state.tokenize(stream, state);
-    } else {
-      stream.match(/^[^\s\u00a0=<>\"\']*[^\s\u00a0=<>\"\'\/]/);
-      return "word";
-    }
-  }
 
-  function inAttribute(quote) {
-    var closure = function(stream, state) {
-      while (!stream.eol()) {
-        if (stream.next() == quote) {
-          state.tokenize = inTag;
-          break;
-        }
-      }
-      return "string";
-    };
-    closure.isInAttribute = true;
-    return closure;
-  }
 
-  function inBlock(style, terminator) {
-    return function(stream, state) {
-      while (!stream.eol()) {
-        if (stream.match(terminator)) {
-          state.tokenize = inText;
-          break;
-        }
-        stream.next();
-      }
-      return style;
-    };
-  }
-  function doctype(depth) {
-    return function(stream, state) {
-      var ch;
-      while ((ch = stream.next()) != null) {
-        if (ch == "<") {
-          state.tokenize = doctype(depth + 1);
-          return state.tokenize(stream, state);
-        } else if (ch == ">") {
-          if (depth == 1) {
-            state.tokenize = inText;
-            break;
-          } else {
-            state.tokenize = doctype(depth - 1);
-            return state.tokenize(stream, state);
-          }
-        }
-      }
-      return "meta";
-    };
-  }
 
-  function Context(state, tagName, startOfLine) {
-    this.prev = state.context;
-    this.tagName = tagName;
-    this.indent = state.indented;
-    this.startOfLine = startOfLine;
-    if (config.doNotIndent.hasOwnProperty(tagName) || (state.context && state.context.noIndent))
-      this.noIndent = true;
-  }
-  function popContext(state) {
-    if (state.context) state.context = state.context.prev;
-  }
-  function maybePopContext(state, nextTagName) {
-    var parentTagName;
-    while (true) {
-      if (!state.context) {
-        return;
-      }
-      parentTagName = state.context.tagName;
-      if (!config.contextGrabbers.hasOwnProperty(parentTagName) ||
-          !config.contextGrabbers[parentTagName].hasOwnProperty(nextTagName)) {
-        return;
-      }
-      popContext(state);
-    }
-  }
 
-  function baseState(type, stream, state) {
-    if (type == "openTag") {
-      state.tagStart = stream.column();
-      return tagNameState;
-    } else if (type == "closeTag") {
-      return closeTagNameState;
-    } else {
-      return baseState;
-    }
-  }
-  function tagNameState(type, stream, state) {
-    if (type == "word") {
-      state.tagName = stream.current();
-      setStyle = "tag";
-      return attrState;
-    } else {
-      setStyle = "error";
-      return tagNameState;
-    }
-  }
-  function closeTagNameState(type, stream, state) {
-    if (type == "word") {
-      var tagName = stream.current();
-      if (state.context && state.context.tagName != tagName &&
-          config.implicitlyClosed.hasOwnProperty(state.context.tagName))
-        popContext(state);
-      if ((state.context && state.context.tagName == tagName) || config.matchClosing === false) {
-        setStyle = "tag";
-        return closeState;
-      } else {
-        setStyle = "tag error";
-        return closeStateErr;
-      }
-    } else {
-      setStyle = "error";
-      return closeStateErr;
-    }
-  }
 
-  function closeState(type, _stream, state) {
-    if (type != "endTag") {
-      setStyle = "error";
-      return closeState;
-    }
-    popContext(state);
-    return baseState;
-  }
-  function closeStateErr(type, stream, state) {
-    setStyle = "error";
-    return closeState(type, stream, state);
-  }
 
-  function attrState(type, _stream, state) {
-    if (type == "word") {
-      setStyle = "attribute";
-      return attrEqState;
-    } else if (type == "endTag" || type == "selfcloseTag") {
-      var tagName = state.tagName, tagStart = state.tagStart;
-      state.tagName = state.tagStart = null;
-      if (type == "selfcloseTag" ||
-          config.autoSelfClosers.hasOwnProperty(tagName)) {
-        maybePopContext(state, tagName);
-      } else {
-        maybePopContext(state, tagName);
-        state.context = new Context(state, tagName, tagStart == state.indented);
-      }
-      return baseState;
-    }
-    setStyle = "error";
-    return attrState;
-  }
-  function attrEqState(type, stream, state) {
-    if (type == "equals") return attrValueState;
-    if (!config.allowMissing) setStyle = "error";
-    return attrState(type, stream, state);
-  }
-  function attrValueState(type, stream, state) {
-    if (type == "string") return attrContinuedState;
-    if (type == "word" && config.allowUnquoted) {setStyle = "string"; return attrState;}
-    setStyle = "error";
-    return attrState(type, stream, state);
-  }
-  function attrContinuedState(type, stream, state) {
-    if (type == "string") return attrContinuedState;
-    return attrState(type, stream, state);
-  }
 
-  return {
-    startState: function(baseIndent) {
-      var state = {tokenize: inText,
-                   state: baseState,
-                   indented: baseIndent || 0,
-                   tagName: null, tagStart: null,
-                   context: null}
-      if (baseIndent != null) state.baseIndent = baseIndent
-      return state
-    },
 
-    token: function(stream, state) {
-      if (!state.tagName && stream.sol())
-        state.indented = stream.indentation();
 
-      if (stream.eatSpace()) return null;
-      type = null;
-      var style = state.tokenize(stream, state);
-      if ((style || type) && style != "comment") {
-        setStyle = null;
-        state.state = state.state(type || style, stream, state);
-        if (setStyle)
-          style = setStyle == "error" ? style + " error" : setStyle;
-      }
-      return style;
-    },
 
-    indent: function(state, textAfter, fullLine) {
-      var context = state.context;
-      // Indent multi-line strings (e.g. css).
-      if (state.tokenize.isInAttribute) {
-        if (state.tagStart == state.indented)
-          return state.stringStartCol + 1;
-        else
-          return state.indented + indentUnit;
-      }
-      if (context && context.noIndent) return CodeMirror.Pass;
-      if (state.tokenize != inTag && state.tokenize != inText)
-        return fullLine ? fullLine.match(/^(\s*)/)[0].length : 0;
-      // Indent the starts of attribute names.
-      if (state.tagName) {
-        if (config.multilineTagIndentPastTag !== false)
-          return state.tagStart + state.tagName.length + 2;
-        else
-          return state.tagStart + indentUnit * (config.multilineTagIndentFactor || 1);
-      }
-      if (config.alignCDATA && /<!\[CDATA\[/.test(textAfter)) return 0;
-      var tagAfter = textAfter && /^<(\/)?([\w_:\.-]*)/.exec(textAfter);
-      if (tagAfter && tagAfter[1]) { // Closing tag spotted
-        while (context) {
-          if (context.tagName == tagAfter[2]) {
-            context = context.prev;
-            break;
-          } else if (config.implicitlyClosed.hasOwnProperty(context.tagName)) {
-            context = context.prev;
-          } else {
-            break;
-          }
-        }
-      } else if (tagAfter) { // Opening tag spotted
-        while (context) {
-          var grabbers = config.contextGrabbers[context.tagName];
-          if (grabbers && grabbers.hasOwnProperty(tagAfter[2]))
-            context = context.prev;
-          else
-            break;
-        }
-      }
-      while (context && context.prev && !context.startOfLine)
-        context = context.prev;
-      if (context) return context.indent + indentUnit;
-      else return state.baseIndent || 0;
-    },
 
-    electricInput: /<\/[\s\w:]+>$/,
-    blockCommentStart: "<!--",
-    blockCommentEnd: "-->",
 
-    configuration: config.htmlMode ? "html" : "xml",
-    helperType: config.htmlMode ? "html" : "xml",
 
-    skipAttribute: function(state) {
-      if (state.state == attrValueState)
-        state.state = attrState
-    }
-  };
-});
 
-CodeMirror.defineMIME("text/xml", "xml");
-CodeMirror.defineMIME("application/xml", "xml");
-if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
-  CodeMirror.defineMIME("text/html", {name: "xml", htmlMode: true});
 
-});
+
+
+
+
+
+
+
+
+
+
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
