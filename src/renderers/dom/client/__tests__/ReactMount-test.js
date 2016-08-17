@@ -229,10 +229,10 @@ describe('ReactMount', function() {
     );
   });
 
-  it('should warn if the unmounted node was rendered by another instance', function() {
+  it('should warn if the unmounted node was rendered by another copy of React', function() {
     jest.resetModuleRegistry();
     var ReactDOMOther = require('ReactDOM');
-    var container = document.createElement('container');
+    var container = document.createElement('div');
 
     class Component extends React.Component {
       render() {
@@ -241,7 +241,7 @@ describe('ReactMount', function() {
     }
 
     ReactDOM.render(<Component />, container);
-    // Make sure ReactDOM and ReactDOMOther are different instances
+    // Make sure ReactDOM and ReactDOMOther are different copies
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
     spyOn(console, 'error');
@@ -249,10 +249,10 @@ describe('ReactMount', function() {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: unmountComponentAtNode(): The node you\'re attempting to unmount ' +
-      'was rendered by another React instance.'
+      'was rendered by another copy of React.'
     );
 
-    // Don't throw a warning if the correct React instance unmounts the node
+    // Don't throw a warning if the correct React copy unmounts the node
     ReactDOM.unmountComponentAtNode(container);
     expect(console.error.calls.count()).toBe(1);
   });

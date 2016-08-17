@@ -208,10 +208,10 @@ function hasNonRootReactChild(container) {
 
 /**
  * True if the supplied DOM node is a React DOM element and
- * it has been rendered by a different React instance.
+ * it has been rendered by another copy of React.
  *
  * @param {?DOMElement} node The candidate DOM node.
- * @return {boolean} True if the DOM has been rendered by a different React instance
+ * @return {boolean} True if the DOM has been rendered by another copy of React
  * @internal
  */
 function nodeIsRenderedByOtherInstance(container) {
@@ -226,7 +226,7 @@ function nodeIsRenderedByOtherInstance(container) {
  * @return {boolean} True if the DOM is a valid DOM node.
  * @internal
  */
-function isNodeElement(node) {
+function isValidContainer(node) {
   return !!(node && (
     node.nodeType === ELEMENT_NODE_TYPE ||
     node.nodeType === DOC_NODE_TYPE ||
@@ -242,7 +242,7 @@ function isNodeElement(node) {
  * @internal
  */
 function isReactNode(node) {
-  return isNodeElement(node) && (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
+  return isValidContainer(node) && (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
 }
 
 function getHostRootInstanceInContainer(container) {
@@ -368,7 +368,7 @@ var ReactMount = {
     );
 
     invariant(
-      isNodeElement(container),
+      isValidContainer(container),
       '_registerComponent(...): Target container is not a DOM element.'
     );
 
@@ -581,7 +581,7 @@ var ReactMount = {
     );
 
     invariant(
-      isNodeElement(container),
+      isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
 
@@ -589,7 +589,7 @@ var ReactMount = {
       warning(
         !nodeIsRenderedByOtherInstance(container),
         'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
-        'was rendered by another React instance.'
+        'was rendered by another copy of React.'
       );
     }
 
@@ -638,7 +638,7 @@ var ReactMount = {
     transaction
   ) {
     invariant(
-      isNodeElement(container),
+      isValidContainer(container),
       'mountComponentIntoNode(...): Target container is not valid.'
     );
 
