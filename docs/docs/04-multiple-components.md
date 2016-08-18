@@ -107,7 +107,7 @@ In most cases, this can be sidestepped by hiding elements instead of destroying 
 
 ### Dynamic Children
 
-The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a `key`:
+The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning a `key` property to the component:
 
 ```javascript
   render: function() {
@@ -115,12 +115,14 @@ The situation gets more complicated when the children are shuffled around (as in
     return (
       <ol>
         {results.map(function(result) {
-          return <li key={result.id}>{result.text}</li>;
+          return <ListItemWrapper key={result.id} data={result} />;
         })}
       </ol>
     );
   }
 ```
+
+React automatically reads the `key` property from a component, generates a unique identifier based on the value passed to it, and adds it to the associated DOM element.  
 
 When React reconciles the keyed children, it will ensure that any child with `key` will be reordered (instead of clobbered) or destroyed (instead of reused).
 
