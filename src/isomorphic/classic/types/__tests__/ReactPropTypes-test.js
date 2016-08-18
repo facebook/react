@@ -819,6 +819,82 @@ describe('ReactPropTypes', function() {
     });
   });
 
+  describe('Intersection Types', function() {
+    it("should fail for invalid argument", function() {
+      typeCheckFail(
+        PropTypes.allOfType(PropTypes.string, PropTypes.number),
+        'red',
+        'Invalid argument supplied to allOfType, expected an instance of array.'
+      );
+    });
+
+    it('should warn if none of the types are valid', function() {
+      typeCheckFail(
+        PropTypes.allOfType([PropTypes.string, PropTypes.number]),
+        [],
+        'Invalid prop `testProp` of type `array` supplied to `testComponent`, expected `string`.'
+      );
+
+      typeCheckFail(
+        PropTypes.allOfType([PropTypes.number, PropTypes.string]),
+        [],
+        'Invalid prop `testProp` of type `array` supplied to `testComponent`, expected `number`.'
+      );
+
+      var checker = PropTypes.allOfType([
+        PropTypes.shape({a: PropTypes.number.isRequired}),
+        PropTypes.shape({b: PropTypes.number.isRequired})
+      ]);
+      typeCheckFail(
+        checker,
+        {a: 1},
+        'Required prop `testProp.b` was not specified in `testComponent`.'
+      );
+      typeCheckFail(
+        checker,
+        {b: 1},
+        'Required prop `testProp.a` was not specified in `testComponent`.'
+      );
+    });
+
+    it('should not warn if all of the types are valid', function() {
+      var checker = PropTypes.allOfType([
+        PropTypes.number,
+        PropTypes.number
+      ]);
+      typeCheckPass(checker, null);
+      typeCheckPass(checker, 123);
+
+      checker = PropTypes.allOfType([
+        PropTypes.shape({a: PropTypes.number.isRequired}),
+        PropTypes.shape({b: PropTypes.number.isRequired})
+      ]);
+      typeCheckPass(checker, {a: 1, b: 1});
+    });
+
+    it("should be implicitly optional and not warn without values", function() {
+      typeCheckPass(
+        PropTypes.allOfType([PropTypes.string, PropTypes.string]), null
+      );
+      typeCheckPass(
+        PropTypes.allOfType([PropTypes.string, PropTypes.string]), undefined
+      );
+    });
+
+    it("should warn for missing required values", function() {
+      typeCheckFail(
+        PropTypes.allOfType([PropTypes.string, PropTypes.string]).isRequired,
+        null,
+        requiredMessage
+      );
+      typeCheckFail(
+        PropTypes.allOfType([PropTypes.string, PropTypes.string]).isRequired,
+        undefined,
+        requiredMessage
+      );
+    });
+  });
+
   describe('Union Types', function() {
     it('should warn but not error for invalid argument', function() {
       spyOn(console, 'error');

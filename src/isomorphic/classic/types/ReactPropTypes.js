@@ -84,6 +84,7 @@ var ReactPropTypes = {
   node: createNodeChecker(),
   objectOf: createObjectOfTypeChecker,
   oneOf: createEnumTypeChecker,
+  allOfType: createIntersectionTypeChecker,
   oneOfType: createUnionTypeChecker,
   shape: createShapeTypeChecker,
 };
@@ -340,6 +341,28 @@ function createObjectOfTypeChecker(typeChecker) {
         if (error instanceof Error) {
           return error;
         }
+      }
+    }
+    return null;
+  }
+  return createChainableTypeChecker(validate);
+}
+
+function createIntersectionTypeChecker(arrayOfTypeCheckers) {
+  if (!Array.isArray(arrayOfTypeCheckers)) {
+    return createChainableTypeChecker(function() {
+      return new Error(
+        `Invalid argument supplied to allOfType, expected an instance of array.`
+      );
+    });
+  }
+
+  function validate(props, propName, componentName, location, propFullName) {
+    for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
+      var checker = arrayOfTypeCheckers[i];
+      var error = checker(props, propName, componentName, location, propFullName);
+      if (error instanceof Error) {
+        return error;
       }
     }
     return null;
