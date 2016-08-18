@@ -139,17 +139,15 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
-var CheckLink = React.createClass({
+var AvatarRound = React.createClass({
   render: function() {
     // This takes any props passed to CheckLink and copies them to <a>
-    return <a {...this.props}>{'√ '}{this.props.children}</a>;
+    return <img {...this.props}/>;
   }
 });
 
 ReactDOM.render(
-  <CheckLink href="/checked.html">
-    Click here!
-  </CheckLink>,
+  <AvatarRound src="http://someapi.com/doe-jordan.png" width={30} height={30} />
   document.getElementById('example')
 );
 ```
