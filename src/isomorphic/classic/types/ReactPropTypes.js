@@ -68,8 +68,17 @@ var warning = require('warning');
 
 var ANONYMOUS = '<<anonymous>>';
 
+const SET_TAG = '[object Set]';
+const MAP_TAG = '[object Map]';
+const WEAKSET_TAG = '[object WeakSet]';
+const WEAKMAP_TAG = '[object WeakMap]';
+
 var ReactPropTypes = {
   array: createPrimitiveTypeChecker('array'),
+  set: createPrimitiveTypeChecker('set'),
+  weakSet: createPrimitiveTypeChecker('weakSet'),
+  map: createPrimitiveTypeChecker('map'),
+  weakMap: createPrimitiveTypeChecker('weakMap'),
   bool: createPrimitiveTypeChecker('boolean'),
   func: createPrimitiveTypeChecker('function'),
   number: createPrimitiveTypeChecker('number'),
@@ -79,6 +88,7 @@ var ReactPropTypes = {
 
   any: createAnyTypeChecker(),
   arrayOf: createArrayOfTypeChecker,
+  setOf: createSetOfTypeChecker,
   element: createElementTypeChecker(),
   instanceOf: createInstanceTypeChecker,
   node: createNodeChecker(),
@@ -218,6 +228,39 @@ function createPrimitiveTypeChecker(expectedType) {
 
 function createAnyTypeChecker() {
   return createChainableTypeChecker(emptyFunction.thatReturns(null));
+}
+
+function createSetOfTypeChecker(typeChecker) {
+  function validate(props, propName, componentName, location, propFullName) {
+    if (typeof typeChecker !== 'function') {
+      return new Error(
+        `Property \`${propFullName}\` of component \`${componentName}\` has invalid PropType notation inside setOf.`
+      );
+    }
+    var propValue = props[propName];
+    if (!isSet(propValue)) {
+      var locationName = ReactPropTypeLocationNames[location];
+      var propType = getPropType(propValue);
+      return new Error(
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${propType}\` supplied to \`${componentName}\`, expected a set.`
+      );
+    }
+    for (var i = 0, values = Array.from(propValue); i < values.length; i++) {
+      var error = typeChecker(
+        values,
+        i,
+        componentName,
+        location,
+        `${propFullName}[${i}]`
+      );
+      if (error instanceof Error) {
+        return error;
+      }
+    }
+    return null;
+  }
+  return createChainableTypeChecker(validate);
 }
 
 function createArrayOfTypeChecker(typeChecker) {
@@ -492,6 +535,22 @@ function isSymbol(propType, propValue) {
   return false;
 }
 
+function isSet(propValue) {
+  return propValue.toString() === SET_TAG;
+}
+
+function isMap(propValue) {
+  return propValue.toString() === MAP_TAG;
+}
+
+function isWeakSet(propValue) {
+  return propValue.toString() === WEAKSET_TAG;
+}
+
+function isWeakMap(propValue) {
+  return propValue.toString() === WEAKMAP_TAG;
+}
+
 // Equivalent of `typeof` but with special handling for array and regexp.
 function getPropType(propValue) {
   var propType = typeof propValue;
@@ -506,6 +565,18 @@ function getPropType(propValue) {
   }
   if (isSymbol(propType, propValue)) {
     return 'symbol';
+  }
+  if (isSet(propValue)) {
+    return 'set';
+  }
+  if (isMap(propValue)) {
+    return 'map';
+  }
+  if (isWeakSet(propValue)) {
+    return 'weakSet';
+  }
+  if (isWeakMap(propValue)) {
+    return 'weakMap';
   }
   return propType;
 }

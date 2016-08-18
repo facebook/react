@@ -149,6 +149,30 @@ describe('ReactPropTypes', function() {
         'Invalid prop `testProp` of type `symbol` supplied to ' +
         '`testComponent`, expected `string`.'
       );
+      typeCheckFail(
+        PropTypes.string,
+        new Set(),
+        'Invalid prop `testProp` of type `set` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
+      typeCheckFail(
+        PropTypes.string,
+        new Map(),
+        'Invalid prop `testProp` of type `map` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
+      typeCheckFail(
+        PropTypes.string,
+        new WeakSet(),
+        'Invalid prop `testProp` of type `weakSet` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
+      typeCheckFail(
+        PropTypes.string,
+        new WeakMap(),
+        'Invalid prop `testProp` of type `weakMap` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
     });
 
     it('should fail date and regexp correctly', function() {
@@ -176,6 +200,10 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.object, new Date());
       typeCheckPass(PropTypes.object, /please/);
       typeCheckPass(PropTypes.symbol, Symbol());
+      typeCheckPass(PropTypes.set, new Set());
+      typeCheckPass(PropTypes.map, new Map());
+      typeCheckPass(PropTypes.weakSet, new WeakSet());
+      typeCheckPass(PropTypes.weakMap, new WeakMap());
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -240,6 +268,10 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.any, 'str');
       typeCheckPass(PropTypes.any, []);
       typeCheckPass(PropTypes.any, Symbol());
+      typeCheckPass(PropTypes.any, new Set());
+      typeCheckPass(PropTypes.any, new Map());
+      typeCheckPass(PropTypes.any, new WeakSet());
+      typeCheckPass(PropTypes.any, new WeakMap());
     });
 
     it('should be implicitly optional and not warn without values', function() {
@@ -273,6 +305,10 @@ describe('ReactPropTypes', function() {
       typeCheckPass(PropTypes.arrayOf(PropTypes.string), ['a', 'b', 'c']);
       typeCheckPass(PropTypes.arrayOf(PropTypes.oneOf(['a', 'b'])), ['a', 'b']);
       typeCheckPass(PropTypes.arrayOf(PropTypes.symbol), [Symbol(), Symbol()]);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.set), [new Set(), new Set()]);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.map), [new Map(), new Map()]);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.weakSet), [new WeakSet(), new WeakSet()]);
+      typeCheckPass(PropTypes.arrayOf(PropTypes.weakMap), [new WeakMap(), new WeakMap()]);
     });
 
     it('should support arrayOf with complex types', function() {
@@ -361,6 +397,99 @@ describe('ReactPropTypes', function() {
       );
       expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number).isRequired, null);
       expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
+    });
+  });
+
+  describe('SetOf Type', function() {
+    it('should fail for invalid argument', function() {
+      typeCheckFail(
+        PropTypes.setOf({ foo: PropTypes.string }),
+        { foo: 'bar' },
+        'Property `testProp` of component `testComponent` has invalid PropType notation inside setOf.'
+      );
+    });
+
+    it('should support the setOf propTypes', function() {
+      typeCheckPass(PropTypes.setOf(PropTypes.number), new Set([1, 2, 3]));
+      typeCheckPass(PropTypes.setOf(PropTypes.string), new Set(['a', 'b', 'c']));
+      typeCheckPass(PropTypes.setOf(PropTypes.oneOf(['a', 'b']), new Set(['a', 'b'])));
+      typeCheckPass(PropTypes.setOf(PropTypes.symbol), new Set([Symbol(), Symbol()]));
+      typeCheckPass(PropTypes.setOf(PropTypes.set), new Set([new Set(), new Set()]));
+      typeCheckPass(PropTypes.setOf(PropTypes.map), new Set([new Map(), new Map()]));
+      typeCheckPass(PropTypes.setOf(PropTypes.weakSet), new Set([new WeakSet(), new WeakSet()]));
+      typeCheckPass(PropTypes.setOf(PropTypes.weakMap), new Set([new WeakMap(), new WeakMap()]));
+      typeCheckPass(PropTypes.setOf(PropTypes.array), new Set([['a', 'b', 'c'], ['d', 'e', 'f']]));
+    });
+
+    it('should support setOf with complex types', function() {
+      typeCheckPass(
+        PropTypes.setOf(PropTypes.shape({a: PropTypes.number.isRequired})),
+        new Set([{a: 1}, {a: 2}])
+      );
+
+      function Thing() {}
+      typeCheckPass(
+        PropTypes.setOf(PropTypes.instanceOf(Thing)),
+        new Set([new Thing(), new Thing()])
+      );
+    });
+
+    it('should warn with invalid items in the set', function() {
+      typeCheckFail(
+        PropTypes.setOf(PropTypes.number),
+        new Set([1, 2, 'b']),
+        'Invalid prop `testProp[2]` of type `string` supplied to ' +
+        '`testComponent`, expected `number`.'
+      );
+    });
+
+    it('should warn with invalid complex types', function() {
+      function Thing() {}
+      var name = Thing.name || '<<anonymous>>';
+
+      typeCheckFail(
+        PropTypes.setOf(PropTypes.instanceOf(Thing)),
+        new Set([new Thing(), 'xyz']),
+        'Invalid prop `testProp[1]` of type `String` supplied to ' +
+        '`testComponent`, expected instance of `' + name + '`.'
+      );
+    });
+
+    it('should warn when passed something other than a set', function() {
+      typeCheckFail(
+        PropTypes.setOf(PropTypes.number),
+        123,
+        'Invalid prop `testProp` of type `number` supplied to ' +
+        '`testComponent`, expected a set.'
+      );
+      typeCheckFail(
+        PropTypes.setOf(PropTypes.number),
+        'string',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected a set.'
+      );
+    });
+
+    it('should not warn when passing an empty set', function() {
+      typeCheckPass(PropTypes.setOf(PropTypes.number), new Set());
+    });
+
+    it('should be implicitly optional and not warn without values', function() {
+      typeCheckPass(PropTypes.setOf(PropTypes.number), null);
+      typeCheckPass(PropTypes.setOf(PropTypes.number), undefined);
+    });
+
+    it('should warn for missing required values', function() {
+      typeCheckFail(
+        PropTypes.setOf(PropTypes.number).isRequired,
+        null,
+        requiredMessage
+      );
+      typeCheckFail(
+        PropTypes.setOf(PropTypes.number).isRequired,
+        undefined,
+        requiredMessage
+      );
     });
   });
 
@@ -1021,6 +1150,110 @@ describe('ReactPropTypes', function() {
     it('should not warn for a polyfilled Symbol', function() {
       var CoreSymbol = require('core-js/library/es6/symbol');
       typeCheckPass(PropTypes.symbol, CoreSymbol('core-js'));
+    });
+  });
+
+  describe('Set Type', function() {
+    it('should warn for non-set', function() {
+      typeCheckFail(
+        PropTypes.set,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `set`.'
+      );
+      typeCheckFail(
+        PropTypes.set,
+        function() { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `set`.'
+      );
+      typeCheckFail(
+        PropTypes.set,
+        {
+          '@@iterator': 'Katana',
+        },
+        'Invalid prop `testProp` of type `object` supplied to ' +
+        '`testComponent`, expected `set`.'
+      );
+    });
+
+    it('should not warn for a polyfilled Set', function() {
+      var CoreSet = require('core-js/library/es6/set');
+      typeCheckPass(PropTypes.set, new CoreSet());
+    });
+  });
+
+  describe('WeakSet Type', function() {
+    it('should warn for non-weakSet', function() {
+      typeCheckFail(
+        PropTypes.weakSet,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `weakSet`.'
+      );
+      typeCheckFail(
+        PropTypes.weakSet,
+        function() { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `weakSet`.'
+      );
+    });
+
+    it('should not warn for a polyfilled WeakSet', function() {
+      var CoreWeakSet = require('core-js/library/es6/weak-set');
+      typeCheckPass(PropTypes.weakSet, new CoreWeakSet());
+    });
+  });
+
+  describe('Map Type', function() {
+    it('should warn for non-map', function() {
+      typeCheckFail(
+        PropTypes.map,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `map`.'
+      );
+      typeCheckFail(
+        PropTypes.map,
+        function() { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `map`.'
+      );
+      typeCheckFail(
+        PropTypes.map,
+        {
+          '@@iterator': 'Katana',
+        },
+        'Invalid prop `testProp` of type `object` supplied to ' +
+        '`testComponent`, expected `map`.'
+      );
+    });
+
+    it('should not warn for a polyfilled Map', function() {
+      var CoreMap = require('core-js/library/es6/map');
+      typeCheckPass(PropTypes.map, new CoreMap());
+    });
+  });
+
+  describe('WeakMap Type', function() {
+    it('should warn for non-weakMap', function() {
+      typeCheckFail(
+        PropTypes.weakMap,
+        'hello',
+        'Invalid prop `testProp` of type `string` supplied to ' +
+        '`testComponent`, expected `weakMap`.'
+      );
+      typeCheckFail(
+        PropTypes.weakMap,
+        function() { },
+        'Invalid prop `testProp` of type `function` supplied to ' +
+        '`testComponent`, expected `weakMap`.'
+      );
+    });
+
+    it('should not warn for a polyfilled WeakMap', function() {
+      var CoreWeakMap = require('core-js/library/es6/weak-map');
+      typeCheckPass(PropTypes.weakMap, new CoreWeakMap());
     });
   });
 
