@@ -51,6 +51,40 @@ describe('ReactElementClone', function() {
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
+  it('should clone a DOM component with function props', function() {
+    var SimpleEventPlugin = require('SimpleEventPlugin');
+
+    SimpleEventPlugin.didPutListener = jest.fn();
+
+    var Child = React.createClass({
+      render: function() {
+        return <a onClick={this.props.clickHandler} />;
+      },
+    });
+
+    var Grandparent = React.createClass({
+      render: function() {
+        return (<Parent>
+                  <Child />
+                </Parent>);
+      },
+    });
+
+    var Parent = React.createClass({
+      clickHandler: function() {},
+      render: function() {
+        return (
+          <div className="parent">
+            {React.cloneElement(this.props.children, { clickHandler: this.clickHandler})}
+          </div>
+        );
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<Grandparent />);
+    expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(1);
+  });
+
   it('should clone a composite component with new props', function() {
     var Child = React.createClass({
       render: function() {
