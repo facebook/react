@@ -59,7 +59,7 @@ We will be using GitHub Issues for our public bugs. We will keep a close eye on 
 
 ### Reporting New Issues
 
-The best way to get your bug fixed is to provide a reduced test case. jsFiddle, jsBin, and other sites provide a way to give live examples. Those are especially helpful though may not work for `JSX`-based code.
+The best way to get your bug fixed is to provide a reduced test case. jsFiddle, jsBin, and other sites provide a way to give live examples. Those are especially helpful but may not work for `JSX`-based code.
 
 ### Security Bugs
 
