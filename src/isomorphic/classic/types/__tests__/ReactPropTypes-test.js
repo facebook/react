@@ -448,6 +448,53 @@ describe('ReactPropTypes', function() {
 
   });
 
+  describe('Component of specific Type', function() {
+    beforeEach(function() {
+      ChildComponent = React.createClass({
+        render: function() {
+          return <div>Child</div>;
+        },
+      });
+      Component = React.createClass({
+        propTypes: {
+          childComponent: PropTypes.componentOf(ChildComponent).isRequired,
+        },
+
+        render: function() {
+          return <div>{this.props.childComponent}</div>;
+        },
+      });
+      spyOn(console, 'error');
+    });
+
+    it('should warn for invalid components', () => {
+      var instance = <Component childComponent={<div />} />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+
+      expect(console.error.argsForCall.length).toBe(1);
+    });
+
+    it('should warn when passing no component and isRequired is set', () => {
+      var instance = <Component />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+
+      expect(console.error.argsForCall.length).toBe(1);
+    });
+
+    it('should not warn for valid components', function() {
+      var instance = <Component childComponent={<ChildComponent />} />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+
+      expect(console.error.argsForCall.length).toBe(0);
+    });
+
+    it('should be implicitly optional and not warn without values', function() {
+      typeCheckPass(PropTypes.componentOf(ChildComponent), null);
+      typeCheckPass(PropTypes.componentOf(ChildComponent), undefined);
+    });
+
+  });
+
   describe('Instance Types', function() {
     it('should warn for invalid instances', function() {
       function Person() {}

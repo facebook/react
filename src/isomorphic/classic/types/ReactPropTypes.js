@@ -79,6 +79,7 @@ var ReactPropTypes = {
 
   any: createAnyTypeChecker(),
   arrayOf: createArrayOfTypeChecker,
+  componentOf: createComponentTypeChecker,
   element: createElementTypeChecker(),
   instanceOf: createInstanceTypeChecker,
   node: createNodeChecker(),
@@ -248,6 +249,24 @@ function createArrayOfTypeChecker(typeChecker) {
       if (error instanceof Error) {
         return error;
       }
+    }
+    return null;
+  }
+  return createChainableTypeChecker(validate);
+}
+
+function createComponentTypeChecker(expectedComponent) {
+  function validate(props, propName, componentName, location, propFullName) {
+    if (!ReactElement.isValidElement(props[propName]) || props[propName].type !== expectedComponent) {
+      var locationName = ReactPropTypeLocationNames[location];
+      var expectedComponentName = expectedComponent && expectedComponent.name || expectedComponent.displayName || ANONYMOUS;
+
+      var actualComponentName = getClassName(props[propName]);
+      return new Error(
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${actualComponentName}\` supplied to \`${componentName}\`, expected ` +
+        `component of type \`${expectedComponentName}\`.`
+      );
     }
     return null;
   }
