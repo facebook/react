@@ -85,13 +85,16 @@ function update(value, spec) {
       'Cannot have more than one key in an object with %s',
       COMMAND_SET
     );
-
     return spec[COMMAND_SET];
   }
 
-  var nextValue = shallowCopy(value);
+  // Make sure to shallowCopy() it before mutations
+  var nextValue = value;
 
   if (hasOwnProperty.call(spec, COMMAND_MERGE)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     var mergeObj = spec[COMMAND_MERGE];
     invariant(
       mergeObj && typeof mergeObj === 'object',
@@ -109,6 +112,9 @@ function update(value, spec) {
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     invariantArrayCase(value, spec, COMMAND_PUSH);
     spec[COMMAND_PUSH].forEach(function(item) {
       nextValue.push(item);
@@ -116,6 +122,9 @@ function update(value, spec) {
   }
 
   if (hasOwnProperty.call(spec, COMMAND_UNSHIFT)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     invariantArrayCase(value, spec, COMMAND_UNSHIFT);
     spec[COMMAND_UNSHIFT].forEach(function(item) {
       nextValue.unshift(item);
@@ -123,6 +132,9 @@ function update(value, spec) {
   }
 
   if (hasOwnProperty.call(spec, COMMAND_SPLICE)) {
+    if (nextValue === value) {
+      nextValue = shallowCopy(value);
+    }
     invariant(
       Array.isArray(value),
       'Expected %s target to be an array; got %s',
@@ -160,7 +172,15 @@ function update(value, spec) {
 
   for (var k in spec) {
     if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
-      nextValue[k] = update(value[k], spec[k]);
+      var nextValueForKey = update(value[k], spec[k]);
+      if (nextValueForKey === value[k]) {
+        continue;
+      }
+
+      if (nextValue === value) {
+        nextValue = shallowCopy(value);
+      }
+      nextValue[k] = nextValueForKey;
     }
   }
 

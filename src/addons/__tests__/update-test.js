@@ -115,6 +115,11 @@ describe('update', function() {
       update(obj, {$set: {c: 'd'}});
       expect(obj).toEqual({a: 'b'});
     });
+    it('keeps reference equality when possible', function() {
+      var original = {a: 1};
+      expect(update(original, {a: {$set: 1}})).toBe(original);
+      expect(update(original, {a: {$set: 2}})).toNotBe(original);
+    });
   });
 
   describe('$apply', function() {
@@ -134,38 +139,82 @@ describe('update', function() {
         'update(): expected spec of $apply to be a function; got 123.'
       );
     });
+    it('keeps reference equality when possible', function() {
+      var original = {a: {b: {}}};
+      function identity(val) {
+        return val;
+      }
+      expect(update(original, {a: {$apply: identity}})).toBe(original);
+      expect(update(original, {a: {$apply: applier}})).toNotBe(original);
+    });
   });
 
-  it('should support deep updates', function() {
-    expect(update({
-      a: 'b',
-      c: {
-        d: 'e',
-        f: [1],
-        g: [2],
-        h: [3],
-        i: {j: 'k'},
-        l: 4,
-      },
-    }, {
-      c: {
-        d: {$set: 'm'},
-        f: {$push: [5]},
-        g: {$unshift: [6]},
-        h: {$splice: [[0, 1, 7]]},
-        i: {$merge: {n: 'o'}},
-        l: {$apply: (x) => x * 2},
-      },
-    })).toEqual({
-      a: 'b',
-      c: {
-        d: 'm',
-        f: [1, 5],
-        g: [6, 2],
-        h: [7],
-        i: {j: 'k', n: 'o'},
-        l: 8,
-      },
+  describe('deep update', function() {
+    it('works', function() {
+      expect(update({
+        a: 'b',
+        c: {
+          d: 'e',
+          f: [1],
+          g: [2],
+          h: [3],
+          i: {j: 'k'},
+          l: 4,
+        },
+      }, {
+        c: {
+          d: {$set: 'm'},
+          f: {$push: [5]},
+          g: {$unshift: [6]},
+          h: {$splice: [[0, 1, 7]]},
+          i: {$merge: {n: 'o'}},
+          l: {$apply: (x) => x * 2},
+        },
+      })).toEqual({
+        a: 'b',
+        c: {
+          d: 'm',
+          f: [1, 5],
+          g: [6, 2],
+          h: [7],
+          i: {j: 'k', n: 'o'},
+          l: 8,
+        },
+      });
+    });
+    it('keeps reference equality when possible', function() {
+      var original = {a: {b: 1}, c: {d: {e: 1}}};
+
+      expect(update(original, {a: {b: {$set: 1}}})).toBe(original);
+      expect(update(original, {a: {b: {$set: 1}}}).a).toBe(original.a);
+
+      expect(update(original, {c: {d: {e: {$set: 1}}}})).toBe(original);
+      expect(update(original, {c: {d: {e: {$set: 1}}}}).c).toBe(original.c);
+      expect(update(original, {c: {d: {e: {$set: 1}}}}).c.d).toBe(original.c.d);
+
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      })).toBe(original);
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      }).a).toBe(original.a);
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      }).c).toBe(original.c);
+      expect(update(original, {
+        a: {b: {$set: 1}},
+        c: {d: {e: {$set: 1}}},
+      }).c.d).toBe(original.c.d);
+
+      expect(update(original, {a: {b: {$set: 2}}})).toNotBe(original);
+      expect(update(original, {a: {b: {$set: 2}}}).a).toNotBe(original.a);
+      expect(update(original, {a: {b: {$set: 2}}}).a.b).toNotBe(original.a.b);
+
+      expect(update(original, {a: {b: {$set: 2}}}).c).toBe(original.c);
+      expect(update(original, {a: {b: {$set: 2}}}).c.d).toBe(original.c.d);
     });
   });
 
