@@ -75,6 +75,14 @@ describe('ReactComponent', function() {
     );
   });
 
+  it('should not warn when children is NaN', function() {
+    spyOn(console, 'error');
+    var children = [<span key={0} />, NaN, <span key={2} />];
+    var element = <div>{children}</div>;
+    ReactTestUtils.renderIntoDocument(element);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
   it('should support refs on owned components', function() {
     var innerObj = {};
     var outerObj = {};

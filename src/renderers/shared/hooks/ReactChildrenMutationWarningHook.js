@@ -13,6 +13,8 @@
 
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
+var is = require('object-is');
+
 var warning = require('warning');
 
 function handleElement(debugID, element) {
@@ -29,7 +31,7 @@ function handleElement(debugID, element) {
   if (Array.isArray(element._shadowChildren)) {
     if (element._shadowChildren.length === element.props.children.length) {
       for (var i = 0; i < element._shadowChildren.length; i++) {
-        if (element._shadowChildren[i] !== element.props.children[i]) {
+        if (!is(element._shadowChildren[i], element.props.children[i])) {
           isMutated = true;
         }
       }
