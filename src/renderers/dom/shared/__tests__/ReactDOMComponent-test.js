@@ -197,6 +197,18 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.count()).toBe(0);
     });
 
+    it('should not warn for "content" style values', function() {
+      spyOn(console, 'error');
+      var Component = React.createClass({
+        render: function() {
+          return <div style={{content: ' '}}><span style={{content: '1'}}></span></div>;
+        },
+      });
+
+      ReactTestUtils.renderIntoDocument(<Component />);
+      expect(console.error.calls.count()).toBe(0);
+    });
+
     it('should warn nicely about NaN in style', function() {
       spyOn(console, 'error');
 
