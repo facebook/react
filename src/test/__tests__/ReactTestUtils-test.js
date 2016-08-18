@@ -374,6 +374,17 @@ describe('ReactTestUtils', function() {
     expect(scryResults5.length).toBe(0);
   });
 
+  it('Test findRenderedDOMComponentWithId', function() {
+    var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span id="example">Jim</span></div>);
+    var result = ReactTestUtils.findRenderedDOMComponentWithId(
+      renderedComponent,
+      'example'
+    );
+    expect(result.tagName).toBe('SPAN');
+    expect(result.props.children).toEqual('Jim')
+
+  });
+
   it('traverses children in the correct order', function() {
     class Wrapper extends React.Component {
       render() {
