@@ -1,6 +1,35 @@
-# [React](https://facebook.github.io/react/) [![Build Status](https://img.shields.io/travis/facebook/react/master.svg?style=flat)](https://travis-ci.org/facebook/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md#pull-requests)
+<h1 align="center">
+  <a href="https://facebook.github.io/react/"><img src="https://github.com/facebook/react/blob/master/docs/img/logo_og.png?raw=true" alt="React" width="200"></a>
+  <br>
+  <a href="https://facebook.github.io/react/">React</a>
+  <br>
+</h1>
 
-React is a JavaScript library for building user interfaces.
+<h4 align="center">A JavaScript library for building user interfaces.</h4>
+
+<p align="center">
+  <a href="https://coveralls.io/github/facebook/react?branch=master">
+    <img src="https://img.shields.io/coveralls/facebook/react/master.svg?style=flat"
+         alt="Coverage Status">
+  </a>
+  <a href="https://travis-ci.org/facebook/react">
+    <img src="https://img.shields.io/travis/facebook/react/master.svg?style=flat"
+         alt="Build Status">
+  </a>
+  <a href="https://coveralls.io/github/facebook/react?branch=master">
+    <img src="https://img.shields.io/coveralls/facebook/react/master.svg?style=flat"
+         alt="Coverage Status">
+  </a>
+  <a href="https://www.npmjs.com/package/react">
+    <img src="https://img.shields.io/npm/v/react.svg?style=flat"
+         alt="npm Version">
+  </a>
+    <a href="CONTRIBUTING.md#pull-requests">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"
+         alt="PRs Welcome">
+  </a>
+</p>
+<br>
 
 * **Declarative:** React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes. Declarative views make your code more predictable, simpler to understand, and easier to debug.
 * **Component-Based:** Build encapsulated components that manage their own state, then compose them to make complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep state out of the DOM.
@@ -96,7 +125,7 @@ grunt clean
 ```
 
 ### Good First Bug
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix.  This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 
 ### License
