@@ -114,7 +114,7 @@ var ReactTransitionGroup = React.createClass({
   performAppear: function(key) {
     this.currentlyTransitioningKeys[key] = true;
 
-    var component = this.refs[key];
+    var component = this.refs[key] || {};
 
     if (component.componentWillAppear) {
       component.componentWillAppear(
@@ -126,7 +126,7 @@ var ReactTransitionGroup = React.createClass({
   },
 
   _handleDoneAppearing: function(key) {
-    var component = this.refs[key];
+    var component = this.refs[key] || {};
     if (component.componentDidAppear) {
       component.componentDidAppear();
     }
@@ -154,7 +154,7 @@ var ReactTransitionGroup = React.createClass({
   performEnter: function(key) {
     this.currentlyTransitioningKeys[key] = true;
 
-    var component = this.refs[key];
+    var component = this.refs[key] || {};
 
     if (component.componentWillEnter) {
       component.componentWillEnter(
@@ -166,7 +166,7 @@ var ReactTransitionGroup = React.createClass({
   },
 
   _handleDoneEntering: function(key) {
-    var component = this.refs[key];
+    var component = this.refs[key] || {};
     if (component.componentDidEnter) {
       component.componentDidEnter();
     }
@@ -194,7 +194,7 @@ var ReactTransitionGroup = React.createClass({
   performLeave: function(key) {
     this.currentlyTransitioningKeys[key] = true;
 
-    var component = this.refs[key];
+    var component = this.refs[key] || {};
     if (component.componentWillLeave) {
       component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
     } else {
@@ -206,7 +206,7 @@ var ReactTransitionGroup = React.createClass({
   },
 
   _handleDoneLeaving: function(key) {
-    var component = this.refs[key];
+    var component = this.refs[key] || {};
 
     if (component.componentDidLeave) {
       component.componentDidLeave();
