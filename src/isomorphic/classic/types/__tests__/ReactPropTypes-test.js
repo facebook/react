@@ -448,6 +448,45 @@ describe('ReactPropTypes', function() {
 
   });
 
+  describe('ElementOf Type', function() {
+    it('should warn for invalid instances', function() {
+      typeCheckFail(
+        PropTypes.elementOf('svg'),
+        [<svg />, <svg />],
+        'Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.elementOf('svg'),
+        123,
+        'Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.elementOf('svg'),
+        'foo',
+        'Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.elementOf('svg'),
+        false,
+        'Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a single ReactElement.'
+      );
+      typeCheckFail(
+        PropTypes.elementOf('svg'),
+        <span />,
+        'Invalid prop `testProp` of type `span` supplied to ' +
+        '`testComponent`, expected type of `svg`.'
+      );
+    });
+
+    it('should not warn for valid values', function() {
+      typeCheckPass(PropTypes.elementOf('svg'), <svg />);
+    });
+  });
+
   describe('Instance Types', function() {
     it('should warn for invalid instances', function() {
       function Person() {}

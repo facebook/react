@@ -80,6 +80,7 @@ var ReactPropTypes = {
   any: createAnyTypeChecker(),
   arrayOf: createArrayOfTypeChecker,
   element: createElementTypeChecker(),
+  elementOf: createElementOfTypeChecker,
   instanceOf: createInstanceTypeChecker,
   node: createNodeChecker(),
   objectOf: createObjectOfTypeChecker,
@@ -263,6 +264,29 @@ function createElementTypeChecker() {
       return new PropTypeError(
         `Invalid ${locationName} \`${propFullName}\` of type ` +
         `\`${propType}\` supplied to \`${componentName}\`, expected a single ReactElement.`
+      );
+    }
+    return null;
+  }
+  return createChainableTypeChecker(validate);
+}
+
+function createElementOfTypeChecker(expectedType) {
+  function validate(props, propName, componentName, location, propFullName) {
+    var error = createElementTypeChecker()(
+      props, propName, componentName, location, propFullName
+    );
+    if (error) {
+      return error;
+    }
+    var propType = props[propName].type;
+    var actualType = propType.displayName || propType.name || propType;
+    if (actualType !== expectedType) {
+      var locationName = ReactPropTypeLocationNames[location];
+      return new Error(
+        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `\`${actualType}\` supplied to \`${componentName}\`, expected ` +
+        `type of \`${expectedType}\`.`
       );
     }
     return null;
