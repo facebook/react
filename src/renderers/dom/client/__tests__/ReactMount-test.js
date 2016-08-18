@@ -229,6 +229,34 @@ describe('ReactMount', function() {
     );
   });
 
+  it('should warn if the unmounted node was rendered by another copy of React', function() {
+    jest.resetModuleRegistry();
+    var ReactDOMOther = require('ReactDOM');
+    var container = document.createElement('div');
+
+    class Component extends React.Component {
+      render() {
+        return <div><div /></div>;
+      }
+    }
+
+    ReactDOM.render(<Component />, container);
+    // Make sure ReactDOM and ReactDOMOther are different copies
+    expect(ReactDOM).not.toEqual(ReactDOMOther);
+
+    spyOn(console, 'error');
+    ReactDOMOther.unmountComponentAtNode(container);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+      'was rendered by another copy of React.'
+    );
+
+    // Don't throw a warning if the correct React copy unmounts the node
+    ReactDOM.unmountComponentAtNode(container);
+    expect(console.error.calls.count()).toBe(1);
+  });
+
   it('passes the correct callback context', function() {
     var container = document.createElement('div');
     var calls = 0;
