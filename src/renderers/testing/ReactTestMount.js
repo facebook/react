@@ -122,6 +122,9 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
 };
 ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
+  if (inst === null) {
+    return null;
+  }
   return inst.toJSON();
 };
 

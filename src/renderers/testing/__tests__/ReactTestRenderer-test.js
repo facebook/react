@@ -28,6 +28,14 @@ describe('ReactTestRenderer', function() {
     });
   });
 
+  it('renders a top-level empty component', function() {
+    function Empty() {
+      return null;
+    }
+    var renderer = ReactTestRenderer.create(<Empty />);
+    expect(renderer.toJSON()).toEqual(null);
+  });
+
   it('exposes a type flag', function() {
     function Link() {
       return <a role="link" />;
