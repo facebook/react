@@ -35,12 +35,12 @@ The fastest way to get started is to serve JavaScript from a CDN. We're using [n
 
 ```html
 <!-- The core React library -->
-<script src="https://npmcdn.com/react@15.3.0/dist/react.js"></script>
+<script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
 <!-- The ReactDOM Library -->
-<script src="https://npmcdn.com/react-dom@15.3.0/dist/react-dom.js"></script>
+<script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.3.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.3.1.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
