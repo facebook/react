@@ -434,7 +434,7 @@
     <p><code>&lt;input&gt;</code> や <code>&lt;textarea&gt;</code> や <code>&lt;option&gt;</code> のようなフォームのコンポーネントはユーザの入力によって変化しうるので、他のネイティブのコンポーネントとは異なります。以下のコンポーネントは、ユーザの入力に返答することにおいて、フォームを操作することを簡単にするインターフェースを提供します。</p>
 
 <p><code>&lt;form&gt;</code> のイベントについての情報は、<a href="/react/docs/events.html#form-events">フォームのイベント</a>をご覧ください。</p>
-<h2><a class="anchor" name="props"></a>双方向のprops <a class="hash-link" href="#props">#</a></h2>
+<h2><a class="anchor" name="双方向のprops"></a>双方向のprops <a class="hash-link" href="#双方向のprops">#</a></h2>
 <p>以下のように、フォームのコンポーネントはユーザの入力に影響されるいくつかのpropsをサポートしています。</p>
 
 <ul>
@@ -459,7 +459,7 @@
 <p>注意:
 <code>&lt;input&gt;</code> と <code>&lt;textarea&gt;</code> にとって、 <code>onChange</code> は DOMのビルトインの <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> イベントハンドラの代替のものです。そして、一般的に、代わりに使われています。</p>
 </blockquote>
-<h2><a class="anchor" name=""></a>制御されたコンポーネント <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="制御されたコンポネント"></a>制御されたコンポーネント <a class="hash-link" href="#制御されたコンポネント">#</a></h2>
 <p><code>&lt;input&gt;</code> と <code>value</code> のセットは <em>制御された</em> コンポーネントです。制御された <code>&lt;input&gt;</code> では、レンダリングされた要素の値は、常に <code>value</code> propを反映します。例えば、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -483,7 +483,7 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>上記はユーザのinputを受け入れますが、値を最初の140字に切り取ります。</p>
-<h2><a class="anchor" name=""></a>制御されないコンポーネント <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="制御されないコンポネント"></a>制御されないコンポーネント <a class="hash-link" href="#制御されないコンポネント">#</a></h2>
 <p><code>value</code> を与えられていない（もしくは <code>null</code> がセットされている） <code>&lt;input&gt;</code> は <em>制御されない</em> コンポーネントです。制御されない <code>&lt;input&gt;</code> では、レンダリングされた要素の値はユーザのinputを反映します。例えば、</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -499,7 +499,7 @@
 <p>この例は、上記の <strong>制御されたコンポーネント</strong> の例と同じように動くでしょう。</p>
 
 <p>同様に、 <code>&lt;input&gt;</code> は <code>defaultChecked</code> をサポートし、 <code>&lt;select&gt;</code> は <code>defaultValue</code> をサポートします。</p>
-<h2><a class="anchor" name=""></a>高度なトピック <a class="hash-link" href="#">#</a></h2><h3><a class="anchor" name=""></a>なぜコントロールされたコンポーネントを使うのでしょうか？ <a class="hash-link" href="#">#</a></h3>
+<h2><a class="anchor" name="高度なトピック"></a>高度なトピック <a class="hash-link" href="#高度なトピック">#</a></h2><h3><a class="anchor" name="なぜコントロルされたコンポネントを使うのでしょうか"></a>なぜコントロールされたコンポーネントを使うのでしょうか？ <a class="hash-link" href="#なぜコントロルされたコンポネントを使うのでしょうか">#</a></h3>
 <p><code>&lt;input&gt;</code> のようなフォームのコンポーネントをReactで使うことは、伝統的なHTMLのフォームを書いた時には無視される表現であることを表します。例えば、HTMLでは、</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
@@ -511,7 +511,7 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>このメソッドがいつでもビューを描画するので、次のテキストの入力の値は <em>常に</em> <code>Untitled</code> になります。</p>
-<h3><a class="anchor" name=""></a>なぜテキストエリアの値を使うのでしょうか？ <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="なぜテキストエリアの値を使うのでしょうか"></a>なぜテキストエリアの値を使うのでしょうか？ <a class="hash-link" href="#なぜテキストエリアの値を使うのでしょうか">#</a></h3>
 <p>HTMLでは、 <code>&lt;textarea&gt;</code> の値は普通、以下のようにその子要素を使うことでセットされます。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 反例: このようにはしないでください！ --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
@@ -520,7 +520,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>子要素を使うことを <em>決めた</em> 場合は、 <code>defaultValue</code> と同様の動きをします。</p>
-<h3><a class="anchor" name=""></a>なぜセレクトバリューを使うのでしょうか？ <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="なぜセレクトバリュを使うのでしょうか"></a>なぜセレクトバリューを使うのでしょうか？ <a class="hash-link" href="#なぜセレクトバリュを使うのでしょうか">#</a></h3>
 <p>HTMLの <code>&lt;select&gt;</code> の選択された <code>&lt;option&gt;</code> は、普通はオプションの <code>selected</code> 属性によって指定されます。Reactでは、コンポーネントの操作を簡単にするために、以下のようなフォーマットが代わりに適用されます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>

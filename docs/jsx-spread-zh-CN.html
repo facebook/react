@@ -433,7 +433,7 @@
 
     <p>如果你事先知道组件需要的全部 Props（属性），JSX 很容易地这样写：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="nx">x</span><span class="p">}</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="nx">y</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h2><a class="anchor" name="-props-"></a>修改 Props 是不好的，明白吗 <a class="hash-link" href="#-props-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="修改-props-是不好的明白吗"></a>修改 Props 是不好的，明白吗 <a class="hash-link" href="#修改-props-是不好的明白吗">#</a></h2>
 <p>如果你不知道要设置哪些 Props，那么现在最好不要设置它：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="c1">// 不好</span>
@@ -442,7 +442,7 @@
 <p>这样是反模式，因为 React 不能帮你检查属性类型（propTypes）。这样即使你的 属性类型有错误也不能得到清晰的错误提示。</p>
 
 <p>Props 应该被认为是不可变的。在别处修改 props 对象可能会导致预料之外的结果，所以原则上这将是一个冻结的对象。</p>
-<h2><a class="anchor" name="spread-attributes"></a>展开属性（Spread Attributes） <a class="hash-link" href="#spread-attributes">#</a></h2>
+<h2><a class="anchor" name="展开属性spread-attributes"></a>展开属性（Spread Attributes） <a class="hash-link" href="#展开属性spread-attributes">#</a></h2>
 <p>现在你可以使用 JSX 的新特性 - 展开属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
   <span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
@@ -455,7 +455,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;default&#39;</span> <span class="p">};</span>
   <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;override&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span><span class="p">);</span> <span class="c1">// &#39;override&#39;</span>
-</code></pre></div><h2><a class="anchor" name="-...-"></a>这个奇怪的 <code>...</code> 标记是什么？ <a class="hash-link" href="#-...-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="这个奇怪的-...-标记是什么"></a>这个奇怪的 <code>...</code> 标记是什么？ <a class="hash-link" href="#这个奇怪的-...-标记是什么">#</a></h2>
 <p>这个 <code>...</code> 操作符（增强的操作符）已经被 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">ES6 数组</a> 支持。相关的还有 ECMAScript 规范草案中的 <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">Object 剩余和展开属性（Rest and Spread Properties）</a>。我们利用了这些还在制定中标准中已经被支持的特性来使 JSX 拥有更优雅的语法。</p>
 
 

@@ -436,7 +436,7 @@
 <p>제가 생각하기에, React는 JavaScript로 크고 빠른 웹 애플리케이션을 만드는데 최고입니다. 페이스북과 인스타그램에서 우리에게 잘 맞도록 조정되어 왔습니다.</p>
 
 <p>React의 많은 뛰어난 점들 중 하나는 생각을 하면서 애플리케이션을 만들게 한다는 겁니다. 이 포스트에서, React를 이용해 검색이 가능한 상품자료 테이블을 만드는 생각 과정을 이해할 수 있게 차근차근 설명할 겁니다.</p>
-<h2><a class="anchor" name="-"></a>모형으로 시작해보기 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="모형으로-시작해보기"></a>모형으로 시작해보기 <a class="hash-link" href="#모형으로-시작해보기">#</a></h2>
 <p>우리가 이미 JSON API와 디자이너로부터 넘겨받은 모형을 이미 가지고 있다고 생각해봅시다. 보시다시피 우리 디자이너는 별로 좋지 않습니다:</p>
 
 <p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
@@ -450,7 +450,7 @@
   {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
   {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
 ];
-</code></pre></div><h2><a class="anchor" name="1-ui----."></a>1단계: UI를 계층 구조의 컴포넌트로 분쇄하세요. <a class="hash-link" href="#1-ui----.">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="1단계-ui를-계층-구조의-컴포넌트로-분쇄하세요."></a>1단계: UI를 계층 구조의 컴포넌트로 분쇄하세요. <a class="hash-link" href="#1단계-ui를-계층-구조의-컴포넌트로-분쇄하세요.">#</a></h2>
 <p>당신이 하고싶은 첫번째는 모형에 있는 모든 컴포넌트 (그리고 자식엘리먼트) 주위에 상자를 그리고, 이름을 부여하는 것입니다. 만약 당신이 디자이너와 같이 작업중이라면, 그들은 이미 이 작업을 해놨을지도 모릅니다. 당장 가서 이야기해보세요. 그들의 포토샵 레이어 이름이 결국 당신의 React 컴포넌트들의 이름이 될 것입니다.</p>
 
 <p>그런데 무엇이 컴포넌트가 되어야 할까요? 당신이 새로운 함수나 객체를 만들어야만 한다면, 똑같이 적용하세요. 한가지 방법은 <a href="http://ko.wikipedia.org/wiki/%EB%8B%A8%EC%9D%BC_%EC%B1%85%EC%9E%84_%EC%9B%90%EC%B9%99">단일 책임의 원칙</a> 입니다. 즉 하나의 컴포넌트는 이상적으로 한가지 작업만 수행해야 합니다. 컴포넌트가 결국 커진다면, 작은 자식 컴포넌트로 쪼개져야 합니다.</p>
@@ -486,7 +486,7 @@
 </ul></li>
 </ul></li>
 </ul>
-<h2><a class="anchor" name="2---."></a>2단계: 정적 버전을 만드세요. <a class="hash-link" href="#2---.">#</a></h2>
+<h2><a class="anchor" name="2단계-정적-버전을-만드세요."></a>2단계: 정적 버전을 만드세요. <a class="hash-link" href="#2단계-정적-버전을-만드세요.">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>계층구조의 컴포넌트들을 가지고 있으니, 이젠 애플리케이션을 구현할 시간입니다. 가장 쉬운 방법은 상호작용을 하지 않는 채로 자료 모델을 이용해 UI를 그리는 것입니다. 정적 버전을 만드는 데에는 적은 생각과 많은 노동이 필요하고, 상호작용을 추가하는 데에는 많은 생각과 적은 노동이 필요하기 때문에 둘을 분리하는 것이 가장 좋습니다. 왜 그런지 봅시다.</p>
@@ -498,9 +498,9 @@
 <p>이 단계의 결과, 자료 모델을 그리는 재활용 가능한 컴포넌트의 라이브러리를 갖게 되었습니다. 정적버전 이후로 컴포넌트들은 오직 <code>render()</code> 메소드만 갖고 있습니다. 계층구조상 가장 위의 컴포넌트 (<code>FilterableProductTable</code>)은 자료 모델을 prop으로 취할 것입니다. 자료 모델이 변했을 때, <code>ReactDOM.render()</code>를 다시 부르면 UI가 업데이트 됩니다. 어떻게 UI가 업데이트 되는지 참 알기 쉽습니다. 자료가 바뀌어도 처리해야 할 복잡한 일이 아무것도 없습니다. React의 <strong>단일 방향 자료 흐름</strong> (혹은 <em>단일방향 바인딩</em>)이 모든것을 모듈식으로, 추론하기 쉽게, 그리고 빠르게 유지해줍니다.</p>
 
 <p>이 단계를 진행하는 데에 도움이 필요하시다면, <a href="/react/docs/getting-started-ko-KR.html">React 문서</a>를 참조하세요.</p>
-<h3><a class="anchor" name="-props-vs-state"></a>잠시만: props vs state <a class="hash-link" href="#-props-vs-state">#</a></h3>
+<h3><a class="anchor" name="잠시만-props-vs-state"></a>잠시만: props vs state <a class="hash-link" href="#잠시만-props-vs-state">#</a></h3>
 <p>React 에는 두가지 타입의 자료 &quot;모델&quot;이 있습니다: props 와 state. 두가지의 구분점을 이해하는데 매우 중요합니다; 혹시 차이점을 확신하지 못한다면 걷어내세요 <a href="/react/docs/interactivity-and-dynamic-uis-ko-KR.html">공식 문서</a>.</p>
-<h2><a class="anchor" name="3-ui-state-----."></a>3단계: UI state 의 표현을 작지만 완전하도록 확인하세요. <a class="hash-link" href="#3-ui-state-----.">#</a></h2>
+<h2><a class="anchor" name="3단계-ui-state-의-표현을-작지만-완전하도록-확인하세요."></a>3단계: UI state 의 표현을 작지만 완전하도록 확인하세요. <a class="hash-link" href="#3단계-ui-state-의-표현을-작지만-완전하도록-확인하세요.">#</a></h2>
 <p>상호적인 UI를 만들기 위해서는, 자료 모델 변화에 반응할 수 있어야 합니다. React는 <strong>state</strong>로 이걸 쉽게 만들어주죠.</p>
 
 <p>올바르게 애플리케이션을 만들기 위해서는, 첫째로 애플리케이션에 필요한 변할 수 있는 state 들의 최소한의 집합에 대해서 생각해볼 필요가 있습니다. 여기 방법이 있습니다: <em>스스로 반복하지 마세요</em> (DRY). 애플리케이션의 상태를 나타낼 수 있는 가장 최소한의 표현 방식을 찾고, 그 밖의 것은 필요할 때 계산합니다. 예를들어 TODO 목록를 만든다고 칩시다. TODO 아이템들의 배열만 유지하세요; 갯수를 표현하기 위한 state 변수를 분리하지 마세요. 대신 TODO 아이템들 배열의 길이를 이용하세요.</p>
@@ -530,7 +530,7 @@
 <li>사용자가 입력한 검색어</li>
 <li>체크박스의 값</li>
 </ul>
-<h2><a class="anchor" name="4--state---."></a>4단계: 어디서 state가 유지되어야 하는지 확인하세요. <a class="hash-link" href="#4--state---.">#</a></h2>
+<h2><a class="anchor" name="4단계-어디서-state가-유지되어야-하는지-확인하세요."></a>4단계: 어디서 state가 유지되어야 하는지 확인하세요. <a class="hash-link" href="#4단계-어디서-state가-유지되어야-하는지-확인하세요.">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>이제 최소한의 state가 무엇인지 알아냈습니다. 다음은, 어떤 컴포넌트가 이 state를 변형하거나 만들어낼지 알아내야 합니다.</p>
@@ -557,7 +557,7 @@
 <p>좋습니다. state를 <code>FilterableProductTable</code>에서 관리하도록 결정했습니다. 먼저, <code>getInitialState()</code> 메소드를 <code>FilterableProductTable</code>에 추가하세요. 이 메소드는 애플리케이션의 초기 state를 갖도록 <code>{filterText: &#39;&#39;, inStockOnly: false}</code>를 리턴하면 됩니다. 그리고, <code>filterText</code>와 <code>inStockOnly</code> 를 <code>ProductTable</code>과 <code>SearchBar</code>에 prop으로 전달하세요. 마지막으로, 이 prop들을 <code>ProductTable</code>을 걸러내는 데, 그리고 <code>SearchBar</code> form fields의 값을 세팅하는데 사용하세요.</p>
 
 <p>이제 어떻게 애플리케이션이 동작하는지 볼 수 있습니다: <code>filterText</code>를 <code>&quot;ball&quot;</code>로 설정하고 업데이트합니다. 자료 테이블이 제대로 업데이트 되는 것을 볼 수 있을 겁니다.</p>
-<h2><a class="anchor" name="5----."></a>5단계: 반대방향 자료 흐름을 추가하세요. <a class="hash-link" href="#5----.">#</a></h2>
+<h2><a class="anchor" name="5단계-반대방향-자료-흐름을-추가하세요."></a>5단계: 반대방향 자료 흐름을 추가하세요. <a class="hash-link" href="#5단계-반대방향-자료-흐름을-추가하세요.">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>앞서 우리는 계층적으로 아랫방향 흐름의 props, state전달로 잘 동작하는 애플리케이션을 만들었습니다. 이제 다른방향의 자료 흐름을 지원할 시간입니다: form 컴포넌트들은 <code>FilterableProductTable</code>의 state를 업데이트할 필요성이 있죠.</p>
@@ -569,7 +569,7 @@
 <p>우리가 원하는 것이 무엇인지 생각해 봅시다. 사용자 입력을 반영하기 위해, 사용자가 form을 바꿀때마다 업데이트 하기를 원하죠. 컴포넌트들이 오직 자기 자신의 state만 업데이트 하더라도 <code>FilterableProductTable</code>은 state가 변할때마다 반영되어야할 <code>SearchBar</code>에 콜백을 전달할 것입니다. 이 알림을 위해서 <code>onChange</code>이벤트를 사용할 수 있습니다. 그리고 <code>FilterableProductTable</code>으로부터 전달된 콜백은 <code>setState()</code>를 호출할 것이고, 애플리케이션은 업데이트될 것입니다.</p>
 
 <p>복잡하게 들릴 수 있지만, 실제로는 몇 줄 되지 않습니다. 그리고 애플리케이션의 구석구석에서 데이터가 어떻게 흐르는지 매우 명확해집니다.</p>
-<h2><a class="anchor" name=""></a>그리고 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="그리고"></a>그리고 <a class="hash-link" href="#그리고">#</a></h2>
 <p>이 글이 컴포넌트와 React로 애플리케이션을 어떻게 만들지에 대한 아이디어가 되길 바랍니다. 원래 하던 방식보다 조금 타이핑을 더 해야할지도 모르지만, 코드는 쓰는 경우보다 읽히는 경우가 많다는 점, 매우 읽기 편하고 명시적인 코드를 썼다는 점을 기억하세요. 컴포넌트로 큰 라이브러리를 만들기 시작할 때, 이 명시성과 모듈성에 감사하게 될 것이며, 재사용함에 따라 코드의 양도 줄어들 것입니다. :)</p>
 
 

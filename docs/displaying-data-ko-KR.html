@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>UI를 가지고 할 수 있는 가장 기초적인 것은 데이터를 표시하는 것입니다. React는 데이터를 표시하고 데이터가 변할 때마다 인터페이스를 최신의 상태로 자동으로 유지하기 쉽게 해 줍니다.</p>
-<h2><a class="anchor" name=""></a>시작하기 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="시작하기"></a>시작하기 <a class="hash-link" href="#시작하기">#</a></h2>
 <p>정말 간단한 예제를 보도록 하죠. 다음과 같은 코드의 <code>hello-react.html</code> 파일을 만듭시다.</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -471,13 +471,13 @@
     <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
   <span class="p">);</span>
 <span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="-reactive-"></a>반응 적(Reactive) 업데이트 <a class="hash-link" href="#-reactive-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="반응-적reactive-업데이트"></a>반응 적(Reactive) 업데이트 <a class="hash-link" href="#반응-적reactive-업데이트">#</a></h2>
 <p><code>hello-react.html</code> 파일을 웹 브라우저에서 열어 당신의 이름을 텍스트 필드에 써 보세요. React는 단지 시간을 표시하는 부분만을 바꿉니다 — 텍스트 필드 안에 입력한 것은 그대로 남아 있구요, 당신이 이 동작을 관리하는 그 어떤 코드도 쓰지 않았음에도 불구하고 말이죠. React는 그걸 올바른 방법으로 알아서 해줍니다.</p>
 
 <p>우리가 이걸 할 수 있었던 건, React는 필요한 경우에만 DOM을 조작하기 때문입니다. <strong>React는 빠른 React 내부의 DOM 모형을 이용하여 변경된 부분을 측정하고, 가장 효율적인 DOM 조작 방법을 계산해 줍니다.</strong></p>
 
 <p>이 컴포넌트에 대한 입력은 <code>props</code> 라고 불립니다 — &quot;properties&quot; 를 줄인 것이죠. 그들은 JSX 문법에서는 어트리뷰트로서 전달됩니다. 당신은 <code>props</code> 를 컴포넌트 안에서 불변의(immutable) 엘리먼트로서 생각해야 하고, <code>this.props</code> 를 덮어씌우려고 해서는 안됩니다.</p>
-<h2><a class="anchor" name="--"></a>컴포넌트들은 함수와 같습니다 <a class="hash-link" href="#--">#</a></h2>
+<h2><a class="anchor" name="컴포넌트들은-함수와-같습니다"></a>컴포넌트들은 함수와 같습니다 <a class="hash-link" href="#컴포넌트들은-함수와-같습니다">#</a></h2>
 <p>React 컴포넌트들은 매우 단순합니다. 당신은 그것들을 <code>props</code> 와 <code>state</code> (이것들은 나중에 언급할 것입니다) 를 받고 HTML을 렌더링하는 단순한 함수들로 생각해도 됩니다. 이걸 염두하면, 컴포넌트의 작동을 이해하는 것도 쉽습니다.</p>
 
 <blockquote>
@@ -485,7 +485,7 @@
 
 <p><strong>한가지 제약이 있습니다</strong>: React 컴포넌트들은 단 하나의 루트 노드(root node)만을 렌더할 수 있습니다. 만약 여러개의 노드들을 리턴하고 싶다면, 그것들은 단 하나의 루트 노드로 싸여져 있어야만 합니다.</p>
 </blockquote>
-<h2><a class="anchor" name="jsx-"></a>JSX 문법 <a class="hash-link" href="#jsx-">#</a></h2>
+<h2><a class="anchor" name="jsx-문법"></a>JSX 문법 <a class="hash-link" href="#jsx-문법">#</a></h2>
 <p>우리는 컴포넌트를 사용하는 것이 &quot;템플릿&quot;과 &quot;디스플레이 로직(display logic)&quot;을 이용하는 것보다 관심을 분리(separate concerns)하는 데에 올바른 방법이라고 강하게 믿고 있습니다. 우리는 마크업과 그것을 만들어내는 코드는 친밀하게 함께 결합되어있다고 생각합니다. 또한, 디스플레이 로직은 종종 매우 복잡하고, 그것을 템플릿 언어를 이용해 표현하는 것은 점점 사용하기 어렵게 됩니다.</p>
 
 <p>우리는 이 문제를 해결하는 최고의 해결책은, UI를 만드는 진짜 프로그래밍 언어의 표현력을 모두 사용할 수 있는 JavaScript 코드로부터 HTML과 컴포넌트 트리들을 생성하는 것임을 발견했습니다.</p>
@@ -507,7 +507,7 @@
 <p>JSX는 HTML과 비슷하지만, 완전히 똑같지는 않습니다. <a href="/react/docs/jsx-gotchas-ko-KR.html">JSX의 실수하기 쉬운 부분들</a>에 중요한 차이점들에 대해 설명되어 있습니다.</p>
 
 <p><a href="http://babeljs.io/docs/setup/">바벨에서 JSX를 시작하는 여러 방법을 제공합니다</a>. 여기에는 커맨드 라인 툴부터 루비 온 레일스 연동까지 다양한 방법이 있습니다. 가장 편한 툴을 사용하세요.</p>
-<h2><a class="anchor" name="jsx--react-"></a>JSX 없이 React 사용하기 <a class="hash-link" href="#jsx--react-">#</a></h2>
+<h2><a class="anchor" name="jsx-없이-react-사용하기"></a>JSX 없이 React 사용하기 <a class="hash-link" href="#jsx-없이-react-사용하기">#</a></h2>
 <p>JSX는 완전히 선택적입니다. 당신은 React와 JSX를 함께 사용하지 않아도 상관없습니다. 그냥 JavaScript에서 React 엘리먼트를 <code>React.createElement</code>로 만들 수 있습니다. 여기에 태그 이름이나 컴포넌트, 속성 객체, 자식 엘리먼트들을 전달하면 됩니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>

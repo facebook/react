@@ -434,8 +434,8 @@
     <p>컴포넌트를 빌드한 후에는 <code>render()</code>에서 반환된 컴포넌트 인스턴스에 접근하거나 메소드를 호출할 방법이 필요할 수도 있습니다. 반응적 데이터 플로우가 <code>render()</code>의 결과물에서 최신의 <code>props</code>가 각각의 자식으로 보내진 것을 항상 보장하기 때문에 애플리케이션의 데이터 플로우를 만드는데 대체로 이런 작업은 필요가 없지만, 여전히 이런 작업이 필요하거나 유리한 경우가 있긴 합니다. React는 이를 위해 <code>refs</code>라는 탈출구를 제공합니다. <code>refs</code>(레퍼런스)는 특히 다음과 같은 경우 유용합니다: 컴포넌트에 의해 렌더된 DOM 마크업을 찾을때 (인스턴스내의 절대적인 위치), 큰 프로젝트의 일부에 React 컴포넌트를 사용하는 경우 또는 기존의 코드베이스를 React로 변경하는 경우.</p>
 
 <p>ref를 어떻게 얻는지 살펴보고, 예제를 완성해 봅시다.</p>
-<h2><a class="anchor" name="reactdom.render--ref"></a>ReactDOM.render에서 반환된 ref <a class="hash-link" href="#reactdom.render--ref">#</a></h2>
-<p>컴포넌트에서 정의한, 가상의 DOM 엘리먼트를 반환하는 <code>render()</code>와 헷갈리지 않도록 합니다. <a href="/react/docs/top-level-api-ko-KR.html#reactdom.render">ReactDOM.render()</a>는 컴포넌트의 <strong>지원 인스턴스(backing instance)</strong>에 대한 참조를 반환 합니다. <a href="/react/docs/reusable-components-ko-KR.html#stateless-functions">상태를 가지지 않는 컴포넌트</a>에 대해선 <code>null</code>을 반환하죠.</p>
+<h2><a class="anchor" name="reactdom.render에서-반환된-ref"></a>ReactDOM.render에서 반환된 ref <a class="hash-link" href="#reactdom.render에서-반환된-ref">#</a></h2>
+<p>컴포넌트에서 정의한, 가상의 DOM 엘리먼트를 반환하는 <code>render()</code>와 헷갈리지 않도록 합니다. <a href="/react/docs/top-level-api-ko-KR.html#reactdom.render">ReactDOM.render()</a>는 컴포넌트의 <strong>지원 인스턴스(backing instance)</strong>에 대한 참조를 반환 합니다. <a href="/react/docs/reusable-components-ko-KR.html#%EC%83%81%ED%83%9C%EB%A5%BC-%EA%B0%80%EC%A7%80%EC%A7%80-%EC%95%8A%EB%8A%94-%ED%95%A8%EC%88%98">상태를 가지지 않는 컴포넌트</a>에 대해선 <code>null</code>을 반환하죠.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
 </code></pre></div>
 <p>명심하세요. 위의 코드는 컴포넌트 인스턴스를 반환하지 않습니다! 이는 그저 <strong>ReactElement</strong>:React에 마운트된 컴포넌트가 어떻게 보여야 할지 알려주는 경량의 표상(representation) 입니다.</p>
@@ -451,10 +451,10 @@
 
 <p>이는 오직 최상위 레벨에서만 사용되어야 합니다. 컴포넌트의 내부에서는 <code>props</code>와 <code>state</code>가 자식 컴포넌트와 통신하도록 하거나 문자열이나 콜백 어트리뷰트 등 ref를 얻어오는 다른 방법을 사용하도록 하세요.</p>
 </blockquote>
-<h2><a class="anchor" name="ref--"></a>ref 콜백 어트리뷰트 <a class="hash-link" href="#ref--">#</a></h2>
+<h2><a class="anchor" name="ref-콜백-어트리뷰트"></a>ref 콜백 어트리뷰트 <a class="hash-link" href="#ref-콜백-어트리뷰트">#</a></h2>
 <p>React는 어떤 컴포넌트에든 추가할 수 있는 특별한 어트리뷰트를 제공합니다. <code>ref</code> 어트리뷰트는 콜백 함수일 수 있으며 이는 컴포넌트가 마운트 된 후 즉시 실행됩니다. 참조된 컴포넌트는 파라미터로 전달될 것이며 콜백 함수는 즉시, 혹은 미래에 사용하기 위해 컴포넌트의 참조를 저장합니다.</p>
 
-<p><code>render</code>에서 반환되는 무엇에든 <code>ref</code> 어트리뷰트를 추가하는 것은 간단합니다: </p>
+<p><code>render</code>에서 반환되는 무엇에든 <code>ref</code> 어트리뷰트를 추가하는 것은 간단합니다:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">TextInput</span>
@@ -477,7 +477,7 @@
 <p><code>&lt;div /&gt;</code> 같은 DOM 컴포넌트에 ref를 추가하면 DOM 노드를 얻게 됩니다; <code>&lt;TextInput /&gt;</code> 같은 합성 컴포넌트에 ref를 추가하면 React 클래스 인스턴스를 얻게 됩니다. 후자의 경우, 클래스에 정의되어 있는 노출된 메소드를 호출할 수 있습니다.</p>
 
 <p>참조된 컴포넌트가 언마운트되고 ref가 변경되면 이전의 ref는 <code>null</code>을 인수로 호출됨을 주의 하세요. 이는 첫번째 예제에서처럼 인스턴트가 저장된 경우의 메모리 누수를 방지합니다. 또한 예제와 같이 ref를 인라인 함수 표현식으로 서술하게되면 React는 모든 업데이트에 대해 다른 함수 객체를 참조하게 됩니다. ref는 컴포넌트의 인스턴스의 호출 이전에  <code>null</code> 객체와 함께 즉시 호출될 것입니다.</p>
-<h2><a class="anchor" name="ref--"></a>ref 문자열 어트리뷰트 <a class="hash-link" href="#ref--">#</a></h2>
+<h2><a class="anchor" name="ref-문자열-어트리뷰트"></a>ref 문자열 어트리뷰트 <a class="hash-link" href="#ref-문자열-어트리뷰트">#</a></h2>
 <p>React는 ref에 콜백 대신 문자열도 지원합니다 이런 접근은 이제 과거의 것이긴 합니다.</p>
 
 <ol>
@@ -490,7 +490,7 @@
 <span class="kd">var</span> <span class="nx">inputRect</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">();</span>
 </code></pre></div></li>
 </ol>
-<h2><a class="anchor" name="-"></a>최종 예제 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="최종-예제"></a>최종 예제 <a class="hash-link" href="#최종-예제">#</a></h2>
 <p>React 컴포넌트의 참조를 얻기 위해서, 현재의 React 컴포넌트를 위해서는 <code>this</code>를, 소유한 컴포넌트에 대해서는 ref를 사용할 수 있습니다. 다음과 같이 작동 합니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -498,7 +498,7 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// ref 어트리뷰트는 컴포넌트가 마운트되면 </span>
+    <span class="c1">// ref 어트리뷰트는 컴포넌트가 마운트되면</span>
     <span class="c1">// this.refs에 컴포넌트에 대한 참조를 추가합니다.</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
@@ -521,20 +521,20 @@
 <p>이 예제에서, 텍스트 인풋의 <strong>지원 인스턴스</strong>에 대한 참조를 얻었으며 버튼이 클릭되었을때 <code>focus()</code>를 호출했습니다.</p>
 
 <p>합성 컴포넌트에서는 참조는 컴포넌트 클래스의 인스턴스를 가리키기 때문에 클래스에 정의된 어떤 메소드도 호출할 수 있습니다. 컴포넌트의 기저에 있는 DOM 노드에 접근하기 위해서는 <a href="/react/docs/top-level-api-ko-KR.html#reactdom.finddomnode">ReactDOM.findDOMNode</a>를 &quot;탈출구&quot;로 사용할 수 있습니다. 하지만 이는 캡슐화를 깨며, 대부분의 경우 React 모델을 이용해 더 명확한 방법으로 구조를 짤 수 있기 때문에 추천하지 않습니다.</p>
-<h2><a class="anchor" name=""></a>요약 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="요약"></a>요약 <a class="hash-link" href="#요약">#</a></h2>
 <p>Refs는 반응적인 <code>props</code>와 <code>state</code> 스트리밍을 통해서는 불편했던 특정한 자식 인스턴스에 메시지 보내기를 수행하는 좋은 방법입니다. 하지만 애플리케이션의 데이터 플로우 전반에 사용해도 되는 go-to 같은 개념은 아닙니다. 기본적으로는 반응적인 데이터 플로우를 사용하고, <code>ref</code>는 근본적으로 반응적이지 않은 경우에만 사용하세요.</p>
-<h3><a class="anchor" name=""></a>이점: <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="이점"></a>이점: <a class="hash-link" href="#이점">#</a></h3>
 <ul>
 <li>컴포넌트 클래스에 public 메소드(ex. Typeahead의 reset)를 선언할 수 있으며 refs를 통해 그를 호출할 수 있습니다. (ex. <code>this.refs.myTypeahead.reset()</code>) 대부분, 이는 선언적으로 refs를 사용하는 것보다 내장 React 데이터 흐름을 명확하게 합니다.</li>
 <li>DOM을 측정하기 위해서는 거의 항상 <code>&lt;input /&gt;</code> 같은 &quot;기본&quot; 컴포넌트를 다루고 ref를 통해 그 기저의 DOM 노드에 접근해야 합니다. Refs는 이 일을 확실하게 수행하는 몇 안 되는 실용적인 방법의 하나입니다.</li>
 <li>Refs는 자동으로 관리합니다! 자식이 파괴되면, 그의 ref도 마찬가지로 파괴됩니다. 참조를 유지하기 위해 뭔가 미친 짓을 하지 않는 한, 메모리 걱정은 하지 않아도 됩니다.</li>
 </ul>
-<h3><a class="anchor" name=""></a>주의: <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="주의"></a>주의: <a class="hash-link" href="#주의">#</a></h3>
 <ul>
 <li>컴포넌트의 렌더 메소드에서는, 혹은 컴포넌트의 렌더 메소드가 콜스택 어디에서든 실행되는 동안에는 절대 접근하지 마세요.</li>
 <li>Google Closure Compiler에서의 어드벤스드 모드 분쇄 복원력 유지(to preserve advanced-mode crushing resilience)를 위해서는 문자열로 정의한 것을 절대 프로퍼티로 접근하지 마세요. ref가 ref=&quot;myRefString&quot;으로 정의되어 있다면 this.refs[&#39;myRefString&#39;]으로만 접근해야 한다는 이야기 입니다.</li>
 <li>React로 앱을 여럿 만들어 본 경험이 없다면, 보통은 처음엔 앱에서 &quot;무언가 일어나도록&quot; 하는데 refs를 사용하게 될 것입니다. 이 경우, 잠시 시간을 내어 <code>state</code>가 컴포넌트 계층구조의 어느 부분에서 관리되어야 할지 비판적으로 생각해 봅시다. 대개는 state가 계층구조의 더 높은 레벨에서 &quot;소유&quot;하는 것이 타당함이 명확해집니다. 그렇게 함으로써 <code>ref</code>를 사용해 &quot;무언가 일어나도록&quot; 하려는 욕망이 대부분 제거됩니다. - 대신에 데이터 플로우를 통해 대개 원하는 바를 달성하게 될 것입니다.</li>
-<li>Refs는 <a href="/react/docs/reusable-components-ko-KR.html#stateless-functions">상태를 가지지 않는 함수</a>에 붙일 수 없습니다. 왜냐하면 컴포넌트가 내부 인스턴스를 가지지 않기 때문입니다. 상태를 가지지 않는 컴포넌트는 항상 일반 컴포넌트로 감싸 ref를 조합 컴포넌트에 붙일 수 있습니다.</li>
+<li>Refs는 <a href="/react/docs/reusable-components-ko-KR.html#%EC%83%81%ED%83%9C%EB%A5%BC-%EA%B0%80%EC%A7%80%EC%A7%80-%EC%95%8A%EB%8A%94-%ED%95%A8%EC%88%98">상태를 가지지 않는 함수</a>에 붙일 수 없습니다. 왜냐하면 컴포넌트가 내부 인스턴스를 가지지 않기 때문입니다. 상태를 가지지 않는 컴포넌트는 항상 일반 컴포넌트로 감싸 ref를 조합 컴포넌트에 붙일 수 있습니다.</li>
 </ul>
 
 

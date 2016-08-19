@@ -440,7 +440,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="p">{</span> <span class="nx">more</span><span class="o">:</span> <span class="s1">&#39;values&#39;</span> <span class="p">}));</span>
 </code></pre></div>
 <p>以下のチュートリアルはベストプラクティスを提示しています。JSXや試験的なES7のシンタックスを使っています。</p>
-<h2><a class="anchor" name=""></a>手動での移動 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="手動での移動"></a>手動での移動 <a class="hash-link" href="#手動での移動">#</a></h2>
 <p>ほとんどの場合、プロパティを明確に子要素に渡すべきです。それは、内部のAPIのサブセットだけを外に出していることと、認識しているプロパティが動作することを保証します。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
@@ -458,10 +458,10 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>しかし、 <code>name</code> プロパティや <code>title</code> プロパティや <code>onMouseOver</code> はどうでしょうか？</p>
-<h2><a class="anchor" name="jsx-...-"></a>JSXにおける <code>...</code> を使った移譲 <a class="hash-link" href="#jsx-...-">#</a></h2>
+<h2><a class="anchor" name="jsxにおける-...-を使った移譲"></a>JSXにおける <code>...</code> を使った移譲 <a class="hash-link" href="#jsxにおける-...-を使った移譲">#</a></h2>
 <blockquote>
 <p>注意:
-以下の例では、実験的なES7のシンタックスであることを示すために <code>--harmony</code> フラグが必要になります。ブラウザ上でJSXトランスフォーマーを使う際には、単純に <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code> を使ってスクリプトを読み込んでください。詳細については、 <a href="/react/docs/transferring-props.html#rest-and-spread-properties-...">レストとスプレッドのプロパティ ...</a>をご覧ください。</p>
+以下の例では、実験的なES7のシンタックスであることを示すために <code>--harmony</code> フラグが必要になります。ブラウザ上でJSXトランスフォーマーを使う際には、単純に <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code> を使ってスクリプトを読み込んでください。詳細については、 <a href="/react/docs/transferring-props-ja-JP.html#%E3%83%AC%E3%82%B9%E3%83%88%E3%81%A8%E3%82%B9%E3%83%97%E3%83%AC%E3%83%83%E3%83%89%E3%81%AE%E3%83%97%E3%83%AD%E3%83%91%E3%83%86%E3%82%A3-...">レストとスプレッドのプロパティ ...</a>をご覧ください。</p>
 </blockquote>
 
 <p>全てのプロパティを渡すのはバグを生みやすく、面倒くさいときがあります。そのようなケースでは、未知のプロパティのセットを使うためにレストプロパティと共に<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">分割代入引数</a>を使うことができます。</p>
@@ -498,7 +498,7 @@
     <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
   <span class="p">);</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="prop"></a>同じpropを使い、移譲する <a class="hash-link" href="#prop">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="同じpropを使い移譲する"></a>同じpropを使い、移譲する <a class="hash-link" href="#同じpropを使い移譲する">#</a></h2>
 <p>コンポーネントがプロパティを使うだけでなく、子要素に渡したい場合は、明確に <code>checked={checked}</code> と記述することで再度渡すことができます。 <code>this.props</code> オブジェクトで全てを渡すほうが、リファクタリングやチェックをしやすいので好ましいです。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">props</span><span class="p">;</span>
@@ -520,7 +520,7 @@
 <p>注意:
 順番の問題です。JSXのpropsの前に <code>{...other}</code> を置くことで、コンポーネントの使用者がオーバーライドできないことを保証します。上の例ではinputが <code>&quot;checkbox&quot;</code> 型であることを保証しました。</p>
 </blockquote>
-<h2><a class="anchor" name="-..."></a>レストとスプレッドのプロパティ <code>...</code> <a class="hash-link" href="#-...">#</a></h2>
+<h2><a class="anchor" name="レストとスプレッドのプロパティ-..."></a>レストとスプレッドのプロパティ <code>...</code> <a class="hash-link" href="#レストとスプレッドのプロパティ-...">#</a></h2>
 <p>レストプロパティはあるオブジェクトの残りの要素を新しいオブジェクトに引き抜きます。分割代入パターンでリストになっている全てのプロパティを外に出します。</p>
 
 <p>これは、<a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ES7プロポーサル</a>の実験的な実行です。</p>
@@ -533,7 +533,7 @@
 <p>注意:
 実験的なES7のシンタックスを有効にするには、 <code>--harmony</code> フラグを<a href="https://www.npmjs.com/package/react-tools">JSXコマンドラインツール</a>で使用してください。</p>
 </blockquote>
-<h2><a class="anchor" name="underscore"></a>Underscoreによる移譲 <a class="hash-link" href="#underscore">#</a></h2>
+<h2><a class="anchor" name="underscoreによる移譲"></a>Underscoreによる移譲 <a class="hash-link" href="#underscoreによる移譲">#</a></h2>
 <p>JSXを使わない際には、同じパターンを行うライブラリを使うことができます。Underscoreでは、 <code>_.omit</code> を使ってプロパティをフィルタしたり、 <code>_.extend</code> を使って新しいオブジェクトにプロパティをコピーしたりできます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">checked</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span><span class="p">;</span>

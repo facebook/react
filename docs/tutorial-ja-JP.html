@@ -448,13 +448,13 @@
 <li><strong>自動更新:</strong> 他のユーザのコメントをリアルタイムで表示させます。</li>
 <li><strong>Markdown 記法:</strong> ユーザが Markdown 記法でコメントを書けるようにします。</li>
 </ul>
-<h3><a class="anchor" name=""></a>全部飛ばしてソースを見たいんだけど？ <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="全部飛ばしてソスを見たいんだけど"></a>全部飛ばしてソースを見たいんだけど？ <a class="hash-link" href="#全部飛ばしてソスを見たいんだけど">#</a></h3>
 <p><a href="https://github.com/reactjs/react-tutorial">全部 GitHub にあります。</a></p>
-<h3><a class="anchor" name=""></a>サーバを動かす <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="サバを動かす"></a>サーバを動かす <a class="hash-link" href="#サバを動かす">#</a></h3>
 <p>このチュートリアルを始めるにあたっては必要ないですが、後半ではサーバに POST を投げる機能を追加します。サーバのことは良く知っていて自分でサーバを建てたいのであれば、それでも構いません。そうではないけれども、サーバサイドは考えずに React のことだけに焦点を絞って学びたい方のため、シンプルなサーバのソースコードを書いておきました。言語は JavaScript （Node.js）または Python、Ruby、Go、ないし PHP で用意してあり、すべて GitHub にあります。<a href="https://github.com/reactjs/react-tutorial/">ソースを見る</a> ことも出来ますし、 <a href="https://github.com/reactjs/react-tutorial/archive/master.zip">zip ファイルでダウンロード</a>することも出来ます。</p>
 
 <p>それでは最初のチュートリアルとして、<code>public/index.html</code> の編集から始めましょう。</p>
-<h3><a class="anchor" name=""></a>始めてみましょう <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="始めてみましょう"></a>始めてみましょう <a class="hash-link" href="#始めてみましょう">#</a></h3>
 <p>このチュートリアルでは、あらかじめビルドされた JavaScript ファイルを CDN から読み込むことになります。自分の好きなエディタを立ち上げて、次のように新規の HTML ドキュメントを作りましょう。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="cp">&lt;!DOCTYPE html&gt;</span>
@@ -484,7 +484,7 @@
 
 <p>上のコードで jQuery を読み込んでいますが、これはチュートリアル後半で ajax のコードを簡潔に書きたいだけなので、React を動かすのに必要なものでは<strong>ありません</strong>。</p>
 </blockquote>
-<h3><a class="anchor" name=""></a>最初のコンポーネント <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="最初のコンポネント"></a>最初のコンポーネント <a class="hash-link" href="#最初のコンポネント">#</a></h3>
 <p>React はすべて、モジュール単位で組み立てられる（composable）コンポーネントからなっています。今回取り上げるコメントボックスの例では、以下のようなコンポーネント構造をとります。</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">- CommentBox
   - CommentList
@@ -506,7 +506,7 @@
   <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h4><a class="anchor" name="jsx-"></a>JSX シンタックス <a class="hash-link" href="#jsx-">#</a></h4>
+</code></pre></div><h4><a class="anchor" name="jsx-シンタックス"></a>JSX シンタックス <a class="hash-link" href="#jsx-シンタックス">#</a></h4>
 <p>先程書いた JavaScript の中に、XMLに似たシンタックスがあることに気付いたでしょうか。このシンタックスシュガーは、シンプルなプリコンパイラによって次のような生の JavaScript に変換されます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial1-raw.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s1">&#39;CommentBox&#39;</span><span class="p">,</span>
@@ -524,7 +524,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>どちらを採るかは自由ですが、生の JavaScript よりも JSX シンタックスのほうが扱いやすいと考えています。詳しくは <a href="/react/docs/jsx-in-depth.html">JSX シンタックスの記事</a> を読んでみてください。</p>
-<h4><a class="anchor" name=""></a>何をしているのか <a class="hash-link" href="#">#</a></h4>
+<h4><a class="anchor" name="何をしているのか"></a>何をしているのか <a class="hash-link" href="#何をしているのか">#</a></h4>
 <p>先程のコードでは、とあるメソッドを持った JavaScript オブジェクトを <code>React.createClass()</code> に渡しています。これは新しい React コンポーネントを作るためです。このメソッドは <code>render</code> と呼ばれており、最終的に HTML へレンダリングされる React コンポーネントのツリーを返す点が肝になります。</p>
 
 <p>コードに書いた <code>&lt;div&gt;</code> タグは実際の DOM ノードではありません。これは React の <code>div</code> コンポーネントのインスタンスです。 これらは React が理解できるマーカーやデータの一部だと見なせます。React は <strong>安全</strong> です。デフォルトで XSS 対策を行っているので、HTML 文字列を生成することはありません。</p>
@@ -532,7 +532,7 @@
 <p>実際の HTML を返す必要はありません。 自分が（もしくは他の誰かが）組み立てたコンポーネントツリーを返せばいいのです。 これこそ React が <strong>composable</strong>な（組み立てられる）ものである理由であり、この大事なルールを守ればフロントエンドはメンテナンスしやすいものとなります。</p>
 
 <p><code>ReactDOM.render()</code> はまずルートコンポーネントのインスタンスを作り、フレームワークを立ち上げます。そして、第2引数で与えられた実際の DOM 要素にマークアップを挿入します。</p>
-<h2><a class="anchor" name=""></a>コンポーネントの組み立て <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="コンポネントの組み立て"></a>コンポーネントの組み立て <a class="hash-link" href="#コンポネントの組み立て">#</a></h2>
 <p>それでは <code>CommentList</code> と <code>CommentForm</code> の骨組みを作りましょう。繰り返しになりますが、これらはただの <code>&lt;div&gt;</code> です。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -570,7 +570,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>ここで、HTML タグと組み立てているコンポーネントが、どのようにミックスされているかを確認しましょう。 HTML コンポーネントは既定の React コンポーネントですが、自分で定義したもの同士はそれぞれ別物になります。JSX コンパイラは HTML タグを自動的に <code>React.createElement(tagName)</code> の式に書き換え、それぞれを別々のものに変換します。これはグローバルの名前空間が汚染させるのを防ぐためです。</p>
-<h3><a class="anchor" name="props-"></a>Props を使う <a class="hash-link" href="#props-">#</a></h3>
+<h3><a class="anchor" name="props-を使う"></a>Props を使う <a class="hash-link" href="#props-を使う">#</a></h3>
 <p>次のステップは <code>Comment</code> コンポーネントの作成です。このコンポーネントは、自分の親にあたるコンポーネントから渡されたデータを扱います。親から渡されたデータは、子のコンポーネントで「プロパティ」として利用できます。この「プロパティ」には <code>this.props</code> を通してアクセスします。props（プロパティ）を使うと <code>CommentList</code> から <code>Comment</code> に渡されたデータの読み込み、マークアップのレンダリングが可能になります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial4.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -587,7 +587,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>JSX の内側で（属性値または子要素として）JavaScript の式を波括弧で囲むと、テキストや React コンポーネントをツリーに加えることが出来ます。コンポーネントに渡された属性値には名前が付けられており、<code>this.props</code> をキーとしてアクセスできます。また、ネストされた子要素の値は <code>this.props.children</code> でアクセスが可能です。</p>
-<h3><a class="anchor" name=""></a>コンポーネントのプロパティ <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="コンポネントのプロパティ"></a>コンポーネントのプロパティ <a class="hash-link" href="#コンポネントのプロパティ">#</a></h3>
 <p>さて、これまでに <code>Comment</code> コンポーネントを定義しました。これからこのコンポーネントに、コメントの著者名と内容を渡せるようにします。これを実装することで、それぞれ別のコメントに対して同じコードを使い回せるようになります。それでは早速 <code>CommentList</code> の中にコメントを追加していきましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial5.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -602,7 +602,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>ここで確認してもらいたいのは、親の <code>CommentList</code> コンポーネントから、子の <code>Comment</code> コンポーネントにデータが渡されている点です。この例ではまず、<em>Pete Hunt</em>（属性値を通して）と <em>This is one comment</em>（XML のような子ノードを通して）といったデータを <code>Comment</code> コンポーネントに渡しています。少し前に確認した通り、<code>Comment</code> コンポーネントからこれらの「プロパティ」にアクセスするには、<code>this.props.author</code> と <code>this.props.children</code> を使います。</p>
-<h3><a class="anchor" name="markdown-"></a>Markdown の追加 <a class="hash-link" href="#markdown-">#</a></h3>
+<h3><a class="anchor" name="markdown-の追加"></a>Markdown の追加 <a class="hash-link" href="#markdown-の追加">#</a></h3>
 <p>Markdown はインラインでテキストをフォーマットする簡単な記法です。例えば、テキストをアスタリスクで挟むと強調されて表示されます。</p>
 
 <p>まず最初に、サードパーティ製の <strong>remarkable</strong> ライブラリをアプリケーションに追加します。 remarkable は Markdown テキストを生の HTML に変換する JavaScript ライブラリです。 既にある head タグの内側に script タグを書き込み、以下のように remarkable を読み込ませます。</p>
@@ -661,7 +661,7 @@
 <p>これは特別な API であり、生の HTML が挿入されにくくなるよう意図的に作ったものです。しかし、ここでは remarkable のためにこのバックドアを利用しています。</p>
 
 <p><strong>注意:</strong> この機能を使うことで、remarkable は安全なものと信頼することになります。</p>
-<h3><a class="anchor" name=""></a>データモデルとの連携 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="デタモデルとの連携"></a>データモデルとの連携 <a class="hash-link" href="#デタモデルとの連携">#</a></h3>
 <p>これまではソースコードにコメントを直に書き込んでいました。その代わりに、これからは JSON の blob データをコメントリストにレンダリングしてみましょう。サーバからデータを取得するのが最後の目標ですが、とりあえず今はソースコードの中にデータを書いておくことにします。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
 <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">[</span>
@@ -708,7 +708,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>これだけ！</p>
-<h3><a class="anchor" name=""></a>サーバからのデータの取得 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="サバからのデタの取得"></a>サーバからのデータの取得 <a class="hash-link" href="#サバからのデタの取得">#</a></h3>
 <p>続いて、ハードコーディングしていたデータを、サーバからの動的なデータに置き換えてみましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
@@ -742,7 +742,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p><code>getInitialState()</code> メソッドはコンポーネントのライフサイクル内で一回だけ実行され、コンポーネントの state における初期値を設定します。</p>
-<h4><a class="anchor" name="state-"></a>State の更新 <a class="hash-link" href="#state-">#</a></h4>
+<h4><a class="anchor" name="state-の更新"></a>State の更新 <a class="hash-link" href="#state-の更新">#</a></h4>
 <p>コンポーネントの作成と同時に、サーバから JSON データを GET で取得し、state を更新して最新のデータを反映させてみましょう。実際のアプリケーションでは動的なエンドポイントになるでしょうが、今回の例では話を簡単にするため、以下の静的な JSON ファイルを使います。</p>
 <div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">[</span>
   <span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
@@ -821,7 +821,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>ここまでに、AJAX を呼び出す部分を別のメソッド内に移動させました。加えて、コンポーネントが最初に読み込まれてから2秒ごとに AJAX のメソッドが呼び出されるようにしました。ぜひ自分のブラウザで実行させて、<code>comments.json</code> ファイルに変更を加えてみてください。2秒以内に表示が更新されるはずです！</p>
-<h3><a class="anchor" name=""></a>新しいコメントの追加 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="新しいコメントの追加"></a>新しいコメントの追加 <a class="hash-link" href="#新しいコメントの追加">#</a></h3>
 <p>いよいよフォームを作る段階に来ました。ここで <code>CommentForm</code> コンポーネントは、ユーザに自分の名前とコメントの内容を入力させ、コメントを保存するためにサーバにリクエストを送信する必要があります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial15.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -835,7 +835,7 @@
 </span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h4><a class="anchor" name=""></a>制御コンポーネント <a class="hash-link" href="#">#</a></h4>
+</code></pre></div><h4><a class="anchor" name="制御コンポネント"></a>制御コンポーネント <a class="hash-link" href="#制御コンポネント">#</a></h4>
 <p>このチュートリアルの DOM は、<code>input</code> 要素がレンダリングされ、ブラウザが状態（そのレンダリングされた値）を管理します。その結果、実際のDOMの状態がコンポーネントとは異なります。ビューの状態がコンポーネントとは異なり、これは理想的ではありません。React では、コンポーネントは初期化の時点だけでなく、常にビューの状態を表している必要があります。</p>
 
 <p>したがって、ユーザの入力を保存するために <code>this.state</code> を使用することになります。2つのプロパティの<code>author</code>と<code>text</code>に最初の<code>state</code>を定義して、空の文字列を設定します。<code>&lt;input&gt;</code>の要素では、<code>onChange</code>にハンドラをアタッチすると<code>value</code> に <code>state</code> が反映される。これらの <code>&lt;input&gt;</code> の要素は、<code>value</code> が設定された制御コンポーネントと呼ばれています。制御コンポーネントの詳細についてはこちらの<a href="/react/docs/forms.html#controlled-components">Forms article</a>をご覧ください。</p>
@@ -870,11 +870,11 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h4><a class="anchor" name=""></a>イベント <a class="hash-link" href="#">#</a></h4>
+</code></pre></div><h4><a class="anchor" name="イベント"></a>イベント <a class="hash-link" href="#イベント">#</a></h4>
 <p>React イベントハンドラのアタッチはコンポーネントにキャメルケースの命名規則を使用します。2つの<code>&lt;input&gt;</code>要素に<code>onChange</code>のハンドラをアタッチします。今、ユーザーの入力は<code>&lt;input&gt;</code>フィールド、アタッチされた<code>onChange</code>がコールバックされてコンポーネントの<code>state</code>が変更されます。その後、<code>input</code>要素のレンダリングされた値は、現在のコンポーネント<code>state</code>を反映するように更新されます。</p>
 
 <p>(賢明な読者は、説明したようにこれらのイベントハンドラが動作することを驚かれるかもしれない、明示的な結合を不要にそのコンポーネントインスタンスへの各メソッドは、メソッドの参照が明示的に<code>this</code>. <code>React.createClass(...)</code> <a href="/react/docs/interactivity-and-dynamic-uis.html#under-the-hood-autobinding-and-event-delegation">automatically binds</a>にバインドされていないことを自動的に結合する与えられました。)</p>
-<h4><a class="anchor" name=""></a>フォーム送信 <a class="hash-link" href="#">#</a></h4>
+<h4><a class="anchor" name="フォム送信"></a>フォーム送信 <a class="hash-link" href="#フォム送信">#</a></h4>
 <p>フォームを対話型にしましょう。ユーザーがフォームを送信すると、それをクリアする必要があります。サーバに要求を送信すると、コメントのリストを更新します。開始するとフォームの送信イベントでクリアするか試しましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -921,7 +921,7 @@
 <p>フォームが有効な入力でサブミットされたときにフォームフィールドをクリアし、フォームに<code>onSubmit</code>ハンドラをアタッチします。</p>
 
 <p><code>preventDefault()</code> はフォームを送信するイベントにブラウザのデフォルトのアクションを防ぐためにコールします。</p>
-<h4><a class="anchor" name="props-"></a>Props としてのコールバック <a class="hash-link" href="#props-">#</a></h4>
+<h4><a class="anchor" name="props-としてのコルバック"></a>Props としてのコールバック <a class="hash-link" href="#props-としてのコルバック">#</a></h4>
 <p>ユーザがコメントを送信したら、コメントリストをリフレッシュして新しいリストを読み込むことになります。コメントリストを表す state を保持しているのは <code>CommentBox</code> なので、必要なロジックは <code>CommentBox</code> の中に書くのが筋でしょう。</p>
 
 <p>ここでは子のコンポーネントから親に向かって、いつもとは逆方向にデータを返す必要があります。まず、親のコンポーネントに新しいコールバック関数（<code>handleCommentSubmit</code>）を定義します。続いて <code>render</code> メソッド内にある子のコンポーネントにコールバックを渡すことで、<code>onCommentSubmit</code> イベントとコールバックを結び付けています。こうすることで、イベントが発生するたびにコールバックが呼び出されます。</p>
@@ -1051,7 +1051,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>最適化: 先読み更新 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="最適化-先読み更新"></a>最適化: 先読み更新 <a class="hash-link" href="#最適化-先読み更新">#</a></h3>
 <p>アプリケーションに必要な機能は一通り実装できました。しかし、フォームからコメントを送信しても、サーバからのレスポンスが来るまで自分のコメントはリストに載らないため、アプリの動作は遅く感じます。ここでは、送信したコメントをリストに先読みさせて、アプリの体感速度をアップさせましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial21.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -1107,7 +1107,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h3><a class="anchor" name=""></a>おめでとう！ <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="おめでとう"></a>おめでとう！ <a class="hash-link" href="#おめでとう">#</a></h3>
 <p>シンプルな手順を追ううちにコメントボックスを作ることが出来ました。さらに詳しいことは<a href="/react/docs/why-react.html">なぜ React を使うのか</a>を読んだり、<a href="/react/docs/top-level-api.html">API リファレンス</a>を開いたりしてハッキングを始めましょう！幸運を祈ります！</p>
 
 

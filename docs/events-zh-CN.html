@@ -431,7 +431,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name=""></a>合成事件 <a class="hash-link" href="#">#</a></h2>
+    <h2><a class="anchor" name="合成事件"></a>合成事件 <a class="hash-link" href="#合成事件">#</a></h2>
 <p>事件处理程序通过 <code>合成事件</code>（<code>SyntheticEvent</code>）的实例传递，<code>SyntheticEvent</code> 是浏览器原生事件跨浏览器的封装。<code>SyntheticEvent</code> 和浏览器原生事件一样有 <code>stopPropagation()</code>、<code>preventDefault()</code> 接口，而且这些接口夸浏览器兼容。</p>
 
 <p>如果出于某些原因想使用浏览器原生事件，可以使用 <code>nativeEvent</code> 属性获取。每个和成事件（<code>SyntheticEvent</code>）对象都有以下属性：</p>
@@ -455,7 +455,7 @@
 
 <p>React v0.14 中，事件处理程序返回 <code>false</code> 不再停止事件传播，取而代之，应该根据需要手动触发 <code>e.stopPropagation()</code> 或 <code>e.preventDefault()</code>。</p>
 </blockquote>
-<h2><a class="anchor" name=""></a>事件池 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="事件池"></a>事件池 <a class="hash-link" href="#事件池">#</a></h2>
 <p><code>SyntheticEvent</code> 是池化的. 这意味着 <code>SyntheticEvent</code> 对象将会被重用并且所有的属性都会在事件回调被调用后被 nullified.
 这是因为性能的原因.
 因此,你不能异步的访问事件.</p>
@@ -478,23 +478,23 @@
 
 <p>如果你想异步访问事件属性,你应该在事件上调用 <code>event.persist()</code> ,这会从池中移除合成事件并允许对事件的引用被用会保留.</p>
 </blockquote>
-<h2><a class="anchor" name=""></a>支持的事件 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="支持的事件"></a>支持的事件 <a class="hash-link" href="#支持的事件">#</a></h2>
 <p>React 将事件统一化，使事件在不同浏览器上有一致的属性.</p>
 
 <p>下面的事件处理程序在事件冒泡阶段被触发。如果要注册事件捕获处理程序，应该使用 <code>Capture</code> 事件，例如使用 <code>onClickCapture</code> 处理点击事件的捕获阶段，而不是 <code>onClick</code>。</p>
-<h3><a class="anchor" name=""></a>剪贴板事件 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="剪贴板事件"></a>剪贴板事件 <a class="hash-link" href="#剪贴板事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onCopy onCut onPaste
 </code></pre></div>
 <p>属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
-</code></pre></div><h3><a class="anchor" name="composition-"></a>Composition 事件 <a class="hash-link" href="#composition-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="composition-事件"></a>Composition 事件 <a class="hash-link" href="#composition-事件">#</a></h3>
 <p>事件名称:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onCompositionEnd onCompositionStart onCompositionUpdate
 </code></pre></div>
 <p>属性:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">data</span>
-</code></pre></div><h3><a class="anchor" name=""></a>键盘事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="键盘事件"></a>键盘事件 <a class="hash-link" href="#键盘事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
 </code></pre></div>
@@ -511,7 +511,7 @@
 <span class="kr">boolean</span> <span class="nx">repeat</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 <span class="nx">number</span> <span class="nx">which</span>
-</code></pre></div><h3><a class="anchor" name=""></a>焦点事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="焦点事件"></a>焦点事件 <a class="hash-link" href="#焦点事件">#</a></h3>
 <p>事件名称</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onFocus onBlur
 </code></pre></div>
@@ -519,12 +519,12 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
 </code></pre></div>
 <p>焦点事件在所有的React DOM上工作,不仅仅是表单元素.</p>
-<h3><a class="anchor" name=""></a>表单事件 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="表单事件"></a>表单事件 <a class="hash-link" href="#表单事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
 </code></pre></div>
 <p>关于 <code>onChange</code> 事件的更多信息，参见 <a href="/react/docs/forms-zh-CN.html">表单组件</a>。</p>
-<h3><a class="anchor" name=""></a>鼠标事件 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="鼠标事件"></a>鼠标事件 <a class="hash-link" href="#鼠标事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
 onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
@@ -550,7 +550,7 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 </code></pre></div><h3><a class="anchor" name="selection-events"></a>Selection Events <a class="hash-link" href="#selection-events">#</a></h3>
 <p>事件名称:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onSelect
-</code></pre></div><h3><a class="anchor" name=""></a>触控事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="触控事件"></a>触控事件 <a class="hash-link" href="#触控事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart
 </code></pre></div>
@@ -563,14 +563,14 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 <span class="nx">DOMTouchList</span> <span class="nx">targetTouches</span>
 <span class="nx">DOMTouchList</span> <span class="nx">touches</span>
-</code></pre></div><h3><a class="anchor" name=""></a>用户界面事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="用户界面事件"></a>用户界面事件 <a class="hash-link" href="#用户界面事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onScroll
 </code></pre></div>
 <p>属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">number</span> <span class="nx">detail</span>
 <span class="nx">DOMAbstractView</span> <span class="nx">view</span>
-</code></pre></div><h3><a class="anchor" name=""></a>滚轮事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="滚轮事件"></a>滚轮事件 <a class="hash-link" href="#滚轮事件">#</a></h3>
 <p>事件名称：</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onWheel
 </code></pre></div>
@@ -579,13 +579,13 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">number</span> <span class="nx">deltaX</span>
 <span class="nx">number</span> <span class="nx">deltaY</span>
 <span class="nx">number</span> <span class="nx">deltaZ</span>
-</code></pre></div><h3><a class="anchor" name=""></a>媒体事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="媒体事件"></a>媒体事件 <a class="hash-link" href="#媒体事件">#</a></h3>
 <p>事件名称:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
-</code></pre></div><h3><a class="anchor" name=""></a>图片事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="图片事件"></a>图片事件 <a class="hash-link" href="#图片事件">#</a></h3>
 <p>事件名称:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError
-</code></pre></div><h3><a class="anchor" name=""></a>动画事件 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="动画事件"></a>动画事件 <a class="hash-link" href="#动画事件">#</a></h3>
 <p>事件名称:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onAnimationStart onAnimationEnd onAnimationIteration
 </code></pre></div>

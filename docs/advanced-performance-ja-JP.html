@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>Reactをプロジェクトで使用しようとする際にまず最初に気になるのは、アプリケーションがReactを使用しないバージョンと比べて、同じくらい速くてレスポンシブであるかどうかということです。ステータスの変更毎にレスポンスでコンポーネントのサブツリーの全てを再度レンダリングするという考え方によって、このプロセスがパフォーマンスにネガティブな影響を与えるのではないかと人々は不安に思います。ReactはUIを更新するのに必要な、コストのかかる多くのDOMの操作を最小限にするためのいくつかの賢い技術を使用します。</p>
-<h2><a class="anchor" name="dom"></a>DOMを一致させることを防ぐこと <a class="hash-link" href="#dom">#</a></h2>
+<h2><a class="anchor" name="domを一致させることを防ぐこと"></a>DOMを一致させることを防ぐこと <a class="hash-link" href="#domを一致させることを防ぐこと">#</a></h2>
 <p>ReactはブラウザでレンダリングされるDOMのサブツリーの記述語である <em>virtual DOM</em> を使用しています。この2つの表現によってReactは、JavaScriptのオブジェクトの操作よりも遅い、DOMノードを作成したり存在しているDOMノードにアクセスすることを防いでいます。コンポーネントの <code>props</code> や <code>state</code> が変更された時、Reactは新しいvirtual DOMを構成して、それを古いものと比較することによって、実際のDOMの更新が必要かどうか決定します。それらが同じものでなかった場合にのみ、ReactはDOMを<a href="/react/docs/reconciliation.html">一致</a>させ、最小限の変更を適用します。
 この最上位で、Reactはコンポーネントライフサイクルファンクションである <code>shouldComponentUpdate</code> を提供します。これは、再度レンダリングを行うプロセス（virtual DOMの比較と起こり得る最終的なDOMの一致）が始まる前に誘発されます。そして、開発者にこのプロセスの循環を短くすることを可能にします。デフォルトのこの関数の実行時にはReactが更新を行って、以下のように <code>true</code> が返ります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
@@ -448,7 +448,7 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>つまり、要約すると、ReactはDOMのサブツリーを一致させる必要があるためにコストのかかるDOMの操作を実行するのを避けます。 <code>shouldComponentUpdate</code> を使用して、このプロセスを短縮することができます。そして、virtual DOMを比較して、更新すべきDOMだけを更新します。</p>
-<h2><a class="anchor" name="shouldcomponentupdate-"></a>shouldComponentUpdate の実行 <a class="hash-link" href="#shouldcomponentupdate-">#</a></h2>
+<h2><a class="anchor" name="shouldcomponentupdate-の実行"></a>shouldComponentUpdate の実行 <a class="hash-link" href="#shouldcomponentupdate-の実行">#</a></h2>
 <p>以下はコンポーネントのサブツリーです。1つ1つは <code>shouldComponentUpdate</code> が何をリターンするかとvirtual DOMが同じものであるかどうかを示しています。最終的には、円の色が、コンポーネントを一致させる必要があるかどうかを示しています。</p>
 
 <figure><img src="/react/img/docs/should-component-update.png" /></figure>
@@ -526,7 +526,7 @@
 <p>問題は、親と内部のコンポーネントが同じオブジェクトへの参照を共有していることです。オブジェクトが <code>onClick</code> 関数の2行目で変更された時には、内部のコンポーネントが保有しているプロパティが変更されるでしょう。そのため、再レンダリングのプロセスが始まった時と、 <code>shouldComponentUpdate</code> が呼び出された時には、 <code>this.props.value.foo</code> は <code>nextProps.value.foo</code> と同じものになるでしょう。そのため、実際は、 <code>this.props.value</code> は <code>nextProps.value</code> と同じオブジェクトを参照します。</p>
 
 <p>結果として、プロパティの変更と再レンダリングのプロセスを省略ができなかったので、UIは <code>&#39;bar&#39;</code> から <code>&#39;barbar&#39;</code> にアップデートされないでしょう。</p>
-<h2><a class="anchor" name="immutable-js"></a>助けとなるImmutable-js <a class="hash-link" href="#immutable-js">#</a></h2>
+<h2><a class="anchor" name="助けとなるimmutable-js"></a>助けとなるImmutable-js <a class="hash-link" href="#助けとなるimmutable-js">#</a></h2>
 <p><a href="https://github.com/facebook/immutable-js">Immutable-js</a>はLee Byronによって作成されたJavaScriptのコレクションのライブラリです。Facebookが最近オープンソース化しました。これは、 <em>構造の共有</em> を通して、<em>不変の状態を保ち続ける</em> コレクションを提供します。以下のプロパティが何を意味するか見ていきましょう。</p>
 
 <ul>
@@ -552,7 +552,7 @@
 <p>変更を追跡する他の方法は、セッタによるフラグセットを保持することでダーティーチェックを行うことです。このアプローチの問題は、追加のコードを多く書いた場合やクラスの編集をいくつか行った場合でもセッタの使用が強制されることです。代わりに、変化の直前にオブジェクトをディープコピーし、変更が有ろうと無かろうと、その特定のために深い比較を行うことができます。このアプローチの問題は、ディープコピーと深い比較の両方とも、コストの高い操作であることです。</p>
 
 <p>そのため、不変なデータ構造によって、オブジェクトの変更を追跡するためのコストの低く、冗長ではない方法が提供されます。私たちがすべきなのは <code>shouldComponentUpdate</code> を実行することだけです。それゆえ、immutable-jsに提供される抽象化を使用して、propsやstate属性を形作る場合は、 <code>PureRenderMixin</code> を使用して、パフォーマンスの向上を行うことができます。</p>
-<h2><a class="anchor" name="immutable-js--flux"></a>Immutable-js と Flux <a class="hash-link" href="#immutable-js--flux">#</a></h2>
+<h2><a class="anchor" name="immutable-js-と-flux"></a>Immutable-js と Flux <a class="hash-link" href="#immutable-js-と-flux">#</a></h2>
 <p><a href="https://facebook.github.io/flux/">Flux</a>を使用している場合には、immutable-jsを使用して書き直すべきです。<a href="https://facebook.github.io/immutable-js/docs/#/">API一覧</a>をご覧ください。</p>
 
 <p>不変のデータ構造を使用したスレッドの例を形作る、ある方法を見ていきましょう。はじめに、形作ろうとしているエンティティのそれぞれに <code>Record</code> を定義する必要が有ります。Record はあるフィールドのセットの値を保持している、ただの不変なコンテナです。</p>

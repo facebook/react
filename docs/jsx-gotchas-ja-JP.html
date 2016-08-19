@@ -437,7 +437,7 @@
 <p>注意:
 インラインの <code>style</code> 属性のようなDOMの違いについては、<a href="/react/docs/dom-differences.html">こちら</a>を確認してください。</p>
 </blockquote>
-<h2><a class="anchor" name="html"></a>HTMLのエンティティ <a class="hash-link" href="#html">#</a></h2>
+<h2><a class="anchor" name="htmlのエンティティ"></a>HTMLのエンティティ <a class="hash-link" href="#htmlのエンティティ">#</a></h2>
 <p>以下のように、JSXの文字のテキストの中にHTMLのエンティティを挿入することができます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">First</span> <span class="o">&amp;</span><span class="nx">middot</span><span class="p">;</span> <span class="nx">Second</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
@@ -457,7 +457,7 @@
 </code></pre></div>
 <p>最後の手段として、常に<a href="/react/tips/dangerously-set-inner-html.html">生のHTMLを挿入</a>することもできます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
-</code></pre></div><h2><a class="anchor" name="html"></a>カスタムされたHTMLの属性 <a class="hash-link" href="#html">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="カスタムされたhtmlの属性"></a>カスタムされたHTMLの属性 <a class="hash-link" href="#カスタムされたhtmlの属性">#</a></h2>
 <p>HTMLの仕様書に存在しない要素をネイティブなHTML要素に渡した場合は、Reactはそれらをレンダリングしません。カスタムした属性を使う場合は、 <code>data-</code> を頭につけてください。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>

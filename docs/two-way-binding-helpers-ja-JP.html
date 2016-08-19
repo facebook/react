@@ -450,7 +450,7 @@
 <p>注意:
 <code>ReactLink</code> は薄いラッパーであり、 <code>onChange</code>/<code>setState()</code> パターンにおける習慣です。Reactアプリケーションのデータフローの方法を根本から変えるようなものではありません。</p>
 </blockquote>
-<h2><a class="anchor" name="reactlink-"></a>ReactLink: ビフォーアフター <a class="hash-link" href="#reactlink-">#</a></h2>
+<h2><a class="anchor" name="reactlink-ビフォアフタ"></a>ReactLink: ビフォーアフター <a class="hash-link" href="#reactlink-ビフォアフタ">#</a></h2>
 <p>以下が、 <code>ReactLink</code> を使用しない単純なフォームの例です。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -483,9 +483,9 @@
 
 <p>チェックボックスはその <code>value</code> 属性に対しての特別な態度を持っていることに注意してください。それは、チェックボックスがチェックされている（デフォルトで <code>on</code> ）場合にフォームのサブミットで送信される値です。 <code>value</code> 属性はチェックボックスがチェックされていても、チェックされていなくても、更新されません。チェックボックスについては、<code>valueLink</code> の代わりに、 <code>checkedLink</code> を使うべきです。以下のように。</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">&lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
-</code></pre></div><h2><a class="anchor" name=""></a>フードの下 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="フドの下"></a>フードの下 <a class="hash-link" href="#フドの下">#</a></h2>
 <p><code>ReactLink</code> には2つの側面があります。 <code>ReactLink</code> のインスタンスを作成する場所と、それを使う場所です。 <code>ReactLink</code> がどれだけ単純か証明するために、それぞれの側面を分けて、明確に再度記述してみましょう。</p>
-<h3><a class="anchor" name="linkedstatemixinreactlink"></a>LinkedStateMixinを使わないReactLink <a class="hash-link" href="#linkedstatemixinreactlink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<h3><a class="anchor" name="linkedstatemixinを使わないreactlink"></a>LinkedStateMixinを使わないReactLink <a class="hash-link" href="#linkedstatemixinを使わないreactlink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -502,7 +502,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>今まで見てきたように <code>ReactLink</code> オブジェクトは <code>value</code> と <code>requestChange</code> プロパティだけを持ったとても単純なオブジェクトです。そして、 <code>LinkedStateMixin</code> も同様に単純です。それらのフィールドを <code>this.state</code> の値と、 <code>this.setState()</code> を呼ぶコールバックで満たします。</p>
-<h3><a class="anchor" name="valuelinkreactlink"></a>valueLinkを使わないReactLink <a class="hash-link" href="#valuelinkreactlink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<h3><a class="anchor" name="valuelinkを使わないreactlink"></a>valueLinkを使わないReactLink <a class="hash-link" href="#valuelinkを使わないreactlink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>

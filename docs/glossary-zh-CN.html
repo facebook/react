@@ -434,11 +434,11 @@
     <p>在 React 的术语中,有五个要重点区分的核心类型:</p>
 
 <ul>
-<li><a href="#react-elements">ReactElement / ReactElement Factory</a></li>
+<li><a href="#react-elementsreact-%E5%85%83%E7%B4%A0">ReactElement / ReactElement Factory</a></li>
 <li><a href="#react-nodes">ReactNode</a></li>
 <li><a href="#react-components">ReactComponent / ReactComponent Class</a></li>
 </ul>
-<h2><a class="anchor" name="react-elementsreact-"></a>React Elements(React 元素) <a class="hash-link" href="#react-elementsreact-">#</a></h2>
+<h2><a class="anchor" name="react-elementsreact-元素"></a>React Elements(React 元素) <a class="hash-link" href="#react-elementsreact-元素">#</a></h2>
 <p>React里的首要类型是 <code>ReactElement</code>.它有四个 properties:<code>type</code>, <code>props</code>, <code>key</code> 和 <code>ref</code>.它没有方法,在 prototype 上什么也没有.</p>
 
 <p>你可以通过 <code>React.createElement</code> 来创建这些对象.</p>
@@ -457,7 +457,7 @@
              <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Text</span> <span class="nx">Content</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
            <span class="o">&lt;</span><span class="err">/ul&gt;;</span>
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div><h3><a class="anchor" name="factories"></a>Factories(工厂) <a class="hash-link" href="#factories">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="factories工厂"></a>Factories(工厂) <a class="hash-link" href="#factories工厂">#</a></h3>
 <p><code>ReactElement</code>-工厂 是一个产生特定 <code>type</code> property的 <code>ReactElement</code> 的函数.React有一个为你内建的辅助工具来创建工厂.它想这样起作用:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">type</span><span class="p">);</span>

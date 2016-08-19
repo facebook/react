@@ -431,7 +431,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>React는 보통 처음에는 꽤 빠릅니다. 하지만 모든 성능을 짜내야 하는 상황일 때를 위해, React는 <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> 훅을 제공해 React의 diff 알고리즘을 위한 최적화 힌트를 추가할 수 있습니다.</p>
+    <p>React는 보통 처음에는 꽤 빠릅니다. 하지만 모든 성능을 짜내야 하는 상황일 때를 위해, React는 <a href="/react/docs/component-specs-ko-KR.html#%EC%97%85%EB%8D%B0%EC%9D%B4%ED%8A%B8-%EC%8B%9C-shouldcomponentupdate">shouldComponentUpdate</a> 훅을 제공해 React의 diff 알고리즘을 위한 최적화 힌트를 추가할 수 있습니다.</p>
 
 <p>덧붙여 앱의 전반적인 성능의 개요도 제공합니다. ReactPerf는 프로파일링 도구로 정확히 어디에 훅이 필요한지 알려줍니다.</p>
 
@@ -440,9 +440,9 @@
 
 <p>React의 개발 빌드는 제공되는 추가 기능으로 인해 프로덕션 빌드보다 느립니다. 추가 기능에는 React의 친절한 콘솔 경고같은 것이 있습니다.(이는 프로덕션 빌드에서는 제거 됩니다) 따라서, 프로파일러는 앱의 <em>상대적으로</em> 비싼 부분만 표시하도록 합니다.</p>
 </blockquote>
-<h2><a class="anchor" name="-api"></a>일반 API <a class="hash-link" href="#-api">#</a></h2>
+<h2><a class="anchor" name="일반-api"></a>일반 API <a class="hash-link" href="#일반-api">#</a></h2>
 <p>여기에서 설명하는 <code>Perf</code> 객체는 <code>require(&#39;react-addons-perf&#39;)</code>로 노출되고 React 개발 모드에서만 사용할 수 있습니다. 이 번들을 프로덕션에서 앱과 같이 빌드하시면 안됩니다.</p>
-<h3><a class="anchor" name="perf.start-perf.stop"></a><code>Perf.start()</code>와 <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-perf.stop">#</a></h3>
+<h3><a class="anchor" name="perf.start와-perf.stop"></a><code>Perf.start()</code>와 <code>Perf.stop()</code> <a class="hash-link" href="#perf.start와-perf.stop">#</a></h3>
 <p>측정을 시작/정지합니다. 그 사이의 React 연산은 밑에 있는 분석을 하기위해 기록됩니다. 미미한 양의 연산은 무시됩니다.</p>
 
 <p>종료 후, 측정을 하기위해서는 이후에 설명할 <code>Perf.getLastMeasurements()</code>가 필요합니다.</p>
@@ -464,7 +464,7 @@
 <p>&quot;set innerHTML&quot;이나 &quot;remove&quot;같은 기저의 DOM 조작을 출력합니다.</p>
 
 <p><img src="/react/img/docs/perf-dom.png" alt=""></p>
-<h2><a class="anchor" name="-api"></a>고급 API <a class="hash-link" href="#-api">#</a></h2>
+<h2><a class="anchor" name="고급-api"></a>고급 API <a class="hash-link" href="#고급-api">#</a></h2>
 <p>위의 출력 메소드에 <code>Perf.getLastMeasurements()</code>를 사용해 결과를 이쁘게 출력합니다.</p>
 <h3><a class="anchor" name="perf.getlastmeasurements"></a><code>Perf.getLastMeasurements()</code> <a class="hash-link" href="#perf.getlastmeasurements">#</a></h3>
 <p>마지막 start-stop 세션에서 측정들의 배열을 가져옵니다. 이 배열은 이런 객체들을 가지고 있습니다.</p>

@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>Reactで<a href="/react/docs/displaying-data-ja-JP.html">どうやってデータを表示するか</a>については既に学んでいます。これからは、どうやって相互に作用するUIを作成するかを見ていきましょう。</p>
-<h2><a class="anchor" name=""></a>単純な例 <a class="hash-link" href="#">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LikeButton</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<h2><a class="anchor" name="単純な例"></a>単純な例 <a class="hash-link" href="#単純な例">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LikeButton</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">liked</span><span class="o">:</span> <span class="kc">false</span><span class="p">};</span>
   <span class="p">},</span>
@@ -453,30 +453,30 @@
   <span class="o">&lt;</span><span class="nx">LikeButton</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>イベントハンドリングとイベントの組み合わせ <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="イベントハンドリングとイベントの組み合わせ"></a>イベントハンドリングとイベントの組み合わせ <a class="hash-link" href="#イベントハンドリングとイベントの組み合わせ">#</a></h2>
 <p>Reactでは、普通のHTMLで行っているように単純にキャメルケースのpropとしてイベントハンドラを渡します。ReactはIE8と同じように全てのイベントが動作することと、組み合わされたイベントシステムが実行されることを保証します。これは、Reactが、イベントがどのように発生して、仕様にそってそれをキャプチャする方法を知っていることと、イベントはイベントハンドラに渡されて、どのブラウザを使っていても、<a href="http://www.w3.org/TR/DOM-Level-3-Events/">W3Cの仕様</a>と一致することを保証することを意味します。</p>
-<h2><a class="anchor" name="-"></a>中身を見る: オートバインディングとイベントの委譲 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="中身を見る-オトバインディングとイベントの委譲"></a>中身を見る: オートバインディングとイベントの委譲 <a class="hash-link" href="#中身を見る-オトバインディングとイベントの委譲">#</a></h2>
 <p>中身を見ていくと、Reactはコードの性能と、理解しやすさを保つためにいくつかのことを行っています。</p>
 
 <p><strong>オートバインディング:</strong> JavaScriptでコールバックを作成するときには、普通は <code>this</code> の値が正しくなるように、インスタンスにメソッドをはっきりとバインドする必要があります。
 Reactでは、全てのメソッドが自動でコンポーネントのインスタンスにバインドされます。ReactはCPUとメモリを効率的に使えるように、バインドするメソッドを持っています。これによって、タイピングの量を少なくすることもできます！</p>
 
 <p><strong>イベントの委譲:</strong> Reactは実際はノード自体にイベントハンドラをアタッチはしません。Reactを立ち上げる時、1つのイベントリスナを使って最上位で全てのイベントをリスニングし始めます。コンポーネントがマウントされたり、アンマウントされた時は、イベントハンドラは内部のマッピングを単純に加えたり減らしたりします。イベントが起こった時には、Reactはこのマッピングを使ってどのようにディスパッチするかを知っています。マッピングの中にイベントハンドラが無い場合は、Reactのイベントハンドラは何も行いません。なぜこれの速度が速いかについて詳しく知るためには、<a href="http://davidwalsh.name/event-delegate">David Walshの素晴らしいブログの投稿</a>をご覧ください。</p>
-<h2><a class="anchor" name=""></a>コンポーネントは静的なマシーンに過ぎない <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="コンポネントは静的なマシンに過ぎない"></a>コンポーネントは静的なマシーンに過ぎない <a class="hash-link" href="#コンポネントは静的なマシンに過ぎない">#</a></h2>
 <p>ReactはUIをただの静的なマシーンと考えます。UIがたくさんのstateの中にあり、それらのstateをレンダリングするものだと考えることで、UIの一貫性を保ちやすくなります。</p>
 
 <p>Reactでは、コンポーネントのstateをアップデートするだけで、新しいstateに基づいた新しいUIをレンダリングします。Reactは最も効率的な方法でDOMをアップデートする面倒を見てくれます。</p>
-<h2><a class="anchor" name="state"></a>どのようにStateが働くか <a class="hash-link" href="#state">#</a></h2>
+<h2><a class="anchor" name="どのようにstateが働くか"></a>どのようにStateが働くか <a class="hash-link" href="#どのようにstateが働くか">#</a></h2>
 <p>Reactがデータの変更を通知する共通な方法は <code>setState(data, callback)</code> を呼ぶことです。このメソッドは <code>data</code> を <code>this.state</code> にマージし、コンポーネントを再度レンダリングします。コンポーネントが再度レンダリングし終わったら、オプションの <code>callback</code> が呼ばれます。ほとんどの場合、 <code>callback</code> を提供する必要はありません。ReactがUIを最新に保ってくれるからです。</p>
-<h2><a class="anchor" name="state"></a>どのコンポーネントがStateを持っているべきでしょうか？ <a class="hash-link" href="#state">#</a></h2>
+<h2><a class="anchor" name="どのコンポネントがstateを持っているべきでしょうか"></a>どのコンポーネントがStateを持っているべきでしょうか？ <a class="hash-link" href="#どのコンポネントがstateを持っているべきでしょうか">#</a></h2>
 <p>コンポーネントは単純に <code>props</code> からデータを取得し、レンダリングすべきです。しかし、時々、ユーザのインプットやサーバのリクエストや、時間の経過に反応する必要が有ります。このような場合にstateを使うのです。</p>
 
 <p><strong>コンポーネントの多くを、可能な限りステートレスに保つよう試みてください。</strong> このようにすることで、stateを最もロジックに近い場所から離し、冗長性を減らすことができ、アプリケーションが理解しやすくなります。</p>
 
 <p>共通なパターンはただデータをレンダリングするいくつかのステートレスなコンポーネントを構築することで、 <code>props</code> を通してその子要素にstateを渡す階級でステートフルなコンポーネントを持つことです。ステートフルなコンポーネントは、ステートレスなコンポーネントが叙述的な方法でデータをレンダリングする助けを行う一方で、全ての相互作用のロジックを持ちます。</p>
-<h2><a class="anchor" name="state--"></a>stateで何が行われる <em>べき</em> でしょうか？ <a class="hash-link" href="#state--">#</a></h2>
+<h2><a class="anchor" name="stateで何が行われる-べき-でしょうか"></a>stateで何が行われる <em>べき</em> でしょうか？ <a class="hash-link" href="#stateで何が行われる-べき-でしょうか">#</a></h2>
 <p><strong>stateはUIのアップデートのトリガーとなるコンポーネントのイベントハンドラとしてのデータを保持するべきです。</strong> 現実のアプリでは、このデータはとても小さく、JSONでシリアライズできるものになります。ステートフルなコンポーネントを構築する時は、このstateの表現をできるだけ小さくなるように、また、 <code>this.state</code> の中だけにそれらのプロパティを貯めこむように考えてください。 <code>render()</code> の中では、このstateに基づく、他の必要な情報をただ計算してください。このように考えたりアプリケーションを記述したりすることが最も正しいアプリケーションへの道であると発見するでしょう。stateに余剰な値や、計算後の値を加えることはReactがそれらを計算してくれるのに頼るのではなく、同期的にそれらを明白に保つ必要があることを意味します。</p>
-<h2><a class="anchor" name="state--"></a>stateで何が行われる <em>べきではない</em> でしょうか？ <a class="hash-link" href="#state--">#</a></h2>
+<h2><a class="anchor" name="stateで何が行われる-べきではない-でしょうか"></a>stateで何が行われる <em>べきではない</em> でしょうか？ <a class="hash-link" href="#stateで何が行われる-べきではない-でしょうか">#</a></h2>
 <p><code>this.state</code> UIのstateを表す必要がある最小限の量のデータだけを保持するべきです。このような点で以下のようなものは保持するべきではありません。</p>
 
 <ul>

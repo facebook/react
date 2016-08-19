@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>用户界面能做的最基础的事就是显示一些数据。React 让显示数据变得简单，当数据变化的时候，用户界面会自动同步更新。</p>
-<h2><a class="anchor" name=""></a>开始 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="开始"></a>开始 <a class="hash-link" href="#开始">#</a></h2>
 <p>让我们看一个非常简单的例子。新建一个名为 <code>hello-react.html</code> 的文件，代码内容如下：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -471,13 +471,13 @@
     <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
   <span class="p">);</span>
 <span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="-reactive-updates"></a>被动更新 (Reactive Updates) <a class="hash-link" href="#-reactive-updates">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="被动更新-reactive-updates"></a>被动更新 (Reactive Updates) <a class="hash-link" href="#被动更新-reactive-updates">#</a></h2>
 <p>在浏览器中打开 <code>hello-react.html</code> ，在输入框输入你的名字。你会发现 React 在用户界面中只改变了时间， 任何你在输入框输入的内容一直保留着，即使你没有写任何代码来完成这个功能。React 为你解决了这个问题，做了正确的事。</p>
 
 <p>我们想到的方法是除非不得不操作 DOM ，React 是不会去操作 DOM 的。<strong>它用一种更快的内置仿造的 DOM 来操作差异，为你计算出出效率最高的 DOM 改变</strong>。</p>
 
 <p>对这个组件的输入称为 <code>props</code> - &quot;properties&quot;的缩写。得益于 JSX 语法，它们通过参数传递。你必须知道在组件里，这些属性是不可改变的，也就是说 <strong><code>this.props</code> 是只读的</strong>。</p>
-<h2><a class="anchor" name=""></a>组件就像是函数 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="组件就像是函数"></a>组件就像是函数 <a class="hash-link" href="#组件就像是函数">#</a></h2>
 <p>React 组件非常简单。你可以认为它们就是简单的函数，接受 <code>props</code> 和 <code>state</code> (后面会讨论) 作为参数，然后渲染出 HTML。正是应为它们是这么的简单，这使得它们非常容易理解。</p>
 
 <blockquote>
@@ -485,7 +485,7 @@
 
 <p><strong>只有一个限制</strong>: React 组件只能渲染单个根节点。如果你想要返回多个节点，它们<em>必须</em>被包含在同一个节点里。</p>
 </blockquote>
-<h2><a class="anchor" name="jsx-"></a>JSX 语法 <a class="hash-link" href="#jsx-">#</a></h2>
+<h2><a class="anchor" name="jsx-语法"></a>JSX 语法 <a class="hash-link" href="#jsx-语法">#</a></h2>
 <p>我们坚信组件是正确方法去做关注分离，而不是通过“模板”和“展示逻辑”。我们认为标签和生成它的代码是紧密相连的。此外，展示逻辑通常是很复杂的，通过模板语言实现这些逻辑会产生大量代码。</p>
 
 <p>我们得出解决这个问题最好的方案是通过 JavaScript 直接生成模板，这样你就可以用一个真正语言的所有表达能力去构建用户界面。</p>
@@ -507,7 +507,7 @@
 <p>JSX 类似于 HTML，但不是完全一样。参考 <a href="/react/docs/jsx-gotchas-zh-CN.html">JSX 陷阱</a> 学习关键区别。</p>
 
 <p>[Babel 公开了一些使用 JSX 的方式],从命令行工具到 Ruby on Rails 集成。选择一个对你来说最合适的工具。</p>
-<h2><a class="anchor" name="-jsx--react"></a>没有 JSX 的 React <a class="hash-link" href="#-jsx--react">#</a></h2>
+<h2><a class="anchor" name="没有-jsx-的-react"></a>没有 JSX 的 React <a class="hash-link" href="#没有-jsx-的-react">#</a></h2>
 <p>JSX完全是可选的；你无需在 React 中必须使用 JSX。你可以通过 <code>React.createElement</code> 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，第三个是子节点。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>

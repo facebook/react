@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>因为React和Web组件是用来解决不同问题的, 试图比较两者将不可避免地导致似是而非的结论, 。Web组件为可复用组件提供了强大的封装, 而React则提供了一个使DOM与你的数据同步的声明式库。两者的目标是互补的；工程师可以混合使用这些技术。作为一个开发者，你可以在你的Web组件中使用React，或者在React中使用Web组件，或者两者一起使用。</p>
-<h2><a class="anchor" name="reactweb"></a>在React中使用Web组件 <a class="hash-link" href="#reactweb">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span><span class="p">{</span>
+<h2><a class="anchor" name="在react中使用web组件"></a>在React中使用Web组件 <a class="hash-link" href="#在react中使用web组件">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span><span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="o">&lt;</span><span class="nx">x</span><span class="o">-</span><span class="nx">search</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/x-search&gt;!&lt;/div&gt;;</span>
   <span class="p">}</span>
@@ -451,7 +451,7 @@ web组件通常暴露一个命令式的API (比如 一个 <code>video</code> web
 <p>当前，一个由web组件触发的事件可能不能准确地在React渲染树中传递。
 你将需要手动附加event handlers来在你的react组件中处理这些事件。</p>
 </blockquote>
-<h2><a class="anchor" name="web-react"></a>在Web 组件中使用React <a class="hash-link" href="#web-react">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+<h2><a class="anchor" name="在web-组件中使用react"></a>在Web 组件中使用React <a class="hash-link" href="#在web-组件中使用react">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
   <span class="nx">attachedCallback</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="kd">var</span> <span class="nx">mountPoint</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">);</span>
@@ -464,7 +464,7 @@ web组件通常暴露一个命令式的API (比如 一个 <code>video</code> web
   <span class="p">}</span>
 <span class="p">});</span>
 <span class="nb">document</span><span class="p">.</span><span class="nx">registerElement</span><span class="p">(</span><span class="s1">&#39;x-search&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">prototype</span><span class="o">:</span> <span class="nx">proto</span><span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name=""></a>完整样例 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="完整样例"></a>完整样例 <a class="hash-link" href="#完整样例">#</a></h2>
 <p>若要查看完整样例，请参照<a href="/react/downloads.html">starter kit</a>中的<code>webcomponents</code>例子。</p>
 
 

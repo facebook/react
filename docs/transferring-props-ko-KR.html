@@ -440,7 +440,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="p">{</span> <span class="nx">more</span><span class="o">:</span> <span class="s1">&#39;values&#39;</span> <span class="p">}));</span>
 </code></pre></div>
 <p>이 튜토리얼의 나머지 부분은 모범 답안을 소개할 것입니다. JSX와 실험적인 ES7 구문을 사용합니다.</p>
-<h2><a class="anchor" name="-"></a>수동적인 전달 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="수동적인-전달"></a>수동적인 전달 <a class="hash-link" href="#수동적인-전달">#</a></h2>
 <p>대부분의 경우 명시적으로 프로퍼티를 아래로 전달해야 합니다. 이는 동작을 확신하는 내부 API의 일부만 공개하도록 합니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
@@ -458,7 +458,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>하지만 <code>name</code>이나 <code>title</code>, <code>onMouseOver</code> 같은 prop들이 더 추가된다면 어떨까요?</p>
-<h2><a class="anchor" name="jsx-...--"></a>JSX에서 <code>...</code>를 사용해 전달하기 <a class="hash-link" href="#jsx-...--">#</a></h2>
+<h2><a class="anchor" name="jsx에서-...를-사용해-전달하기"></a>JSX에서 <code>...</code>를 사용해 전달하기 <a class="hash-link" href="#jsx에서-...를-사용해-전달하기">#</a></h2>
 <blockquote>
 <p>주의:</p>
 
@@ -500,7 +500,7 @@
     <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
   <span class="p">);</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="-prop--"></a>같은 Prop을 소비하고 전달하기 <a class="hash-link" href="#-prop--">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="같은-prop을-소비하고-전달하기"></a>같은 Prop을 소비하고 전달하기 <a class="hash-link" href="#같은-prop을-소비하고-전달하기">#</a></h2>
 <p>컴포넌트가 프로퍼티를 사용하지만 계속 넘기길 원한다면, <code>checked={checked}</code>처럼 명시적으로 다시 넘길 수 있습니다. 리팩토링과 린트(lint)하기가 더 쉬우므로 이 방식이 <code>this.props</code> 객체 전부를 넘기는 것보다 낫습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">props</span><span class="p">;</span>
@@ -525,7 +525,7 @@
 </blockquote>
 
 <p><a name="rest-and-spread-properties-..."></a></p>
-<h2><a class="anchor" name="----..."></a>잔여 프로퍼티와 스프레드 프로퍼티 <code>...</code> <a class="hash-link" href="#----...">#</a></h2>
+<h2><a class="anchor" name="잔여-프로퍼티와-스프레드-프로퍼티-..."></a>잔여 프로퍼티와 스프레드 프로퍼티 <code>...</code> <a class="hash-link" href="#잔여-프로퍼티와-스프레드-프로퍼티-...">#</a></h2>
 <p>잔여(Rest, <code>...</code>) 프로퍼티는 객체에서 소비되지 않은 나머지 프로퍼티를 추출해 새로운 객체로 만들 수 있게 해 줍니다. 구조 해체 패턴에서 열거된 다른 프로퍼티들은 모두 제외됩니다.</p>
 
 <p>이 제안은 2 단계에 돌입해 이제 바벨에서 기본값으로 활성화되어있습니다. 바벨의 이전 버전은 <code>babel --optional es7.objectRestSpread</code>로 명시적으로 활성화 할 필요가 있을 수도 있습니다.</p>
@@ -539,7 +539,7 @@
 
 <p>실험적인 ES7 구문을 활성화하려면 <a href="https://www.npmjs.com/package/react-tools">JSX 커맨드라인 도구</a>를 <code>--harmony</code> 플래그와 함께 사용하세요.</p>
 </blockquote>
-<h2><a class="anchor" name="underscore--"></a>Underscore로 전달 다루기 <a class="hash-link" href="#underscore--">#</a></h2>
+<h2><a class="anchor" name="underscore로-전달-다루기"></a>Underscore로 전달 다루기 <a class="hash-link" href="#underscore로-전달-다루기">#</a></h2>
 <p>JSX를 사용하지 않는다면 라이브러리를 사용해 같은 패턴을 쓸 수 있습니다. Underscore에서는 <code>_.omit</code>을 사용해 특정 프로퍼티를 제외하거나 <code>_.extend</code>를 사용해 새로운 객체로 프로퍼티를 복사할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">checked</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span><span class="p">;</span>

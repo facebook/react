@@ -432,15 +432,15 @@
     <div class="subHeader"></div>
 
     <p>React提供了强大的抽象机制使你在大多数情况下免于直接接触DOM，但有时你仅仅只需要访问底层API，也许是为了与第三方库或者已有的代码协作。</p>
-<h2><a class="anchor" name="-dom"></a>虚拟 DOM <a class="hash-link" href="#-dom">#</a></h2>
+<h2><a class="anchor" name="虚拟-dom"></a>虚拟 DOM <a class="hash-link" href="#虚拟-dom">#</a></h2>
 <p>React非常快速是因为它从不直接操作DOM。React维持了一个快速的内存中的DOM表示。<code>render()</code> 方法实际上返回一个对DOM的<em>描述</em>，然后React能将其与内存中的“描述”进行比较，以计算出最快速的方式更新浏览器。</p>
 
 <p>此外，React实现了一个完备的合成事件（synthetic event）系统，以使得所有的事件对象都被保证符合W3C细则，而不论各个浏览器的怪癖，并且所有事件跨浏览器地一致并高效的冒泡（bubbles），你甚至能在IE8里使用一些HTML5事件！</p>
 
 <p>大多数时间你应该和React的&quot;伪造浏览器&quot;呆在一起，因为它更高性能并且容易推理。然而，有时你只需要访问底层API，或许是为了与第三方库比如一个jQuery插件协作。React为你提供了安全舱口来直接使用底层API。</p>
-<h2><a class="anchor" name="refs--finddomnode"></a>Refs 和 findDOMNode() <a class="hash-link" href="#refs--finddomnode">#</a></h2>
+<h2><a class="anchor" name="refs-和-finddomnode"></a>Refs 和 findDOMNode() <a class="hash-link" href="#refs-和-finddomnode">#</a></h2>
 <p>为了与浏览器互动，你需要一个指向DOM node的引用。你可以连接一个 <code>ref</code> 到任何的元素，这允许你引用组件的 <strong>backing instance</strong>  。如果你需要在组件上调用命令式函数，或者想访问底层的DOM节点，它很有用。要了解更多关于 refs，包括更有效使用他们的方法，请查看我们的 <a href="/react/docs/more-about-refs-zh-CN.html">关于Refs的更多内容</a> 文档。</p>
-<h2><a class="anchor" name=""></a>组件的生命周期 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="组件的生命周期"></a>组件的生命周期 <a class="hash-link" href="#组件的生命周期">#</a></h2>
 <p>组件的生命周期有三个主要部分：</p>
 
 <ul>
@@ -450,30 +450,30 @@
 </ul>
 
 <p>React提供生命周期方法，以便你可以指定钩挂到这个过程上。我们提供了 <strong>will</strong> 方法，该方法在某事发生前被调用，<strong>did</strong>方法，在某事发生后被调用。</p>
-<h3><a class="anchor" name=""></a>挂载 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="挂载"></a>挂载 <a class="hash-link" href="#挂载">#</a></h3>
 <ul>
 <li><code>getInitialState(): object</code> 在组件挂载前被调用。有状态组件(Stateful components) 应该实现此函数并返回初始state的数据。</li>
 <li><code>componentWillMount()</code> 在挂载发生前被立即调用。</li>
 <li><code>componentDidMount()</code> 在挂载发生后被立即调用。 需要DOM node的初始化应该放在这里。</li>
 </ul>
-<h3><a class="anchor" name=""></a>更新 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="更新"></a>更新 <a class="hash-link" href="#更新">#</a></h3>
 <ul>
 <li><code>componentWillReceiveProps(object nextProps)</code> 当挂载的组件接收到新的props时被调用。此方法应该被用于比较<code>this.props</code> 和 <code>nextProps</code>以用于使用<code>this.setState()</code>执行状态转换。</li>
 <li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> 当组件决定任何改变是否要更新到DOM时被调用。作为一个优化实现比较<code>this.props</code> 和 <code>nextProps</code> 、<code>this.state</code> 和 <code>nextState</code> ，如果React应该跳过更新，返回<code>false</code>。</li>
 <li><code>componentWillUpdate(object nextProps, object nextState)</code> 在更新发生前被立即调用。你不能在此调用<code>this.setState()</code>。</li>
 <li><code>componentDidUpdate(object prevProps, object prevState)</code> 在更新发生后被立即调用。</li>
 </ul>
-<h3><a class="anchor" name=""></a>卸载 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="卸载"></a>卸载 <a class="hash-link" href="#卸载">#</a></h3>
 <ul>
 <li><code>componentWillUnmount()</code> 在组件被卸载和摧毁前被立即调用。清理应该放在这里。</li>
 </ul>
-<h3><a class="anchor" name=""></a>已挂载的方法 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="已挂载的方法"></a>已挂载的方法 <a class="hash-link" href="#已挂载的方法">#</a></h3>
 <p><em>Mounted</em> 复合组件同样支持以下方法:</p>
 
 <ul>
 <li><code>component.forceUpdate()</code> 可以在任何已挂载的组件上调用，在你知道某些深处的组件状态在未使用 <code>this.setState()</code> 就被改变了时。</li>
 </ul>
-<h2><a class="anchor" name=""></a>浏览器支持 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="浏览器支持"></a>浏览器支持 <a class="hash-link" href="#浏览器支持">#</a></h2>
 <p>React 支持绝大多数流行的浏览器，包括 Internet Explorer 9 及以上。</p>
 
 <p>（我们不支持那些不支持 ES5 methods 的更老的浏览器，但你可能发现如果你的页面包含了类似 <a href="https://github.com/es-shims/es5-shim">es5-shim and es5-sham</a> 的填充物时是可以在更老的浏览器上运行的。是否做这一步取决于你自己。）</p>

@@ -435,7 +435,7 @@
 <p><code>React</code>는 React 라이브러리의 진입점입니다. 미리 빌드된 패키지를 사용하는 경우 전역 변수로 접근할 수 있습니다. CommonJS 모듈을 사용하는 경우에는 <code>require()</code>로 불러올 수 있습니다.</p>
 <h3><a class="anchor" name="react.component"></a>React.Component <a class="hash-link" href="#react.component">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Component</span>
 </code></pre></div>
-<p>ES6 클래스 구문을 사용해 React 컴포넌트를 정의했을 때 기본 클래스가 되는 부분입니다. 어떻게 ES6 클래스 구문을 사용해 React를 다루는지는 <a href="/react/docs/reusable-components-ko-KR.html#es6-classes">재사용가능한 컴포넌트</a>를 확인하세요. 기본 클래스에서 실제 제공되는 메소드들에는 어떤것이 있는지 알아보려면 <a href="/react/docs/component-api-ko-KR.html">컴포넌트 API</a>를 확인하세요.</p>
+<p>ES6 클래스 구문을 사용해 React 컴포넌트를 정의했을 때 기본 클래스가 되는 부분입니다. 어떻게 ES6 클래스 구문을 사용해 React를 다루는지는 <a href="/react/docs/reusable-components-ko-KR.html#es6-%ED%81%B4%EB%9E%98%EC%8A%A4">재사용가능한 컴포넌트</a>를 확인하세요. 기본 클래스에서 실제 제공되는 메소드들에는 어떤것이 있는지 알아보려면 <a href="/react/docs/component-api-ko-KR.html">컴포넌트 API</a>를 확인하세요.</p>
 <h3><a class="anchor" name="react.createclass"></a>React.createClass <a class="hash-link" href="#react.createclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactClass</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">object</span> <span class="nx">specification</span><span class="p">)</span>
 </code></pre></div>
 <p>주어진 명세에 따라 컴포넌트 클래스를 만듭니다. 컴포넌트는 단 하나의 자식만을 리턴하는 <code>render</code> 메소드를 구현합니다. 그 자식은 임의 깊이의 자식 구조를 가질 수 있습니다. 컴포넌트가 일반적인 프로토타입 기반의 클래스와 다른 점은 생성할 때 <code>new</code> 연산자를 사용하지 않아도 된다는 것입니다. 컴포넌트는 (<code>new</code> 연산자를 통해) 내부 인스턴스를 만들어 주는 편의 래퍼(wrapper)입니다.</p>
@@ -483,16 +483,16 @@
 <p><code>children</code>에 단 하나의 자식이 있을 때 그 자식을 리턴합니다. 그 밖의 경우에는 예외를 발생시킵니다.</p>
 <h4><a class="anchor" name="react.children.toarray"></a>React.Children.toArray <a class="hash-link" href="#react.children.toarray">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
 </code></pre></div>
-<p>불투명한 자료구조인 <code>children</code>를 개별 자식마다 키를 할당해 평면 배열로 리턴합니다. 이는 render 메소드 내에서 자식의 컬렉션을 조작할 때, 특히 <code>this.props.children</code>을 넘기기 전에 재정렬하거나 재단할 때 유용합니다.   </p>
+<p>불투명한 자료구조인 <code>children</code>를 개별 자식마다 키를 할당해 평면 배열로 리턴합니다. 이는 render 메소드 내에서 자식의 컬렉션을 조작할 때, 특히 <code>this.props.children</code>을 넘기기 전에 재정렬하거나 재단할 때 유용합니다.</p>
 <h2><a class="anchor" name="reactdom"></a>ReactDOM <a class="hash-link" href="#reactdom">#</a></h2>
-<p><code>react-dom</code> 패키지는 앱의 최상위 레벨에서 사용될 DOM 고유의 메소드를 제공하며, 원한다면 리액트 외부모델을 위한 출구로 사용될 수 있습니다. 대부분의 컴포넌트는 이 모듈을 사용할 필요가 없습니다. </p>
+<p><code>react-dom</code> 패키지는 앱의 최상위 레벨에서 사용될 DOM 고유의 메소드를 제공하며, 원한다면 리액트 외부모델을 위한 출구로 사용될 수 있습니다. 대부분의 컴포넌트는 이 모듈을 사용할 필요가 없습니다.</p>
 <h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
   <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>주어진 ReactElement를 <code>container</code> 인자에 넘어온 DOM 안에 렌더링하고 컴포넌트의 <a href="/react/docs/more-about-refs-ko-KR.html">레퍼런스</a>를 컴포넌트에 리턴합니다. <a href="/react/docs/reusable-components-ko-KR.html#stateless-functions">상태가 없는 컴포넌트</a>에서는 <code>null</code>을 리턴합니다. </p>
+<p>주어진 ReactElement를 <code>container</code> 인자에 넘어온 DOM 안에 렌더링하고 컴포넌트의 <a href="/react/docs/more-about-refs-ko-KR.html">레퍼런스</a>를 컴포넌트에 리턴합니다. <a href="/react/docs/reusable-components-ko-KR.html#%EC%83%81%ED%83%9C%EB%A5%BC-%EA%B0%80%EC%A7%80%EC%A7%80-%EC%95%8A%EB%8A%94-%ED%95%A8%EC%88%98">상태가 없는 컴포넌트</a>에서는 <code>null</code>을 리턴합니다.</p>
 
 <p>어떤 ReactElement가 이미 <code>container</code>에 렌더링 된 적이 있다면, 그것을 업데이트한 뒤 React 컴포넌트의 최신 상태를 반영하기 위해 꼭 필요한 만큼만 DOM을 변경합니다.</p>
 
@@ -517,7 +517,7 @@
 
 <p><code>findDOMNode()</code>는 기본 DOM 노드에 접근하기 위한 출구입니다. 컴포넌트 추상화를 파괴하기 때문에 대부분의 경우 이것의 사용은 권장되지 않습니다.</p>
 
-<p><code>findDOMNode()</code>는 마운트된 컴포넌트에서만 작동합니다. 이는 컴포넌트가 DOM에 위치해야 함을 뜻합니다. 만약 아직 생성되기전의 컴포넌트에서 <code>render()</code>에서 <code>findDOMNode()</code>를 호출하는 등 컴포넌트가 마운트 되기 이전에 이를 호출한다면, 예외가 던져질 것입니다.  </p>
+<p><code>findDOMNode()</code>는 마운트된 컴포넌트에서만 작동합니다. 이는 컴포넌트가 DOM에 위치해야 함을 뜻합니다. 만약 아직 생성되기전의 컴포넌트에서 <code>render()</code>에서 <code>findDOMNode()</code>를 호출하는 등 컴포넌트가 마운트 되기 이전에 이를 호출한다면, 예외가 던져질 것입니다.</p>
 
 <p><code>findDOMNode()</code>는 상태가없는 컴포넌트에서 쓸 수 없습니다.</p>
 </blockquote>

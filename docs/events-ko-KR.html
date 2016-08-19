@@ -431,7 +431,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="synthetic-"></a>통합적인(Synthetic) 이벤트 <a class="hash-link" href="#synthetic-">#</a></h2>
+    <h2><a class="anchor" name="통합적인synthetic-이벤트"></a>통합적인(Synthetic) 이벤트 <a class="hash-link" href="#통합적인synthetic-이벤트">#</a></h2>
 <p>이벤트 핸들러는 브라우저의 네이티브 이벤트의 크로스 브라우저 래퍼(wrapper)인<code>SyntheticEvent</code>의 인스턴스에 전달됩니다. 모든 브라우저에서 동작한다는 점을 제외하면, <code>SyntheticEvent</code>는 <code>stopPropagation()</code>나 <code>preventDefault()</code>를 포함해, 브라우저의 네이티브 이벤트와 같은 인터페이스를 가지고 있습니다.</p>
 
 <p>어떤 이유로 기본 브라우저 이벤트가 필요하다면, 그냥 <code>nativeEvent</code>를 사용해 할 수 있습니다. 모든 <code>SyntheticEvent</code> 객체는 이런 어트리뷰트를 가집니다.</p>
@@ -455,7 +455,7 @@
 
 <p>v0.14 시점에서, 이벤트 핸들러에서 <code>false</code> 를 리턴하는 것은 더 이상 이벤트의 전달(propagation)을 멈추지 않습니다. 대신, <code>e.stopPropagation()</code>나 <code>e.preventDefault()</code>로 적절히 수동으로 트리거해야 합니다.</p>
 </blockquote>
-<h2><a class="anchor" name="-"></a>이벤트 풀링 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="이벤트-풀링"></a>이벤트 풀링 <a class="hash-link" href="#이벤트-풀링">#</a></h2>
 <p><code>SyntheticEvent</code>는 풀링됩니다. 이는 <code>SyntheticEvent</code> 객체가 재사용될 것이며 이벤트 콜백이 호출된 후 모든 프로퍼티가 null 값을 갖게 된다는 것을 뜻합니다.
 이는 성능을 위한 동작입니다.
 이 때문에, 비동기 방식으로는 이벤트에 접근할 수 없습니다.</p>
@@ -478,11 +478,11 @@
 
 <p>만약 비동기 방식으로 이벤트 프로퍼티에 접근하길 원한다면, 이벤트의 <code>event.persist()</code>를 호출해야 합니다, 이는 풀로부터 통합적인 이벤트를 제거하고 이벤트에 대한 참조는 사용자의 코드에 의해 유지 될 수 있도록 합니다.</p>
 </blockquote>
-<h2><a class="anchor" name="-"></a>지원되는 이벤트 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="지원되는-이벤트"></a>지원되는 이벤트 <a class="hash-link" href="#지원되는-이벤트">#</a></h2>
 <p>React는 다른 브라우저에서 일관된 특성을 가지도록 이벤트를 일반화합니다.</p>
 
 <p>밑에 있는 이벤트 핸들러들은 일으키는(bubbling) 단계에서 이벤트를 트리거합니다. 이벤트 핸들러를 캡처 단계로 등록하려면, 이벤트 이름에 <code>Capture</code>를 붙이면 됩니다.  예를 들어, 캡처 단계의 클릭 이벤트를 다루려면 <code>onClick</code>를 사용하는 대신에 <code>onClickCapture</code>를 사용해야 합니다.</p>
-<h3><a class="anchor" name="-"></a>클립보드 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="클립보드-이벤트"></a>클립보드 이벤트 <a class="hash-link" href="#클립보드-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onCopy onCut onPaste
 </code></pre></div>
@@ -494,7 +494,7 @@
 </code></pre></div>
 <p>프로퍼티:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">data</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>키보드 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="키보드-이벤트"></a>키보드 이벤트 <a class="hash-link" href="#키보드-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
 </code></pre></div>
@@ -511,7 +511,7 @@
 <span class="kr">boolean</span> <span class="nx">repeat</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 <span class="nx">number</span> <span class="nx">which</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>포커스 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="포커스-이벤트"></a>포커스 이벤트 <a class="hash-link" href="#포커스-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onFocus onBlur
 </code></pre></div>
@@ -519,14 +519,12 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
 </code></pre></div>
 <p>이 포커스 이벤트는 폼 엘리먼트뿐만 아니라 모든 React DOM 엘리먼트에서 작동합니다.</p>
-
-<p><a name="form-events"></a></p>
-<h3><a class="anchor" name="-"></a>폼 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="폼-이벤트"></a>폼 이벤트 <a class="hash-link" href="#폼-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
 </code></pre></div>
 <p>onChange 이벤트에 대한 더 자세한 정보는 <a href="/react/docs/forms-ko-KR.html">폼</a>에서 확인하세요.</p>
-<h3><a class="anchor" name="-"></a>마우스 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="마우스-이벤트"></a>마우스 이벤트 <a class="hash-link" href="#마우스-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
 onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
@@ -549,10 +547,10 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">number</span> <span class="nx">screenX</span>
 <span class="nx">number</span> <span class="nx">screenY</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>셀렉션 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="셀렉션-이벤트"></a>셀렉션 이벤트 <a class="hash-link" href="#셀렉션-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onSelect
-</code></pre></div><h3><a class="anchor" name="-"></a>터치 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="터치-이벤트"></a>터치 이벤트 <a class="hash-link" href="#터치-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart
 </code></pre></div>
@@ -565,14 +563,14 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 <span class="nx">DOMTouchList</span> <span class="nx">targetTouches</span>
 <span class="nx">DOMTouchList</span> <span class="nx">touches</span>
-</code></pre></div><h3><a class="anchor" name="ui-"></a>UI 이벤트 <a class="hash-link" href="#ui-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="ui-이벤트"></a>UI 이벤트 <a class="hash-link" href="#ui-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onScroll
 </code></pre></div>
 <p>프로퍼티:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">number</span> <span class="nx">detail</span>
 <span class="nx">DOMAbstractView</span> <span class="nx">view</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>휠 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="휠-이벤트"></a>휠 이벤트 <a class="hash-link" href="#휠-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onWheel
 </code></pre></div>
@@ -581,10 +579,10 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">number</span> <span class="nx">deltaX</span>
 <span class="nx">number</span> <span class="nx">deltaY</span>
 <span class="nx">number</span> <span class="nx">deltaZ</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>미디어 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="미디어-이벤트"></a>미디어 이벤트 <a class="hash-link" href="#미디어-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend onTimeUpdate onVolumeChange onWaiting
-</code></pre></div><h3><a class="anchor" name="-"></a>이미지 이벤트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="이미지-이벤트"></a>이미지 이벤트 <a class="hash-link" href="#이미지-이벤트">#</a></h3>
 <p>이벤트 이름:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError
 </code></pre></div>

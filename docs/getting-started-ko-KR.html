@@ -438,7 +438,7 @@
 <li><strong><a href="https://jsfiddle.net/reactjs/69z2wepo/">React JSFiddle</a></strong></li>
 <li><a href="https://jsfiddle.net/reactjs/5vjqabv3/">React JSFiddle without JSX</a></li>
 </ul>
-<h2><a class="anchor" name="npm-react-"></a>npm으로 React 사용하기 <a class="hash-link" href="#npm-react-">#</a></h2>
+<h2><a class="anchor" name="npm으로-react-사용하기"></a>npm으로 React 사용하기 <a class="hash-link" href="#npm으로-react-사용하기">#</a></h2>
 <p><a href="http://browserify.org/">browserify</a>, <a href="https://webpack.github.io/">webpack</a> 같은 CommonJS 모듈 시스템과 함께 React를 사용하시는 것을 권장합니다. <a href="https://www.npmjs.com/package/react"><code>react</code></a>, <a href="https://www.npmjs.com/package/react-dom"><code>react-dom</code></a> npm 패키지를 사용하세요.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// main.js</span>
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
@@ -458,7 +458,7 @@
 
 <p>ES2015를 사용하고 있다면, <code>babel-preset-es2015</code> 패키지도 설치할 필요가 있습니다.</p>
 </blockquote>
-<h2><a class="anchor" name="npm--quick-start-"></a>npm 없이 Quick Start 하기 <a class="hash-link" href="#npm--quick-start-">#</a></h2>
+<h2><a class="anchor" name="npm-없이-quick-start-하기"></a>npm 없이 Quick Start 하기 <a class="hash-link" href="#npm-없이-quick-start-하기">#</a></h2>
 <p>만약 당신이 npm을 사용할 준비가 아직 안되었다면, 미리빌드된 React와 React DOM 파일이 포함된 초심자용 키트를 다운로드 받을 수 있습니다.</p>
 
 <div class="buttons-unit downloads">
@@ -489,7 +489,7 @@
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
 <p>JavaScript 안에 보이는 XML 구문은 JSX라고 합니다; 더 자세한 내용은 <a href="/react/docs/jsx-in-depth-ko-KR.html">JSX syntax</a>을 확인하세요. 일반적인 JavaScript로 번역하기 위해 <code>&lt;script type=&quot;text/babel&quot;&gt;</code>를 사용하고 Babel을 포함하는 것으로 실제로 브라우저에서 변환작업을 수행합니다.</p>
-<h3><a class="anchor" name="-"></a>파일의 분리 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="파일의-분리"></a>파일의 분리 <a class="hash-link" href="#파일의-분리">#</a></h3>
 <p>React JSX 코드는 분리된 파일로 존재할 수 있습니다. 다음 내용으로 <code>src/helloworld.js</code>를 생성해보세요.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
@@ -500,7 +500,7 @@
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/babel&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>크롬 같은 몇몇 브라우저에서는 HTTP를 통해 제공되는 파일이 아니면 로드에 실패하므로 주의하세요.</p>
-<h3><a class="anchor" name="-"></a>오프라인 변환 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="오프라인-변환"></a>오프라인 변환 <a class="hash-link" href="#오프라인-변환">#</a></h3>
 <p>먼저 <a href="http://babeljs.io/">Babel</a> 커맨드라인 도구를 설치합니다. (<a href="https://www.npmjs.com/">npm</a> 필요):</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">npm install --global babel-cli
 npm install babel-preset-react
@@ -535,7 +535,7 @@ npm install babel-preset-react
 <span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span>  <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</code></pre></div><h2><a class="anchor" name="-"></a>다음 단계로 <a class="hash-link" href="#-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="다음-단계로"></a>다음 단계로 <a class="hash-link" href="#다음-단계로">#</a></h2>
 <p>더 알아보려면 <a href="/react/docs/tutorial-ko-KR.html">튜토리얼</a>과 초심자용 키트의 <code>examples</code> 디렉터리에서 다른 예제들을 확인해 보세요.</p>
 
 <p>커뮤니티의 기여로 운영되는 Wiki도 있습니다: <a href="https://github.com/facebook/react/wiki/Complementary-Tools">워크플로우, UI 컴포넌트, 라우팅, 데이터 관리 등</a></p>

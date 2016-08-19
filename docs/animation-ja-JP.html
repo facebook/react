@@ -432,9 +432,9 @@
     <div class="subHeader"></div>
 
     <p>ReactはアニメーションのためにローレベルAPIとして <code>ReactTransitionGroup</code> アドオンコンポーネントと、基本的なCSSアニメーションとトランジションを簡単に実行するために <code>ReactCSSTransitionGroup</code> を提供しています。</p>
-<h2><a class="anchor" name="api-reactcsstransitiongroup"></a>ハイレベルAPI: <code>ReactCSSTransitionGroup</code> <a class="hash-link" href="#api-reactcsstransitiongroup">#</a></h2>
+<h2><a class="anchor" name="ハイレベルapi-reactcsstransitiongroup"></a>ハイレベルAPI: <code>ReactCSSTransitionGroup</code> <a class="hash-link" href="#ハイレベルapi-reactcsstransitiongroup">#</a></h2>
 <p><code>ReactCSSTransitionGroup</code> は <code>ReactTransitionGroup</code> に基づいており、ReactコンポーネントがDOMを作成したり、削除したりする際に、CSSのトランジションとアニメーションを行う簡単な方法です。これは、素晴らしい<a href="http://www.nganimate.org/">ng-animate</a>ライブラリにインスパイアされています。</p>
-<h3><a class="anchor" name=""></a>はじめに <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="はじめに"></a>はじめに <a class="hash-link" href="#はじめに">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> は <code>ReactTransitions</code> のインターフェースです。アニメーションに関心がある全てのコンポーネントをラップする単純な要素です。以下が、リストのアイテムをフェードインやフェードアウトさせる例です。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
 
@@ -497,7 +497,7 @@
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name=""></a>最初のマウントにおけるアニメーション <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="最初のマウントにおけるアニメション"></a>最初のマウントにおけるアニメーション <a class="hash-link" href="#最初のマウントにおけるアニメション">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> は <code>transitionAppear</code> というオプションのプロパティを提供します。コンポーネントの最初のマウントの際に、更なるトランジションのフェーズを加えるためです。一般的には、 <code>transitionAppear</code> が <code>false</code> である最初のマウントの際にはトランジションのフェーズはありません。 <code>transitionAppear</code> プロパティを値が <code>true</code> である状態で渡す以下の例を見てみましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -523,8 +523,8 @@
 <p>注意:
 <code>transitionAppear</code> プロパティはバージョン <code>0.13</code> で <code>ReactCSSTransitionGroup</code> に加えられました。後方互換性を維持するために、デフォルトの値は <code>false</code> に指定されています。</p>
 </blockquote>
-<h3><a class="anchor" name=""></a>アニメーショングループを動かすためには、マウントされている必要があります <a class="hash-link" href="#">#</a></h3>
-<p>子要素にトランジションを適用するためには、 <code>ReactCSSTransitionGroup</code> はすでにDOMにマウントされているか、 <code>transitionAppear</code> プロパティに <code>true</code> がセットされている必要があります。以下の例は動きません。 <code>ReactCSSTransitionGroup</code> が新しいアイテムとともにマウントされており、新しいマウントがマウントされていないからです。これと上の<a href="#getting-started">はじめに</a> とで違いを比較してみてください。</p>
+<h3><a class="anchor" name="アニメショングルプを動かすためにはマウントされている必要があります"></a>アニメーショングループを動かすためには、マウントされている必要があります <a class="hash-link" href="#アニメショングルプを動かすためにはマウントされている必要があります">#</a></h3>
+<p>子要素にトランジションを適用するためには、 <code>ReactCSSTransitionGroup</code> はすでにDOMにマウントされているか、 <code>transitionAppear</code> プロパティに <code>true</code> がセットされている必要があります。以下の例は動きません。 <code>ReactCSSTransitionGroup</code> が新しいアイテムとともにマウントされており、新しいマウントがマウントされていないからです。これと上の<a href="#%E3%81%AF%E3%81%98%E3%82%81%E3%81%AB">はじめに</a> とで違いを比較してみてください。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">(</span>
@@ -542,7 +542,7 @@
 </span><span class="hll">      <span class="o">&lt;</span><span class="err">/div&gt;</span>
 </span>    <span class="p">);</span>
   <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="10"></a>1個か0個のアイテムをアニメーションする <a class="hash-link" href="#10">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="1個か0個のアイテムをアニメションする"></a>1個か0個のアイテムをアニメーションする <a class="hash-link" href="#1個か0個のアイテムをアニメションする">#</a></h3>
 <p>上の例では、 <code>ReactCSSTransitionGroup</code> にアイテムのリストをレンダリングしました。しかし、 <code>ReactCSSTransitionGroup</code> の子要素は1個や0個のアイテムになり得ます。単一の要素が作成や削除のアニメーションを可能にします。同様に、現在の要素を置き換える新しい要素をアニメーションできます。例えば、以下のように、1つの画像でカルーセルを実行できます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
 
@@ -560,14 +560,14 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h3><a class="anchor" name=""></a>アニメーションを作動させないようにする <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="アニメションを作動させないようにする"></a>アニメーションを作動させないようにする <a class="hash-link" href="#アニメションを作動させないようにする">#</a></h3>
 <p>もししたいならば、 <code>enter</code> や <code>leave</code> のアニメーションを無効にすることもできます。例えば、 <code>enter</code> アニメーションは行いたいが、 <code>leave</code> のアニメーションは行いたくない場合があるでしょう。しかし、 <code>ReactCSSTransitionGroup</code> はDOMのノードが削除される前にアニメーションが終わるのを待ちます。<code>ReactCSSTransitionGroup</code> がそれらのアニメーションを無効化するために、 <code>transitionEnter={false}</code> や <code>transitionLeave={false}</code> といったプロパティを追加することができます。</p>
 
 <blockquote>
 <p>注意:
 <code>ReactCSSTransitionGroup</code> を使う際には、コンポーネントがトランジションが終わったことを検知したり、アニメーション関連でさらに複雑なロジックを実行するといったことはできません。更に細かな制御を求める場合は、トランジションをカスタムするために必要なフックを提供するローレベルの <code>ReactTransitionGroup</code> APIを使用できます。</p>
 </blockquote>
-<h2><a class="anchor" name="api-reacttransitiongroup"></a>ローレベルAPI: <code>ReactTransitionGroup</code> <a class="hash-link" href="#api-reacttransitiongroup">#</a></h2>
+<h2><a class="anchor" name="ロレベルapi-reacttransitiongroup"></a>ローレベルAPI: <code>ReactTransitionGroup</code> <a class="hash-link" href="#ロレベルapi-reacttransitiongroup">#</a></h2>
 <p><code>ReactTransitionGroup</code> はアニメーションの基盤です。 <code>React.addons.TransitionGroup</code> と同じくらい簡単に使用できます。これによって（上記の例のように）、宣言的に子要素が追加されたり削除されたりするときに、それらの上で特別なライフサイクルのフックが呼ばれます。</p>
 <h3><a class="anchor" name="componentwillappearcallback"></a><code>componentWillAppear(callback)</code> <a class="hash-link" href="#componentwillappearcallback">#</a></h3>
 <p>このメソッドは <code>TransitionGroup</code> の中で最初にマウントされるコンポーネントのために <code>componentDidMount()</code> と同時に呼ばれます。これは、 <code>callback</code> が呼ばれるまで、他のアニメーションが発生するのをブロックします。これは、 <code>TransitionGroup</code> の最初のレンダリングのときにのみ呼ばれます。</p>
@@ -581,7 +581,7 @@
 <p>これは、 <code>ReactTransitionGroup</code> から子要素が削除されたときに呼ばれます。子要素が削除されても、 <code>ReactTransitionGroup</code> は <code>callback</code> が呼ばれるまでDOMの中に子要素を保持し続けます。</p>
 <h3><a class="anchor" name="componentdidleave"></a><code>componentDidLeave()</code> <a class="hash-link" href="#componentdidleave">#</a></h3>
 <p>これは、 <code>willLeave</code> の <code>callback</code> が呼ばれた際に呼ばれます（ <code>componentWillUnmount</code> と同時です）。</p>
-<h3><a class="anchor" name=""></a>異なるコンポーネントをレンダリングする <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="異なるコンポネントをレンダリングする"></a>異なるコンポーネントをレンダリングする <a class="hash-link" href="#異なるコンポネントをレンダリングする">#</a></h3>
 <p>デフォルトで、 <code>ReactTransitionGroup</code> は <code>span</code> としてレンダリングされます。この動きは、 <code>component</code> プロパティによって変更できます。例えば、 <code>&lt;ul&gt;</code> をレンダリングしたい場合は以下のようになります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span><span class="o">&gt;</span>
 </span>  <span class="p">...</span>

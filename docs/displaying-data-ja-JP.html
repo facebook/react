@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>UIについて、最も基本的なことは、いくつかのデータを表示することです。Reactはデータを表示し、変更された時にはインターフェースを最新の状態に自動的に保つことが簡単にできるようになっています。</p>
-<h2><a class="anchor" name=""></a>はじめに <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="はじめに"></a>はじめに <a class="hash-link" href="#はじめに">#</a></h2>
 <p>本当に単純な例を見てみましょう。<code>hello-react.html</code> ファイルを以下のようなコードで作成してください。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -471,13 +471,13 @@
     <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
   <span class="p">);</span>
 <span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>リアクティブなアップデート <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="リアクティブなアップデト"></a>リアクティブなアップデート <a class="hash-link" href="#リアクティブなアップデト">#</a></h2>
 <p><code>hello-react.html</code> をウェブブラウザで開き、テキストフィールドにあなたの名前を入力してください。ReactはUIのうち、時間の文字列しか変更しないことに注意してください。あなたがテキストフィールドに入力したものは残っています。あなたはそういったコードを書いていないのにも関わらずです。Reactはあなたのことを理解しており、正しいことを行います。</p>
 
 <p>このことについて私たちが理解できる方法は、Reactは必要になるまで、DOMの操作を行わないということです。 <strong>Reactは、DOMの変化を表現し、あなたにもっとも効率的なDOMの変化を見積もるために早い、内部のモックのDOMを使っています。</strong></p>
 
 <p>このコンポーネントのインプットは <code>props</code> と呼ばれるものです。&quot;properties&quot; の省略形です。それらはJSXシンタックスの中でアトリビュートとして渡されます。それらはコンポーネントの中で不変と考えるべきで、 <strong><code>this.props</code> には書き込まないようにしてください</strong></p>
-<h2><a class="anchor" name=""></a>コンポーネントは関数のようなものです。 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="コンポネントは関数のようなものです"></a>コンポーネントは関数のようなものです。 <a class="hash-link" href="#コンポネントは関数のようなものです">#</a></h2>
 <p>Reactのコンポーネントはとても単純です。それらは <code>props</code> や <code>state</code>　（後述します）を取り、HTMLをレンダリングする単純な関数だと考えることができます。この考えの元、コンポーネントは簡単に理解することができます。</p>
 
 <blockquote>
@@ -485,7 +485,7 @@
 
 <p><strong>1つの制限</strong>: Reactのコンポーネントは単一の最上位のノードだけをレンダリングします。複数のノードをリターンしたい場合は、単一の最上位のもので <em>ラップする必要があります</em> 。</p>
 </blockquote>
-<h2><a class="anchor" name="jsx"></a>JSXシンタックス <a class="hash-link" href="#jsx">#</a></h2>
+<h2><a class="anchor" name="jsxシンタックス"></a>JSXシンタックス <a class="hash-link" href="#jsxシンタックス">#</a></h2>
 <p>私たちは関心を分離する正しい方法は「テンプレート」と「ディスプレイロジック」ではなくコンポーネントであると強く考えています。ビューを生成するマークアップとコードは密接につながっていると考えています。加えて、ディスプレイロジックはとても複雑になりえますし、ビューを表現するのにテンプレート言語を使うことはとてもややこしくなりえます。</p>
 
 <p>私たちは、この問題の最適解は、UIを構築するのにリアルなプログラミング言語の表現力の全てを使うことができるように、JavaScriptのコードからHTMLやコンポーネントのツリーを直接生成することだと発見しました。</p>
@@ -507,7 +507,7 @@
 <p>JSXはHTMLに似ていますが、正確に同じではありません。いくつかのキーの違いについては<a href="/react/docs/jsx-gotchas.html">JSXの理解</a> をご覧ください。</p>
 
 <p>JSXを初めて使う際に最も簡単なのは、ブラウザで <code>JSXTransformer</code> を使う方法です。これはプロダクションでは使わないことを強くお勧めします。コードは、コマンドラインの<a href="https://www.npmjs.com/package/react-tools">react-tools</a>パッケージを使うことでプリコンパイルできます。</p>
-<h2><a class="anchor" name="jsxreact"></a>JSXを使わないReact <a class="hash-link" href="#jsxreact">#</a></h2>
+<h2><a class="anchor" name="jsxを使わないreact"></a>JSXを使わないReact <a class="hash-link" href="#jsxを使わないreact">#</a></h2>
 <p>JSXは完全にオプションです。Reactと一緒にJSXを使う必要はありません。<code>React.createElement</code> を使って、ただのJavaScriptでReactの要素を作ることもできます。それは、タグの名前やコンポーネント、プロパティのオブジェクト、いくつかのオプションの子要素をとります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>

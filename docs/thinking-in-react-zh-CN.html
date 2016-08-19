@@ -436,7 +436,7 @@
 <p>在我看来，React 是构建大型，快速 Web app 的首选方式。它已经在 Facebook 和 Instagram 被我们有了广泛的应用。</p>
 
 <p>React 许多优秀的部分之一，是它使得你在构建 app 的过程中不断思考。在本文里，我将带你经历一次使用 React 构建可搜索的商品数据表的思考过程。</p>
-<h2><a class="anchor" name="mock"></a>从模型（mock）开始 <a class="hash-link" href="#mock">#</a></h2>
+<h2><a class="anchor" name="从模型mock开始"></a>从模型（mock）开始 <a class="hash-link" href="#从模型mock开始">#</a></h2>
 <p>想象我们已经有个一个 JSON API 和一个来自设计师的模型。我们的设计师显然做得不够好，因为模型看起来像这样：</p>
 
 <p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
@@ -450,7 +450,7 @@
   {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
   {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
 ];
-</code></pre></div><h2><a class="anchor" name="ui"></a>第一步：把UI拆分为一个组件的层级 <a class="hash-link" href="#ui">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="第一步把ui拆分为一个组件的层级"></a>第一步：把UI拆分为一个组件的层级 <a class="hash-link" href="#第一步把ui拆分为一个组件的层级">#</a></h2>
 <p>首先你想要做的，是在模型里的每一个组件周围绘制边框，并给它们命名。如果你和设计师一起工作，他们应该已经完成这步了，所以去和他们谈谈！他们的 Photoshop 图层名也许最终会成为你的 React 组件名。</p>
 
 <p>但是你如何知道什么东西应该是独立的组件？只需在你创建一个函数或者对象时，根据是否使用过相同技术来做决定。一种这样的技术是<a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">单一功能原则（single responsibility principle）</a>，也就是一个组件在理想情况下只做一件事情。如果它最终增长了，它就应该被分解为更小的组件。</p>
@@ -486,7 +486,7 @@
 </ul></li>
 </ul></li>
 </ul>
-<h2><a class="anchor" name="react"></a>第二步：用React创建一个静态版本 <a class="hash-link" href="#react">#</a></h2>
+<h2><a class="anchor" name="第二步用react创建一个静态版本"></a>第二步：用React创建一个静态版本 <a class="hash-link" href="#第二步用react创建一个静态版本">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>既然你已经有了你的组件层级，是时候实现你的app了。简单的方式是构建一个版本，它取走你的数据模型并渲染UI，除了没有互动性。这是将过程解耦的最好办法，因为构建一个静态版本需要不假思索地写很多代码，而添加互动性需要很多思考但不需要太多代码。之后我们将会看到原因。</p>
@@ -498,9 +498,9 @@
 <p>在这一步的最后，你会获得一个渲染数据模型的可重用组件库。这些组件只有 <code>render()</code> 方法，因为这是一个静态版本。在层级顶端的组件 (<code>FilterableProductTable</code>) 将会接受你的数据模型，并将其作为一个prop。如果你改变了底层数据模型，并且再次调用 <code>React.render()</code> ，UI 将会更新。你可以很容易地看到 UI 是如何更新的，以及哪里变动了，因为这没什么复杂的。React的 <strong>单向数据流</strong> (也被称为 <em>单向绑定</em>)使一切保持了模块化和快速。</p>
 
 <p>如果你在执行这步时需要帮助，请参阅 <a href="/react/docs/">React 文档</a>。</p>
-<h3><a class="anchor" name="-props-vs-state"></a>小插曲: props vs state <a class="hash-link" href="#-props-vs-state">#</a></h3>
+<h3><a class="anchor" name="小插曲-props-vs-state"></a>小插曲: props vs state <a class="hash-link" href="#小插曲-props-vs-state">#</a></h3>
 <p>在React里有两种数据 &quot;模型&quot;: props 和 state。明白这二者之间的区别是很重要的；如果你不是很确定它们之间的区别，请概览<a href="/react/docs/interactivity-and-dynamic-uis-zh-CN.html">React官方文档</a></p>
-<h2><a class="anchor" name="-ui-state-"></a>第三步：确定最小（但完备）的 UI state 表达 <a class="hash-link" href="#-ui-state-">#</a></h2>
+<h2><a class="anchor" name="第三步确定最小但完备的-ui-state-表达"></a>第三步：确定最小（但完备）的 UI state 表达 <a class="hash-link" href="#第三步确定最小但完备的-ui-state-表达">#</a></h2>
 <p>要让你的 UI 互动，你需要做到触发底层数据模型发生变化。React用 <strong>state</strong> 来让此变得容易。</p>
 
 <p>要正确的构建你的 app，你首先需要思考你的 app 需要的可变 state 的最小组。这里的关键是 DRY 原则：<em>Don&#39;t Repeat Yourself(不要重复自己)</em>。想出哪些是你的应用需要的绝对最小 state 表达，并按需计算其他任何数据。例如，如果你要构建一个 TODO list，只要保持一个 TODO 项的数组；不要为了计数保持一个单独的 state 变量。当你想渲染 TODO 的计数时，简单的采用 TODO 项目的数组长度作为替代。</p>
@@ -530,7 +530,7 @@
 <li>用户输入的搜索文本</li>
 <li>checkbox 的值</li>
 </ul>
-<h2><a class="anchor" name="-state-"></a>第四步：确定你的 state 应该存在于哪里 <a class="hash-link" href="#-state-">#</a></h2>
+<h2><a class="anchor" name="第四步确定你的-state-应该存在于哪里"></a>第四步：确定你的 state 应该存在于哪里 <a class="hash-link" href="#第四步确定你的-state-应该存在于哪里">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>OK，我们已经确定好应用的最小 state 集合是什么。接下来，我们需要确定哪个组件可以改变，或者 <em>拥有</em> 这个state.</p>
@@ -557,7 +557,7 @@
 <p>酷，我们已经决定了我们的 state 存在于 <code>FilterableProductTable</code>。首先，添加一个 <code>getInitialState()</code> 方法到  <code>FilterableProductTable</code>，返回 <code>{filterText: &#39;&#39;, inStockOnly: false}</code> 来反映应用的初始状态。然后，传递<code>filterText</code> 和 <code>inStockOnly</code> 给 <code>ProductTable</code> 和 <code>SearchBar</code> 作为 prop。最后，使用这些 prop 来过滤 <code>ProductTable</code> 中的行和设置 <code>SearchBar</code> 的表单项的值。</p>
 
 <p>你可以开始看看你的应用将有怎样的行为了: 设置 <code>filterText</code> 为 <code>&quot;ball&quot;</code> 并刷新你的 app。你将可以看到数据表被正确地更新。</p>
-<h2><a class="anchor" name=""></a>第五步：添加反向数据流 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="第五步添加反向数据流"></a>第五步：添加反向数据流 <a class="hash-link" href="#第五步添加反向数据流">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>到目前为止，我们已经构建了一个应用, 它以 props 和 state 沿着层级向下流动的功能正确渲染。现在是时候支持另一种数据流动了：在层级深处的表单组件需要更新 <code>FilterableProductTable</code> 里的 state。</p>
@@ -569,7 +569,7 @@
 <p>让我们思考下希望发生什么。我们想确保每当用户改变表单，就通过更新 state 来反映用户的输入。由于组件应该只更新自己拥有的 state ， <code>FilterableProductTable</code> 将会传递一个回调函数给 <code>SearchBar</code> ，每当 state 应被更新时回调函数就会被调用。我们可以使用 input 的 <code>onChange</code> 事件来接受它的通知。 <code>FilterableProductTable</code> 传递的回调函数将会调用 <code>setState()</code> ，然后应用将会被更新。</p>
 
 <p>虽然这听起来复杂，但是实际上只是数行代码。并且这明确显示出了数据在应用中从始至终是如何流动的。</p>
-<h2><a class="anchor" name=""></a>好了，就是这样 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="好了就是这样"></a>好了，就是这样 <a class="hash-link" href="#好了就是这样">#</a></h2>
 <p>希望这给了你一个怎样思考用React构建组件和应用的概念。虽然可能比你过往的习惯要多敲一点代码，但记住，读代码的时间远比写代码的时间多，并且阅读这种模块化的、显式的代码是极为容易的。当你开始构建大型组件库时，你会非常感激这种清晰性和模块化，并且随着代码的重用，你的代码行数将会开始缩减。:)</p>
 
 

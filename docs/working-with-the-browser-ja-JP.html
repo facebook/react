@@ -432,13 +432,13 @@
     <div class="subHeader"></div>
 
     <p>Reactはほとんどのケースで、DOMを直接触ることからあなたを解放するパワフルな抽象性を提供します。しかし、単純に根本的なAPIにアクセスする必要がある場合もあります。サードパーティのライブラリや現存するコードと動かす必要があるかもしれません。</p>
-<h2><a class="anchor" name="dom"></a>仮想DOM <a class="hash-link" href="#dom">#</a></h2>
+<h2><a class="anchor" name="仮想dom"></a>仮想DOM <a class="hash-link" href="#仮想dom">#</a></h2>
 <p>ReactはDOMと直接対話を行わないため、とても速いです。Reactは速いメモリ上のDOMの表現を持っています。 <code>render()</code> メソッドはDOMの <em>記述</em> をリターンします。Reactはこの記述とメモリ上の表現のdiffをとることができ、ブラウザを更新する最速の方法を計算することができます。</p>
 
 <p>加えて、Reactはブラウザ依存があるにも関わらず、W3Cの使用に則っていると保証されているイベントオブジェクトのような、完全に合成されたイベントシステムを実行します。HTML5のイベントをIE8で使うこともできます！</p>
 
 <p>パフォーマンスが優れており、簡単であると思われるので、ほとんどの場合、Reactの「偽のブラウザ」を使うべきです。しかし、jQueryプラグインのようなサードパーティのライブラリと動かすかもしれません。基本的なAPIに単純にアクセスする必要がある時もあります。Reactは基本的なDOMのAPIを直接使うための脱出口を提供しています。</p>
-<h2><a class="anchor" name="finddomnode"></a>参照とfindDOMNode() <a class="hash-link" href="#finddomnode">#</a></h2>
+<h2><a class="anchor" name="参照とfinddomnode"></a>参照とfindDOMNode() <a class="hash-link" href="#参照とfinddomnode">#</a></h2>
 <p>ブラウザと相互に影響するために、DOMノードへの参照が必要になるでしょう。ReactはコンポーネントのDOMノードへの参照を得ることができる <code>ReactDOM.findDOMNode(component)</code> 関数を持っています。</p>
 
 <blockquote>
@@ -472,9 +472,9 @@
   <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>参照に関しての詳細 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="参照に関しての詳細"></a>参照に関しての詳細 <a class="hash-link" href="#参照に関しての詳細">#</a></h2>
 <p>参照に関して、詳細に学ぶためと、効率的にそれらを使う方法については、<a href="/react/docs/more-about-refs.html">参照に関しての詳細</a>ドキュメントを読んでください。</p>
-<h2><a class="anchor" name=""></a>コンポーネントライフサイクル <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="コンポネントライフサイクル"></a>コンポーネントライフサイクル <a class="hash-link" href="#コンポネントライフサイクル">#</a></h2>
 <p>コンポーネントは以下のように、ライフサイクルの3つのパートを持っています</p>
 
 <ul>
@@ -484,35 +484,35 @@
 </ul>
 
 <p>Reactは上記のプロセスになるように指定できるライフサイクルメソッドを提供します。私たちは何かが起こる直前に呼ばれる <strong>未来の</strong> メソッドと何かが起こった直後に呼ばれる <strong>過去の</strong> メソッドを使うことができます。</p>
-<h3><a class="anchor" name=""></a>マウンティング <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="マウンティング"></a>マウンティング <a class="hash-link" href="#マウンティング">#</a></h3>
 <ul>
 <li><code>getInitialState(): object</code> はコンポーネントがマウントされる前に実行されます。ステートフルなコンポーネントはこのメソッドをインプリメントする必要があり、最初のstateのデータをリターンする必要があります。</li>
 <li><code>componentWillMount()</code> はマウンティングが起きる直前に実行されます。</li>
 <li><code>componentDidMount()</code> はマウンティングが起きた直後に実行されます。DOMノードを必要とする初期化はここで行われるべきです。</li>
 </ul>
-<h3><a class="anchor" name=""></a>アップデーティング <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="アップデティング"></a>アップデーティング <a class="hash-link" href="#アップデティング">#</a></h3>
 <ul>
 <li><code>componentWillReceiveProps(object nextProps)</code> はマウントされたコンポーネントが新しいpropsを受け取ったときに実行されます。このメソッドは <code>this.setState()</code> を使ったstateの変更を実行するために <code>this.props</code> と <code>nextProps</code> とを比較するのに使われるべきです。</li>
 <li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> は何かしらの変更がDOMをアップデートしなければいけないかどうかコンポーネントが決めるときに実行されます。このメソッドを <code>this.props</code> と <code>nextProps</code> そして <code>this.state</code> と <code>nextState</code> の比較の最適化のために実行してください。そして、Reactがアップデートをスキップするべきときには <code>false</code> を返してください。</li>
 <li><code>componentWillUpdate(object nextProps, object nextState)</code> はアップデーティングが発生する直前に実行されます。ここで <code>this.setState()</code> を呼ぶことはできません。</li>
 <li><code>componentDidUpdate(object prevProps, object prevState)</code> はアップデーティングが発生した直後に実行されます。</li>
 </ul>
-<h3><a class="anchor" name=""></a>アンマウンティング <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="アンマウンティング"></a>アンマウンティング <a class="hash-link" href="#アンマウンティング">#</a></h3>
 <ul>
 <li><code>componentWillUnmount()</code> はコンポーネントがアンマウントされ、削除される直前に実行されます。クリーンアップはここで行われるべきです。</li>
 </ul>
-<h3><a class="anchor" name=""></a>マウントのメソッド <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="マウントのメソッド"></a>マウントのメソッド <a class="hash-link" href="#マウントのメソッド">#</a></h3>
 <p><em>マウントされた</em> 複合的なコンポーネントも以下のようなメソッドをサポートします。</p>
 
 <ul>
 <li><code>findDOMNode(): DOMElement</code> はレンダリングされたDOMノードへの参照を得るために、どのマウントされたコンポーネントの上でも実行されます。</li>
 <li><code>forceUpdate()</code> は <code>this.setState()</code> を使うことなくコンポーネントのstateが変更された際にさらにその詳細について知るときにどのマウントされたコンポーネントの上でも実行されます。</li>
 </ul>
-<h2><a class="anchor" name=""></a>ブラウザのサポートとポリフィル <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="ブラウザのサポトとポリフィル"></a>ブラウザのサポートとポリフィル <a class="hash-link" href="#ブラウザのサポトとポリフィル">#</a></h2>
 <p>Facebookでは、IE8を含む古いブラウザをサポートしています。私たちは将来に向けたJSを書くことができるように、長い間ポリフィルを使ってきました。これは、私たちのコードベースにたくさんの処理が散らばり、「ただ動くだけの」コードであることを予想することしかできないことを意味します。例えば、 <code>+new Date()</code> を見る代わりに、  <code>Date.now()</code> と記述しています。オープンソースであるReactを私たちは内部で使っているので、将来に向けたJSを使うという哲学を持ち越しています。</p>
 
 <p>この哲学に加えて、私たちはJSのライブラリの作者として、ライブラリの一部としてポリフィルを含めるべきではないというスタンスをとっています。全てのライブラリがこのようなことを行ったなら、死んだコードの大きな塊になりうる同じポリフィルを何度も記述しなくてもよくなるでしょう。あなたのプロダクトが古いブラウザをサポートする必要があるなら、<a href="https://github.com/es-shims/es5-shim">es5-shim</a>のようなものを使うことにチャンスがあるでしょう。</p>
-<h3><a class="anchor" name=""></a>ポリフィルは古いブラウザをサポートする必要があります <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="ポリフィルは古いブラウザをサポトする必要があります"></a>ポリフィルは古いブラウザをサポートする必要があります <a class="hash-link" href="#ポリフィルは古いブラウザをサポトする必要があります">#</a></h3>
 <p><a href="https://github.com/es-shims/es5-shim">kriskowal&#39;s es5-shim</a> の <code>es5-shim.js</code> はReactが必要とする以下のようなものを提供します。</p>
 
 <ul>
@@ -542,9 +542,9 @@
 </ul>
 
 <p><code>&lt;section&gt;</code> 、 <code>&lt;article&gt;</code> 、 <code>&lt;nav&gt;</code> 、 <code>&lt;header&gt;</code> 、 <code>&lt;footer&gt;</code> を含むHTML5の要素をIE8で使うときには、<a href="https://github.com/aFarkas/html5shiv">html5shiv</a>か、似たようなスクリプトをインクルードする必要があります。</p>
-<h3><a class="anchor" name=""></a>クロスブラウザの問題 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="クロスブラウザの問題"></a>クロスブラウザの問題 <a class="hash-link" href="#クロスブラウザの問題">#</a></h3>
 <p>Reactはブラウザ間の違いを抽象化することにおいてとても優れていますが、一時的な解決ができない、制限や独特な動作をするブラウザもあります。</p>
-<h4><a class="anchor" name="ie8onscroll"></a>IE8のonScrollイベント <a class="hash-link" href="#ie8onscroll">#</a></h4>
+<h4><a class="anchor" name="ie8のonscrollイベント"></a>IE8のonScrollイベント <a class="hash-link" href="#ie8のonscrollイベント">#</a></h4>
 <p>IE8では <code>onScroll</code> イベントは発火せず、イベントのフェーズをキャプチャするハンドラを定義するAPIを持っていません。それは、Reactがそれらのイベントを検知する方法が無いということを意味します。現状、IE8ではこのイベントは無視されています。</p>
 
 <p>詳細な情報については、GitHubのイシューである<a href="https://github.com/facebook/react/issues/631">onScrollがIE8で動かない</a>を参照してください。</p>

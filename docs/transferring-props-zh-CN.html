@@ -440,7 +440,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="p">{</span> <span class="nx">more</span><span class="o">:</span> <span class="s1">&#39;values&#39;</span> <span class="p">}));</span>
 </code></pre></div>
 <p>下面的教程介绍一些最佳实践。使用了 JSX 和 试验性的ECMAScript 语法。</p>
-<h2><a class="anchor" name=""></a>手动传递 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="手动传递"></a>手动传递 <a class="hash-link" href="#手动传递">#</a></h2>
 <p>大部分情况下你应该显式地向下传递 props。这样可以确保只公开你认为是安全的内部 API 的子集。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
@@ -458,11 +458,11 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>但 <code>name</code> 这个属性怎么办？还有 <code>title</code>、<code>onMouseOver</code> 这些 props？</p>
-<h2><a class="anchor" name="-jsx--...-"></a>在 JSX 里使用 <code>...</code> 传递 <a class="hash-link" href="#-jsx--...-">#</a></h2>
+<h2><a class="anchor" name="在-jsx-里使用-...-传递"></a>在 JSX 里使用 <code>...</code> 传递 <a class="hash-link" href="#在-jsx-里使用-...-传递">#</a></h2>
 <blockquote>
 <p>注意:</p>
 
-<p>在下面的例子中，<code>--harmony</code> 标志是必须的因为这个语法是ES7的实验性语法。如果用浏览器中的JSX转换器，以 <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code>简单的打开你脚本就行了。详见<a href="/react/docs/transferring-props.html#rest-and-spread-properties-...">Rest and Spread Properties ...</a></p>
+<p>在下面的例子中，<code>--harmony</code> 标志是必须的因为这个语法是ES7的实验性语法。如果用浏览器中的JSX转换器，以 <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code>简单的打开你脚本就行了。详见<a href="/react/docs/transferring-props-zh-CN.html#%E5%89%A9%E4%BD%99%E5%B1%9E%E6%80%A7%E5%92%8C%E5%B1%95%E5%BC%80%E5%B1%9E%E6%80%A7-...">Rest and Spread Properties ...</a></p>
 </blockquote>
 
 <p>有时把所有属性都传下去是不安全或啰嗦的。这时可以使用 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">解构赋值</a> 中的剩余属性特性来把未知属性批量提取出来。</p>
@@ -500,7 +500,7 @@
     <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">fancyClass</span><span class="p">}</span> <span class="o">/&gt;</span>
   <span class="p">);</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="-prop"></a>使用和传递同一个 Prop <a class="hash-link" href="#-prop">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="使用和传递同一个-prop"></a>使用和传递同一个 Prop <a class="hash-link" href="#使用和传递同一个-prop">#</a></h2>
 <p>如果组件需要使用一个属性又要往下传递，可以直接使用 <code>checked={checked}</code> 再传一次。这样做比传整个 <code>props</code> 对象要好，因为更利于重构和语法检查。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="p">{</span> <span class="nx">checked</span><span class="p">,</span> <span class="nx">title</span><span class="p">,</span> <span class="p">...</span><span class="nx">other</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">props</span><span class="p">;</span>
@@ -523,7 +523,7 @@
 
 <p>顺序很重要，把 <code>{...other}</code> 放到 JSX props 前面会使 props 不会被覆盖。上面例子中我们可以保证 input 的 type 是 <code>&quot;checkbox&quot;</code>。</p>
 </blockquote>
-<h2><a class="anchor" name="-..."></a>剩余属性和展开属性 <code>...</code> <a class="hash-link" href="#-...">#</a></h2>
+<h2><a class="anchor" name="剩余属性和展开属性-..."></a>剩余属性和展开属性 <code>...</code> <a class="hash-link" href="#剩余属性和展开属性-...">#</a></h2>
 <p>剩余属性可以把对象剩下的属性提取到一个新的对象。这会把所有在解构赋值中列出的属性剔除。</p>
 
 <p>这是 <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">ECMAScript 草案</a> 中的试验特性。</p>
@@ -537,7 +537,7 @@
 
 <p>要用 Babel 6转换 rest 和 spread 属性，你需要安装 <a href="https://babeljs.io/docs/plugins/preset-es2015/"><code>es2015</code></a> preset，<a href="https://babeljs.io/docs/plugins/transform-object-rest-spread/"><code>transform-object-rest-spread</code></a> 插件并在 <code>.babelrc</code> 里配置他们.</p>
 </blockquote>
-<h2><a class="anchor" name="-underscore-"></a>使用 Underscore 来传递 <a class="hash-link" href="#-underscore-">#</a></h2>
+<h2><a class="anchor" name="使用-underscore-来传递"></a>使用 Underscore 来传递 <a class="hash-link" href="#使用-underscore-来传递">#</a></h2>
 <p>如果不使用 JSX，可以使用一些库来实现相同效果。Underscore 提供 <code>_.omit</code> 来过滤属性，<code>_.extend</code> 复制属性到新的对象。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FancyCheckbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">checked</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">checked</span><span class="p">;</span>

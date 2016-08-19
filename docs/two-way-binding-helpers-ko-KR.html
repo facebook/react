@@ -452,7 +452,7 @@
 
 <p><code>ReactLink</code>는 얇은 레퍼고 <code>onChange</code>/<code>setState()</code>패턴 부분의 관례일 뿐입니다. React 애플리케이션에서의 데이터 흐름을 근본적으로 바꾸지는 않습니다.</p>
 </blockquote>
-<h2><a class="anchor" name="reactlink--"></a>ReactLink: 적용 전후 <a class="hash-link" href="#reactlink--">#</a></h2>
+<h2><a class="anchor" name="reactlink-적용-전후"></a>ReactLink: 적용 전후 <a class="hash-link" href="#reactlink-적용-전후">#</a></h2>
 <p><code>ReactLink</code>를 사용하지 않는 간단한 폼 예제입니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -488,9 +488,9 @@
 <code>
 &lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
 </code></p>
-<h2><a class="anchor" name="-"></a>내부 구조 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="내부-구조"></a>내부 구조 <a class="hash-link" href="#내부-구조">#</a></h2>
 <p><code>ReactLink</code>에는 크게 인스턴스를 생성하는 면과 사용하는 면이 있습니다. <code>ReactLink</code>가 얼마나 간단한지 확인하기 위해, 이 부분들을 보다 명시적으로 고쳐 봅시다.</p>
-<h3><a class="anchor" name="linkedstatemixin--reactlink-"></a>LinkedStateMixin 없이 ReactLink 쓰기 <a class="hash-link" href="#linkedstatemixin--reactlink-">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<h3><a class="anchor" name="linkedstatemixin-없이-reactlink-쓰기"></a>LinkedStateMixin 없이 ReactLink 쓰기 <a class="hash-link" href="#linkedstatemixin-없이-reactlink-쓰기">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -507,7 +507,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>보시다시피, <code>ReactLink</code> 객체는 <code>value</code>와 <code>requestChange</code> prop만 가지는 매우 간단한 객체입니다. <code>LinkedStateMixin</code>도 간단합니다. 그냥 <code>this.state</code>의 값과 <code>this.setState()</code>에서 호출되는 콜백을 필드로 가질 뿐입니다.</p>
-<h3><a class="anchor" name="valuelink--reactlink-"></a>valueLink 없이 ReactLink 쓰기 <a class="hash-link" href="#valuelink--reactlink-">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
+<h3><a class="anchor" name="valuelink-없이-reactlink-쓰기"></a>valueLink 없이 ReactLink 쓰기 <a class="hash-link" href="#valuelink-없이-reactlink-쓰기">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>

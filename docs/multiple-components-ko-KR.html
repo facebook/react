@@ -432,9 +432,9 @@
     <div class="subHeader"></div>
 
     <p>지금까지, 단일 컴포넌트에서 데이터를 표시하고 유저 입력을 다루는 것을 살펴보았습니다. 다음엔 React의 최고의 기능 중 하나인 조합가능성(composability)을 살펴봅시다.</p>
-<h2><a class="anchor" name="--"></a>동기: 관심의 분리 <a class="hash-link" href="#--">#</a></h2>
+<h2><a class="anchor" name="동기-관심의-분리"></a>동기: 관심의 분리 <a class="hash-link" href="#동기-관심의-분리">#</a></h2>
 <p>명확히 정의된 인터페이스와 다른 컴포넌트를 재사용해 모듈러 컴포넌트를 구축하면, 함수와 클래스를 이용했을 때 얻을 수 있는 이점 대부분을 얻을 수 있습니다. 특히 앱에서 <em>다른 관심을 분리</em>할 수 있습니다.아무리 간단히 새 컴포넌트를 만들었다고 해도 말이죠. 당신의 애플리케이션에서 쓸 커스텀 컴포넌트 라이브러리를 만들어서, 당신의 도메인에 최적화된 방법으로 UI를 표현할 수 있게 됩니다.</p>
-<h2><a class="anchor" name="composition-"></a>조합(Composition) 예제 <a class="hash-link" href="#composition-">#</a></h2>
+<h2><a class="anchor" name="조합composition-예제"></a>조합(Composition) 예제 <a class="hash-link" href="#조합composition-예제">#</a></h2>
 <p>간단히 페이스북 그래프 API를 사용해 프로필 사진과 유저이름을 보여주는 아바타 컴포넌트를 만든다고 합시다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -469,16 +469,16 @@
   <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">username</span><span class="o">=</span><span class="s2">&quot;pwh&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="ownership"></a>소유권(Ownership) <a class="hash-link" href="#ownership">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="소유권ownership"></a>소유권(Ownership) <a class="hash-link" href="#소유권ownership">#</a></h2>
 <p>위의 예제에서, <code>Avatar</code> 인스턴스는  <code>ProfilePic</code>과 <code>ProfileLink</code>인스턴스를 <em>가지고</em> 있습니다. React에서 <strong>소유자는 다른 컴포넌트의 <code>props</code>를 설정하는 컴포넌트입니다</strong>. 더 정식으로 말하면, <code>X</code> 컴포넌트가 <code>Y</code> 컴포넌트의 <code>render()</code> 메소드 안에서 만들어졌다면, <code>Y</code>가 <code>X</code>를 <em>소유하고</em> 있다고 합니다. 앞에서 설명한 바와 같이, 컴포넌트는 자신의 <code>props</code>를 변경할 수 없습니다. <code>props</code>는 언제나 소유자가 설정한 것과 일치합니다. 이와 같은 근본적인 불변성은 UI가 일관성 있도록 해줍니다.</p>
 
 <p>소유(owner-ownee)관계와 부모·자식 관계를 구별하는 것은 중요합니다. 부모·자식 관계가 DOM에서부터 쓰던 익숙하고 이미 알고있던 단순한 것인 한편, 소유관계는 React 고유의 것입니다.  위의 예제에서, <code>Avatar</code>는 <code>div</code>, <code>ProfilePic</code>, <code>ProfileLink</code>인스턴스를 소유하고, <code>div</code>는 <code>ProfilePic</code>과 <code>ProfileLink</code>인스턴스의 (소유자가 아닌) <strong>부모</strong>입니다.</p>
-<h2><a class="anchor" name=""></a>자식 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="자식"></a>자식 <a class="hash-link" href="#자식">#</a></h2>
 <p>React 컴포넌트 인스턴스를 만들 때, 추가적인 React 컴포넌트나 JavaScript 표현식을 시작과 끝 태그 사이에 넣을 수 있습니다. 이렇게 말이죠.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
 <p><code>Parent</code>는 <code>this.props.children</code>라는 특수 prop으로 자식들을 읽을 수 있습니다. <strong><code>this.props.children</code> 는 불투명한 데이터 구조이며,</strong> <a href="/react/docs/top-level-api-ko-KR.html#react.children">React.Children 유틸리티</a>를 사용해 자식들을 관리합니다.</p>
-<h3><a class="anchor" name="-reconciliation-"></a>자식 Reconciliation (비교조정) <a class="hash-link" href="#-reconciliation-">#</a></h3>
+<h3><a class="anchor" name="자식-reconciliation-비교조정"></a>자식 Reconciliation (비교조정) <a class="hash-link" href="#자식-reconciliation-비교조정">#</a></h3>
 <p><strong>Reconciliation은 React가 DOM을 각각 새로운 렌더 패스에 업데이트하는 과정입니다.</strong> 일반적으로, 자식은 렌더하는 순서에 따라 비교조정됩니다. 예를 들어, 각각의 마크업을 생성하는 두 개의 렌더 패스가 있다고 해봅시다.</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">// Render Pass 1
 <span class="nt">&lt;Card&gt;</span>
@@ -491,7 +491,7 @@
 <span class="nt">&lt;/Card&gt;</span>
 </code></pre></div>
 <p>직관적으로 보면, <code>&lt;p&gt;Paragraph 1&lt;/p&gt;</code>가 없어졌습니다만 그러는 대신에, React는 첫 번째 자식의 텍스트를 비교조정하고 마지막 자식을 파괴하도록 DOM을 비교조정할 것입니다. React는 자식들의 <em>순서</em>에 따라 비교조정합니다.</p>
-<h3><a class="anchor" name="stateful-"></a>상태기반(Stateful) 자식 <a class="hash-link" href="#stateful-">#</a></h3>
+<h3><a class="anchor" name="상태기반stateful-자식"></a>상태기반(Stateful) 자식 <a class="hash-link" href="#상태기반stateful-자식">#</a></h3>
 <p>대부분의 컴포넌트에서는, 이것은 큰 문제가 아닙니다. 하지만 렌더 패스 간에 <code>this.state</code>를 유지하는 상태기반의 컴포넌트에서는 매우 문제가 될 수 있습니다.</p>
 
 <p>대부분의 경우, 이 문제는 엘리먼트를 파괴하지 않고 숨김으로써 피해갈 수 있습니다.</p>
@@ -505,9 +505,7 @@
   <span class="nt">&lt;p</span> <span class="na">style=</span><span class="s">{{display:</span> <span class="err">&#39;</span><span class="na">none</span><span class="err">&#39;}}</span><span class="nt">&gt;</span>Paragraph 1<span class="nt">&lt;/p&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 2<span class="nt">&lt;/p&gt;</span>
 <span class="nt">&lt;/Card&gt;</span>
-</code></pre></div>
-<p><a name="dynamic-children"></a></p>
-<h3><a class="anchor" name="-"></a>동적 자식 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="동적-자식"></a>동적 자식 <a class="hash-link" href="#동적-자식">#</a></h3>
 <p>자식들이 섞이거나(검색의 결과같은 경우) 새로운 컴포넌트가 목록의 앞에 추가(스트림같은 경우)된다면 상황은 점점 더 까다로워집니다. 이런 때에의 동일성과 각 자식의 상태는 반드시 렌더 패스 간에 유지돼야 합니다. 각 자식에 <code>key</code>를 할당 함으로써 독자적으로 식별할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
@@ -559,9 +557,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>ReactFragment 객체를 넘기는 것으로 자식에 키를 할당할 수도 있습니다. 자세한 내용은 <a href="create-fragment-ko-KR.html">키가 할당된 프래그먼트</a>를 참고하세요.</p>
-<h2><a class="anchor" name="-"></a>데이터 흐름 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="데이터-흐름"></a>데이터 흐름 <a class="hash-link" href="#데이터-흐름">#</a></h2>
 <p>React에서 데이터는 위에서 말한 것처럼 <code>props</code>를 통해 소유자로부터 소유한 컴포넌트로 흐릅니다. 이것은 사실상 단방향 데이터 바인딩입니다. 소유자는 <code>props</code>나 <code>state</code>를 기준으로 계산한 어떤 값으로 소유한 컴포넌트의 props를 바인드합니다. 이 과정은 재귀적으로 발생하므로, 데이터의 변경은 자동으로 모든 곳에 반영됩니다.</p>
-<h2><a class="anchor" name="-"></a>성능의 주의점 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="성능의-주의점"></a>성능의 주의점 <a class="hash-link" href="#성능의-주의점">#</a></h2>
 <p>소유자가 가지고 있는 노드의 수가 많아지면 데이터가 변화하는 비용이 증가할 것으로 생각할 수도 있습니다. 좋은 소식은 JavaScript의 속도는 빠르고 <code>render()</code> 메소드는 꽤 간단한 경향이 있어, 대부분 애플리케이션에서 매우 빠르다는 점입니다. 덧붙여, 대부분의 병목 현상은 JS 실행이 아닌 DOM 변경에서 일어나고, React는 배치와 탐지 변경을 이용해 최적화해 줍니다.</p>
 
 <p>하지만, 가끔 성능을 위해 정교하게 제어해야 할 때도 있습니다. 이런 경우, React가 서브트리의 처리를 건너 뛰도록 간단히 <code>shouldComponentUpdate()</code>를 오버라이드해 false를 리턴하게 할 수 있습니다. 좀 더 자세한 정보는 <a href="/react/docs/component-specs-ko-KR.html">React 참조 문서</a>를 보세요.</p>

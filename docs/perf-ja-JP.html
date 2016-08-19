@@ -431,7 +431,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>Reactは普通、従来の枠を超えてとても速いです。しかし、アプリケーションにおいて、少しでもパフォーマンスを上げようという状況では、Reactの差分を取るアルゴリズムを最大限活用するヒントが得られる、<a href="/react/docs/component-specs-ja-JP.html#updating-shouldcomponentupdate">shouldComponentUpdate</a>のフックを提供します。</p>
+    <p>Reactは普通、従来の枠を超えてとても速いです。しかし、アプリケーションにおいて、少しでもパフォーマンスを上げようという状況では、Reactの差分を取るアルゴリズムを最大限活用するヒントが得られる、<a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a>のフックを提供します。</p>
 
 <p>アプリケーション全体のパフォーマンスについての要約を得ることに加えて、ReactPerfはそれらのフックを実際にはどこに配置する必要があるか教えてくれるプロファイリングツールでもあります。</p>
 
@@ -439,9 +439,9 @@
 <p>注意:
 Reactの開発版のビルドは与えられた外部ロジックのためにプロダクション版のビルドよりも遅くなります。例えば、Reactのフレンドリーコンソールの警告（プロダクション版のビルドにおいては警告が出ません）のように。それゆえ、プロファイラは <em>比較的</em> コストがかかっている箇所のみを指し示します。</p>
 </blockquote>
-<h2><a class="anchor" name="api"></a>一般的なAPI <a class="hash-link" href="#api">#</a></h2>
+<h2><a class="anchor" name="一般的なapi"></a>一般的なAPI <a class="hash-link" href="#一般的なapi">#</a></h2>
 <p>ここに記述されている <code>Perf</code> オブジェクトは <code>react-with-addons.js</code> を開発版でビルドしたものを使用する際に <code>React.addons.Perf</code> として表されます。</p>
-<h3><a class="anchor" name="perf.start--perf.stop"></a><code>Perf.start()</code> と <code>Perf.stop()</code> <a class="hash-link" href="#perf.start--perf.stop">#</a></h3>
+<h3><a class="anchor" name="perf.start-と-perf.stop"></a><code>Perf.start()</code> と <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-と-perf.stop">#</a></h3>
 <p>測定の開始/終了です。その間のReactの操作は以下のような分析のために記録されます。あまり時間を使わない操作は無視されます。</p>
 
 <p>停止した後、あなたは、測定結果を得るために <code>Perf.getLastMeasurements()</code> （後述）が必要になります。</p>
@@ -463,7 +463,7 @@ Reactの開発版のビルドは与えられた外部ロジックのためにプ
 <p>以下のような、DOMの操作を出力します。例えば、&quot;set innerHTML&quot;や&quot;remove&quot;といったものです。</p>
 
 <p><img src="/react/img/docs/perf-dom.png" alt=""></p>
-<h2><a class="anchor" name="api"></a>先進的なAPI <a class="hash-link" href="#api">#</a></h2>
+<h2><a class="anchor" name="先進的なapi"></a>先進的なAPI <a class="hash-link" href="#先進的なapi">#</a></h2>
 <p>上記の出力メソッドは結果をプリティプリントするのに <code>Perf.getLastMeasurements()</code> を使用しています。</p>
 <h3><a class="anchor" name="perf.getlastmeasurements"></a><code>Perf.getLastMeasurements()</code> <a class="hash-link" href="#perf.getlastmeasurements">#</a></h3>
 <p>最後の開始と終了のセッションから測定の配列を取得します。配列は以下のようなオブジェクトを含みます。</p>

@@ -434,7 +434,7 @@
     <p>在建立你的组件以后，你也许发现你想“接触”并且调用从 <code>render()</code>返回的组件实例上的方法。大部分情况下，这是不必要的因为响应式的数据流总是确保最近的 props 被送到每一个从 <code>render()</code> 输出的子级。然而，有一些情况下它仍旧是必要或者有益的，所以 React 提供了一个被称为 <code>refs</code> 的安全舱口。这些 <code>refs</code> （引用） 在你需要时特别有用 如：查找被组件绘制的 DOM 标记（例如，绝对定位它），使用 React 组件在一个大的非React组件里，或者转换你已有的代码库到React。</p>
 
 <p>让我们来看看怎样取得一个ref，然后深入完整的例子。</p>
-<h2><a class="anchor" name="-reactdom.render--ref"></a>从 ReactDOM.render 返回的 ref <a class="hash-link" href="#-reactdom.render--ref">#</a></h2>
+<h2><a class="anchor" name="从-reactdom.render-返回的-ref"></a>从 ReactDOM.render 返回的 ref <a class="hash-link" href="#从-reactdom.render-返回的-ref">#</a></h2>
 <p>不要被你在你的组件（它返回一个虚拟的DOM元素）里定义的 <code>render()</code> 迷惑了， <a href="/react/docs/top-level-api.html#reactdom.render">ReactDOM.render()</a> 会返回一个对你的组件的 <strong>backing instance</strong> 的引用（<a href="/react/docs/reusable-components.html#stateless-functions">无状态组件</a> 返回 <code>null</code>).</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
 </code></pre></div>
@@ -451,7 +451,7 @@
 
 <p>这只应该用在顶层上。在组件内部，让你的 <code>props</code> 和 <code>state</code> 来处理和子组件的通信，或者使用其他获取ref的方法（string attribute or callbacks）。</p>
 </blockquote>
-<h2><a class="anchor" name="ref-callback-"></a>ref Callback 属性 <a class="hash-link" href="#ref-callback-">#</a></h2>
+<h2><a class="anchor" name="ref-callback-属性"></a>ref Callback 属性 <a class="hash-link" href="#ref-callback-属性">#</a></h2>
 <p>React支持一种非常特殊的属性，你可以附加到任何的组件上。 <code>ref</code> 属性可以是一个回调函数，这个回调函数会在组件被挂载后立即执行。被引用的组件会被作为参数传递，回调函数可以用立即使用这个组件，或者保存引用以后使用（或者二者皆是）。</p>
 
 <p>简单的说就是添加一个 <code>ref</code> 属性到任何从 <code>render</code> 返回的东西上：</p>
@@ -477,7 +477,7 @@
 <p>当连接一个ref到一个DOM组件如 <code>&lt;div /&gt;</code>，你取回DOM节点;当连接一个ref到一个复合组件如 <code>&lt;TextInput /&gt;</code>，你会得到React类的实例。在后一种情况下，你可以调用任何那个组件的类暴露的方法。</p>
 
 <p>注意当被引用的组件卸载和每当ref变动，旧的ref将会被以<code>null</code>做参数调用。这阻止了在实例被保存的情况下的内存泄露，如第二个例子。注意当像在这里的例子，使用内联函数表达式写refs，React在每次更新都看到不同的函数对象，ref将会被以<code>null</code> 立即调用在它被以组件实例调用前。</p>
-<h2><a class="anchor" name="ref-string-"></a>ref String 属性 <a class="hash-link" href="#ref-string-">#</a></h2>
+<h2><a class="anchor" name="ref-string-属性"></a>ref String 属性 <a class="hash-link" href="#ref-string-属性">#</a></h2>
 <p>React同样支持使用一个字符串（代替回调函数）在任意组件上作为一个 ref prop，尽管这个方法在这点上主要是遗留物。</p>
 
 <ol>
@@ -490,7 +490,7 @@
 <span class="kd">var</span> <span class="nx">inputRect</span> <span class="o">=</span> <span class="nx">input</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">();</span>
 </code></pre></div></li>
 </ol>
-<h2><a class="anchor" name=""></a>完整的示例 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="完整的示例"></a>完整的示例 <a class="hash-link" href="#完整的示例">#</a></h2>
 <p>为了获取一个React组件的引用，你既可以使用 <code>this</code> 来获取当前的React组件，也可以使用一个 ref 来获取一个你拥有的组件的引用。他们像这样工作：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -521,15 +521,15 @@
 <p>在这个例子中，我们获得一个对 text input <strong>backing instance</strong> 的引用 并且当按钮被点击时我们调用 <code>focus()</code>。</p>
 
 <p>对于复合组件，引用会指向一个组件类的实例所以你可以调用那个类定义的任何方法。如果你需要访问那个组件的底层的DOM节点，你可以使用 <a href="/react/docs/top-level-api.html#reactdom.finddomnode">ReactDOM.findDOMNode</a> 作为一个 <code>安全舱口</code> 但是我们不推荐这样，因为它打破了封装，在大多数情况下都有一个清晰的方法来以React模式构建你的代码.</p>
-<h2><a class="anchor" name=""></a>总结 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="总结"></a>总结 <a class="hash-link" href="#总结">#</a></h2>
 <p>Refs是一种很好的发送消息给特定子实例(通过流式的Reactive <code>props</code> 和 <code>state</code>来做会不方便)的方式。它们应该，不论怎样，不是你的应用中数据流通的首选。默认情况下，使用响应式数据流，并为本身不是reactive的用例保存<code>ref</code>。</p>
-<h3><a class="anchor" name=""></a>优点: <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="优点"></a>优点: <a class="hash-link" href="#优点">#</a></h3>
 <ul>
 <li>你可以在你的组件类里定义任何的公开方法（比如在一个Typeahead的重置方法）然后通过refs调用那些公开方法（比如<code>this.refs.myTypeahead.reset()</code>）。在大多数情况下，使用内建的React数据流更清晰，而不是使用强制的ref。</li>
 <li>实行DOM测量几乎总是需要接触到 &quot;原生&quot; 组件比如 <code>&lt;input /&gt;</code> 并且通过 ref 访问它的底层DOM节点。 Refs 是唯一一个可靠的完成这件事的实际方式。</li>
 <li>Refs 是为你自动管理的！如果子级被销毁了，它的ref也同样为你销毁了。这里不用担心内存（除非你做了一些疯狂的事情来自己保持一份引用）。</li>
 </ul>
-<h3><a class="anchor" name=""></a>注意事项: <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="注意事项"></a>注意事项: <a class="hash-link" href="#注意事项">#</a></h3>
 <ul>
 <li><em>绝不</em> 在任何组件的 render 方法中访问 refs - 或者当任何组件的render方法还在调用栈上的任何地方运行时。</li>
 <li>如果你想要保留Google Closure Compiler advanced-mode crushing resilience，务必不要以属性的方式访问指明为字符串的属性。这意味这你必须用<code>this.refs[&#39;myRefString&#39;]</code>访问，如果你的ref被定义为<code>ref=&quot;myRefString&quot;</code>。</li>

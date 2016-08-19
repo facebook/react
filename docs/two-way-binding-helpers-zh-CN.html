@@ -452,7 +452,7 @@
 
 <p><code>ReactLink</code> 只是一层对 <code>onChange</code>/<code>setState()</code> 模式的薄包装。它没有根本性的改变你的React应用里数据如何流动。</p>
 </blockquote>
-<h2><a class="anchor" name="reactlink-"></a>ReactLink: 之前和之后 <a class="hash-link" href="#reactlink-">#</a></h2>
+<h2><a class="anchor" name="reactlink-之前和之后"></a>ReactLink: 之前和之后 <a class="hash-link" href="#reactlink-之前和之后">#</a></h2>
 <p>这里有一个简单的 不用 <code>ReactLink</code> 的 form 例子：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -488,7 +488,7 @@
 <code>
 &lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
 </code></p>
-<h2><a class="anchor" name=""></a>引擎盖下 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="引擎盖下"></a>引擎盖下 <a class="hash-link" href="#引擎盖下">#</a></h2>
 <p>这里对 <code>ReactLink</code>有两方面：创建<code>ReactLink</code>的实例以及使用它的地方。为了证明<code>ReactLink</code>有多简单，让我们重写两方面一边更好的理解。</p>
 <h3><a class="anchor" name="reactlink-without-linkedstatemixin"></a>ReactLink Without LinkedStateMixin <a class="hash-link" href="#reactlink-without-linkedstatemixin">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

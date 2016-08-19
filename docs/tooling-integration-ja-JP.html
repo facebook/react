@@ -432,24 +432,24 @@
     <div class="subHeader"></div>
 
     <p>全てのプロジェクトがJavaScriptをビルドしたりデプロイするのに様々なシステムを使用しています。私たちはReactをできるだけ環境不問にしようとしています。</p>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2><h3><a class="anchor" name="cdnreact"></a>CDNにホストされたReact <a class="hash-link" href="#cdnreact">#</a></h3>
+<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2><h3><a class="anchor" name="cdnにホストされたreact"></a>CDNにホストされたReact <a class="hash-link" href="#cdnにホストされたreact">#</a></h3>
 <p><a href="/react/downloads.html">ダウンロードページ</a>でCDNにホストされたバージョンのReactが提供されています。それらの、事前にビルドされたファイルはUMDモジュールフォーマットを使用しています。簡単な <code>&lt;script&gt;</code> タグを使ってそれらを導入することで、あなたの環境でグローバルに <code>React</code> を使うことができます。CommonJSの外や、AMDの環境でも、それは動作するでしょう。</p>
-<h3><a class="anchor" name="master"></a>masterを使う <a class="hash-link" href="#master">#</a></h3>
+<h3><a class="anchor" name="masterを使う"></a>masterを使う <a class="hash-link" href="#masterを使う">#</a></h3>
 <p><a href="https://github.com/facebook/react">GitHubリポジトリに</a> <code>master</code> からビルドする説明が書いてあります。<code>build/modules</code> の下にCommonJSモジュールのツリーをビルドします。それらは、どんな環境やCommonJSがサポートされているパッケージングツールでも導入できます。</p>
-<h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="jsx"></a>ブラウザ上でのJSXの変換 <a class="hash-link" href="#jsx">#</a></h3>
+<h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="ブラウザ上でのjsxの変換"></a>ブラウザ上でのJSXの変換 <a class="hash-link" href="#ブラウザ上でのjsxの変換">#</a></h3>
 <p>JSXを使用したい場合、<a href="/react/downloads.html">ダウンロードページに</a>開発のためにブラウザ上でのJSXトランスフォーマーを提供しています。単純に <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> をインクルードすることでJSXトランスフォーマーを使用できます。</p>
 
 <blockquote>
 <p>注意:
 ブラウザ上でのJSXトランスフォーマーをとても大きく、避けることのできるクライアントサイドの計算になりかねません。プロダクションでは使わないでください。詳細は次のセクションをご覧ください。</p>
 </blockquote>
-<h3><a class="anchor" name="jsx"></a>プロダクションで使う場合:事前にコンパイルされたJSX <a class="hash-link" href="#jsx">#</a></h3>
+<h3><a class="anchor" name="プロダクションで使う場合事前にコンパイルされたjsx"></a>プロダクションで使う場合:事前にコンパイルされたJSX <a class="hash-link" href="#プロダクションで使う場合事前にコンパイルされたjsx">#</a></h3>
 <p><a href="https://www.npmjs.com/">npm</a>がインストールされている場合、コマンドラインの <code>jsx</code> ツールは単純に <code>npm install -g react-tools</code> コマンドを流せばインストールできます。このツールはJSXを使用しているファイルを直接ブラウザ上で動く生のJavaScriptファイルに変換します。また、ディレクトリをウォッチして、ファイルが変更されたら自動的に変換を行います。例えば、次のようなコマンドで。 <code>jsx --watch src/ build/</code></p>
 
 <p>デフォルトで、拡張子が <code>.js</code> のJSXファイルは変換されます。拡張子が <code>.jsx</code> のファイルを変換するには <code>jsx --extension jsx src/ build/</code> コマンドを使用してください。</p>
 
 <p>このツールの使用方法についての詳細の情報については、 <code>jsx --help</code> コマンドを使用してください。</p>
-<h3><a class="anchor" name=""></a>役に立つオープンソースのプロジェクト <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="役に立つオプンソスのプロジェクト"></a>役に立つオープンソースのプロジェクト <a class="hash-link" href="#役に立つオプンソスのプロジェクト">#</a></h3>
 <p>オープンソースコミュニティがJSXをいくつかのエディタやビルドシステムで使用するためのツールを作成しました。一覧は<a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSXのインテグレーション</a>を参照してください。</p>
 
 

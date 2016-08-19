@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>在使用者介面所能做最基本的事情就是呈現資料. React讓呈現資料變得更加容易並且當資料有所變動時也能自動地讓使用者介面保持呈現最新的資料.</p>
-<h2><a class="anchor" name="getting-started"></a>入門(Getting Started) <a class="hash-link" href="#getting-started">#</a></h2>
+<h2><a class="anchor" name="入門getting-started"></a>入門(Getting Started) <a class="hash-link" href="#入門getting-started">#</a></h2>
 <p>我們從一個相當簡單的範例開始. 建立一個名為 <code>hello-react.html</code> 的檔案裡面包含下列程式碼:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -471,13 +471,13 @@
     <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
   <span class="p">);</span>
 <span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="reactive-updates"></a>反應性更新(Reactive Updates) <a class="hash-link" href="#reactive-updates">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="反應性更新reactive-updates"></a>反應性更新(Reactive Updates) <a class="hash-link" href="#反應性更新reactive-updates">#</a></h2>
 <p>在一個瀏覽器上開啟檔案 <code>hello-react.html</code> 並且在文字區塊填入你的名字. 請注意React僅僅改變UI上的時間字串 — 你在文字區塊輸入的任何文字依舊存在, 即使你並沒有寫任何程式碼來管理這個行為.React可以為你分辨出這樣的行為並且做出正確的回應.</p>
 
 <p>之所以能夠分辨出這樣的行為是因為React除非在真正有必要的情況下，否則不會對DOM做任何操作. <strong>它使用一個快速的, 內部虛擬的DOM(internal mock DOM)來為你施行比較和計算最有效率的DOM變動(DOM mutation)</strong></p>
 
 <p>輸入到元件(component)的內容我們稱為<code>props</code> — 是屬性(&quot;properties&quot;)的簡稱. 他們在JSX語法中作為傳遞屬性之用. 你應該把這些屬性當做元件中不可被改變的, 也就是說, <strong>永遠不要對 <code>this.props</code> 做寫入的行為</strong>.</p>
-<h2><a class="anchor" name="components-are-just-like-functions"></a>元件就是函數(Components are Just Like Functions) <a class="hash-link" href="#components-are-just-like-functions">#</a></h2>
+<h2><a class="anchor" name="元件就是函數components-are-just-like-functions"></a>元件就是函數(Components are Just Like Functions) <a class="hash-link" href="#元件就是函數components-are-just-like-functions">#</a></h2>
 <p>React元件(components)是非常簡單的. 你能把它們想成是簡單的函數帶入<code>props</code>和<code>state</code>(後面會討論這部份)並且呈送給HTML(render HTML). 在心中保持住這個想法, 就能容易理解元件(components).
 React components are very simple. You can think of them as simple functions that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. With this in mind, components are easy to reason about.</p>
 
@@ -486,7 +486,7 @@ React components are very simple. You can think of them as simple functions that
 
 <p><strong>一個局限性</strong>: React元件(components)只能呈送(render)給一個單一根節點(root node). 如果你想要回傳多個節點(multiple nodes)他們<em>必須</em>被包裹在單一根節點內.</p>
 </blockquote>
-<h2><a class="anchor" name="jsx"></a>JSX語法 <a class="hash-link" href="#jsx">#</a></h2>
+<h2><a class="anchor" name="jsx語法"></a>JSX語法 <a class="hash-link" href="#jsx語法">#</a></h2>
 <p>我們深信元件(components)才是分離關注點(separate concerns)的正確方法, 而並非傳統的模板(&quot;templates&quot;)和顯示邏輯(&quot;display logic&quot;)觀念. 我們認為標記(markup)和產生它的程式碼應當緊密的綁在一起. 另外, 顯示邏輯(display logic)常常是非常複雜的, 若使用模板語言(template languages)來詮釋它就顯得笨重或累贅.</p>
 
 <p>我們找到解決這個問題的最佳解答就是直接在JavaScript程式內產生HTML和元件樹(component trees)如此一來你就能使用真正的程式語言的表達能力(expressive power)來建立使用者介面(UIs).</p>
@@ -508,7 +508,7 @@ React components are very simple. You can think of them as simple functions that
 <p>JSX類似於HTML, 但不盡然完全相同. 參閱 <a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> 來比較一些主要的差異點.</p>
 
 <p><a href="http://babeljs.io/docs/setup/">Babel exposes a number of ways to get started using JSX</a>, 涵蓋從命令列工具到Ruby on Rails整合. 可以從中選擇最適合你的工具.</p>
-<h2><a class="anchor" name="reactjsxreact-without-jsx"></a>React不使用JSX的範例(React without JSX) <a class="hash-link" href="#reactjsxreact-without-jsx">#</a></h2>
+<h2><a class="anchor" name="react不使用jsx的範例react-without-jsx"></a>React不使用JSX的範例(React without JSX) <a class="hash-link" href="#react不使用jsx的範例react-without-jsx">#</a></h2>
 <p>JSX完全是可選擇性使用的; 你可以不拿JSX跟React一起使用. 你能在純粹的JavaScript環境中使用<code>React.createElement</code>來創建React元素(React elements), 它搭配一個標籤名(tag name)或是元件(component), 一個屬性物件(properties object), 和數個選擇性子參數(child arguments).</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child1</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;First Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">child2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Second Text Content&#39;</span><span class="p">);</span>

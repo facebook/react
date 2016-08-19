@@ -433,8 +433,8 @@
 
     <p>诸如 <code>&lt;input&gt;</code>、<code>&lt;textarea&gt;</code>、<code>&lt;option&gt;</code> 这样的表单组件不同于其他原生组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。</p>
 
-<p>关于 <code>&lt;form&gt;</code> 事件详情请查看 <a href="/react/docs/events-zh-CN.html#form-events">表单事件</a>。</p>
-<h2><a class="anchor" name=""></a>交互属性 <a class="hash-link" href="#">#</a></h2>
+<p>关于 <code>&lt;form&gt;</code> 事件详情请查看 <a href="/react/docs/events-zh-CN.html#%E8%A1%A8%E5%8D%95%E4%BA%8B%E4%BB%B6">表单事件</a>。</p>
+<h2><a class="anchor" name="交互属性"></a>交互属性 <a class="hash-link" href="#交互属性">#</a></h2>
 <p>表单组件支持几个受用户交互影响的属性：</p>
 
 <ul>
@@ -460,7 +460,7 @@
 
 <p>对于 <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>， <code>onChange</code> 取代 — 一般应该用来替代 — DOM内建的 <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> 事件处理。</p>
 </blockquote>
-<h2><a class="anchor" name=""></a>受控组件 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="受控组件"></a>受控组件 <a class="hash-link" href="#受控组件">#</a></h2>
 <p>一个<em>受控</em>的 <code>&lt;input&gt;</code> 有一个 <code>value</code> prop。渲染一个受控 <code>&lt;input&gt;</code> 会反映 <code>value</code> prop 的值。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -491,9 +491,9 @@
 <p>上面的代码接受用户输入，并截取前 140 个字符。</p>
 
 <p>受控组件不维持一个自己的内部状态;它单纯的基于 props 渲染。</p>
-<h3><a class="anchor" name=""></a>复选框与单选按钮的潜在问题 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="复选框与单选按钮的潜在问题"></a>复选框与单选按钮的潜在问题 <a class="hash-link" href="#复选框与单选按钮的潜在问题">#</a></h3>
 <p>当心，在力图标准化复选框与单选按钮的变换处理中，React使用 <code>click</code> 事件代替 <code>change</code> 事件。在大多数情况下它们表现的如同预期，除了在<code>change</code> handler中调用<code>preventDefault</code> 。<code>preventDefault</code> 阻止了浏览器视觉上更新输入，即使<code>checked</code>被触发。变通的方式是要么移除<code>preventDefault</code>的调用，要么把<code>checked</code> 的触发放在一个<code>setTimeout</code>里。</p>
-<h2><a class="anchor" name=""></a>不受控组件 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="不受控组件"></a>不受控组件 <a class="hash-link" href="#不受控组件">#</a></h2>
 <p>一个没有 <code>value</code> 属性的 <code>&lt;input&gt;</code> 是一个不<em>受控</em>组件:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -502,7 +502,7 @@
 <p>上面的代码将渲染出一个空值的输入框，用户输入将立即反应到元素上。和受控元素一样，使用 <code>onChange</code> 事件可以监听值的变化。</p>
 
 <p><em>不受控</em>组件维持它自己的内部状态。</p>
-<h3><a class="anchor" name=""></a>默认值 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="默认值"></a>默认值 <a class="hash-link" href="#默认值">#</a></h3>
 <p>如果想给组件设置一个非空的初始值，可以使用 <code>defaultValue</code> 属性。例如：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -517,7 +517,7 @@
 
 <p><code>defaultValue</code> 和 <code>defaultChecked</code> props 只能在内部渲染时被使用。 如果你需要在随后的渲染更新值, 你需要使用 <a href="#%E5%8F%97%E6%8E%A7%E7%BB%84%E4%BB%B6">受控组件</a>.</p>
 </blockquote>
-<h2><a class="anchor" name=""></a>高级主题 <a class="hash-link" href="#">#</a></h2><h3><a class="anchor" name=""></a>为什么使用受控组件？ <a class="hash-link" href="#">#</a></h3>
+<h2><a class="anchor" name="高级主题"></a>高级主题 <a class="hash-link" href="#高级主题">#</a></h2><h3><a class="anchor" name="为什么使用受控组件"></a>为什么使用受控组件？ <a class="hash-link" href="#为什么使用受控组件">#</a></h3>
 <p>在 React 中使用诸如 <code>&lt;input&gt;</code> 的表单组件时，遇到了一个在传统 HTML 中没有的挑战。比如下面的代码：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
@@ -529,7 +529,7 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>由于这个方法描述了在任意时间点上的视图，那么文本输入框的值就应该<em>始终</em>为 <code>Untitled</code>。</p>
-<h3><a class="anchor" name="-lttextareagt--value-"></a>为什么 <code>&lt;textarea&gt;</code> 使用 <code>value</code> 属性？ <a class="hash-link" href="#-lttextareagt--value-">#</a></h3>
+<h3><a class="anchor" name="为什么-lttextareagt-使用-value-属性"></a>为什么 <code>&lt;textarea&gt;</code> 使用 <code>value</code> 属性？ <a class="hash-link" href="#为什么-lttextareagt-使用-value-属性">#</a></h3>
 <p>在 HTML 中， <code>&lt;textarea&gt;</code> 的值通常使用子节点设置：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 反例：在 React 中不要这样使用！ --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
@@ -538,7 +538,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>如果 <em>非要</em> 使用子节点，效果和使用 <code>defaultValue</code> 一样。</p>
-<h3><a class="anchor" name="-ltselectgt--value-"></a>为什么 <code>&lt;select&gt;</code> 使用 <code>value</code> 属性 <a class="hash-link" href="#-ltselectgt--value-">#</a></h3>
+<h3><a class="anchor" name="为什么-ltselectgt-使用-value-属性"></a>为什么 <code>&lt;select&gt;</code> 使用 <code>value</code> 属性 <a class="hash-link" href="#为什么-ltselectgt-使用-value-属性">#</a></h3>
 <p>HTML 中 <code>&lt;select&gt;</code> 通常使用 <code>&lt;option&gt;</code> 的 <code>selected</code> 属性设置选中状态；React 为了更方便地控制组件，采用以下方式代替：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>

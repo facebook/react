@@ -438,7 +438,7 @@
 
 <p>关于 DOM 的区别，如行内样式属性 <code>style</code>，参考 <a href="/react/docs/dom-differences.html">DOM 区别</a></p>
 </blockquote>
-<h2><a class="anchor" name="html-"></a>HTML 实体 <a class="hash-link" href="#html-">#</a></h2>
+<h2><a class="anchor" name="html-实体"></a>HTML 实体 <a class="hash-link" href="#html-实体">#</a></h2>
 <p>HTML 实体可以插入到 JSX 的文本中。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">First</span> <span class="o">&amp;</span><span class="nx">middot</span><span class="p">;</span> <span class="nx">Second</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
@@ -458,7 +458,7 @@
 </code></pre></div>
 <p>万不得已，可以直接<a href="/react/tips/dangerously-set-inner-html.html">插入原始HTML</a>。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
-</code></pre></div><h2><a class="anchor" name="-html-"></a>自定义 HTML 属性 <a class="hash-link" href="#-html-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="自定义-html-属性"></a>自定义 HTML 属性 <a class="hash-link" href="#自定义-html-属性">#</a></h2>
 <p>如果往原生 HTML 元素里传入 HTML 规范里不存在的属性，React 不会显示它们。如果需要使用自定义属性，要加 <code>data-</code> 前缀。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>

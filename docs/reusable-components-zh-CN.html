@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>设计接口的时候，把通用的设计元素（按钮，表单框，布局组件等）拆成接口良好定义的可复用的组件。这样，下次开发相同界面程序时就可以写更少的代码，也意义着更高的开发效率，更少的 Bug 和更少的程序体积。</p>
-<h2><a class="anchor" name="prop-"></a>Prop 验证 <a class="hash-link" href="#prop-">#</a></h2>
+<h2><a class="anchor" name="prop-验证"></a>Prop 验证 <a class="hash-link" href="#prop-验证">#</a></h2>
 <p>随着应用不断变大，保证组件被正确使用变得非常有用。为此我们引入 <code>propTypes</code>。<code>React.PropTypes</code> 提供很多验证器 (validator) 来验证传入数据的有效性。当向 props 传入无效数据时，JavaScript 控制台会抛出警告。注意为了性能考虑，只在开发环境验证 <code>propTypes</code>。下面用例子来说明不同验证器的区别：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -514,7 +514,7 @@
   <span class="p">}</span>
 
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="-prop-"></a>默认 Prop 值 <a class="hash-link" href="#-prop-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="默认-prop-值"></a>默认 Prop 值 <a class="hash-link" href="#默认-prop-值">#</a></h2>
 <p>React 支持以声明式的方式来定义 <code>props</code> 的默认值。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ComponentWithDefaultProps</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getDefaultProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -526,7 +526,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>当父级没有传入 props 时，<code>getDefaultProps()</code> 可以保证  <code>this.props.value</code> 有默认值，注意 <code>getDefaultProps</code> 的结果会被 <em>缓存</em>。得益于此，你可以直接使用 props，而不必写手动编写一些重复或无意义的代码。</p>
-<h2><a class="anchor" name="-props"></a>传递 Props：捷径 <a class="hash-link" href="#-props">#</a></h2>
+<h2><a class="anchor" name="传递-props捷径"></a>传递 Props：捷径 <a class="hash-link" href="#传递-props捷径">#</a></h2>
 <p>有一些常用的 React 组件只是对 HTML 做简单扩展。通常，你想复制任何传进你的组件的HTML属性到底层的HTML元素上。为了减少输入，你可以用 JSX <em>spread</em>  语法来完成：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -613,7 +613,7 @@
 <span class="p">}</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
-</code></pre></div><h3><a class="anchor" name=""></a>无自动绑定 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="无自动绑定"></a>无自动绑定 <a class="hash-link" href="#无自动绑定">#</a></h3>
 <p>方法遵循正式的ES6 class的语义，意味着它们不会自动绑定<code>this</code>到实例上。你必须显示的使用<code>.bind(this)</code> or <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/Arrow_functions">箭头函数</a> <code>=&gt;</code>：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 你可以使用 bind() 来绑定 `this`</span>
 <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
@@ -633,9 +633,9 @@
 <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">}</span><span class="o">&gt;</span>
 </code></pre></div>
 <p>这对应用的性能有帮助，特别是当你用 <a href="/react/docs/shallow-compare.html">浅层比较</a> 实现 <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate()</a> 时。</p>
-<h3><a class="anchor" name="-mixins"></a>没有 Mixins <a class="hash-link" href="#-mixins">#</a></h3>
+<h3><a class="anchor" name="没有-mixins"></a>没有 Mixins <a class="hash-link" href="#没有-mixins">#</a></h3>
 <p>不幸的是ES6的发布没有任何mixin的支持。因此，当你在ES6 classes下使用React时不支持mixins。作为替代，我们正在努力使它更容易不依靠mixins支持这些用例。</p>
-<h2><a class="anchor" name=""></a>无状态函数 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="无状态函数"></a>无状态函数 <a class="hash-link" href="#无状态函数">#</a></h2>
 <p>你也可以用 JavaScript 函数来定义你的 React 类。例如使用无状态函数语法：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">HelloMessage</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>

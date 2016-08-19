@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>インターフェースをデザインするとき、明確に定義されたインターフェースでは共通のデザイン要素（ボタン、フォームフィールド、レイアウトコンポーネントなど）を再利用可能なコンポーネントにブレークダウンします。そのような方法をとることで、次にUIを作成する必要があるときに、書くコードが少なくて済みます。これは、開発速度を上げ、バグを減らし、導線を減らすことを意味します。</p>
-<h2><a class="anchor" name="prop"></a>Propのバリデーション <a class="hash-link" href="#prop">#</a></h2>
+<h2><a class="anchor" name="propのバリデション"></a>Propのバリデーション <a class="hash-link" href="#propのバリデション">#</a></h2>
 <p>アプリが大きくなっていくにつれて、コンポーネントが正しく使われていることを保証することが役に立つようになります。<code>propTypes</code> を指定することでそういったことができるようになります。<code>React.PropTypes</code> はあなたが受け取ったデータが正しいことを認識するのに使われるバリデータを出力します。不正な値がpropに渡されたときは、警告がJavaScriptコンソールに表示されます。パフォーマンスの点で、 <code>propTypes</code> は開発モードでのみチェックされることに注意してください。異なるバリデータが提供された際の例を表すドキュメントは以下の通りです。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -496,7 +496,7 @@
   <span class="p">},</span>
   <span class="cm">/* ... */</span>
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="prop"></a>デフォルトのPropの値 <a class="hash-link" href="#prop">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="デフォルトのpropの値"></a>デフォルトのPropの値 <a class="hash-link" href="#デフォルトのpropの値">#</a></h2>
 <p>Reactは以下のように、とても宣言的な方法で <code>props</code> のデフォルト値を定義できます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ComponentWithDefaultProps</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getDefaultProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -508,7 +508,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p><code>getDefaultProps()</code> の結果は <code>this.props.value</code> が親コンポーネントで制限されなかった場合に値を保証するためにキャッシュされて使われます。これによって、自分自身でハンドルするための壊れやすいコードを何度も書くことなくpropsをただ安全に使うことができます。</p>
-<h2><a class="anchor" name="props-"></a>Propsの移動: ショートカット <a class="hash-link" href="#props-">#</a></h2>
+<h2><a class="anchor" name="propsの移動-ショトカット"></a>Propsの移動: ショートカット <a class="hash-link" href="#propsの移動-ショトカット">#</a></h2>
 <p>Reactのコンポーネントに共通しているのは、単純な方法で基本的なHTML要素を拡張していることです。よく、
 コンポーネントに渡されるHTML属性を、型付けを守るために、基本的なHTML要素にコピーしたいと考える人もいます。このようなことを行うために、JSXの <em>拡張された</em> シンタックスを使うことができます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -524,7 +524,7 @@
   <span class="o">&lt;</span><span class="err">/CheckLink&gt;,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>単一の子要素 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="単一の子要素"></a>単一の子要素 <a class="hash-link" href="#単一の子要素">#</a></h2>
 <p><code>React.PropTypes.element</code> を使って、childrenとしてコンポーネントにただ一つの子要素が渡されるよう制限できます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -540,7 +540,7 @@
   <span class="p">}</span>
 
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name=""></a>ミックスイン <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="ミックスイン"></a>ミックスイン <a class="hash-link" href="#ミックスイン">#</a></h2>
 <p>コンポーネントはReactでコードを再利用する最良の方法ですが、全く異なったコンポーネントが共通の機能性を共有することもあります。それらは<a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">横断的関心事</a>と呼ばれることもあります。Reactはこの問題を解決するために、 <code>mixins</code> を提供しています。</p>
 
 <p>共通のユースケースとしては、時間の間隔によって、コンポーネントにそれ自身をアップデートさせたい場合があります。 <code>setInterval()</code> を使うのは簡単ですが、メモリをセーブするためにもう必要でなくなった場合にはインターバルをキャンセルすることが重要です。Reactは<a href="/react/docs/working-with-the-browser.html#component-lifecycle">ライフサイクルメソッド</a>を提供しており、コンポーネントが作成されようとしたり削除されようとした時にそれを検知することができます。コンポーネントが削除されたときに自動的にクリーンアップしてくれる、簡単な <code>setInterval()</code> 関数を提供する以下のようなメソッドを使って単純なミックスインを作成してみましょう。</p>
@@ -582,7 +582,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>ミックスインの素晴らしい特徴はコンポーネントが複数のミックスインを使っていて、いくつかのミックスインが同じライフサイクルメソッドを定義している場合（すなわち、コンポーネントが削除された際に幾つかのミックスインがクリーンアップを行いたい場合）に、すべてのライフサイクルメソッドが呼ばれることを保証することです。ミックスインで定義されたメソッドは、ミックスインが並んでいる順番に走り、コンポーネントのメソッド呼び出しで呼ばれます。</p>
-<h2><a class="anchor" name="es6"></a>ES6のクラス <a class="hash-link" href="#es6">#</a></h2>
+<h2><a class="anchor" name="es6のクラス"></a>ES6のクラス <a class="hash-link" href="#es6のクラス">#</a></h2>
 <p>ReactのクラスをただのJavaScriptのクラスとして定義することもできます。例えば、ES6 のクラスシンタックスを使うと、以下のようになります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -612,9 +612,9 @@
 <span class="p">}</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
-</code></pre></div><h3><a class="anchor" name=""></a>オートバインディングしません <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="オトバインディングしません"></a>オートバインディングしません <a class="hash-link" href="#オトバインディングしません">#</a></h3>
 <p>メソッドは標準のES6のクラスと同じ仕様です。それは、 <code>this</code> をインスタンスに自動的にバインドしないことを意味します。明確に <code>.bind(this)</code> を使うか <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/">アロー関数</a> <code>=&gt;</code> を使ってください。</p>
-<h3><a class="anchor" name=""></a>ミックスインはありません <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="ミックスインはありません"></a>ミックスインはありません <a class="hash-link" href="#ミックスインはありません">#</a></h3>
 <p>不幸なことに、ES6はミックスインのサポートを行いません。それゆえ、ReactをES6のクラスと一緒に使う際にはミックスインのサポートはありません。代わりに、ミックスインに頼ることなくそれらのユースケースをサポートするのが簡単になるよう努力しています。</p>
 
 

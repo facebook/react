@@ -483,7 +483,7 @@
 <p>この反例では、 <code>&lt;input /&gt;</code> は単に <code>&lt;input /&gt;</code> の <em>説明</em> に過ぎず、この説明は <code>&lt;input /&gt;</code> の <em>現実の</em>  <strong>バッキングインスタンス</strong> を作るために使われます。</p>
 
 <p>では、inputの <em>現実の</em> バッキングインスタンスについて、どのように話していきましょうか？</p>
-<h2><a class="anchor" name=""></a>参照の文字列属性 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="参照の文字列属性"></a>参照の文字列属性 <a class="hash-link" href="#参照の文字列属性">#</a></h2>
 <p>Reactは <code>render()</code> からの出力であるコンポーネントであれば何でもアタッチできるとても特別なプロパティをサポートしています。この特別なプロパティは <code>render()</code> からのリターンである <strong>バッキングインスタンス</strong> に対応したものに参照することを許可します。これはどのタイミングにおいても、固有のインスタンスであることを保証されています。</p>
 
 <p>これは以下のように単純です。</p>
@@ -499,12 +499,12 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
 </code></pre></div>
 <p><code>ReactDOM.findDOMNode(this.refs.myInput)</code> を呼ぶことで、コンポーネントのDOMノードに直接アクセスできる。</p>
-<h2><a class="anchor" name=""></a>参照のコールバック属性 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="参照のコルバック属性"></a>参照のコールバック属性 <a class="hash-link" href="#参照のコルバック属性">#</a></h2>
 <p><code>ref</code> 属性は名前の代わりのコールバック関数になり得ます。このコールバックはコンポーネントがマウントされた直後に実行されます。参照されたコンポーネントはパラメータとして渡され、コールバック関数はコンポーネントを即座に使用するか、または将来使用するために参照を保存します（またはその両方を行います）。</p>
 
 <p>これは、以下のように、 <code>render</code> でリターンされてきたものに <code>ref</code> 属性をアサインするのと同じくらい簡単です。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">ReactDOM</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
-</code></pre></div><h2><a class="anchor" name=""></a>完全な例 <a class="hash-link" href="#">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</code></pre></div><h2><a class="anchor" name="完全な例"></a>完全な例 <a class="hash-link" href="#完全な例">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>
@@ -535,15 +535,15 @@
   <span class="p">});</span>
 </code></pre></div>
 <p>この例では、レンダリング関数は <code>&lt;input /&gt;</code> インスタンスの説明をリターンします。しかし、実際のインスタンスは <code>this.refs.theInput</code> を通してアクセスされます。 <code>ref=&quot;theInput&quot;</code> を持つ子要素のコンポーネントが <code>render</code> からリターンされる限り、 <code>this.refs.theInput</code> は固有のインスタンスにアクセスするでしょう。これは <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code> のような高階層の（DOMでない）コンポーネントでも同様に動きます。</p>
-<h2><a class="anchor" name=""></a>要約 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="要約"></a>要約 <a class="hash-link" href="#要約">#</a></h2>
 <p>リアクティブな <code>props</code> と <code>state</code> を通してのストリーミングのアクセスは便利とは言えないため、参照は特定の子要素のインスタンスにメッセージを送るための素晴らしい方法です。しかし、それらは、アプリケーションを通したデータフローの抽象化につながるわけではありません。デフォルトで、リアクティブなデータフローを使ってください。そして、ユースケースのために <code>ref</code> を保存するのは本質的にはリアクティブではありません。</p>
-<h3><a class="anchor" name=""></a>利益: <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="利益"></a>利益: <a class="hash-link" href="#利益">#</a></h3>
 <ul>
 <li>コンポーネントクラス（例えば、Typeaheadのリセットメソッドのようなもの）にパブリックなメソッドを定義できる。また、参照（例えば、 <code>this.refs.myTypeahead.reset()</code> のように）を通してそれらのパブリックなメソッドを呼べる。</li>
 <li>DOMの計測を行うことは大体いつも <code>&lt;input /&gt;</code> のような「ネイティブの」コンポーネントや <code>ReactDOM.findDOMNode(this.refs.myInput)</code> を通した根本のDOMノードにアクセスすることを必要とします。参照は、こういったことを期待通りに行う唯一の実用的な方法です。</li>
 <li>参照は自動的に管理されます！もし子要素が削除されたら、その参照もまた削除されます。メモリに関しての心配は要りません（あなた自身が参照を維持するために何かおかしなことを行っていなければ）。</li>
 </ul>
-<h3><a class="anchor" name=""></a>警告: <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="警告"></a>警告: <a class="hash-link" href="#警告">#</a></h3>
 <ul>
 <li><em>決して</em> コンポーネントのレンダリングメソッドの中の参照にアクセスしてはいけません。たとえコンポーネントのレンダリングメソッドのいずれかがコールスタックの中のどこかで動いているとしても。</li>
 <li>もしGoogle Closure Compilerのクラッシュからの回復を守りたいなら、文字列として指定されたプロパティとしてアクセスしてはいけないことに気をつけてください。これは、 <code>ref=&quot;myRefString&quot;</code> として参照が定義されている場合は、 <code>this.refs[&#39;myRefString&#39;]</code> を使ってアクセスしなければいけないことを意味します。</li>

@@ -436,7 +436,7 @@
 <p>ReactはJavascriptで大きなアプリを早く作成するのに良い方法だと私は思います。FacebookとInstagram製で規模を大きすすることも容易いです。</p>
 
 <p>Reactのたくさんある中の偉大なパーツの1つのは、あなたに構築するアプリについて考えさせます。このページで、私はReactを使って検索可能な製品データテーブルを構築する思考プロセスをご案内します。</p>
-<h2><a class="anchor" name=""></a>モックから始めましょう <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="モックから始めましょう"></a>モックから始めましょう <a class="hash-link" href="#モックから始めましょう">#</a></h2>
 <p>私たちはすでにデザイナーからJSON APIとモックをもらっていると想像してください。このモックを見ればわかるように私たちのデザイナーは明らかに良くないです。</p>
 
 <p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
@@ -450,7 +450,7 @@
   {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
   {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
 ];
-</code></pre></div><h2><a class="anchor" name="1--ui"></a>ステップ1 : コンポーネント階層を用いてUIを改築します <a class="hash-link" href="#1--ui">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="ステップ1--コンポネント階層を用いてuiを改築します"></a>ステップ1 : コンポーネント階層を用いてUIを改築します <a class="hash-link" href="#ステップ1--コンポネント階層を用いてuiを改築します">#</a></h2>
 <p>まずあなたが行いたいことは、モックに必要なすべてのコンポーネント(サブコンポーネントも)の箱を作り、名前をつけることでしょう。もしあなたがデザイナーと共に働いているなら、すでに行っているかもしれませんが、彼らと話に行きましょう！彼らのPhotoshopのレイヤーの名前をReactのコンポーネントの名前にして終わらせることもできます。</p>
 
 <p>独自コンポーネントがどのようにあるべきか知っていますか？ あなたが新しい関数やオブジェクトを作る必要があるかどうかを決定するために同じ技術を使用しています。そのうちの一つのテクニックが<a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">単一責任の原則(single responsibility principle)</a>です。これは一つのコンポーネントは一つの振る舞いをするべきというものです。もしこれが難しいのであれば、より小さなサブコンポーネントに分ける必要があります。</p>
@@ -486,7 +486,7 @@
 </ul></li>
 </ul></li>
 </ul>
-<h2><a class="anchor" name="2--react"></a>ステップ2 : 静的なReactの構築 <a class="hash-link" href="#2--react">#</a></h2>
+<h2><a class="anchor" name="ステップ2--静的なreactの構築"></a>ステップ2 : 静的なReactの構築 <a class="hash-link" href="#ステップ2--静的なreactの構築">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>あなたは今コンポーネントの階層を持っており、アプリを実装する時がきました。最も簡単な方法はあなたの持っているデータモデルを受け取りUIをレンダリングするが、双方向性を持っていないバージョンを構築することです。静的なバージョンを構築するには多くのコードを書く必要があるが考えることはなく、双方向性を加えるためには熟考する必要がありコード量は多くないです。そのためこれらのプロセスは分離するのが最善の手段です。理由をみていきましょう。</p>
@@ -498,9 +498,9 @@
 <p>この最後のステップは、データモデルをレンダリングできる再利用可能なコンポーネントのライブラリーを手に入れることです。これはあなたのアプリの静的なバージョンのため、コンポーネントは<code>render()</code>メソッドのみを持ちます。階層のトップのコンポーネント(<code>FilterableProductTable</code>)は部品としてデータモデルを持ちます。あなたが下の階層にあるデータモデルの変更を行い、<code>ReactDOM.render()</code>を呼ぶと、UIも更新されます。複雑なことは何もないので、どのようにあなたのUIが更新され、変更した場所を確認するのは簡単です。Reactの<strong>1方向のデータフロー</strong> (<em>１方向バインディング</em>ともよばれます。)はすべてのモジュール式と速さを保ちます。</p>
 
 <p>このステップでヘルプが必要な場合はここに簡単な説明があります。<a href="/react/docs/">React docs</a></p>
-<h3><a class="anchor" name="-props--state-"></a>コラム: props か state か？ <a class="hash-link" href="#-props--state-">#</a></h3>
+<h3><a class="anchor" name="コラム-props-か-state-か"></a>コラム: props か state か？ <a class="hash-link" href="#コラム-props-か-state-か">#</a></h3>
 <p>Reactにはpropsとstateの2つのタイプの&quot;model&quot;データがあります。この二つの違いを理解することは重要です。違いを明確に理解していない場合はここを参照してください。<a href="/react/docs/interactivity-and-dynamic-uis.html">the official React docs</a></p>
-<h2><a class="anchor" name="3--ui"></a>ステップ3 : UI部品の最小限の(しかし完全な)表現を特定します <a class="hash-link" href="#3--ui">#</a></h2>
+<h2><a class="anchor" name="ステップ3--ui部品の最小限のしかし完全な表現を特定します"></a>ステップ3 : UI部品の最小限の(しかし完全な)表現を特定します <a class="hash-link" href="#ステップ3--ui部品の最小限のしかし完全な表現を特定します">#</a></h2>
 <p>UIをインタラクティブに作るために、下の階層のデータモデルを変更を行えるようにする必要があります。Reactでは <strong>state</strong> を使うことで簡単に行うことができます。</p>
 
 <p>アプリの構築を正しく行うために、まずそのアプリのニーズの可変状態の最小セットを考える必要があります。ここで重要なのはDRY、つまり繰り返さないこと、です。アプリケーションの状態の絶対的な最小表現を把握し、オンデマンドで必要他のすべてを計算します。たとえば、TODOリストを構築するとすると、TODOのリストを配列で保持し、個別にカウントの状態変数を保持しません。TODOの個数をレンダリングするときに、単にTODOのアイテムの長さを取得すればよいのです。</p>
@@ -530,7 +530,7 @@
 <li>ユーザーが入力した検索テキスト</li>
 <li>チェックボックスの値</li>
 </ul>
-<h2><a class="anchor" name="4--state"></a>ステップ4 : あなたのstateがあるべき場所を特定します。 <a class="hash-link" href="#4--state">#</a></h2>
+<h2><a class="anchor" name="ステップ4--あなたのstateがあるべき場所を特定します"></a>ステップ4 : あなたのstateがあるべき場所を特定します。 <a class="hash-link" href="#ステップ4--あなたのstateがあるべき場所を特定します">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>ここまでで、私たちはアプリの状態の最小セットが何であるかを認識することができました。次はコンポーネントの変化か、またはそれ自身の状態を特定する必要があります。</p>
@@ -557,7 +557,7 @@
 <p>stateは<code>FilterableProductTable</code>の中にあると決定しました。まずはアプリケーションの最初の状態を反映させるため、<code>FilterableProductTable</code>に <code>{filterText: &#39;&#39;, inStockOnly: false}</code>を返す、<code>getInitialState()</code>という関数を追加します。次に、<code>ProductTable</code> と <code>SearchBar</code>にpropとして<code>filterText</code>と<code>inStockOnly</code>を通します。最後にこれらのpropを<code>ProductTable</code>の行のフィルターに使い、<code>SearchBar</code>のフォームのフィールドの値をセットします。</p>
 
 <p>アプリケーションがどのように動作(<code>&quot;ball&quot;</code>に<code>filterText</code>をセットし、アプリを更新する)するかを見て開始することができます。データテーブルが正しく更新されていることがわかるでしょう。</p>
-<h2><a class="anchor" name="5--"></a>ステップ5 : 逆のデータフローを追加 <a class="hash-link" href="#5--">#</a></h2>
+<h2><a class="anchor" name="ステップ5--逆のデタフロを追加"></a>ステップ5 : 逆のデータフローを追加 <a class="hash-link" href="#ステップ5--逆のデタフロを追加">#</a></h2>
 <iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>ここまで、階層の下へ向かってpropやstateの関数として正しくレンダリングするアプリを構築しました。ここからは逆の方向へのデータのフローをサポートします。深い階層のフォームのコンポーネントは<code>FilterableProductTable</code>のstateを更新する必要があります。</p>
@@ -569,7 +569,7 @@
 <p>何を起こしたいのかを考えましょう。私たちは確かにユーザーがどのようにフォームを変えても入力した値をstateに反映させようとしています。コンポーネントが自身のstateを更新する必要があるため、<code>FilterableProductTable</code>は<code>SearchBar</code>が更新するべき時にはいつでもコールバックを渡します。入力の通知に対して<code>onChange</code>イベントを使用できます。そして<code>FilterableProductTable</code>によって渡されたコールバックは<code>setState()</code>を呼び出し、アプリが更新されます。</p>
 
 <p>これは複雑に見えますが、それはわずか数行のコードのみです。そしてデータがどのようにアプリ内を流れているか、とても明白です。</p>
-<h2><a class="anchor" name=""></a>以上です。 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="以上です"></a>以上です。 <a class="hash-link" href="#以上です">#</a></h2>
 <p>この記事を通してReactでコンポーネントとアプリケーションを構築するかをどのように考えるかのヒントになれば幸いです。あなたが今まで使ってきたものよりも少しタイピングが必要かもしれないが、そのコードは書かれているよりもはるかに多くを認識し、このモジュールを読むためにとても簡単でかつ明白なコードです。あなたが大きなコンポーネントのライブラリを構築するのなら、この明示性とモジュール性に感謝するでしょうし、コードの再利用性とコードのあなたのラインが縮小し始めます。 :)</p>
 
 

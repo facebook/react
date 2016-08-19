@@ -433,8 +433,8 @@
 
     <p><code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code> 같은 폼 컴포넌트는 다른 네이티브 컴포넌트와 다릅니다. 왜냐하면, 사용자의 상호작용에 의해 변경될 수 있기 때문이죠. 이런 컴포넌트들은 사용자의 상호작용에 반응하여 폼을 더 쉽게 관리할 수 있도록 인터페이스를 제공합니다.</p>
 
-<p><code>&lt;form&gt;</code> 이벤트에 관한 정보는 <a href="/react/docs/events-ko-KR.html#form-events">폼 이벤트</a>를 보세요.</p>
-<h2><a class="anchor" name="props-"></a>Props의 상호작용 <a class="hash-link" href="#props-">#</a></h2>
+<p><code>&lt;form&gt;</code> 이벤트에 관한 정보는 <a href="/react/docs/events-ko-KR.html#%ED%8F%BC-%EC%9D%B4%EB%B2%A4%ED%8A%B8">폼 이벤트</a>를 보세요.</p>
+<h2><a class="anchor" name="props의-상호작용"></a>Props의 상호작용 <a class="hash-link" href="#props의-상호작용">#</a></h2>
 <p>폼 컴포넌트는 사용자 상호작용을 통해 영향을 받는 몇 가지 props를 지원합니다.</p>
 
 <ul>
@@ -460,9 +460,7 @@
 
 <p><code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>에서는 <code>onChange</code>가 DOM의 <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> 이벤트 핸들러와 같은 기능을 제공하므로 일반적인 경우에는 <code>onChange</code>를 사용하세요.</p>
 </blockquote>
-
-<p><a name="controlled-components"></a></p>
-<h2><a class="anchor" name="controlled-"></a>제어되는(controlled) 컴포넌트 <a class="hash-link" href="#controlled-">#</a></h2>
+<h2><a class="anchor" name="제어되는controlled-컴포넌트"></a>제어되는(controlled) 컴포넌트 <a class="hash-link" href="#제어되는controlled-컴포넌트">#</a></h2>
 <p><code>value</code>가 설정된 <code>&lt;input&gt;</code>은 <em>제어되는</em> 컴포넌트입니다. 제어되는 <code>&lt;input&gt;</code>에서, 렌더 엘리먼트의 값은 항상 <code>value</code> prop을 반영합니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -486,16 +484,16 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>이것은 사용자 입력을 받아들이지만, 시작에서부터 140자로 값을 자릅니다.</p>
-<h3><a class="anchor" name="----"></a>체크박스와 라디오 버튼의 잠제적인 문제 <a class="hash-link" href="#----">#</a></h3>
+<h3><a class="anchor" name="체크박스와-라디오-버튼의-잠제적인-문제"></a>체크박스와 라디오 버튼의 잠제적인 문제 <a class="hash-link" href="#체크박스와-라디오-버튼의-잠제적인-문제">#</a></h3>
 <p>변경 핸들링을 일반화하기 위해 React는 <code>change</code> 이벤트 대신에 <code>click</code> 이벤트를 사용하는 것에 주의하세요. <code>change</code> 핸들러 안에서 <code>preventDefault</code>를 호출하는 경우를 재외하고 이 동작은 예상대로 동작합니다. 이런 경우 <code>preventDefault</code>를 제거하거나,  <code>setTimeout</code>에 <code>checked</code>의 전환을 넣어서 해결 가능합니다.</p>
-<h2><a class="anchor" name="-uncontrolled-"></a>제어되지 않는(Uncontrolled) 컴포넌트 <a class="hash-link" href="#-uncontrolled-">#</a></h2>
+<h2><a class="anchor" name="제어되지-않는uncontrolled-컴포넌트"></a>제어되지 않는(Uncontrolled) 컴포넌트 <a class="hash-link" href="#제어되지-않는uncontrolled-컴포넌트">#</a></h2>
 <p><code>value</code> 가 없(거나 <code>null</code>로 설정되어 있)는 <code>&lt;input&gt;</code>은 <em>제어되지 않는</em> 컴포넌트입니다. 제어되지 않는 <code>&lt;input&gt;</code>에서 렌더된 엘리먼트의 value값은 사용자의 입력을 반영합니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
 <p>이것은 빈 값으로 시작되는 input을 렌더합니다. 임의의 사용자 입력은 즉시 렌더된 엘리먼트에 반영됩니다. 값의 업데이트를 감시하길 원한다면, 제어되는 컴포넌트처럼 <code>onChange</code> 이벤트를 사용할 수 있습니다.</p>
-<h3><a class="anchor" name="-"></a>기본 값 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="기본-값"></a>기본 값 <a class="hash-link" href="#기본-값">#</a></h3>
 <p>비어 있지 않은 값으로 초기화하길 원한다면, <code>defaultValue</code> prop로 할 수 있습니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -508,9 +506,9 @@
 <blockquote>
 <p>주의:</p>
 
-<p><code>defaultValue</code>, <code>defaultChecked</code> prop은 최초 렌더에서만 사용됩니다. 뒤에 일어나는 렌더에서 값을 업데이트할 필요가 있다면,  <a href="#controlled-components">제어되는(controlled) 컴포넌트</a>를 사용하셔야 합니다.</p>
+<p><code>defaultValue</code>, <code>defaultChecked</code> prop은 최초 렌더에서만 사용됩니다. 뒤에 일어나는 렌더에서 값을 업데이트할 필요가 있다면,  <a href="#%EC%A0%9C%EC%96%B4%EB%90%98%EB%8A%94controlled-%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8">제어되는(controlled) 컴포넌트</a>를 사용하셔야 합니다.</p>
 </blockquote>
-<h2><a class="anchor" name="-"></a>심화 주제 <a class="hash-link" href="#-">#</a></h2><h3><a class="anchor" name="--"></a>왜 제어되는 컴포넌트인가요? <a class="hash-link" href="#--">#</a></h3>
+<h2><a class="anchor" name="심화-주제"></a>심화 주제 <a class="hash-link" href="#심화-주제">#</a></h2><h3><a class="anchor" name="왜-제어되는-컴포넌트인가요"></a>왜 제어되는 컴포넌트인가요? <a class="hash-link" href="#왜-제어되는-컴포넌트인가요">#</a></h3>
 <p>React에서 <code>&lt;input&gt;</code>같은 폼 컴포넌트를 사용하면, 전통적인 폼 HTML을 쓸 때에는 없던 어려운 문제가 있습니다. 예를 들어 HTML에서</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
 </code></pre></div>
@@ -522,7 +520,7 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>이 메소드가 어떤 시점에도 뷰를 기술하기 때문에, 텍스트 input의 값은 <em>언제나</em> <code>Untitled</code>입니다.</p>
-<h3><a class="anchor" name="-textarea-value-"></a>왜 Textarea에 value를 사용하나요? <a class="hash-link" href="#-textarea-value-">#</a></h3>
+<h3><a class="anchor" name="왜-textarea에-value를-사용하나요"></a>왜 Textarea에 value를 사용하나요? <a class="hash-link" href="#왜-textarea에-value를-사용하나요">#</a></h3>
 <p>HTML에서, <code>&lt;textarea&gt;</code>의 값은 보통 그것의 자식들로 설정됩니다.</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- 안티패턴: 이렇게 하지 마세요! --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>이것은 설명입니다.<span class="nt">&lt;/textarea&gt;</span>
@@ -531,7 +529,7 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;이것은 설명입니다.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>자식들을 사용하기로 <em>했다면</em>, 자식들은 <code>defaultValue</code>처럼 동작할 것입니다.</p>
-<h3><a class="anchor" name="-select-value-"></a>왜 Select에 value를 사용하나요? <a class="hash-link" href="#-select-value-">#</a></h3>
+<h3><a class="anchor" name="왜-select에-value를-사용하나요"></a>왜 Select에 value를 사용하나요? <a class="hash-link" href="#왜-select에-value를-사용하나요">#</a></h3>
 <p>HTML <code>&lt;select&gt;</code>에서 선택된 <code>&lt;option&gt;</code>은 보통 option의 <code>selected</code> 어트리뷰트로 기술됩니다. React에서는 컴포넌트를 관리하기 쉽게 하기 위해, 다음 형식이 대신 채용됐습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>

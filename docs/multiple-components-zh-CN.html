@@ -432,9 +432,9 @@
     <div class="subHeader"></div>
 
     <p>目前为止，我们已经学了如何用单个组件来展示数据和处理用户输入。下一步让我们来体验 React 最激动人心的特性之一：可组合性（composability）。</p>
-<h2><a class="anchor" name=""></a>动机：关注分离 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="动机关注分离"></a>动机：关注分离 <a class="hash-link" href="#动机关注分离">#</a></h2>
 <p>通过复用那些接口定义良好的组件来开发新的模块化组件，我们得到了与使用函数和类相似的好处。具体来说就是能够通过开发简单的组件把程序的<em>不同关注面分离</em>。如果为程序开发一套自定义的组件库，那么就能以最适合业务场景的方式来展示你的用户界面。</p>
-<h2><a class="anchor" name=""></a>组合实例 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="组合实例"></a>组合实例 <a class="hash-link" href="#组合实例">#</a></h2>
 <p>让我们用 Facebook Graph API 来开发一个显示 Facebook 页面图片和用户名的简单 Avatar 组件吧。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -469,16 +469,16 @@
   <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">pagename</span><span class="o">=</span><span class="s2">&quot;Engineering&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>从属关系 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="从属关系"></a>从属关系 <a class="hash-link" href="#从属关系">#</a></h2>
 <p>上面例子中，<code>Avatar</code> 拥有 <code>PagePic</code> 和 <code>PageLink</code> 的实例。<code>拥有者</code> 就是给其它组件设置 <code>props</code> 的那个组件。更正式地说，如果组件 <code>Y</code> 在 <code>render()</code> 方法是创建了组件 <code>X</code>，那么 <code>Y</code> 就拥有 <code>X</code>。上面讲过，组件不能修改自身的 <code>props</code> - 它们总是与它们的拥有者所设置的值保持一致。这是保持用户界面一致性的基本不变量。</p>
 
 <p>把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是 DOM 里的标签的关系。在上一个例子中，<code>Avatar</code> 拥有 <code>div</code>、<code>PagePic</code> 和 <code>PageLink</code> 实例，<code>div</code> 是 <code>PagePic</code> 和 <code>PageLink</code> 实例的<strong>父级</strong>（但不是拥有者）。</p>
-<h2><a class="anchor" name=""></a>子级 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="子级"></a>子级 <a class="hash-link" href="#子级">#</a></h2>
 <p>实例化 React 组件时，你可以在开始标签和结束标签之间引用在React 组件或者Javascript 表达式：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
 <p><code>Parent</code> 能通过专门的 <code>this.props.children</code>  prop 读取子级。<strong><code>this.props.children</code> 是一个不透明的数据结构：</strong> 通过 <a href="/react/docs/top-level-api.html#react.children">React.Children 工具类</a> 来操作。</p>
-<h3><a class="anchor" name="reconciliation"></a>子级校正（Reconciliation） <a class="hash-link" href="#reconciliation">#</a></h3>
+<h3><a class="anchor" name="子级校正reconciliation"></a>子级校正（Reconciliation） <a class="hash-link" href="#子级校正reconciliation">#</a></h3>
 <p><strong>校正就是每次 render 方法调用后 React 更新 DOM 的过程。</strong> 一般情况下，子级会根据它们被渲染的顺序来做校正。例如，下面代码描述了两次渲染的过程：</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">// 第一次渲染
 <span class="nt">&lt;Card&gt;</span>
@@ -491,7 +491,7 @@
 <span class="nt">&lt;/Card&gt;</span>
 </code></pre></div>
 <p>直观来看，只是删除了<code>&lt;p&gt;Paragraph 1&lt;/p&gt;</code>。事实上，React 先更新第一个子级的内容，然后删除最后一个组件。React 是根据子级的<em>顺序</em>来校正的。</p>
-<h3><a class="anchor" name=""></a>子组件状态管理 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="子组件状态管理"></a>子组件状态管理 <a class="hash-link" href="#子组件状态管理">#</a></h3>
 <p>对于大多数组件，这没什么大碍。但是，对于使用 <code>this.state</code> 来在多次渲染过程中里维持数据的状态化组件，这样做潜在很多问题。</p>
 
 <p>多数情况下，可以通过隐藏组件而不是删除它们来绕过这些问题。</p>
@@ -505,7 +505,7 @@
   <span class="nt">&lt;p</span> <span class="na">style=</span><span class="s">{{display:</span> <span class="err">&#39;</span><span class="na">none</span><span class="err">&#39;}}</span><span class="nt">&gt;</span>Paragraph 1<span class="nt">&lt;/p&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 2<span class="nt">&lt;/p&gt;</span>
 <span class="nt">&lt;/Card&gt;</span>
-</code></pre></div><h3><a class="anchor" name=""></a>动态子级 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="动态子级"></a>动态子级 <a class="hash-link" href="#动态子级">#</a></h3>
 <p>如果子组件位置会改变（如在搜索结果中）或者有新组件添加到列表开头（如在流中）情况会变得更加复杂。如果子级要在多个渲染阶段保持自己的特征和状态，在这种情况下，你可以通过给子级设置惟一标识的 <code>key</code> 来区分。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
@@ -557,9 +557,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>也可以传递 ReactFragment 对象来做有 key 的子级。详见<a href="create-fragment.html">Keyed Fragments</a></p>
-<h2><a class="anchor" name=""></a>数据流 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="数据流"></a>数据流 <a class="hash-link" href="#数据流">#</a></h2>
 <p>React 里，数据通过上面介绍过的 <code>props</code> 从拥有者流向归属者。这就是高效的单向数据绑定(one-way data binding)：拥有者们通过它们的 <code>props</code> 或 <code>state</code> 计算出一些值，并把这些值绑定到它们拥有的组件的 props 上。因为这个过程会递归地调用，所以数据变化会自动在所有它们被使用的地方反映出来。</p>
-<h2><a class="anchor" name=""></a>性能提醒 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="性能提醒"></a>性能提醒 <a class="hash-link" href="#性能提醒">#</a></h2>
 <p>你或许会担心如果一个拥有者有大量子级时，对于数据变化做出响应非常耗费性能。值得庆幸的是执行 JavaScript  非常的快，而且 <code>render()</code> 方法一般比较简单，所以在大部分应用里这样做速度极快。此外，性能的瓶颈大多是因为 DOM 更新，而非 JS 执行，而且 React 会通过批量更新和变化检测来优化性能。</p>
 
 <p>但是，有时候需要做细粒度的性能控制。这种情况下，可以重写 <code>shouldComponentUpdate()</code> 方法返回 false 来让 React 跳过对子树的处理。参考 <a href="/react/docs/component-specs.html">React reference docs</a> 了解更多。</p>

@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p><a href="https://facebook.github.io/jsx/">JSX</a>는 XML과 비슷한 JavaScript문법 확장입니다. React에서 변환되는 간단한 JSX 구문을 사용하실 수 있습니다.</p>
-<h2><a class="anchor" name="-jsx"></a>왜 JSX인가? <a class="hash-link" href="#-jsx">#</a></h2>
+<h2><a class="anchor" name="왜-jsx인가"></a>왜 JSX인가? <a class="hash-link" href="#왜-jsx인가">#</a></h2>
 <p>React를 위해 꼭 JSX를 사용할 필요는 없고, 그냥 일반 JS를 사용할 수도 있습니만 JSX를 사용하기를 추천합니다. 왜냐하면, 어트리뷰트를 가진 트리 구조로 정의할 수 있는 간결하고 익숙한 문법이기 때문입니다.</p>
 
 <p>이것은 디자이너 같은 케쥬얼 개발자에게 더 익숙합니다.</p>
@@ -440,7 +440,7 @@
 <p>XML에는 여닫는 태그의 장점이 있습니다. 태그는 큰 트리일 때 함수 호출이나 객체 리터럴보다 읽기 쉬워 집니다.</p>
 
 <p>JSX는 JavaScript의 시맨틱을 변경하지 않습니다.</p>
-<h2><a class="anchor" name="html--vs.-react-"></a>HTML 태그 vs. React 컴포넌트 <a class="hash-link" href="#html--vs.-react-">#</a></h2>
+<h2><a class="anchor" name="html-태그-vs.-react-컴포넌트"></a>HTML 태그 vs. React 컴포넌트 <a class="hash-link" href="#html-태그-vs.-react-컴포넌트">#</a></h2>
 <p>React는 렌더 HTML 태그(문자열)이나 React 컴포넌트(클래스)일 수 있습니다.</p>
 
 <p>HTML 태그를 렌더하려면, 그냥 JSX에 소문자 태그를 사용하세요.</p>
@@ -461,9 +461,7 @@
 권장하지 않습니다. 대신, React DOM 컴포넌트는 각각 <code>className</code>, <code>htmlFor</code>같은
 DOM 프로퍼티 이름을 기대합니다.</p>
 </blockquote>
-
-<p><a name="the-transform"></a></p>
-<h2><a class="anchor" name=""></a>변환 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="변환"></a>변환 <a class="hash-link" href="#변환">#</a></h2>
 <p>React JSX는 XML같은 문법에서 네이티브 JavaScript로 변환됩니다. XML 엘리먼트, 어트리뷰트, 자식은 <code>React.createElement</code>에 넘겨지는 인자로 변환됩니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
 <span class="c1">// 입력 (JSX):</span>
@@ -484,7 +482,7 @@ DOM 프로퍼티 이름을 기대합니다.</p>
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Profile</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>클래스에 <a href="/react/docs/component-specs-ko-KR.html#displayName">displayName</a>이 정의되어 있지 않으면 JSX는 변수명을 displayName으로 간주할 것입니다:</p>
+<p>클래스에 <a href="/react/docs/component-specs-ko-KR.html#displayname">displayName</a>이 정의되어 있지 않으면 JSX는 변수명을 displayName으로 간주할 것입니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 입력 (JSX):</span>
 <span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">});</span>
 <span class="c1">// 출력 (JS):</span>
@@ -501,7 +499,7 @@ DOM 프로퍼티 이름을 기대합니다.</p>
 다를 수 있습니다. 최적화 모드는 ReactElement를 <code>React.createElement</code>에서 검증
 코드를 우회하는 객체 리터럴로 ReactElement를 인라인으로 만들 수 있습니다.</p>
 </blockquote>
-<h2><a class="anchor" name="--"></a>네임스페이스를 사용한 컴포넌트 <a class="hash-link" href="#--">#</a></h2>
+<h2><a class="anchor" name="네임스페이스를-사용한-컴포넌트"></a>네임스페이스를 사용한 컴포넌트 <a class="hash-link" href="#네임스페이스를-사용한-컴포넌트">#</a></h2>
 <p>폼같은 자식을 많이 가지는 컴포넌트를 만든다면, 많은 변수 선언을 하게 될 것입니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 변수 선언의 어색한 블록</span>
 <span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
@@ -552,7 +550,7 @@ DOM 프로퍼티 이름을 기대합니다.</p>
 
 <p>이 기능은 <a href="/react/blog/2014/07/17/react-v0.11.html#jsx">v0.11</a> 이상에만 있습니다.</p>
 </blockquote>
-<h2><a class="anchor" name="javascript-"></a>JavaScript 표현식 <a class="hash-link" href="#javascript-">#</a></h2><h3><a class="anchor" name="-"></a>어트리뷰트 표현식 <a class="hash-link" href="#-">#</a></h3>
+<h2><a class="anchor" name="javascript-표현식"></a>JavaScript 표현식 <a class="hash-link" href="#javascript-표현식">#</a></h2><h3><a class="anchor" name="어트리뷰트-표현식"></a>어트리뷰트 표현식 <a class="hash-link" href="#어트리뷰트-표현식">#</a></h3>
 <p>JavaScript 표현식을 어트리뷰트 값으로 사용하려면, 표현식을 쌍따옴표(<code>&quot;&quot;</code>)대신 중괄호(<code>{}</code>)로 감싸야 합니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 입력 (JSX):</span>
 <span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Person</span> <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -561,7 +559,7 @@ DOM 프로퍼티 이름을 기대합니다.</p>
   <span class="nx">Person</span><span class="p">,</span>
   <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
 <span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>불린 어트리뷰트 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="불린-어트리뷰트"></a>불린 어트리뷰트 <a class="hash-link" href="#불린-어트리뷰트">#</a></h3>
 <p>어트리뷰트의 값을 생략하면 JSX는 값을 <code>true</code>로 취급합니다. 어트리뷰트 표현식에 <code>false</code>를 넘기려면 사용해야만 합니다. HTML 폼 엘리먼트에 <code>disabled</code>, <code>required</code>, <code>checked</code>, <code>readOnly</code>같은 어트리뷰트를 사용할 일이 자주 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// JSX에서 이 두 줄은 똑같이 버튼을 비활성화합니다.</span>
 <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -570,7 +568,7 @@ DOM 프로퍼티 이름을 기대합니다.</p>
 <span class="c1">// 그리고 JSX에서 이 두 줄은 똑같이 버튼을 비활성화하지 않습니다.</span>
 <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h3><a class="anchor" name="-"></a>자식 표현식 <a class="hash-link" href="#-">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="자식-표현식"></a>자식 표현식 <a class="hash-link" href="#자식-표현식">#</a></h3>
 <p>비슷하게, JavaScript 표현식을 자식을 표현하는 데 사용할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 입력 (JSX):</span>
 <span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Container&gt;;</span>
@@ -580,7 +578,7 @@ DOM 프로퍼티 이름을 기대합니다.</p>
   <span class="kc">null</span><span class="p">,</span>
   <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">)</span> <span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Login</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name=""></a>주석 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="주석"></a>주석 <a class="hash-link" href="#주석">#</a></h3>
 <p>JSX에 주석을 넣기는 쉽습니다. 그냥 JS 표현식과 같습니다. 그냥 태그의 자식 섹션에서만 조심하시면 됩니다. 이럴 땐 주석 주변에 <code>{}</code>를 감싸야 합니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>

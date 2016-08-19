@@ -432,9 +432,9 @@
     <div class="subHeader"></div>
 
     <p>今まで、データを表示したりユーザの入力をハンドルするための1つのコンポーネントの書き方を見てきました。次に、 Reactの最も面白い特徴であるコンポーザビリティについて見ていきましょう。</p>
-<h2><a class="anchor" name="-"></a>動機: 関心の分離 <a class="hash-link" href="#-">#</a></h2>
+<h2><a class="anchor" name="動機-関心の分離"></a>動機: 関心の分離 <a class="hash-link" href="#動機-関心の分離">#</a></h2>
 <p>うまく定義されたインターフェースとともに他のコンポーネントを再利用するモジュールのコンポーネントを構築することによって、関数やクラスを使う場合と同じ利益を得ることができます。特に、アプリの <em>異なった関心を分離</em> できるにも関わらず、新しいコンポーネントを単純に構築することで満足する場合には。アプリケーションにカスタムコンポーネントライブラリを構築することによって、あなたがやりたいことに最も合う方法でUIを表現することができます。</p>
-<h2><a class="anchor" name=""></a>構成例 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="構成例"></a>構成例 <a class="hash-link" href="#構成例">#</a></h2>
 <p>FacebookのグラフAPIを使って、プロフィール画像とユーザー名を表示する単純なアバターのコンポーネントを作ってみましょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -469,16 +469,16 @@
   <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">username</span><span class="o">=</span><span class="s2">&quot;pwh&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name=""></a>所有 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="所有"></a>所有 <a class="hash-link" href="#所有">#</a></h2>
 <p>上記の例では、 <code>Avatar</code> のインスタンスは  <code>ProfilePic</code> と <code>ProfileLink</code> のインスタンスを <em>所有</em> しています。Reactでは、 <strong>所有者は、他のコンポーネントの <code>props</code> をセットするコンポーネントです。</strong> 正式に言うと、もし <code>Y</code> コンポーネントの <code>render()</code> メソッドの中に <code>X</code> コンポーネントが作られた場合、 <code>X</code> は <code>Y</code> に所有されていると言います。以前述べたように、コンポーネントはそれ自身の <code>props</code> を変化させることはできません。 <code>props</code> は常に、所有者が彼らにセットしたものと一貫性があります。このキー要素は一貫性があることを保証するために、UIに反映されます。</p>
 
 <p>所有者と所有される側の関係と、親子の関係の違いを示すのは重要です。所有者と所有される側の関係はReact独特です。一方で、親子の関係は単純にDOMから分かる、愛すべき関係です。上の例では、 <code>Avatar</code> は <code>div</code> を所有しますが、 <code>ProfilePic</code> と <code>ProfileLink</code> インスタンスと、 <code>div</code> は  <code>ProfilePic</code> と <code>ProfileLink</code>インスタンスの <strong>親</strong> (しかし、所有者ではありません)です。</p>
-<h2><a class="anchor" name=""></a>子 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="子"></a>子 <a class="hash-link" href="#子">#</a></h2>
 <p>Reactのコンポーネントのインスタンスを作成する時には、以下のように開始タグと終了タグの間に付加的なReactのコンポーネントやJavaScriptの表現を含めることができます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
 <p><code>Parent</code> は特別な  <code>this.props.children</code> というプロパティでアクセスすることで、子要素を読み取ることができます。 <strong><code>this.props.children</code> は不透明なデータ構造です。</strong> 操作するには<a href="/react/docs/top-level-api.html#react.children">React.Children utilities</a>を使用してください。</p>
-<h3><a class="anchor" name=""></a>子要素の調和 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="子要素の調和"></a>子要素の調和 <a class="hash-link" href="#子要素の調和">#</a></h3>
 <p><strong>調和はReactが新しいレンダリングのパスごとにDOMをアップデートするプロセスです。</strong> 一般的に、子要素はレンダリングされる順序に従って調和します。例えば、2つのレンダリングパスを考えると、以下のそれぞれのマークアップが生成されます。</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html">// パス1のレンダリング
 <span class="nt">&lt;Card&gt;</span>
@@ -491,7 +491,7 @@
 <span class="nt">&lt;/Card&gt;</span>
 </code></pre></div>
 <p>直感的には、 <code>&lt;p&gt;Paragraph 1&lt;/p&gt;</code> が削除されたように思えます。代わりに、Reactは1つ目の子要素のテキストコンテンツを変更し、最後の子要素を削除するという変更を加えることでDOMを調和させます。Reactは子要素の <em>順序</em> に従って調和するのです。</p>
-<h3><a class="anchor" name=""></a>ステートフルな子要素 <a class="hash-link" href="#">#</a></h3>
+<h3><a class="anchor" name="ステトフルな子要素"></a>ステートフルな子要素 <a class="hash-link" href="#ステトフルな子要素">#</a></h3>
 <p>多くのコンポーネントにとって、これは大きな処理ではありません。しかし、レンダリングのパスを超えて、 <code>this.state</code> にデータを保持しているステートフルなコンポーネントにとっては、これはとても問題になり得ます。</p>
 
 <p>多くのケースにおいては、以下のように、削除する代わりに要素を隠すことで回避することがあります。</p>
@@ -505,7 +505,7 @@
   <span class="nt">&lt;p</span> <span class="na">style=</span><span class="s">{{display:</span> <span class="err">&#39;</span><span class="na">none</span><span class="err">&#39;}}</span><span class="nt">&gt;</span>Paragraph 1<span class="nt">&lt;/p&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 2<span class="nt">&lt;/p&gt;</span>
 <span class="nt">&lt;/Card&gt;</span>
-</code></pre></div><h3><a class="anchor" name=""></a>動的な子要素 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="動的な子要素"></a>動的な子要素 <a class="hash-link" href="#動的な子要素">#</a></h3>
 <p>子要素がシャッフルされているような時（検索結果のように）や、リストの最初に新しいコンポーネントが追加されるような時（ストリームのように）には、状況はさらに複雑になります。そういったケースでは、それぞれの子要素のアイデンティティやstateがレンダリングパスを保持する必要があり、以下のように <code>key</code> を認識することでそれぞれの子要素をただ1つに識別できます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
@@ -558,9 +558,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Reactのフラグのオブジェクトを渡すことで子要素をキー付けすることもできます。詳細は、<a href="create-fragment.html">キー付けされたフラグ</a>をご覧ください。</p>
-<h2><a class="anchor" name=""></a>データフロー <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="デタフロ"></a>データフロー <a class="hash-link" href="#デタフロ">#</a></h2>
 <p>Reactの、 <code>props</code> を通した所有者から所有されるコンポーネントへのデータフローは今までに記述してきました。これは実際には一方向のデータバインディングです。所有者は所有しているコンポーネントのpropsを、所有者が <code>props</code> か <code>state</code> に基づいて計算したいくつかの値にバインドします。このプロセスが何度も行われるので、データの変更は彼らが使われるところは自動的にどこでも反映されます。</p>
-<h2><a class="anchor" name=""></a>パフォーマンスの注意 <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="パフォマンスの注意"></a>パフォーマンスの注意 <a class="hash-link" href="#パフォマンスの注意">#</a></h2>
 <p>みなさんは所有者の下にたくさんのノードがあるときには、データの変更には多くのコストがかかると考えるでしょう。良いニュースとして、JavaScriptは早く、 <code>render()</code> メソッドはとても単純になりやすいので、多くのアプリケーションにおいて、こういったことは非常に早くなります。加えて、ボトルネックとなるものの多くは、JSの実行ではなく、DOMの変更です。Reactは変更の一括処理と検知を使うことによって、それを最適化しています。</p>
 
 <p>しかし、パフォーマンスについて、よりよい制御を持つことを求める時もあるでしょう。こういったケースで、Reactがサブツリーの処理をスキップすることを求めるなら、 <code>shouldComponentUpdate()</code> が単純にfalseを返すようにオーバーライドしてください。更に情報を得たい場合には、<a href="/react/docs/component-specs.html">Reactのリファレンス文書</a>を読んでください。</p>

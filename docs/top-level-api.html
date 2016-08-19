@@ -485,6 +485,12 @@ html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a <code>ReactC
 <h4><a class="anchor" name="react.children.toarray"></a>React.Children.toArray <a class="hash-link" href="#react.children.toarray">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
 </code></pre></div>
 <p>Return the <code>children</code> opaque data structure as a flat array with keys assigned to each child. Useful if you want to manipulate collections of children in your render methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p><code>React.Children.toArray()</code> changes keys to preserve the semantics of nested arrays when flattening lists of children. That is, <code>toArray</code> prefixes each key in the returned array so that each element&#39;s key is scoped to the input array containing it.</p>
+</blockquote>
 <h2><a class="anchor" name="reactdom"></a>ReactDOM <a class="hash-link" href="#reactdom">#</a></h2>
 <p>The <code>react-dom</code> package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.</p>
 <h3><a class="anchor" name="reactdom.render"></a>ReactDOM.render <a class="hash-link" href="#reactdom.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">(</span>

@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p>인터페이스를 설계할 때, 공통적으로 사용되는 디자인 요소들(버튼, 폼 필드, 레이아웃 컴포넌트 등.)을 잘 정의된 인터페이스의 재사용 가능한 컴포넌트로 분해합니다. 이런 방법으로 다음에 UI를 구축할 때에는 훨씬 적은 코드로 만들 수 있습니다. 이 말은 더 빠른 개발 시간, 더 적은 버그, 더 적은 용량으로 할 수 있다는 뜻이죠.</p>
-<h2><a class="anchor" name="prop-"></a>Prop 검증 <a class="hash-link" href="#prop-">#</a></h2>
+<h2><a class="anchor" name="prop-검증"></a>Prop 검증 <a class="hash-link" href="#prop-검증">#</a></h2>
 <p>앱의 규모가 커지면 컴포넌트들이 바르게 사용되었는지 확인하는게 도움이 됩니다. 확인은 <code>propTypes</code>를 명시해서 할 수 있습니다. <code>React.PropTypes</code>는 받은 데이터가 적절한지(valid) 확인하는데 사용할 수 있는 다양한 검증자(validator)를 제공합니다. prop에 부적절한 값을 명시한다면 JavaScript 콘솔에 경고가 보일 것입니다. 성능상의 문제로 <code>propTypes</code>는 개발 모드에서만 검사됩니다. 다음은 제공되는 검증자를 설명하는 예제입니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -497,7 +497,7 @@
   <span class="p">},</span>
   <span class="cm">/* ... */</span>
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="-prop-"></a>기본 Prop 값 <a class="hash-link" href="#-prop-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="기본-prop-값"></a>기본 Prop 값 <a class="hash-link" href="#기본-prop-값">#</a></h2>
 <p>React는 매우 선언적(declarative)인 방법으로 <code>props</code>의 기본값을 정의할 수 있게 해줍니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ComponentWithDefaultProps</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getDefaultProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -509,7 +509,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p><code>getDefaultProps()</code>의 결과값은 캐시가 되며, 부모 컴포넌트에서 명시되지 않았을 때 <code>this.props.value</code>가 값을 가질 수 있도록 해주는데 사용됩니다.<code>getDefaultProps()</code>를 사용하면 반복적이고 깨지기 쉬운 코드를 짤 필요없이 그냥 안전하게 prop을 사용할 수 있습니다.</p>
-<h2><a class="anchor" name="prop--"></a>Prop 전달하기: 단축 <a class="hash-link" href="#prop--">#</a></h2>
+<h2><a class="anchor" name="prop-전달하기-단축"></a>Prop 전달하기: 단축 <a class="hash-link" href="#prop-전달하기-단축">#</a></h2>
 <p>React 컴포넌트의 흔히 그냥 기본 HTML 엘리먼트를 확장해서 씁니다. 타이핑을 아끼기 위해 기저의 HTML 엘리먼트에 HTML 속성들을 단순히 복사하는 컴포넌트가 필요할 수도 있습니다. JSX의 <em>spread</em> 문법을 사용하면 이렇게 할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -524,7 +524,7 @@
   <span class="o">&lt;</span><span class="err">/CheckLink&gt;,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="-"></a>단일 자식 <a class="hash-link" href="#-">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="단일-자식"></a>단일 자식 <a class="hash-link" href="#단일-자식">#</a></h2>
 <p><code>React.PropTypes.element</code>을 통해 컴포넌트에 한 자식만 보내도록 명시할 수 있습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -540,10 +540,10 @@
   <span class="p">}</span>
 
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name=""></a>믹스인 <a class="hash-link" href="#">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="믹스인"></a>믹스인 <a class="hash-link" href="#믹스인">#</a></h2>
 <p>컴포넌트는 React에서 코드를 재사용할 수 있는 최고의 방법이지만, 가끔 아주 다른 컴포넌트에서 공통 기능이 필요한 때도 있습니다. 이런 상황을 <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">공통된 관심사(cross-cutting concerns)</a>라 부르며, React에서는 <code>mixins</code>으로 이 문제를 해결합니다.</p>
 
-<p>예를 들어, 컴포넌트가 주기적으로 업데이트되길 원할 경우가 있습니다. <code>setInterval()</code>을 사용하면 쉽지만, 필요 없어지면 메모리를 아끼기 위해 주기를 꼭 취소해야 합니다. React는 컴포넌트가 막 생성거나 없어질 때를 <a href="/react/docs/working-with-the-browser-ko-KR.html#component-lifecycle">생명주기 메소드</a>를 통해 알려줍니다. 이런 메소드들을 사용해서 컴포넌트가 사라질 때 자동으로 정리해주는 <code>setInterval()</code>를 제공해주는 간단한 믹스인을 만들어보겠습니다.</p>
+<p>예를 들어, 컴포넌트가 주기적으로 업데이트되길 원할 경우가 있습니다. <code>setInterval()</code>을 사용하면 쉽지만, 필요 없어지면 메모리를 아끼기 위해 주기를 꼭 취소해야 합니다. React는 컴포넌트가 막 생성거나 없어질 때를 <a href="/react/docs/working-with-the-browser-ko-KR.html#%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8-%EC%83%9D%EB%AA%85%EC%A3%BC%EA%B8%B0">생명주기 메소드</a>를 통해 알려줍니다. 이런 메소드들을 사용해서 컴포넌트가 사라질 때 자동으로 정리해주는 <code>setInterval()</code>를 제공해주는 간단한 믹스인을 만들어보겠습니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SetIntervalMixin</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span> <span class="o">=</span> <span class="p">[];</span>
@@ -582,9 +582,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>믹스인의 괜찮은 점은 컴포넌트가 여러 믹스인을 사용하고 여러 믹스인에서 같은 생명주기 메소드를 사용할 때(예를 들어, 여러 믹스인에서 컴포넌트가 사라질 때 뭔가 정리하려 한다면) 모든 생명주기 메소드들의 실행은 보장됩니다. 믹스인에 정의된 메소드은 컴포넌트의 메소드가 호출됨에 따라 믹스인이 나열된 순서대로 실행됩니다.</p>
-
-<p><a name="es6-classes"></a></p>
-<h2><a class="anchor" name="es6-"></a>ES6 클래스 <a class="hash-link" href="#es6-">#</a></h2>
+<h2><a class="anchor" name="es6-클래스"></a>ES6 클래스 <a class="hash-link" href="#es6-클래스">#</a></h2>
 <p>React 클래스를 일반적인 JavaScript 클래스로 선언할 수도 있습니다. 다음의 예제는 ES6 클래스 문법을 사용합니다:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -614,13 +612,11 @@
 <span class="p">}</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
 <span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
-</code></pre></div><h3><a class="anchor" name="--"></a>자동 바인딩 안됨 <a class="hash-link" href="#--">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="자동-바인딩-안됨"></a>자동 바인딩 안됨 <a class="hash-link" href="#자동-바인딩-안됨">#</a></h3>
 <p>메소드는 일반 ES6 클래스와 동일한 시멘틱을 따릅니다. <code>this</code>를 인스턴스에 자동으로 바인딩하지 않는다는 이야기입니다. 명시적으로 <code>.bind(this)</code>나 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">화살표 함수(arrow function)</a> <code>=&gt;</code>를 사용하세요.</p>
-<h3><a class="anchor" name="-"></a>믹스인 안됨 <a class="hash-link" href="#-">#</a></h3>
+<h3><a class="anchor" name="믹스인-안됨"></a>믹스인 안됨 <a class="hash-link" href="#믹스인-안됨">#</a></h3>
 <p>불행하게도 ES6는 믹스인에 대한 지원이 없이 출시되었기 때문에, React에서 ES6 클래스를 사용한다면 믹스인을 사용할 방법이 없습니다. 대신, 우리는 믹스인에 의존하지 않고도 동작하도록 만들기 위해 열심히 노력하고 있습니다.</p>
-
-<p><a name="stateless-functions"></a></p>
-<h2><a class="anchor" name="---"></a>상태를 가지지 않는 함수 <a class="hash-link" href="#---">#</a></h2>
+<h2><a class="anchor" name="상태를-가지지-않는-함수"></a>상태를 가지지 않는 함수 <a class="hash-link" href="#상태를-가지지-않는-함수">#</a></h2>
 <p>React 클래스를 일반 JavaScript 함수로 작성할 수도 있습니다. 상태를 가지지 않는 함수 문법을 사용하는 예제입니다.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">HelloMessage</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>

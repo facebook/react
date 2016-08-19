@@ -432,7 +432,7 @@
     <div class="subHeader"></div>
 
     <p><a href="https://facebook.github.io/jsx/">JSX</a>はXMLに似たJavaScriptのシンタックスの拡張です。Reactでは、単純なJSXのシンタックスの変換を使うことができます。</p>
-<h2><a class="anchor" name="jsx"></a>なぜJSXを使うのでしょうか？ <a class="hash-link" href="#jsx">#</a></h2>
+<h2><a class="anchor" name="なぜjsxを使うのでしょうか"></a>なぜJSXを使うのでしょうか？ <a class="hash-link" href="#なぜjsxを使うのでしょうか">#</a></h2>
 <p>ReactでJSXの使用を強制されるわけではありません。生のJSを使うこともできます。しかし、JSXは簡潔で、木構造とReactの特性を定義しやすいシンタックスであるため、JSXを使うことをお勧めします。</p>
 
 <p>デザイナーのようなカジュアルな開発者にとってはさらに馴染みやすいでしょう。</p>
@@ -440,7 +440,7 @@
 <p>XMLにはバランスの取れた開始タグと終了タグという利益があります。このことで、関数がオブジェクトリテラルを呼んでいるのを読むよりも簡単に大きな木構造を作ることができます。</p>
 
 <p>これはJavaScriptのセマンティックスを代替するものではありません。</p>
-<h2><a class="anchor" name="htmlreact"></a>HTMLタグ対Reactコンポーネント <a class="hash-link" href="#htmlreact">#</a></h2>
+<h2><a class="anchor" name="htmlタグ対reactコンポネント"></a>HTMLタグ対Reactコンポーネント <a class="hash-link" href="#htmlタグ対reactコンポネント">#</a></h2>
 <p>ReactはHTMLタグ（文字列）とReactコンポーネント（クラス）の両方をレンダリングすることができます。</p>
 
 <p>以下のようにJSXで小文字のタグ名を使用するだけで、HTMLタグをレンダリングできます。</p>
@@ -495,7 +495,7 @@
 
 <p>JSXという表現は常にReactElementを評価します。実際に実行する際の詳細はおそらく異なっているでしょう。最適化されたモードでは <code>React.createElement</code> のコードのバリデーションを避けるためにReactElementをオブジェクトリテラルとして配置するでしょう。</p>
 </blockquote>
-<h2><a class="anchor" name=""></a>ネームスペース化されたコンポーネント <a class="hash-link" href="#">#</a></h2>
+<h2><a class="anchor" name="ネムスペス化されたコンポネント"></a>ネームスペース化されたコンポーネント <a class="hash-link" href="#ネムスペス化されたコンポネント">#</a></h2>
 <p>formのように、たくさんの子要素を持つコンポーネントを構築する際には、以下のように多くの変数を宣言しなければいけないでしょう。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 変数宣言のあまりよくない部分</span>
 <span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
@@ -545,7 +545,7 @@
 <p>注意:
 この特徴は <a href="/react/blog/2014/07/17/react-v0.11.html#jsx">v0.11</a> 以上で使用できます。</p>
 </blockquote>
-<h2><a class="anchor" name="javascript"></a>JavaScriptの表現 <a class="hash-link" href="#javascript">#</a></h2><h3><a class="anchor" name=""></a>アトリビュートの表現 <a class="hash-link" href="#">#</a></h3>
+<h2><a class="anchor" name="javascriptの表現"></a>JavaScriptの表現 <a class="hash-link" href="#javascriptの表現">#</a></h2><h3><a class="anchor" name="アトリビュトの表現"></a>アトリビュートの表現 <a class="hash-link" href="#アトリビュトの表現">#</a></h3>
 <p>JavaScriptで書いたものをアトリビュートの値として使うためには、その表現を引用(<code>&quot;&quot;</code>)ではなく波括弧(<code>{}</code>)で囲ってください。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 入力 (JSX):</span>
 <span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Person</span> <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -554,7 +554,7 @@
   <span class="nx">Person</span><span class="p">,</span>
   <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
 <span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name="boolean"></a>Booleanのアトリビュート <a class="hash-link" href="#boolean">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="booleanのアトリビュト"></a>Booleanのアトリビュート <a class="hash-link" href="#booleanのアトリビュト">#</a></h3>
 <p>アトリビュートの値を記述しないと、JSXはそれを <code>true</code> として扱ってしまいます。<code>false</code> を渡すためには、アトリビュートが使われる必要があります。これらはHTMLのform要素の <code>disabled</code> 、 <code>required</code> 、 <code>checked</code> 、 <code>readOnly</code> といったアトリビュートを使う際によく見かけられます。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 以下の2つはボタンを使用不能にするという意味でJSXでは同義です。</span>
 <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -563,7 +563,7 @@
 <span class="c1">// 以下の2つはボタンを使用不能にしないという意味でJSXでは同義です。</span>
 <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h3><a class="anchor" name=""></a>子要素の表現 <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="子要素の表現"></a>子要素の表現 <a class="hash-link" href="#子要素の表現">#</a></h3>
 <p>同様に、JavaScriptは子要素を表現するのに使われることもあります。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 入力 (JSX):</span>
 <span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Container&gt;;</span>
@@ -573,7 +573,7 @@
   <span class="kc">null</span><span class="p">,</span>
   <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">)</span> <span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Login</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name=""></a>コメント <a class="hash-link" href="#">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="コメント"></a>コメント <a class="hash-link" href="#コメント">#</a></h3>
 <p>JSXにコメントを加えるのは簡単です。ただのJSの書き方です。タグの内側にコメントを書く時には、 <code>{}</code> で囲うことに注意してください。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
