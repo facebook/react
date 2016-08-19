@@ -35,8 +35,8 @@ describe('ReactDOMComponentTree', function() {
     // This is a little hard to test directly. But refs rely on it -- so we
     // check that we can find a ref at arbitrary points in the tree, even if
     // other nodes don't have a ref.
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         var toRef = this.props.toRef;
         return (
           <div ref={toRef === 'div' ? 'target' : null}>
@@ -47,8 +47,8 @@ describe('ReactDOMComponentTree', function() {
             goodbye.
           </div>
         );
-      },
-    });
+      }
+    }
 
     function renderAndGetRef(toRef) {
       var inst = renderMarkupIntoDocument(<Component toRef={toRef} />);
@@ -62,8 +62,8 @@ describe('ReactDOMComponentTree', function() {
   });
 
   it('finds instances for nodes', function() {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return (
           <div>
             <h1>hello</h1>
@@ -74,8 +74,8 @@ describe('ReactDOMComponentTree', function() {
             <main dangerouslySetInnerHTML={{__html: '<b><img></b>'}} />
           </div>
         );
-      },
-    });
+      }
+    }
 
     function renderAndQuery(sel) {
       var root = renderMarkupIntoDocument(<section><Component /></section>);

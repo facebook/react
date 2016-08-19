@@ -150,7 +150,7 @@ var ReactCompositeComponentMixin = {
    */
   construct: function(element) {
     this._currentElement = element;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
     this._compositeType = null;
     this._instance = null;
     this._hostParent = null;
@@ -367,13 +367,6 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
-
     return markup;
   },
 
@@ -529,21 +522,18 @@ var ReactCompositeComponentMixin = {
       nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
     );
     this._renderedComponent = child;
-    if (__DEV__) {
-      if (child._debugID !== 0 && this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetParent(
-          child._debugID,
-          this._debugID
-        );
-      }
-    }
 
+    var selfDebugID = 0;
+    if (__DEV__) {
+      selfDebugID = this._debugID;
+    }
     var markup = ReactReconciler.mountComponent(
       child,
       transaction,
       hostParent,
       hostContainerInfo,
-      this._processChildContext(context)
+      this._processChildContext(context),
+      selfDebugID
     );
 
     if (__DEV__) {
@@ -619,7 +609,7 @@ var ReactCompositeComponentMixin = {
     // These fields do not really need to be reset since this object is no
     // longer accessible.
     this._context = null;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
     this._topLevelWrapper = null;
 
     // Delete the reference from the instance to this internal representation
@@ -1019,13 +1009,6 @@ var ReactCompositeComponentMixin = {
         );
       }
     }
-
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
   },
 
   /**
@@ -1056,21 +1039,18 @@ var ReactCompositeComponentMixin = {
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
       this._renderedComponent = child;
-      if (__DEV__) {
-        if (child._debugID !== 0 && this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetParent(
-            child._debugID,
-            this._debugID
-          );
-        }
-      }
 
+      var selfDebugID = 0;
+      if (__DEV__) {
+        selfDebugID = this._debugID;
+      }
       var nextMarkup = ReactReconciler.mountComponent(
         child,
         transaction,
         this._hostParent,
         this._hostContainerInfo,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        selfDebugID
       );
 
       if (__DEV__) {

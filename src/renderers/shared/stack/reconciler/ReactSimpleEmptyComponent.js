@@ -23,14 +23,16 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
     transaction,
     hostParent,
     hostContainerInfo,
-    context
+    context,
+    parentDebugID // 0 in production and for roots
   ) {
     return ReactReconciler.mountComponent(
       this._renderedComponent,
       transaction,
       hostParent,
       hostContainerInfo,
-      context
+      context,
+      parentDebugID
     );
   },
   receiveComponent: function() {

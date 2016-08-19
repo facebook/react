@@ -218,24 +218,26 @@ describe('ReactCompositeComponent-state', function() {
 
   it('should batch unmounts', function() {
     var outer;
-    var Inner = React.createClass({
-      render: function() {
+
+    class Inner extends React.Component {
+      render() {
         return <div />;
-      },
-      componentWillUnmount: function() {
+      }
+
+      componentWillUnmount() {
         // This should get silently ignored (maybe with a warning), but it
         // shouldn't break React.
         outer.setState({showInner: false});
-      },
-    });
-    var Outer = React.createClass({
-      getInitialState: function() {
-        return {showInner: true};
-      },
-      render: function() {
+      }
+    }
+
+    class Outer extends React.Component {
+      state = {showInner: true};
+
+      render() {
         return <div>{this.state.showInner && <Inner />}</div>;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     outer = ReactDOM.render(<Outer />, container);

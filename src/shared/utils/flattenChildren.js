@@ -16,7 +16,7 @@ var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
-var ReactComponentTreeDevtool;
+var ReactComponentTreeHook;
 
 if (
   typeof process !== 'undefined' &&
@@ -28,7 +28,7 @@ if (
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeDevtool = require('ReactComponentTreeDevtool')
+  ReactComponentTreeHook = require('ReactComponentTreeHook');
 }
 
 /**
@@ -48,17 +48,19 @@ function flattenSingleChildIntoContext(
     const result = traverseContext;
     const keyUnique = (result[name] === undefined);
     if (__DEV__) {
-      if (!ReactComponentTreeDevtool) {
-        ReactComponentTreeDevtool = require('ReactComponentTreeDevtool');
+      if (!ReactComponentTreeHook) {
+        ReactComponentTreeHook = require('ReactComponentTreeHook');
       }
-      warning(
-        keyUnique,
-        'flattenChildren(...): Encountered two children with the same key, ' +
-        '`%s`. Child keys must be unique; when two children share a key, only ' +
-        'the first child will be used.%s',
-        KeyEscapeUtils.unescape(name),
-        ReactComponentTreeDevtool.getStackAddendumByID(selfDebugID)
-      );
+      if (!keyUnique) {
+        warning(
+          false,
+          'flattenChildren(...): Encountered two children with the same key, ' +
+          '`%s`. Child keys must be unique; when two children share a key, only ' +
+          'the first child will be used.%s',
+          KeyEscapeUtils.unescape(name),
+          ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
+        );
+      }
     }
     if (keyUnique && child != null) {
       result[name] = child;

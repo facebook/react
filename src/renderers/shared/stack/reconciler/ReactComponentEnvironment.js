@@ -18,13 +18,6 @@ var injected = false;
 var ReactComponentEnvironment = {
 
   /**
-   * Optionally injectable environment dependent cleanup hook. (server vs.
-   * browser etc). Example: A browser system caches DOM nodes based on component
-   * ID and must remove that cache entry when this instance is unmounted.
-   */
-  unmountIDFromEnvironment: null,
-
-  /**
    * Optionally injectable hook for swapping out mount images in the middle of
    * the tree.
    */
@@ -42,8 +35,6 @@ var ReactComponentEnvironment = {
         !injected,
         'ReactCompositeComponent: injectEnvironment() can only be called once.'
       );
-      ReactComponentEnvironment.unmountIDFromEnvironment =
-        environment.unmountIDFromEnvironment;
       ReactComponentEnvironment.replaceNodeWithMarkup =
         environment.replaceNodeWithMarkup;
       ReactComponentEnvironment.processChildrenUpdates =

@@ -16,8 +16,6 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
 
-var mapObject = require('mapObject');
-
 var stripEmptyValues = function(obj) {
   var ret = {};
   var name;
@@ -47,46 +45,44 @@ var getOriginalKey = function(childName) {
  * existing children won't reinitialize components, when moving children -
  * reusing existing DOM/memory resources.
  */
-var StatusDisplay = React.createClass({
-  getInitialState: function() {
-    return {internalState: Math.random()};
-  },
+class StatusDisplay extends React.Component {
+  state = {internalState: Math.random()};
 
-  getStatus: function() {
+  getStatus = () => {
     return this.props.status;
-  },
+  };
 
-  getInternalState: function() {
+  getInternalState = () => {
     return this.state.internalState;
-  },
+  };
 
-  componentDidMount: function() {
+  componentDidMount() {
     this.props.onFlush();
-  },
+  }
 
-  componentDidUpdate: function() {
+  componentDidUpdate() {
     this.props.onFlush();
-  },
+  }
 
-  render: function() {
+  render() {
     return (
       <div>
         {this.state.internalState}
       </div>
     );
-  },
-});
+  }
+}
 
 /**
  * Displays friends statuses.
  */
-var FriendsStatusDisplay = React.createClass({
+class FriendsStatusDisplay extends React.Component {
   /**
   * Gets the order directly from each rendered child's `index` field.
   * Refs are not maintained in the rendered order, and neither is
   * `this._renderedChildren` (surprisingly).
   */
-  getOriginalKeys: function() {
+  getOriginalKeys = () => {
     var originalKeys = [];
     // TODO: Update this to a better test that doesn't rely so much on internal
     // implementation details.
@@ -103,12 +99,13 @@ var FriendsStatusDisplay = React.createClass({
       }
     }
     return originalKeys;
-  },
+  };
+
   /**
    * Retrieves the rendered children in a nice format for comparing to the input
    * `this.props.usernameToStatus`.
    */
-  getStatusDisplays: function() {
+  getStatusDisplays = () => {
     var res = {};
     var i;
     var originalKeys = this.getOriginalKeys();
@@ -117,7 +114,8 @@ var FriendsStatusDisplay = React.createClass({
       res[key] = this.refs[key];
     }
     return res;
-  },
+  };
+
   /**
    * Verifies that by the time a child is flushed, the refs that appeared
    * earlier have already been resolved.
@@ -125,7 +123,7 @@ var FriendsStatusDisplay = React.createClass({
    * but our internal layer API depends on this assumption. We need to change
    * it to be more declarative before making ref resolution indeterministic.
    */
-  verifyPreviousRefsResolved: function(flushedKey) {
+  verifyPreviousRefsResolved = (flushedKey) => {
     var i;
     var originalKeys = this.getOriginalKeys();
     for (i = 0; i < originalKeys.length; i++) {
@@ -136,8 +134,9 @@ var FriendsStatusDisplay = React.createClass({
       }
       expect(this.refs[key]).toBeTruthy();
     }
-  },
-  render: function() {
+  };
+
+  render() {
     var children = [];
     var key;
     for (key in this.props.usernameToStatus) {
@@ -157,14 +156,15 @@ var FriendsStatusDisplay = React.createClass({
         {children}
       </div>
     );
-  },
-});
+  }
+}
 
 
 function getInternalStateByUserName(statusDisplays) {
-  return mapObject(statusDisplays, function(statusDisplay, key) {
-    return statusDisplay.getInternalState();
-  });
+  return Object.keys(statusDisplays).reduce((acc, key) => {
+    acc[key] = statusDisplays[key].getInternalState();
+    return acc;
+  }, {});
 }
 
 /**

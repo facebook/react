@@ -28,6 +28,14 @@ describe('ReactTestRenderer', function() {
     });
   });
 
+  it('renders a top-level empty component', function() {
+    function Empty() {
+      return null;
+    }
+    var renderer = ReactTestRenderer.create(<Empty />);
+    expect(renderer.toJSON()).toEqual(null);
+  });
+
   it('exposes a type flag', function() {
     function Link() {
       return <a role="link" />;
@@ -46,11 +54,11 @@ describe('ReactTestRenderer', function() {
 
   it('renders some basics with an update', function() {
     var renders = 0;
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {x: 3};
-      },
-      render: function() {
+
+    class Component extends React.Component {
+      state = {x: 3};
+
+      render() {
         renders++;
         return (
           <div className="purple">
@@ -59,11 +67,12 @@ describe('ReactTestRenderer', function() {
             <Null />
           </div>
         );
-      },
-      componentDidMount: function() {
+      }
+
+      componentDidMount() {
         this.setState({x: 7});
-      },
-    });
+      }
+    }
 
     var Child = () => (renders++, <moo />);
     var Null = () => (renders++, null);

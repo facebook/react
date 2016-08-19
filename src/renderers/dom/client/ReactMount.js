@@ -114,7 +114,8 @@ function mountComponentIntoNode(
     transaction,
     null,
     ReactDOMContainerInfo(wrapperInstance, container),
-    context
+    context,
+    0 /* parentDebugID */
   );
 
   if (markerName) {
@@ -204,6 +205,45 @@ function hasNonRootReactChild(container) {
     var inst = ReactDOMComponentTree.getInstanceFromNode(rootEl);
     return !!(inst && inst._hostParent);
   }
+}
+
+/**
+ * True if the supplied DOM node is a React DOM element and
+ * it has been rendered by another copy of React.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM has been rendered by another copy of React
+ * @internal
+ */
+function nodeIsRenderedByOtherInstance(container) {
+  var rootEl = getReactRootElementInContainer(container);
+  return !!(rootEl && isReactNode(rootEl) && !ReactDOMComponentTree.getInstanceFromNode(rootEl));
+}
+
+/**
+ * True if the supplied DOM node is a valid node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid DOM node.
+ * @internal
+ */
+function isValidContainer(node) {
+  return !!(node && (
+    node.nodeType === ELEMENT_NODE_TYPE ||
+    node.nodeType === DOC_NODE_TYPE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+  ));
+}
+
+/**
+ * True if the supplied DOM node is a valid React node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid React DOM node.
+ * @internal
+ */
+function isReactNode(node) {
+  return isValidContainer(node) && (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
 }
 
 function getHostRootInstanceInContainer(container) {
@@ -302,7 +342,7 @@ var ReactMount = {
   },
 
   /**
-   * Render a new component into the DOM. Hooked by devtools!
+   * Render a new component into the DOM. Hooked by hooks!
    *
    * @param {ReactElement} nextElement element to render
    * @param {DOMElement} container container to render into
@@ -329,11 +369,7 @@ var ReactMount = {
     );
 
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
+      isValidContainer(container),
       '_registerComponent(...): Target container is not a DOM element.'
     );
 
@@ -354,13 +390,6 @@ var ReactMount = {
 
     var wrapperID = componentInstance._instance.rootID;
     instancesByReactRootID[wrapperID] = componentInstance;
-
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        componentInstance._renderedComponent._debugID
-      );
-    }
 
     return componentInstance;
   },
@@ -551,13 +580,17 @@ var ReactMount = {
     );
 
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
+      isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
+
+    if (__DEV__) {
+      warning(
+        !nodeIsRenderedByOtherInstance(container),
+        'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+        'was rendered by another copy of React.'
+      );
+    }
 
     var prevComponent = getTopLevelWrapperInContainer(container);
     if (!prevComponent) {
@@ -604,11 +637,7 @@ var ReactMount = {
     transaction
   ) {
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
+      isValidContainer(container),
       'mountComponentIntoNode(...): Target container is not valid.'
     );
 

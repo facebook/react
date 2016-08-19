@@ -18,7 +18,6 @@ var ResponderSyntheticEvent = require('ResponderSyntheticEvent');
 var ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
 
 var accumulate = require('accumulate');
-var invariant = require('invariant');
 var keyOf = require('keyOf');
 
 var isStartish = EventPluginUtils.isStartish;
@@ -489,11 +488,14 @@ var ResponderEventPlugin = {
     if (isStartish(topLevelType)) {
       trackedTouchCount += 1;
     } else if (isEndish(topLevelType)) {
-      trackedTouchCount -= 1;
-      invariant(
-        trackedTouchCount >= 0,
-        'Ended a touch event which was not counted in trackedTouchCount.'
-      );
+      if (trackedTouchCount >= 0) {
+        trackedTouchCount -= 1;
+      } else {
+        console.error(
+          'Ended a touch event which was not counted in `trackedTouchCount`.'
+        );
+        return null;
+      }
     }
 
     ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent);

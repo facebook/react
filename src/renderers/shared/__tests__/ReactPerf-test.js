@@ -40,24 +40,24 @@ describe('ReactPerf', function() {
     ReactTestUtils = require('ReactTestUtils');
     emptyFunction = require('emptyFunction');
 
-    App = React.createClass({
-      render: function() {
+    App = class extends React.Component {
+      render() {
         return <div><Box /><Box flip={this.props.flipSecond} /></div>;
-      },
-    });
+      }
+    };
 
-    Box = React.createClass({
-      render: function() {
+    Box = class extends React.Component {
+      render() {
         return <div key={!!this.props.flip}><input /></div>;
-      },
-    });
+      }
+    };
 
     // ReactPerf only measures composites, so we put everything in one.
-    Div = React.createClass({
-      render: function() {
+    Div = class extends React.Component {
+      render() {
         return <div {...this.props} />;
-      },
-    });
+      }
+    };
 
     LifeCycle = React.createClass({
       shouldComponentUpdate: emptyFunction.thatReturnsTrue,
@@ -471,24 +471,28 @@ describe('ReactPerf', function() {
 
   it('should work when measurement starts during reconciliation', () => {
     // https://github.com/facebook/react/issues/6949#issuecomment-230371009
-    var Measurer = React.createClass({
+    class Measurer extends React.Component {
       componentWillMount() {
         ReactPerf.start();
-      },
+      }
+
       componentDidMount() {
         ReactPerf.stop();
-      },
+      }
+
       componentWillUpdate() {
         ReactPerf.start();
-      },
+      }
+
       componentDidUpdate() {
         ReactPerf.stop();
-      },
+      }
+
       render() {
         // Force reconciliation despite constant element
         return React.cloneElement(this.props.children);
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     ReactDOM.render(<Measurer><App /></Measurer>, container);

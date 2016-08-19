@@ -71,17 +71,18 @@ function checkSelectPropTypes(inst, props) {
     if (props[propName] == null) {
       continue;
     }
-    if (props.multiple) {
+    var isArray = Array.isArray(props[propName]);
+    if (props.multiple && !isArray) {
       warning(
-        Array.isArray(props[propName]),
+        false,
         'The `%s` prop supplied to <select> must be an array if ' +
         '`multiple` is true.%s',
         propName,
         getDeclarationErrorAddendum(owner)
       );
-    } else {
+    } else if (!props.multiple && isArray) {
       warning(
-        !Array.isArray(props[propName]),
+        false,
         'The `%s` prop supplied to <select> must be a scalar ' +
         'value if `multiple` is false.%s',
         propName,

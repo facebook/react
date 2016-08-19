@@ -21,11 +21,11 @@ describe('findDOMNode', function() {
   });
 
   it('findDOMNode should find dom element', function() {
-    var MyNode = React.createClass({
-      render: function() {
+    class MyNode extends React.Component {
+      render() {
         return <div><span>Noise</span></div>;
-      },
-    });
+      }
+    }
 
     var myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
     var myDiv = ReactDOM.findDOMNode(myNode);
@@ -43,11 +43,11 @@ describe('findDOMNode', function() {
   });
 
   it('findDOMNode should reject unmounted objects with render func', function() {
-    var Foo = React.createClass({
-      render: function() {
+    class Foo extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var container = document.createElement('div');
     var inst = ReactDOM.render(<Foo />, container);
@@ -59,14 +59,15 @@ describe('findDOMNode', function() {
   });
 
   it('findDOMNode should not throw an error when called within a component that is not mounted', function() {
-    var Bar = React.createClass({
-      componentWillMount: function() {
+    class Bar extends React.Component {
+      componentWillMount() {
         expect(ReactDOM.findDOMNode(this)).toBeNull();
-      },
-      render: function() {
+      }
+
+      render() {
         return <div/>;
-      },
-    });
+      }
+    }
 
     expect(() => ReactTestUtils.renderIntoDocument(<Bar/>)).not.toThrow();
   });

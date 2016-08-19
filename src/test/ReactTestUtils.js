@@ -23,7 +23,6 @@ var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
@@ -383,7 +382,10 @@ var nextDebugID = 1;
 var NoopInternalComponent = function(element) {
   this._renderedOutput = element;
   this._currentElement = element;
-  this._debugID = nextDebugID++;
+
+  if (__DEV__) {
+    this._debugID = nextDebugID++;
+  }
 };
 
 NoopInternalComponent.prototype = {
@@ -412,8 +414,6 @@ var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
     this._debugID = nextDebugID++;
-    var displayName = element.type.displayName || element.type.name || 'Unknown';
-    ReactInstrumentation.debugTool.onSetDisplayName(this._debugID, displayName);
   }
 
   this.construct(element);
@@ -493,7 +493,7 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
     );
   } else {
     var instance = new ShallowComponentWrapper(element);
-    ReactReconciler.mountComponent(instance, transaction, null, null, context);
+    ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
     this._instance = instance;
   }
 };

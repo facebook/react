@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
@@ -128,6 +127,9 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
 };
 ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
+  if (inst === null) {
+    return null;
+  }
   return inst.toJSON();
 };
 
@@ -138,8 +140,8 @@ ReactTestInstance.prototype.toJSON = function() {
 var ReactTestMount = {
 
   render: function(
-    nextElement: ReactElement
-  ): ?ReactElement<any, any, any> {
+    nextElement: ReactElement<any>
+  ): ReactTestInstance {
     var nextWrappedElement = new ReactElement(
       TopLevelWrapper,
       null,
@@ -160,12 +162,6 @@ var ReactTestMount = {
       batchedMountComponentIntoNode,
       instance
     );
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        instance._renderedComponent._debugID
-      );
-    }
     return new ReactTestInstance(instance);
   },
 

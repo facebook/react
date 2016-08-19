@@ -21,17 +21,18 @@ var reactComponentExpect = require('reactComponentExpect');
  * Counts clicks and has a renders an item for each click. Each item rendered
  * has a ref of the form "clickLogN".
  */
-var ClickCounter = React.createClass({
-  getInitialState: function() {
-    return {count: this.props.initialCount};
-  },
-  triggerReset: function() {
+class ClickCounter extends React.Component {
+  state = {count: this.props.initialCount};
+
+  triggerReset = () => {
     this.setState({count: this.props.initialCount});
-  },
-  handleClick: function() {
+  };
+
+  handleClick = () => {
     this.setState({count: this.state.count + 1});
-  },
-  render: function() {
+  };
+
+  render() {
     var children = [];
     var i;
     for (i = 0; i < this.state.count; i++) {
@@ -48,29 +49,30 @@ var ClickCounter = React.createClass({
         {children}
       </span>
     );
-  },
-});
+  }
+}
 
 /**
  * Only purpose is to test that refs are tracked even when applied to a
  * component that is injected down several layers. Ref systems are difficult to
  * build in such a way that ownership is maintained in an airtight manner.
  */
-var GeneralContainerComponent = React.createClass({
-  render: function() {
+class GeneralContainerComponent extends React.Component {
+  render() {
     return <div>{this.props.children}</div>;
-  },
-});
+  }
+}
 
 /**
  * Notice how refs ownership is maintained even when injecting a component
  * into a different parent.
  */
-var TestRefsComponent = React.createClass({
-  doReset: function() {
+class TestRefsComponent extends React.Component {
+  doReset = () => {
     this.refs.myCounter.triggerReset();
-  },
-  render: function() {
+  };
+
+  render() {
     return (
       <div>
         <div ref="resetDiv" onClick={this.doReset}>
@@ -81,8 +83,8 @@ var TestRefsComponent = React.createClass({
         </GeneralContainerComponent>
       </div>
     );
-  },
-});
+  }
+}
 
 /**
  * Render a TestRefsComponent and ensure that the main refs are wired up.
@@ -161,14 +163,14 @@ describe('ref swapping', function() {
     jest.resetModuleRegistry();
   });
 
-  var RefHopsAround = React.createClass({
-    getInitialState: function() {
-      return {count: 0};
-    },
-    moveRef: function() {
+  class RefHopsAround extends React.Component {
+    state = {count: 0};
+
+    moveRef = () => {
       this.setState({count: this.state.count + 1});
-    },
-    render: function() {
+    };
+
+    render() {
       var count = this.state.count;
       /**
        * What we have here, is three divs with refs (div1/2/3), but a single
@@ -192,8 +194,8 @@ describe('ref swapping', function() {
           />
         </div>
       );
-    },
-  });
+    }
+  }
 
   it('Allow refs to hop around children correctly', function() {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
@@ -231,11 +233,11 @@ describe('ref swapping', function() {
 
 
   it('always has a value for this.refs', function() {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(!!instance.refs).toBe(true);
@@ -246,17 +248,21 @@ describe('ref swapping', function() {
     function Inner(props) {
       return <a ref={props.saveA} />;
     }
-    var Outer = React.createClass({
-      saveA() {
+
+    class Outer extends React.Component {
+      saveA = () => {
         refCalled++;
-      },
+      };
+
       componentDidMount() {
         this.setState({});
-      },
+      }
+
       render() {
         return <Inner saveA={this.saveA} />;
-      },
-    });
+      }
+    }
+
     ReactTestUtils.renderIntoDocument(<Outer />);
     expect(refCalled).toBe(1);
   }
