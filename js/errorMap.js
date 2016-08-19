@@ -138,5 +138,9 @@ var errorMap = {
   "136": "Attempted to update component `%s` that has already been unmounted (or failed to mount).",
   "137": "%s is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`.%s",
   "138": "Touch object is missing identifier.",
-  "139": "ReactTestRenderer: .update() can't be called after unmount."
+  "139": "ReactTestRenderer: .update() can't be called after unmount.",
+  "140": "Expected hook events to fire for the child before its parent includes it in onSetChildren().",
+  "141": "Expected onSetChildren() to fire for a container child before its parent includes it in onSetChildren().",
+  "142": "Expected onBeforeMountComponent() parent and onSetChildren() to be consistent (%s has parents %s and %s).",
+  "143": "React.Children.only expected to receive a single React element child."
 };
