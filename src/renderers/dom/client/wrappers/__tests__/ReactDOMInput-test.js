@@ -856,12 +856,12 @@ describe('ReactDOMInput', function() {
             <input ref="input" type="checkbox" checked={this.state.checked} />
           </form>
         );
-      }
+      },
     });
 
     var el = ReactTestUtils.renderIntoDocument(<Input />);
 
-    el.setState({ checked: null })
+    el.setState({ checked: null });
 
     expect(el.refs.input.checked).toBe(false);
   });
