@@ -322,10 +322,23 @@ if (__DEV__) {
 
   var didWarn = {};
 
-  validateDOMNesting = function(childTag, childInstance, ancestorInfo) {
+  validateDOMNesting = function(
+    childTag,
+    childText,
+    childInstance,
+    ancestorInfo
+  ) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
+
+    if (childText != null) {
+      warning(
+        childTag == null,
+        'validateDOMNesting: when childText is passed, childTag should be null'
+      );
+      childTag = '#text';
+    }
 
     var invalidParent =
       isTagValidWithParent(childTag, parentTag) ? null : parentInfo;
@@ -385,7 +398,17 @@ if (__DEV__) {
       didWarn[warnKey] = true;
 
       var tagDisplayName = childTag;
-      if (childTag !== '#text') {
+      var whitespaceInfo = '';
+      if (childTag === '#text') {
+        if (/\S/.test(childText)) {
+          tagDisplayName = 'Text nodes';
+        } else {
+          tagDisplayName = 'Whitespace text nodes';
+          whitespaceInfo =
+            ' Make sure you don\'t have any extra whitespace between tags on ' +
+            'each line of your source code.';
+        }
+      } else {
         tagDisplayName = '<' + childTag + '>';
       }
 
@@ -398,10 +421,11 @@ if (__DEV__) {
         }
         warning(
           false,
-          'validateDOMNesting(...): %s cannot appear as a child of <%s>. ' +
+          'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s ' +
           'See %s.%s',
           tagDisplayName,
           ancestorTag,
+          whitespaceInfo,
           ownerInfo,
           info
         );
