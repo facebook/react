@@ -843,4 +843,26 @@ describe('ReactDOMInput', function() {
       'node.setAttribute("checked", "")',
     ]);
   });
+
+  it('removes the checked state when assigned null after initially rendering true', function() {
+    var Input = React.createClass({
+      getInitialState() {
+        return { checked: true };
+      },
+
+      render() {
+        return (
+          <form>
+            <input ref="input" type="checkbox" checked={this.state.checked} />
+          </form>
+        );
+      }
+    });
+
+    var el = ReactTestUtils.renderIntoDocument(<Input />);
+
+    el.setState({ checked: null })
+
+    expect(el.refs.input.checked).toBe(false);
+  });
 });
