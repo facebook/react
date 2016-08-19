@@ -119,7 +119,7 @@ function PropTypeError(message) {
 // Make `instanceof Error` still work for returned errors.
 PropTypeError.prototype = Error.prototype;
 
-function createChainableTypeChecker(validate) {
+function createChainableTypeChecker(validate, expectedType) {
   if (__DEV__) {
     var manualPropTypeCallCache = {};
   }
@@ -183,6 +183,9 @@ function createChainableTypeChecker(validate) {
 
   var chainedCheckType = checkType.bind(null, false);
   chainedCheckType.isRequired = checkType.bind(null, true);
+  if (expectedType) {
+    chainedCheckType.expectedType = expectedType;
+  }
 
   return chainedCheckType;
 }
@@ -213,11 +216,11 @@ function createPrimitiveTypeChecker(expectedType) {
     }
     return null;
   }
-  return createChainableTypeChecker(validate);
+  return createChainableTypeChecker(validate, expectedType);
 }
 
 function createAnyTypeChecker() {
-  return createChainableTypeChecker(emptyFunction.thatReturns(null));
+  return createChainableTypeChecker(emptyFunction.thatReturns(null), 'any');
 }
 
 function createArrayOfTypeChecker(typeChecker) {
@@ -267,7 +270,7 @@ function createElementTypeChecker() {
     }
     return null;
   }
-  return createChainableTypeChecker(validate);
+  return createChainableTypeChecker(validate, 'element');
 }
 
 function createInstanceTypeChecker(expectedClass) {
@@ -295,19 +298,40 @@ function createEnumTypeChecker(expectedValues) {
 
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
+    var locationName = ReactPropTypeLocationNames[location];
     for (var i = 0; i < expectedValues.length; i++) {
       if (is(propValue, expectedValues[i])) {
         return null;
       }
+      if (
+        getPropType(expectedValues[i]) === 'function' &&
+        expectedValues[i].hasOwnProperty('expectedType')
+      ) {
+        return new PropTypeError(
+          `Invalid enum values for ` +
+          `${locationName} \`${propFullName}\` of value \`${propValue}\`. ` +
+          `Found React PropType: "${expectedValues[i].expectedType}". ` +
+          `Did you mean to use oneOfType instead?`
+        );
+      }
     }
 
-    var locationName = ReactPropTypeLocationNames[location];
-    var valuesString = JSON.stringify(expectedValues);
+    var valuesString = JSON.stringify(expectedValues, functionPrettifier);
     return new PropTypeError(
       `Invalid ${locationName} \`${propFullName}\` of value \`${propValue}\` ` +
       `supplied to \`${componentName}\`, expected one of ${valuesString}.`
     );
   }
+
+  function functionPrettifier(name, values) {
+    for (var i = 0; i < values.length; i++) {
+      if (getPropType(values[i]) === 'function') {
+        values[i] = 'Unexpected function: ' + values[i].toString();
+      }
+    }
+    return values;
+  }
+
   return createChainableTypeChecker(validate);
 }
 
@@ -390,7 +414,7 @@ function createNodeChecker() {
     }
     return null;
   }
-  return createChainableTypeChecker(validate);
+  return createChainableTypeChecker(validate, 'node');
 }
 
 function createShapeTypeChecker(shapeTypes) {

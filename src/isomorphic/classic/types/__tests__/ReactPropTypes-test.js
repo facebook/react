@@ -11,6 +11,8 @@
 
 'use strict';
 
+var emptyFunction = require('emptyFunction');
+
 var PropTypes;
 var React;
 var ReactFragment;
@@ -794,6 +796,13 @@ describe('ReactPropTypes', function() {
         'Invalid prop `testProp` of value `false` supplied to ' +
         '`testComponent`, expected one of [0,"false"].'
       );
+      typeCheckFail(
+        PropTypes.oneOf([emptyFunction.thatReturnsNull, 0]),
+        false,
+        'Invalid prop `testProp` of value `false` supplied to ' +
+        '`testComponent`, expected one of ' +
+        '["Unexpected function: function () {\\n    return arg;\\n  }",0].'
+      );
     });
 
     it('should not warn for valid values', function() {
@@ -816,6 +825,16 @@ describe('ReactPropTypes', function() {
       expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), true);
       expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), null);
       expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), undefined);
+    });
+
+    it('should fail if a PropType is passed', function() {
+      typeCheckFail(
+        PropTypes.oneOf([PropTypes.number]),
+        'test',
+        'Invalid enum values for prop `testProp` of value `test`. ' +
+        'Found React PropType: "number". ' +
+        'Did you mean to use oneOfType instead?'
+      );
     });
   });
 
