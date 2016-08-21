@@ -18,6 +18,8 @@ module.exports = function(gulp, plugins) {
   var gutil = plugins.util;
 
   return function(done) {
+    console.log(require('child_process')
+      .spawnSync('bash', ['-c', 'cat src/isomorphic/hooks/ReactComponentTreeHook.js | head -n 10']).output.toString());
     spawn(
       process.execPath,
       [
