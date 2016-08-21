@@ -133,6 +133,13 @@ if (__DEV__) {
       }
     }
   }
+
+  // Check if using Polymer and we are not using native shadow
+  var shadyDom = window.Polymer !== undefined && !window.Polymer.useNativeShadow;
+  warning(
+    !shadyDom,
+    'It looks like you are using the shady-dom. Careful things might break!'
+  );
 }
 
 if (__DEV__) {
