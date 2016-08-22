@@ -135,11 +135,14 @@ if (__DEV__) {
   }
 
   // Check if using Polymer and we are not using native shadow
-  var shadyDom = window.Polymer !== undefined && !window.Polymer.useNativeShadow;
-  warning(
-    !shadyDom,
-    'It looks like you are using the shady-dom. Careful things might break!'
-  );
+  if (ExecutionEnvironment.canUseDOM) {
+    var shadyDom = window.Polymer != null &&
+      (window.Polymer.wantShadow && !window.Polymer.nativeShadow);
+    warning(
+      !shadyDom,
+      'Using the shady-dom with React may cause subtle problems.'
+    );
+  }
 }
 
 if (__DEV__) {
