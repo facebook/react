@@ -198,6 +198,7 @@ ReactElement.createElement = function(type, config, children) {
   var ref = null;
   var self = null;
   var source = null;
+  var symbols;
 
   if (config != null) {
     if (__DEV__) {
@@ -224,6 +225,13 @@ ReactElement.createElement = function(type, config, children) {
       if (hasOwnProperty.call(config, propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         props[propName] = config[propName];
+      }
+    }
+
+    if (Object.getOwnPropertySymbols) {
+      symbols = Object.getOwnPropertySymbols(config);
+      for (var j = 0; j < symbols.length; j++) {
+        props[symbols[j]] = config[symbols[j]];
       }
     }
   }

@@ -533,6 +533,17 @@ describe('ReactElement', function() {
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
+  it('passes props with Symbol keys', function() {
+    global.Symbol = originalSymbol;
+    var sym = Symbol();
+    var element = React.createFactory(ComponentClass)({
+      [sym]: '12',
+    });
+    expect(element.props).toEqual({[sym]: '12'});
+
+    global.Symbol = undefined;
+  });
+
 });
 
 describe('comparing jsx vs .createFactory() vs .createElement()', function() {
