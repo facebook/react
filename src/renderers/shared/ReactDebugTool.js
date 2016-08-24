@@ -192,10 +192,13 @@ function resumeCurrentLifeCycleTimer() {
   currentTimerType = timerType;
 }
 
+var lastMarkTimeStamp = null;
 var canUsePerformanceMeasure =
   typeof performance !== 'undefined' &&
   typeof performance.mark === 'function' &&
-  typeof performance.measure === 'function';
+  typeof performance.clearMarks === 'function' &&
+  typeof performance.measure === 'function' &&
+  typeof performance.clearMeasures === 'function';
 
 function shouldMark(debugID) {
   if (!isProfiling || !canUsePerformanceMeasure) {
@@ -216,20 +219,34 @@ function markBegin(debugID, markType) {
   if (!shouldMark(debugID)) {
     return;
   }
-  var beginMarkName = `${debugID}::${markType}::begin`;
-  performance.mark(beginMarkName);
+
+  var markName = `${debugID}::${markType}`;
+  lastMarkTimeStamp = performanceNow();
+  performance.mark(markName);
 }
 
 function markEnd(debugID, markType) {
   if (!shouldMark(debugID)) {
     return;
   }
-  var beginMarkName = `${debugID}::${markType}::begin`;
-  var endMarkName = `${debugID}::${markType}::end`;
+
+  var markName = `${debugID}::${markType}`;
   var displayName = ReactComponentTreeHook.getDisplayName(debugID);
-  var measurementName = `${displayName} [${markType}]`;
-  performance.mark(endMarkName);
-  performance.measure(measurementName, beginMarkName, endMarkName);
+
+  // Chrome has an issue of dropping markers recorded too fast:
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=640652
+  // To work around this, we will not report very small measurements.
+  // I determined the magic number by tweaking it back and forth.
+  // 0.05ms was enough to prevent the issue, but I set it to 0.1ms to be safe.
+  // When the bug is fixed, we can `measure()` unconditionally if we want to.
+  var timeStamp = performanceNow();
+  if (timeStamp - lastMarkTimeStamp > 0.1) {
+    var measurementName = `${displayName} [${markType}]`;
+    performance.measure(measurementName, markName);
+  }
+
+  performance.clearMarks(markName);
+  performance.clearMeasures(measurementName);
 }
 
 var ReactDebugTool = {
