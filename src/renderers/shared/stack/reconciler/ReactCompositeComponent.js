@@ -37,8 +37,15 @@ var CompositeTypes = {
   StatelessFunctional: 2,
 };
 
-function StatelessComponent(Component) {
+function StatelessComponent(Component, props, context, updater) {
+  this.props = props;
+  this.context = context;
+  this.updater = updater;
+
+  this.refs = emptyObject;
+  this.state = null;
 }
+
 StatelessComponent.prototype.render = function() {
   var Component = ReactInstanceMap.get(this)._currentElement.type;
   var element = Component(this.props, this.context, this.updater);
@@ -222,8 +229,8 @@ var ReactCompositeComponentMixin = {
     );
     var renderedElement;
 
-    // Support functional components
     if (!doConstruct && (inst == null || inst.render == null)) {
+      // is a stateless functional component (SFC)
       renderedElement = inst;
       warnIfInvalidElement(Component, renderedElement);
       invariant(
@@ -234,14 +241,33 @@ var ReactCompositeComponentMixin = {
         'returned undefined, an array or some other invalid object.',
         Component.displayName || Component.name || 'Component'
       );
-      inst = new StatelessComponent(Component);
+      inst = new StatelessComponent(
+        Component,
+        publicProps,
+        publicContext,
+        updateQueue
+      );
       this._compositeType = CompositeTypes.StatelessFunctional;
+
+      this._instance = inst;
+
+      // Store a reference from the instance back to the internal representation
+      ReactInstanceMap.set(inst, this);
+
+      // SFC: skip redundant assertions
+      return this._getMarkupForSFC(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
+    }
+
+    if (isPureComponent(Component)) {
+      this._compositeType = CompositeTypes.PureClass;
     } else {
-      if (isPureComponent(Component)) {
-        this._compositeType = CompositeTypes.PureClass;
-      } else {
-        this._compositeType = CompositeTypes.ImpureClass;
-      }
+      this._compositeType = CompositeTypes.ImpureClass;
     }
 
     if (__DEV__) {
@@ -345,21 +371,16 @@ var ReactCompositeComponentMixin = {
       this.getName() || 'ReactCompositeComponent'
     );
 
-    this._pendingStateQueue = null;
-    this._pendingReplaceState = false;
-    this._pendingForceUpdate = false;
-
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
-        renderedElement,
         hostParent,
         hostContainerInfo,
         transaction,
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     }
 
     if (inst.componentDidMount) {
@@ -367,6 +388,31 @@ var ReactCompositeComponentMixin = {
         transaction.getReactMountReady().enqueue(invokeComponentDidMountWithTimer, this);
       } else {
         transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
+      }
+    }
+
+    return markup;
+  },
+
+  _getMarkupForSFC: function(
+    renderedElement,
+    hostParent,
+    hostContainerInfo,
+    transaction,
+    context
+  ) {
+    var markup = this.performInitialMountForSFC(
+      renderedElement,
+      hostParent,
+      hostContainerInfo,
+      transaction,
+      context
+    );
+
+    if (__DEV__) {
+      if (this._debugID) {
+        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
+        transaction.getReactMountReady().enqueue(callback, this);
       }
     }
 
@@ -452,7 +498,6 @@ var ReactCompositeComponentMixin = {
   },
 
   performInitialMountWithErrorHandling: function(
-    renderedElement,
     hostParent,
     hostContainerInfo,
     transaction,
@@ -461,7 +506,7 @@ var ReactCompositeComponentMixin = {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     } catch (e) {
       if (__DEV__) {
         if (this._debugID !== 0) {
@@ -481,13 +526,14 @@ var ReactCompositeComponentMixin = {
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
+  performInitialMount: function(hostParent, hostContainerInfo, transaction, context) {
     var inst = this._instance;
+    var renderedElement;
     if (inst.componentWillMount) {
       if (__DEV__) {
         if (this._debugID !== 0) {
@@ -513,11 +559,45 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    // If not a stateless component, we now render
-    if (renderedElement === undefined) {
-      renderedElement = this._renderValidatedComponent();
+    renderedElement = this._renderValidatedComponent();
+
+    var nodeType = ReactNodeTypes.getType(renderedElement);
+    this._renderedNodeType = nodeType;
+    var child = this._instantiateReactComponent(
+      renderedElement,
+      nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
+    );
+    this._renderedComponent = child;
+    if (__DEV__) {
+      if (child._debugID !== 0 && this._debugID !== 0) {
+        ReactInstrumentation.debugTool.onSetParent(
+          child._debugID,
+          this._debugID
+        );
+      }
     }
 
+    var markup = ReactReconciler.mountComponent(
+      child,
+      transaction,
+      hostParent,
+      hostContainerInfo,
+      this._processChildContext(context)
+    );
+
+    if (__DEV__) {
+      if (this._debugID !== 0) {
+        ReactInstrumentation.debugTool.onSetChildren(
+          this._debugID,
+          child._debugID !== 0 ? [child._debugID] : []
+        );
+      }
+    }
+
+    return markup;
+  },
+
+  performInitialMountForSFC: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
     var nodeType = ReactNodeTypes.getType(renderedElement);
     this._renderedNodeType = nodeType;
     var child = this._instantiateReactComponent(
