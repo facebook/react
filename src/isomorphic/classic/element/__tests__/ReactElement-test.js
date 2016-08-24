@@ -533,13 +533,17 @@ describe('ReactElement', function() {
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
-  it('passes props with Symbol keys', function() {
+  it('warns about props with Symbol key', function() {
     global.Symbol = originalSymbol;
-    var sym = Symbol();
-    var element = React.createFactory(ComponentClass)({
-      [sym]: '12',
-    });
-    expect(element.props).toEqual({[sym]: '12'});
+
+    spyOn(console, 'error');
+    expect(console.error).not.toHaveBeenCalled();
+    React.createElement('div', {[Symbol()]: '12'});
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'React.createElement(...): Unsupported Symbol key in props. ' +
+      'Properties keyed by Symbol will be ignored.'
+    );
 
     global.Symbol = undefined;
   });
