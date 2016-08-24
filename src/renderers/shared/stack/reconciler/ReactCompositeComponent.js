@@ -72,6 +72,13 @@ function isPureComponent(Component) {
 
 // Separated into a function to contain deoptimizations caused by try/finally.
 function measureLifeCyclePerf(fn, debugID, timerType) {
+  if (debugID === 0) {
+    // Top-level wrappers (see ReactMount) and empty components (see
+    // ReactDOMEmptyComponent) are invisible to hooks and devtools.
+    // Both are implementation details that should go away in the future.
+    return fn();
+  }
+
   ReactInstrumentation.debugTool.onBeginLifeCycleTimer(debugID, timerType);
   try {
     return fn();
@@ -338,20 +345,15 @@ var ReactCompositeComponentMixin = {
       markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
     }
 
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
     if (inst.componentDidMount) {
-      if (__DEV__ && debugID !== 0) {
+      if (__DEV__) {
         transaction.getReactMountReady().enqueue(() => {
           measureLifeCyclePerf(
             () => inst.componentDidMount(),
-            debugID,
+            this._debugID,
             'componentDidMount'
           );
-        }, null);
+        });
       } else {
         transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
       }
@@ -396,16 +398,11 @@ var ReactCompositeComponentMixin = {
   ) {
     var Component = this._currentElement.type;
 
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
     if (doConstruct) {
-      if (__DEV__ && debugID !== 0) {
+      if (__DEV__) {
         return measureLifeCyclePerf(
           () => new Component(publicProps, publicContext, updateQueue),
-          debugID,
+          this._debugID,
           'ctor'
         );
       } else {
@@ -415,10 +412,10 @@ var ReactCompositeComponentMixin = {
 
     // This can still be an instance in case of factory components
     // but we'll count this as time spent rendering as the more common case.
-    if (__DEV__ && debugID !== 0) {
+    if (__DEV__) {
       return measureLifeCyclePerf(
         () => Component(publicProps, publicContext, updateQueue),
-        debugID,
+        this._debugID,
         'render'
       );
     } else {
@@ -465,7 +462,7 @@ var ReactCompositeComponentMixin = {
     }
 
     if (inst.componentWillMount) {
-      if (__DEV__ && debugID !== 0) {
+      if (__DEV__) {
         measureLifeCyclePerf(
           () => inst.componentWillMount(),
           debugID,
@@ -503,9 +500,11 @@ var ReactCompositeComponentMixin = {
       debugID
     );
 
-    if (__DEV__ && debugID !== 0) {
-      var childDebugIDs = child._debugID !== 0 ? [child._debugID] : [];
-      ReactInstrumentation.debugTool.onSetChildren(debugID, childDebugIDs);
+    if (__DEV__) {
+      if (debugID !== 0) {
+        var childDebugIDs = child._debugID !== 0 ? [child._debugID] : [];
+        ReactInstrumentation.debugTool.onSetChildren(debugID, childDebugIDs);
+      }
     }
 
     return markup;
@@ -528,11 +527,6 @@ var ReactCompositeComponentMixin = {
 
     var inst = this._instance;
 
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
     if (inst.componentWillUnmount && !inst._calledComponentWillUnmount) {
       inst._calledComponentWillUnmount = true;
 
@@ -540,10 +534,10 @@ var ReactCompositeComponentMixin = {
         var name = this.getName() + '.componentWillUnmount()';
         ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
       } else {
-        if (__DEV__ && debugID !== 0) {
+        if (__DEV__) {
           measureLifeCyclePerf(
             () => inst.componentWillUnmount(),
-            debugID,
+            this._debugID,
             'componentWillUnmount'
           );
         } else {
@@ -793,19 +787,14 @@ var ReactCompositeComponentMixin = {
       willReceive = true;
     }
 
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
     // An update here will schedule an update but immediately set
     // _pendingStateQueue which will ensure that any state updates gets
     // immediately reconciled instead of waiting for the next batch.
     if (willReceive && inst.componentWillReceiveProps) {
-      if (__DEV__ && debugID !== 0) {
+      if (__DEV__) {
         measureLifeCyclePerf(
           () => inst.componentWillReceiveProps(nextProps, nextContext),
-          debugID,
+          this._debugID,
           'componentWillReceiveProps',
         );
       } else {
@@ -818,10 +807,10 @@ var ReactCompositeComponentMixin = {
 
     if (!this._pendingForceUpdate) {
       if (inst.shouldComponentUpdate) {
-        if (__DEV__ && debugID !== 0) {
+        if (__DEV__) {
           shouldUpdate = measureLifeCyclePerf(
             () => inst.shouldComponentUpdate(nextProps, nextState, nextContext),
-            debugID,
+            this._debugID,
             'shouldComponentUpdate'
           );
         } else {
@@ -929,16 +918,11 @@ var ReactCompositeComponentMixin = {
       prevContext = inst.context;
     }
 
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
     if (inst.componentWillUpdate) {
-      if (__DEV__ && debugID !== 0) {
+      if (__DEV__) {
         measureLifeCyclePerf(
           () => inst.componentWillUpdate(nextProps, nextState, nextContext),
-          debugID,
+          this._debugID,
           'componentWillUpdate'
         );
       } else {
@@ -955,14 +939,14 @@ var ReactCompositeComponentMixin = {
     this._updateRenderedComponent(transaction, unmaskedContext);
 
     if (hasComponentDidUpdate) {
-      if (__DEV__ && debugID !== 0) {
+      if (__DEV__) {
         transaction.getReactMountReady().enqueue(() => {
           measureLifeCyclePerf(
-            () => inst.componentDidUpdate(prevProps, prevState, prevContext),
-            debugID,
+            inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+            this._debugID,
             'componentDidUpdate'
           );
-        }, null);
+        });
       } else {
         transaction.getReactMountReady().enqueue(
           inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
@@ -1016,9 +1000,11 @@ var ReactCompositeComponentMixin = {
         debugID
       );
 
-      if (__DEV__ && debugID !== 0) {
-        var childDebugIDs = child._debugID !== 0 ? [child._debugID] : [];
-        ReactInstrumentation.debugTool.onSetChildren(debugID, childDebugIDs);
+      if (__DEV__) {
+        if (debugID !== 0) {
+          var childDebugIDs = child._debugID !== 0 ? [child._debugID] : [];
+          ReactInstrumentation.debugTool.onSetChildren(debugID, childDebugIDs);
+        }
       }
 
       this._replaceNodeWithMarkup(
@@ -1049,15 +1035,10 @@ var ReactCompositeComponentMixin = {
     var inst = this._instance;
     var renderedComponent;
 
-    var debugID = 0;
     if (__DEV__) {
-      debugID = this._debugID;
-    }
-
-    if (__DEV__ && debugID !== 0) {
       renderedComponent = measureLifeCyclePerf(
         () => inst.render(),
-        debugID,
+        this._debugID,
         'render'
       );
     } else {
