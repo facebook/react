@@ -310,12 +310,6 @@ var ReactDebugTool = {
     markEnd(debugID, timerType);
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
-  onError(debugID) {
-    if (currentTimerDebugID != null) {
-      endLifeCycleTimer(currentTimerDebugID, currentTimerType);
-    }
-    emitEvent('onError', debugID);
-  },
   onBeginProcessingChildContext() {
     emitEvent('onBeginProcessingChildContext');
   },

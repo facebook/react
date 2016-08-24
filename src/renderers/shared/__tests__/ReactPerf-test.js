@@ -516,4 +516,208 @@ describe('ReactPerf', function() {
       renderCount: 2,
     }]);
   });
+
+  it('should not print errant warnings if render() throws', () => {
+    var container = document.createElement('div');
+    var thrownErr = new Error('Muhaha!');
+
+    class Evil extends React.Component {
+      render() {
+        throw thrownErr;
+      }
+    }
+
+    ReactPerf.start();
+    try {
+      ReactDOM.render(
+        <div>
+          <LifeCycle />
+          <Evil />
+        </div>,
+        container
+      );
+    } catch (err) {
+      if (err !== thrownErr) {
+        throw err;
+      }
+    }
+    ReactPerf.stop();
+  });
+
+  it('should not print errant warnings if componentWillMount() throws', () => {
+    var container = document.createElement('div');
+    var thrownErr = new Error('Muhaha!');
+
+    class Evil extends React.Component {
+      componentWillMount() {
+        throw thrownErr;
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactPerf.start();
+    try {
+      ReactDOM.render(
+        <div>
+          <LifeCycle />
+          <Evil />
+        </div>,
+        container
+      );
+    } catch (err) {
+      if (err !== thrownErr) {
+        throw err;
+      }
+    }
+    ReactPerf.stop();
+  });
+
+  it('should not print errant warnings if componentDidMount() throws', () => {
+    var container = document.createElement('div');
+    var thrownErr = new Error('Muhaha!');
+
+    class Evil extends React.Component {
+      componentDidMount() {
+        throw thrownErr;
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactPerf.start();
+    try {
+      ReactDOM.render(
+        <div>
+          <LifeCycle />
+          <Evil />
+        </div>,
+        container
+      );
+    } catch (err) {
+      if (err !== thrownErr) {
+        throw err;
+      }
+    }
+    ReactPerf.stop();
+  });
+
+  it('should not print errant warnings if portal throws in render()', () => {
+    var container = document.createElement('div');
+    var thrownErr = new Error('Muhaha!');
+
+    class Evil extends React.Component {
+      render() {
+        throw thrownErr;
+      }
+    }
+    class EvilPortal extends React.Component {
+      componentWillMount() {
+        var portalContainer = document.createElement('div');
+        ReactDOM.render(<Evil />, portalContainer);
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactPerf.start();
+    try {
+      ReactDOM.render(
+        <div>
+          <LifeCycle />
+          <EvilPortal />
+        </div>,
+        container
+      );
+    } catch (err) {
+      if (err !== thrownErr) {
+        throw err;
+      }
+    }
+    ReactDOM.unmountComponentAtNode(container);
+    ReactPerf.stop();
+  });
+
+  it('should not print errant warnings if portal throws in componentWillMount()', () => {
+    var container = document.createElement('div');
+    var thrownErr = new Error('Muhaha!');
+
+    class Evil extends React.Component {
+      componentWillMount() {
+        throw thrownErr;
+      }
+      render() {
+        return <div />;
+      }
+    }
+    class EvilPortal extends React.Component {
+      componentWillMount() {
+        var portalContainer = document.createElement('div');
+        ReactDOM.render(<Evil />, portalContainer);
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactPerf.start();
+    try {
+      ReactDOM.render(
+        <div>
+          <LifeCycle />
+          <EvilPortal />
+        </div>,
+        container
+      );
+    } catch (err) {
+      if (err !== thrownErr) {
+        throw err;
+      }
+    }
+    ReactDOM.unmountComponentAtNode(container);
+    ReactPerf.stop();
+  });
+
+  it('should not print errant warnings if portal throws in componentDidMount()', () => {
+    var container = document.createElement('div');
+    var thrownErr = new Error('Muhaha!');
+
+    class Evil extends React.Component {
+      componentDidMount() {
+        throw thrownErr;
+      }
+      render() {
+        return <div />;
+      }
+    }
+    class EvilPortal extends React.Component {
+      componentWillMount() {
+        var portalContainer = document.createElement('div');
+        ReactDOM.render(<Evil />, portalContainer);
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactPerf.start();
+    try {
+      ReactDOM.render(
+        <div>
+          <LifeCycle />
+          <EvilPortal />
+        </div>,
+        container
+      );
+    } catch (err) {
+      if (err !== thrownErr) {
+        throw err;
+      }
+    }
+    ReactDOM.unmountComponentAtNode(container);
+    ReactPerf.stop();
+  });
 });
