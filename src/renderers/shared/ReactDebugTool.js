@@ -192,6 +192,63 @@ function resumeCurrentLifeCycleTimer() {
   currentTimerType = timerType;
 }
 
+var lastMarkTimeStamp = null;
+var canUsePerformanceMeasure =
+  typeof performance !== 'undefined' &&
+  typeof performance.mark === 'function' &&
+  typeof performance.clearMarks === 'function' &&
+  typeof performance.measure === 'function' &&
+  typeof performance.clearMeasures === 'function';
+
+function shouldMark(debugID) {
+  if (!isProfiling || !canUsePerformanceMeasure) {
+    return false;
+  }
+  var element = ReactComponentTreeHook.getElement(debugID);
+  if (element == null || typeof element !== 'object') {
+    return false;
+  }
+  var isHostElement = typeof element.type === 'string';
+  if (isHostElement) {
+    return false;
+  }
+  return true;
+}
+
+function markBegin(debugID, markType) {
+  if (!shouldMark(debugID)) {
+    return;
+  }
+
+  var markName = `${debugID}::${markType}`;
+  lastMarkTimeStamp = performanceNow();
+  performance.mark(markName);
+}
+
+function markEnd(debugID, markType) {
+  if (!shouldMark(debugID)) {
+    return;
+  }
+
+  var markName = `${debugID}::${markType}`;
+  var displayName = ReactComponentTreeHook.getDisplayName(debugID);
+
+  // Chrome has an issue of dropping markers recorded too fast:
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=640652
+  // To work around this, we will not report very small measurements.
+  // I determined the magic number by tweaking it back and forth.
+  // 0.05ms was enough to prevent the issue, but I set it to 0.1ms to be safe.
+  // When the bug is fixed, we can `measure()` unconditionally if we want to.
+  var timeStamp = performanceNow();
+  if (timeStamp - lastMarkTimeStamp > 0.1) {
+    var measurementName = `${displayName} [${markType}]`;
+    performance.measure(measurementName, markName);
+  }
+
+  performance.clearMarks(markName);
+  performance.clearMeasures(measurementName);
+}
+
 var ReactDebugTool = {
   addHook(hook) {
     hooks.push(hook);
@@ -244,11 +301,13 @@ var ReactDebugTool = {
   onBeginLifeCycleTimer(debugID, timerType) {
     checkDebugID(debugID);
     emitEvent('onBeginLifeCycleTimer', debugID, timerType);
+    markBegin(debugID, timerType);
     beginLifeCycleTimer(debugID, timerType);
   },
   onEndLifeCycleTimer(debugID, timerType) {
     checkDebugID(debugID);
     endLifeCycleTimer(debugID, timerType);
+    markEnd(debugID, timerType);
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
   onError(debugID) {
@@ -279,25 +338,31 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     checkDebugID(parentDebugID, true);
     emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
+    markBegin(debugID, 'mount');
   },
   onMountComponent(debugID) {
     checkDebugID(debugID);
+    markEnd(debugID, 'mount');
     emitEvent('onMountComponent', debugID);
   },
   onBeforeUpdateComponent(debugID, element) {
     checkDebugID(debugID);
     emitEvent('onBeforeUpdateComponent', debugID, element);
+    markBegin(debugID, 'update');
   },
   onUpdateComponent(debugID) {
     checkDebugID(debugID);
+    markEnd(debugID, 'update');
     emitEvent('onUpdateComponent', debugID);
   },
   onBeforeUnmountComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onBeforeUnmountComponent', debugID);
+    markBegin(debugID, 'unmount');
   },
   onUnmountComponent(debugID) {
     checkDebugID(debugID);
+    markEnd(debugID, 'unmount');
     emitEvent('onUnmountComponent', debugID);
   },
   onTestEvent() {
