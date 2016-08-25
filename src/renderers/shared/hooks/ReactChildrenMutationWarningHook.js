@@ -15,8 +15,6 @@ var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
 
-var elements = {};
-
 function handleElement(debugID, element) {
   if (element == null) {
     return;
@@ -39,28 +37,22 @@ function handleElement(debugID, element) {
       isMutated = true;
     }
   }
-  warning(
-    Array.isArray(element._shadowChildren) && !isMutated,
-    'Component\'s children should not be mutated.%s',
-    ReactComponentTreeHook.getStackAddendumByID(debugID),
-  );
+  if (!Array.isArray(element._shadowChildren) || isMutated) {
+    warning(
+      false,
+      'Component\'s children should not be mutated.%s',
+      ReactComponentTreeHook.getStackAddendumByID(debugID),
+    );
+  }
 }
 
-var ReactDOMUnknownPropertyHook = {
-  onBeforeMountComponent(debugID, element) {
-    elements[debugID] = element;
+var ReactChildrenMutationWarningHook = {
+  onMountComponent(debugID) {
+    handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
-  onBeforeUpdateComponent(debugID, element) {
-    elements[debugID] = element;
-  },
-  onComponentHasMounted(debugID) {
-    handleElement(debugID, elements[debugID]);
-    delete elements[debugID];
-  },
-  onComponentHasUpdated(debugID) {
-    handleElement(debugID, elements[debugID]);
-    delete elements[debugID];
+  onUpdateComponent(debugID) {
+    handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
 };
 
-module.exports = ReactDOMUnknownPropertyHook;
+module.exports = ReactChildrenMutationWarningHook;

@@ -232,8 +232,6 @@ describe('ReactPropTypes', function() {
       expectWarningInDevelopment(PropTypes.object.isRequired, null);
       expectWarningInDevelopment(PropTypes.object.isRequired, undefined);
     });
-
-
   });
 
   describe('Any type', function() {
@@ -259,7 +257,6 @@ describe('ReactPropTypes', function() {
       expectWarningInDevelopment(PropTypes.any.isRequired, null);
       expectWarningInDevelopment(PropTypes.any.isRequired, undefined);
     });
-
   });
 
   describe('ArrayOf Type', function() {

@@ -22,7 +22,7 @@ var ReactDOMEmptyComponent = function(instantiate) {
   this._hostNode = null;
   this._hostParent = null;
   this._hostContainerInfo = null;
-  this._domID = null;
+  this._domID = 0;
 };
 Object.assign(ReactDOMEmptyComponent.prototype, {
   mountComponent: function(

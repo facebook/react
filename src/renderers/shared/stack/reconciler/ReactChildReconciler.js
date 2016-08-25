@@ -41,14 +41,16 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
     if (!ReactComponentTreeHook) {
       ReactComponentTreeHook = require('ReactComponentTreeHook');
     }
-    warning(
-      keyUnique,
-      'flattenChildren(...): Encountered two children with the same key, ' +
-      '`%s`. Child keys must be unique; when two children share a key, only ' +
-      'the first child will be used.%s',
-      KeyEscapeUtils.unescape(name),
-      ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
-    );
+    if (!keyUnique) {
+      warning(
+        false,
+        'flattenChildren(...): Encountered two children with the same key, ' +
+        '`%s`. Child keys must be unique; when two children share a key, only ' +
+        'the first child will be used.%s',
+        KeyEscapeUtils.unescape(name),
+        ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
+      );
+    }
   }
   if (child != null && keyUnique) {
     childInstances[name] = instantiateReactComponent(child, true);
@@ -73,7 +75,7 @@ var ReactChildReconciler = {
     nestedChildNodes,
     transaction,
     context,
-    selfDebugID // __DEV__ only
+    selfDebugID // 0 in production and for roots
   ) {
     if (nestedChildNodes == null) {
       return null;
@@ -115,7 +117,9 @@ var ReactChildReconciler = {
     transaction,
     hostParent,
     hostContainerInfo,
-    context) {
+    context,
+    selfDebugID // 0 in production and for roots
+  ) {
     // We currently don't have a way to track moves here but if we use iterators
     // instead of for..in we can zip the iterators and check if an item has
     // moved.
@@ -154,7 +158,8 @@ var ReactChildReconciler = {
           transaction,
           hostParent,
           hostContainerInfo,
-          context
+          context,
+          selfDebugID
         );
         mountImages.push(nextChildMountImage);
       }

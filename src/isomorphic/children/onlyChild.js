@@ -31,7 +31,7 @@ var invariant = require('invariant');
 function onlyChild(children) {
   invariant(
     ReactElement.isValidElement(children),
-    'onlyChild must be passed a children with exactly one child.'
+    'React.Children.only expected to receive a single React element child.'
   );
   return children;
 }

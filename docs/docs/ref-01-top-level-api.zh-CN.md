@@ -146,7 +146,7 @@ ReactComponent render(
 )
 ```
 
-渲染一个 ReactElement 到 DOM 里提供的 `容器（container）`中，并返回一个对 组件(或者返回 `null` 对于 [无状态组件](/react/docs/reusable-components.html#stateless-functions)) 的[引用](/react/docs/more-about-refs.html) 
+渲染一个 ReactElement 到 DOM 里提供的 `容器（container）`中，并返回一个对 组件(或者返回 `null` 对于 [无状态组件](/react/docs/reusable-components-zh-CN.html#无状态函数)) 的[引用](/react/docs/more-about-refs.html)
 
 如果 ReactElement 之前被渲染到了 `container` 中，这将对它执行一次更新，并仅变动需要变动的 DOM 来反映最新的 React 组件。
 
@@ -183,7 +183,7 @@ DOMElement findDOMNode(ReactComponent component)
 >
 > `findDOMNode()` 是一个用来访问底层DOM节点的安全舱口.大多数情况下,使用这个安全舱口是不被鼓励的,因为它穿破了组件的抽象.
 >
-> `findDOMNode()` 只在已挂载的组件上工作(即是,已经被放置到DOM里的组件).如果你尝试在没有被挂载的组件上调用这个方法(比如在 一个没有被创建的组件的`render()`里 调用 `findDOMNode()` )会抛出一个异常. 
+> `findDOMNode()` 只在已挂载的组件上工作(即是,已经被放置到DOM里的组件).如果你尝试在没有被挂载的组件上调用这个方法(比如在 一个没有被创建的组件的`render()`里 调用 `findDOMNode()` )会抛出一个异常.
 >
 > `findDOMNode()` 不能用在无状态组件.
 

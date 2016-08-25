@@ -11,8 +11,7 @@
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
-var ReactInstrumentation = require('ReactInstrumentation');
+var React = require('React');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
@@ -32,9 +31,9 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounts this component and inserts it into the DOM.
@@ -89,14 +88,9 @@ ReactTestInstance.prototype.update = function(nextElement) {
     this._component,
     "ReactTestRenderer: .update() can't be called after unmount."
   );
-  var nextWrappedElement = new ReactElement(
+  var nextWrappedElement = React.createElement(
     TopLevelWrapper,
-    null,
-    null,
-    null,
-    null,
-    null,
-    nextElement
+    { child: nextElement }
   );
   var component = this._component;
   ReactUpdates.batchedUpdates(function() {
@@ -128,6 +122,9 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
 };
 ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
+  if (inst === null) {
+    return null;
+  }
   return inst.toJSON();
 };
 
@@ -138,16 +135,11 @@ ReactTestInstance.prototype.toJSON = function() {
 var ReactTestMount = {
 
   render: function(
-    nextElement: ReactElement
-  ): ?ReactElement<any, any, any> {
-    var nextWrappedElement = new ReactElement(
+    nextElement: ReactElement<any>
+  ): ReactTestInstance {
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      { child: nextElement }
     );
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
@@ -160,12 +152,6 @@ var ReactTestMount = {
       batchedMountComponentIntoNode,
       instance
     );
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        instance._renderedComponent._debugID
-      );
-    }
     return new ReactTestInstance(instance);
   },
 

@@ -14,7 +14,6 @@
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInstrumentation = require('ReactInstrumentation');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
@@ -44,7 +43,7 @@ var ReactDOMTextComponent = function(text) {
   this._hostParent = null;
 
   // Properties
-  this._domID = null;
+  this._domID = 0;
   this._mountIndex = 0;
   this._closingComment = null;
   this._commentNodes = null;
@@ -67,8 +66,6 @@ Object.assign(ReactDOMTextComponent.prototype, {
     context
   ) {
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
-
       var parentInfo;
       if (hostParent != null) {
         parentInfo = hostParent._ancestorInfo;
@@ -78,7 +75,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
       if (parentInfo) {
         // parentInfo should always be present except for the top-level
         // component when server rendering
-        validateDOMNesting('#text', this, parentInfo);
+        validateDOMNesting(null, this._stringText, this, parentInfo);
       }
     }
 
@@ -142,13 +139,6 @@ Object.assign(ReactDOMTextComponent.prototype, {
           commentNodes[1],
           nextStringText
         );
-
-        if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
-            this._debugID,
-            nextStringText
-          );
-        }
       }
     }
   },

@@ -41,11 +41,11 @@ For this tutorial, we're going to make it as easy as possible. Included in the s
   <head>
     <meta charset="utf-8" />
     <title>React Tutorial</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/{{site.react_version}}/react-dom.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/remarkable/1.6.2/remarkable.min.js"></script>
+    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
+    <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -62,7 +62,7 @@ For the remainder of this tutorial, we'll be writing our JavaScript code in this
 
 > Note:
 >
-> We included jQuery here because we want to simplify the code of our future ajax calls, but it's **NOT** mandatory for React to work.
+> We included jQuery here because we want to simplify the code of our future AJAX calls, but it's **NOT** mandatory for React to work.
 
 ### Your first component
 

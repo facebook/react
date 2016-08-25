@@ -20,25 +20,31 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var performanceNow = require('performanceNow');
 var warning = require('warning');
 
-var eventHandlers = [];
-var handlerDoesThrowForEvent = {};
+var hooks = [];
+var didHookThrowForEvent = {};
 
-function emitEvent(handlerFunctionName, arg1, arg2, arg3, arg4, arg5) {
-  eventHandlers.forEach(function(handler) {
-    try {
-      if (handler[handlerFunctionName]) {
-        handler[handlerFunctionName](arg1, arg2, arg3, arg4, arg5);
-      }
-    } catch (e) {
-      warning(
-        handlerDoesThrowForEvent[handlerFunctionName],
-        'exception thrown by hook while handling %s: %s',
-        handlerFunctionName,
-        e + '\n' + e.stack
-      );
-      handlerDoesThrowForEvent[handlerFunctionName] = true;
+function callHook(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
+  try {
+    fn.call(context, arg1, arg2, arg3, arg4, arg5);
+  } catch (e) {
+    warning(
+      didHookThrowForEvent[event],
+      'Exception thrown by hook while handling %s: %s',
+      event,
+      e + '\n' + e.stack
+    );
+    didHookThrowForEvent[event] = true;
+  }
+}
+
+function emitEvent(event, arg1, arg2, arg3, arg4, arg5) {
+  for (var i = 0; i < hooks.length; i++) {
+    var hook = hooks[i];
+    var fn = hook[event];
+    if (fn) {
+      callHook(event, fn, hook, arg1, arg2, arg3, arg4, arg5);
     }
-  });
+  }
 }
 
 var isProfiling = false;
@@ -103,8 +109,13 @@ function resetMeasurements() {
   currentFlushMeasurements = [];
 }
 
-function checkDebugID(debugID) {
-  warning(debugID, 'ReactDebugTool: debugID may not be empty.');
+function checkDebugID(debugID, allowRoot = false) {
+  if (allowRoot && debugID === 0) {
+    return;
+  }
+  if (!debugID) {
+    warning(false, 'ReactDebugTool: debugID may not be empty.');
+  }
 }
 
 function beginLifeCycleTimer(debugID, timerType) {
@@ -183,12 +194,12 @@ function resumeCurrentLifeCycleTimer() {
 
 var ReactDebugTool = {
   addHook(hook) {
-    eventHandlers.push(hook);
+    hooks.push(hook);
   },
   removeHook(hook) {
-    for (var i = 0; i < eventHandlers.length; i++) {
-      if (eventHandlers[i] === hook) {
-        eventHandlers.splice(i, 1);
+    for (var i = 0; i < hooks.length; i++) {
+      if (hooks[i] === hook) {
+        hooks.splice(i, 1);
         i--;
       }
     }
@@ -240,14 +251,6 @@ var ReactDebugTool = {
     endLifeCycleTimer(debugID, timerType);
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
-  onBeginReconcilerTimer(debugID, timerType) {
-    checkDebugID(debugID);
-    emitEvent('onBeginReconcilerTimer', debugID, timerType);
-  },
-  onEndReconcilerTimer(debugID, timerType) {
-    checkDebugID(debugID);
-    emitEvent('onEndReconcilerTimer', debugID, timerType);
-  },
   onError(debugID) {
     if (currentTimerDebugID != null) {
       endLifeCycleTimer(currentTimerDebugID, currentTimerType);
@@ -264,45 +267,18 @@ var ReactDebugTool = {
     checkDebugID(debugID);
     emitEvent('onHostOperation', debugID, type, payload);
   },
-  onComponentHasMounted(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onComponentHasMounted', debugID);
-  },
-  onComponentHasUpdated(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onComponentHasUpdated', debugID);
-  },
   onSetState() {
     emitEvent('onSetState');
-  },
-  onSetDisplayName(debugID, displayName) {
-    checkDebugID(debugID);
-    emitEvent('onSetDisplayName', debugID, displayName);
   },
   onSetChildren(debugID, childDebugIDs) {
     checkDebugID(debugID);
     childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onSetOwner(debugID, ownerDebugID) {
+  onBeforeMountComponent(debugID, element, parentDebugID) {
     checkDebugID(debugID);
-    emitEvent('onSetOwner', debugID, ownerDebugID);
-  },
-  onSetParent(debugID, parentDebugID) {
-    checkDebugID(debugID);
-    emitEvent('onSetParent', debugID, parentDebugID);
-  },
-  onSetText(debugID, text) {
-    checkDebugID(debugID);
-    emitEvent('onSetText', debugID, text);
-  },
-  onMountRootComponent(debugID) {
-    checkDebugID(debugID);
-    emitEvent('onMountRootComponent', debugID);
-  },
-  onBeforeMountComponent(debugID, element) {
-    checkDebugID(debugID);
-    emitEvent('onBeforeMountComponent', debugID, element);
+    checkDebugID(parentDebugID, true);
+    emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
   },
   onMountComponent(debugID) {
     checkDebugID(debugID);
@@ -315,6 +291,10 @@ var ReactDebugTool = {
   onUpdateComponent(debugID) {
     checkDebugID(debugID);
     emitEvent('onUpdateComponent', debugID);
+  },
+  onBeforeUnmountComponent(debugID) {
+    checkDebugID(debugID);
+    emitEvent('onBeforeUnmountComponent', debugID);
   },
   onUnmountComponent(debugID) {
     checkDebugID(debugID);

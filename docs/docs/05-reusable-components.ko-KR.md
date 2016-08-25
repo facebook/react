@@ -140,7 +140,7 @@ var MyComponent = React.createClass({
 
 컴포넌트는 React에서 코드를 재사용할 수 있는 최고의 방법이지만, 가끔 아주 다른 컴포넌트에서 공통 기능이 필요한 때도 있습니다. 이런 상황을 [공통된 관심사(cross-cutting concerns)](https://en.wikipedia.org/wiki/Cross-cutting_concern)라 부르며, React에서는 `mixins`으로 이 문제를 해결합니다.
 
-예를 들어, 컴포넌트가 주기적으로 업데이트되길 원할 경우가 있습니다. `setInterval()`을 사용하면 쉽지만, 필요 없어지면 메모리를 아끼기 위해 주기를 꼭 취소해야 합니다. React는 컴포넌트가 막 생성거나 없어질 때를 [생명주기 메소드](/react/docs/working-with-the-browser-ko-KR.html#component-lifecycle)를 통해 알려줍니다. 이런 메소드들을 사용해서 컴포넌트가 사라질 때 자동으로 정리해주는 `setInterval()`를 제공해주는 간단한 믹스인을 만들어보겠습니다.
+예를 들어, 컴포넌트가 주기적으로 업데이트되길 원할 경우가 있습니다. `setInterval()`을 사용하면 쉽지만, 필요 없어지면 메모리를 아끼기 위해 주기를 꼭 취소해야 합니다. React는 컴포넌트가 막 생성거나 없어질 때를 [생명주기 메소드](/react/docs/working-with-the-browser-ko-KR.html#컴포넌트-생명주기)를 통해 알려줍니다. 이런 메소드들을 사용해서 컴포넌트가 사라질 때 자동으로 정리해주는 `setInterval()`를 제공해주는 간단한 믹스인을 만들어보겠습니다.
 
 ```javascript
 var SetIntervalMixin = {
@@ -183,7 +183,6 @@ ReactDOM.render(
 
 믹스인의 괜찮은 점은 컴포넌트가 여러 믹스인을 사용하고 여러 믹스인에서 같은 생명주기 메소드를 사용할 때(예를 들어, 여러 믹스인에서 컴포넌트가 사라질 때 뭔가 정리하려 한다면) 모든 생명주기 메소드들의 실행은 보장됩니다. 믹스인에 정의된 메소드은 컴포넌트의 메소드가 호출됨에 따라 믹스인이 나열된 순서대로 실행됩니다.
 
-<a name="es6-classes"></a>
 ## ES6 클래스
 
 React 클래스를 일반적인 JavaScript 클래스로 선언할 수도 있습니다. 다음의 예제는 ES6 클래스 문법을 사용합니다:
@@ -230,7 +229,6 @@ Counter.defaultProps = { initialCount: 0 };
 
 불행하게도 ES6는 믹스인에 대한 지원이 없이 출시되었기 때문에, React에서 ES6 클래스를 사용한다면 믹스인을 사용할 방법이 없습니다. 대신, 우리는 믹스인에 의존하지 않고도 동작하도록 만들기 위해 열심히 노력하고 있습니다.
 
-<a name="stateless-functions"></a>
 ## 상태를 가지지 않는 함수
 
 React 클래스를 일반 JavaScript 함수로 작성할 수도 있습니다. 상태를 가지지 않는 함수 문법을 사용하는 예제입니다.

@@ -31,16 +31,16 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://faceboo
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from the CDN (also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react)):
+The fastest way to get started is to serve JavaScript from a CDN. We're using [npmcdn](https://npmcdn.com/) below but React is also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react):
 
 ```html
 <!-- The core React library -->
-<script src="https://fb.me/react-15.3.0.js"></script>
+<script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
 <!-- The ReactDOM Library -->
-<script src="https://fb.me/react-dom-15.3.0.js"></script>
+<script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.3.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.3.1.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
@@ -65,7 +65,7 @@ The process to build `react.js` is built entirely on top of node.js, using many 
 #### Prerequisites
 
 * You have `node` installed at v4.0.0+ and `npm` at v2.0.0+.
-* You have `gcc` installed or are comfortable installing a compiler if needed. Some of our `npm` dependencies may require a compliation step. On OS X, the Xcode Command Line Tools will cover this. On Ubuntu, `apt-get install build-essential` will install the required packages. Similar commands should work on other Linux distros. Windows will require some additional steps, see the [`node-gyp` installation instructions](https://github.com/nodejs/node-gyp#installation) for details.
+* You have `gcc` installed or are comfortable installing a compiler if needed. Some of our `npm` dependencies may require a compilation step. On OS X, the Xcode Command Line Tools will cover this. On Ubuntu, `apt-get install build-essential` will install the required packages. Similar commands should work on other Linux distros. Windows will require some additional steps, see the [`node-gyp` installation instructions](https://github.com/nodejs/node-gyp#installation) for details.
 * You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
 * You are familiar with `git`.
 

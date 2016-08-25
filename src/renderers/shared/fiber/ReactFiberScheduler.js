@@ -15,6 +15,7 @@
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
@@ -43,6 +44,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
+  let nextPriorityLevel : PriorityLevel = NoWork;
 
   // Linked list of roots with scheduled work on them.
   let nextScheduledRoot : ?FiberRoot = null;
@@ -55,10 +57,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       if (nextScheduledRoot === lastScheduledRoot) {
         nextScheduledRoot = null;
         lastScheduledRoot = null;
+        nextPriorityLevel = NoWork;
         return null;
       }
       nextScheduledRoot = nextScheduledRoot.nextScheduledRoot;
     }
+    // TODO: This is scanning one root at a time. It should be scanning all
+    // roots for high priority work before moving on to lower priorities.
     let root = nextScheduledRoot;
     while (root) {
       cloneFiber(root.current, root.current.pendingWorkPriority);
@@ -68,19 +73,28 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // too many just means flushing changes too often.
       let work = findNextUnitOfWorkAtPriority(root.current, HighPriority);
       if (work) {
+        nextPriorityLevel = HighPriority;
         return work;
       }
       work = findNextUnitOfWorkAtPriority(root.current, LowPriority);
       if (work) {
+        nextPriorityLevel = LowPriority;
         return work;
       }
       work = findNextUnitOfWorkAtPriority(root.current, OffscreenPriority);
       if (work) {
+        nextPriorityLevel = OffscreenPriority;
         return work;
       }
       // We didn't find anything to do in this root, so let's try the next one.
       root = root.nextScheduledRoot;
     }
+    root = nextScheduledRoot;
+    while (root) {
+      root = root.nextScheduledRoot;
+    }
+
+    nextPriorityLevel = NoWork;
     return null;
   }
 
@@ -112,9 +126,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
-      if (workInProgress.pendingWorkPriority === NoWork) {
-        workInProgress.hasWorkInProgress = false;
-      }
 
       const returnFiber = workInProgress.return;
 
@@ -148,6 +159,15 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       } else if (returnFiber) {
         // If there's no more work in this returnFiber. Complete the returnFiber.
         workInProgress = returnFiber;
+        // If we're stepping up through the child, that means we can now commit
+        // this work. We should only do this when we're stepping upwards because
+        // completing a downprioritized item is not the same as completing its
+        // children.
+        if (workInProgress.childInProgress) {
+          workInProgress.child = workInProgress.childInProgress;
+          workInProgress.childInProgress = null;
+        }
+        continue;
       } else {
         // If we're at the root, there's no more work to do. We can flush it.
         const root : FiberRoot = (workInProgress.stateNode : any);
@@ -156,7 +176,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        console.log('----- COMPLETED with remaining work:', workInProgress.pendingWorkPriority);
         commitAllWork(workInProgress);
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
@@ -209,11 +228,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  function scheduleLowPriWork(root : FiberRoot) {
+  function scheduleLowPriWork(root : FiberRoot, priority : PriorityLevel) {
     // We must reset the current unit of work pointer so that we restart the
     // search from the root during the next tick, in case there is now higher
     // priority work somewhere earlier than before.
-    nextUnitOfWork = null;
+    if (priority <= nextPriorityLevel) {
+      nextUnitOfWork = null;
+    }
 
     if (root.isScheduled) {
       // If we're already scheduled, we can bail out.

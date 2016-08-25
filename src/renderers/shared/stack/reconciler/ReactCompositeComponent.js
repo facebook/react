@@ -11,17 +11,20 @@
 
 'use strict';
 
+var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactReconciler = require('ReactReconciler');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
+if (__DEV__) {
+  var ReactPropTypeLocations = require('ReactPropTypeLocations');
+  var checkReactTypeSpec = require('checkReactTypeSpec');
+}
+
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var shallowEqual = require('shallowEqual');
@@ -46,7 +49,7 @@ StatelessComponent.prototype.render = function() {
 function warnIfInvalidElement(Component, element) {
   if (__DEV__) {
     warning(
-      element === null || element === false || ReactElement.isValidElement(element),
+      element === null || element === false || React.isValidElement(element),
       '%s(...): A valid React element (or null) must be returned. You may have ' +
       'returned undefined, an array or some other invalid object.',
       Component.displayName || Component.name || 'Component'
@@ -150,7 +153,7 @@ var ReactCompositeComponentMixin = {
    */
   construct: function(element) {
     this._currentElement = element;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
     this._compositeType = null;
     this._instance = null;
     this._hostParent = null;
@@ -226,7 +229,7 @@ var ReactCompositeComponentMixin = {
       invariant(
         inst === null ||
         inst === false ||
-        ReactElement.isValidElement(inst),
+        React.isValidElement(inst),
         '%s(...): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
         Component.displayName || Component.name || 'Component'
@@ -364,13 +367,6 @@ var ReactCompositeComponentMixin = {
         transaction.getReactMountReady().enqueue(invokeComponentDidMountWithTimer, this);
       } else {
         transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
-      }
-    }
-
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = (component) => ReactInstrumentation.debugTool.onComponentHasMounted(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
       }
     }
 
@@ -529,21 +525,18 @@ var ReactCompositeComponentMixin = {
       nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
     );
     this._renderedComponent = child;
-    if (__DEV__) {
-      if (child._debugID !== 0 && this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetParent(
-          child._debugID,
-          this._debugID
-        );
-      }
-    }
 
+    var selfDebugID = 0;
+    if (__DEV__) {
+      selfDebugID = this._debugID;
+    }
     var markup = ReactReconciler.mountComponent(
       child,
       transaction,
       hostParent,
       hostContainerInfo,
-      this._processChildContext(context)
+      this._processChildContext(context),
+      selfDebugID
     );
 
     if (__DEV__) {
@@ -619,7 +612,7 @@ var ReactCompositeComponentMixin = {
     // These fields do not really need to be reset since this object is no
     // longer accessible.
     this._context = null;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
     this._topLevelWrapper = null;
 
     // Delete the reference from the instance to this internal representation
@@ -729,14 +722,16 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _checkContextTypes: function(typeSpecs, values, location) {
-    checkReactTypeSpec(
-      typeSpecs,
-      values,
-      location,
-      this.getName(),
-      null,
-      this._debugID
-    );
+    if (__DEV__) {
+      checkReactTypeSpec(
+        typeSpecs,
+        values,
+        location,
+        this.getName(),
+        null,
+        this._debugID
+      );
+    }
   },
 
   receiveComponent: function(nextElement, transaction, nextContext) {
@@ -1019,13 +1014,6 @@ var ReactCompositeComponentMixin = {
         );
       }
     }
-
-    if (__DEV__) {
-      if (this._debugID) {
-        var callback = () => ReactInstrumentation.debugTool.onComponentHasUpdated(this._debugID);
-        transaction.getReactMountReady().enqueue(callback, this);
-      }
-    }
   },
 
   /**
@@ -1056,21 +1044,18 @@ var ReactCompositeComponentMixin = {
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
       this._renderedComponent = child;
-      if (__DEV__) {
-        if (child._debugID !== 0 && this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetParent(
-            child._debugID,
-            this._debugID
-          );
-        }
-      }
 
+      var selfDebugID = 0;
+      if (__DEV__) {
+        selfDebugID = this._debugID;
+      }
       var nextMarkup = ReactReconciler.mountComponent(
         child,
         transaction,
         this._hostParent,
         this._hostContainerInfo,
-        this._processChildContext(context)
+        this._processChildContext(context),
+        selfDebugID
       );
 
       if (__DEV__) {
@@ -1160,7 +1145,7 @@ var ReactCompositeComponentMixin = {
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedComponent === null || renderedComponent === false ||
-      ReactElement.isValidElement(renderedComponent),
+      React.isValidElement(renderedComponent),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'

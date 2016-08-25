@@ -294,7 +294,19 @@ ReactDOM.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
 This simplified component API is intended for components that are pure functions of their props. These components must not retain internal state, do not have backing instances, and do not have the component lifecycle methods. They are pure functional transforms of their input, with zero boilerplate.
-However, you may still specify `.propTypes` and `.defaultProps` by setting them as properties on the function, just as you would set them on an ES6 class.
+
+However, you may still specify `.propTypes` and `.defaultProps` by setting them as properties on the function, just as you would set them on an ES6 class:
+
+```javascript
+const HelloMessage = (props) => <div>Hello, {props.name}</div>;
+HelloMessage.propTypes = {
+  name: React.PropTypes.string
+}
+HelloMessage.defaultProps = {
+  name: 'John Doe'
+}
+ReactDOM.render(<HelloMessage name="Mădălina"/>, mountNode);
+```
 
 > NOTE:
 >

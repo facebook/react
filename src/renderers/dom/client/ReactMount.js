@@ -13,12 +13,12 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
+var React = require('React');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -100,7 +100,7 @@ function mountComponentIntoNode(
 ) {
   var markerName;
   if (ReactFeatureFlags.logTopLevelRenders) {
-    var wrappedElement = wrapperInstance._currentElement.props;
+    var wrappedElement = wrapperInstance._currentElement.props.child;
     var type = wrappedElement.type;
     markerName = 'React mount: ' + (
       typeof type === 'string' ? type :
@@ -114,7 +114,8 @@ function mountComponentIntoNode(
     transaction,
     null,
     ReactDOMContainerInfo(wrapperInstance, container),
-    context
+    context,
+    0 /* parentDebugID */
   );
 
   if (markerName) {
@@ -206,6 +207,45 @@ function hasNonRootReactChild(container) {
   }
 }
 
+/**
+ * True if the supplied DOM node is a React DOM element and
+ * it has been rendered by another copy of React.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM has been rendered by another copy of React
+ * @internal
+ */
+function nodeIsRenderedByOtherInstance(container) {
+  var rootEl = getReactRootElementInContainer(container);
+  return !!(rootEl && isReactNode(rootEl) && !ReactDOMComponentTree.getInstanceFromNode(rootEl));
+}
+
+/**
+ * True if the supplied DOM node is a valid node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid DOM node.
+ * @internal
+ */
+function isValidContainer(node) {
+  return !!(node && (
+    node.nodeType === ELEMENT_NODE_TYPE ||
+    node.nodeType === DOC_NODE_TYPE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+  ));
+}
+
+/**
+ * True if the supplied DOM node is a valid React node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid React DOM node.
+ * @internal
+ */
+function isReactNode(node) {
+  return isValidContainer(node) && (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
+}
+
 function getHostRootInstanceInContainer(container) {
   var rootEl = getReactRootElementInContainer(container);
   var prevHostInstance =
@@ -235,9 +275,9 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounting is the process of initializing a React component by creating its
@@ -329,11 +369,7 @@ var ReactMount = {
     );
 
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
+      isValidContainer(container),
       '_registerComponent(...): Target container is not a DOM element.'
     );
 
@@ -354,13 +390,6 @@ var ReactMount = {
 
     var wrapperID = componentInstance._instance.rootID;
     instancesByReactRootID[wrapperID] = componentInstance;
-
-    if (__DEV__) {
-      // The instance here is TopLevelWrapper so we report mount for its child.
-      ReactInstrumentation.debugTool.onMountRootComponent(
-        componentInstance._renderedComponent._debugID
-      );
-    }
 
     return componentInstance;
   },
@@ -394,7 +423,7 @@ var ReactMount = {
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     ReactUpdateQueue.validateCallback(callback, 'ReactDOM.render');
     invariant(
-      ReactElement.isValidElement(nextElement),
+      React.isValidElement(nextElement),
       'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
@@ -421,14 +450,9 @@ var ReactMount = {
       'for your app.'
     );
 
-    var nextWrappedElement = ReactElement(
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      { child: nextElement }
     );
 
     var nextContext;
@@ -443,7 +467,7 @@ var ReactMount = {
 
     if (prevComponent) {
       var prevWrappedElement = prevComponent._currentElement;
-      var prevElement = prevWrappedElement.props;
+      var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
         var updatedCallback = callback && function() {
@@ -551,13 +575,17 @@ var ReactMount = {
     );
 
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
+      isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
+
+    if (__DEV__) {
+      warning(
+        !nodeIsRenderedByOtherInstance(container),
+        'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+        'was rendered by another copy of React.'
+      );
+    }
 
     var prevComponent = getTopLevelWrapperInContainer(container);
     if (!prevComponent) {
@@ -604,11 +632,7 @@ var ReactMount = {
     transaction
   ) {
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE ||
-        container.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
-      ),
+      isValidContainer(container),
       'mountComponentIntoNode(...): Target container is not valid.'
     );
 

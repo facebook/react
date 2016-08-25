@@ -42,6 +42,7 @@ var eventTypes = {
       topLevelTypes.topContextMenu,
       topLevelTypes.topFocus,
       topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyUp,
       topLevelTypes.topMouseDown,
       topLevelTypes.topMouseUp,
       topLevelTypes.topSelectionChange,

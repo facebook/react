@@ -47,7 +47,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           throw new Error('This should only be done during updates.');
         }
         // Commit the work prepared earlier.
-        const child = (finishedWork.child : ?Fiber);
+        const child = finishedWork.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = finishedWork.memoizedProps;
         const current = finishedWork.alternate;

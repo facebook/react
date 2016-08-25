@@ -17,7 +17,7 @@ redirect_from: "/docs/reference-ko-KR.html"
 class Component
 ```
 
-ES6 클래스 구문을 사용해 React 컴포넌트를 정의했을 때 기본 클래스가 되는 부분입니다. 어떻게 ES6 클래스 구문을 사용해 React를 다루는지는 [재사용가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html#es6-classes)를 확인하세요. 기본 클래스에서 실제 제공되는 메소드들에는 어떤것이 있는지 알아보려면 [컴포넌트 API](/react/docs/component-api-ko-KR.html)를 확인하세요.
+ES6 클래스 구문을 사용해 React 컴포넌트를 정의했을 때 기본 클래스가 되는 부분입니다. 어떻게 ES6 클래스 구문을 사용해 React를 다루는지는 [재사용가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html#es6-클래스)를 확인하세요. 기본 클래스에서 실제 제공되는 메소드들에는 어떤것이 있는지 알아보려면 [컴포넌트 API](/react/docs/component-api-ko-KR.html)를 확인하세요.
 
 
 ### React.createClass
@@ -129,11 +129,11 @@ object React.Children.only(object children)
 array React.Children.toArray(object children)
 ```
 
-불투명한 자료구조인 `children`를 개별 자식마다 키를 할당해 평면 배열로 리턴합니다. 이는 render 메소드 내에서 자식의 컬렉션을 조작할 때, 특히 `this.props.children`을 넘기기 전에 재정렬하거나 재단할 때 유용합니다.   
+불투명한 자료구조인 `children`를 개별 자식마다 키를 할당해 평면 배열로 리턴합니다. 이는 render 메소드 내에서 자식의 컬렉션을 조작할 때, 특히 `this.props.children`을 넘기기 전에 재정렬하거나 재단할 때 유용합니다.
 
 ## ReactDOM
 
-`react-dom` 패키지는 앱의 최상위 레벨에서 사용될 DOM 고유의 메소드를 제공하며, 원한다면 리액트 외부모델을 위한 출구로 사용될 수 있습니다. 대부분의 컴포넌트는 이 모듈을 사용할 필요가 없습니다. 
+`react-dom` 패키지는 앱의 최상위 레벨에서 사용될 DOM 고유의 메소드를 제공하며, 원한다면 리액트 외부모델을 위한 출구로 사용될 수 있습니다. 대부분의 컴포넌트는 이 모듈을 사용할 필요가 없습니다.
 
 ### ReactDOM.render
 
@@ -145,7 +145,7 @@ ReactComponent render(
 )
 ```
 
-주어진 ReactElement를 `container` 인자에 넘어온 DOM 안에 렌더링하고 컴포넌트의 [레퍼런스](/react/docs/more-about-refs-ko-KR.html)를 컴포넌트에 리턴합니다. [상태가 없는 컴포넌트](/react/docs/reusable-components-ko-KR.html#stateless-functions)에서는 `null`을 리턴합니다. 
+주어진 ReactElement를 `container` 인자에 넘어온 DOM 안에 렌더링하고 컴포넌트의 [레퍼런스](/react/docs/more-about-refs-ko-KR.html)를 컴포넌트에 리턴합니다. [상태가 없는 컴포넌트](/react/docs/reusable-components-ko-KR.html#상태를-가지지-않는-함수)에서는 `null`을 리턴합니다.
 
 어떤 ReactElement가 이미 `container`에 렌더링 된 적이 있다면, 그것을 업데이트한 뒤 React 컴포넌트의 최신 상태를 반영하기 위해 꼭 필요한 만큼만 DOM을 변경합니다.
 
@@ -178,7 +178,7 @@ DOMElement findDOMNode(ReactComponent component)
 >
 > `findDOMNode()`는 기본 DOM 노드에 접근하기 위한 출구입니다. 컴포넌트 추상화를 파괴하기 때문에 대부분의 경우 이것의 사용은 권장되지 않습니다.
 >
-> `findDOMNode()`는 마운트된 컴포넌트에서만 작동합니다. 이는 컴포넌트가 DOM에 위치해야 함을 뜻합니다. 만약 아직 생성되기전의 컴포넌트에서 `render()`에서 `findDOMNode()`를 호출하는 등 컴포넌트가 마운트 되기 이전에 이를 호출한다면, 예외가 던져질 것입니다.  
+> `findDOMNode()`는 마운트된 컴포넌트에서만 작동합니다. 이는 컴포넌트가 DOM에 위치해야 함을 뜻합니다. 만약 아직 생성되기전의 컴포넌트에서 `render()`에서 `findDOMNode()`를 호출하는 등 컴포넌트가 마운트 되기 이전에 이를 호출한다면, 예외가 던져질 것입니다.
 >
 > `findDOMNode()`는 상태가없는 컴포넌트에서 쓸 수 없습니다.
 

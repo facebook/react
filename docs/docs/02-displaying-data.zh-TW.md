@@ -18,9 +18,9 @@ next: jsx-in-depth-zh-TW.html
   <head>
     <meta charset="UTF-8" />
     <title>Hello React</title>
-    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="https://fb.me/react-dom-{{site.react_version}}.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>

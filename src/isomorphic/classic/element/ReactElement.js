@@ -17,11 +17,7 @@ var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var RESERVED_PROPS = {
   key: true,
@@ -54,6 +50,48 @@ function hasValidKey(config) {
     }
   }
   return config.key !== undefined;
+}
+
+function defineKeyPropWarningGetter(props, displayName) {
+  var warnAboutAccessingKey = function() {
+    if (!specialPropKeyWarningShown) {
+      specialPropKeyWarningShown = true;
+      warning(
+        false,
+        '%s: `key` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+        displayName
+      );
+    }
+  };
+  warnAboutAccessingKey.isReactWarning = true;
+  Object.defineProperty(props, 'key', {
+    get: warnAboutAccessingKey,
+    configurable: true,
+  });
+}
+
+function defineRefPropWarningGetter(props, displayName) {
+  var warnAboutAccessingRef = function() {
+    if (!specialPropRefWarningShown) {
+      specialPropRefWarningShown = true;
+      warning(
+        false,
+        '%s: `ref` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+        displayName
+      );
+    }
+  };
+  warnAboutAccessingRef.isReactWarning = true;
+  Object.defineProperty(props, 'ref', {
+    get: warnAboutAccessingRef,
+    configurable: true,
+  });
 }
 
 /**
@@ -213,56 +251,18 @@ ReactElement.createElement = function(type, config, children) {
     }
   }
   if (__DEV__) {
-    var displayName = typeof type === 'function' ?
-      (type.displayName || type.name || 'Unknown') :
-      type;
-
-    // Create dummy `key` and `ref` property to `props` to warn users against its use
-    var warnAboutAccessingKey = function() {
-      if (!specialPropKeyWarningShown) {
-        specialPropKeyWarningShown = true;
-        warning(
-          false,
-          '%s: `key` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-          displayName
-        );
-      }
-      return undefined;
-    };
-    warnAboutAccessingKey.isReactWarning = true;
-
-    var warnAboutAccessingRef = function() {
-      if (!specialPropRefWarningShown) {
-        specialPropRefWarningShown = true;
-        warning(
-          false,
-          '%s: `ref` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-          displayName
-        );
-      }
-      return undefined;
-    };
-    warnAboutAccessingRef.isReactWarning = true;
-
-    if (typeof props.$$typeof === 'undefined' ||
-        props.$$typeof !== REACT_ELEMENT_TYPE) {
-      if (!props.hasOwnProperty('key')) {
-        Object.defineProperty(props, 'key', {
-          get: warnAboutAccessingKey,
-          configurable: true,
-        });
-      }
-      if (!props.hasOwnProperty('ref')) {
-        Object.defineProperty(props, 'ref', {
-          get: warnAboutAccessingRef,
-          configurable: true,
-        });
+    if (key || ref) {
+      if (typeof props.$$typeof === 'undefined' ||
+          props.$$typeof !== REACT_ELEMENT_TYPE) {
+        var displayName = typeof type === 'function' ?
+          (type.displayName || type.name || 'Unknown') :
+          type;
+        if (key) {
+          defineKeyPropWarningGetter(props, displayName);
+        }
+        if (ref) {
+          defineRefPropWarningGetter(props, displayName);
+        }
       }
     }
   }
@@ -405,7 +405,5 @@ ReactElement.isValidElement = function(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
-
-ReactElement.REACT_ELEMENT_TYPE = REACT_ELEMENT_TYPE;
 
 module.exports = ReactElement;

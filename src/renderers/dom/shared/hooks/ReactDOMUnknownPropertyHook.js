@@ -69,7 +69,7 @@ if (__DEV__) {
 
     if (standardName != null) {
       warning(
-        standardName == null,
+        false,
         'Unknown DOM property %s. Did you mean %s?%s',
         name,
         standardName,
@@ -78,7 +78,7 @@ if (__DEV__) {
       return true;
     } else if (registrationName != null) {
       warning(
-        registrationName == null,
+        false,
         'Unknown event handler property %s. Did you mean `%s`?%s',
         name,
         registrationName,
