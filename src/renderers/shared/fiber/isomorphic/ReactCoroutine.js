@@ -33,6 +33,9 @@ export type ReactCoroutine = {
   children: any,
   // This should be a more specific CoroutineHandler
   handler: (props: any, yields: Array<ReifiedYield>) => ReactNodeList,
+  /* $FlowFixMe(>=0.31.0): Which is it? mixed? Or Object? Must match
+   * `ReactYield` type.
+   */
   props: mixed,
 };
 export type ReactYield = {
