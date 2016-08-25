@@ -11,10 +11,9 @@
  */
 'use strict';
 
+var AbstractReconcileTransaction = require('AbstractReconcileTransaction');
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
-var Transaction = require('Transaction');
-var ReactUpdateQueue = require('ReactUpdateQueue');
 
 /**
  * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks during
@@ -73,49 +72,11 @@ var Mixin = {
   getTransactionWrappers: function() {
     return TRANSACTION_WRAPPERS;
   },
-
-  /**
-   * @return {object} The queue to collect `onDOMReady` callbacks with.
-   *   TODO: convert to ReactMountReady
-   */
-  getReactMountReady: function() {
-    return this.reactMountReady;
-  },
-
-  /**
-   * @return {object} The queue to collect React async events.
-   */
-  getUpdateQueue: function() {
-    return ReactUpdateQueue;
-  },
-
-  /**
-   * Save current transaction state -- if the return value from this method is
-   * passed to `rollback`, the transaction will be reset to that state.
-   */
-  checkpoint: function() {
-    // reactMountReady is the our only stateful wrapper
-    return this.reactMountReady.checkpoint();
-  },
-
-  rollback: function(checkpoint) {
-    this.reactMountReady.rollback(checkpoint);
-  },
-
-  /**
-   * `PooledClass` looks for this, and will invoke this before allowing this
-   * instance to be reused.
-   */
-  destructor: function() {
-    CallbackQueue.release(this.reactMountReady);
-    this.reactMountReady = null;
-  },
 };
 
 Object.assign(
   ReactTestReconcileTransaction.prototype,
-  Transaction.Mixin,
-  ReactTestReconcileTransaction,
+  AbstractReconcileTransaction.Mixin,
   Mixin
 );
 
