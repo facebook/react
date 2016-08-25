@@ -43,7 +43,7 @@ function isNative(fn) {
   }
 }
 
-type Item = {
+type Item = { // eslint-disable-line no-unused-vars
   element: ReactElement,
   parentID: DebugID,
   text: ?string,
@@ -113,12 +113,12 @@ if (canUseCollections) {
 
   // Use non-numeric keys to prevent V8 performance issues:
   // https://github.com/facebook/react/pull/7232
-  function getKeyFromID(id: DebugID): string {
+  var getKeyFromID = function(id: DebugID): string {
     return '.' + id;
-  }
-  function getIDFromKey(key: string): DebugID {
+  };
+  var getIDFromKey = function(key: string): DebugID {
     return parseInt(key.substr(1), 10);
-  }
+  };
 
   var setItem = function(id, item) {
     var key = getKeyFromID(id);
