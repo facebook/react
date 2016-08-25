@@ -88,6 +88,66 @@ ReactTestComponent.prototype.toJSON = function() {
   });
   return object;
 };
+ReactTestComponent.prototype.getType = function() {
+  return this._currentElement.type;
+};
+ReactTestComponent.prototype.getProps = function() {
+  return this._currentElement.props;
+};
+ReactTestComponent.prototype.getChildren = function() {
+  return Object.keys(this._renderedChildren || {}).map(function(key) {
+    return this._renderedChildren[key];
+  }, this);
+};
+ReactTestComponent.prototype.find = function(selector) {
+  if (this.getType() === selector) {
+    return this;
+  }
+  var children = this.getChildren();
+
+  for (var key in children) {
+    var inst = children[key];
+    let result = inst.find(selector);
+    if (result) {
+      return result;
+    }
+  }
+  return null;
+};
+ReactTestComponent.prototype.findAll = function(selector, props) {
+  var output = [];
+
+  if (this.getType() === selector) {
+    output.push(this);
+  }
+
+  return this.getChildren().reduce(function(current, inst) {
+    return current.concat(inst.findAll(selector));
+  }, output);
+};
+ReactTestComponent.prototype.findByProps = function(props) {
+  var propsEqual = true;
+  for (var key in props) {
+    if (this.getProps()[key] !== props[key]) {
+      propsEqual = false;
+      break;
+    }
+  }
+  if (propsEqual) {
+    return this;
+  }
+
+  var children = this.getChildren();
+  for (key in children) {
+    var inst = children[key];
+    let result = inst.findByProps(props);
+    if (result) {
+      return result;
+    }
+  }
+  return null;
+};
+
 Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
 
 // =============================================================================
@@ -103,6 +163,15 @@ ReactTestTextComponent.prototype.getHostNode = function() {};
 ReactTestTextComponent.prototype.unmountComponent = function() {};
 ReactTestTextComponent.prototype.toJSON = function() {
   return this._currentElement;
+};
+ReactTestTextComponent.prototype.find = function() {
+  return null;
+};
+ReactTestTextComponent.prototype.findAll = function() {
+  return [];
+};
+ReactTestTextComponent.prototype.findByProps = function() {
+  return null;
 };
 
 // =============================================================================
