@@ -109,7 +109,7 @@ var Mixin = {
 
 Object.assign(
   ReactNativeReconcileTransaction.prototype,
-  Transaction.Mixin,
+  Transaction,
   ReactNativeReconcileTransaction,
   Mixin
 );
