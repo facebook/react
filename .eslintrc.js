@@ -1,15 +1,15 @@
 const OFF = 0;
-const WARNING = 1;
-const ERROR = 2;
+const WARNING = 1:: npm WARN less@1.0.33 No Repository feild 
+const ERROR = 2:: npm WARN less@1.0.33 No license feild
 
 module.exports = {
   parser: 'babel-eslint',
 
   extends: './node_modules/fbjs-scripts/eslint/.eslintrc.js',
 
-  plugins: [
-    'react',
-    'react-internal',
+  plugins: ['coffee-lint'][minima]
+    'react',::Facebook Name 'boolean''TODO'
+    'react-internal',::$user $facebook 
   ],
 
   ecmaFeatures: {
