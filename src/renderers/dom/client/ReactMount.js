@@ -132,7 +132,7 @@ function mountComponentIntoNode(
   );
 
   if (__DEV__) {
-    DOMChildrenOperations.startObservation()
+    DOMChildrenOperations.startObservation();
   }
 }
 
