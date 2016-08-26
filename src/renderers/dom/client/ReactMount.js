@@ -15,6 +15,7 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var DOMChildrenOperations = require('DOMChildrenOperations'); 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -129,6 +130,10 @@ function mountComponentIntoNode(
     shouldReuseMarkup,
     transaction
   );
+
+  if (__DEV__) {
+    DOMChildrenOperations.startObservation()
+  }
 }
 
 /**
