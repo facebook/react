@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactDebugTool
+ * @flow
  */
 
 'use strict';
@@ -19,6 +20,62 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var performanceNow = require('performanceNow');
 var warning = require('warning');
+
+import type { ReactElement } from 'ReactElementType';
+import type { DebugID } from 'ReactInstanceType';
+
+type Hook = any;
+type Payload = mixed;
+
+type TimerType =
+  'ctor' |
+  'render' |
+  'componentWillMount' |
+  'componentWillUnmount' |
+  'componentWillReceiveProps' |
+  'shouldComponentUpdate' |
+  'componentWillUpdate' |
+  'componentDidUpdate' |
+  'componentDidMount';
+
+type HostOperationType =
+  'mount' |
+  'insert child' |
+  'move child' |
+  'remove child' |
+  'replace children' |
+  'replace text' |
+  'replace with';
+
+type Operation = {
+  instanceID: DebugID,
+  type: string,
+  payload: Payload,
+};
+
+type Measurement = {
+  timerType: TimerType,
+  instanceID: DebugID,
+  duration: number,
+};
+
+type TreeSnapshot = {
+  [key: DebugID]: {
+    displayName: string,
+    text: string,
+    updateCount: number,
+    childIDs: Array<DebugID>,
+    ownerID: DebugID,
+    parentID: DebugID,
+  }
+};
+
+type HistoryItem = {
+  duration: number,
+  measurements: Array<Measurement>,
+  operations: Array<Operation>,
+  treeSnapshot: TreeSnapshot,
+};
 
 var hooks = [];
 var didHookThrowForEvent = {};
@@ -51,11 +108,11 @@ var isProfiling = false;
 var flushHistory = [];
 var lifeCycleTimerStack = [];
 var currentFlushNesting = 0;
-var currentFlushMeasurements = null;
-var currentFlushStartTime = null;
+var currentFlushMeasurements = [];
+var currentFlushStartTime = 0;
 var currentTimerDebugID = null;
-var currentTimerStartTime = null;
-var currentTimerNestedFlushDuration = null;
+var currentTimerStartTime = 0;
+var currentTimerNestedFlushDuration = 0;
 var currentTimerType = null;
 
 var lifeCycleTimerHasWarned = false;
@@ -75,7 +132,9 @@ function getTreeSnapshot(registeredIDs) {
       updateCount: ReactComponentTreeHook.getUpdateCount(id),
       childIDs: ReactComponentTreeHook.getChildIDs(id),
       // Text nodes don't have owners but this is close enough.
-      ownerID: ownerID || ReactComponentTreeHook.getOwnerID(parentID),
+      ownerID: ownerID ||
+        parentID && ReactComponentTreeHook.getOwnerID(parentID) ||
+        0,
       parentID,
     };
     return tree;
@@ -84,12 +143,12 @@ function getTreeSnapshot(registeredIDs) {
 
 function resetMeasurements() {
   var previousStartTime = currentFlushStartTime;
-  var previousMeasurements = currentFlushMeasurements || [];
+  var previousMeasurements = currentFlushMeasurements;
   var previousOperations = ReactHostOperationHistoryHook.getHistory();
 
   if (currentFlushNesting === 0) {
-    currentFlushStartTime = null;
-    currentFlushMeasurements = null;
+    currentFlushStartTime = 0;
+    currentFlushMeasurements = [];
     clearHistory();
     return;
   }
@@ -163,8 +222,8 @@ function endLifeCycleTimer(debugID, timerType) {
       duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
     });
   }
-  currentTimerStartTime = null;
-  currentTimerNestedFlushDuration = null;
+  currentTimerStartTime = 0;
+  currentTimerNestedFlushDuration = 0;
   currentTimerDebugID = null;
   currentTimerType = null;
 }
@@ -177,8 +236,8 @@ function pauseCurrentLifeCycleTimer() {
     timerType: currentTimerType,
   };
   lifeCycleTimerStack.push(currentTimer);
-  currentTimerStartTime = null;
-  currentTimerNestedFlushDuration = null;
+  currentTimerStartTime = 0;
+  currentTimerNestedFlushDuration = 0;
   currentTimerDebugID = null;
   currentTimerType = null;
 }
@@ -192,8 +251,9 @@ function resumeCurrentLifeCycleTimer() {
   currentTimerType = timerType;
 }
 
-var lastMarkTimeStamp = null;
-var canUsePerformanceMeasure =
+var lastMarkTimeStamp = 0;
+var canUsePerformanceMeasure: bool =
+// $FlowFixMe https://github.com/facebook/flow/issues/2345
   typeof performance !== 'undefined' &&
   typeof performance.mark === 'function' &&
   typeof performance.clearMarks === 'function' &&
@@ -231,7 +291,7 @@ function markEnd(debugID, markType) {
   }
 
   var markName = `${debugID}::${markType}`;
-  var displayName = ReactComponentTreeHook.getDisplayName(debugID);
+  var displayName = ReactComponentTreeHook.getDisplayName(debugID) || 'Unknown';
 
   // Chrome has an issue of dropping markers recorded too fast:
   // https://bugs.chromium.org/p/chromium/issues/detail?id=640652
@@ -250,10 +310,10 @@ function markEnd(debugID, markType) {
 }
 
 var ReactDebugTool = {
-  addHook(hook) {
+  addHook(hook: Hook): void {
     hooks.push(hook);
   },
-  removeHook(hook) {
+  removeHook(hook: Hook): void {
     for (var i = 0; i < hooks.length; i++) {
       if (hooks[i] === hook) {
         hooks.splice(i, 1);
@@ -261,10 +321,10 @@ var ReactDebugTool = {
       }
     }
   },
-  isProfiling() {
+  isProfiling(): bool {
     return isProfiling;
   },
-  beginProfiling() {
+  beginProfiling(): void {
     if (isProfiling) {
       return;
     }
@@ -274,7 +334,7 @@ var ReactDebugTool = {
     resetMeasurements();
     ReactDebugTool.addHook(ReactHostOperationHistoryHook);
   },
-  endProfiling() {
+  endProfiling(): void {
     if (!isProfiling) {
       return;
     }
@@ -283,90 +343,90 @@ var ReactDebugTool = {
     resetMeasurements();
     ReactDebugTool.removeHook(ReactHostOperationHistoryHook);
   },
-  getFlushHistory() {
+  getFlushHistory(): Array<HistoryItem> {
     return flushHistory;
   },
-  onBeginFlush() {
+  onBeginFlush(): void {
     currentFlushNesting++;
     resetMeasurements();
     pauseCurrentLifeCycleTimer();
     emitEvent('onBeginFlush');
   },
-  onEndFlush() {
+  onEndFlush(): void {
     resetMeasurements();
     currentFlushNesting--;
     resumeCurrentLifeCycleTimer();
     emitEvent('onEndFlush');
   },
-  onBeginLifeCycleTimer(debugID, timerType) {
+  onBeginLifeCycleTimer(debugID: DebugID, timerType: TimerType): void {
     checkDebugID(debugID);
     emitEvent('onBeginLifeCycleTimer', debugID, timerType);
     markBegin(debugID, timerType);
     beginLifeCycleTimer(debugID, timerType);
   },
-  onEndLifeCycleTimer(debugID, timerType) {
+  onEndLifeCycleTimer(debugID: DebugID, timerType: TimerType): void {
     checkDebugID(debugID);
     endLifeCycleTimer(debugID, timerType);
     markEnd(debugID, timerType);
     emitEvent('onEndLifeCycleTimer', debugID, timerType);
   },
-  onBeginProcessingChildContext() {
+  onBeginProcessingChildContext(): void {
     emitEvent('onBeginProcessingChildContext');
   },
-  onEndProcessingChildContext() {
+  onEndProcessingChildContext(): void {
     emitEvent('onEndProcessingChildContext');
   },
-  onHostOperation(debugID, type, payload) {
+  onHostOperation(debugID: DebugID, type: HostOperationType, payload: Payload): void {
     checkDebugID(debugID);
     emitEvent('onHostOperation', debugID, type, payload);
   },
-  onSetState() {
+  onSetState(): void {
     emitEvent('onSetState');
   },
-  onSetChildren(debugID, childDebugIDs) {
+  onSetChildren(debugID: DebugID, childDebugIDs: Array<DebugID>) {
     checkDebugID(debugID);
     childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onBeforeMountComponent(debugID, element, parentDebugID) {
+  onBeforeMountComponent(debugID: DebugID, element: ReactElement, parentDebugID: DebugID): void {
     checkDebugID(debugID);
     checkDebugID(parentDebugID, true);
     emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
     markBegin(debugID, 'mount');
   },
-  onMountComponent(debugID) {
+  onMountComponent(debugID: DebugID): void {
     checkDebugID(debugID);
     markEnd(debugID, 'mount');
     emitEvent('onMountComponent', debugID);
   },
-  onBeforeUpdateComponent(debugID, element) {
+  onBeforeUpdateComponent(debugID: DebugID, element: ReactElement): void {
     checkDebugID(debugID);
     emitEvent('onBeforeUpdateComponent', debugID, element);
     markBegin(debugID, 'update');
   },
-  onUpdateComponent(debugID) {
+  onUpdateComponent(debugID: DebugID): void {
     checkDebugID(debugID);
     markEnd(debugID, 'update');
     emitEvent('onUpdateComponent', debugID);
   },
-  onBeforeUnmountComponent(debugID) {
+  onBeforeUnmountComponent(debugID: DebugID): void {
     checkDebugID(debugID);
     emitEvent('onBeforeUnmountComponent', debugID);
     markBegin(debugID, 'unmount');
   },
-  onUnmountComponent(debugID) {
+  onUnmountComponent(debugID: DebugID): void {
     checkDebugID(debugID);
     markEnd(debugID, 'unmount');
     emitEvent('onUnmountComponent', debugID);
   },
-  onTestEvent() {
+  onTestEvent(): void {
     emitEvent('onTestEvent');
   },
 };
 
 // TODO remove these when RN/www gets updated
-ReactDebugTool.addDevtool = ReactDebugTool.addHook;
-ReactDebugTool.removeDevtool = ReactDebugTool.removeHook;
+(ReactDebugTool: any).addDevtool = ReactDebugTool.addHook;
+(ReactDebugTool: any).removeDevtool = ReactDebugTool.removeHook;
 
 ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
 ReactDebugTool.addHook(ReactComponentTreeHook);
