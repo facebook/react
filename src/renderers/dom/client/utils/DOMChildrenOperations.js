@@ -13,7 +13,7 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
-// var warning = require('warning'); 
+var warning = require('warning'); 
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -248,6 +248,7 @@ var DOMChildrenOperations = {
     }
   },
 
+  // Potentially unnecessary as it's not called anywhere
   endObservation: function() {
     observer.disconnect();
   },
@@ -255,8 +256,8 @@ var DOMChildrenOperations = {
   startObservation: function() { 
     var config = { attributes: false, childList: true, characterData: false, subtree: true };
     var MutationObserver = window.MutationObserver || function() {}
-    MutationObserver.prototype.observe = MutationObserver.observe || function() {}      
-    MutationObserver.prototype.disconnect = MutationObserver.disconnect || function() {}      
+    MutationObserver.prototype.observe = MutationObserver.prototype.observe || function() {}      
+    MutationObserver.prototype.disconnect = MutationObserver.prototype.disconnect || function() {}      
 
     var observer = new MutationObserver(function(mutations) {
       for (var i = 0; i < mutations.length; i++) { 
