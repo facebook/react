@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactChildrenMutationWarningHook
+ * @flow
  */
 
 'use strict';
@@ -14,6 +15,8 @@
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
+
+import type { DebugID } from 'ReactInstanceType';
 
 function handleElement(debugID, element) {
   if (element == null) {
@@ -47,10 +50,10 @@ function handleElement(debugID, element) {
 }
 
 var ReactChildrenMutationWarningHook = {
-  onMountComponent(debugID) {
+  onMountComponent(debugID: DebugID): void {
     handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
-  onUpdateComponent(debugID) {
+  onUpdateComponent(debugID: DebugID): void {
     handleElement(debugID, ReactComponentTreeHook.getElement(debugID));
   },
 };
