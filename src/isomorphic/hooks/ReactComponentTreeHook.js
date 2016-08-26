@@ -43,24 +43,6 @@ function isNative(fn) {
   }
 }
 
-type Item = { // eslint-disable-line no-unused-vars
-  element: ReactElement,
-  parentID: DebugID,
-  text: ?string,
-  childIDs: Array<DebugID>,
-  isMounted: bool,
-  updateCount: number,
-};
-
-declare function getItem(id: DebugID): ?Item;
-declare function removeItem(id: DebugID): void;
-declare function setItem(id: DebugID, item: Item): void;
-declare function getItemIDs(): Array<DebugID>;
-
-declare function addRoot(id: DebugID): void;
-declare function removeRoot(id: DebugID): void;
-declare function getRootIDs(): Array<DebugID>;
-
 var canUseCollections = (
   // Array.from
   typeof Array.from === 'function' &&
