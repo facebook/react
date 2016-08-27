@@ -13,6 +13,7 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
+var warning = require('warning'); 
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -244,6 +245,39 @@ var DOMChildrenOperations = {
           }
           break;
       }
+    }
+  },
+
+  startObservation: function() { 
+    var config = { attributes: false, childList: true, characterData: false, subtree: true };
+    var MutationObserver = window.MutationObserver || function() {};
+    MutationObserver.prototype.observe = MutationObserver.prototype.observe || function() {};      
+    MutationObserver.prototype.disconnect = MutationObserver.prototype.disconnect || function() {};      
+
+    var observer = new MutationObserver(function(mutations) {
+      for (var i = 0; i < mutations.length; i++) { 
+        var mutation = mutations[i];
+
+        if (mutation.addedNodes.length > 0) {
+          warning(false, 'Warning, an outside source is mutating the DOM');
+          break;
+        }
+        if (mutation.removedNodes.length > 0) {
+          warning(false, 'Warning, an outside source is mutating the DOM');
+          break;
+        }
+      }
+    });   
+
+    // Find all the elements with data-reactid attributes and data-reactroot attributes.
+    var reactIds = document.querySelectorAll('[data-reactid]');
+    var reactRoots = document.querySelectorAll('[data-reactroot]');
+
+    for (var i = 0; i < reactIds.length; i++) {
+      observer.observe(reactIds[i].parentNode, config);
+    }
+    for (var i = 0; i < reactRoots.length; i++) {
+      observer.observe(reactRoots[i].parentNode, config);
     }
   },
 
