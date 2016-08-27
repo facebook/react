@@ -59,8 +59,8 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   }
 
   if (__DEV__) {
-    if(warnedOnce === false) {
-      warnedOnce = true
+    if (warnedOnce === false) {
+      warnedOnce = true;
       warning(
         ReactCurrentOwner.current == null,
         '%s(...): Cannot update during an existing state transition (such as ' +
