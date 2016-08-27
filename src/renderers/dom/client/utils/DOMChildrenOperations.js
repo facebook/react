@@ -13,7 +13,6 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
-var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
@@ -179,7 +178,7 @@ var DOMChildrenOperations = {
     for (var k = 0; k < updates.length; k++) {
       var update = updates[k];
       switch (update.type) {
-        case ReactMultiChildUpdateTypes.INSERT_MARKUP:
+        case 'INSERT_MARKUP':
           insertLazyTreeChildAt(
             parentNode,
             update.content,
@@ -193,7 +192,7 @@ var DOMChildrenOperations = {
             );
           }
           break;
-        case ReactMultiChildUpdateTypes.MOVE_EXISTING:
+        case 'MOVE_EXISTING':
           moveChild(
             parentNode,
             update.fromNode,
@@ -207,7 +206,7 @@ var DOMChildrenOperations = {
             );
           }
           break;
-        case ReactMultiChildUpdateTypes.SET_MARKUP:
+        case 'SET_MARKUP':
           setInnerHTML(
             parentNode,
             update.content
@@ -220,7 +219,7 @@ var DOMChildrenOperations = {
             );
           }
           break;
-        case ReactMultiChildUpdateTypes.TEXT_CONTENT:
+        case 'TEXT_CONTENT':
           setTextContent(
             parentNode,
             update.content
@@ -233,7 +232,7 @@ var DOMChildrenOperations = {
             );
           }
           break;
-        case ReactMultiChildUpdateTypes.REMOVE_NODE:
+        case 'REMOVE_NODE':
           removeChild(parentNode, update.fromNode);
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation(

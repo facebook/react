@@ -11,7 +11,6 @@
 'use strict';
 
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var UIManager = require('UIManager');
 
 /**
@@ -41,12 +40,12 @@ var dangerouslyProcessChildrenUpdates = function(inst, childrenUpdates) {
 
   for (var i = 0; i < childrenUpdates.length; i++) {
     var update = childrenUpdates[i];
-    if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
+    if (update.type === 'MOVE_EXISTING') {
       (moveFromIndices || (moveFromIndices = [])).push(update.fromIndex);
       (moveToIndices || (moveToIndices = [])).push(update.toIndex);
-    } else if (update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
+    } else if (update.type === 'REMOVE_NODE') {
       (removeAtIndices || (removeAtIndices = [])).push(update.fromIndex);
-    } else if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP) {
+    } else if (update.type === 'INSERT_MARKUP') {
       var mountImage = update.content;
       var tag = mountImage;
       (addAtIndices || (addAtIndices = [])).push(update.toIndex);

@@ -14,7 +14,6 @@
 describe('ReactDOMIDOperations', function() {
   var ReactDOMComponentTree = require('ReactDOMComponentTree');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
-  var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
   it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
@@ -25,7 +24,7 @@ describe('ReactDOMIDOperations', function() {
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
       stubInstance,
       [{
-        type: ReactMultiChildUpdateTypes.SET_MARKUP,
+        type: 'SET_MARKUP',
         content: html,
         fromIndex: null,
         toIndex: null,
