@@ -18,6 +18,7 @@ var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
+var warnedOnce = false;
 
 function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
@@ -58,15 +59,18 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   }
 
   if (__DEV__) {
-    warning(
-      ReactCurrentOwner.current == null,
-      '%s(...): Cannot update during an existing state transition (such as ' +
-      'within `render` or another component\'s constructor). Render methods ' +
-      'should be a pure function of props and state; constructor ' +
-      'side-effects are an anti-pattern, but can be moved to ' +
-      '`componentWillMount`.',
-      callerName
-    );
+    if(warnedOnce === false) {
+      warnedOnce = true
+      warning(
+        ReactCurrentOwner.current == null,
+        '%s(...): Cannot update during an existing state transition (such as ' +
+        'within `render` or another component\'s constructor). Render methods ' +
+        'should be a pure function of props and state; constructor ' +
+        'side-effects are an anti-pattern, but can be moved to ' +
+        '`componentWillMount`.',
+        callerName
+      );
+    }
   }
 
   return internalInstance;
