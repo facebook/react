@@ -77,6 +77,8 @@ type HistoryItem = {
   treeSnapshot: TreeSnapshot,
 };
 
+export type FlushHistory = Array<HistoryItem>;
+
 var hooks = [];
 var didHookThrowForEvent = {};
 
@@ -343,7 +345,7 @@ var ReactDebugTool = {
     resetMeasurements();
     ReactDebugTool.removeHook(ReactHostOperationHistoryHook);
   },
-  getFlushHistory(): Array<HistoryItem> {
+  getFlushHistory(): FlushHistory {
     return flushHistory;
   },
   onBeginFlush(): void {
