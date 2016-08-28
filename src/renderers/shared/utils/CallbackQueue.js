@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule CallbackQueue
+ * @flow
  */
 
 'use strict';
@@ -101,6 +102,4 @@ Object.assign(CallbackQueue.prototype, {
 
 });
 
-PooledClass.addPoolingTo(CallbackQueue);
-
-module.exports = CallbackQueue;
+module.exports = PooledClass.addPoolingTo(CallbackQueue);
