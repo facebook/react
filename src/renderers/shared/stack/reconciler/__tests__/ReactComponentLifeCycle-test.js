@@ -11,8 +11,6 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
-
 var React;
 var ReactDOM;
 var ReactInstanceMap;
@@ -68,25 +66,24 @@ var POST_WILL_UNMOUNT_STATE = {
 /**
  * Every React component is in one of these life cycles.
  */
-var ComponentLifeCycle = keyMirror({
+type ComponentLifeCycle =
   /**
    * Mounted components have a DOM node representation and are capable of
    * receiving new props.
    */
-  MOUNTED: null,
+  'MOUNTED' |
   /**
    * Unmounted components are inactive and cannot receive new props.
    */
-  UNMOUNTED: null,
-});
+  'UNMOUNTED';
 
-function getLifeCycleState(instance) {
+function getLifeCycleState(instance): ComponentLifeCycle {
   var internalInstance = ReactInstanceMap.get(instance);
   // Once a component gets mounted, it has an internal instance, once it
   // gets unmounted, it loses that internal instance.
   return internalInstance ?
-         ComponentLifeCycle.MOUNTED :
-         ComponentLifeCycle.UNMOUNTED;
+         'MOUNTED' :
+         'UNMOUNTED';
 }
 
 /**
@@ -407,30 +404,30 @@ describe('ReactComponentLifeCycle', function() {
       GET_INIT_STATE_RETURN_VAL
     );
     expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
-      .toBe(ComponentLifeCycle.UNMOUNTED);
+      .toBe('UNMOUNTED');
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(
       instance._testJournal.returnedFromGetInitialState
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
-      .toBe(ComponentLifeCycle.MOUNTED);
+      .toBe('MOUNTED');
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount)
       .toEqual(DID_MOUNT_STATE);
     expect(instance._testJournal.lifeCycleAtStartOfDidMount).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
     // render
     expect(instance._testJournal.stateInInitialRender)
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
-    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
+    expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     // Now *update the component*
     instance.forceUpdate();
@@ -439,10 +436,10 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance._testJournal.stateInLaterRender)
       .toEqual(NEXT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInLaterRender).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
-    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
+    expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     ReactDOM.unmountComponentAtNode(container);
 
@@ -450,11 +447,11 @@ describe('ReactComponentLifeCycle', function() {
       .toEqual(WILL_UNMOUNT_STATE);
     // componentWillUnmount called right before unmount.
     expect(instance._testJournal.lifeCycleAtStartOfWillUnmount).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
     // But the current lifecycle of the component is unmounted.
-    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.UNMOUNTED);
+    expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
