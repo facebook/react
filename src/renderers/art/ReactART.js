@@ -93,7 +93,7 @@ function injectAfter(parentNode, referenceNode, node) {
 
 // ContainerMixin for components that can hold ART nodes
 
-const ContainerMixin = assign({}, ReactMultiChild.Mixin, {
+const ContainerMixin = assign({}, ReactMultiChild, {
 
   /**
    * Moves a child component to the supplied index.
@@ -144,7 +144,7 @@ const ContainerMixin = assign({}, ReactMultiChild.Mixin, {
    * @param {?object} nextChildren.
    * @param {ReactReconcileTransaction} transaction
    * @internal
-   * @override {ReactMultiChild.Mixin.updateChildren}
+   * @override {ReactMultiChild.updateChildren}
    */
   updateChildren: function(nextChildren, transaction, context) {
     this._updateChildren(nextChildren, transaction, context);
