@@ -219,13 +219,13 @@ var CommentList = React.createClass({
 });
 ```
 
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via the *author* attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via the `author` attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
 
 ### Adding Markdown
 
 Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.
 
-In this tutorial we use a third-party library **remarkable** which takes Markdown text and converts it to raw HTML. We already included this library, remarkable.min.js,  with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
+In this tutorial we use a third-party library **remarkable** which takes Markdown text and converts it to raw HTML. We already included this library, `remarkable.min.js`,  with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
 
 ```javascript{4,10}
 // tutorial6.js
