@@ -11,11 +11,10 @@
  */
 'use strict';
 
+var AbstractReconcileTransaction = require('AbstractReconcileTransaction');
 var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
-var Transaction = require('Transaction');
 var ReactInstrumentation = require('ReactInstrumentation');
-var ReactUpdateQueue = require('ReactUpdateQueue');
 
 /**
  * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks during
@@ -81,36 +80,11 @@ var Mixin = {
   getTransactionWrappers: function() {
     return TRANSACTION_WRAPPERS;
   },
-
-  /**
-   * @return {object} The queue to collect `onDOMReady` callbacks with.
-   *   TODO: convert to ReactMountReady
-   */
-  getReactMountReady: function() {
-    return this.reactMountReady;
-  },
-
-  /**
-   * @return {object} The queue to collect React async events.
-   */
-  getUpdateQueue: function() {
-    return ReactUpdateQueue;
-  },
-
-  /**
-   * `PooledClass` looks for this, and will invoke this before allowing this
-   * instance to be reused.
-   */
-  destructor: function() {
-    CallbackQueue.release(this.reactMountReady);
-    this.reactMountReady = null;
-  },
 };
 
 Object.assign(
   ReactNativeReconcileTransaction.prototype,
-  Transaction.Mixin,
-  ReactNativeReconcileTransaction,
+  AbstractReconcileTransaction.Mixin,
   Mixin
 );
 
