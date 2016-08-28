@@ -219,20 +219,25 @@ describe('ReactJSXElementValidator', function() {
     void <Num />;
     expect(console.error.calls.count()).toBe(4);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+      'undefined is an invalid value for a type. ' +
+        'It should be a string (for DOM elements), ReactClass or React.Component ' +
+        '(for composite components). ' +
+        'Did you mistype an import or forget to export your component? '
     );
     expect(console.error.calls.argsFor(1)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+      'null is an invalid value for a type. ' +
+        'It should be a string (for DOM elements), ReactClass or React.Component ' +
+        '(for composite components).'
     );
     expect(console.error.calls.argsFor(2)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+      'true is an invalid value for a type. ' +
+        'It should be a string (for DOM elements), ReactClass or React.Component ' +
+        '(for composite components).'
     );
     expect(console.error.calls.argsFor(3)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+      '123 is an invalid value for a type. ' +
+        'It should be a string (for DOM elements), ReactClass or React.Component ' +
+        '(for composite components).'
     );
     void <Div />;
     expect(console.error.calls.count()).toBe(4);

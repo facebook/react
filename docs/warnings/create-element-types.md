@@ -4,39 +4,43 @@ layout: single
 permalink: warnings/create-element-types.html
 ---
 
-You probably came to this page because of this error:
+You probably came here because your code is trying to create a ReactElement with an invalid type using JSX or the `React.createElement` API. This usually happens when you have an invalid import statement.
 
-```
-Warning: React.createElement: type should not be null, undefined, boolean, or number.
-It should be a string (for DOM elements) or a ReactClass (for composite components).
-```
+`React.createElement` requires an argument of type `string` (e.g. 'div', 'span'), or a `ReactClass`/`React.Component`. It cannot be of type `number`, `boolean`, `undefined` or `null`. See the documentation of this API: [https://facebook.github.io/react/docs/top-level-api.html](https://facebook.github.io/react/docs/top-level-api.html)
 
-This usually occurs when attempting to render an element that is of an invalid type. The following examples will trigger this error:
+The following common examples will trigger this error:
 
 ### Invalid types
 
 Ensure that your component is not of the following types: undefined, boolean, number or null.
 
-`Foo.js`
+`Components.js`
 
 ```js
-let Foo;
+let Foo, Bar;
 
 if (false) {
   Foo = () => <div />;
 }
 
-export default Foo; // Foo is undefined
+Bar = React.createElement(42);
+// The following types are invalid, too.
+// Bar = 42;
+// Bar = null;
+// Bar = undefined;
+// Bar = true;
+
+export { Foo, Bar }; // Foo is undefined and Bar is an invalid element.
 ```
 
 `App.js`
 
 ```js
-import Foo from './Foo'
+import { Foo, Bar } from './Components'
 
 class ReactApp extends Component {
   render() {
-    return <Foo />;
+    return <Foo />; // or return <Bar />
   }
 }
 ```
@@ -45,7 +49,7 @@ class ReactApp extends Component {
 
 This happens when attempting to import a member as a default member, or importing a default member as a member.
 
-`Foo.js`
+`Components.js`
 
 ```js
 export const Foo = () => { return <div /> }
@@ -54,8 +58,8 @@ export const Foo = () => { return <div /> }
 `App.js`
 
 ```js
-import Foo from './Foo' // wrong!
-// correct: import { Foo } from './Foo';
+import Foo from './Components' // wrong!
+// correct: import { Foo } from './Components';
 
 class ReactApp extends Component {
   render() {
@@ -68,7 +72,7 @@ class ReactApp extends Component {
 
 Check that the component is exported properly with the keyword `export`.
 
-`Foo.js`
+`Components.js`
 
 ```js
 const Foo = () => { return <div /> } // Foo needs to be exported
@@ -77,7 +81,7 @@ const Foo = () => { return <div /> } // Foo needs to be exported
 `App.js`
 
 ```js
-import { Foo } from './Foo' // Foo is undefined
+import { Foo } from './Components' // Foo is undefined
 
 class ReactApp extends Component {
   render() {

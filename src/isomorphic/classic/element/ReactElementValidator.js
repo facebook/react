@@ -183,19 +183,46 @@ function validatePropTypes(element) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function' ||
-                    (type !== null && typeof type === 'object');
-    // We warn in this case but don't throw. We expect the element creation to
-    // succeed and there will likely be errors in render.
-    if (!validType) {
-      warning(
-        false,
-        'React.createElement: type should not be null, undefined, boolean, or ' +
-          'number. It should be a string (for DOM elements) or a ReactClass ' +
-          '(for composite components). See ' +
-          'https://facebook.github.io/react/warning/create-element-types.html%s',
-        getDeclarationErrorAddendum()
-      );
+    var validType = true;
+    var warnInvalidType = function(inputValue) {
+      // warning(...) messages need to be string literals.
+      // If not, we can do a ternary expression to evaluate the need
+      // for the mistyped import message, and not repeat the message
+      // twice here.
+      if (inputValue === undefined) {
+        warning(false,
+          'React.createElement: %s is an invalid value for a type. ' +
+            'It should be a string (for DOM elements), ReactClass or '+ 
+            'React.Component (for composite components). ' +
+            'Did you mistype an import or forget to export your component?' +
+            '%s See fb.me/react-warning-create-element for more information.',
+          inputValue, getDeclarationErrorAddendum()
+        );
+      } else {
+        warning(false,
+          'React.createElement: %s is an invalid value for a type. ' +
+            'It should be a string (for DOM elements), ReactClass or ' + 
+            'React.Component (for composite components).' +
+            '%s See fb.me/react-warning-create-element for more information.',
+          inputValue, getDeclarationErrorAddendum()
+        );
+      }
+    };
+
+    switch (typeof type) {
+      case 'string':
+      case 'function':
+        break;
+      case 'object':
+        if (type !== null) {
+          break;
+        }
+        // fallthrough if type is a null
+      default:
+        // We warn in this case but don't throw. We expect the element creation to
+        // succeed and there will likely be errors in render.
+        validType = false;
+        warnInvalidType(type);
     }
 
     var element = ReactElement.createElement.apply(this, arguments);
