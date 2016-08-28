@@ -13,8 +13,10 @@
 'use strict';
 
 var ReactUpdateQueue = require('ReactUpdateQueue');
-var Transaction = require('Transaction');
+
 var warning = require('warning');
+
+import type { Transaction } from 'Transaction';
 
 function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
   if (__DEV__) {
@@ -39,7 +41,7 @@ function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: str
  * @param {Transaction} transaction
  */
 class ReactServerUpdateQueue {
-  /* :: transaction: Transaction; */
+  transaction: Transaction;
 
   constructor(transaction: Transaction) {
     this.transaction = transaction;
