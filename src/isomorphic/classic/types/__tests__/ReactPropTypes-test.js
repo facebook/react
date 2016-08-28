@@ -14,7 +14,6 @@
 var PropTypes;
 var React;
 var ReactFragment;
-var ReactPropTypeLocations;
 var ReactTestUtils;
 var ReactPropTypesSecret;
 
@@ -27,7 +26,7 @@ function typeCheckFail(declaration, value, message) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
@@ -45,7 +44,7 @@ function typeCheckFailRequiredValues(declaration) {
     props1,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
@@ -56,7 +55,7 @@ function typeCheckFailRequiredValues(declaration) {
     props2,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
@@ -67,7 +66,7 @@ function typeCheckFailRequiredValues(declaration) {
     props3,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
@@ -81,7 +80,7 @@ function typeCheckPass(declaration, value) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
@@ -112,7 +111,6 @@ describe('ReactPropTypes', function() {
     PropTypes = require('ReactPropTypes');
     React = require('React');
     ReactFragment = require('ReactFragment');
-    ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
     ReactPropTypesSecret = require('ReactPropTypesSecret');
   });

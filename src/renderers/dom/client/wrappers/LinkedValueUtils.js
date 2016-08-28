@@ -12,7 +12,6 @@
 'use strict';
 
 var React = require('React');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
@@ -110,7 +109,7 @@ var LinkedValueUtils = {
           props,
           propName,
           tagName,
-          ReactPropTypeLocations.prop,
+          'prop',
           null,
           ReactPropTypesSecret
         );
