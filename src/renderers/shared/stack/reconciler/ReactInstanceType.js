@@ -24,8 +24,8 @@ export type ReactInstance = {
   receiveComponent: any,
   performUpdateIfNecessary: any,
   updateComponent: any,
-  attachRef: any,
-  detachRef: any,
+  attachRef: (ref: string, component: ReactInstance) => void,
+  detachRef: (ref: string) => void,
   getName: () => string,
   getPublicInstance: any,
 

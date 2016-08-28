@@ -7,11 +7,27 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactOwner
+ * @flow
  */
 
 'use strict';
 
 var invariant = require('invariant');
+
+import type { ReactInstance } from 'ReactInstanceType';
+
+/**
+ * @param {?object} object
+ * @return {boolean} True if `object` is a valid owner.
+ * @final
+ */
+function isValidOwner(object: any): bool {
+  return !!(
+    object &&
+    typeof object.attachRef === 'function' &&
+    typeof object.detachRef === 'function'
+  );
+}
 
 /**
  * ReactOwners are capable of storing references to owned components.
@@ -44,20 +60,6 @@ var invariant = require('invariant');
  * @class ReactOwner
  */
 var ReactOwner = {
-
-  /**
-   * @param {?object} object
-   * @return {boolean} True if `object` is a valid owner.
-   * @final
-   */
-  isValidOwner: function(object) {
-    return !!(
-      object &&
-      typeof object.attachRef === 'function' &&
-      typeof object.detachRef === 'function'
-    );
-  },
-
   /**
    * Adds a component by ref to an owner component.
    *
@@ -67,9 +69,13 @@ var ReactOwner = {
    * @final
    * @internal
    */
-  addComponentAsRefTo: function(component, ref, owner) {
+  addComponentAsRefTo: function(
+    component: ReactInstance,
+    ref: string,
+    owner: ReactInstance,
+  ): void {
     invariant(
-      ReactOwner.isValidOwner(owner),
+      isValidOwner(owner),
       'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
       'be adding a ref to a component that was not created inside a component\'s ' +
       '`render` method, or you have multiple copies of React loaded ' +
@@ -87,9 +93,13 @@ var ReactOwner = {
    * @final
    * @internal
    */
-  removeComponentAsRefFrom: function(component, ref, owner) {
+  removeComponentAsRefFrom: function(
+    component: ReactInstance,
+    ref: string,
+    owner: ReactInstance,
+  ): void {
     invariant(
-      ReactOwner.isValidOwner(owner),
+      isValidOwner(owner),
       'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. You might ' +
       'be removing a ref to a component that was not created inside a component\'s ' +
       '`render` method, or you have multiple copies of React loaded ' +
