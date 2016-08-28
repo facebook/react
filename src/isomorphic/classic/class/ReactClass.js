@@ -13,7 +13,6 @@
 
 var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
@@ -22,6 +21,8 @@ var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
 var warning = require('warning');
+
+import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var MIXINS_KEY = keyOf({mixins: null});
 
@@ -327,7 +328,7 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         childContextTypes,
-        ReactPropTypeLocations.childContext
+        'childContext'
       );
     }
     Constructor.childContextTypes = Object.assign(
@@ -341,7 +342,7 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         contextTypes,
-        ReactPropTypeLocations.context
+        'context'
       );
     }
     Constructor.contextTypes = Object.assign(
@@ -369,7 +370,7 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         propTypes,
-        ReactPropTypeLocations.prop
+        'prop'
       );
     }
     Constructor.propTypes = Object.assign(
@@ -384,7 +385,11 @@ var RESERVED_SPEC_KEYS = {
   autobind: function() {}, // noop
 };
 
-function validateTypeDef(Constructor, typeDef, location) {
+function validateTypeDef(
+  Constructor,
+  typeDef,
+  location: ReactPropTypeLocations,
+) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       // use a warning instead of an invariant so components

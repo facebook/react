@@ -21,7 +21,6 @@ var ReactNodeTypes = require('ReactNodeTypes');
 var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
-  var ReactPropTypeLocations = require('ReactPropTypeLocations');
   var checkReactTypeSpec = require('checkReactTypeSpec');
 }
 
@@ -30,6 +29,8 @@ var invariant = require('invariant');
 var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+
+import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var CompositeTypes = {
   ImpureClass: 0,
@@ -617,7 +618,7 @@ var ReactCompositeComponentMixin = {
         this._checkContextTypes(
           Component.contextTypes,
           maskedContext,
-          ReactPropTypeLocations.context
+          'context'
         );
       }
     }
@@ -658,7 +659,7 @@ var ReactCompositeComponentMixin = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          ReactPropTypeLocations.childContext
+          'childContext'
         );
       }
       for (var name in childContext) {
@@ -682,7 +683,11 @@ var ReactCompositeComponentMixin = {
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
    */
-  _checkContextTypes: function(typeSpecs, values, location) {
+  _checkContextTypes: function(
+    typeSpecs,
+    values,
+    location: ReactPropTypeLocations,
+  ) {
     if (__DEV__) {
       checkReactTypeSpec(
         typeSpecs,

@@ -21,7 +21,6 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 var checkReactTypeSpec = require('checkReactTypeSpec');
 
@@ -166,7 +165,7 @@ function validatePropTypes(element) {
     checkReactTypeSpec(
       componentClass.propTypes,
       element.props,
-      ReactPropTypeLocations.prop,
+      'prop',
       name,
       element,
       null
