@@ -88,7 +88,7 @@ ReactTestComponent.prototype.toJSON = function() {
   });
   return object;
 };
-Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
+Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 
