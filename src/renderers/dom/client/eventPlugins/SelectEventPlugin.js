@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -22,8 +21,6 @@ var getActiveElement = require('getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
-
-var topLevelTypes = EventConstants.topLevelTypes;
 
 var skipSelectionChangeEvent = (
   ExecutionEnvironment.canUseDOM &&
@@ -38,14 +35,14 @@ var eventTypes = {
       captured: keyOf({onSelectCapture: null}),
     },
     dependencies: [
-      topLevelTypes.topBlur,
-      topLevelTypes.topContextMenu,
-      topLevelTypes.topFocus,
-      topLevelTypes.topKeyDown,
-      topLevelTypes.topKeyUp,
-      topLevelTypes.topMouseDown,
-      topLevelTypes.topMouseUp,
-      topLevelTypes.topSelectionChange,
+      'topBlur',
+      'topContextMenu',
+      'topFocus',
+      'topKeyDown',
+      'topKeyUp',
+      'topMouseDown',
+      'topMouseUp',
+      'topSelectionChange',
     ],
   },
 };
@@ -168,7 +165,7 @@ var SelectEventPlugin = {
 
     switch (topLevelType) {
       // Track the input node that has focus.
-      case topLevelTypes.topFocus:
+      case 'topFocus':
         if (isTextInputElement(targetNode) ||
             targetNode.contentEditable === 'true') {
           activeElement = targetNode;
@@ -176,7 +173,7 @@ var SelectEventPlugin = {
           lastSelection = null;
         }
         break;
-      case topLevelTypes.topBlur:
+      case 'topBlur':
         activeElement = null;
         activeElementInst = null;
         lastSelection = null;
@@ -184,11 +181,11 @@ var SelectEventPlugin = {
 
       // Don't fire the event while the user is dragging. This matches the
       // semantics of the native select event.
-      case topLevelTypes.topMouseDown:
+      case 'topMouseDown':
         mouseDown = true;
         break;
-      case topLevelTypes.topContextMenu:
-      case topLevelTypes.topMouseUp:
+      case 'topContextMenu':
+      case 'topMouseUp':
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
 
@@ -201,13 +198,13 @@ var SelectEventPlugin = {
       // keyup, but we check on keydown as well in the case of holding down a
       // key, when multiple keydown events are fired but only one keyup is.
       // This is also our approach for IE handling, for the reason above.
-      case topLevelTypes.topSelectionChange:
+      case 'topSelectionChange':
         if (skipSelectionChangeEvent) {
           break;
         }
         // falls through
-      case topLevelTypes.topKeyDown:
-      case topLevelTypes.topKeyUp:
+      case 'topKeyDown':
+      case 'topKeyUp':
         return constructSelectEvent(nativeEvent, nativeEventTarget);
     }
 

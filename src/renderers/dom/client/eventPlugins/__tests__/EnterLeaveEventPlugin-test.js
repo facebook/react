@@ -12,24 +12,18 @@
 'use strict';
 
 var EnterLeaveEventPlugin;
-var EventConstants;
 var React;
 var ReactDOM;
 var ReactDOMComponentTree;
-
-var topLevelTypes;
 
 describe('EnterLeaveEventPlugin', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-    EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-
-    topLevelTypes = EventConstants.topLevelTypes;
   });
 
   it('should set relatedTarget properly in iframe', function() {
@@ -47,7 +41,7 @@ describe('EnterLeaveEventPlugin', function() {
     var div = ReactDOM.findDOMNode(component);
 
     var extracted = EnterLeaveEventPlugin.extractEvents(
-      topLevelTypes.topMouseOver,
+      'topMouseOver',
       ReactDOMComponentTree.getInstanceFromNode(div),
       {target: div},
       div

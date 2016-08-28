@@ -11,28 +11,25 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 var keyOf = require('keyOf');
 
-var topLevelTypes = EventConstants.topLevelTypes;
-
 var eventTypes = {
   mouseEnter: {
     registrationName: keyOf({onMouseEnter: null}),
     dependencies: [
-      topLevelTypes.topMouseOut,
-      topLevelTypes.topMouseOver,
+      'topMouseOut',
+      'topMouseOver',
     ],
   },
   mouseLeave: {
     registrationName: keyOf({onMouseLeave: null}),
     dependencies: [
-      topLevelTypes.topMouseOut,
-      topLevelTypes.topMouseOver,
+      'topMouseOut',
+      'topMouseOver',
     ],
   },
 };
@@ -54,12 +51,12 @@ var EnterLeaveEventPlugin = {
     nativeEvent,
     nativeEventTarget
   ) {
-    if (topLevelType === topLevelTypes.topMouseOver &&
+    if (topLevelType === 'topMouseOver' &&
         (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
       return null;
     }
-    if (topLevelType !== topLevelTypes.topMouseOut &&
-        topLevelType !== topLevelTypes.topMouseOver) {
+    if (topLevelType !== 'topMouseOut' &&
+        topLevelType !== 'topMouseOver') {
       // Must not be a mouse in or mouse out - ignoring.
       return null;
     }
@@ -80,7 +77,7 @@ var EnterLeaveEventPlugin = {
 
     var from;
     var to;
-    if (topLevelType === topLevelTypes.topMouseOut) {
+    if (topLevelType === 'topMouseOut') {
       from = targetInst;
       var related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ?
