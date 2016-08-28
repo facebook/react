@@ -13,7 +13,7 @@
 
 var keyMirror = require('keyMirror');
 
-var PropagationPhases = keyMirror({bubbled: null, captured: null});
+export type PropagationPhases = 'bubbled' | 'captured';
 
 /**
  * Types of raw signals from the browser caught at the top level.
@@ -91,7 +91,6 @@ var topLevelTypes = keyMirror({
 
 var EventConstants = {
   topLevelTypes: topLevelTypes,
-  PropagationPhases: PropagationPhases,
 };
 
 module.exports = EventConstants;

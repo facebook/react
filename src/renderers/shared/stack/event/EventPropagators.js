@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
 
@@ -19,14 +18,15 @@ var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var warning = require('warning');
 
-var PropagationPhases = EventConstants.PropagationPhases;
+import type { PropagationPhases } from 'EventConstants';
+
 var getListener = EventPluginHub.getListener;
 
 /**
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
  */
-function listenerAtPhase(inst, event, propagationPhase) {
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
   var registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
@@ -45,7 +45,7 @@ function accumulateDirectionalDispatches(inst, upwards, event) {
       'Dispatching inst must not be null'
     );
   }
-  var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
+  var phase = upwards ? 'bubbled' : 'captured';
   var listener = listenerAtPhase(inst, event, phase);
   if (listener) {
     event._dispatchListeners =
