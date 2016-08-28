@@ -90,8 +90,10 @@ Object.assign(reactComponentExpectInternal.prototype, {
         continue;
       }
       if (renderedChildren[name]) {
-        if (renderedChildren[name]._mountIndex === childIndex) {
-          return new reactComponentExpectInternal(renderedChildren[name]);
+        if (renderedChildren[name].mountIndex === childIndex) {
+          return new reactComponentExpectInternal(
+            renderedChildren[name].instance
+          );
         }
       }
     }

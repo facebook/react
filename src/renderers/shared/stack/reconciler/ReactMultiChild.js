@@ -54,8 +54,8 @@ function makeMove(child, afterNode, toIndex) {
   return {
     type: 'MOVE_EXISTING',
     content: null,
-    fromIndex: child._mountIndex,
-    fromNode: ReactReconciler.getHostNode(child),
+    fromIndex: child.mountIndex,
+    fromNode: ReactReconciler.getHostNode(child.instance),
     toIndex: toIndex,
     afterNode: afterNode,
   };
@@ -72,7 +72,7 @@ function makeRemove(child, node) {
   return {
     type: 'REMOVE_NODE',
     content: null,
-    fromIndex: child._mountIndex,
+    fromIndex: child.mountIndex,
     fromNode: node,
     toIndex: null,
     afterNode: null,
@@ -158,7 +158,9 @@ if (__DEV__) {
     if (debugID !== 0) {
       ReactInstrumentation.debugTool.onSetChildren(
         debugID,
-        children ? Object.keys(children).map(key => children[key]._debugID) : []
+        children ?
+          Object.keys(children).map(key => children[key].instance._debugID) :
+          []
       );
     }
   };
@@ -272,14 +274,14 @@ var ReactMultiChild = {
             selfDebugID = getDebugID(this);
           }
           var mountImage = ReactReconciler.mountComponent(
-            child,
+            child.instance,
             transaction,
             this,
             this._hostContainerInfo,
             context,
             selfDebugID
           );
-          child._mountIndex = index++;
+          child.mountIndex = index++;
           mountImages.push(mountImage);
         }
       }
@@ -383,12 +385,12 @@ var ReactMultiChild = {
             updates,
             this.moveChild(prevChild, lastPlacedNode, nextIndex, lastIndex)
           );
-          lastIndex = Math.max(prevChild._mountIndex, lastIndex);
-          prevChild._mountIndex = nextIndex;
+          lastIndex = Math.max(prevChild.mountIndex, lastIndex);
+          prevChild.mountIndex = nextIndex;
         } else {
           if (prevChild) {
-            // Update `lastIndex` before `_mountIndex` gets unset by unmounting.
-            lastIndex = Math.max(prevChild._mountIndex, lastIndex);
+            // Update `lastIndex` before `mountIndex` gets unset by unmounting.
+            lastIndex = Math.max(prevChild.mountIndex, lastIndex);
             // The `removedNodes` loop below will actually remove the child.
           }
           // The child must be instantiated before it's mounted.
@@ -406,7 +408,7 @@ var ReactMultiChild = {
           nextMountIndex++;
         }
         nextIndex++;
-        lastPlacedNode = ReactReconciler.getHostNode(nextChild);
+        lastPlacedNode = ReactReconciler.getHostNode(nextChild.instance);
       }
       // Remove children that are no longer present.
       for (name in removedNodes) {
@@ -452,7 +454,7 @@ var ReactMultiChild = {
       // If the index of `child` is less than `lastIndex`, then it needs to
       // be moved. Otherwise, we do not need to move it because a child will be
       // inserted or moved before `child`.
-      if (child._mountIndex < lastIndex) {
+      if (child.mountIndex < lastIndex) {
         return makeMove(child, afterNode, toIndex);
       }
     },
@@ -465,7 +467,7 @@ var ReactMultiChild = {
      * @protected
      */
     createChild: function(child, afterNode, mountImage) {
-      return makeInsertMarkup(mountImage, afterNode, child._mountIndex);
+      return makeInsertMarkup(mountImage, afterNode, child.mountIndex);
     },
 
     /**
@@ -495,8 +497,9 @@ var ReactMultiChild = {
       afterNode,
       index,
       transaction,
-      context) {
-      child._mountIndex = index;
+      context
+    ) {
+      child.mountIndex = index;
       return this.createChild(child, afterNode, mountImage);
     },
 
@@ -510,7 +513,7 @@ var ReactMultiChild = {
      */
     _unmountChild: function(child, node) {
       var update = this.removeChild(child, node);
-      child._mountIndex = null;
+      child.mountIndex = null;
       return update;
     },
 

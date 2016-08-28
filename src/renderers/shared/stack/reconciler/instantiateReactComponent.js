@@ -118,12 +118,6 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
     );
   }
 
-  // These two fields are used by the DOM and ART diffing algorithms
-  // respectively. Instead of using expandos on components, we should be
-  // storing the state needed by the diffing algorithms elsewhere.
-  instance._mountIndex = 0;
-  instance._mountImage = null;
-
   if (__DEV__) {
     instance._debugID = shouldHaveDebugID ? nextDebugID++ : 0;
   }

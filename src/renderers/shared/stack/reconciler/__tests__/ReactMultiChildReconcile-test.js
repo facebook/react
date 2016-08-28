@@ -95,7 +95,7 @@ class FriendsStatusDisplay extends React.Component {
       var child = statusDisplays[name];
       var isPresent = !!child;
       if (isPresent) {
-        originalKeys[child._mountIndex] = getOriginalKey(name);
+        originalKeys[child.mountIndex] = getOriginalKey(name);
       }
     }
     return originalKeys;
