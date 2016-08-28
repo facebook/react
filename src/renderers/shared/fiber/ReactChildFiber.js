@@ -123,6 +123,10 @@ function ChildReconciler(shouldClone) {
 
     switch (newChildren.$$typeof) {
       case REACT_ELEMENT_TYPE: {
+        /* $FlowFixMe(>=0.31.0): This is an unsafe cast. Consider adding a type
+         *                       annotation to the `newChildren` param of this
+         *                       function.
+         */
         const element = (newChildren : ReactElement<any>);
         if (existingChild &&
             element.type === existingChild.type &&
@@ -144,6 +148,8 @@ function ChildReconciler(shouldClone) {
       }
 
       case REACT_COROUTINE_TYPE: {
+        /* $FlowFixMe(>=0.31.0): No 'handler' property found in object type
+         */
         const coroutine = (newChildren : ReactCoroutine);
         const child = createFiberFromCoroutine(coroutine, priority);
         child.return = returnFiber;
@@ -154,6 +160,9 @@ function ChildReconciler(shouldClone) {
         // A yield results in a fragment fiber whose output is the continuation.
         // TODO: When there is only a single child, we can optimize this to avoid
         // the fragment.
+        /* $FlowFixMe(>=0.31.0): No 'continuation' property found in object
+         * type
+         */
         const yieldNode = (newChildren : ReactYield);
         const reifiedYield = createReifiedYield(yieldNode);
         const child = createFiberFromYield(yieldNode, priority);
@@ -167,6 +176,11 @@ function ChildReconciler(shouldClone) {
       var first : ?Fiber = null;
       var prev : ?Fiber = null;
       var existing : ?Fiber = existingChild;
+      /* $FlowIssue(>=0.31.0) #12747709
+       *
+       * `Array.isArray` is matched syntactically for now until predicate
+       * support is complete.
+       */
       for (var i = 0; i < newChildren.length; i++) {
         var nextExisting = existing && existing.sibling;
         if (prev == null) {

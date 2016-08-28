@@ -17,6 +17,8 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 var invariant = require('invariant');
 var warning = require('warning');
 
+import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
+
 var ReactComponentTreeHook;
 
 if (
@@ -46,7 +48,14 @@ var loggedTypeFailures = {};
  * @param {?number} debugID The React component instance that is being type-checked
  * @private
  */
-function checkReactTypeSpec(typeSpecs, values, location, componentName, element, debugID) {
+function checkReactTypeSpec(
+  typeSpecs,
+  values,
+  location: ReactPropTypeLocations,
+  componentName,
+  element,
+  debugID,
+) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
