@@ -7,11 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactRef
+ * @flow
  */
 
 'use strict';
 
 var ReactOwner = require('ReactOwner');
+
+import type { ReactInstance } from 'ReactInstanceType';
+import type { ReactElement } from 'ReactElementType';
 
 var ReactRef = {};
 
@@ -33,8 +37,11 @@ function detachRef(ref, component, owner) {
   }
 }
 
-ReactRef.attachRefs = function(instance, element) {
-  if (element === null || element === false) {
+ReactRef.attachRefs = function(
+  instance: ReactInstance,
+  element: ReactElement | string | number | null | false,
+): void {
+  if (element === null || typeof element !== 'object') {
     return;
   }
   var ref = element.ref;
@@ -43,7 +50,10 @@ ReactRef.attachRefs = function(instance, element) {
   }
 };
 
-ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
+ReactRef.shouldUpdateRefs = function(
+  prevElement: ReactElement | string | number | null | false,
+  nextElement: ReactElement | string | number | null | false,
+): bool {
   // If either the owner or a `ref` has changed, make sure the newest owner
   // has stored a reference to `this`, and the previous owner (if different)
   // has forgotten the reference to `this`. We use the element instead
@@ -56,21 +66,32 @@ ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
   // is made. It probably belongs where the key checking and
   // instantiateReactComponent is done.
 
-  var prevEmpty = prevElement === null || prevElement === false;
-  var nextEmpty = nextElement === null || nextElement === false;
+  var prevRef = null;
+  var prevOwner = null;
+  if (prevElement !== null && typeof prevElement === 'object') {
+    prevRef = prevElement.ref;
+    prevOwner = prevElement._owner;
+  }
+
+  var nextRef = null;
+  var nextOwner = null;
+  if (nextElement !== null && typeof nextElement === 'object') {
+    nextRef = nextElement.ref;
+    nextOwner = nextElement._owner;
+  }
 
   return (
-    // This has a few false positives w/r/t empty components.
-    prevEmpty || nextEmpty ||
-    nextElement.ref !== prevElement.ref ||
+    prevRef !== nextRef ||
     // If owner changes but we have an unchanged function ref, don't update refs
-    (typeof nextElement.ref === 'string' &&
-     nextElement._owner !== prevElement._owner)
+    (typeof nextRef === 'string' && nextOwner !== prevOwner)
   );
 };
 
-ReactRef.detachRefs = function(instance, element) {
-  if (element === null || element === false) {
+ReactRef.detachRefs = function(
+  instance: ReactInstance,
+  element: ReactElement | string | number | null | false,
+): void {
+  if (element === null || typeof element !== 'object') {
     return;
   }
   var ref = element.ref;
