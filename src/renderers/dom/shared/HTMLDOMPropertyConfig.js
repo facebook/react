@@ -82,7 +82,6 @@ var HTMLDOMPropertyConfig = {
     hrefLang: 0,
     htmlFor: 0,
     httpEquiv: 0,
-    icon: 0,
     id: 0,
     inputMode: 0,
     integrity: 0,
