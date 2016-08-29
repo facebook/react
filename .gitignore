@@ -18,6 +18,7 @@ docs/js/*
 docs/downloads
 docs/vendor/bundle
 examples/shared/*.js
+examples/**/bundle.js
 test/the-files-to-test.generated.js
 *.log*
 chrome-user-data
