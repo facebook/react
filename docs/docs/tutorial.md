@@ -225,7 +225,7 @@ Note that we have passed some data from the parent `CommentList` component to th
 
 Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.
 
-In this tutorial we use a third-party library **remarkable** which takes Markdown text and converts it to raw HTML. We already included this library, with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
+In this tutorial we use a third-party library **remarkable** which takes Markdown text and converts it to raw HTML. We already included this library with the original markup for the page, so we can just start using it. Let's convert the comment text to Markdown and output it:
 
 ```javascript{4,10}
 // tutorial6.js
