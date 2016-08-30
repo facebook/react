@@ -36,7 +36,7 @@ var HTMLDOMPropertyConfig = {
     allowFullScreen: HAS_BOOLEAN_VALUE,
     allowTransparency: 0,
     alt: 0,
-    // 'as' is keyword to links with 'preload' type
+    // specifies target context for links with `preload` type
     as: 0,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: 0,
