@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
@@ -25,8 +24,6 @@ var isEventSupported = require('isEventSupported');
 var isTextInputElement = require('isTextInputElement');
 var keyOf = require('keyOf');
 
-var topLevelTypes = EventConstants.topLevelTypes;
-
 
 var eventTypes = {
   change: {
@@ -35,14 +32,14 @@ var eventTypes = {
       captured: keyOf({onChangeCapture: null}),
     },
     dependencies: [
-      topLevelTypes.topBlur,
-      topLevelTypes.topChange,
-      topLevelTypes.topClick,
-      topLevelTypes.topFocus,
-      topLevelTypes.topInput,
-      topLevelTypes.topKeyDown,
-      topLevelTypes.topKeyUp,
-      topLevelTypes.topSelectionChange,
+      'topBlur',
+      'topChange',
+      'topClick',
+      'topFocus',
+      'topInput',
+      'topKeyDown',
+      'topKeyUp',
+      'topSelectionChange',
     ],
   },
 };
@@ -136,7 +133,7 @@ function getTargetInstForChangeEvent(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topChange) {
+  if (topLevelType === 'topChange') {
     return targetInst;
   }
 }
@@ -146,12 +143,12 @@ function handleEventsForChangeEventIE8(
   target,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topFocus) {
+  if (topLevelType === 'topFocus') {
     // stopWatching() should be a noop here but we call it just in case we
     // missed a blur event somehow.
     stopWatchingForChangeEventIE8();
     startWatchingForChangeEventIE8(target, targetInst);
-  } else if (topLevelType === topLevelTypes.topBlur) {
+  } else if (topLevelType === 'topBlur') {
     stopWatchingForChangeEventIE8();
   }
 }
@@ -212,7 +209,7 @@ function handleEventsForInputEventPolyfill(
   target,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topFocus) {
+  if (topLevelType === 'topFocus') {
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
     // equal to 'value'
@@ -228,7 +225,7 @@ function handleEventsForInputEventPolyfill(
     // missed a blur event somehow.
     stopWatchingForValueChange();
     startWatchingForValueChange(target, targetInst);
-  } else if (topLevelType === topLevelTypes.topBlur) {
+  } else if (topLevelType === 'topBlur') {
     stopWatchingForValueChange();
   }
 }
@@ -238,9 +235,9 @@ function getTargetInstForInputEventPolyfill(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topSelectionChange ||
-      topLevelType === topLevelTypes.topKeyUp ||
-      topLevelType === topLevelTypes.topKeyDown) {
+  if (topLevelType === 'topSelectionChange' ||
+      topLevelType === 'topKeyUp' ||
+      topLevelType === 'topKeyDown') {
     // On the selectionchange event, the target is just document which isn't
     // helpful for us so just check activeElement instead.
     //
@@ -274,7 +271,7 @@ function getTargetInstForClickEvent(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topClick) {
+  if (topLevelType === 'topClick') {
     return getInstIfValueChanged(targetInst);
   }
 }
@@ -284,8 +281,8 @@ function getTargetInstForInputOrChangeEvent(
   targetInst
 ) {
   if (
-    topLevelType === topLevelTypes.topInput ||
-    topLevelType === topLevelTypes.topChange
+    topLevelType === 'topInput' ||
+    topLevelType === 'topChange'
   ) {
     return getInstIfValueChanged(targetInst);
   }

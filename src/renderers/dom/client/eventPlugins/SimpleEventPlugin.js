@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPropagators = require('EventPropagators');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -31,8 +30,6 @@ var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('invariant');
 var keyOf = require('keyOf');
-
-var topLevelTypes = EventConstants.topLevelTypes;
 
 var eventTypes = {
   abort: {
@@ -505,39 +502,39 @@ var SimpleEventPlugin = {
     }
     var EventConstructor;
     switch (topLevelType) {
-      case topLevelTypes.topAbort:
-      case topLevelTypes.topCanPlay:
-      case topLevelTypes.topCanPlayThrough:
-      case topLevelTypes.topDurationChange:
-      case topLevelTypes.topEmptied:
-      case topLevelTypes.topEncrypted:
-      case topLevelTypes.topEnded:
-      case topLevelTypes.topError:
-      case topLevelTypes.topInput:
-      case topLevelTypes.topInvalid:
-      case topLevelTypes.topLoad:
-      case topLevelTypes.topLoadedData:
-      case topLevelTypes.topLoadedMetadata:
-      case topLevelTypes.topLoadStart:
-      case topLevelTypes.topPause:
-      case topLevelTypes.topPlay:
-      case topLevelTypes.topPlaying:
-      case topLevelTypes.topProgress:
-      case topLevelTypes.topRateChange:
-      case topLevelTypes.topReset:
-      case topLevelTypes.topSeeked:
-      case topLevelTypes.topSeeking:
-      case topLevelTypes.topStalled:
-      case topLevelTypes.topSubmit:
-      case topLevelTypes.topSuspend:
-      case topLevelTypes.topTimeUpdate:
-      case topLevelTypes.topVolumeChange:
-      case topLevelTypes.topWaiting:
+      case 'topAbort':
+      case 'topCanPlay':
+      case 'topCanPlayThrough':
+      case 'topDurationChange':
+      case 'topEmptied':
+      case 'topEncrypted':
+      case 'topEnded':
+      case 'topError':
+      case 'topInput':
+      case 'topInvalid':
+      case 'topLoad':
+      case 'topLoadedData':
+      case 'topLoadedMetadata':
+      case 'topLoadStart':
+      case 'topPause':
+      case 'topPlay':
+      case 'topPlaying':
+      case 'topProgress':
+      case 'topRateChange':
+      case 'topReset':
+      case 'topSeeked':
+      case 'topSeeking':
+      case 'topStalled':
+      case 'topSubmit':
+      case 'topSuspend':
+      case 'topTimeUpdate':
+      case 'topVolumeChange':
+      case 'topWaiting':
         // HTML Events
         // @see http://www.w3.org/TR/html5/index.html#events-0
         EventConstructor = SyntheticEvent;
         break;
-      case topLevelTypes.topKeyPress:
+      case 'topKeyPress':
         // Firefox creates a keypress event for function keys too. This removes
         // the unwanted keypress events. Enter is however both printable and
         // non-printable. One would expect Tab to be as well (but it isn't).
@@ -545,63 +542,63 @@ var SimpleEventPlugin = {
           return null;
         }
         /* falls through */
-      case topLevelTypes.topKeyDown:
-      case topLevelTypes.topKeyUp:
+      case 'topKeyDown':
+      case 'topKeyUp':
         EventConstructor = SyntheticKeyboardEvent;
         break;
-      case topLevelTypes.topBlur:
-      case topLevelTypes.topFocus:
+      case 'topBlur':
+      case 'topFocus':
         EventConstructor = SyntheticFocusEvent;
         break;
-      case topLevelTypes.topClick:
+      case 'topClick':
         // Firefox creates a click event on right mouse clicks. This removes the
         // unwanted click events.
         if (nativeEvent.button === 2) {
           return null;
         }
         /* falls through */
-      case topLevelTypes.topContextMenu:
-      case topLevelTypes.topDoubleClick:
-      case topLevelTypes.topMouseDown:
-      case topLevelTypes.topMouseMove:
-      case topLevelTypes.topMouseOut:
-      case topLevelTypes.topMouseOver:
-      case topLevelTypes.topMouseUp:
+      case 'topContextMenu':
+      case 'topDoubleClick':
+      case 'topMouseDown':
+      case 'topMouseMove':
+      case 'topMouseOut':
+      case 'topMouseOver':
+      case 'topMouseUp':
         EventConstructor = SyntheticMouseEvent;
         break;
-      case topLevelTypes.topDrag:
-      case topLevelTypes.topDragEnd:
-      case topLevelTypes.topDragEnter:
-      case topLevelTypes.topDragExit:
-      case topLevelTypes.topDragLeave:
-      case topLevelTypes.topDragOver:
-      case topLevelTypes.topDragStart:
-      case topLevelTypes.topDrop:
+      case 'topDrag':
+      case 'topDragEnd':
+      case 'topDragEnter':
+      case 'topDragExit':
+      case 'topDragLeave':
+      case 'topDragOver':
+      case 'topDragStart':
+      case 'topDrop':
         EventConstructor = SyntheticDragEvent;
         break;
-      case topLevelTypes.topTouchCancel:
-      case topLevelTypes.topTouchEnd:
-      case topLevelTypes.topTouchMove:
-      case topLevelTypes.topTouchStart:
+      case 'topTouchCancel':
+      case 'topTouchEnd':
+      case 'topTouchMove':
+      case 'topTouchStart':
         EventConstructor = SyntheticTouchEvent;
         break;
-      case topLevelTypes.topAnimationEnd:
-      case topLevelTypes.topAnimationIteration:
-      case topLevelTypes.topAnimationStart:
+      case 'topAnimationEnd':
+      case 'topAnimationIteration':
+      case 'topAnimationStart':
         EventConstructor = SyntheticAnimationEvent;
         break;
-      case topLevelTypes.topTransitionEnd:
+      case 'topTransitionEnd':
         EventConstructor = SyntheticTransitionEvent;
         break;
-      case topLevelTypes.topScroll:
+      case 'topScroll':
         EventConstructor = SyntheticUIEvent;
         break;
-      case topLevelTypes.topWheel:
+      case 'topWheel':
         EventConstructor = SyntheticWheelEvent;
         break;
-      case topLevelTypes.topCopy:
-      case topLevelTypes.topCut:
-      case topLevelTypes.topPaste:
+      case 'topCopy':
+      case 'topCut':
+      case 'topPaste':
         EventConstructor = SyntheticClipboardEvent;
         break;
     }

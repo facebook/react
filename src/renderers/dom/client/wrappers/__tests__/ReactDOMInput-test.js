@@ -15,7 +15,6 @@
 var emptyFunction = require('emptyFunction');
 
 describe('ReactDOMInput', function() {
-  var EventConstants;
   var React;
   var ReactDOM;
   var ReactDOMServer;
@@ -33,7 +32,6 @@ describe('ReactDOMInput', function() {
 
   beforeEach(function() {
     jest.resetModuleRegistry();
-    EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -273,7 +271,7 @@ describe('ReactDOMInput', function() {
     fakeNativeEvent.target = node;
     fakeNativeEvent.path = [node, container];
     ReactTestUtils.simulateNativeEventOnNode(
-      EventConstants.topLevelTypes.topInput,
+      'topInput',
       node,
       fakeNativeEvent
     );
