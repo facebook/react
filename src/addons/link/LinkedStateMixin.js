@@ -24,8 +24,7 @@ var LinkedStateMixin = {
    * ReactLink will have the current value of this.state[key] and will call
    * setState() when a change is requested.
    *
-   * @param {string} key state key to update. Note: you may want to use keyOf()
-   * if you're using Google Closure Compiler advanced mode.
+   * @param {string} key state key to update.
    * @return {ReactLink} ReactLink instance linking to the state.
    */
   linkState: function(key) {

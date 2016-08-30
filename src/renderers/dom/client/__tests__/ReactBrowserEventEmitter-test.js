@@ -11,8 +11,6 @@
 
 'use strict';
 
-var keyOf = require('keyOf');
-
 var EventListener;
 var EventPluginHub;
 var EventPluginRegistry;
@@ -36,10 +34,10 @@ var recordIDAndReturnFalse = function(id, event) {
   return false;
 };
 var LISTENER = jest.fn();
-var ON_CLICK_KEY = keyOf({onClick: null});
-var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
-var ON_CHANGE_KEY = keyOf({onChange: null});
-var ON_MOUSE_ENTER_KEY = keyOf({onMouseEnter: null});
+var ON_CLICK_KEY = 'onClick';
+var ON_TOUCH_TAP_KEY = 'onTouchTap';
+var ON_CHANGE_KEY = 'onChange';
+var ON_MOUSE_ENTER_KEY = 'onMouseEnter';
 
 var GRANDPARENT;
 var PARENT;

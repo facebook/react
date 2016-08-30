@@ -17,8 +17,6 @@ var FallbackCompositionState = require('FallbackCompositionState');
 var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
 var SyntheticInputEvent = require('SyntheticInputEvent');
 
-var keyOf = require('keyOf');
-
 import type { TopLevelTypes } from 'EventConstants';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
@@ -75,8 +73,8 @@ var SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
 var eventTypes = {
   beforeInput: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onBeforeInput: null}),
-      captured: keyOf({onBeforeInputCapture: null}),
+      bubbled: 'onBeforeInput',
+      captured: 'onBeforeInputCapture',
     },
     dependencies: [
       'topCompositionEnd',
@@ -87,8 +85,8 @@ var eventTypes = {
   },
   compositionEnd: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onCompositionEnd: null}),
-      captured: keyOf({onCompositionEndCapture: null}),
+      bubbled: 'onCompositionEnd',
+      captured: 'onCompositionEndCapture',
     },
     dependencies: [
       'topBlur',
@@ -101,8 +99,8 @@ var eventTypes = {
   },
   compositionStart: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onCompositionStart: null}),
-      captured: keyOf({onCompositionStartCapture: null}),
+      bubbled: 'onCompositionStart',
+      captured: 'onCompositionStartCapture',
     },
     dependencies: [
       'topBlur',
@@ -115,8 +113,8 @@ var eventTypes = {
   },
   compositionUpdate: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onCompositionUpdate: null}),
-      captured: keyOf({onCompositionUpdateCapture: null}),
+      bubbled: 'onCompositionUpdate',
+      captured: 'onCompositionUpdateCapture',
     },
     dependencies: [
       'topBlur',
