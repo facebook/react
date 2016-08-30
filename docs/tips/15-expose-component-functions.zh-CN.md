@@ -1,10 +1,10 @@
 ---
-id: expose-component-functions
+id: expose-component-functions-zh-CN
 title: 暴露组件函数
 layout: tips
-permalink: tips/expose-component-functions.html
-prev: communicate-between-components.html
-next: children-undefined.html
+permalink: tips/expose-component-functions-zh-CN.html
+prev: communicate-between-components-zh-CN.html
+next: children-undefined-zh-CN.html
 ---
 
 
@@ -57,4 +57,4 @@ var Todos = React.createClass({
 ReactDOM.render(<Todos />, mountNode);
 ```
 
-当然，你也可以通过在`todo`组件中的prop传递`isLastUnfinishedItem`，来让子组件自己判断是否它是最后一个，来执行animate函数；但是，如果你通过不同的props值来控制的不同的动画，到最后可能会变得很混乱。
+当然，你也可以通过在`todo`组件中的prop传递`isLastUnfinishedItem`，来让子组件在 `componentDidUpdate`中判断是否它是最后一个，来执行animate函数；但是，如果你通过不同的props值来控制的不同的动画，到最后可能会变得很混乱。
