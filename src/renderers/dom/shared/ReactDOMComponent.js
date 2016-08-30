@@ -19,7 +19,6 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -326,7 +325,7 @@ function trapBubbledEventsLocal() {
     case 'object':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topLoad,
+          'topLoad',
           'load',
           node
         ),
@@ -341,7 +340,7 @@ function trapBubbledEventsLocal() {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
             ReactBrowserEventEmitter.trapBubbledEvent(
-              EventConstants.topLevelTypes[event],
+              event,
               mediaEvents[event],
               node
             )
@@ -352,7 +351,7 @@ function trapBubbledEventsLocal() {
     case 'source':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topError,
+          'topError',
           'error',
           node
         ),
@@ -361,12 +360,12 @@ function trapBubbledEventsLocal() {
     case 'img':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topError,
+          'topError',
           'error',
           node
         ),
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topLoad,
+          'topLoad',
           'load',
           node
         ),
@@ -375,12 +374,12 @@ function trapBubbledEventsLocal() {
     case 'form':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topReset,
+          'topReset',
           'reset',
           node
         ),
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topSubmit,
+          'topSubmit',
           'submit',
           node
         ),
@@ -391,7 +390,7 @@ function trapBubbledEventsLocal() {
     case 'textarea':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topInvalid,
+          'topInvalid',
           'invalid',
           node
         ),

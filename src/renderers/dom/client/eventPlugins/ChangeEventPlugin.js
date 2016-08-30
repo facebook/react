@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
@@ -24,8 +23,6 @@ var isEventSupported = require('isEventSupported');
 var isTextInputElement = require('isTextInputElement');
 var keyOf = require('keyOf');
 
-var topLevelTypes = EventConstants.topLevelTypes;
-
 var eventTypes = {
   change: {
     phasedRegistrationNames: {
@@ -33,14 +30,14 @@ var eventTypes = {
       captured: keyOf({onChangeCapture: null}),
     },
     dependencies: [
-      topLevelTypes.topBlur,
-      topLevelTypes.topChange,
-      topLevelTypes.topClick,
-      topLevelTypes.topFocus,
-      topLevelTypes.topInput,
-      topLevelTypes.topKeyDown,
-      topLevelTypes.topKeyUp,
-      topLevelTypes.topSelectionChange,
+      'topBlur',
+      'topChange',
+      'topClick',
+      'topFocus',
+      'topInput',
+      'topKeyDown',
+      'topKeyUp',
+      'topSelectionChange',
     ],
   },
 };
@@ -119,7 +116,7 @@ function getTargetInstForChangeEvent(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topChange) {
+  if (topLevelType === 'topChange') {
     return targetInst;
   }
 }
@@ -128,12 +125,12 @@ function handleEventsForChangeEventIE8(
   target,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topFocus) {
+  if (topLevelType === 'topFocus') {
     // stopWatching() should be a noop here but we call it just in case we
     // missed a blur event somehow.
     stopWatchingForChangeEventIE8();
     startWatchingForChangeEventIE8(target, targetInst);
-  } else if (topLevelType === topLevelTypes.topBlur) {
+  } else if (topLevelType === 'topBlur') {
     stopWatchingForChangeEventIE8();
   }
 }
@@ -240,7 +237,7 @@ function getTargetInstForInputEvent(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topInput) {
+  if (topLevelType === 'topInput') {
     // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
     // what we want so fall through here and trigger an abstract event
     return targetInst;
@@ -252,7 +249,7 @@ function handleEventsForInputEventIE(
   target,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topFocus) {
+  if (topLevelType === 'topFocus') {
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
     // equal to 'value'
@@ -268,7 +265,7 @@ function handleEventsForInputEventIE(
     // missed a blur event somehow.
     stopWatchingForValueChange();
     startWatchingForValueChange(target, targetInst);
-  } else if (topLevelType === topLevelTypes.topBlur) {
+  } else if (topLevelType === 'topBlur') {
     stopWatchingForValueChange();
   }
 }
@@ -278,9 +275,9 @@ function getTargetInstForInputEventIE(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topSelectionChange ||
-      topLevelType === topLevelTypes.topKeyUp ||
-      topLevelType === topLevelTypes.topKeyDown) {
+  if (topLevelType === 'topSelectionChange' ||
+      topLevelType === 'topKeyUp' ||
+      topLevelType === 'topKeyDown') {
     // On the selectionchange event, the target is just document which isn't
     // helpful for us so just check activeElement instead.
     //
@@ -316,7 +313,7 @@ function getTargetInstForClickEvent(
   topLevelType,
   targetInst
 ) {
-  if (topLevelType === topLevelTypes.topClick) {
+  if (topLevelType === 'topClick') {
     return targetInst;
   }
 }

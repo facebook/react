@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var ResponderSyntheticEvent = require('ResponderSyntheticEvent');
@@ -326,7 +325,7 @@ function setResponderAndExtractTransfer(
   var shouldSetEventType =
     isStartish(topLevelType) ? eventTypes.startShouldSetResponder :
     isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder :
-    topLevelType === EventConstants.topLevelTypes.topSelectionChange ?
+    topLevelType === 'topSelectionChange' ?
       eventTypes.selectionChangeShouldSetResponder :
     eventTypes.scrollShouldSetResponder;
 
@@ -429,10 +428,10 @@ function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
     // responderIgnoreScroll: We are trying to migrate away from specifically
     // tracking native scroll events here and responderIgnoreScroll indicates we
     // will send topTouchCancel to handle canceling touch events instead
-    (topLevelType === EventConstants.topLevelTypes.topScroll &&
+    (topLevelType === 'topScroll' &&
       !nativeEvent.responderIgnoreScroll) ||
     (trackedTouchCount > 0 &&
-      topLevelType === EventConstants.topLevelTypes.topSelectionChange) ||
+      topLevelType === 'topSelectionChange') ||
     isStartish(topLevelType) ||
     isMoveish(topLevelType)
   );
@@ -541,7 +540,7 @@ var ResponderEventPlugin = {
 
     var isResponderTerminate =
       responderInst &&
-      topLevelType === EventConstants.topLevelTypes.topTouchCancel;
+      topLevelType === 'topTouchCancel';
     var isResponderRelease =
       responderInst &&
       !isResponderTerminate &&
