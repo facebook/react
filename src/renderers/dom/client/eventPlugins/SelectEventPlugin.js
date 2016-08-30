@@ -19,7 +19,6 @@ var SyntheticEvent = require('SyntheticEvent');
 
 var getActiveElement = require('getActiveElement');
 var isTextInputElement = require('isTextInputElement');
-var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 
 var skipSelectionChangeEvent = (
@@ -31,8 +30,8 @@ var skipSelectionChangeEvent = (
 var eventTypes = {
   select: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onSelect: null}),
-      captured: keyOf({onSelectCapture: null}),
+      bubbled: 'onSelect',
+      captured: 'onSelectCapture',
     },
     dependencies: [
       'topBlur',
@@ -55,7 +54,6 @@ var mouseDown = false;
 // Track whether a listener exists for this plugin. If none exist, we do
 // not extract events. See #3639.
 var hasListener = false;
-var ON_SELECT_KEY = keyOf({onSelect: null});
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -212,7 +210,7 @@ var SelectEventPlugin = {
   },
 
   didPutListener: function(inst, registrationName, listener) {
-    if (registrationName === ON_SELECT_KEY) {
+    if (registrationName === 'onSelect') {
       hasListener = true;
     }
   },

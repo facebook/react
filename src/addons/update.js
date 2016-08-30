@@ -13,7 +13,6 @@
 
 'use strict';
 
-var keyOf = require('keyOf');
 var invariant = require('invariant');
 var hasOwnProperty = {}.hasOwnProperty;
 
@@ -27,12 +26,12 @@ function shallowCopy(x) {
   }
 }
 
-var COMMAND_PUSH = keyOf({$push: null});
-var COMMAND_UNSHIFT = keyOf({$unshift: null});
-var COMMAND_SPLICE = keyOf({$splice: null});
-var COMMAND_SET = keyOf({$set: null});
-var COMMAND_MERGE = keyOf({$merge: null});
-var COMMAND_APPLY = keyOf({$apply: null});
+var COMMAND_PUSH = '$push';
+var COMMAND_UNSHIFT = '$unshift';
+var COMMAND_SPLICE = '$splice';
+var COMMAND_SET = '$set';
+var COMMAND_MERGE = '$merge';
+var COMMAND_APPLY = '$apply';
 
 var ALL_COMMANDS_LIST = [
   COMMAND_PUSH,

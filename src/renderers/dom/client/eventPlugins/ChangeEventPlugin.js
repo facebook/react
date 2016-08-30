@@ -22,14 +22,12 @@ var inputValueTracking = require('inputValueTracking');
 var getEventTarget = require('getEventTarget');
 var isEventSupported = require('isEventSupported');
 var isTextInputElement = require('isTextInputElement');
-var keyOf = require('keyOf');
-
 
 var eventTypes = {
   change: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onChange: null}),
-      captured: keyOf({onChangeCapture: null}),
+      bubbled: 'onChange',
+      captured: 'onChangeCapture',
     },
     dependencies: [
       'topBlur',

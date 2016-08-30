@@ -17,7 +17,6 @@ var ResponderSyntheticEvent = require('ResponderSyntheticEvent');
 var ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
 
 var accumulate = require('accumulate');
-var keyOf = require('keyOf');
 
 var isStartish = EventPluginUtils.isStartish;
 var isMoveish = EventPluginUtils.isMoveish;
@@ -63,8 +62,8 @@ var eventTypes = {
    */
   startShouldSetResponder: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onStartShouldSetResponder: null}),
-      captured: keyOf({onStartShouldSetResponderCapture: null}),
+      bubbled: 'onStartShouldSetResponder',
+      captured: 'onStartShouldSetResponderCapture',
     },
   },
 
@@ -79,8 +78,8 @@ var eventTypes = {
    */
   scrollShouldSetResponder: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onScrollShouldSetResponder: null}),
-      captured: keyOf({onScrollShouldSetResponderCapture: null}),
+      bubbled: 'onScrollShouldSetResponder',
+      captured: 'onScrollShouldSetResponderCapture',
     },
   },
 
@@ -93,8 +92,8 @@ var eventTypes = {
    */
   selectionChangeShouldSetResponder: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onSelectionChangeShouldSetResponder: null}),
-      captured: keyOf({onSelectionChangeShouldSetResponderCapture: null}),
+      bubbled: 'onSelectionChangeShouldSetResponder',
+      captured: 'onSelectionChangeShouldSetResponderCapture',
     },
   },
 
@@ -104,24 +103,24 @@ var eventTypes = {
    */
   moveShouldSetResponder: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onMoveShouldSetResponder: null}),
-      captured: keyOf({onMoveShouldSetResponderCapture: null}),
+      bubbled: 'onMoveShouldSetResponder',
+      captured: 'onMoveShouldSetResponderCapture',
     },
   },
 
   /**
    * Direct responder events dispatched directly to responder. Do not bubble.
    */
-  responderStart: {registrationName: keyOf({onResponderStart: null})},
-  responderMove: {registrationName: keyOf({onResponderMove: null})},
-  responderEnd: {registrationName: keyOf({onResponderEnd: null})},
-  responderRelease: {registrationName: keyOf({onResponderRelease: null})},
+  responderStart: {registrationName: 'onResponderStart'},
+  responderMove: {registrationName: 'onResponderMove'},
+  responderEnd: {registrationName: 'onResponderEnd'},
+  responderRelease: {registrationName: 'onResponderRelease'},
   responderTerminationRequest: {
-    registrationName: keyOf({onResponderTerminationRequest: null}),
+    registrationName: 'onResponderTerminationRequest',
   },
-  responderGrant: {registrationName: keyOf({onResponderGrant: null})},
-  responderReject: {registrationName: keyOf({onResponderReject: null})},
-  responderTerminate: {registrationName: keyOf({onResponderTerminate: null})},
+  responderGrant: {registrationName: 'onResponderGrant'},
+  responderReject: {registrationName: 'onResponderReject'},
+  responderTerminate: {registrationName: 'onResponderTerminate'},
 };
 
 /**

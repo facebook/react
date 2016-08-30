@@ -17,8 +17,6 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 var TouchEventUtils = require('TouchEventUtils');
 var ViewportMetrics = require('ViewportMetrics');
 
-var keyOf = require('keyOf');
-
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
 
@@ -69,8 +67,8 @@ var dependencies = [
 var eventTypes = {
   touchTap: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onTouchTap: null}),
-      captured: keyOf({onTouchTapCapture: null}),
+      bubbled: 'onTouchTap',
+      captured: 'onTouchTapCapture',
     },
     dependencies: dependencies,
   },
