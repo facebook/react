@@ -22,19 +22,17 @@ var caughtError = null;
  * @param {*} a First argument
  * @param {*} b Second argument
  */
-function invokeGuardedCallback<A, B, C>(
+function invokeGuardedCallback<A>(
   name: string,
-  func: (a: A, b: B) => C,
+  func: (a: A) => void,
   a: A,
-  b: B,
-): ?C {
+): void {
   try {
-    return func(a, b);
+    func(a);
   } catch (x) {
     if (caughtError === null) {
       caughtError = x;
     }
-    return undefined;
   }
 }
 
@@ -70,13 +68,12 @@ if (__DEV__) {
       typeof document !== 'undefined' &&
       typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
-    ReactErrorUtils.invokeGuardedCallback = function<A, B, C>(
+    ReactErrorUtils.invokeGuardedCallback = function<A>(
       name: string,
-      func: (a: A, b: B) => C,
+      func: (a: A) => void,
       a: A,
-      b: B,
-    ): ?C {
-      var boundFunc = func.bind(null, a, b);
+    ): void {
+      var boundFunc = func.bind(null, a);
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');
