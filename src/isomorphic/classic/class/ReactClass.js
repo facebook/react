@@ -18,12 +18,11 @@ var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
-var keyOf = require('keyOf');
 var warning = require('warning');
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
-var MIXINS_KEY = keyOf({mixins: null});
+var MIXINS_KEY = 'mixins';
 
 /**
  * Policies that describe methods in `ReactClassInterface`.

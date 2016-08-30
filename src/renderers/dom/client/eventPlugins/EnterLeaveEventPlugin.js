@@ -15,18 +15,16 @@ var EventPropagators = require('EventPropagators');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
-var keyOf = require('keyOf');
-
 var eventTypes = {
   mouseEnter: {
-    registrationName: keyOf({onMouseEnter: null}),
+    registrationName: 'onMouseEnter',
     dependencies: [
       'topMouseOut',
       'topMouseOver',
     ],
   },
   mouseLeave: {
-    registrationName: keyOf({onMouseLeave: null}),
+    registrationName: 'onMouseLeave',
     dependencies: [
       'topMouseOut',
       'topMouseOver',
