@@ -31,13 +31,13 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://faceboo
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from a CDN. We're using [npmcdn](https://npmcdn.com/) below but React is also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react):
+The fastest way to get started is to serve JavaScript from a CDN. We're using [unpkg](https://unpkg.com/) below but React is also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react):
 
 ```html
 <!-- The core React library -->
-<script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
+<script src="https://unpkg.com/react@15.3.1/dist/react.js"></script>
 <!-- The ReactDOM Library -->
-<script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
+<script src="https://unpkg.com/react-dom@15.3.1/dist/react-dom.js"></script>
 ```
 
 We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.3.1.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.

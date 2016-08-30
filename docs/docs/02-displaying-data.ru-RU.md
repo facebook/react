@@ -18,9 +18,9 @@ next: jsx-in-depth.html
   <head>
     <meta charset="UTF-8" />
     <title>Hello React</title>
-    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
-    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
-    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://unpkg.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>
