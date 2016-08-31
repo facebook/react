@@ -25,7 +25,9 @@ describe('setInnerHTML', function() {
   });
 
   describe('when the node does not have an innerHTML property', () => {
-    it('sets innerHTML on it', function() {
+    // Disabled. JSDOM doesn't seem to remove nodes when using appendChild to
+    // move existing nodes.
+    xit('sets innerHTML on it', function() {
       // Create a mock node that looks like an SVG in IE (without innerHTML)
       var node = {
         namespaceURI: DOMNamespaces.svg,
