@@ -11,9 +11,6 @@
 
 'use strict';
 
-jest
-  .unmock('accumulateInto');
-
 var accumulateInto;
 
 describe('accumulateInto', function() {

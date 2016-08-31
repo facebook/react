@@ -45,33 +45,33 @@ describe('ReactServerRendering', function() {
       var response = ReactServerRendering.renderToString(
         <span>hello world</span>
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
-      );
+      ));
     });
 
     it('should generate simple markup for self-closing tags', function() {
       var response = ReactServerRendering.renderToString(
         <img />
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      );
+      ));
     });
 
     it('should generate simple markup for attribute with `>` symbol', function() {
       var response = ReactServerRendering.renderToString(
         <img data-attr=">" />
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      );
+      ));
     });
 
     it('should generate comment markup for component returns null', function() {
@@ -111,7 +111,7 @@ describe('ReactServerRendering', function() {
       var response = ReactServerRendering.renderToString(
         <Parent />
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
@@ -120,7 +120,7 @@ describe('ReactServerRendering', function() {
             '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
           '</span>' +
         '</div>'
-      );
+      ));
     });
 
     it('should only execute certain lifecycle methods', function() {
@@ -172,14 +172,14 @@ describe('ReactServerRendering', function() {
           <TestComponent />
         );
 
-        expect(response).toMatch(
+        expect(response).toMatch(new RegExp(
           '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
             ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
             '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
             '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
           '</span>'
-        );
+        ));
         expect(lifecycle).toEqual(
           ['getInitialState', 'componentWillMount', 'render']
         );

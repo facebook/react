@@ -9,11 +9,6 @@
  */
 'use strict';
 
-jest.unmock('ReactNativeAttributePayload');
-jest.unmock('ReactNativePropRegistry');
-// jest.dontMock('deepDiffer');
-// jest.dontMock('flattenStyle');
-
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var ReactNativePropRegistry = require('ReactNativePropRegistry');
 

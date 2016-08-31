@@ -13,9 +13,6 @@
 
 'use strict';
 
-jest
-  .unmock('ReactART');
-
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
