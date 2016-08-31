@@ -13,13 +13,11 @@
 
 var React;
 var ReactDOM;
-var ReactDOMServer;
 
 describe('ReactErrorBoundaries', function() {
 
   beforeEach(function() {
     ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
     React = require('React');
   });
 
@@ -37,9 +35,11 @@ describe('ReactErrorBoundaries', function() {
       }
       render() {
         if (!this.state.error) {
-          return (<div><button onClick={this.onClick}>ClickMe</button><Angry /></div>);
+          return (
+            <div><button onClick={this.onClick}>ClickMe</button><Angry /></div>
+          );
         } else {
-          return (<div>Happy Birthday!</div>);
+          return <div>Happy Birthday!</div>;
         }
       }
       onClick() {
@@ -57,10 +57,18 @@ describe('ReactErrorBoundaries', function() {
     expect(EventPluginHub.putListener).not.toBeCalled();
   });
 
-  it('renders an error state (ssr)', function() {
+  it('renders an error state', function() {
+    var log = [];
     class Angry extends React.Component {
       render() {
+        log.push('Angry render');
         throw new Error('Please, do not render me.');
+      }
+      componentDidMount() {
+        log.push('Angry componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Angry componentWillUnmount');
       }
     }
 
@@ -70,11 +78,20 @@ describe('ReactErrorBoundaries', function() {
         this.state = {error: false};
       }
       render() {
+        log.push('Boundary render');
         if (!this.state.error) {
-          return (<div><button onClick={this.onClick}>ClickMe</button><Angry /></div>);
+          return (
+            <div><button onClick={this.onClick}>ClickMe</button><Angry /></div>
+          );
         } else {
-          return (<div>Happy Birthday!</div>);
+          return <div>Happy Birthday!</div>;
         }
+      }
+      componentDidMount() {
+        log.push('Boundary componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Boundary componentWillUnmount');
       }
       onClick() {
         /* do nothing */
@@ -84,12 +101,15 @@ describe('ReactErrorBoundaries', function() {
       }
     }
 
-    var EventPluginHub = require('EventPluginHub');
     var container = document.createElement('div');
-    EventPluginHub.putListener = jest.fn();
-    container.innerHTML = ReactDOMServer.renderToString(<Boundary />);
+    ReactDOM.render(<Boundary />, container);
     expect(container.firstChild.innerHTML).toBe('Happy Birthday!');
-    expect(EventPluginHub.putListener).not.toBeCalled();
+    expect(log).toEqual([
+      'Boundary render',
+      'Angry render',
+      'Boundary render',
+      'Boundary componentDidMount',
+    ]);
   });
 
   it('will catch exceptions in componentWillUnmount', function() {
@@ -98,14 +118,14 @@ describe('ReactErrorBoundaries', function() {
         super();
         this.state = {error: false};
       }
-      
+
       render() {
         if (!this.state.error) {
           return <div>{this.props.children}</div>;
         }
         return <div>Error has been caught</div>;
       }
-      
+
       unstable_handleError() {
         this.setState({error: true});
       }
@@ -139,27 +159,36 @@ describe('ReactErrorBoundaries', function() {
   });
 
   it('expect uneventful render to succeed', function() {
+    var log = [];
     class Boundary extends React.Component {
       constructor(props) {
         super(props);
         this.state = {error: false};
       }
       render() {
-        return (<div><button onClick={this.onClick}>ClickMe</button></div>);
+        log.push('Boundary render');
+        return <div><button onClick={this.onClick}>ClickMe</button></div>;
       }
       onClick() {
         /* do nothing */
+      }
+      componentDidMount() {
+        log.push('Boundary componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Boundary componentWillUnmount');
       }
       unstable_handleError() {
         this.setState({error: true});
       }
     }
 
-    var EventPluginHub = require('EventPluginHub');
     var container = document.createElement('div');
-    EventPluginHub.putListener = jest.fn();
     ReactDOM.render(<Boundary />, container);
-    expect(EventPluginHub.putListener).toBeCalled();
+    expect(log).toEqual([
+      'Boundary render',
+      'Boundary componentDidMount',
+    ]);
   });
 
   it('correctly handles composite siblings', function() {
@@ -168,14 +197,14 @@ describe('ReactErrorBoundaries', function() {
         super();
         this.state = {error: false};
       }
-      
+
       render() {
         if (!this.state.error) {
           return <div>{this.props.children}</div>;
         }
         return <div>Error has been caught</div>;
       }
-      
+
       unstable_handleError() {
         this.setState({error: true});
       }
