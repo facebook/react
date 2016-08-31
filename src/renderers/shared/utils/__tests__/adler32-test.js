@@ -13,29 +13,27 @@
 
 var adler32 = require('adler32');
 
-describe('adler32', function() {
-  it('generates differing checksums', function() {
-    expect(adler32('foo')).not.toBe(adler32('bar'));
-  });
+it('generates differing checksums', function() {
+  expect(adler32('foo')).not.toBe(adler32('bar'));
+});
 
-  it('generates consistent checksums', function() {
-    expect(adler32('linux')).toBe(adler32('linux'));
-  });
+it('generates consistent checksums', function() {
+  expect(adler32('linux')).toBe(adler32('linux'));
+});
 
-  it('is case sensitive', function() {
-    expect(adler32('a')).not.toBe(adler32('A'));
-  });
+it('is case sensitive', function() {
+  expect(adler32('a')).not.toBe(adler32('A'));
+});
 
-  it('doesn\'t barf on large inputs', function() {
-    var str = '';
-    for (var i = 0; i < 100000; i++) {
-      str += 'This will be repeated to be very large indeed. ';
-    }
-    expect(adler32(str)).toBe(692898118);
-  });
+it('doesn\'t barf on large inputs', function() {
+  var str = '';
+  for (var i = 0; i < 100000; i++) {
+    str += 'This will be repeated to be very large indeed. ';
+  }
+  expect(adler32(str)).toBe(692898118);
+});
 
-  it('doesn\'t barf on international inputs', function() {
-    var str = 'Linux 是一個真棒操作系統!';
-    expect(adler32(str)).toBe(-1183804097);
-  });
+it('doesn\'t barf on international inputs', function() {
+  var str = 'Linux 是一個真棒操作系統!';
+  expect(adler32(str)).toBe(-1183804097);
 });

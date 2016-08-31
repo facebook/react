@@ -12,97 +12,95 @@
 'use strict';
 
 
-describe('DisabledInputUtils', function() {
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+var React;
+var ReactDOM;
+var ReactTestUtils;
 
-  var elements = ['button', 'input', 'select', 'textarea'];
+var elements = ['button', 'input', 'select', 'textarea'];
 
-  function expectClickThru(element) {
-    onClick.mockClear();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
-    expect(onClick.mock.calls.length).toBe(1);
-  }
+function expectClickThru(element) {
+  onClick.mockClear();
+  ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
+  expect(onClick.mock.calls.length).toBe(1);
+}
 
-  function expectNoClickThru(element) {
-    onClick.mockClear();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
-    expect(onClick.mock.calls.length).toBe(0);
-  }
+function expectNoClickThru(element) {
+  onClick.mockClear();
+  ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
+  expect(onClick.mock.calls.length).toBe(0);
+}
 
-  function mounted(element) {
-    element = ReactTestUtils.renderIntoDocument(element);
-    return element;
-  }
+function mounted(element) {
+  element = ReactTestUtils.renderIntoDocument(element);
+  return element;
+}
 
-  var onClick = jest.fn();
+var onClick = jest.fn();
 
-  elements.forEach(function(tagName) {
+elements.forEach(function(tagName) {
 
-    describe(tagName, function() {
+  describe(tagName, function() {
 
-      beforeEach(function() {
-        React = require('React');
-        ReactDOM = require('ReactDOM');
-        ReactTestUtils = require('ReactTestUtils');
+    beforeEach(function() {
+      React = require('React');
+      ReactDOM = require('ReactDOM');
+      ReactTestUtils = require('ReactTestUtils');
+    });
+
+    it('should forward clicks when it starts out not disabled', function() {
+      var element = React.createElement(tagName, {
+        onClick: onClick,
       });
 
-      it('should forward clicks when it starts out not disabled', function() {
-        var element = React.createElement(tagName, {
-          onClick: onClick,
-        });
+      expectClickThru(mounted(element));
+    });
 
-        expectClickThru(mounted(element));
+    it('should not forward clicks when it starts out disabled', function() {
+      var element = React.createElement(tagName, {
+        onClick: onClick,
+        disabled: true,
       });
 
-      it('should not forward clicks when it starts out disabled', function() {
-        var element = React.createElement(tagName, {
-          onClick: onClick,
-          disabled: true,
-        });
+      expectNoClickThru(mounted(element));
+    });
 
-        expectNoClickThru(mounted(element));
-      });
+    it('should forward clicks when it becomes not disabled', function() {
+      var container = document.createElement('div');
+      var element = ReactDOM.render(
+        React.createElement(tagName, { onClick: onClick, disabled: true }),
+        container
+      );
+      element = ReactDOM.render(
+        React.createElement(tagName, { onClick: onClick }),
+        container
+      );
+      expectClickThru(element);
+    });
 
-      it('should forward clicks when it becomes not disabled', function() {
-        var container = document.createElement('div');
-        var element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: true }),
-          container
-        );
-        element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick }),
-          container
-        );
-        expectClickThru(element);
-      });
+    it('should not forward clicks when it becomes disabled', function() {
+      var container = document.createElement('div');
+      var element = ReactDOM.render(
+        React.createElement(tagName, { onClick: onClick }),
+        container
+      );
+      element = ReactDOM.render(
+        React.createElement(tagName, { onClick: onClick, disabled: true }),
+        container
+      );
+      expectNoClickThru(element);
+    });
 
-      it('should not forward clicks when it becomes disabled', function() {
-        var container = document.createElement('div');
-        var element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick }),
-          container
-        );
-        element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: true }),
-          container
-        );
-        expectNoClickThru(element);
-      });
-
-      it('should work correctly if the listener is changed', function() {
-        var container = document.createElement('div');
-        var element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: true }),
-          container
-        );
-        element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: false }),
-          container
-        );
-        expectClickThru(element);
-      });
+    it('should work correctly if the listener is changed', function() {
+      var container = document.createElement('div');
+      var element = ReactDOM.render(
+        React.createElement(tagName, { onClick: onClick, disabled: true }),
+        container
+      );
+      element = ReactDOM.render(
+        React.createElement(tagName, { onClick: onClick, disabled: false }),
+        container
+      );
+      expectClickThru(element);
     });
   });
 });

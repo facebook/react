@@ -11,21 +11,18 @@
 
 'use strict';
 
-describe('CSSProperty', function() {
-  var CSSProperty;
+var CSSProperty;
 
-  beforeEach(function() {
-    jest.resetModuleRegistry();
-    CSSProperty = require('CSSProperty');
-  });
+beforeEach(function() {
+  jest.resetModuleRegistry();
+  CSSProperty = require('CSSProperty');
+});
 
-  it('should generate browser prefixes for its `isUnitlessNumber`', function() {
-    expect(CSSProperty.isUnitlessNumber.lineClamp).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.WebkitLineClamp).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.MozFlexGrow).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
-  });
-
+it('should generate browser prefixes for its `isUnitlessNumber`', function() {
+  expect(CSSProperty.isUnitlessNumber.lineClamp).toBeTruthy();
+  expect(CSSProperty.isUnitlessNumber.WebkitLineClamp).toBeTruthy();
+  expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();
+  expect(CSSProperty.isUnitlessNumber.MozFlexGrow).toBeTruthy();
+  expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
+  expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
 });

@@ -15,22 +15,20 @@ jest
   .unmock('EventPluginHub')
   .mock('isEventSupported');
 
-describe('EventPluginHub', function() {
-  var EventPluginHub;
-  var isEventSupported;
+var EventPluginHub;
+var isEventSupported;
 
-  beforeEach(function() {
-    jest.resetModuleRegistry();
-    EventPluginHub = require('EventPluginHub');
-    isEventSupported = require('isEventSupported');
-    isEventSupported.mockReturnValueOnce(false);
-  });
+beforeEach(function() {
+  jest.resetModuleRegistry();
+  EventPluginHub = require('EventPluginHub');
+  isEventSupported = require('isEventSupported');
+  isEventSupported.mockReturnValueOnce(false);
+});
 
-  it('should prevent non-function listeners', function() {
-    expect(function() {
-      EventPluginHub.putListener(1, 'onClick', 'not a function');
-    }).toThrowError(
-      'Expected onClick listener to be a function, instead got type string'
-    );
-  });
+it('should prevent non-function listeners', function() {
+  expect(function() {
+    EventPluginHub.putListener(1, 'onClick', 'not a function');
+  }).toThrowError(
+    'Expected onClick listener to be a function, instead got type string'
+  );
 });

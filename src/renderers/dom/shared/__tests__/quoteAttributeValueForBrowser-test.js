@@ -11,38 +11,34 @@
 
 'use strict';
 
-describe('quoteAttributeValueForBrowser', function() {
+var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 
-  var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
+it('should escape boolean to string', function() {
+  expect(quoteAttributeValueForBrowser(true)).toBe('"true"');
+  expect(quoteAttributeValueForBrowser(false)).toBe('"false"');
+});
 
-  it('should escape boolean to string', function() {
-    expect(quoteAttributeValueForBrowser(true)).toBe('"true"');
-    expect(quoteAttributeValueForBrowser(false)).toBe('"false"');
+it('should escape object to string', function() {
+  var escaped = quoteAttributeValueForBrowser({
+    toString: function() {
+      return 'ponys';
+    },
   });
 
-  it('should escape object to string', function() {
-    var escaped = quoteAttributeValueForBrowser({
-      toString: function() {
-        return 'ponys';
-      },
-    });
+  expect(escaped).toBe('"ponys"');
+});
 
-    expect(escaped).toBe('"ponys"');
-  });
+it('should escape number to string', function() {
+  expect(quoteAttributeValueForBrowser(42)).toBe('"42"');
+});
 
-  it('should escape number to string', function() {
-    expect(quoteAttributeValueForBrowser(42)).toBe('"42"');
-  });
+it('should escape string', function() {
+  var escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
+  expect(escaped).not.toContain('<');
+  expect(escaped).not.toContain('>');
+  expect(escaped).not.toContain('\'');
+  expect(escaped.substr(1, -1)).not.toContain('\"');
 
-  it('should escape string', function() {
-    var escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
-    expect(escaped).not.toContain('<');
-    expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain('\'');
-    expect(escaped.substr(1, -1)).not.toContain('\"');
-
-    escaped = quoteAttributeValueForBrowser('&');
-    expect(escaped).toBe('"&amp;"');
-  });
-
+  escaped = quoteAttributeValueForBrowser('&');
+  expect(escaped).toBe('"&amp;"');
 });
