@@ -108,6 +108,22 @@ describe('ReactBrowserEventEmitter', function() {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
+  it('should not crash ensureScrollValueMonitoring when createEvent returns null', function() {
+    var originalCreateEvent = document.createEvent;
+    var mockedCreateEvent = jest.fn().mockImplementation(function() {
+      return null;
+    });
+    try {
+      document.createEvent = mockedCreateEvent;
+      ReactBrowserEventEmitter.injection.injectHasEventPageXY(undefined);
+      ReactBrowserEventEmitter.ensureScrollValueMonitoring();
+    } finally {
+      document.createEvent = originalCreateEvent;
+    }
+
+    expect(mockedCreateEvent.mock.calls.length).toBe(1);
+  });
+
   it(
     'should not invoke handlers if ReactBrowserEventEmitter is disabled',
     function() {
