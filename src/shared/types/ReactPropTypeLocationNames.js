@@ -16,14 +16,14 @@ import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 type NamesType = {[key: ReactPropTypeLocations]: string};
 
-var ReactPropTypeLocationNames = {};
+var ReactPropTypeLocationNames: NamesType = {};
 
 if (__DEV__) {
-  ReactPropTypeLocationNames = ({
+  ReactPropTypeLocationNames = {
     prop: 'prop',
     context: 'context',
     childContext: 'child context',
-  }: NamesType);
+  };
 }
 
 module.exports = ReactPropTypeLocationNames;
