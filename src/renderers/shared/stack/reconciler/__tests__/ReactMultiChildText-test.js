@@ -60,7 +60,7 @@ var expectChildren = function(d, children) {
         openingCommentNode = outerNode.childNodes[mountIndex];
 
         expect(openingCommentNode.nodeType).toBe(8);
-        expect(openingCommentNode.nodeValue).toMatch(' react-text: [0-9]+ ');
+        expect(openingCommentNode.nodeValue).toMatch(/ react-text: [0-9]+ /);
 
         if (child === '') {
           textNode = null;

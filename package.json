@@ -58,7 +58,7 @@
     "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest": "^12.1.1",
+    "jest": "^15.0.1",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.0",
@@ -90,14 +90,18 @@
       "/.module-cache/",
       "/react/build/"
     ],
-    "persistModuleRegistryBetweenSpecs": true,
     "rootDir": "",
     "scriptPreprocessor": "scripts/jest/preprocessor.js",
-    "setupEnvScriptFile": "scripts/jest/environment.js",
+    "setupFiles": [
+      "scripts/jest/environment.js"
+    ],
     "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
-    "testFileExtensions": [
-      "coffee",
+    "testRegex": "/__tests__/",
+    "moduleFileExtensions": [
       "js",
+      "json",
+      "node",
+      "coffee",
       "ts"
     ],
     "testPathDirs": [
@@ -107,8 +111,6 @@
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
-    "unmockedModulePathPatterns": [
-      ""
-    ]
+    "timers": "fake"
   }
 }

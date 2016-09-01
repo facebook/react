@@ -11,9 +11,7 @@
 
 'use strict';
 
-jest
-  .unmock('EventPluginHub')
-  .mock('isEventSupported');
+jest.mock('isEventSupported');
 
 describe('EventPluginHub', function() {
   var EventPluginHub;
