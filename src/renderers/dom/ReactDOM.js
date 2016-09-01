@@ -118,7 +118,6 @@ if (__DEV__) {
       Date.now,
       Function.prototype.bind,
       Object.keys,
-      String.prototype.split,
       String.prototype.trim,
     ];
 
