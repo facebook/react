@@ -21,8 +21,6 @@ module.system=haste
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 
-experimental.strict_type_args=true
-
 munge_underscores=false
 
 suppress_type=$FlowIssue
