@@ -71,14 +71,8 @@ script:
       fi
     elif [ "$TEST_TYPE" = test ]; then
       set -e
-      # Disabling coverage because it's broken:
-      # https://travis-ci.org/facebook/react/jobs/128163922
-      if false; then
-        ./node_modules/.bin/grunt jest:coverage
-        cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
-      else
-        ./node_modules/.bin/grunt jest:normal
-      fi
+      ./node_modules/.bin/grunt jest:coverage
+      cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
       echo 'Testing in server-render (HTML generation) mode...'
       printf '\nmodule.exports.useCreateElement = false;\n' \
         >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
