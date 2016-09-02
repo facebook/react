@@ -72,6 +72,16 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
 
+    // TODO: Disable this before release, since it is not part of the public API
+    // I use this for testing to compare the relative overhead of classes.
+    if (typeof fn.shouldComponentUpdate === 'function') {
+      if (workInProgress.memoizedProps !== null) {
+        if (!fn.shouldComponentUpdate(workInProgress.memoizedProps, props)) {
+          return bailoutOnAlreadyFinishedWork(current, workInProgress);
+        }
+      }
+    }
+
     var nextChildren = fn(props);
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
