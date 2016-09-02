@@ -92,6 +92,17 @@ export type Fiber = Instance & {
   // This will be used to quickly determine if a subtree has no pending changes.
   pendingWorkPriority: PriorityLevel,
 
+  // This value represents the priority level that was last used to process this
+  // component. This indicates whether it is better to continue from the
+  // progressed work or if it is better to continue from the current state.
+  progressedPriority: PriorityLevel,
+
+  // If work bails out on a Fiber that already had some work started at a lower
+  // priority, then we need to store the progressed work somewhere. This holds
+  // the started child set until we need to get back to working on it. It may
+  // or may not be the same as the "current" child.
+  progressedChild: ?Fiber,
+
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
@@ -147,6 +158,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     lastEffect: null,
 
     pendingWorkPriority: NoWork,
+    progressedPriority: NoWork,
+    progressedChild: null,
 
     alternate: null,
 
@@ -158,7 +171,16 @@ function shouldConstruct(Component) {
 }
 
 // This is used to create an alternate fiber to do work on.
+// TODO: Rename to createWorkInProgressFiber or something like that.
 exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
+  // We clone to get a work in progress. That means that this fiber is the
+  // current. To make it safe to reuse that fiber later on as work in progress
+  // we need to reset its work in progress flag now. We don't have an
+  // opportunity to do this earlier since we don't traverse the tree when
+  // the work in progress tree becomes the current tree.
+  // fiber.progressedPriority = NoWork;
+  // fiber.progressedChild = null;
+
   // We use a double buffering pooling technique because we know that we'll only
   // ever need at most two versions of a tree. We pool the "other" unused node
   // that we're free to reuse. This is lazily created to avoid allocating extra
@@ -167,12 +189,12 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   let alt = fiber.alternate;
   if (alt) {
     alt.stateNode = fiber.stateNode;
-    alt.child = fiber.child;
-    alt.sibling = fiber.sibling;
+    alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
     alt.ref = fiber.ref;
-    alt.pendingProps = fiber.pendingProps;
+    alt.pendingProps = fiber.pendingProps; // TODO: Pass as argument.
     alt.pendingWorkPriority = priorityLevel;
 
+    alt.child = fiber.child;
     alt.memoizedProps = fiber.memoizedProps;
     alt.output = fiber.output;
 
@@ -190,14 +212,18 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.type = fiber.type;
   alt.stateNode = fiber.stateNode;
   alt.child = fiber.child;
-  alt.sibling = fiber.sibling;
+  alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
   alt.ref = fiber.ref;
   // pendingProps is here for symmetry but is unnecessary in practice for now.
+  // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;
   alt.output = fiber.output;
+
+  alt.progressedChild = fiber.progressedChild;
+  alt.progressedPriority = fiber.progressedPriority;
 
   alt.alternate = fiber;
   fiber.alternate = alt;

@@ -270,6 +270,85 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
+  it('can defer side-effects and resume them later on', function() {
+    class Bar extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        return this.props.idx !== nextProps;
+      }
+      render() {
+        return <span prop={this.props.idx} />;
+      }
+    }
+    function Foo(props) {
+      return (
+        <div>
+          <span prop={props.tick} />
+          <div hidden={true}>
+            <Bar idx={props.idx} />
+            <Bar idx={props.idx + 1} />
+          </div>
+        </div>
+      );
+    }
+    ReactNoop.render(<Foo tick={0} idx={0} />);
+    ReactNoop.flushLowPri(40 + 25);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(0),
+        div(/*the spans are down-prioritized and not rendered yet*/)
+      ),
+    ]);
+    ReactNoop.render(<Foo tick={1} idx={0} />);
+    ReactNoop.flushLowPri(35 + 25);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(1),
+        div(/*still not rendered yet*/)
+      ),
+    ]);
+    ReactNoop.flushLowPri(30 + 25);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(1),
+        div(
+          // Now we had enough time to finish the spans.
+          span(0),
+          span(1)
+        )
+      ),
+    ]);
+    var innerSpanA = ReactNoop.root.children[0].children[1].children[1];
+    ReactNoop.render(<Foo tick={2} idx={1} />);
+    ReactNoop.flushLowPri(30 + 25);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(2),
+        div(
+          // Still same old numbers.
+          span(0),
+          span(1)
+        )
+      ),
+    ]);
+    ReactNoop.flushLowPri(30);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(2),
+        div(
+          // New numbers.
+          span(1),
+          span(2)
+        )
+      ),
+    ]);
+
+    var innerSpanB = ReactNoop.root.children[0].children[1].children[1];
+    // This should have been an update to an existing instance, not recreation.
+    // We verify that by ensuring that the child instance was the same as
+    // before.
+    expect(innerSpanA).toBe(innerSpanB);
+  });
+
 
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
