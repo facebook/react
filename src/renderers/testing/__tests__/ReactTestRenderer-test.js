@@ -203,7 +203,24 @@ describe('ReactTestRenderer', function() {
   it('gives a ref to native components', function() {
     var log = [];
     ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
-    expect(log).toEqual([null]);
+    expect(log).toEqual([{}]);
+  });
+
+  it('allows an optional getMockRef function', function() {
+    var mockDOMInstance = { focus: () => {} };
+    var log = [];
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+      {
+        getMockRef: instance => {
+          return mockDOMInstance;
+        },
+      }
+    );
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+    );
+    expect(log).toEqual([mockDOMInstance, {}]);
   });
 
   it('supports error boundaries', function() {

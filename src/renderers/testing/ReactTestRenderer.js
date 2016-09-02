@@ -42,6 +42,7 @@ var ReactTestComponent = function(element) {
   this._currentElement = element;
   this._renderedChildren = null;
   this._topLevelWrapper = null;
+  this._mockConfig = null;
 };
 ReactTestComponent.prototype.mountComponent = function(
   transaction,
@@ -62,9 +63,13 @@ ReactTestComponent.prototype.receiveComponent = function(
 };
 ReactTestComponent.prototype.getHostNode = function() {};
 ReactTestComponent.prototype.getPublicInstance = function() {
-  // I can't say this makes a ton of sense but it seems better than throwing.
-  // Maybe we'll revise later if someone has a good use case.
-  return null;
+  if (this._mockConfig) {
+    var { getMockRef } = this._mockConfig;
+    if (getMockRef) {
+      return getMockRef(this._currentElement);
+    }
+  }
+  return {};
 };
 ReactTestComponent.prototype.unmountComponent = function() {};
 ReactTestComponent.prototype.toJSON = function() {
@@ -134,9 +139,9 @@ ReactComponentEnvironment.injection.injectEnvironment({
   replaceNodeWithMarkup: function() {},
 });
 
+
 var ReactTestRenderer = {
   create: ReactTestMount.render,
-
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */
