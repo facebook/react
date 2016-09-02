@@ -103,6 +103,19 @@ export type Fiber = Instance & {
 
 };
 
+// This is a constructor of a POJO instead of a constructor function for a few
+// reasons:
+// 1) Nobody should add any instance methods on this. Instance methods can be
+//    more difficult to predict when they get optimized and they are almost
+//    never inlined properly in static compilers.
+// 2) Nobody should rely on `instanceof Fiber` for type testing. We should
+//    always know when it is a fiber.
+// 3) We can easily go from a createFiber call to calling a constructor if that
+//    is faster. The opposite is not true.
+// 4) We might want to experiment with using numeric keys since they are easier
+//    to optimize in a non-JIT environment.
+// 5) It should be easy to port this to a C struct and keep a C implementation
+//    compatible.
 var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
   return {
 
