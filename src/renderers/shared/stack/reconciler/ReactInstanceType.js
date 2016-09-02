@@ -34,4 +34,5 @@ export type ReactInstance = {
   _mountImage: any,
   // __DEV__
   _debugID: DebugID,
+  _warnedAboutRefsInRender: bool,
 };
