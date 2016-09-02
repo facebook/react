@@ -17,7 +17,7 @@ describe('SimpleEventPlugin', function() {
   var ReactDOM;
   var ReactTestUtils;
 
-  var elements = ['button', 'input', 'select', 'textarea'];
+  var onClick = jest.fn();
 
   function expectClickThru(element) {
     onClick.mockClear();
@@ -36,17 +36,31 @@ describe('SimpleEventPlugin', function() {
     return element;
   }
 
-  var onClick = jest.fn();
+  beforeEach(function() {
+    React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactTestUtils = require('ReactTestUtils');
+  });
 
-  elements.forEach(function(tagName) {
+  it('A non-interactive tags click when disabled', function() {
+    var element = (<div onClick={ onClick } />);
+    expectClickThru(mounted(element));
+  });
 
-    describe(tagName, () => {
+  it('A non-interactive tags clicks bubble when disabled', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <div onClick={onClick}><div /></div>
+    );
+    var child = ReactDOM.findDOMNode(element).firstChild;
 
-      beforeEach(() => {
-        React = require('React');
-        ReactDOM = require('ReactDOM');
-        ReactTestUtils = require('ReactTestUtils');
-      });
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  ['button', 'input', 'select', 'textarea'].forEach(function(tagName) {
+
+    describe(tagName, function() {
 
       it('should forward clicks when it starts out not disabled', () => {
         var element = React.createElement(tagName, {
