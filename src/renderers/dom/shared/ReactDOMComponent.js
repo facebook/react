@@ -22,7 +22,6 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInput = require('ReactDOMInput');
@@ -542,9 +541,6 @@ ReactDOMComponent.Mixin = {
         };
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
         break;
-      case 'button':
-        props = ReactDOMButton.getHostProps(this, props, hostParent);
-        break;
       case 'input':
         ReactDOMInput.mountWrapper(this, props, hostParent);
         props = ReactDOMInput.getHostProps(this, props);
@@ -887,10 +883,6 @@ ReactDOMComponent.Mixin = {
     var nextProps = this._currentElement.props;
 
     switch (this._tag) {
-      case 'button':
-        lastProps = ReactDOMButton.getHostProps(this, lastProps);
-        nextProps = ReactDOMButton.getHostProps(this, nextProps);
-        break;
       case 'input':
         lastProps = ReactDOMInput.getHostProps(this, lastProps);
         nextProps = ReactDOMInput.getHostProps(this, nextProps);

@@ -21,13 +21,13 @@ describe('DisabledInputUtils', () => {
 
   function expectClickThru(element) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
     expect(onClick.mock.calls.length).toBe(1);
   }
 
   function expectNoClickThru(element) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
     expect(onClick.mock.calls.length).toBe(0);
   }
 

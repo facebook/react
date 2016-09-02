@@ -224,6 +224,11 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topMouseOut':
       case 'topMouseOver':
       case 'topMouseUp':
+        // Disabled elements should not respond to mouse events
+        if (targetInst._currentElement &&
+            targetInst._currentElement.props.disabled) {
+          return null
+        }
         EventConstructor = SyntheticMouseEvent;
         break;
       case 'topDrag':
