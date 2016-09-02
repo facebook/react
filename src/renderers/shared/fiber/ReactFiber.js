@@ -164,7 +164,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.child = fiber.child;
     alt.childInProgress = fiber.childInProgress;
     alt.sibling = fiber.sibling;
-    alt.ref = alt.ref;
+    alt.ref = fiber.ref;
     alt.pendingProps = fiber.pendingProps;
     alt.pendingWorkPriority = priorityLevel;
 
@@ -187,7 +187,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.child = fiber.child;
   alt.childInProgress = fiber.childInProgress;
   alt.sibling = fiber.sibling;
-  alt.ref = alt.ref;
+  alt.ref = fiber.ref;
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   alt.pendingProps = fiber.pendingProps;
   alt.pendingWorkPriority = priorityLevel;

@@ -221,3 +221,57 @@ function ChildReconciler(shouldClone) {
 exports.reconcileChildFibers = ChildReconciler(true);
 
 exports.reconcileChildFibersInPlace = ChildReconciler(false);
+
+
+function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fiber) {
+  workInProgress.return = returnFiber;
+  while (current.sibling) {
+    current = current.sibling;
+    workInProgress = workInProgress.sibling = cloneFiber(
+      current,
+      current.pendingWorkPriority
+    );
+    workInProgress.return = returnFiber;
+  }
+  workInProgress.sibling = null;
+}
+
+exports.cloneChildFibers = function(workInProgress : Fiber) {
+  if (!workInProgress.child) {
+    return;
+  }
+  const current = workInProgress.alternate;
+  if (!current || workInProgress.child !== current.child) {
+    // If there is no alternate, then we don't need to clone the children.
+    // If the children of the alternate fiber is a different set, then we don't
+    // need to clone. We need to reset the return fiber though since we'll
+    // traverse down into them.
+    // TODO: I don't think it is actually possible for them to be anything but
+    // equal at this point because this fiber was just cloned. Can we skip this
+    // check? Similar question about the return fiber.
+    let child = workInProgress.child;
+    while (child) {
+      child.return = workInProgress;
+      child = child.sibling;
+    }
+    return;
+  }
+  // TODO: This used to reset the pending priority. Not sure if that is needed.
+  // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
+
+  // TODO: The below priority used to be set to NoWork which would've
+  // dropped work. This is currently unobservable but will become
+  // observable when the first sibling has lower priority work remaining
+  // than the next sibling. At that point we should add tests that catches
+  // this.
+
+  const currentChild = current.child;
+  if (!currentChild) {
+    return;
+  }
+  workInProgress.child = cloneFiber(
+    currentChild,
+    currentChild.pendingWorkPriority
+  );
+  cloneSiblings(currentChild, workInProgress.child, workInProgress);
+}

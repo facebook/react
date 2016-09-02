@@ -22,7 +22,6 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 
 var { cloneFiber } = require('ReactFiber');
-var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
 
 var {
   NoWork,
@@ -65,36 +64,23 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     // TODO: This is scanning one root at a time. It should be scanning all
     // roots for high priority work before moving on to lower priorities.
     let root = nextScheduledRoot;
+    let highestPriorityRoot = null;
+    let highestPriorityLevel = NoWork;
     while (root) {
-      let rootInProgress = cloneFiber(
-        root.current,
-        root.current.pendingWorkPriority
-      );
-      // Find the highest possible priority work to do.
-      // This loop is unrolled just to satisfy Flow's enum constraint.
-      // We could make arbitrary many idle priority levels but having
-      // too many just means flushing changes too often.
-      let work = findNextUnitOfWorkAtPriority(rootInProgress, HighPriority);
-      if (work) {
-        nextPriorityLevel = HighPriority;
-        return work;
-      }
-      work = findNextUnitOfWorkAtPriority(rootInProgress, LowPriority);
-      if (work) {
-        nextPriorityLevel = LowPriority;
-        return work;
-      }
-      work = findNextUnitOfWorkAtPriority(rootInProgress, OffscreenPriority);
-      if (work) {
-        nextPriorityLevel = OffscreenPriority;
-        return work;
+      if (highestPriorityLevel === NoWork ||
+          highestPriorityLevel > root.current.pendingWorkPriority) {
+        highestPriorityLevel = root.current.pendingWorkPriority;
+        highestPriorityRoot = root;
       }
       // We didn't find anything to do in this root, so let's try the next one.
       root = root.nextScheduledRoot;
     }
-    root = nextScheduledRoot;
-    while (root) {
-      root = root.nextScheduledRoot;
+    if (highestPriorityRoot) {
+      nextPriorityLevel = highestPriorityLevel;
+      return cloneFiber(
+        highestPriorityRoot.current,
+        highestPriorityLevel
+      );
     }
 
     nextPriorityLevel = NoWork;
@@ -119,7 +105,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   function resetWorkPriority(workInProgress : Fiber) {
     let newPriority = NoWork;
-    let child = workInProgress.childInProgress || workInProgress.child;
+    let child = workInProgress.child;
     while (child) {
       // Ensure that remaining work priority bubbles up.
       if (child.pendingWorkPriority !== NoWork &&
@@ -139,13 +125,25 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
-      const next = completeWork(current, workInProgress);
+      let next = null;
 
-      resetWorkPriority(workInProgress);
+      // If this bailed at a lower priority.
+      // TODO: This branch is currently needed if a particular type of component
+      // ends up being a priority lowering. We should probably know that already
+      // before entering begin work.
+      if (workInProgress.pendingWorkPriority === NoWork ||
+          workInProgress.pendingWorkPriority > nextPriorityLevel) {
+        // This fiber was ignored. We need to fall through to the next fiber
+        // and leave the pending props and work untouched on this fiber.
+      } else {
+        next = completeWork(current, workInProgress);
 
-      // The work is now done. We don't need this anymore. This flags
-      // to the system not to redo any work here.
-      workInProgress.pendingProps = null;
+        resetWorkPriority(workInProgress);
+
+        // The work is now done. We don't need this anymore. This flags
+        // to the system not to redo any work here.
+        workInProgress.pendingProps = null;
+      }
 
       const returnFiber = workInProgress.return;
 
@@ -173,14 +171,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       } else if (returnFiber) {
         // If there's no more work in this returnFiber. Complete the returnFiber.
         workInProgress = returnFiber;
-        // If we're stepping up through the child, that means we can now commit
-        // this work. We should only do this when we're stepping upwards because
-        // completing a downprioritized item is not the same as completing its
-        // children.
-        if (workInProgress.childInProgress) {
-          workInProgress.child = workInProgress.childInProgress;
-          workInProgress.childInProgress = null;
-        }
         continue;
       } else {
         // If we're at the root, there's no more work to do. We can flush it.
@@ -205,16 +195,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   }
 
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
-    // Ignore work if there is nothing to do.
-    if (workInProgress.pendingProps === null) {
-      return completeUnitOfWork(workInProgress);
-    }
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
     // progress.
     const current = workInProgress.alternate;
-    const next = beginWork(current, workInProgress);
+    const next = beginWork(current, workInProgress, nextPriorityLevel);
+
     if (next) {
       // If this spawns new work, do that next.
       return next;
