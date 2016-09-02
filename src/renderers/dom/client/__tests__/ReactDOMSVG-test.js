@@ -14,20 +14,16 @@
 var React;
 var ReactDOMServer;
 
-describe('ReactDOMSVG', function() {
+beforeEach(function() {
+  React = require('React');
+  ReactDOMServer = require('ReactDOMServer');
+});
 
-  beforeEach(function() {
-    React = require('React');
-    ReactDOMServer = require('ReactDOMServer');
-  });
-
-  it('creates initial namespaced markup', function() {
-    var markup = ReactDOMServer.renderToString(
-      <svg>
-        <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-      </svg>
-    );
-    expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
-  });
-
+it('creates initial namespaced markup', function() {
+  var markup = ReactDOMServer.renderToString(
+    <svg>
+      <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+    </svg>
+  );
+  expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
 });

@@ -15,152 +15,147 @@ var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
-// TODO: Test render and all stock methods.
-describe('autobinding', function() {
+it('Holds reference to instance', function() {
 
-  it('Holds reference to instance', function() {
+  var mouseDidEnter = jest.fn();
+  var mouseDidLeave = jest.fn();
+  var mouseDidClick = jest.fn();
 
-    var mouseDidEnter = jest.fn();
-    var mouseDidLeave = jest.fn();
-    var mouseDidClick = jest.fn();
+  var TestBindComponent = React.createClass({
+    getInitialState: function() {
+      return {something: 'hi'};
+    },
+    onMouseEnter: mouseDidEnter,
+    onMouseLeave: mouseDidLeave,
+    onClick: mouseDidClick,
 
-    var TestBindComponent = React.createClass({
-      getInitialState: function() {
-        return {something: 'hi'};
+    // auto binding only occurs on top level functions in class defs.
+    badIdeas: {
+      badBind: function() {
+        void this.state.something;
       },
-      onMouseEnter: mouseDidEnter,
-      onMouseLeave: mouseDidLeave,
-      onClick: mouseDidClick,
+    },
 
-      // auto binding only occurs on top level functions in class defs.
-      badIdeas: {
-        badBind: function() {
-          void this.state.something;
-        },
-      },
-
-      render: function() {
-        return (
-          <div
-            onMouseOver={this.onMouseEnter}
-            onMouseOut={this.onMouseLeave}
-            onClick={this.onClick}
-          />
-        );
-      },
-    });
-
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
-
-    var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
-    var rendered2 = reactComponentExpect(mountedInstance2)
-      .expectRenderedChild()
-      .instance();
-
-    expect(function() {
-      var badIdea = instance1.badIdeas.badBind;
-      badIdea();
-    }).toThrow();
-
-    expect(mountedInstance1.onClick).not.toBe(mountedInstance2.onClick);
-
-    ReactTestUtils.Simulate.click(rendered1);
-    expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
-
-    ReactTestUtils.Simulate.click(rendered2);
-    expect(mouseDidClick.mock.instances.length).toBe(2);
-    expect(mouseDidClick.mock.instances[1]).toBe(mountedInstance2);
-
-    ReactTestUtils.Simulate.mouseOver(rendered1);
-    expect(mouseDidEnter.mock.instances.length).toBe(1);
-    expect(mouseDidEnter.mock.instances[0]).toBe(mountedInstance1);
-
-    ReactTestUtils.Simulate.mouseOver(rendered2);
-    expect(mouseDidEnter.mock.instances.length).toBe(2);
-    expect(mouseDidEnter.mock.instances[1]).toBe(mountedInstance2);
-
-    ReactTestUtils.Simulate.mouseOut(rendered1);
-    expect(mouseDidLeave.mock.instances.length).toBe(1);
-    expect(mouseDidLeave.mock.instances[0]).toBe(mountedInstance1);
-
-    ReactTestUtils.Simulate.mouseOut(rendered2);
-    expect(mouseDidLeave.mock.instances.length).toBe(2);
-    expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
+    render: function() {
+      return (
+        <div
+          onMouseOver={this.onMouseEnter}
+          onMouseOut={this.onMouseLeave}
+          onClick={this.onClick}
+        />
+      );
+    },
   });
 
-  it('works with mixins', function() {
-    var mouseDidClick = jest.fn();
+  var instance1 = <TestBindComponent />;
+  var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+  var rendered1 = reactComponentExpect(mountedInstance1)
+    .expectRenderedChild()
+    .instance();
 
-    var TestMixin = {
-      onClick: mouseDidClick,
-    };
+  var instance2 = <TestBindComponent />;
+  var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
+  var rendered2 = reactComponentExpect(mountedInstance2)
+    .expectRenderedChild()
+    .instance();
 
-    var TestBindComponent = React.createClass({
-      mixins: [TestMixin],
+  expect(function() {
+    var badIdea = instance1.badIdeas.badBind;
+    badIdea();
+  }).toThrow();
 
-      render: function() {
-        return <div onClick={this.onClick} />;
-      },
-    });
+  expect(mountedInstance1.onClick).not.toBe(mountedInstance2.onClick);
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+  ReactTestUtils.Simulate.click(rendered1);
+  expect(mouseDidClick.mock.instances.length).toBe(1);
+  expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
 
-    ReactTestUtils.Simulate.click(rendered1);
-    expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+  ReactTestUtils.Simulate.click(rendered2);
+  expect(mouseDidClick.mock.instances.length).toBe(2);
+  expect(mouseDidClick.mock.instances[1]).toBe(mountedInstance2);
+
+  ReactTestUtils.Simulate.mouseOver(rendered1);
+  expect(mouseDidEnter.mock.instances.length).toBe(1);
+  expect(mouseDidEnter.mock.instances[0]).toBe(mountedInstance1);
+
+  ReactTestUtils.Simulate.mouseOver(rendered2);
+  expect(mouseDidEnter.mock.instances.length).toBe(2);
+  expect(mouseDidEnter.mock.instances[1]).toBe(mountedInstance2);
+
+  ReactTestUtils.Simulate.mouseOut(rendered1);
+  expect(mouseDidLeave.mock.instances.length).toBe(1);
+  expect(mouseDidLeave.mock.instances[0]).toBe(mountedInstance1);
+
+  ReactTestUtils.Simulate.mouseOut(rendered2);
+  expect(mouseDidLeave.mock.instances.length).toBe(2);
+  expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
+});
+
+it('works with mixins', function() {
+  var mouseDidClick = jest.fn();
+
+  var TestMixin = {
+    onClick: mouseDidClick,
+  };
+
+  var TestBindComponent = React.createClass({
+    mixins: [TestMixin],
+
+    render: function() {
+      return <div onClick={this.onClick} />;
+    },
   });
 
-  it('warns if you try to bind to this', function() {
-    spyOn(console, 'error');
+  var instance1 = <TestBindComponent />;
+  var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+  var rendered1 = reactComponentExpect(mountedInstance1)
+    .expectRenderedChild()
+    .instance();
 
-    var TestBindComponent = React.createClass({
-      handleClick: function() { },
-      render: function() {
-        return <div onClick={this.handleClick.bind(this)} />;
-      },
-    });
+  ReactTestUtils.Simulate.click(rendered1);
+  expect(mouseDidClick.mock.instances.length).toBe(1);
+  expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+});
 
-    ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+it('warns if you try to bind to this', function() {
+  spyOn(console, 'error');
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: bind(): You are binding a component method to the component. ' +
-      'React does this for you automatically in a high-performance ' +
-      'way, so you can safely remove this call. See TestBindComponent'
-    );
+  var TestBindComponent = React.createClass({
+    handleClick: function() { },
+    render: function() {
+      return <div onClick={this.handleClick.bind(this)} />;
+    },
   });
 
-  it('does not warn if you pass an auto-bound method to setState', function() {
-    spyOn(console, 'error');
+  ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    var TestBindComponent = React.createClass({
-      getInitialState: function() {
-        return {foo: 1};
-      },
-      componentDidMount: function() {
-        this.setState({foo: 2}, this.handleUpdate);
-      },
-      handleUpdate: function() {
+  expect(console.error.calls.count()).toBe(1);
+  expect(console.error.calls.argsFor(0)[0]).toBe(
+    'Warning: bind(): You are binding a component method to the component. ' +
+    'React does this for you automatically in a high-performance ' +
+    'way, so you can safely remove this call. See TestBindComponent'
+  );
+});
 
-      },
-      render: function() {
-        return <div onClick={this.handleClick} />;
-      },
-    });
+it('does not warn if you pass an auto-bound method to setState', function() {
+  spyOn(console, 'error');
 
-    ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+  var TestBindComponent = React.createClass({
+    getInitialState: function() {
+      return {foo: 1};
+    },
+    componentDidMount: function() {
+      this.setState({foo: 2}, this.handleUpdate);
+    },
+    handleUpdate: function() {
 
-    expect(console.error.calls.count()).toBe(0);
+    },
+    render: function() {
+      return <div onClick={this.handleClick} />;
+    },
   });
 
+  ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+
+  expect(console.error.calls.count()).toBe(0);
 });

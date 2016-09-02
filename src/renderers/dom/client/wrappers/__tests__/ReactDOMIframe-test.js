@@ -11,27 +11,25 @@
 
 'use strict';
 
-describe('ReactDOMIframe', function() {
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+var React;
+var ReactDOM;
+var ReactTestUtils;
 
-  beforeEach(function() {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactTestUtils = require('ReactTestUtils');
-  });
+beforeEach(function() {
+  React = require('React');
+  ReactDOM = require('ReactDOM');
+  ReactTestUtils = require('ReactTestUtils');
+});
 
-  it('should trigger load events', function() {
-    var onLoadSpy = jasmine.createSpy();
-    var iframe = React.createElement('iframe', {onLoad: onLoadSpy});
-    iframe = ReactTestUtils.renderIntoDocument(iframe);
+it('should trigger load events', function() {
+  var onLoadSpy = jasmine.createSpy();
+  var iframe = React.createElement('iframe', {onLoad: onLoadSpy});
+  iframe = ReactTestUtils.renderIntoDocument(iframe);
 
-    var loadEvent = document.createEvent('Event');
-    loadEvent.initEvent('load', false, false);
+  var loadEvent = document.createEvent('Event');
+  loadEvent.initEvent('load', false, false);
 
-    ReactDOM.findDOMNode(iframe).dispatchEvent(loadEvent);
+  ReactDOM.findDOMNode(iframe).dispatchEvent(loadEvent);
 
-    expect(onLoadSpy).toHaveBeenCalled();
-  });
+  expect(onLoadSpy).toHaveBeenCalled();
 });

@@ -13,62 +13,60 @@
 
 var SyntheticClipboardEvent;
 
-describe('SyntheticClipboardEvent', function() {
-  var createEvent;
+var createEvent;
 
-  beforeEach(function() {
-    SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-    createEvent = function(nativeEvent) {
-      var target = require('getEventTarget')(nativeEvent);
-      return SyntheticClipboardEvent.getPooled({}, '', nativeEvent, target);
-    };
-  });
+beforeEach(function() {
+  SyntheticClipboardEvent = require('SyntheticClipboardEvent');
+  createEvent = function(nativeEvent) {
+    var target = require('getEventTarget')(nativeEvent);
+    return SyntheticClipboardEvent.getPooled({}, '', nativeEvent, target);
+  };
+});
 
-  describe('ClipboardEvent interface', function() {
-    describe('clipboardData', function() {
-      describe('when event has clipboardData', function() {
-        it("returns event's clipboardData", function() {
-          // Mock clipboardData since native implementation doesn't have a constructor
-          var clipboardData = jasmine.createSpyObj(
-            'clipboardData',
-            ['dropEffect', 'effectAllowed', 'files', 'items', 'types']
-          );
-          var clipboardEvent = createEvent({clipboardData: clipboardData});
-          
-          expect(clipboardEvent.clipboardData).toBe(clipboardData);
-        });
+describe('ClipboardEvent interface', function() {
+  describe('clipboardData', function() {
+    describe('when event has clipboardData', function() {
+      it("returns event's clipboardData", function() {
+        // Mock clipboardData since native implementation doesn't have a constructor
+        var clipboardData = jasmine.createSpyObj(
+          'clipboardData',
+          ['dropEffect', 'effectAllowed', 'files', 'items', 'types']
+        );
+        var clipboardEvent = createEvent({clipboardData: clipboardData});
+        
+        expect(clipboardEvent.clipboardData).toBe(clipboardData);
       });
     });
   });
+});
 
-  describe('EventInterface', function() {
-    it('normalizes properties from the Event interface', function() {
-      var target = document.createElement('div');
-      var syntheticEvent = createEvent({srcElement: target});
+describe('EventInterface', function() {
+  it('normalizes properties from the Event interface', function() {
+    var target = document.createElement('div');
+    var syntheticEvent = createEvent({srcElement: target});
 
-      expect(syntheticEvent.target).toBe(target);
-      expect(syntheticEvent.type).toBe(undefined);
-    });
+    expect(syntheticEvent.target).toBe(target);
+    expect(syntheticEvent.type).toBe(undefined);
+  });
 
-    it('is able to `preventDefault` and `stopPropagation`', function() {
-      var nativeEvent = {};
-      var syntheticEvent = createEvent(nativeEvent);
+  it('is able to `preventDefault` and `stopPropagation`', function() {
+    var nativeEvent = {};
+    var syntheticEvent = createEvent(nativeEvent);
 
-      expect(syntheticEvent.isDefaultPrevented()).toBe(false);
-      syntheticEvent.preventDefault();
-      expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+    expect(syntheticEvent.isDefaultPrevented()).toBe(false);
+    syntheticEvent.preventDefault();
+    expect(syntheticEvent.isDefaultPrevented()).toBe(true);
 
-      expect(syntheticEvent.isPropagationStopped()).toBe(false);
-      syntheticEvent.stopPropagation();
-      expect(syntheticEvent.isPropagationStopped()).toBe(true);
-    });
+    expect(syntheticEvent.isPropagationStopped()).toBe(false);
+    syntheticEvent.stopPropagation();
+    expect(syntheticEvent.isPropagationStopped()).toBe(true);
+  });
 
-    it('is able to `persist`', function() {
-      var syntheticEvent = createEvent({});
+  it('is able to `persist`', function() {
+    var syntheticEvent = createEvent({});
 
-      expect(syntheticEvent.isPersistent()).toBe(false);
-      syntheticEvent.persist();
-      expect(syntheticEvent.isPersistent()).toBe(true);
-    });
+    expect(syntheticEvent.isPersistent()).toBe(false);
+    syntheticEvent.persist();
+    expect(syntheticEvent.isPersistent()).toBe(true);
   });
 });

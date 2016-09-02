@@ -48,251 +48,247 @@ function testDOMNodeStructure(domNode, expectedStructure) {
   }
 }
 
-describe('ReactART', function() {
+beforeEach(function() {
+  ARTCurrentMode.setCurrent(ARTSVGMode);
 
-  beforeEach(function() {
-    ARTCurrentMode.setCurrent(ARTSVGMode);
+  Group = ReactART.Group;
+  Shape = ReactART.Shape;
+  Surface = ReactART.Surface;
 
-    Group = ReactART.Group;
-    Shape = ReactART.Shape;
-    Surface = ReactART.Surface;
+  TestComponent = class extends React.Component {
+    render() {
 
-    TestComponent = class extends React.Component {
-      render() {
+      var a =
+        <Shape
+          d="M0,0l50,0l0,50l-50,0z"
+          fill={new ReactART.LinearGradient(["black", "white"])}
+          key="a"
+          width={50} height={50}
+          x={50} y={50}
+          opacity={0.1}
+        />;
 
-        var a =
-          <Shape
-            d="M0,0l50,0l0,50l-50,0z"
-            fill={new ReactART.LinearGradient(["black", "white"])}
-            key="a"
-            width={50} height={50}
-            x={50} y={50}
-            opacity={0.1}
-          />;
+      var b =
+        <Shape
+          fill="#3C5A99"
+          key="b"
+          scale={0.5}
+          x={50} y={50}
+          title="This is an F"
+          cursor="pointer">
+          M64.564,38.583H54l0.008-5.834c0-3.035,0.293-4.666,4.657-4.666
+          h5.833V16.429h-9.33c-11.213,0-15.159,5.654-15.159,15.16v6.994
+          h-6.99v11.652h6.99v33.815H54V50.235h9.331L64.564,38.583z
+        </Shape>;
 
-        var b =
-          <Shape
-            fill="#3C5A99"
-            key="b"
-            scale={0.5}
-            x={50} y={50}
-            title="This is an F"
-            cursor="pointer">
-            M64.564,38.583H54l0.008-5.834c0-3.035,0.293-4.666,4.657-4.666
-            h5.833V16.429h-9.33c-11.213,0-15.159,5.654-15.159,15.16v6.994
-            h-6.99v11.652h6.99v33.815H54V50.235h9.331L64.564,38.583z
-          </Shape>;
+      var c = <Group key="c" />;
 
-        var c = <Group key="c" />;
+      return (
+        <Surface width={150} height={200}>
+          <Group ref="group">
+            {this.props.flipped ? [b, a, c] : [a, b, c]}
+          </Group>
+        </Surface>
+      );
+    }
+  };
+});
 
-        return (
-          <Surface width={150} height={200}>
-            <Group ref="group">
-              {this.props.flipped ? [b, a, c] : [a, b, c]}
-            </Group>
-          </Surface>
-        );
+it('should have the correct lifecycle state', function() {
+  var instance = <TestComponent />;
+  instance = ReactTestUtils.renderIntoDocument(instance);
+  var group = instance.refs.group;
+  // Duck type test for an ART group
+  expect(typeof group.indicate).toBe('function');
+});
+
+it('should render a reasonable SVG structure in SVG mode', function() {
+  var instance = <TestComponent />;
+  instance = ReactTestUtils.renderIntoDocument(instance);
+
+  var expectedStructure = {
+    nodeName: 'svg',
+    width: '150',
+    height: '200',
+    children: [
+      { nodeName: 'defs' },
+      {
+        nodeName: 'g',
+        children: [
+          {
+            nodeName: 'defs',
+            children: [
+              { nodeName: 'linearGradient' }
+            ]
+          },
+          { nodeName: 'path' },
+          { nodeName: 'path' },
+          { nodeName: 'g' }
+        ]
       }
-    };
-  });
+    ]
+  };
 
-  it('should have the correct lifecycle state', function() {
-    var instance = <TestComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    var group = instance.refs.group;
-    // Duck type test for an ART group
-    expect(typeof group.indicate).toBe('function');
-  });
+  var realNode = ReactDOM.findDOMNode(instance);
+  testDOMNodeStructure(realNode, expectedStructure);
+});
 
-  it('should render a reasonable SVG structure in SVG mode', function() {
-    var instance = <TestComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+it('should be able to reorder components', function() {
+  var container = document.createElement('div');
+  var instance = ReactDOM.render(<TestComponent flipped={false} />, container);
 
-    var expectedStructure = {
-      nodeName: 'svg',
-      width: '150',
-      height: '200',
-      children: [
-        { nodeName: 'defs' },
-        {
-          nodeName: 'g',
-          children: [
-            {
-              nodeName: 'defs',
-              children: [
-                { nodeName: 'linearGradient' }
-              ]
-            },
-            { nodeName: 'path' },
-            { nodeName: 'path' },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
-    };
-
-    var realNode = ReactDOM.findDOMNode(instance);
-    testDOMNodeStructure(realNode, expectedStructure);
-  });
-
-  it('should be able to reorder components', function() {
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<TestComponent flipped={false} />, container);
-
-    var expectedStructure = {
-      nodeName: 'svg',
-      children: [
-        { nodeName: 'defs' },
-        {
-          nodeName: 'g',
-          children: [
-            { nodeName: 'defs' },
-            { nodeName: 'path', opacity: '0.1' },
-            { nodeName: 'path', opacity: Missing },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
-    };
-
-    var realNode = ReactDOM.findDOMNode(instance);
-    testDOMNodeStructure(realNode, expectedStructure);
-
-    ReactDOM.render(<TestComponent flipped={true} />, container);
-
-    var expectedNewStructure = {
-      nodeName: 'svg',
-      children: [
-        { nodeName: 'defs' },
-        {
-          nodeName: 'g',
-          children: [
-            { nodeName: 'defs' },
-            { nodeName: 'path', opacity: Missing },
-            { nodeName: 'path', opacity: '0.1' },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
-    };
-
-    testDOMNodeStructure(realNode, expectedNewStructure);
-  });
-
-  it('should be able to reorder many components', function() {
-    var container = document.createElement('div');
-
-    class Component extends React.Component {
-      render() {
-        var chars = this.props.chars.split('');
-        return (
-          <Surface>
-            {chars.map((text) => <Shape key={text} title={text} />)}
-          </Surface>
-        );
+  var expectedStructure = {
+    nodeName: 'svg',
+    children: [
+      { nodeName: 'defs' },
+      {
+        nodeName: 'g',
+        children: [
+          { nodeName: 'defs' },
+          { nodeName: 'path', opacity: '0.1' },
+          { nodeName: 'path', opacity: Missing },
+          { nodeName: 'g' }
+        ]
       }
+    ]
+  };
+
+  var realNode = ReactDOM.findDOMNode(instance);
+  testDOMNodeStructure(realNode, expectedStructure);
+
+  ReactDOM.render(<TestComponent flipped={true} />, container);
+
+  var expectedNewStructure = {
+    nodeName: 'svg',
+    children: [
+      { nodeName: 'defs' },
+      {
+        nodeName: 'g',
+        children: [
+          { nodeName: 'defs' },
+          { nodeName: 'path', opacity: Missing },
+          { nodeName: 'path', opacity: '0.1' },
+          { nodeName: 'g' }
+        ]
+      }
+    ]
+  };
+
+  testDOMNodeStructure(realNode, expectedNewStructure);
+});
+
+it('should be able to reorder many components', function() {
+  var container = document.createElement('div');
+
+  class Component extends React.Component {
+    render() {
+      var chars = this.props.chars.split('');
+      return (
+        <Surface>
+          {chars.map((text) => <Shape key={text} title={text} />)}
+        </Surface>
+      );
+    }
+  }
+
+  // Mini multi-child stress test: lots of reorders, some adds, some removes.
+  var before = 'abcdefghijklmnopqrst';
+  var after = 'mxhpgwfralkeoivcstzy';
+
+  var instance = ReactDOM.render(<Component chars={before} />, container);
+  var realNode = ReactDOM.findDOMNode(instance);
+  expect(realNode.textContent).toBe(before);
+
+  instance = ReactDOM.render(<Component chars={after} />, container);
+  expect(realNode.textContent).toBe(after);
+
+  ReactDOM.unmountComponentAtNode(container);
+});
+
+it('renders composite with lifecycle inside group', function() {
+  var mounted = false;
+
+  class CustomShape extends React.Component {
+    render() {
+      return <Shape />;
     }
 
-    // Mini multi-child stress test: lots of reorders, some adds, some removes.
-    var before = 'abcdefghijklmnopqrst';
-    var after = 'mxhpgwfralkeoivcstzy';
+    componentDidMount() {
+      mounted = true;
+    }
+  }
 
-    var instance = ReactDOM.render(<Component chars={before} />, container);
-    var realNode = ReactDOM.findDOMNode(instance);
-    expect(realNode.textContent).toBe(before);
+  ReactTestUtils.renderIntoDocument(
+    <Surface>
+      <Group>
+        <CustomShape />
+      </Group>
+    </Surface>
+  );
+  expect(mounted).toBe(true);
+});
 
-    instance = ReactDOM.render(<Component chars={after} />, container);
-    expect(realNode.textContent).toBe(after);
+it('resolves refs before componentDidMount', function() {
+  class CustomShape extends React.Component {
+    render() {
+      return <Shape />;
+    }
+  }
 
-    ReactDOM.unmountComponentAtNode(container);
-  });
+  var ref = null;
 
-  it('renders composite with lifecycle inside group', function() {
-    var mounted = false;
-
-    class CustomShape extends React.Component {
-      render() {
-        return <Shape />;
-      }
-
-      componentDidMount() {
-        mounted = true;
-      }
+  class Outer extends React.Component {
+    componentDidMount() {
+      ref = this.refs.test;
     }
 
-    ReactTestUtils.renderIntoDocument(
-      <Surface>
-        <Group>
-          <CustomShape />
-        </Group>
-      </Surface>
-    );
-    expect(mounted).toBe(true);
-  });
+    render() {
+      return (
+        <Surface>
+          <Group>
+            <CustomShape ref="test" />
+          </Group>
+        </Surface>
+      );
+    }
+  }
 
-  it('resolves refs before componentDidMount', function() {
-    class CustomShape extends React.Component {
-      render() {
-        return <Shape />;
-      }
+  ReactTestUtils.renderIntoDocument(<Outer />);
+  expect(ref.constructor).toBe(CustomShape);
+});
+
+it('resolves refs before componentDidUpdate', function() {
+  class CustomShape extends React.Component {
+    render() {
+      return <Shape />;
+    }
+  }
+
+  var ref = {};
+
+  class Outer extends React.Component {
+    componentDidMount() {
+      ref = this.refs.test;
     }
 
-    var ref = null;
-
-    class Outer extends React.Component {
-      componentDidMount() {
-        ref = this.refs.test;
-      }
-
-      render() {
-        return (
-          <Surface>
-            <Group>
-              <CustomShape ref="test" />
-            </Group>
-          </Surface>
-        );
-      }
+    componentDidUpdate() {
+      ref = this.refs.test;
     }
 
-    ReactTestUtils.renderIntoDocument(<Outer />);
-    expect(ref.constructor).toBe(CustomShape);
-  });
-
-  it('resolves refs before componentDidUpdate', function() {
-    class CustomShape extends React.Component {
-      render() {
-        return <Shape />;
-      }
+    render() {
+      return (
+        <Surface>
+          <Group>
+            {this.props.mountCustomShape && <CustomShape ref="test" />}
+          </Group>
+        </Surface>
+      );
     }
+  }
 
-    var ref = {};
-
-    class Outer extends React.Component {
-      componentDidMount() {
-        ref = this.refs.test;
-      }
-
-      componentDidUpdate() {
-        ref = this.refs.test;
-      }
-
-      render() {
-        return (
-          <Surface>
-            <Group>
-              {this.props.mountCustomShape && <CustomShape ref="test" />}
-            </Group>
-          </Surface>
-        );
-      }
-    }
-
-    var container = document.createElement('div');
-    ReactDOM.render(<Outer />, container);
-    expect(ref).not.toBeDefined();
-    ReactDOM.render(<Outer mountCustomShape={true} />, container);
-    expect(ref.constructor).toBe(CustomShape);
-  });
-
+  var container = document.createElement('div');
+  ReactDOM.render(<Outer />, container);
+  expect(ref).not.toBeDefined();
+  ReactDOM.render(<Outer mountCustomShape={true} />, container);
+  expect(ref.constructor).toBe(CustomShape);
 });

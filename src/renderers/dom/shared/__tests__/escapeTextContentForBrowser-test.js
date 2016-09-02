@@ -11,38 +11,34 @@
 
 'use strict';
 
-describe('escapeTextContentForBrowser', function() {
+var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 
-  var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+it('should escape boolean to string', function() {
+  expect(escapeTextContentForBrowser(true)).toBe('true');
+  expect(escapeTextContentForBrowser(false)).toBe('false');
+});
 
-  it('should escape boolean to string', function() {
-    expect(escapeTextContentForBrowser(true)).toBe('true');
-    expect(escapeTextContentForBrowser(false)).toBe('false');
+it('should escape object to string', function() {
+  var escaped = escapeTextContentForBrowser({
+    toString: function() {
+      return 'ponys';
+    },
   });
 
-  it('should escape object to string', function() {
-    var escaped = escapeTextContentForBrowser({
-      toString: function() {
-        return 'ponys';
-      },
-    });
+  expect(escaped).toBe('ponys');
+});
 
-    expect(escaped).toBe('ponys');
-  });
+it('should escape number to string', function() {
+  expect(escapeTextContentForBrowser(42)).toBe('42');
+});
 
-  it('should escape number to string', function() {
-    expect(escapeTextContentForBrowser(42)).toBe('42');
-  });
+it('should escape string', function() {
+  var escaped = escapeTextContentForBrowser('<script type=\'\' src=""></script>');
+  expect(escaped).not.toContain('<');
+  expect(escaped).not.toContain('>');
+  expect(escaped).not.toContain('\'');
+  expect(escaped).not.toContain('\"');
 
-  it('should escape string', function() {
-    var escaped = escapeTextContentForBrowser('<script type=\'\' src=""></script>');
-    expect(escaped).not.toContain('<');
-    expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain('\'');
-    expect(escaped).not.toContain('\"');
-
-    escaped = escapeTextContentForBrowser('&');
-    expect(escaped).toBe('&amp;');
-  });
-
+  escaped = escapeTextContentForBrowser('&');
+  expect(escaped).toBe('&amp;');
 });

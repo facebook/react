@@ -11,27 +11,25 @@
 
 'use strict';
 
-describe('ReactDOMIDOperations', function() {
-  var ReactDOMComponentTree = require('ReactDOMComponentTree');
-  var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMIDOperations = require('ReactDOMIDOperations');
 
-  it('should update innerHTML and preserve whitespace', function() {
-    var stubNode = document.createElement('div');
-    var stubInstance = {_debugID: 1};
-    ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+it('should update innerHTML and preserve whitespace', function() {
+  var stubNode = document.createElement('div');
+  var stubInstance = {_debugID: 1};
+  ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
-    var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
-    ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
-      stubInstance,
-      [{
-        type: 'SET_MARKUP',
-        content: html,
-        fromIndex: null,
-        toIndex: null,
-      }],
-      []
-    );
+  var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
+  ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
+    stubInstance,
+    [{
+      type: 'SET_MARKUP',
+      content: html,
+      fromIndex: null,
+      toIndex: null,
+    }],
+    []
+  );
 
-    expect(stubNode.innerHTML).toBe(html);
-  });
+  expect(stubNode.innerHTML).toBe(html);
 });

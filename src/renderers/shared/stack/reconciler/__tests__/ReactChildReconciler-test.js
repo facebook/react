@@ -17,68 +17,66 @@
 var React;
 var ReactTestUtils;
 
-describe('ReactChildReconciler', function() {
-  function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+function normalizeCodeLocInfo(str) {
+  return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+}
+
+beforeEach(function() {
+  jest.resetModuleRegistry();
+
+  React = require('React');
+  ReactTestUtils = require('ReactTestUtils');
+});
+
+it('warns for duplicated keys', function() {
+  spyOn(console, 'error');
+
+  class Component extends React.Component {
+    render() {
+      return <div>{[<div key="1" />, <div key="1" />]}</div>;
+    }
   }
 
-  beforeEach(function() {
-    jest.resetModuleRegistry();
+  ReactTestUtils.renderIntoDocument(<Component />);
 
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
-  });
+  expect(console.error.calls.count()).toBe(1);
+  expect(console.error.calls.argsFor(0)[0]).toContain(
+    'Child keys must be unique; when two children share a key, only the first child will be used.'
+  );
+});
 
-  it('warns for duplicated keys', function() {
-    spyOn(console, 'error');
+it('warns for duplicated keys with component stack info', function() {
+  spyOn(console, 'error');
 
-    class Component extends React.Component {
-      render() {
-        return <div>{[<div key="1" />, <div key="1" />]}</div>;
-      }
+  class Component extends React.Component {
+    render() {
+      return <div>{[<div key="1" />, <div key="1" />]}</div>;
     }
+  }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.'
-    );
-  });
-
-  it('warns for duplicated keys with component stack info', function() {
-    spyOn(console, 'error');
-
-    class Component extends React.Component {
-      render() {
-        return <div>{[<div key="1" />, <div key="1" />]}</div>;
-      }
+  class Parent extends React.Component {
+    render() {
+      return React.cloneElement(this.props.child);
     }
+  }
 
-    class Parent extends React.Component {
-      render() {
-        return React.cloneElement(this.props.child);
-      }
+  class GrandParent extends React.Component {
+    render() {
+      return <Parent child={<Component />} />;
     }
+  }
 
-    class GrandParent extends React.Component {
-      render() {
-        return <Parent child={<Component />} />;
-      }
-    }
+  ReactTestUtils.renderIntoDocument(<GrandParent />);
 
-    ReactTestUtils.renderIntoDocument(<GrandParent />);
-
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: flattenChildren(...): ' +
-      'Encountered two children with the same key, `1`. ' +
-      'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
-      '    in div (at **)\n' +
-      '    in Component (at **)\n' +
-      '    in Parent (at **)\n' +
-      '    in GrandParent (at **)'
-    );
-  });
+  expect(console.error.calls.count()).toBe(1);
+  expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    'Warning: flattenChildren(...): ' +
+    'Encountered two children with the same key, `1`. ' +
+    'Child keys must be unique; when two children share a key, ' +
+    'only the first child will be used.\n' +
+    '    in div (at **)\n' +
+    '    in Component (at **)\n' +
+    '    in Parent (at **)\n' +
+    '    in GrandParent (at **)'
+  );
 });
