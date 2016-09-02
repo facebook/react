@@ -146,6 +146,23 @@ function getDictionaryKey(inst: ReactInstance): string {
   return '.' + inst._rootNodeID;
 }
 
+function isInteractive(tag) {
+  return tag === 'button' || tag === 'input'
+    || tag === 'textarea' || tag === 'select';
+}
+
+function shouldPreventMouseEvent(inst) {
+  if (inst) {
+    var disabled = inst._currentElement && inst._currentElement.props.disabled;
+
+    if (disabled) {
+      return isInteractive(inst._tag);
+    }
+  }
+
+  return false;
+}
+
 var SimpleEventPlugin: PluginModule<MouseEvent> = {
 
   eventTypes: eventTypes,
@@ -225,9 +242,8 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topMouseOver':
       case 'topMouseUp':
         // Disabled elements should not respond to mouse events
-        if (targetInst._currentElement &&
-            targetInst._currentElement.props.disabled) {
-          return null
+        if (shouldPreventMouseEvent(targetInst)) {
+          return null;
         }
         EventConstructor = SyntheticMouseEvent;
         break;
@@ -291,7 +307,8 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     // non-interactive elements, which means delegated click listeners do not
     // fire. The workaround for this bug involves attaching an empty click
     // listener on the target node.
-    if (registrationName === 'onClick') {
+    // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+    if (registrationName === 'onClick' && isInteractive(inst._tag)) {
       var key = getDictionaryKey(inst);
       var node = ReactDOMComponentTree.getNodeFromInstance(inst);
       if (!onClickListeners[key]) {
@@ -308,7 +325,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     inst: ReactInstance,
     registrationName: string,
   ): void {
-    if (registrationName === 'onClick') {
+    if (registrationName === 'onClick' && isInteractive(inst._tag)) {
       var key = getDictionaryKey(inst);
       onClickListeners[key].remove();
       delete onClickListeners[key];
