@@ -162,10 +162,16 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
             // This returns true if there was something to update.
             markForPreEffect(workInProgress);
           }
+          // TODO: Is this actually ever going to change? Why set it every time?
           workInProgress.output = instance;
         } else {
           if (!newProps) {
-            throw new Error('We must have new props for new mounts.');
+            if (workInProgress.stateNode === null) {
+              throw new Error('We must have new props for new mounts.');
+            } else {
+              // This can happen when we abort work.
+              return null;
+            }
           }
           const instance = createInstance(workInProgress.type, newProps, children);
           // TODO: This seems like unnecessary duplication.

@@ -25,9 +25,6 @@ var { cloneFiber } = require('ReactFiber');
 
 var {
   NoWork,
-  HighPriority,
-  LowPriority,
-  OffscreenPriority,
 } = require('ReactPriorityLevel');
 
 var timeHeuristicForUnitOfWork = 1;
@@ -105,7 +102,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   function resetWorkPriority(workInProgress : Fiber) {
     let newPriority = NoWork;
-    let child = workInProgress.child;
+    // progressedChild is going to be the child set with the highest priority.
+    // Either it is the same as child, or it just bailed out because it choose
+    // not to do the work.
+    let child = workInProgress.progressedChild;
     while (child) {
       // Ensure that remaining work priority bubbles up.
       if (child.pendingWorkPriority !== NoWork &&
@@ -125,25 +125,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
-      let next = null;
+      const next = completeWork(current, workInProgress);
 
-      // If this bailed at a lower priority.
-      // TODO: This branch is currently needed if a particular type of component
-      // ends up being a priority lowering. We should probably know that already
-      // before entering begin work.
-      if (workInProgress.pendingWorkPriority === NoWork ||
-          workInProgress.pendingWorkPriority > nextPriorityLevel) {
-        // This fiber was ignored. We need to fall through to the next fiber
-        // and leave the pending props and work untouched on this fiber.
-      } else {
-        next = completeWork(current, workInProgress);
+      resetWorkPriority(workInProgress);
 
-        resetWorkPriority(workInProgress);
-
-        // The work is now done. We don't need this anymore. This flags
-        // to the system not to redo any work here.
-        workInProgress.pendingProps = null;
-      }
+      // The work is now done. We don't need this anymore. This flags
+      // to the system not to redo any work here.
+      workInProgress.pendingProps = null;
 
       const returnFiber = workInProgress.return;
 
@@ -175,6 +163,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       } else {
         // If we're at the root, there's no more work to do. We can flush it.
         const root : FiberRoot = (workInProgress.stateNode : any);
+        if (root.current === workInProgress) {
+          throw new Error(
+            'Cannot commit the same tree as before. This is probably a bug ' +
+            'related to the return field.'
+          );
+        }
         root.current = workInProgress;
         // TODO: We can be smarter here and only look for more work in the
         // "next" scheduled work since we've already scanned passed. That
