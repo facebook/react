@@ -40,7 +40,7 @@ export type HostConfig<T, P, I, C> = {
   updateContainer(containerInfo : C, children : HostChildren<I>) : void;
 
   createInstance(type : T, props : P, children : HostChildren<I>) : I,
-  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : bool,
+  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : boolean,
   commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : void,
   deleteInstance(instance : I) : void,
 

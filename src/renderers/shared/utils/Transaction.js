@@ -103,7 +103,7 @@ var TransactionImpl = {
    */
   getTransactionWrappers: null,
 
-  isInTransaction: function(): bool {
+  isInTransaction: function(): boolean {
     return !!this._isInTransaction;
   },
 
