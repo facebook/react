@@ -30,451 +30,104 @@ var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('invariant');
 
-var eventTypes = {
-  abort: {
-    phasedRegistrationNames: {
-      bubbled: 'onAbort',
-      captured: 'onAbortCapture',
-    },
-  },
-  animationEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onAnimationEnd',
-      captured: 'onAnimationEndCapture',
-    },
-  },
-  animationIteration: {
-    phasedRegistrationNames: {
-      bubbled: 'onAnimationIteration',
-      captured: 'onAnimationIterationCapture',
-    },
-  },
-  animationStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onAnimationStart',
-      captured: 'onAnimationStartCapture',
-    },
-  },
-  blur: {
-    phasedRegistrationNames: {
-      bubbled: 'onBlur',
-      captured: 'onBlurCapture',
-    },
-  },
-  canPlay: {
-    phasedRegistrationNames: {
-      bubbled: 'onCanPlay',
-      captured: 'onCanPlayCapture',
-    },
-  },
-  canPlayThrough: {
-    phasedRegistrationNames: {
-      bubbled: 'onCanPlayThrough',
-      captured: 'onCanPlayThroughCapture',
-    },
-  },
-  click: {
-    phasedRegistrationNames: {
-      bubbled: 'onClick',
-      captured: 'onClickCapture',
-    },
-  },
-  contextMenu: {
-    phasedRegistrationNames: {
-      bubbled: 'onContextMenu',
-      captured: 'onContextMenuCapture',
-    },
-  },
-  copy: {
-    phasedRegistrationNames: {
-      bubbled: 'onCopy',
-      captured: 'onCopyCapture',
-    },
-  },
-  cut: {
-    phasedRegistrationNames: {
-      bubbled: 'onCut',
-      captured: 'onCutCapture',
-    },
-  },
-  doubleClick: {
-    phasedRegistrationNames: {
-      bubbled: 'onDoubleClick',
-      captured: 'onDoubleClickCapture',
-    },
-  },
-  drag: {
-    phasedRegistrationNames: {
-      bubbled: 'onDrag',
-      captured: 'onDragCapture',
-    },
-  },
-  dragEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onDragEnd',
-      captured: 'onDragEndCapture',
-    },
-  },
-  dragEnter: {
-    phasedRegistrationNames: {
-      bubbled: 'onDragEnter',
-      captured: 'onDragEnterCapture',
-    },
-  },
-  dragExit: {
-    phasedRegistrationNames: {
-      bubbled: 'onDragExit',
-      captured: 'onDragExitCapture',
-    },
-  },
-  dragLeave: {
-    phasedRegistrationNames: {
-      bubbled: 'onDragLeave',
-      captured: 'onDragLeaveCapture',
-    },
-  },
-  dragOver: {
-    phasedRegistrationNames: {
-      bubbled: 'onDragOver',
-      captured: 'onDragOverCapture',
-    },
-  },
-  dragStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onDragStart',
-      captured: 'onDragStartCapture',
-    },
-  },
-  drop: {
-    phasedRegistrationNames: {
-      bubbled: 'onDrop',
-      captured: 'onDropCapture',
-    },
-  },
-  durationChange: {
-    phasedRegistrationNames: {
-      bubbled: 'onDurationChange',
-      captured: 'onDurationChangeCapture',
-    },
-  },
-  emptied: {
-    phasedRegistrationNames: {
-      bubbled: 'onEmptied',
-      captured: 'onEmptiedCapture',
-    },
-  },
-  encrypted: {
-    phasedRegistrationNames: {
-      bubbled: 'onEncrypted',
-      captured: 'onEncryptedCapture',
-    },
-  },
-  ended: {
-    phasedRegistrationNames: {
-      bubbled: 'onEnded',
-      captured: 'onEndedCapture',
-    },
-  },
-  error: {
-    phasedRegistrationNames: {
-      bubbled: 'onError',
-      captured: 'onErrorCapture',
-    },
-  },
-  focus: {
-    phasedRegistrationNames: {
-      bubbled: 'onFocus',
-      captured: 'onFocusCapture',
-    },
-  },
-  input: {
-    phasedRegistrationNames: {
-      bubbled: 'onInput',
-      captured: 'onInputCapture',
-    },
-  },
-  invalid: {
-    phasedRegistrationNames: {
-      bubbled: 'onInvalid',
-      captured: 'onInvalidCapture',
-    },
-  },
-  keyDown: {
-    phasedRegistrationNames: {
-      bubbled: 'onKeyDown',
-      captured: 'onKeyDownCapture',
-    },
-  },
-  keyPress: {
-    phasedRegistrationNames: {
-      bubbled: 'onKeyPress',
-      captured: 'onKeyPressCapture',
-    },
-  },
-  keyUp: {
-    phasedRegistrationNames: {
-      bubbled: 'onKeyUp',
-      captured: 'onKeyUpCapture',
-    },
-  },
-  load: {
-    phasedRegistrationNames: {
-      bubbled: 'onLoad',
-      captured: 'onLoadCapture',
-    },
-  },
-  loadedData: {
-    phasedRegistrationNames: {
-      bubbled: 'onLoadedData',
-      captured: 'onLoadedDataCapture',
-    },
-  },
-  loadedMetadata: {
-    phasedRegistrationNames: {
-      bubbled: 'onLoadedMetadata',
-      captured: 'onLoadedMetadataCapture',
-    },
-  },
-  loadStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onLoadStart',
-      captured: 'onLoadStartCapture',
-    },
-  },
-  // Note: We do not allow listening to mouseOver events. Instead, use the
-  // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
-  mouseDown: {
-    phasedRegistrationNames: {
-      bubbled: 'onMouseDown',
-      captured: 'onMouseDownCapture',
-    },
-  },
-  mouseMove: {
-    phasedRegistrationNames: {
-      bubbled: 'onMouseMove',
-      captured: 'onMouseMoveCapture',
-    },
-  },
-  mouseOut: {
-    phasedRegistrationNames: {
-      bubbled: 'onMouseOut',
-      captured: 'onMouseOutCapture',
-    },
-  },
-  mouseOver: {
-    phasedRegistrationNames: {
-      bubbled: 'onMouseOver',
-      captured: 'onMouseOverCapture',
-    },
-  },
-  mouseUp: {
-    phasedRegistrationNames: {
-      bubbled: 'onMouseUp',
-      captured: 'onMouseUpCapture',
-    },
-  },
-  paste: {
-    phasedRegistrationNames: {
-      bubbled: 'onPaste',
-      captured: 'onPasteCapture',
-    },
-  },
-  pause: {
-    phasedRegistrationNames: {
-      bubbled: 'onPause',
-      captured: 'onPauseCapture',
-    },
-  },
-  play: {
-    phasedRegistrationNames: {
-      bubbled: 'onPlay',
-      captured: 'onPlayCapture',
-    },
-  },
-  playing: {
-    phasedRegistrationNames: {
-      bubbled: 'onPlaying',
-      captured: 'onPlayingCapture',
-    },
-  },
-  progress: {
-    phasedRegistrationNames: {
-      bubbled: 'onProgress',
-      captured: 'onProgressCapture',
-    },
-  },
-  rateChange: {
-    phasedRegistrationNames: {
-      bubbled: 'onRateChange',
-      captured: 'onRateChangeCapture',
-    },
-  },
-  reset: {
-    phasedRegistrationNames: {
-      bubbled: 'onReset',
-      captured: 'onResetCapture',
-    },
-  },
-  scroll: {
-    phasedRegistrationNames: {
-      bubbled: 'onScroll',
-      captured: 'onScrollCapture',
-    },
-  },
-  seeked: {
-    phasedRegistrationNames: {
-      bubbled: 'onSeeked',
-      captured: 'onSeekedCapture',
-    },
-  },
-  seeking: {
-    phasedRegistrationNames: {
-      bubbled: 'onSeeking',
-      captured: 'onSeekingCapture',
-    },
-  },
-  stalled: {
-    phasedRegistrationNames: {
-      bubbled: 'onStalled',
-      captured: 'onStalledCapture',
-    },
-  },
-  submit: {
-    phasedRegistrationNames: {
-      bubbled: 'onSubmit',
-      captured: 'onSubmitCapture',
-    },
-  },
-  suspend: {
-    phasedRegistrationNames: {
-      bubbled: 'onSuspend',
-      captured: 'onSuspendCapture',
-    },
-  },
-  timeUpdate: {
-    phasedRegistrationNames: {
-      bubbled: 'onTimeUpdate',
-      captured: 'onTimeUpdateCapture',
-    },
-  },
-  touchCancel: {
-    phasedRegistrationNames: {
-      bubbled: 'onTouchCancel',
-      captured: 'onTouchCancelCapture',
-    },
-  },
-  touchEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onTouchEnd',
-      captured: 'onTouchEndCapture',
-    },
-  },
-  touchMove: {
-    phasedRegistrationNames: {
-      bubbled: 'onTouchMove',
-      captured: 'onTouchMoveCapture',
-    },
-  },
-  touchStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onTouchStart',
-      captured: 'onTouchStartCapture',
-    },
-  },
-  transitionEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onTransitionEnd',
-      captured: 'onTransitionEndCapture',
-    },
-  },
-  volumeChange: {
-    phasedRegistrationNames: {
-      bubbled: 'onVolumeChange',
-      captured: 'onVolumeChangeCapture',
-    },
-  },
-  waiting: {
-    phasedRegistrationNames: {
-      bubbled: 'onWaiting',
-      captured: 'onWaitingCapture',
-    },
-  },
-  wheel: {
-    phasedRegistrationNames: {
-      bubbled: 'onWheel',
-      captured: 'onWheelCapture',
-    },
-  },
-};
+/**
+ * Turns
+ * ['abort', ...]
+ * into
+ * eventTypes = {
+ *   'abort': {
+ *     phasedRegistrationNames: {
+ *       bubbled: 'onAbort',
+ *       captured: 'onAbortCapture',
+ *     },
+ *     dependencies: ['topAbort'],
+ *   },
+ *   ...
+ * };
+ * topLevelEventsToDispatchConfig = {
+ *   'topAbort': { sameConfig }
+ * };
+ */
+var eventTypes = {};
+var topLevelEventsToDispatchConfig = {};
+[
+  'abort',
+  'animationEnd',
+  'animationIteration',
+  'animationStart',
+  'blur',
+  'canPlay',
+  'canPlayThrough',
+  'click',
+  'contextMenu',
+  'copy',
+  'cut',
+  'doubleClick',
+  'drag',
+  'dragEnd',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'dragStart',
+  'drop',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'focus',
+  'input',
+  'invalid',
+  'keyDown',
+  'keyPress',
+  'keyUp',
+  'load',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'mouseDown',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'mouseUp',
+  'paste',
+  'pause',
+  'play',
+  'playing',
+  'progress',
+  'rateChange',
+  'reset',
+  'scroll',
+  'seeked',
+  'seeking',
+  'stalled',
+  'submit',
+  'suspend',
+  'timeUpdate',
+  'touchCancel',
+  'touchEnd',
+  'touchMove',
+  'touchStart',
+  'transitionEnd',
+  'volumeChange',
+  'waiting',
+  'wheel',
+].forEach(event => {
+  var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
+  var onEvent = 'on' + capitalizedEvent;
+  var topEvent = 'top' + capitalizedEvent;
 
-var topLevelEventsToDispatchConfig = {
-  topAbort:           eventTypes.abort,
-  topAnimationEnd:    eventTypes.animationEnd,
-  topAnimationIteration: eventTypes.animationIteration,
-  topAnimationStart:  eventTypes.animationStart,
-  topBlur:            eventTypes.blur,
-  topCanPlay:         eventTypes.canPlay,
-  topCanPlayThrough:  eventTypes.canPlayThrough,
-  topClick:           eventTypes.click,
-  topContextMenu:     eventTypes.contextMenu,
-  topCopy:            eventTypes.copy,
-  topCut:             eventTypes.cut,
-  topDoubleClick:     eventTypes.doubleClick,
-  topDrag:            eventTypes.drag,
-  topDragEnd:         eventTypes.dragEnd,
-  topDragEnter:       eventTypes.dragEnter,
-  topDragExit:        eventTypes.dragExit,
-  topDragLeave:       eventTypes.dragLeave,
-  topDragOver:        eventTypes.dragOver,
-  topDragStart:       eventTypes.dragStart,
-  topDrop:            eventTypes.drop,
-  topDurationChange:  eventTypes.durationChange,
-  topEmptied:         eventTypes.emptied,
-  topEncrypted:       eventTypes.encrypted,
-  topEnded:           eventTypes.ended,
-  topError:           eventTypes.error,
-  topFocus:           eventTypes.focus,
-  topInput:           eventTypes.input,
-  topInvalid:         eventTypes.invalid,
-  topKeyDown:         eventTypes.keyDown,
-  topKeyPress:        eventTypes.keyPress,
-  topKeyUp:           eventTypes.keyUp,
-  topLoad:            eventTypes.load,
-  topLoadedData:      eventTypes.loadedData,
-  topLoadedMetadata:  eventTypes.loadedMetadata,
-  topLoadStart:       eventTypes.loadStart,
-  topMouseDown:       eventTypes.mouseDown,
-  topMouseMove:       eventTypes.mouseMove,
-  topMouseOut:        eventTypes.mouseOut,
-  topMouseOver:       eventTypes.mouseOver,
-  topMouseUp:         eventTypes.mouseUp,
-  topPaste:           eventTypes.paste,
-  topPause:           eventTypes.pause,
-  topPlay:            eventTypes.play,
-  topPlaying:         eventTypes.playing,
-  topProgress:        eventTypes.progress,
-  topRateChange:      eventTypes.rateChange,
-  topReset:           eventTypes.reset,
-  topScroll:          eventTypes.scroll,
-  topSeeked:          eventTypes.seeked,
-  topSeeking:         eventTypes.seeking,
-  topStalled:         eventTypes.stalled,
-  topSubmit:          eventTypes.submit,
-  topSuspend:         eventTypes.suspend,
-  topTimeUpdate:      eventTypes.timeUpdate,
-  topTouchCancel:     eventTypes.touchCancel,
-  topTouchEnd:        eventTypes.touchEnd,
-  topTouchMove:       eventTypes.touchMove,
-  topTouchStart:      eventTypes.touchStart,
-  topTransitionEnd:   eventTypes.transitionEnd,
-  topVolumeChange:    eventTypes.volumeChange,
-  topWaiting:         eventTypes.waiting,
-  topWheel:           eventTypes.wheel,
-};
-
-for (var type in topLevelEventsToDispatchConfig) {
-  topLevelEventsToDispatchConfig[type].dependencies = [type];
-}
+  var type = {
+    phasedRegistrationNames: {
+      bubbled: onEvent,
+      captured: onEvent + 'Capture',
+    },
+    dependencies: [topEvent],
+  };
+  eventTypes[event] = type;
+  topLevelEventsToDispatchConfig[topEvent] = type;
+});
 
 var onClickListeners = {};
 
