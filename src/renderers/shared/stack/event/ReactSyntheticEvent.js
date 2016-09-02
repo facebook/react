@@ -18,4 +18,4 @@ export type DispatchConfig = any;
 
 export class ReactSyntheticEvent extends SyntheticEvent {
   dispatchConfig: DispatchConfig;
-};
+}
