@@ -177,7 +177,7 @@ describe('ReactIncrementalSideEffects', () => {
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
-    ReactNoop.flush(30);
+    ReactNoop.flush();
 
     // Since we did nothing to the middle subtree during the interuption,
     // we should be able to reuse the reconciliation work that we already did
@@ -269,6 +269,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(span(1)),
     ]);
   });
+
 
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
