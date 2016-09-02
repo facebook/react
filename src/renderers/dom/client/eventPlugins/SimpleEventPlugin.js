@@ -308,7 +308,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     // fire. The workaround for this bug involves attaching an empty click
     // listener on the target node.
     // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
-    if (registrationName === 'onClick' && isInteractive(inst._tag)) {
+    if (registrationName === 'onClick' && !isInteractive(inst._tag)) {
       var key = getDictionaryKey(inst);
       var node = ReactDOMComponentTree.getNodeFromInstance(inst);
       if (!onClickListeners[key]) {
@@ -325,7 +325,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     inst: ReactInstance,
     registrationName: string,
   ): void {
-    if (registrationName === 'onClick' && isInteractive(inst._tag)) {
+    if (registrationName === 'onClick' && !isInteractive(inst._tag)) {
       var key = getDictionaryKey(inst);
       onClickListeners[key].remove();
       delete onClickListeners[key];

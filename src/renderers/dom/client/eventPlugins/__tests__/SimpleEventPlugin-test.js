@@ -119,4 +119,37 @@ describe('SimpleEventPlugin', function() {
       });
     });
   });
+
+
+  describe('iOS bubbling click fix', function() {
+    // See http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+
+    beforeEach(function() {
+      onClick.mockClear();
+    });
+
+    it ('does not add a local click to interactive elements', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<button onClick={ onClick }></button>, container);
+
+      var node = container.firstChild;
+
+      node.dispatchEvent(new MouseEvent('click'));
+
+      expect(onClick.mock.calls.length).toBe(0);
+    });
+
+    it ('adds a local click listener to non-interactive elements', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div onClick={ onClick }></div>, container);
+
+      var node = container.firstChild;
+
+      node.dispatchEvent(new MouseEvent('click'));
+
+      expect(onClick.mock.calls.length).toBe(0);
+    });
+  });
 });
