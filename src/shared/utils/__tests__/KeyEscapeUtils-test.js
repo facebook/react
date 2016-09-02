@@ -13,26 +13,24 @@
 
 var KeyEscapeUtils;
 
-describe('KeyEscapeUtils', () => {
-  beforeEach(() => {
-    jest.resetModuleRegistry();
+beforeEach(() => {
+  jest.resetModuleRegistry();
 
-    KeyEscapeUtils = require('KeyEscapeUtils');
+  KeyEscapeUtils = require('KeyEscapeUtils');
+});
+
+describe('escape', () => {
+  it('should properly escape and wrap user defined keys', () => {
+    expect(KeyEscapeUtils.escape('1')).toBe('$1');
+    expect(KeyEscapeUtils.escape('1=::=2')).toBe('$1=0=2=2=02');
   });
+});
 
-  describe('escape', () => {
-    it('should properly escape and wrap user defined keys', () => {
-      expect(KeyEscapeUtils.escape('1')).toBe('$1');
-      expect(KeyEscapeUtils.escape('1=::=2')).toBe('$1=0=2=2=02');
-    });
-  });
-
-  describe('unescape', () => {
-    it('should properly unescape and unwrap user defined keys', () => {
-      expect(KeyEscapeUtils.unescape('.1')).toBe('1');
-      expect(KeyEscapeUtils.unescape('$1')).toBe('1');
-      expect(KeyEscapeUtils.unescape('.$1')).toBe('1');
-      expect(KeyEscapeUtils.unescape('$1=0=2=2=02')).toBe('1=::=2');
-    });
+describe('unescape', () => {
+  it('should properly unescape and unwrap user defined keys', () => {
+    expect(KeyEscapeUtils.unescape('.1')).toBe('1');
+    expect(KeyEscapeUtils.unescape('$1')).toBe('1');
+    expect(KeyEscapeUtils.unescape('.$1')).toBe('1');
+    expect(KeyEscapeUtils.unescape('$1=0=2=2=02')).toBe('1=::=2');
   });
 });

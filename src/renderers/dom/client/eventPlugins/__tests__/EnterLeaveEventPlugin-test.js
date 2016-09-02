@@ -16,44 +16,42 @@ var React;
 var ReactDOM;
 var ReactDOMComponentTree;
 
-describe('EnterLeaveEventPlugin', function() {
-  beforeEach(function() {
-    jest.resetModuleRegistry();
+beforeEach(function() {
+  jest.resetModuleRegistry();
 
-    EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMComponentTree = require('ReactDOMComponentTree');
-  });
+  EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+  React = require('React');
+  ReactDOM = require('ReactDOM');
+  ReactDOMComponentTree = require('ReactDOMComponentTree');
+});
 
-  it('should set relatedTarget properly in iframe', function() {
-    var iframe = document.createElement('iframe');
-    document.body.appendChild(iframe);
+it('should set relatedTarget properly in iframe', function() {
+  var iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
 
-    var iframeDocument = iframe.contentDocument;
+  var iframeDocument = iframe.contentDocument;
 
-    iframeDocument.write(
-      '<!DOCTYPE html><html><head></head><body><div></div></body></html>'
-    );
-    iframeDocument.close();
+  iframeDocument.write(
+    '<!DOCTYPE html><html><head></head><body><div></div></body></html>'
+  );
+  iframeDocument.close();
 
-    var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
-    var div = ReactDOM.findDOMNode(component);
+  var component = ReactDOM.render(<div />, iframeDocument.body.getElementsByTagName('div')[0]);
+  var div = ReactDOM.findDOMNode(component);
 
-    var extracted = EnterLeaveEventPlugin.extractEvents(
-      'topMouseOver',
-      ReactDOMComponentTree.getInstanceFromNode(div),
-      {target: div},
-      div
-    );
-    expect(extracted.length).toBe(2);
+  var extracted = EnterLeaveEventPlugin.extractEvents(
+    'topMouseOver',
+    ReactDOMComponentTree.getInstanceFromNode(div),
+    {target: div},
+    div
+  );
+  expect(extracted.length).toBe(2);
 
-    var leave = extracted[0];
-    var enter = extracted[1];
+  var leave = extracted[0];
+  var enter = extracted[1];
 
-    expect(leave.target).toBe(iframe.contentWindow);
-    expect(leave.relatedTarget).toBe(div);
-    expect(enter.target).toBe(div);
-    expect(enter.relatedTarget).toBe(iframe.contentWindow);
-  });
+  expect(leave.target).toBe(iframe.contentWindow);
+  expect(leave.relatedTarget).toBe(div);
+  expect(enter.target).toBe(div);
+  expect(enter.relatedTarget).toBe(iframe.contentWindow);
 });

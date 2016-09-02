@@ -14,152 +14,150 @@ var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var inputValueTracking = require('inputValueTracking');
 
-describe('inputValueTracking', function() {
-  var input, checkbox, mockComponent;
+var input, checkbox, mockComponent;
 
-  beforeEach(function() {
-    input = document.createElement('input');
-    input.type = 'text';
-    checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    mockComponent = { _hostNode: input, _wrapperState: {} };
-  });
+beforeEach(function() {
+  input = document.createElement('input');
+  input.type = 'text';
+  checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  mockComponent = { _hostNode: input, _wrapperState: {} };
+});
 
-  it('should attach tracker to wrapper state', function() {
-    inputValueTracking.track(mockComponent);
+it('should attach tracker to wrapper state', function() {
+  inputValueTracking.track(mockComponent);
 
-    expect(
-      mockComponent._wrapperState.hasOwnProperty('valueTracker')
-    ).toBe(true);
-  });
+  expect(
+    mockComponent._wrapperState.hasOwnProperty('valueTracker')
+  ).toBe(true);
+});
 
-  it('should define `value` on the instance node', function() {
-    inputValueTracking.track(mockComponent);
+it('should define `value` on the instance node', function() {
+  inputValueTracking.track(mockComponent);
 
-    expect(
-      input.hasOwnProperty('value')
-    ).toBe(true);
-  });
+  expect(
+    input.hasOwnProperty('value')
+  ).toBe(true);
+});
 
-  it('should define `checked` on the instance node', function() {
-    mockComponent._hostNode = checkbox;
-    inputValueTracking.track(mockComponent);
+it('should define `checked` on the instance node', function() {
+  mockComponent._hostNode = checkbox;
+  inputValueTracking.track(mockComponent);
 
-    expect(checkbox.hasOwnProperty('checked')).toBe(true);
-  });
+  expect(checkbox.hasOwnProperty('checked')).toBe(true);
+});
 
-  it('should initialize with the current value', function() {
-    input.value ='foo';
+it('should initialize with the current value', function() {
+  input.value ='foo';
 
-    inputValueTracking.track(mockComponent);
+  inputValueTracking.track(mockComponent);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    expect(tracker.getValue()).toEqual('foo');
-  });
+  expect(tracker.getValue()).toEqual('foo');
+});
 
-  it('should initialize with the current `checked`', function() {
-    mockComponent._hostNode = checkbox;
-    checkbox.checked = true;
-    inputValueTracking.track(mockComponent);
+it('should initialize with the current `checked`', function() {
+  mockComponent._hostNode = checkbox;
+  checkbox.checked = true;
+  inputValueTracking.track(mockComponent);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    expect(tracker.getValue()).toEqual('true');
-  });
+  expect(tracker.getValue()).toEqual('true');
+});
 
-  it('should track value changes', function() {
-    input.value ='foo';
+it('should track value changes', function() {
+  input.value ='foo';
 
-    inputValueTracking.track(mockComponent);
+  inputValueTracking.track(mockComponent);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    input.value ='bar';
-    expect(tracker.getValue()).toEqual('bar');
-  });
+  input.value ='bar';
+  expect(tracker.getValue()).toEqual('bar');
+});
 
-  it('should tracked`checked` changes', function() {
-    mockComponent._hostNode = checkbox;
-    checkbox.checked = true;
-    inputValueTracking.track(mockComponent);
+it('should tracked`checked` changes', function() {
+  mockComponent._hostNode = checkbox;
+  checkbox.checked = true;
+  inputValueTracking.track(mockComponent);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    checkbox.checked = false;
-    expect(tracker.getValue()).toEqual('false');
-  });
+  checkbox.checked = false;
+  expect(tracker.getValue()).toEqual('false');
+});
 
-  it('should update value manually', function() {
-    input.value ='foo';
-    inputValueTracking.track(mockComponent);
+it('should update value manually', function() {
+  input.value ='foo';
+  inputValueTracking.track(mockComponent);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    tracker.setValue('bar');
-    expect(tracker.getValue()).toEqual('bar');
-  });
+  tracker.setValue('bar');
+  expect(tracker.getValue()).toEqual('bar');
+});
 
-  it('should coerce value to a string', function() {
-    input.value ='foo';
-    inputValueTracking.track(mockComponent);
+it('should coerce value to a string', function() {
+  input.value ='foo';
+  inputValueTracking.track(mockComponent);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    tracker.setValue(500);
-    expect(tracker.getValue()).toEqual('500');
-  });
+  tracker.setValue(500);
+  expect(tracker.getValue()).toEqual('500');
+});
 
-  it('should update value if it changed and return result', function() {
-    inputValueTracking.track(mockComponent);
-    input.value ='foo';
+it('should update value if it changed and return result', function() {
+  inputValueTracking.track(mockComponent);
+  input.value ='foo';
 
-    var tracker = mockComponent._wrapperState.valueTracker;
+  var tracker = mockComponent._wrapperState.valueTracker;
 
-    expect(
-      inputValueTracking.updateValueIfChanged(mockComponent)
-    ).toBe(false);
+  expect(
+    inputValueTracking.updateValueIfChanged(mockComponent)
+  ).toBe(false);
 
-    tracker.setValue('bar');
+  tracker.setValue('bar');
 
-    expect(
-      inputValueTracking.updateValueIfChanged(mockComponent)
-    ).toBe(true);
+  expect(
+    inputValueTracking.updateValueIfChanged(mockComponent)
+  ).toBe(true);
 
-    expect(tracker.getValue()).toEqual('foo');
-  });
+  expect(tracker.getValue()).toEqual('foo');
+});
 
-  it('should track value and return true when updating untracked instance', function() {
-    input.value ='foo';
+it('should track value and return true when updating untracked instance', function() {
+  input.value ='foo';
 
-    expect(
-      inputValueTracking.updateValueIfChanged(mockComponent)
-    )
-    .toBe(true);
+  expect(
+    inputValueTracking.updateValueIfChanged(mockComponent)
+  )
+  .toBe(true);
 
-    var tracker = mockComponent._wrapperState.valueTracker;
-    expect(tracker.getValue()).toEqual('foo');
-  });
+  var tracker = mockComponent._wrapperState.valueTracker;
+  expect(tracker.getValue()).toEqual('foo');
+});
 
-  it('should return tracker from node', function() {
-    var node = ReactTestUtils.renderIntoDocument(<input type="text" defaultValue="foo" />);
-    var tracker = inputValueTracking._getTrackerFromNode(node);
-    expect(tracker.getValue()).toEqual('foo');
-  });
+it('should return tracker from node', function() {
+  var node = ReactTestUtils.renderIntoDocument(<input type="text" defaultValue="foo" />);
+  var tracker = inputValueTracking._getTrackerFromNode(node);
+  expect(tracker.getValue()).toEqual('foo');
+});
 
-  it('should stop tracking', function() {
-    inputValueTracking.track(mockComponent);
+it('should stop tracking', function() {
+  inputValueTracking.track(mockComponent);
 
-    expect(
-      mockComponent._wrapperState.hasOwnProperty('valueTracker')
-    ).toBe(true);
+  expect(
+    mockComponent._wrapperState.hasOwnProperty('valueTracker')
+  ).toBe(true);
 
-    inputValueTracking.stopTracking(mockComponent);
+  inputValueTracking.stopTracking(mockComponent);
 
-    expect(
-      mockComponent._wrapperState.hasOwnProperty('valueTracker')
-    ).toBe(false);
+  expect(
+    mockComponent._wrapperState.hasOwnProperty('valueTracker')
+  ).toBe(false);
 
-    expect(input.hasOwnProperty('value')).toBe(false);
-  });
+  expect(input.hasOwnProperty('value')).toBe(false);
 });

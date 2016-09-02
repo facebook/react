@@ -12,35 +12,33 @@
 'use strict';
 
 
-describe('LinkedStateMixin', function() {
-  var LinkedStateMixin;
-  var React;
-  var ReactTestUtils;
+var LinkedStateMixin;
+var React;
+var ReactTestUtils;
 
-  beforeEach(function() {
-    LinkedStateMixin = require('LinkedStateMixin');
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
+beforeEach(function() {
+  LinkedStateMixin = require('LinkedStateMixin');
+  React = require('React');
+  ReactTestUtils = require('ReactTestUtils');
+});
+
+it('should create a ReactLink for state', function() {
+  var Component = React.createClass({
+    mixins: [LinkedStateMixin],
+
+    getInitialState: function() {
+      return {value: 'initial value'};
+    },
+
+    render: function() {
+      return <span>value is {this.state.value}</span>;
+    },
   });
-
-  it('should create a ReactLink for state', function() {
-    var Component = React.createClass({
-      mixins: [LinkedStateMixin],
-
-      getInitialState: function() {
-        return {value: 'initial value'};
-      },
-
-      render: function() {
-        return <span>value is {this.state.value}</span>;
-      },
-    });
-    var component = ReactTestUtils.renderIntoDocument(<Component />);
-    var link = component.linkState('value');
-    expect(component.state.value).toBe('initial value');
-    expect(link.value).toBe('initial value');
-    link.requestChange('new value');
-    expect(component.state.value).toBe('new value');
-    expect(component.linkState('value').value).toBe('new value');
-  });
+  var component = ReactTestUtils.renderIntoDocument(<Component />);
+  var link = component.linkState('value');
+  expect(component.state.value).toBe('initial value');
+  expect(link.value).toBe('initial value');
+  link.requestChange('new value');
+  expect(component.state.value).toBe('new value');
+  expect(component.linkState('value').value).toBe('new value');
 });
