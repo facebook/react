@@ -22,7 +22,7 @@ export type FiberRoot = {
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
   // Determines if this root has already been added to the schedule for work.
-  isScheduled: bool,
+  isScheduled: boolean,
   // The work schedule is a linked list.
   nextScheduledRoot: ?FiberRoot,
 };
