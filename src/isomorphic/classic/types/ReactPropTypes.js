@@ -17,6 +17,7 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
+var invariant = require('invariant');
 var warning = require('warning');
 
 /**
@@ -68,25 +69,57 @@ var warning = require('warning');
 
 var ANONYMOUS = '<<anonymous>>';
 
-var ReactPropTypes = {
-  array: createPrimitiveTypeChecker('array'),
-  bool: createPrimitiveTypeChecker('boolean'),
-  func: createPrimitiveTypeChecker('function'),
-  number: createPrimitiveTypeChecker('number'),
-  object: createPrimitiveTypeChecker('object'),
-  string: createPrimitiveTypeChecker('string'),
-  symbol: createPrimitiveTypeChecker('symbol'),
+if (__DEV__) {
+  // Keep in sync with production version below
+  var ReactPropTypes = {
+    array: createPrimitiveTypeChecker('array'),
+    bool: createPrimitiveTypeChecker('boolean'),
+    func: createPrimitiveTypeChecker('function'),
+    number: createPrimitiveTypeChecker('number'),
+    object: createPrimitiveTypeChecker('object'),
+    string: createPrimitiveTypeChecker('string'),
+    symbol: createPrimitiveTypeChecker('symbol'),
 
-  any: createAnyTypeChecker(),
-  arrayOf: createArrayOfTypeChecker,
-  element: createElementTypeChecker(),
-  instanceOf: createInstanceTypeChecker,
-  node: createNodeChecker(),
-  objectOf: createObjectOfTypeChecker,
-  oneOf: createEnumTypeChecker,
-  oneOfType: createUnionTypeChecker,
-  shape: createShapeTypeChecker,
-};
+    any: createAnyTypeChecker(),
+    arrayOf: createArrayOfTypeChecker,
+    element: createElementTypeChecker(),
+    instanceOf: createInstanceTypeChecker,
+    node: createNodeChecker(),
+    objectOf: createObjectOfTypeChecker,
+    oneOf: createEnumTypeChecker,
+    oneOfType: createUnionTypeChecker,
+    shape: createShapeTypeChecker,
+  };
+} else {
+  var productionTypeChecker = function() {
+    invariant(
+      false,
+      'React.PropTypes type checking code is stripped in production.'
+    );
+  };
+  productionTypeChecker.isRequired = productionTypeChecker;
+  var getProductionTypeChecker = () => productionTypeChecker;
+  // Keep in sync with production version above
+  var ReactPropTypes = {
+    array: getProductionTypeChecker(),
+    bool: getProductionTypeChecker(),
+    func: getProductionTypeChecker(),
+    number: getProductionTypeChecker(),
+    object: getProductionTypeChecker(),
+    string: getProductionTypeChecker(),
+    symbol: getProductionTypeChecker(),
+
+    any: getProductionTypeChecker(),
+    arrayOf: getProductionTypeChecker,
+    element: getProductionTypeChecker(),
+    instanceOf: getProductionTypeChecker,
+    node: getProductionTypeChecker(),
+    objectOf: getProductionTypeChecker,
+    oneOf: getProductionTypeChecker,
+    oneOfType: getProductionTypeChecker,
+    shape: getProductionTypeChecker,
+  };
+}
 
 /**
  * inlined Object.is polyfill to avoid requiring consumers ship their own
