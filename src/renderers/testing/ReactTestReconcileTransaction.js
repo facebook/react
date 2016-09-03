@@ -114,7 +114,7 @@ var Mixin = {
 
 Object.assign(
   ReactTestReconcileTransaction.prototype,
-  Transaction.Mixin,
+  Transaction,
   ReactTestReconcileTransaction,
   Mixin
 );

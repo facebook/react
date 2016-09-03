@@ -305,7 +305,7 @@ function getOperations(flushHistory = getLastMeasurements()) {
   return stats;
 }
 
-function printExclusive(flushHistory: FlushHistory) {
+function printExclusive(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -331,7 +331,7 @@ function printExclusive(flushHistory: FlushHistory) {
   consoleTable(table);
 }
 
-function printInclusive(flushHistory: FlushHistory) {
+function printInclusive(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -350,7 +350,7 @@ function printInclusive(flushHistory: FlushHistory) {
   consoleTable(table);
 }
 
-function printWasted(flushHistory: FlushHistory) {
+function printWasted(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -369,7 +369,7 @@ function printWasted(flushHistory: FlushHistory) {
   consoleTable(table);
 }
 
-function printOperations(flushHistory: FlushHistory) {
+function printOperations(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;

@@ -11,14 +11,11 @@
 
 'use strict';
 
-var EventConstants;
 var React;
 var ReactDOM;
 var ReactDOMComponentTree;
 var ReactTestUtils;
 var SelectEventPlugin;
-
-var topLevelTypes;
 
 describe('SelectEventPlugin', function() {
   function extract(node, topLevelEvent) {
@@ -31,14 +28,11 @@ describe('SelectEventPlugin', function() {
   }
 
   beforeEach(function() {
-    EventConstants = require('EventConstants');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
-
-    topLevelTypes = EventConstants.topLevelTypes;
   });
 
   it('should skip extraction if no listeners are present', function() {
@@ -52,10 +46,10 @@ describe('SelectEventPlugin', function() {
     var node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
-    var mousedown = extract(node, topLevelTypes.topMouseDown);
+    var mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, topLevelTypes.topMouseUp);
+    var mouseup = extract(node, 'topMouseUp');
     expect(mouseup).toBe(null);
   });
 
@@ -77,13 +71,13 @@ describe('SelectEventPlugin', function() {
     node.selectionEnd = 0;
     node.focus();
 
-    var focus = extract(node, topLevelTypes.topFocus);
+    var focus = extract(node, 'topFocus');
     expect(focus).toBe(null);
 
-    var mousedown = extract(node, topLevelTypes.topMouseDown);
+    var mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, topLevelTypes.topMouseUp);
+    var mouseup = extract(node, 'topMouseUp');
     expect(mouseup).not.toBe(null);
     expect(typeof mouseup).toBe('object');
     expect(mouseup.type).toBe('select');

@@ -13,6 +13,11 @@ The easiest way to start hacking on React is using the following JSFiddle Hello 
  * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
  * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
 
+## Create React App
+
+**[Create React App](http://github.com/facebookincubator/create-react-app)** is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration. It requires Node 4 or higher.
+
+Note that it has [some limitations](https://github.com/facebookincubator/create-react-app#limitations) and is only useful for single-page applications. If you need more flexibility, or if you want to integrate React into an existing project, consider other options below.
 
 ## Starter Pack
 
@@ -34,7 +39,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
     <title>Hello React!</title>
     <script src="build/react.js"></script>
     <script src="build/react-dom.js"></script>
-    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
   </head>
   <body>
     <div id="example"></div>

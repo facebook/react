@@ -297,7 +297,7 @@ var ReactComponentTreeHook = {
     unmountedIDs.length = 0;
   },
 
-  isMounted(id: DebugID): bool {
+  isMounted(id: DebugID): boolean {
     var item = getItem(id);
     return item ? item.isMounted : false;
   },

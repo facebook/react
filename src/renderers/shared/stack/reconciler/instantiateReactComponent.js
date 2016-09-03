@@ -24,7 +24,7 @@ var ReactCompositeComponentWrapper = function(element) {
 };
 Object.assign(
   ReactCompositeComponentWrapper.prototype,
-  ReactCompositeComponent.Mixin,
+  ReactCompositeComponent,
   {
     _instantiateReactComponent: instantiateReactComponent,
   }

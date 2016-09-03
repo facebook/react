@@ -11,14 +11,12 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
-
-var PropagationPhases = keyMirror({bubbled: null, captured: null});
+export type PropagationPhases = 'bubbled' | 'captured';
 
 /**
  * Types of raw signals from the browser caught at the top level.
  */
-var topLevelTypes = keyMirror({
+var topLevelTypes = {
   topAbort: null,
   topAnimationEnd: null,
   topAnimationIteration: null,
@@ -87,11 +85,12 @@ var topLevelTypes = keyMirror({
   topVolumeChange: null,
   topWaiting: null,
   topWheel: null,
-});
+};
+
+export type TopLevelTypes = $Enum<typeof topLevelTypes>;
 
 var EventConstants = {
-  topLevelTypes: topLevelTypes,
-  PropagationPhases: PropagationPhases,
+  topLevelTypes,
 };
 
 module.exports = EventConstants;

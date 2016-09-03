@@ -32,7 +32,11 @@ describe('ReactClassEquivalence', function() {
 function runJest(testFile) {
   var cwd = process.cwd();
   var jestBin = path.resolve('node_modules', '.bin', 'jest');
-  var setupFile = path.resolve(__dirname, 'setupSpecEquivalenceReporter.js');
+  var setupFile = path.resolve(
+    'scripts',
+    'jest',
+    'setupSpecEquivalenceReporter.js'
+  );
   var result = spawnSync('node', [
     jestBin,
     testFile,
@@ -60,7 +64,7 @@ function runJest(testFile) {
 }
 
 function compareResults(a, b) {
-  var regexp = /^EQUIVALENCE.*$/gm;
+  var regexp = /EQUIVALENCE.*$/gm;
   var aSpecs = (a.match(regexp) || []).sort().join('\n');
   var bSpecs = (b.match(regexp) || []).sort().join('\n');
 

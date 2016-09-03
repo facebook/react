@@ -419,15 +419,15 @@ var ShallowComponentWrapper = function(element) {
 };
 Object.assign(
   ShallowComponentWrapper.prototype,
-  ReactCompositeComponent.Mixin, {
+  ReactCompositeComponent, {
     _constructComponent:
-      ReactCompositeComponent.Mixin._constructComponentWithoutOwner,
+      ReactCompositeComponent._constructComponentWithoutOwner,
     _instantiateReactComponent: function(element) {
       return new NoopInternalComponent(element);
     },
     _replaceNodeWithMarkup: function() {},
     _renderValidatedComponent:
-      ReactCompositeComponent.Mixin
+      ReactCompositeComponent
         ._renderValidatedComponentWithoutOwnerOrContext,
   }
 );

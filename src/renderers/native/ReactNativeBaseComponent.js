@@ -224,7 +224,7 @@ ReactNativeBaseComponent.Mixin = {
  */
 Object.assign(
   ReactNativeBaseComponent.prototype,
-  ReactMultiChild.Mixin,
+  ReactMultiChild,
   ReactNativeBaseComponent.Mixin,
   NativeMethodsMixin
 );

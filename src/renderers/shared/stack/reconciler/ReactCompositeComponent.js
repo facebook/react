@@ -126,7 +126,7 @@ var nextMountID = 1;
 /**
  * @lends {ReactCompositeComponent.prototype}
  */
-var ReactCompositeComponentMixin = {
+var ReactCompositeComponent = {
 
   /**
    * Base constructor for all composite component.
@@ -1166,12 +1166,6 @@ var ReactCompositeComponentMixin = {
 
   // Stub
   _instantiateReactComponent: null,
-
-};
-
-var ReactCompositeComponent = {
-
-  Mixin: ReactCompositeComponentMixin,
 
 };
 

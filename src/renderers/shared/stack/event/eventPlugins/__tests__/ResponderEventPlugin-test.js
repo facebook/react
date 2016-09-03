@@ -12,12 +12,9 @@
 'use strict';
 
 var EventPluginHub;
-var EventConstants;
 var ReactInstanceHandles;
 var ResponderEventPlugin;
 var EventPluginUtils;
-
-var topLevelTypes;
 
 var touch = function(nodeHandle, i) {
   return {target: nodeHandle, identifier: i};
@@ -108,7 +105,7 @@ var _touchConfig = function(
  */
 var startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    topLevelTypes.topTouchStart,
+    'topTouchStart',
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -121,7 +118,7 @@ var startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  */
 var moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    topLevelTypes.topTouchMove,
+    'topTouchMove',
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -134,7 +131,7 @@ var moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  */
 var endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    topLevelTypes.topTouchEnd,
+    'topTouchEnd',
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -334,7 +331,6 @@ describe('ResponderEventPlugin', function() {
   beforeEach(function() {
     jest.resetModuleRegistry();
 
-    EventConstants = require('EventConstants');
     EventPluginHub = require('EventPluginHub');
     EventPluginUtils = require('EventPluginUtils');
     ReactInstanceHandles = require('ReactInstanceHandles');
@@ -380,8 +376,6 @@ describe('ResponderEventPlugin', function() {
         );
       },
     });
-
-    topLevelTypes = EventConstants.topLevelTypes;
   });
 
   it('should do nothing when no one wants to respond', function() {
@@ -953,7 +947,7 @@ describe('ResponderEventPlugin', function() {
     config.responderReject.parent = {order: 5};
 
     run(config, three, {
-      topLevelType: topLevelTypes.topScroll,
+      topLevelType: 'topScroll',
       targetInst: idToInstance[three.parent],
       nativeEvent: {},
     });
@@ -970,7 +964,7 @@ describe('ResponderEventPlugin', function() {
     config.responderTerminate.child = {order: 5};
 
     run(config, three, {
-      topLevelType: topLevelTypes.topScroll,
+      topLevelType: 'topScroll',
       targetInst: idToInstance[three.parent],
       nativeEvent: {},
     });
@@ -997,7 +991,7 @@ describe('ResponderEventPlugin', function() {
     config.responderTerminate.child = {order: 1};
 
     var nativeEvent = _touchConfig(
-      topLevelTypes.topTouchCancel,
+      'topTouchCancel',
       three.child,
       [three.child],
       [0]
