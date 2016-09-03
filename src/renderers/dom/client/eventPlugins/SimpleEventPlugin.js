@@ -147,8 +147,8 @@ function getDictionaryKey(inst: ReactInstance): string {
 }
 
 function isInteractive(tag) {
-  return tag === 'button' || tag === 'input'
-    || tag === 'textarea' || tag === 'select';
+  return tag === 'button' || tag === 'input' ||
+         tag === 'textarea' || tag === 'select';
 }
 
 function shouldPreventMouseEvent(inst) {
@@ -234,17 +234,18 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
           return null;
         }
         /* falls through */
-      case 'topContextMenu':
       case 'topDoubleClick':
       case 'topMouseDown':
       case 'topMouseMove':
-      case 'topMouseOut':
-      case 'topMouseOver':
       case 'topMouseUp':
         // Disabled elements should not respond to mouse events
         if (shouldPreventMouseEvent(targetInst)) {
           return null;
         }
+        /* falls through */
+      case 'topMouseOut':
+      case 'topMouseOver':
+      case 'topContextMenu':
         EventConstructor = SyntheticMouseEvent;
         break;
       case 'topDrag':
