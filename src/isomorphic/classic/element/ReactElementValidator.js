@@ -180,34 +180,37 @@ function validatePropTypes(element) {
   }
 }
 
+function warnInvalidType(inputValue) {
+  // warning(...) messages need to be string literals.
+  // If not, we can do a ternary expression to evaluate the need
+  // for the mistyped import message, and not repeat the message
+  // twice here.
+  if (inputValue === undefined) {
+    warning(
+      false,
+      'React.createElement: %s is an invalid value for a type. ' +
+      'It should be a string (for DOM elements), ReactClass or '+
+      'React.Component (for composite components). ' +
+      'Did you mistype an import or forget to export your component?' +
+      '%s See fb.me/react-warning-create-element for more information.',
+      inputValue, getDeclarationErrorAddendum()
+    );
+} else {
+    warning(
+      false,
+      'React.createElement: %s is an invalid value for a type. ' +
+      'It should be a string (for DOM elements), ReactClass or ' +
+      'React.Component (for composite components).' +
+      '%s See fb.me/react-warning-create-element for more information.',
+      inputValue, getDeclarationErrorAddendum()
+    );
+  }
+};
+
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
     var validType = true;
-    var warnInvalidType = function(inputValue) {
-      // warning(...) messages need to be string literals.
-      // If not, we can do a ternary expression to evaluate the need
-      // for the mistyped import message, and not repeat the message
-      // twice here.
-      if (inputValue === undefined) {
-        warning(false,
-          'React.createElement: %s is an invalid value for a type. ' +
-            'It should be a string (for DOM elements), ReactClass or '+ 
-            'React.Component (for composite components). ' +
-            'Did you mistype an import or forget to export your component?' +
-            '%s See fb.me/react-warning-create-element for more information.',
-          inputValue, getDeclarationErrorAddendum()
-        );
-      } else {
-        warning(false,
-          'React.createElement: %s is an invalid value for a type. ' +
-            'It should be a string (for DOM elements), ReactClass or ' + 
-            'React.Component (for composite components).' +
-            '%s See fb.me/react-warning-create-element for more information.',
-          inputValue, getDeclarationErrorAddendum()
-        );
-      }
-    };
 
     switch (typeof type) {
       case 'string':
