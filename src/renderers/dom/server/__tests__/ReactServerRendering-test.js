@@ -326,7 +326,7 @@ describe('ReactServerRendering', function() {
       var EventPluginHub = require('EventPluginHub');
       var cb = jest.fn();
 
-      ReactServerRendering.renderToString(
+      ReactServerRendering.renderToStaticMarkup(
         <span onClick={cb}>hello world</span>
       );
       expect(EventPluginHub.__getListenerBank()).toEqual({});
