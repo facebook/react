@@ -98,7 +98,7 @@ if (__DEV__) {
   };
   productionTypeChecker.isRequired = productionTypeChecker;
   var getProductionTypeChecker = () => productionTypeChecker;
-  // Keep in sync with production version above
+  // Keep in sync with development version above
   var ReactPropTypes = {
     array: getProductionTypeChecker(),
     bool: getProductionTypeChecker(),
