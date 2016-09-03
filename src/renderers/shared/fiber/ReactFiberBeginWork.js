@@ -121,7 +121,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     fiber.updateQueue = updateQueue;
     // Schedule update on the alternate as well, since we don't know which tree
     // is current.
-    if (fiber.alternate !== null) {
+    if (fiber.alternate) {
       fiber.alternate.updateQueue = updateQueue;
     }
     while (true) {
@@ -129,7 +129,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
           fiber.pendingWorkPriority >= priorityLevel) {
         fiber.pendingWorkPriority = priorityLevel;
       }
-      if (fiber.alternate !== null) {
+      if (fiber.alternate) {
         if (fiber.alternate.pendingWorkPriority === NoWork ||
             fiber.alternate.pendingWorkPriority >= priorityLevel) {
           fiber.alternate.pendingWorkPriority = priorityLevel;
