@@ -12,7 +12,6 @@
 'use strict';
 
 var React = require('React');
-var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -109,9 +108,7 @@ var LinkedValueUtils = {
           props,
           propName,
           tagName,
-          'prop',
-          null,
-          ReactPropTypesSecret
+          'prop'
         );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {
