@@ -254,7 +254,7 @@ function resumeCurrentLifeCycleTimer() {
 }
 
 var lastMarkTimeStamp = 0;
-var canUsePerformanceMeasure: bool =
+var canUsePerformanceMeasure: boolean =
 // $FlowFixMe https://github.com/facebook/flow/issues/2345
   typeof performance !== 'undefined' &&
   typeof performance.mark === 'function' &&
@@ -323,7 +323,7 @@ var ReactDebugTool = {
       }
     }
   },
-  isProfiling(): bool {
+  isProfiling(): boolean {
     return isProfiling;
   },
   beginProfiling(): void {

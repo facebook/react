@@ -53,7 +53,7 @@ ReactRef.attachRefs = function(
 ReactRef.shouldUpdateRefs = function(
   prevElement: ReactElement | string | number | null | false,
   nextElement: ReactElement | string | number | null | false,
-): bool {
+): boolean {
   // If either the owner or a `ref` has changed, make sure the newest owner
   // has stored a reference to `this`, and the previous owner (if different)
   // has forgotten the reference to `this`. We use the element instead
