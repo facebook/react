@@ -1,7 +1,7 @@
 ---
-title: Invalid type for createElement
+title: Invalid Element Type Warning
 layout: single
-permalink: warnings/create-element-types.html
+permalink: warnings/invalid-element-type.html
 ---
 
 You probably came here because your code is trying to create a ReactElement with an invalid type using JSX or the `React.createElement` API. This usually happens when you have an invalid import statement.

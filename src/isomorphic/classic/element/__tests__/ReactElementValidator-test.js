@@ -297,29 +297,29 @@ describe('ReactElementValidator', function() {
     React.createElement(123);
     expect(console.error.calls.count()).toBe(4);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: undefined is an invalid value for a type. ' +
-        'It should be a string (for DOM elements), ReactClass or React.Component ' +
-        '(for composite components). ' +
+      'Warning: React.createElement: undefined is an invalid element type. ' +
         'Did you mistype an import or forget to export your component? ' +
-        'See fb.me/react-warning-create-element for more information.'
+        'It should be a string (for DOM elements), component class or function ' +
+        '(for user-defined components). ' +
+        'See https://fb.me/react-invalid-element-type for more information.'
     );
     expect(console.error.calls.argsFor(1)[0]).toBe(
-      'Warning: React.createElement: null is an invalid value for a type. ' +
-        'It should be a string (for DOM elements), ReactClass or React.Component ' +
-        '(for composite components). ' +
-        'See fb.me/react-warning-create-element for more information.'
+      'Warning: React.createElement: null is an invalid element type. ' +
+        'It should be a string (for DOM elements), component class or function ' +
+        '(for user-defined components). ' +
+        'See https://fb.me/react-invalid-element-type for more information.'
     );
     expect(console.error.calls.argsFor(2)[0]).toBe(
-      'Warning: React.createElement: true is an invalid value for a type. ' +
-        'It should be a string (for DOM elements), ReactClass or React.Component ' +
-        '(for composite components). ' +
-        'See fb.me/react-warning-create-element for more information.'
+      'Warning: React.createElement: true is an invalid element type. ' +
+        'It should be a string (for DOM elements), component class or function ' +
+        '(for user-defined components). ' +
+        'See https://fb.me/react-invalid-element-type for more information.'
     );
     expect(console.error.calls.argsFor(3)[0]).toBe(
-      'Warning: React.createElement: 123 is an invalid value for a type. ' +
-        'It should be a string (for DOM elements), ReactClass or React.Component ' +
-        '(for composite components). ' +
-        'See fb.me/react-warning-create-element for more information.'
+      'Warning: React.createElement: 123 is an invalid element type. ' +
+        'It should be a string (for DOM elements), component class or function ' +
+        '(for user-defined components). ' +
+        'See https://fb.me/react-invalid-element-type for more information.'
     );
     React.createElement('div');
     expect(console.error.calls.count()).toBe(4);
@@ -341,10 +341,10 @@ describe('ReactElementValidator', function() {
     );
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: null is an invalid value for a type. ' +
-        'It should be a string (for DOM elements), ReactClass or React.Component ' +
-        '(for composite components). Check the render method of `ParentComp`. ' +
-        'See fb.me/react-warning-create-element for more information.'
+      'Warning: React.createElement: null is an invalid element type. ' +
+        'It should be a string (for DOM elements), component class or function ' +
+        '(for user-defined components). Check the render method of `ParentComp`. ' +
+        'See https://fb.me/react-invalid-element-type for more information.'
     );
   });
 
@@ -542,11 +542,11 @@ describe('ReactElementValidator', function() {
     void <Foo>{[<div />]}</Foo>;
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: undefined is an invalid value for a type. ' +
-        'It should be a string (for DOM elements), ReactClass or React.Component ' +
-        '(for composite components). ' +
+      'Warning: React.createElement: undefined is an invalid element type. ' +
         'Did you mistype an import or forget to export your component? ' +
-        'See fb.me/react-warning-create-element for more information.'
+        'It should be a string (for DOM elements), component class or function ' +
+        '(for user-defined components). ' +
+        'See https://fb.me/react-invalid-element-type for more information.'
     );
   });
 
