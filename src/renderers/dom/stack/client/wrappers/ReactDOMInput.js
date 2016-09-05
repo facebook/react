@@ -188,6 +188,11 @@ var ReactDOMInput = {
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = props.value;
     if (value != null) {
+      if (value === 0) {
+        // Since we use loose type checking below, zero is
+        // falsy, so we need to manually cover it
+        value = '0';
+      }
       // Use loose coercion to prevent replacement on comparisons like
       // '3e1' == 30 in Chrome (~52).
       if (value != node.value) { // eslint-disable-line

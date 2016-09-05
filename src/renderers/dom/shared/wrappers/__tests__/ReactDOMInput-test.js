@@ -423,6 +423,17 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
+  it('should properly transition from an empty value to 0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value="" />, container);
+    ReactDOM.render(<input type="text" value={0} />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+  });
+
   it('should have the correct target value', () => {
     var handled = false;
     var handler = function(event) {
