@@ -15,7 +15,7 @@
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'ReactSyntheticEvent';
+} from 'ReactSyntheticEventType';
 
 type PluginName = string;
 

@@ -8,7 +8,7 @@
  *
  * Flow type for SyntheticEvent class that includes private properties
  *
- * @providesModule ReactSyntheticEvent
+ * @providesModule ReactSyntheticEventType
  * @flow
  */
 
