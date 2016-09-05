@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule TapEventPlugin
+ * @flow
  */
 
 'use strict';
@@ -20,19 +21,60 @@ var ViewportMetrics = require('ViewportMetrics');
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
 
+import type {DispatchConfig} from 'ReactSyntheticEventType';
+import type {PluginModule} from 'PluginModuleType';
+import type {ReactInstance} from 'ReactInstanceType';
+import type {TopLevelTypes} from 'EventConstants';
+
+/**
+ * We are extending the Flow 'Touch' declaration to enable using bracket
+ * notation to access properties.
+ * Without this adjustment Flow throws
+ * "Indexable signature not found in Touch".
+ * See https://github.com/facebook/flow/issues/1323
+ */
+type TouchPropertyKey =
+  'clientX' |
+  'clientY' |
+  'pageX' |
+  'pageY';
+
+declare class _Touch extends Touch {
+  [key: TouchPropertyKey]: number;
+}
+
+type AxisCoordinateData = {
+  page: TouchPropertyKey,
+  client: TouchPropertyKey,
+  envScroll: 'currentPageScrollLeft' | 'currentPageScrollTop',
+};
+
+type AxisType = {
+  x: AxisCoordinateData,
+  y: AxisCoordinateData,
+};
+
+type CoordinatesType = {
+  x: number,
+  y: number,
+};
+
 /**
  * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
  * in order to still be considered a 'tap' event.
  */
 var tapMoveThreshold = 10;
-var startCoords = {x: null, y: null};
+var startCoords: CoordinatesType = {x: 0, y: 0};
 
-var Axis = {
+var Axis: AxisType = {
   x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
   y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'},
 };
 
-function getAxisCoordOfEvent(axis, nativeEvent) {
+function getAxisCoordOfEvent(
+  axis: AxisCoordinateData,
+  nativeEvent: _Touch,
+): number {
   var singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
   if (singleTouch) {
     return singleTouch[axis.page];
@@ -42,7 +84,10 @@ function getAxisCoordOfEvent(axis, nativeEvent) {
     nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
 }
 
-function getDistance(coords, nativeEvent) {
+function getDistance(
+  coords: CoordinatesType,
+  nativeEvent: _Touch,
+): number {
   var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
   var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
   return Math.pow(
@@ -64,7 +109,7 @@ var dependencies = [
   'topMouseUp',
 ].concat(touchEvents);
 
-var eventTypes = {
+var eventTypes: DispatchConfig = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: 'onTouchTap',
@@ -78,17 +123,17 @@ var usedTouch = false;
 var usedTouchTime = 0;
 var TOUCH_DELAY = 1000;
 
-var TapEventPlugin = {
+var TapEventPlugin: PluginModule<_Touch> = {
 
   tapMoveThreshold: tapMoveThreshold,
 
   eventTypes: eventTypes,
 
   extractEvents: function(
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget
+    topLevelType: TopLevelTypes,
+    targetInst: ReactInstance,
+    nativeEvent: _Touch,
+    nativeEventTarget: EventTarget,
   ) {
     if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
       return null;

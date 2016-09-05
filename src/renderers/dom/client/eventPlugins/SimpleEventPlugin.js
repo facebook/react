@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule SimpleEventPlugin
+ * @flow
  */
 
 'use strict';
@@ -30,6 +31,14 @@ var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('invariant');
 
+import type {TopLevelTypes} from 'EventConstants';
+import type {
+  DispatchConfig,
+  ReactSyntheticEvent,
+} from 'ReactSyntheticEventType';
+import type {ReactInstance} from 'ReactInstanceType';
+import type {PluginModule} from 'PluginModuleType';
+
 /**
  * Turns
  * ['abort', ...]
@@ -48,8 +57,8 @@ var invariant = require('invariant');
  *   'topAbort': { sameConfig }
  * };
  */
-var eventTypes = {};
-var topLevelEventsToDispatchConfig = {};
+var eventTypes: {[key: string]: DispatchConfig} = {};
+var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 [
   'abort',
   'animationEnd',
@@ -131,22 +140,22 @@ var topLevelEventsToDispatchConfig = {};
 
 var onClickListeners = {};
 
-function getDictionaryKey(inst) {
+function getDictionaryKey(inst: ReactInstance): string {
   // Prevents V8 performance issue:
   // https://github.com/facebook/react/pull/7232
   return '.' + inst._rootNodeID;
 }
 
-var SimpleEventPlugin = {
+var SimpleEventPlugin: PluginModule<MouseEvent> = {
 
   eventTypes: eventTypes,
 
   extractEvents: function(
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget
-  ) {
+    topLevelType: TopLevelTypes,
+    targetInst: ReactInstance,
+    nativeEvent: MouseEvent,
+    nativeEventTarget: EventTarget,
+  ): null | ReactSyntheticEvent {
     var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
@@ -268,7 +277,11 @@ var SimpleEventPlugin = {
     return event;
   },
 
-  didPutListener: function(inst, registrationName, listener) {
+  didPutListener: function(
+    inst: ReactInstance,
+    registrationName: string,
+    listener: () => void,
+  ): void {
     // Mobile Safari does not fire properly bubble click events on
     // non-interactive elements, which means delegated click listeners do not
     // fire. The workaround for this bug involves attaching an empty click
@@ -286,7 +299,10 @@ var SimpleEventPlugin = {
     }
   },
 
-  willDeleteListener: function(inst, registrationName) {
+  willDeleteListener: function(
+    inst: ReactInstance,
+    registrationName: string,
+  ): void {
     if (registrationName === 'onClick') {
       var key = getDictionaryKey(inst);
       onClickListeners[key].remove();

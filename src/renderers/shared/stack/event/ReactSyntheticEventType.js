@@ -14,8 +14,23 @@
 
 'use strict';
 
-export type DispatchConfig = any;
+import type {ReactInstance} from 'ReactInstanceType';
 
-export class ReactSyntheticEvent extends SyntheticEvent {
+export type DispatchConfig = {
+  dependencies: Array<string>,
+  phasedRegistrationNames?: {
+    bubbled: string,
+    captured: string,
+  },
+  registrationName?: string,
+};
+
+export type ReactSyntheticEvent = {
   dispatchConfig: DispatchConfig;
-}
+  getPooled: (
+    dispatchConfig: DispatchConfig,
+    targetInst: ReactInstance,
+    nativeTarget: Event,
+    nativeEventTarget: EventTarget,
+  ) => ReactSyntheticEvent;
+} & SyntheticEvent;
