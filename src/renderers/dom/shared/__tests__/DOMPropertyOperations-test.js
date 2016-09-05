@@ -320,7 +320,7 @@ describe('DOMPropertyOperations', () => {
       var stubInstance = {_debugID: 1};
       ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
-      stubNode.setAttribute('type', 'radio')
+      stubNode.setAttribute('type', 'radio');
 
       DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
       spyOn(stubNode, 'setAttribute');

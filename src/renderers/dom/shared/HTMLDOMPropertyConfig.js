@@ -211,22 +211,27 @@ var HTMLDOMPropertyConfig = {
   },
   DOMPropertyNames: {},
   DOMMutationMethods: {
-    value: function (node, value) {
+    value: function(node, value) {
       if (value == null) {
         return node.removeAttribute('value');
       }
 
       if (node.hasAttribute('value')) {
+        if (value === 0) {
+          // Since we use loose type checking below, zero is
+          // falsy, so we need to manually cover it
+          value = '0';
+        }
         // Use loose coercion to prevent replacement on comparisons like
         // '3e1' == 30 in Chrome (~52).
         if (node.value == value) { // eslint-disable-line
-          return;
+          return false;
         }
       }
 
       node.setAttribute('value', '' + value);
-    }
-  }
+    },
+  },
 };
 
 module.exports = HTMLDOMPropertyConfig;
