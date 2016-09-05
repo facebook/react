@@ -160,12 +160,6 @@ var DOMPropertyOperations = {
           (propertyInfo.hasOverloadedBooleanValue && value === true)
         ) {
           node.setAttribute(attributeName, '');
-        } else if (attributeName === 'value' && node.hasAttribute('value')) {
-          // Use loose coercion to prevent replacement on comparisons like
-          // '3e1' == 30 in Chrome (~52).
-          if (node.value != value) { // eslint-disable-line
-            node.setAttribute(attributeName, '' + value);
-          }
         } else {
           node.setAttribute(attributeName, '' + value);
         }

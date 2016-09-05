@@ -210,6 +210,23 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: 'http-equiv',
   },
   DOMPropertyNames: {},
+  DOMMutationMethods: {
+    value: function (node, value) {
+      if (value == null) {
+        return node.removeAttribute('value');
+      }
+
+      if (node.hasAttribute('value')) {
+        // Use loose coercion to prevent replacement on comparisons like
+        // '3e1' == 30 in Chrome (~52).
+        if (node.value == value) { // eslint-disable-line
+          return;
+        }
+      }
+
+      node.setAttribute('value', '' + value);
+    }
+  }
 };
 
 module.exports = HTMLDOMPropertyConfig;

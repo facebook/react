@@ -295,7 +295,14 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.className).toBe('');
     });
 
+  });
+
+  describe('value mutation method', function() {
     it('should not update numeric values when the input.value is loosely the same', function() {
+      var stubNode = document.createElement('input');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
       stubNode.setAttribute('type', 'number');
       stubNode.setAttribute('value', '3e1');
       // Keep in sync. The comparison occurs between setAttribute and value.
@@ -307,6 +314,34 @@ describe('DOMPropertyOperations', () => {
 
       expect(stubNode.setAttribute.calls.count()).toBe(0);
     });
+
+    it('should update an empty attribute to zero', function() {
+      var stubNode = document.createElement('input');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
+      stubNode.setAttribute('type', 'radio')
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
+      spyOn(stubNode, 'setAttribute');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 0);
+
+      expect(stubNode.setAttribute.calls.count()).toBe(1);
+    });
+
+    it('should always assign the value attribute for non-inputs', function() {
+      var stubNode = document.createElement('progress');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
+      spyOn(stubNode, 'setAttribute');
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '30');
+
+      expect(stubNode.setAttribute.calls.count()).toBe(2);
+    });
+
   });
 
   describe('deleteValueForProperty', () => {
