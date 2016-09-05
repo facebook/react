@@ -36,14 +36,21 @@ function getRenderedHostOrTextFromComponent(component) {
 }
 
 
+var defaultMockConfig = {
+  getMockRef: function() {
+    return {};
+  },
+}
+
 // =============================================================================
 
 var ReactTestComponent = function(element) {
   this._currentElement = element;
   this._renderedChildren = null;
   this._topLevelWrapper = null;
-  this._mockConfig = null;
+  this._mockConfig = defaultMockConfig;
 };
+
 ReactTestComponent.prototype.mountComponent = function(
   transaction,
   nativeParent,
@@ -53,6 +60,7 @@ ReactTestComponent.prototype.mountComponent = function(
   var element = this._currentElement;
   this.mountChildren(element.props.children, transaction, context);
 };
+
 ReactTestComponent.prototype.receiveComponent = function(
   nextElement,
   transaction,
@@ -61,16 +69,14 @@ ReactTestComponent.prototype.receiveComponent = function(
   this._currentElement = nextElement;
   this.updateChildren(nextElement.props.children, transaction, context);
 };
+
 ReactTestComponent.prototype.getHostNode = function() {};
 ReactTestComponent.prototype.getPublicInstance = function() {
-  if (this._mockConfig) {
-    var { getMockRef } = this._mockConfig;
-    if (getMockRef) {
-      return getMockRef(this._currentElement);
-    }
-  }
-  return {};
+  console.log(this._currentElement);
+  console.log(this._mockConfig)
+  return this._mockConfig.getMockRef(this._currentElement);
 };
+
 ReactTestComponent.prototype.unmountComponent = function() {};
 ReactTestComponent.prototype.toJSON = function() {
   var {children, ...props} = this._currentElement.props;

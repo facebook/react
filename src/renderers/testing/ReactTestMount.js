@@ -24,6 +24,24 @@ type TestRendererMockConfig = {
   getMockRef: (element: ReactElement) => Object,
 };
 
+function attachMockConfigToChildren(
+  renderedComponent,
+  mockConfig,
+) {
+  var children = renderedComponent._renderedChildren;
+  for (var key in children) {
+    var child = children[key];
+    child._mockConfig = mockConfig;
+    if (child._renderedChildren) {
+      attachMockConfigToChildren(
+        child,
+        mockConfig
+      );
+    }
+  }
+}
+
+
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
  * composites instead of having to worry about different types of components
@@ -59,10 +77,13 @@ function mountComponentIntoNode(
     null,
     emptyObject
   );
+  // console.log(componentInstance._renderedComponent);
+  // attachMockConfigToChildren(
+  //   componentInstance._renderedComponent,
+  //   mockConfig
+  // );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
-  if (mockConfig) {
-    componentInstance._renderedComponent._mockConfig = mockConfig;
-  }
+  componentInstance._renderedComponent._mockConfig = mockConfig;
   return image;
 }
 
@@ -167,7 +188,7 @@ var ReactTestMount = {
       instance,
       mockConfig,
     );
-    return new ReactTestInstance(instance);
+    return new ReactTestInstance(instance, mockConfig);
   },
 
 };
