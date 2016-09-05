@@ -72,8 +72,6 @@ ReactTestComponent.prototype.receiveComponent = function(
 
 ReactTestComponent.prototype.getHostNode = function() {};
 ReactTestComponent.prototype.getPublicInstance = function() {
-  console.log(this._currentElement);
-  console.log(this._mockConfig)
   return this._mockConfig.getMockRef(this._currentElement);
 };
 

@@ -24,24 +24,6 @@ type TestRendererMockConfig = {
   getMockRef: (element: ReactElement) => Object,
 };
 
-function attachMockConfigToChildren(
-  renderedComponent,
-  mockConfig,
-) {
-  var children = renderedComponent._renderedChildren;
-  for (var key in children) {
-    var child = children[key];
-    child._mockConfig = mockConfig;
-    if (child._renderedChildren) {
-      attachMockConfigToChildren(
-        child,
-        mockConfig
-      );
-    }
-  }
-}
-
-
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
  * composites instead of having to worry about different types of components
@@ -77,11 +59,6 @@ function mountComponentIntoNode(
     null,
     emptyObject
   );
-  // console.log(componentInstance._renderedComponent);
-  // attachMockConfigToChildren(
-  //   componentInstance._renderedComponent,
-  //   mockConfig
-  // );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   componentInstance._renderedComponent._mockConfig = mockConfig;
   return image;
@@ -98,7 +75,7 @@ function batchedMountComponentIntoNode(
     componentInstance,
     mockConfig,
   ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(mockConfig);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,

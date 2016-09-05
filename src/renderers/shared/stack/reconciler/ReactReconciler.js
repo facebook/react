@@ -20,7 +20,9 @@ var warning = require('warning');
  * Helper to call ReactRef.attachRefs with this composite component, split out
  * to avoid allocations in the transaction mount-ready queue.
  */
-function attachRefs() {
+function attachRefs(transaction) {
+
+  console.log('attachRefs', transaction)
   ReactRef.attachRefs(this, this._currentElement);
 }
 
@@ -63,7 +65,11 @@ var ReactReconciler = {
     );
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {
-      transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
+      transaction.getReactMountReady().enqueue(
+        attachRefs,
+        internalInstance,
+        transaction,
+      );
     }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {

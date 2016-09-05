@@ -57,7 +57,8 @@ var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
  *
  * @class ReactTestReconcileTransaction
  */
-function ReactTestReconcileTransaction() {
+function ReactTestReconcileTransaction(mockConfig) {
+  this._mockConfig = mockConfig;
   this.reinitializeTransaction();
   this.reactMountReady = CallbackQueue.getPooled(null);
 }

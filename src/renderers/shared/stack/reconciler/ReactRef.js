@@ -15,7 +15,7 @@ var ReactOwner = require('ReactOwner');
 
 var ReactRef = {};
 
-function attachRef(ref, component, owner) {
+function attachRef(ref, component, owner, transaction) {
   if (typeof ref === 'function') {
     ref(component.getPublicInstance());
   } else {
