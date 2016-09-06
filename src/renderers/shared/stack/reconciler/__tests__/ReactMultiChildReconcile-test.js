@@ -275,12 +275,12 @@ function testPropsSequence(sequence) {
   }
 }
 
-describe('ReactMultiChildReconcile', function() {
-  beforeEach(function() {
+describe('ReactMultiChildReconcile', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
   });
 
-  it('should reset internal state if removed then readded', function() {
+  it('should reset internal state if removed then readded', () => {
     // Test basics.
     var props = {
       usernameToStatus: {
@@ -315,7 +315,7 @@ describe('ReactMultiChildReconcile', function() {
         .not.toBe(startingInternalState);
   });
 
-  it('should create unique identity', function() {
+  it('should create unique identity', () => {
     // Test basics.
     var usernameToStatus = {
       jcw: 'jcwStatus',
@@ -326,7 +326,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence([{usernameToStatus: usernameToStatus}]);
   });
 
-  it('should preserve order if children order has not changed', function() {
+  it('should preserve order if children order has not changed', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -344,7 +344,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should transition from zero to one children correctly', function() {
+  it('should transition from zero to one children correctly', () => {
     var PROPS_SEQUENCE = [
       {usernameToStatus: {} },
       {
@@ -356,7 +356,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should transition from one to zero children correctly', function() {
+  it('should transition from one to zero children correctly', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -368,7 +368,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should transition from one child to null children', function() {
+  it('should transition from one child to null children', () => {
     testPropsSequence([
       {
         usernameToStatus: {
@@ -379,7 +379,7 @@ describe('ReactMultiChildReconcile', function() {
     ]);
   });
 
-  it('should transition from null children to one child', function() {
+  it('should transition from null children to one child', () => {
     testPropsSequence([
       {},
       {
@@ -390,7 +390,7 @@ describe('ReactMultiChildReconcile', function() {
     ]);
   });
 
-  it('should transition from zero children to null children', function() {
+  it('should transition from zero children to null children', () => {
     testPropsSequence([
       {
         usernameToStatus: {},
@@ -399,7 +399,7 @@ describe('ReactMultiChildReconcile', function() {
     ]);
   });
 
-  it('should transition from null children to zero children', function() {
+  it('should transition from null children to zero children', () => {
     testPropsSequence([
       {},
       {
@@ -414,7 +414,7 @@ describe('ReactMultiChildReconcile', function() {
    * `FriendsStatusDisplay` renders nulls as empty children (it's a convention
    * of `FriendsStatusDisplay`, nothing related to React or these test cases.
    */
-  it('should remove nulled out children at the beginning', function() {
+  it('should remove nulled out children at the beginning', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -432,7 +432,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should remove nulled out children at the end', function() {
+  it('should remove nulled out children at the end', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -450,7 +450,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should reverse the order of two children', function() {
+  it('should reverse the order of two children', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -468,7 +468,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should reverse the order of more than two children', function() {
+  it('should reverse the order of more than two children', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -488,7 +488,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should cycle order correctly', function() {
+  it('should cycle order correctly', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -534,7 +534,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should cycle order correctly in the other direction', function() {
+  it('should cycle order correctly in the other direction', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -581,7 +581,7 @@ describe('ReactMultiChildReconcile', function() {
   });
 
 
-  it('should remove nulled out children and ignore new null children', function() {
+  it('should remove nulled out children and ignore new null children', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -600,7 +600,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should remove nulled out children and reorder remaining', function() {
+  it('should remove nulled out children and reorder remaining', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -621,7 +621,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should append children to the end', function() {
+  it('should append children to the end', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -640,7 +640,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should append multiple children to the end', function() {
+  it('should append multiple children to the end', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -660,7 +660,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should prepend children to the beginning', function() {
+  it('should prepend children to the beginning', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -679,7 +679,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should prepend multiple children to the beginning', function() {
+  it('should prepend multiple children to the beginning', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -699,7 +699,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should not prepend an empty child to the beginning', function() {
+  it('should not prepend an empty child to the beginning', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -718,7 +718,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should not append an empty child to the end', function() {
+  it('should not append an empty child to the end', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -737,7 +737,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should not insert empty children in the middle', function() {
+  it('should not insert empty children in the middle', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -758,7 +758,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should insert one new child in the middle', function() {
+  it('should insert one new child in the middle', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -777,7 +777,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should insert multiple new truthy children in the middle', function() {
+  it('should insert multiple new truthy children in the middle', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {
@@ -798,7 +798,7 @@ describe('ReactMultiChildReconcile', function() {
     testPropsSequence(PROPS_SEQUENCE);
   });
 
-  it('should insert non-empty children in middle where nulls were', function() {
+  it('should insert non-empty children in middle where nulls were', () => {
     var PROPS_SEQUENCE = [
       {
         usernameToStatus: {

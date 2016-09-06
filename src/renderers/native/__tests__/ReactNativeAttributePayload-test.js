@@ -14,7 +14,7 @@ var ReactNativePropRegistry = require('ReactNativePropRegistry');
 
 var diff = ReactNativeAttributePayload.diff;
 
-describe('ReactNativeAttributePayload', function() {
+describe('ReactNativeAttributePayload', () => {
 
   it('should work with simple example', () => {
     expect(diff(

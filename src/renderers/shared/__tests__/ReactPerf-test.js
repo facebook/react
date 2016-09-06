@@ -11,7 +11,7 @@
 
 'use strict';
 
-describe('ReactPerf', function() {
+describe('ReactPerf', () => {
   var React;
   var ReactDOM;
   var ReactPerf;
@@ -23,7 +23,7 @@ describe('ReactPerf', function() {
   var Div;
   var LifeCycle;
 
-  beforeEach(function() {
+  beforeEach(() => {
     var now = 0;
     jest.setMock('fbjs/lib/performanceNow', function() {
       return now++;
@@ -71,7 +71,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  afterEach(function() {
+  afterEach(() => {
     if (console.table.isFake) {
       delete console.table;
     }
@@ -91,7 +91,7 @@ describe('ReactPerf', function() {
     return ReactPerf.getLastMeasurements();
   }
 
-  it('should count no-op update as waste', function() {
+  it('should count no-op update as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<App />, container);
     var measurements = measure(() => {
@@ -112,7 +112,7 @@ describe('ReactPerf', function() {
     }]);
   });
 
-  it('should count no-op update in child as waste', function() {
+  it('should count no-op update in child as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<App />, container);
 
@@ -137,13 +137,13 @@ describe('ReactPerf', function() {
     expect(summary).toEqual([]);
   }
 
-  it('should not count initial render as waste', function() {
+  it('should not count initial render as waste', () => {
     expectNoWaste(() => {
       ReactTestUtils.renderIntoDocument(<App />);
     });
   });
 
-  it('should not count unmount as waste', function() {
+  it('should not count unmount as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div>hello</Div>, container);
     expectNoWaste(() => {
@@ -151,7 +151,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count content update as waste', function() {
+  it('should not count content update as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div>hello</Div>, container);
     expectNoWaste(() => {
@@ -159,7 +159,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count child addition as waste', function() {
+  it('should not count child addition as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div><span /></Div>, container);
     expectNoWaste(() => {
@@ -167,7 +167,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count child removal as waste', function() {
+  it('should not count child removal as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div><span /><span /></Div>, container);
     expectNoWaste(() => {
@@ -175,7 +175,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count property update as waste', function() {
+  it('should not count property update as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div className="yellow">hey</Div>, container);
     expectNoWaste(() => {
@@ -183,7 +183,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count style update as waste', function() {
+  it('should not count style update as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div style={{color: 'yellow'}}>hey</Div>, container);
     expectNoWaste(() => {
@@ -191,7 +191,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count property removal as waste', function() {
+  it('should not count property removal as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div className="yellow">hey</Div>, container);
     expectNoWaste(() => {
@@ -199,7 +199,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count raw HTML update as waste', function() {
+  it('should not count raw HTML update as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <Div dangerouslySetInnerHTML={{__html: 'me'}} />,
@@ -213,7 +213,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count child reordering as waste', function() {
+  it('should not count child reordering as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div><div key="A" /><div key="B" /></Div>, container);
     expectNoWaste(() => {
@@ -221,7 +221,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count text update as waste', function() {
+  it('should not count text update as waste', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Div>{'hello'}{'world'}</Div>, container);
     expectNoWaste(() => {
@@ -229,7 +229,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count replacing null with a host as waste', function() {
+  it('should not count replacing null with a host as waste', () => {
     var element = null;
     function Foo() {
       return element;
@@ -242,7 +242,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should not count replacing a host with null as waste', function() {
+  it('should not count replacing a host with null as waste', () => {
     var element = <div />;
     function Foo() {
       return element;
@@ -255,7 +255,7 @@ describe('ReactPerf', function() {
     });
   });
 
-  it('should include stats for components unmounted during measurement', function() {
+  it('should include stats for components unmounted during measurement', () => {
     var container = document.createElement('div');
     var measurements = measure(() => {
       ReactDOM.render(<Div><Div key="a" /></Div>, container);
@@ -270,7 +270,7 @@ describe('ReactPerf', function() {
     }]);
   });
 
-  it('should include lifecycle methods in measurements', function() {
+  it('should include lifecycle methods in measurements', () => {
     var container = document.createElement('div');
     var measurements = measure(() => {
       var instance = ReactDOM.render(<LifeCycle />, container);
@@ -307,7 +307,7 @@ describe('ReactPerf', function() {
     }]);
   });
 
-  it('should include render time of functional components', function() {
+  it('should include render time of functional components', () => {
     function Foo() {
       return null;
     }
@@ -329,7 +329,7 @@ describe('ReactPerf', function() {
     }]);
   });
 
-  it('should not count time in a portal towards lifecycle method', function() {
+  it('should not count time in a portal towards lifecycle method', () => {
     function Foo() {
       return null;
     }
@@ -385,7 +385,7 @@ describe('ReactPerf', function() {
     }]);
   });
 
-  it('warns once when using getMeasurementsSummaryMap', function() {
+  it('warns once when using getMeasurementsSummaryMap', () => {
     var measurements = measure(() => {});
     spyOn(console, 'error');
     ReactPerf.getMeasurementsSummaryMap(measurements);
@@ -399,7 +399,7 @@ describe('ReactPerf', function() {
     expect(console.error.calls.count()).toBe(1);
   });
 
-  it('warns once when using printDOM', function() {
+  it('warns once when using printDOM', () => {
     var measurements = measure(() => {});
     spyOn(console, 'error');
     ReactPerf.printDOM(measurements);

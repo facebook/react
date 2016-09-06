@@ -14,10 +14,10 @@
 var SyntheticKeyboardEvent;
 var getEventCharCode;
 
-describe('SyntheticKeyboardEvent', function() {
+describe('SyntheticKeyboardEvent', () => {
   var createEvent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     // Mock getEventCharCode for proper unit testing
     jest.mock('getEventCharCode');
     getEventCharCode = require('getEventCharCode');
@@ -29,10 +29,10 @@ describe('SyntheticKeyboardEvent', function() {
     };
   });
 
-  describe('KeyboardEvent interface', function() {
-    describe('charCode', function() {
-      describe('when event is `keypress`', function() {
-        it('returns whatever getEventCharCode returns', function() {
+  describe('KeyboardEvent interface', () => {
+    describe('charCode', () => {
+      describe('when event is `keypress`', () => {
+        it('returns whatever getEventCharCode returns', () => {
           getEventCharCode.mockReturnValue(100500);
           var keyboardEvent = createEvent({type: 'keypress', charCode: 50});
 
@@ -40,33 +40,33 @@ describe('SyntheticKeyboardEvent', function() {
         });
       });
 
-      describe('when event is not `keypress`', function() {
-        it('returns 0', function() {
+      describe('when event is not `keypress`', () => {
+        it('returns 0', () => {
           var keyboardEvent = createEvent({type: 'keyup', charCode: 50});
           expect(keyboardEvent.charCode).toBe(0);
         });
       });
     });
 
-    describe('keyCode', function() {
-      describe('when event is `keydown` or `keyup`', function() {
-        it('returns a passed keyCode', function() {
+    describe('keyCode', () => {
+      describe('when event is `keydown` or `keyup`', () => {
+        it('returns a passed keyCode', () => {
           var keyboardEvent = createEvent({type: 'keyup', keyCode: 40});
           expect(keyboardEvent.keyCode).toBe(40);
         });
       });
 
-      describe('when event is `keypress`', function() {
-        it('returns 0', function() {
+      describe('when event is `keypress`', () => {
+        it('returns 0', () => {
           var keyboardEvent = createEvent({type: 'keypress', charCode: 40});
           expect(keyboardEvent.keyCode).toBe(0);
         });
       });
     });
 
-    describe('which', function() {
-      describe('when event is `keypress`', function() {
-        it('returns whatever getEventCharCode returns', function() {
+    describe('which', () => {
+      describe('when event is `keypress`', () => {
+        it('returns whatever getEventCharCode returns', () => {
           getEventCharCode.mockReturnValue(9001);
           var keyboardEvent = createEvent({type: 'keypress', charCode: 50});
 
@@ -74,15 +74,15 @@ describe('SyntheticKeyboardEvent', function() {
         });
       });
 
-      describe('when event is `keydown` or `keyup`', function() {
-        it('returns a passed keyCode', function() {
+      describe('when event is `keydown` or `keyup`', () => {
+        it('returns a passed keyCode', () => {
           var keyboardEvent = createEvent({type: 'keyup', keyCode: 40});
           expect(keyboardEvent.which).toBe(40);
         });
       });
 
-      describe('when event type is unknown', function() {
-        it('returns 0', function() {
+      describe('when event type is unknown', () => {
+        it('returns 0', () => {
           var keyboardEvent = createEvent({type: 'keysmack', keyCode: 40});
           expect(keyboardEvent.which).toBe(0);
         });
@@ -90,8 +90,8 @@ describe('SyntheticKeyboardEvent', function() {
     });
   });
 
-  describe('EventInterface', function() {
-    it('normalizes properties from the Event interface', function() {
+  describe('EventInterface', () => {
+    it('normalizes properties from the Event interface', () => {
       var target = document.createElement('div');
       var syntheticEvent = createEvent({srcElement: target});
 
@@ -99,7 +99,7 @@ describe('SyntheticKeyboardEvent', function() {
       expect(syntheticEvent.type).toBe(undefined);
     });
 
-    it('is able to `preventDefault` and `stopPropagation`', function() {
+    it('is able to `preventDefault` and `stopPropagation`', () => {
       var nativeEvent = {};
       var syntheticEvent = createEvent(nativeEvent);
 
@@ -112,7 +112,7 @@ describe('SyntheticKeyboardEvent', function() {
       expect(syntheticEvent.isPropagationStopped()).toBe(true);
     });
 
-    it('is able to `persist`', function() {
+    it('is able to `persist`', () => {
       var syntheticEvent = createEvent({});
 
       expect(syntheticEvent.isPersistent()).toBe(false);

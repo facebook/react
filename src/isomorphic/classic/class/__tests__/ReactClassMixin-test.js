@@ -20,9 +20,9 @@ var TestComponentWithReverseSpec;
 var mixinPropValidator;
 var componentPropValidator;
 
-describe('ReactClass-mixin', function() {
+describe('ReactClass-mixin', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     mixinPropValidator = jest.fn();
@@ -106,7 +106,7 @@ describe('ReactClass-mixin', function() {
     });
   });
 
-  it('should support merging propTypes and statics', function() {
+  it('should support merging propTypes and statics', () => {
     var listener = jest.fn();
     var instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -121,7 +121,7 @@ describe('ReactClass-mixin', function() {
     expect('staticComponent' in TestComponent).toBe(true);
   });
 
-  it('should support chaining delegate functions', function() {
+  it('should support chaining delegate functions', () => {
     var listener = jest.fn();
     var instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -134,7 +134,7 @@ describe('ReactClass-mixin', function() {
     ]);
   });
 
-  it('should chain functions regardless of spec property order', function() {
+  it('should chain functions regardless of spec property order', () => {
     var listener = jest.fn();
     var instance = <TestComponentWithReverseSpec listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -147,13 +147,13 @@ describe('ReactClass-mixin', function() {
     ]);
   });
 
-  it('should validate prop types via mixins', function() {
+  it('should validate prop types via mixins', () => {
     expect(TestComponent.propTypes).toBeDefined();
     expect(TestComponent.propTypes.value)
       .toBe(mixinPropValidator);
   });
 
-  it('should override mixin prop types with class prop types', function() {
+  it('should override mixin prop types with class prop types', () => {
     // Sanity check...
     expect(componentPropValidator).not.toBe(mixinPropValidator);
     // Actually check...
@@ -166,7 +166,7 @@ describe('ReactClass-mixin', function() {
   });
 
 
-  it('should support mixins with getInitialState()', function() {
+  it('should support mixins with getInitialState()', () => {
     var Mixin = {
       getInitialState: function() {
         return {mixin: true};
@@ -187,7 +187,7 @@ describe('ReactClass-mixin', function() {
     expect(instance.state.mixin).toBe(true);
   });
 
-  it('should throw with conflicting getInitialState() methods', function() {
+  it('should throw with conflicting getInitialState() methods', () => {
     var Mixin = {
       getInitialState: function() {
         return {x: true};
@@ -213,7 +213,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should not mutate objects returned by getInitialState()', function() {
+  it('should not mutate objects returned by getInitialState()', () => {
     var Mixin = {
       getInitialState: function() {
         return Object.freeze({mixin: true});
@@ -233,7 +233,7 @@ describe('ReactClass-mixin', function() {
     }).not.toThrow();
   });
 
-  it('should support statics in mixins', function() {
+  it('should support statics in mixins', () => {
     var Mixin = {
       statics: {
         foo: 'bar',
@@ -258,7 +258,7 @@ describe('ReactClass-mixin', function() {
     expect(Component.abc).toBe('def');
   });
 
-  it("should throw if mixins override each others' statics", function() {
+  it("should throw if mixins override each others' statics", () => {
     expect(function() {
       var Mixin = {
         statics: {
@@ -282,7 +282,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should throw if mixins override functions in statics', function() {
+  it('should throw if mixins override functions in statics', () => {
     expect(function() {
       var Mixin = {
         statics: {
@@ -310,7 +310,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should warn if the mixin is undefined', function() {
+  it('should warn if the mixin is undefined', () => {
     spyOn(console, 'error');
 
     React.createClass({
@@ -330,7 +330,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should warn if the mixin is null', function() {
+  it('should warn if the mixin is null', () => {
     spyOn(console, 'error');
 
     React.createClass({
@@ -350,7 +350,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should warn if an undefined mixin is included in another mixin', function() {
+  it('should warn if an undefined mixin is included in another mixin', () => {
     spyOn(console, 'error');
 
     var mixinA = {
@@ -374,7 +374,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should warn if a null mixin is included in another mixin', function() {
+  it('should warn if a null mixin is included in another mixin', () => {
     spyOn(console, 'error');
 
     var mixinA = {
@@ -398,7 +398,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should throw if the mixin is a React component', function() {
+  it('should throw if the mixin is a React component', () => {
     expect(function() {
       React.createClass({
         mixins: [<div />],
@@ -413,7 +413,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should throw if the mixin is a React component class', function() {
+  it('should throw if the mixin is a React component class', () => {
     expect(function() {
       var Component = React.createClass({
         render: function() {
@@ -434,7 +434,7 @@ describe('ReactClass-mixin', function() {
     );
   });
 
-  it('should have bound the mixin methods to the component', function() {
+  it('should have bound the mixin methods to the component', () => {
     var mixin = {
       mixinFunc: function() {
         return this;
@@ -454,7 +454,7 @@ describe('ReactClass-mixin', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should include the mixin keys in even if their values are falsy', function() {
+  it('should include the mixin keys in even if their values are falsy', () => {
     var mixin = {
       keyWithNullValue: null,
       randomCounter: 0,

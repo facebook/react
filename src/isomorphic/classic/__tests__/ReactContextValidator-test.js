@@ -23,12 +23,12 @@ var ReactTestUtils;
 
 var reactComponentExpect;
 
-describe('ReactContextValidator', function() {
+describe('ReactContextValidator', () => {
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -40,7 +40,7 @@ describe('ReactContextValidator', function() {
   // TODO: This behavior creates a runtime dependency on propTypes. We should
   // ensure that this is not required for ES6 classes with Flow.
 
-  it('should filter out context not in contextTypes', function() {
+  it('should filter out context not in contextTypes', () => {
     var Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string,
@@ -73,7 +73,7 @@ describe('ReactContextValidator', function() {
     reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
   });
 
-  it('should filter context properly in callbacks', function() {
+  it('should filter context properly in callbacks', () => {
     var actualComponentWillReceiveProps;
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
@@ -134,7 +134,7 @@ describe('ReactContextValidator', function() {
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
   });
 
-  it('should check context types', function() {
+  it('should check context types', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -208,7 +208,7 @@ describe('ReactContextValidator', function() {
     );
   });
 
-  it('should check child context types', function() {
+  it('should check child context types', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({

@@ -16,9 +16,9 @@ var ReactDOM;
 
 var TestComponent;
 
-describe('ReactCompositeComponent-state', function() {
+describe('ReactCompositeComponent-state', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
 
     ReactDOM = require('ReactDOM');
@@ -126,7 +126,7 @@ describe('ReactCompositeComponent-state', function() {
     });
   });
 
-  it('should support setting state', function() {
+  it('should support setting state', () => {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -216,7 +216,7 @@ describe('ReactCompositeComponent-state', function() {
     ].join('\n'));
   });
 
-  it('should batch unmounts', function() {
+  it('should batch unmounts', () => {
     var outer;
 
     class Inner extends React.Component {

@@ -13,13 +13,13 @@
 
 var accumulateInto;
 
-describe('accumulateInto', function() {
+describe('accumulateInto', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     accumulateInto = require('accumulateInto');
   });
 
-  it('throws if the second item is null', function() {
+  it('throws if the second item is null', () => {
     expect(function() {
       accumulateInto([], null);
     }).toThrowError(
@@ -27,12 +27,12 @@ describe('accumulateInto', function() {
     );
   });
 
-  it('returns the second item if first is null', function() {
+  it('returns the second item if first is null', () => {
     var a = [];
     expect(accumulateInto(null, a)).toBe(a);
   });
 
-  it('merges the second into the first if first item is an array', function() {
+  it('merges the second into the first if first item is an array', () => {
     var a = [1, 2];
     var b = [3, 4];
     accumulateInto(a, b);
@@ -43,7 +43,7 @@ describe('accumulateInto', function() {
     expect(c).toEqual([1, 2]);
   });
 
-  it('returns a new array if first or both items are scalar', function() {
+  it('returns a new array if first or both items are scalar', () => {
     var a = [2];
     expect(accumulateInto(1, a)).toEqual([1, 2]);
     expect(a).toEqual([2]);

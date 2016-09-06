@@ -12,11 +12,11 @@
 'use strict';
 
 
-describe('EventPluginRegistry', function() {
+describe('EventPluginRegistry', () => {
   var EventPluginRegistry;
   var createPlugin;
 
-  beforeEach(function() {
+  beforeEach(() => {
     EventPluginRegistry = require('EventPluginRegistry');
     EventPluginRegistry._resetEventPlugins();
 
@@ -25,7 +25,7 @@ describe('EventPluginRegistry', function() {
     };
   });
 
-  it('should be able to inject ordering before plugins', function() {
+  it('should be able to inject ordering before plugins', () => {
     var OnePlugin = createPlugin();
     var TwoPlugin = createPlugin();
     var ThreePlugin = createPlugin();
@@ -45,7 +45,7 @@ describe('EventPluginRegistry', function() {
     expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
   });
 
-  it('should be able to inject plugins before and after ordering', function() {
+  it('should be able to inject plugins before and after ordering', () => {
     var OnePlugin = createPlugin();
     var TwoPlugin = createPlugin();
     var ThreePlugin = createPlugin();
@@ -65,7 +65,7 @@ describe('EventPluginRegistry', function() {
     expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
   });
 
-  it('should be able to inject repeated plugins and out-of-order', function() {
+  it('should be able to inject repeated plugins and out-of-order', () => {
     var OnePlugin = createPlugin();
     var TwoPlugin = createPlugin();
     var ThreePlugin = createPlugin();
@@ -86,7 +86,7 @@ describe('EventPluginRegistry', function() {
     expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
   });
 
-  it('should throw if plugin does not implement `extractEvents`', function() {
+  it('should throw if plugin does not implement `extractEvents`', () => {
     var BadPlugin = {};
 
     EventPluginRegistry.injectEventPluginOrder(['bad']);
@@ -101,7 +101,7 @@ describe('EventPluginRegistry', function() {
     );
   });
 
-  it('should throw if plugin does not exist in ordering', function() {
+  it('should throw if plugin does not exist in ordering', () => {
     var OnePlugin = createPlugin();
     var RandomPlugin = createPlugin();
 
@@ -118,7 +118,7 @@ describe('EventPluginRegistry', function() {
     );
   });
 
-  it('should throw if ordering is injected more than once', function() {
+  it('should throw if ordering is injected more than once', () => {
     var pluginOrdering = [];
 
     EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
@@ -131,7 +131,7 @@ describe('EventPluginRegistry', function() {
     );
   });
 
-  it('should throw if different plugins injected using same name', function() {
+  it('should throw if different plugins injected using same name', () => {
     var OnePlugin = createPlugin();
     var TwoPlugin = createPlugin();
 
@@ -145,7 +145,7 @@ describe('EventPluginRegistry', function() {
     );
   });
 
-  it('should publish registration names of injected plugins', function() {
+  it('should publish registration names of injected plugins', () => {
     var OnePlugin = createPlugin({
       eventTypes: {
         click: {registrationName: 'onClick'},
@@ -179,7 +179,7 @@ describe('EventPluginRegistry', function() {
     ).toBe(TwoPlugin);
   });
 
-  it('should throw if multiple registration names collide', function() {
+  it('should throw if multiple registration names collide', () => {
     var OnePlugin = createPlugin({
       eventTypes: {
         photoCapture: {registrationName: 'onPhotoCapture'},
@@ -209,7 +209,7 @@ describe('EventPluginRegistry', function() {
     );
   });
 
-  it('should throw if an invalid event is published', function() {
+  it('should throw if an invalid event is published', () => {
     var OnePlugin = createPlugin({
       eventTypes: {
         badEvent: {/* missing configuration */},
@@ -226,7 +226,7 @@ describe('EventPluginRegistry', function() {
     );
   });
 
-  it('should be able to get the plugin from synthetic events', function() {
+  it('should be able to get the plugin from synthetic events', () => {
     var clickDispatchConfig = {
       registrationName: 'onClick',
     };

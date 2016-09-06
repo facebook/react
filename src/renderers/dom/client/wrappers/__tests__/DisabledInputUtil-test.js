@@ -12,7 +12,7 @@
 'use strict';
 
 
-describe('DisabledInputUtils', function() {
+describe('DisabledInputUtils', () => {
   var React;
   var ReactDOM;
   var ReactTestUtils;
@@ -40,15 +40,15 @@ describe('DisabledInputUtils', function() {
 
   elements.forEach(function(tagName) {
 
-    describe(tagName, function() {
+    describe(tagName, () => {
 
-      beforeEach(function() {
+      beforeEach(() => {
         React = require('React');
         ReactDOM = require('ReactDOM');
         ReactTestUtils = require('ReactTestUtils');
       });
 
-      it('should forward clicks when it starts out not disabled', function() {
+      it('should forward clicks when it starts out not disabled', () => {
         var element = React.createElement(tagName, {
           onClick: onClick,
         });
@@ -56,7 +56,7 @@ describe('DisabledInputUtils', function() {
         expectClickThru(mounted(element));
       });
 
-      it('should not forward clicks when it starts out disabled', function() {
+      it('should not forward clicks when it starts out disabled', () => {
         var element = React.createElement(tagName, {
           onClick: onClick,
           disabled: true,
@@ -65,7 +65,7 @@ describe('DisabledInputUtils', function() {
         expectNoClickThru(mounted(element));
       });
 
-      it('should forward clicks when it becomes not disabled', function() {
+      it('should forward clicks when it becomes not disabled', () => {
         var container = document.createElement('div');
         var element = ReactDOM.render(
           React.createElement(tagName, { onClick: onClick, disabled: true }),
@@ -78,7 +78,7 @@ describe('DisabledInputUtils', function() {
         expectClickThru(element);
       });
 
-      it('should not forward clicks when it becomes disabled', function() {
+      it('should not forward clicks when it becomes disabled', () => {
         var container = document.createElement('div');
         var element = ReactDOM.render(
           React.createElement(tagName, { onClick: onClick }),
@@ -91,7 +91,7 @@ describe('DisabledInputUtils', function() {
         expectNoClickThru(element);
       });
 
-      it('should work correctly if the listener is changed', function() {
+      it('should work correctly if the listener is changed', () => {
         var container = document.createElement('div');
         var element = ReactDOM.render(
           React.createElement(tagName, { onClick: onClick, disabled: true }),

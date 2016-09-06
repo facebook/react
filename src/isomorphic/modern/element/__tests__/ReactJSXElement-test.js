@@ -15,10 +15,10 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('ReactJSXElement', function() {
+describe('ReactJSXElement', () => {
   var Component;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -31,7 +31,7 @@ describe('ReactJSXElement', function() {
     };
   });
 
-  it('returns a complete element according to spec', function() {
+  it('returns a complete element according to spec', () => {
     var element = <Component />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe(null);
@@ -41,7 +41,7 @@ describe('ReactJSXElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('allows a lower-case to be passed as the string type', function() {
+  it('allows a lower-case to be passed as the string type', () => {
     var element = <div />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
@@ -51,7 +51,7 @@ describe('ReactJSXElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('allows a string to be passed as the type', function() {
+  it('allows a string to be passed as the type', () => {
     var TagName = 'div';
     var element = <TagName />;
     expect(element.type).toBe('div');
@@ -62,12 +62,12 @@ describe('ReactJSXElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('returns an immutable element', function() {
+  it('returns an immutable element', () => {
     var element = <Component />;
     expect(() => element.type = 'div').toThrow();
   });
 
-  it('does not reuse the object that is spread into props', function() {
+  it('does not reuse the object that is spread into props', () => {
     var config = {foo: 1};
     var element = <Component {...config} />;
     expect(element.props.foo).toBe(1);
@@ -75,7 +75,7 @@ describe('ReactJSXElement', function() {
     expect(element.props.foo).toBe(1);
   });
 
-  it('extracts key and ref from the rest of the props', function() {
+  it('extracts key and ref from the rest of the props', () => {
     var element = <Component key="12" ref="34" foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
@@ -85,7 +85,7 @@ describe('ReactJSXElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('coerces the key to a string', function() {
+  it('coerces the key to a string', () => {
     var element = <Component key={12} foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
@@ -95,7 +95,7 @@ describe('ReactJSXElement', function() {
     expect(element.props).toEqual(expectation);
   });
 
-  it('merges JSX children onto the children prop', function() {
+  it('merges JSX children onto the children prop', () => {
     spyOn(console, 'error');
     var a = 1;
     var element = <Component children="text">{a}</Component>;
@@ -103,21 +103,21 @@ describe('ReactJSXElement', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not override children if no JSX children are provided', function() {
+  it('does not override children if no JSX children are provided', () => {
     spyOn(console, 'error');
     var element = <Component children="text" />;
     expect(element.props.children).toBe('text');
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('overrides children if null is provided as a JSX child', function() {
+  it('overrides children if null is provided as a JSX child', () => {
     spyOn(console, 'error');
     var element = <Component children="text">{null}</Component>;
     expect(element.props.children).toBe(null);
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('overrides children if undefined is provided as an argument', function() {
+  it('overrides children if undefined is provided as an argument', () => {
     var element = <Component children="text">{undefined}</Component>;
     expect(element.props.children).toBe(undefined);
 
@@ -129,7 +129,7 @@ describe('ReactJSXElement', function() {
     expect(element2.props.children).toBe(undefined);
   });
 
-  it('merges JSX children onto the children prop in an array', function() {
+  it('merges JSX children onto the children prop in an array', () => {
     spyOn(console, 'error');
     var a = 1;
     var b = 2;
@@ -139,7 +139,7 @@ describe('ReactJSXElement', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('allows static methods to be called using the type property', function() {
+  it('allows static methods to be called using the type property', () => {
     spyOn(console, 'error');
 
     class StaticMethodComponent {
@@ -156,7 +156,7 @@ describe('ReactJSXElement', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('identifies valid elements', function() {
+  it('identifies valid elements', () => {
     expect(React.isValidElement(<div />)).toEqual(true);
     expect(React.isValidElement(<Component />)).toEqual(true);
 
@@ -168,13 +168,13 @@ describe('ReactJSXElement', function() {
     expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
   });
 
-  it('is indistinguishable from a plain object', function() {
+  it('is indistinguishable from a plain object', () => {
     var element = <div className="foo" />;
     var object = {};
     expect(element.constructor).toBe(object.constructor);
   });
 
-  it('should use default prop value when removing a prop', function() {
+  it('should use default prop value when removing a prop', () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
@@ -188,7 +188,7 @@ describe('ReactJSXElement', function() {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  it('should normalize props with default values', function() {
+  it('should normalize props with default values', () => {
     class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
