@@ -20,6 +20,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
@@ -153,30 +154,61 @@ var ReactNoop = {
       return;
     }
 
+    var bufferedLog = [];
+    function log(...args) {
+      bufferedLog.push(...args, '\n');
+    }
+
     function logHostInstances(children: Array<Instance>, depth) {
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
-        console.log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
+        log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
         logHostInstances(child.children, depth + 1);
       }
     }
     function logContainer(container : Container, depth) {
-      console.log('  '.repeat(depth) + '- [root#' + container.rootID + ']');
+      log('  '.repeat(depth) + '- [root#' + container.rootID + ']');
       logHostInstances(container.children, depth + 1);
     }
 
+    function logUpdateQueue(updateQueue : UpdateQueue, depth) {
+      log(
+        '  '.repeat(depth + 1) + 'QUEUED UPDATES',
+        updateQueue.isReplace ? 'is replace' : '',
+        updateQueue.isForced ? 'is forced' : ''
+      );
+      log(
+        '  '.repeat(depth + 1) + '~',
+        updateQueue.partialState,
+        updateQueue.callback ? 'with callback' : ''
+      );
+      var next;
+      while (next = updateQueue.next) {
+        log(
+          '  '.repeat(depth + 1) + '~',
+          next.partialState,
+          next.callback ? 'with callback' : ''
+        );
+      }
+    }
+
     function logFiber(fiber : Fiber, depth) {
-      console.log(
+      log(
         '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
         '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
       );
+      if (fiber.updateQueue) {
+        logUpdateQueue(fiber.updateQueue, depth);
+      }
       const childInProgress = fiber.progressedChild;
       if (childInProgress && childInProgress !== fiber.child) {
-        console.log('  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.progressedPriority);
+        log('  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.progressedPriority);
         logFiber(childInProgress, depth + 1);
         if (fiber.child) {
-          console.log('  '.repeat(depth + 1) + 'CURRENT');
+          log('  '.repeat(depth + 1) + 'CURRENT');
         }
+      } else if (fiber.child && fiber.updateQueue) {
+        log('  '.repeat(depth + 1) + 'CHILDREN');
       }
       if (fiber.child) {
         logFiber(fiber.child, depth + 1);
@@ -186,10 +218,12 @@ var ReactNoop = {
       }
     }
 
-    console.log('HOST INSTANCES:');
+    log('HOST INSTANCES:');
     logContainer(rootContainer, 0);
-    console.log('FIBERS:');
+    log('FIBERS:');
     logFiber((root.stateNode : any).current, 0);
+
+    console.log(...bufferedLog);
   },
 
 };
