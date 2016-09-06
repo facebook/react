@@ -206,6 +206,31 @@ describe('ReactTestRenderer', function() {
     expect(log).toEqual([null]);
   });
 
+  it('warns correctly for refs on SFCs', function() {
+    spyOn(console, 'error');
+    function Bar() {
+      return <div>Hello, world</div>
+    }
+    class Foo extends React.Component {
+      render() {
+        return <Bar ref="foo" />
+      }
+    }
+    class Baz extends React.Component {
+      render() {
+        return <div ref="baz" />
+      }
+    }
+    ReactTestRenderer.create(<Baz />);
+    ReactTestRenderer.create(<Foo />);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'Stateless function components cannot be given refs ' +
+      '(See ref "foo" in Bar created by Foo). ' +
+      'Attempts to access this ref will fail.'
+    );
+  });
+
   it('supports error boundaries', function() {
     var log = [];
     class Angry extends React.Component {
