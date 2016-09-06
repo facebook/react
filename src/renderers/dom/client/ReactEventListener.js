@@ -111,13 +111,12 @@ var ReactEventListener = {
    *
    * @param {string} topLevelType Record from `EventConstants`.
    * @param {string} handlerBaseName Event name (e.g. "click").
-   * @param {object} handle Element on which to attach listener.
+   * @param {object} element Element on which to attach listener.
    * @return {?object} An object with a remove function which will forcefully
    *                  remove the listener.
    * @internal
    */
-  trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
-    var element = handle;
+  trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
     if (!element) {
       return null;
     }
@@ -133,13 +132,12 @@ var ReactEventListener = {
    *
    * @param {string} topLevelType Record from `EventConstants`.
    * @param {string} handlerBaseName Event name (e.g. "click").
-   * @param {object} handle Element on which to attach listener.
+   * @param {object} element Element on which to attach listener.
    * @return {?object} An object with a remove function which will forcefully
    *                  remove the listener.
    * @internal
    */
-  trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
-    var element = handle;
+  trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
     if (!element) {
       return null;
     }
