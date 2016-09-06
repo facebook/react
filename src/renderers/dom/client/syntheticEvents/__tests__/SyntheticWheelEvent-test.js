@@ -13,10 +13,10 @@
 
 var SyntheticWheelEvent;
 
-describe('SyntheticWheelEvent', function() {
+describe('SyntheticWheelEvent', () => {
   var createEvent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     SyntheticWheelEvent = require('SyntheticWheelEvent');
 
     createEvent = function(nativeEvent) {
@@ -25,7 +25,7 @@ describe('SyntheticWheelEvent', function() {
     };
   });
 
-  it('should normalize properties from the Event interface', function() {
+  it('should normalize properties from the Event interface', () => {
     var target = document.createElement('div');
     var syntheticEvent = createEvent({srcElement: target});
 
@@ -33,11 +33,11 @@ describe('SyntheticWheelEvent', function() {
     expect(syntheticEvent.type).toBe(undefined);
   });
 
-  it('should normalize properties from the MouseEvent interface', function() {
+  it('should normalize properties from the MouseEvent interface', () => {
     expect(createEvent({which: 2, button: 1}).button).toBe(1);
   });
 
-  it('should normalize properties from the WheelEvent interface', function() {
+  it('should normalize properties from the WheelEvent interface', () => {
     var standardEvent = createEvent({deltaX: 10, deltaY: -50});
     expect(standardEvent.deltaX).toBe(10);
     expect(standardEvent.deltaY).toBe(-50);
@@ -47,7 +47,7 @@ describe('SyntheticWheelEvent', function() {
     expect(webkitEvent.deltaY).toBe(-50);
   });
 
-  it('should be able to `preventDefault` and `stopPropagation`', function() {
+  it('should be able to `preventDefault` and `stopPropagation`', () => {
     var nativeEvent = {};
     var syntheticEvent = createEvent(nativeEvent);
 
@@ -60,7 +60,7 @@ describe('SyntheticWheelEvent', function() {
     expect(syntheticEvent.isPropagationStopped()).toBe(true);
   });
 
-  it('should be able to `persist`', function() {
+  it('should be able to `persist`', () => {
     var syntheticEvent = createEvent({});
 
     expect(syntheticEvent.isPersistent()).toBe(false);

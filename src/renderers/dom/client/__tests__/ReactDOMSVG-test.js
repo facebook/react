@@ -14,14 +14,14 @@
 var React;
 var ReactDOMServer;
 
-describe('ReactDOMSVG', function() {
+describe('ReactDOMSVG', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOMServer = require('ReactDOMServer');
   });
 
-  it('creates initial namespaced markup', function() {
+  it('creates initial namespaced markup', () => {
     var markup = ReactDOMServer.renderToString(
       <svg>
         <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />

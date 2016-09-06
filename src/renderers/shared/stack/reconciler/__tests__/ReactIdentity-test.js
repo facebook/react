@@ -16,9 +16,9 @@ var ReactDOM;
 var ReactFragment;
 var ReactTestUtils;
 
-describe('ReactIdentity', function() {
+describe('ReactIdentity', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -30,7 +30,7 @@ describe('ReactIdentity', function() {
     return ReactFragment.create(obj);
   }
 
-  it('should allow key property to express identity', function() {
+  it('should allow key property to express identity', () => {
     var node;
     var Component = (props) =>
       <div ref={(c) => node = c}>
@@ -47,7 +47,7 @@ describe('ReactIdentity', function() {
     expect(origChildren[1]).toBe(newChildren[0]);
   });
 
-  it('should use composite identity', function() {
+  it('should use composite identity', () => {
     class Wrapper extends React.Component {
       render() {
         return <a>{this.props.children}</a>;
@@ -89,7 +89,7 @@ describe('ReactIdentity', function() {
     expect(ReactDOM.findDOMNode(span2)).not.toBe(null);
   }
 
-  it('should allow any character as a key, in a detached parent', function() {
+  it('should allow any character as a key, in a detached parent', () => {
     var detachedContainer = document.createElement('div');
     renderAComponentWithKeyIntoContainer(
       "<'WEIRD/&\\key'>",
@@ -97,7 +97,7 @@ describe('ReactIdentity', function() {
     );
   });
 
-  it('should allow any character as a key, in an attached parent', function() {
+  it('should allow any character as a key, in an attached parent', () => {
     // This test exists to protect against implementation details that
     // incorrectly query escaped IDs using DOM tools like getElementById.
     var attachedContainer = document.createElement('div');
@@ -111,7 +111,7 @@ describe('ReactIdentity', function() {
     document.body.removeChild(attachedContainer);
   });
 
-  it('should not allow scripts in keys to execute', function() {
+  it('should not allow scripts in keys to execute', () => {
     var h4x0rKey =
       '"><script>window[\'YOUVEBEENH4X0RED\']=true;</script><div id="';
 
@@ -126,7 +126,7 @@ describe('ReactIdentity', function() {
     expect(window.YOUVEBEENH4X0RED).toBe(undefined);
   });
 
-  it('should let restructured components retain their uniqueness', function() {
+  it('should let restructured components retain their uniqueness', () => {
     var instance0 = <span />;
     var instance1 = <span />;
     var instance2 = <span />;
@@ -156,7 +156,7 @@ describe('ReactIdentity', function() {
     }).not.toThrow();
   });
 
-  it('should let nested restructures retain their uniqueness', function() {
+  it('should let nested restructures retain their uniqueness', () => {
     var instance0 = <span />;
     var instance1 = <span />;
     var instance2 = <span />;
@@ -190,7 +190,7 @@ describe('ReactIdentity', function() {
     }).not.toThrow();
   });
 
-  it('should let text nodes retain their uniqueness', function() {
+  it('should let text nodes retain their uniqueness', () => {
     class TestComponent extends React.Component {
       render() {
         return <div>{this.props.children}<span /></div>;
@@ -215,7 +215,7 @@ describe('ReactIdentity', function() {
     }).not.toThrow();
   });
 
-  it('should retain key during updates in composite components', function() {
+  it('should retain key during updates in composite components', () => {
     class TestComponent extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
@@ -257,7 +257,7 @@ describe('ReactIdentity', function() {
     expect(beforeB).toBe(afterB);
   });
 
-  it('should not allow implicit and explicit keys to collide', function() {
+  it('should not allow implicit and explicit keys to collide', () => {
     var component =
       <div>
         <span />

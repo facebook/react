@@ -20,8 +20,8 @@ var reactComponentExpect;
 
 var log;
 
-describe('ReactEmptyComponent', function() {
-  beforeEach(function() {
+describe('ReactEmptyComponent', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -202,7 +202,7 @@ describe('ReactEmptyComponent', function() {
     }
   );
 
-  it('works when switching components', function() {
+  it('works when switching components', () => {
     var assertions = 0;
 
     class Inner extends React.Component {
@@ -249,7 +249,7 @@ describe('ReactEmptyComponent', function() {
     expect(assertions).toBe(3);
   });
 
-  it('throws when rendering null at the top level', function() {
+  it('throws when rendering null at the top level', () => {
     // TODO: This should actually work since `null` is a valid ReactNode
     var div = document.createElement('div');
     expect(function() {
@@ -259,7 +259,7 @@ describe('ReactEmptyComponent', function() {
     );
   });
 
-  it('does not break when updating during mount', function() {
+  it('does not break when updating during mount', () => {
     class Child extends React.Component {
       componentDidMount() {
         if (this.props.onMount) {
@@ -297,7 +297,7 @@ describe('ReactEmptyComponent', function() {
     }).not.toThrow();
   });
 
-  it('preserves the dom node during updates', function() {
+  it('preserves the dom node during updates', () => {
     class Empty extends React.Component {
       render() {
         return null;

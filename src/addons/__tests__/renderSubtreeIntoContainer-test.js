@@ -16,9 +16,9 @@ var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
-describe('renderSubtreeIntoContainer', function() {
+describe('renderSubtreeIntoContainer', () => {
 
-  it('should pass context when rendering subtree elsewhere', function() {
+  it('should pass context when rendering subtree elsewhere', () => {
     var portal = document.createElement('div');
 
     class Component extends React.Component {
@@ -57,7 +57,7 @@ describe('renderSubtreeIntoContainer', function() {
     expect(portal.firstChild.innerHTML).toBe('bar');
   });
 
-  it('should throw if parentComponent is invalid', function() {
+  it('should throw if parentComponent is invalid', () => {
     var portal = document.createElement('div');
 
     class Component extends React.Component {
@@ -93,7 +93,7 @@ describe('renderSubtreeIntoContainer', function() {
     }
   });
 
-  it('should update context if it changes due to setState', function() {
+  it('should update context if it changes due to setState', () => {
     var container = document.createElement('div');
     document.body.appendChild(container);
     var portal = document.createElement('div');
@@ -145,7 +145,7 @@ describe('renderSubtreeIntoContainer', function() {
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
-  it('should update context if it changes due to re-render', function() {
+  it('should update context if it changes due to re-render', () => {
     var container = document.createElement('div');
     document.body.appendChild(container);
     var portal = document.createElement('div');

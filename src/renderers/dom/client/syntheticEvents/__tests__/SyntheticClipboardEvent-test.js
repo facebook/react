@@ -13,10 +13,10 @@
 
 var SyntheticClipboardEvent;
 
-describe('SyntheticClipboardEvent', function() {
+describe('SyntheticClipboardEvent', () => {
   var createEvent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     SyntheticClipboardEvent = require('SyntheticClipboardEvent');
     createEvent = function(nativeEvent) {
       var target = require('getEventTarget')(nativeEvent);
@@ -24,10 +24,10 @@ describe('SyntheticClipboardEvent', function() {
     };
   });
 
-  describe('ClipboardEvent interface', function() {
-    describe('clipboardData', function() {
-      describe('when event has clipboardData', function() {
-        it("returns event's clipboardData", function() {
+  describe('ClipboardEvent interface', () => {
+    describe('clipboardData', () => {
+      describe('when event has clipboardData', () => {
+        it("returns event's clipboardData", () => {
           // Mock clipboardData since native implementation doesn't have a constructor
           var clipboardData = jasmine.createSpyObj(
             'clipboardData',
@@ -41,8 +41,8 @@ describe('SyntheticClipboardEvent', function() {
     });
   });
 
-  describe('EventInterface', function() {
-    it('normalizes properties from the Event interface', function() {
+  describe('EventInterface', () => {
+    it('normalizes properties from the Event interface', () => {
       var target = document.createElement('div');
       var syntheticEvent = createEvent({srcElement: target});
 
@@ -50,7 +50,7 @@ describe('SyntheticClipboardEvent', function() {
       expect(syntheticEvent.type).toBe(undefined);
     });
 
-    it('is able to `preventDefault` and `stopPropagation`', function() {
+    it('is able to `preventDefault` and `stopPropagation`', () => {
       var nativeEvent = {};
       var syntheticEvent = createEvent(nativeEvent);
 
@@ -63,7 +63,7 @@ describe('SyntheticClipboardEvent', function() {
       expect(syntheticEvent.isPropagationStopped()).toBe(true);
     });
 
-    it('is able to `persist`', function() {
+    it('is able to `persist`', () => {
       var syntheticEvent = createEvent({});
 
       expect(syntheticEvent.isPersistent()).toBe(false);

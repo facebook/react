@@ -16,15 +16,15 @@ var ReactDOM;
 var ReactTestUtils;
 var ReactUpdates;
 
-describe('ReactUpdates', function() {
-  beforeEach(function() {
+describe('ReactUpdates', () => {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
     ReactUpdates = require('ReactUpdates');
   });
 
-  it('should batch state when updating state twice', function() {
+  it('should batch state when updating state twice', () => {
     var updateCount = 0;
 
     class Component extends React.Component {
@@ -53,7 +53,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch state when updating two different state keys', function() {
+  it('should batch state when updating two different state keys', () => {
     var updateCount = 0;
 
     class Component extends React.Component {
@@ -85,7 +85,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch state and props together', function() {
+  it('should batch state and props together', () => {
     var updateCount = 0;
 
     class Component extends React.Component {
@@ -118,7 +118,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch parent/child state updates together', function() {
+  it('should batch parent/child state updates together', () => {
     var parentUpdateCount = 0;
 
     class Parent extends React.Component {
@@ -167,7 +167,7 @@ describe('ReactUpdates', function() {
     expect(childUpdateCount).toBe(1);
   });
 
-  it('should batch child/parent state updates together', function() {
+  it('should batch child/parent state updates together', () => {
     var parentUpdateCount = 0;
 
     class Parent extends React.Component {
@@ -218,7 +218,7 @@ describe('ReactUpdates', function() {
     expect(childUpdateCount).toBe(1);
   });
 
-  it('should support chained state updates', function() {
+  it('should support chained state updates', () => {
     var updateCount = 0;
 
     class Component extends React.Component {
@@ -257,7 +257,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(2);
   });
 
-  it('should batch forceUpdate together', function() {
+  it('should batch forceUpdate together', () => {
     var shouldUpdateCount = 0;
     var updateCount = 0;
 
@@ -299,7 +299,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should update children even if parent blocks updates', function() {
+  it('should update children even if parent blocks updates', () => {
     var parentRenderCount = 0;
     var childRenderCount = 0;
 
@@ -345,7 +345,7 @@ describe('ReactUpdates', function() {
     expect(childRenderCount).toBe(2);
   });
 
-  it('should not reconcile children passed via props', function() {
+  it('should not reconcile children passed via props', () => {
     var numMiddleRenders = 0;
     var numBottomRenders = 0;
 
@@ -378,7 +378,7 @@ describe('ReactUpdates', function() {
     expect(numBottomRenders).toBe(1);
   });
 
-  it('should flow updates correctly', function() {
+  it('should flow updates correctly', () => {
     var willUpdates = [];
     var didUpdates = [];
 
@@ -505,7 +505,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('should share reconcile transaction across different roots', function() {
+  it('should share reconcile transaction across different roots', () => {
     var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
     spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
 
@@ -534,7 +534,7 @@ describe('ReactUpdates', function() {
     expect(ReconcileTransaction.getPooled.calls.count()).toBe(3);
   });
 
-  it('should queue mount-ready handlers across different roots', function() {
+  it('should queue mount-ready handlers across different roots', () => {
     // We'll define two components A and B, then update both of them. When A's
     // componentDidUpdate handlers is called, B's DOM should already have been
     // updated.
@@ -576,7 +576,7 @@ describe('ReactUpdates', function() {
     expect(aUpdated).toBe(true);
   });
 
-  it('should flush updates in the correct order', function() {
+  it('should flush updates in the correct order', () => {
     var updates = [];
 
     class Outer extends React.Component {
@@ -651,7 +651,7 @@ describe('ReactUpdates', function() {
     /* eslint-enable indent */
   });
 
-  it('should flush updates in the correct order across roots', function() {
+  it('should flush updates in the correct order across roots', () => {
     var instances = [];
     var updates = [];
 
@@ -689,7 +689,7 @@ describe('ReactUpdates', function() {
     expect(updates).toEqual([0, 1, 2, 0, 1, 2]);
   });
 
-  it('should queue nested updates', function() {
+  it('should queue nested updates', () => {
     // See https://github.com/facebook/react/issues/1147
 
     class X extends React.Component {
@@ -745,7 +745,7 @@ describe('ReactUpdates', function() {
     expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
   });
 
-  it('should queue updates from during mount', function() {
+  it('should queue updates from during mount', () => {
     // See https://github.com/facebook/react/issues/1353
     var a;
 
@@ -784,7 +784,7 @@ describe('ReactUpdates', function() {
     expect(ReactDOM.findDOMNode(a).textContent).toBe('A1');
   });
 
-  it('calls componentWillReceiveProps setState callback properly', function() {
+  it('calls componentWillReceiveProps setState callback properly', () => {
     var callbackCount = 0;
 
     class A extends React.Component {
@@ -810,7 +810,7 @@ describe('ReactUpdates', function() {
     expect(callbackCount).toBe(1);
   });
 
-  it('calls asap callbacks properly', function() {
+  it('calls asap callbacks properly', () => {
     var callbackCount = 0;
 
     class A extends React.Component {
@@ -836,7 +836,7 @@ describe('ReactUpdates', function() {
     expect(callbackCount).toBe(2);
   });
 
-  it('calls asap callbacks with queued updates', function() {
+  it('calls asap callbacks with queued updates', () => {
     var log = [];
 
     class A extends React.Component {
@@ -887,7 +887,7 @@ describe('ReactUpdates', function() {
     ]);
   });
 
-  it('does not call render after a component as been deleted', function() {
+  it('does not call render after a component as been deleted', () => {
     var renderCount = 0;
     var componentB = null;
 
@@ -924,7 +924,7 @@ describe('ReactUpdates', function() {
     expect(renderCount).toBe(1);
   });
 
-  it('marks top-level updates', function() {
+  it('marks top-level updates', () => {
     var ReactFeatureFlags = require('ReactFeatureFlags');
 
     class Foo extends React.Component {
@@ -958,7 +958,7 @@ describe('ReactUpdates', function() {
     }
   });
 
-  it('throws in setState if the update callback is not a function', function() {
+  it('throws in setState if the update callback is not a function', () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -988,7 +988,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('throws in replaceState if the update callback is not a function', function() {
+  it('throws in replaceState if the update callback is not a function', () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -1017,7 +1017,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('throws in forceUpdate if the update callback is not a function', function() {
+  it('throws in forceUpdate if the update callback is not a function', () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -1047,7 +1047,7 @@ describe('ReactUpdates', function() {
     );
   });
 
-  it('does not update one component twice in a batch (#2410)', function() {
+  it('does not update one component twice in a batch (#2410)', () => {
     class Parent extends React.Component {
       getChild = () => {
         return this.refs.child;
@@ -1097,7 +1097,7 @@ describe('ReactUpdates', function() {
     });
   });
 
-  it('does not update one component twice in a batch (#6371)', function() {
+  it('does not update one component twice in a batch (#6371)', () => {
     var callbacks = [];
     function emitChange() {
       callbacks.forEach(c => c());
@@ -1147,7 +1147,7 @@ describe('ReactUpdates', function() {
     ReactDOM.render(<App />, document.createElement('div'));
   });
 
-  it('unstable_batchedUpdates should return value from a callback', function() {
+  it('unstable_batchedUpdates should return value from a callback', () => {
     var result = ReactDOM.unstable_batchedUpdates(function() {
       return 42;
     });

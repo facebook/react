@@ -12,7 +12,7 @@
 'use strict';
 
 
-describe('ReactDOMComponent', function() {
+describe('ReactDOMComponent', () => {
   var React;
   var ReactDOM;
   var ReactDOMFeatureFlags;
@@ -22,7 +22,7 @@ describe('ReactDOMComponent', function() {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -30,14 +30,14 @@ describe('ReactDOMComponent', function() {
     ReactDOMServer = require('ReactDOMServer');
   });
 
-  describe('updateDOM', function() {
+  describe('updateDOM', () => {
     var ReactTestUtils;
 
-    beforeEach(function() {
+    beforeEach(() => {
       ReactTestUtils = require('ReactTestUtils');
     });
 
-    it('should handle className', function() {
+    it('should handle className', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div style={{}} />, container);
 
@@ -49,7 +49,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.className).toEqual('');
     });
 
-    it('should gracefully handle various style value types', function() {
+    it('should gracefully handle various style value types', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div style={{}} />, container);
       var stubStyle = container.firstChild.style;
@@ -71,7 +71,7 @@ describe('ReactDOMComponent', function() {
     });
 
     // TODO: (poshannessy) deprecate this pattern.
-    it('should update styles when mutating style object', function() {
+    it('should update styles when mutating style object', () => {
       // not actually used. Just to suppress the style mutation warning
       spyOn(console, 'error');
 
@@ -110,7 +110,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.lineHeight).toBe('');
     });
 
-    it('should warn when mutating style', function() {
+    it('should warn when mutating style', () => {
       spyOn(console, 'error');
 
       var style = {border: '1px solid black'};
@@ -150,7 +150,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.count()).toBe(2);
     });
 
-    it('should warn for unknown prop', function() {
+    it('should warn for unknown prop', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div foo="bar" />, container);
@@ -161,7 +161,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should group multiple unknown prop warnings together', function() {
+    it('should group multiple unknown prop warnings together', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div foo="bar" baz="qux" />, container);
@@ -172,7 +172,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn for onDblClick prop', function() {
+    it('should warn for onDblClick prop', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div onDblClick={() => {}} />, container);
@@ -225,7 +225,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.count()).toBe(2);
     });
 
-    it('should not warn for "0" as a unitless style value', function() {
+    it('should not warn for "0" as a unitless style value', () => {
       spyOn(console, 'error');
 
       class Component extends React.Component {
@@ -238,7 +238,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.count()).toBe(0);
     });
 
-    it('should warn nicely about NaN in style', function() {
+    it('should warn nicely about NaN in style', () => {
       spyOn(console, 'error');
 
       var style = {fontSize: NaN};
@@ -252,7 +252,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should update styles if initially null', function() {
+    it('should update styles if initially null', () => {
       var styles = null;
       var container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
@@ -265,7 +265,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
-    it('should update styles if updated to null multiple times', function() {
+    it('should update styles if updated to null multiple times', () => {
       var styles = null;
       var container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
@@ -286,7 +286,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('');
     });
 
-    it('should skip reserved props on web components', function() {
+    it('should skip reserved props on web components', () => {
       var container = document.createElement('div');
 
       ReactDOM.render(
@@ -314,7 +314,7 @@ describe('ReactDOMComponent', function() {
       ).toBe(false);
     });
 
-    it('should skip dangerouslySetInnerHTML on web components', function() {
+    it('should skip dangerouslySetInnerHTML on web components', () => {
       var container = document.createElement('div');
 
       ReactDOM.render(
@@ -334,7 +334,7 @@ describe('ReactDOMComponent', function() {
       ).toBe(false);
     });
 
-    it('should remove attributes', function() {
+    it('should remove attributes', () => {
       var container = document.createElement('div');
       ReactDOM.render(<img height="17" />, container);
 
@@ -343,7 +343,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.hasAttribute('height')).toBe(false);
     });
 
-    it('should remove properties', function() {
+    it('should remove properties', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div className="monkey" />, container);
 
@@ -352,7 +352,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.className).toEqual('');
     });
 
-    it('should properly update custom attributes on custom elements', function() {
+    it('should properly update custom attributes on custom elements', () => {
       var container = document.createElement('div');
       ReactDOM.render(<some-custom-element foo="bar"/>, container);
       ReactDOM.render(<some-custom-element bar="buzz"/>, container);
@@ -361,7 +361,7 @@ describe('ReactDOMComponent', function() {
       expect(node.getAttribute('bar')).toBe('buzz');
     });
 
-    it('should clear a single style prop when changing `style`', function() {
+    it('should clear a single style prop when changing `style`', () => {
       var styles = {display: 'none', color: 'red'};
       var container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
@@ -374,7 +374,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('green');
     });
 
-    it('should reject attribute key injection attack on markup', function() {
+    it('should reject attribute key injection attack on markup', () => {
       spyOn(console, 'error');
       for (var i = 0; i < 3; i++) {
         var container = document.createElement('div');
@@ -391,7 +391,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should reject attribute key injection attack on update', function() {
+    it('should reject attribute key injection attack on update', () => {
       spyOn(console, 'error');
       for (var i = 0; i < 3; i++) {
         var container = document.createElement('div');
@@ -411,7 +411,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should update arbitrary attributes for tags containing dashes', function() {
+    it('should update arbitrary attributes for tags containing dashes', () => {
       var container = document.createElement('div');
 
       var beforeUpdate = React.createElement('x-foo-component', {}, null);
@@ -423,7 +423,7 @@ describe('ReactDOMComponent', function() {
       expect(container.childNodes[0].getAttribute('myattr')).toBe('myval');
     });
 
-    it('should clear all the styles when removing `style`', function() {
+    it('should clear all the styles when removing `style`', () => {
       var styles = {display: 'none', color: 'red'};
       var container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
@@ -435,7 +435,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
-    it('should update styles when `style` changes from null to object', function() {
+    it('should update styles when `style` changes from null to object', () => {
       var container = document.createElement('div');
       var styles = {color: 'red'};
       ReactDOM.render(<div style={styles} />, container);
@@ -446,7 +446,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('red');
     });
 
-    it('should empty element when removing innerHTML', function() {
+    it('should empty element when removing innerHTML', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
 
@@ -455,7 +455,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('');
     });
 
-    it('should transition from string content to innerHTML', function() {
+    it('should transition from string content to innerHTML', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div>hello</div>, container);
 
@@ -467,7 +467,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('goodbye');
     });
 
-    it('should transition from innerHTML to string content', function() {
+    it('should transition from innerHTML to string content', () => {
       var container = document.createElement('div');
       ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />,
@@ -479,7 +479,7 @@ describe('ReactDOMComponent', function() {
       expect(container.firstChild.innerHTML).toEqual('adieu');
     });
 
-    it('should transition from innerHTML to children in nested el', function() {
+    it('should transition from innerHTML to children in nested el', () => {
       var container = document.createElement('div');
       ReactDOM.render(
         <div><div dangerouslySetInnerHTML={{__html: 'bonjour'}} /></div>,
@@ -491,7 +491,7 @@ describe('ReactDOMComponent', function() {
       expect(container.textContent).toEqual('adieu');
     });
 
-    it('should transition from children to innerHTML in nested el', function() {
+    it('should transition from children to innerHTML in nested el', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div><div><span>adieu</span></div></div>, container);
 
@@ -503,7 +503,7 @@ describe('ReactDOMComponent', function() {
       expect(container.textContent).toEqual('bonjour');
     });
 
-    it('should not incur unnecessary DOM mutations for attributes', function() {
+    it('should not incur unnecessary DOM mutations for attributes', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div id="" />, container);
 
@@ -541,7 +541,7 @@ describe('ReactDOMComponent', function() {
       expect(node.removeAttribute.mock.calls.length).toBe(2);
     });
 
-    it('should not incur unnecessary DOM mutations for string properties', function() {
+    it('should not incur unnecessary DOM mutations for string properties', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div value="" />, container);
 
@@ -574,7 +574,7 @@ describe('ReactDOMComponent', function() {
       expect(nodeValueSetter.mock.calls.length).toBe(2);
     });
 
-    it('should not incur unnecessary DOM mutations for boolean properties', function() {
+    it('should not incur unnecessary DOM mutations for boolean properties', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div checked={true} />, container);
 
@@ -603,13 +603,13 @@ describe('ReactDOMComponent', function() {
       expect(nodeValueSetter.mock.calls.length).toBe(3);
     });
 
-    it('should ignore attribute whitelist for elements with the "is: attribute', function() {
+    it('should ignore attribute whitelist for elements with the "is: attribute', () => {
       var container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
     });
 
-    it('should not update when switching between null/undefined', function() {
+    it('should not update when switching between null/undefined', () => {
       var container = document.createElement('div');
       var node = ReactDOM.render(<div />, container);
 
@@ -624,7 +624,7 @@ describe('ReactDOMComponent', function() {
       expect(setter.mock.calls.length).toBe(1);
     });
 
-    it('handles multiple child updates without interference', function() {
+    it('handles multiple child updates without interference', () => {
       // This test might look like it's just testing ReactMultiChild but the
       // last bug in this was actually in DOMChildrenOperations so this test
       // needs to be in some DOM-specific test file.
@@ -659,14 +659,14 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('createOpenTagMarkup', function() {
+  describe('createOpenTagMarkup', () => {
     var genMarkup;
 
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    beforeEach(function() {
+    beforeEach(() => {
       var ReactDefaultInjection = require('ReactDefaultInjection');
       ReactDefaultInjection.inject();
 
@@ -705,27 +705,27 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it('should generate the correct markup with className', function() {
+    it('should generate the correct markup with className', () => {
       expect(genMarkup({className: 'a'})).toHaveAttribute(['class', 'a']);
       expect(genMarkup({className: 'a b'})).toHaveAttribute(['class', 'a b']);
       expect(genMarkup({className: ''})).toHaveAttribute(['class', '']);
     });
 
-    it('should escape style names and values', function() {
+    it('should escape style names and values', () => {
       expect(genMarkup({
         style: {'b&ckground': '<3'},
       })).toHaveAttribute(['style', 'b&amp;ckground:&lt;3;']);
     });
   });
 
-  describe('createContentMarkup', function() {
+  describe('createContentMarkup', () => {
     var genMarkup;
 
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    beforeEach(function() {
+    beforeEach(() => {
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -758,7 +758,7 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it('should handle dangerouslySetInnerHTML', function() {
+    it('should handle dangerouslySetInnerHTML', () => {
       var innerHTML = {__html: 'testContent'};
       expect(
         genMarkup({dangerouslySetInnerHTML: innerHTML})
@@ -766,17 +766,17 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('mountComponent', function() {
+  describe('mountComponent', () => {
     var mountComponent;
 
-    beforeEach(function() {
+    beforeEach(() => {
       mountComponent = function(props) {
         var container = document.createElement('div');
         ReactDOM.render(<div {...props} />, container);
       };
     });
 
-    it('should work error event on <source> element', function() {
+    it('should work error event on <source> element', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
@@ -796,7 +796,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should not duplicate uppercased selfclosing tags', function() {
+    it('should not duplicate uppercased selfclosing tags', () => {
       class Container extends React.Component {
         render() {
           return React.createElement('BR', null);
@@ -807,7 +807,7 @@ describe('ReactDOMComponent', function() {
       expect(returnedValue).not.toContain('</BR>');
     });
 
-    it('should warn against children for void elements', function() {
+    it('should warn against children for void elements', () => {
       var container = document.createElement('div');
 
       expect(function() {
@@ -818,7 +818,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn against dangerouslySetInnerHTML for void elements', function() {
+    it('should warn against dangerouslySetInnerHTML for void elements', () => {
       var container = document.createElement('div');
 
       expect(function() {
@@ -832,7 +832,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should treat menuitem as a void element but still create the closing tag', function() {
+    it('should treat menuitem as a void element but still create the closing tag', () => {
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(<menu><menuitem /></menu>);
@@ -848,7 +848,7 @@ describe('ReactDOMComponent', function() {
 
     });
 
-    it('should validate against multiple children props', function() {
+    it('should validate against multiple children props', () => {
       expect(function() {
         mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).toThrowError(
@@ -856,7 +856,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should validate against use of innerHTML', function() {
+    it('should validate against use of innerHTML', () => {
 
       spyOn(console, 'error');
       mountComponent({innerHTML: '<span>Hi Jim!</span>'});
@@ -866,7 +866,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should validate use of dangerouslySetInnerHTML', function() {
+    it('should validate use of dangerouslySetInnerHTML', () => {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrowError(
@@ -875,7 +875,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should validate use of dangerouslySetInnerHTML', function() {
+    it('should validate use of dangerouslySetInnerHTML', () => {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: {foo: 'bar'} });
       }).toThrowError(
@@ -884,26 +884,26 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should allow {__html: null}', function() {
+    it('should allow {__html: null}', () => {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: {__html: null} });
       }).not.toThrow();
     });
 
-    it('should warn about contentEditable and children', function() {
+    it('should warn about contentEditable and children', () => {
       spyOn(console, 'error');
       mountComponent({contentEditable: true, children: ''});
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain('contentEditable');
     });
 
-    it('should respect suppressContentEditableWarning', function() {
+    it('should respect suppressContentEditableWarning', () => {
       spyOn(console, 'error');
       mountComponent({contentEditable: true, children: '', suppressContentEditableWarning: true});
       expect(console.error.calls.count()).toBe(0);
     });
 
-    it('should validate against invalid styles', function() {
+    it('should validate against invalid styles', () => {
       expect(function() {
         mountComponent({style: 'display: none'});
       }).toThrowError(
@@ -913,7 +913,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should execute custom event plugin listening behavior', function() {
+    it('should execute custom event plugin listening behavior', () => {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = jest.fn();
@@ -932,7 +932,7 @@ describe('ReactDOMComponent', function() {
       expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
     });
 
-    it('should handle null and missing properly with event hooks', function() {
+    it('should handle null and missing properly with event hooks', () => {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = jest.fn();
@@ -968,7 +968,7 @@ describe('ReactDOMComponent', function() {
       expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
     });
 
-    it('should warn for children on void elements', function() {
+    it('should warn for children on void elements', () => {
       class X extends React.Component {
         render() {
           return <input>moo</input>;
@@ -984,7 +984,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should support custom elements which extend native elements', function() {
+    it('should support custom elements which extend native elements', () => {
       if (ReactDOMFeatureFlags.useCreateElement) {
         var container = document.createElement('div');
         spyOn(document, 'createElement').and.callThrough();
@@ -996,14 +996,14 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('updateComponent', function() {
+  describe('updateComponent', () => {
     var container;
 
-    beforeEach(function() {
+    beforeEach(() => {
       container = document.createElement('div');
     });
 
-    it('should warn against children for void elements', function() {
+    it('should warn against children for void elements', () => {
       ReactDOM.render(<input />, container);
 
       expect(function() {
@@ -1014,7 +1014,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn against dangerouslySetInnerHTML for void elements', function() {
+    it('should warn against dangerouslySetInnerHTML for void elements', () => {
       ReactDOM.render(<input />, container);
 
       expect(function() {
@@ -1028,7 +1028,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should validate against multiple children props', function() {
+    it('should validate against multiple children props', () => {
       ReactDOM.render(<div></div>, container);
 
       expect(function() {
@@ -1041,7 +1041,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn about contentEditable and children', function() {
+    it('should warn about contentEditable and children', () => {
       spyOn(console, 'error');
       ReactDOM.render(
         <div contentEditable={true}><div /></div>,
@@ -1051,7 +1051,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.argsFor(0)[0]).toContain('contentEditable');
     });
 
-    it('should validate against invalid styles', function() {
+    it('should validate against invalid styles', () => {
       ReactDOM.render(<div></div>, container);
 
       expect(function() {
@@ -1063,7 +1063,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should report component containing invalid styles', function() {
+    it('should report component containing invalid styles', () => {
       class Animal extends React.Component {
         render() {
           return <div style={1}></div>;
@@ -1079,7 +1079,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should properly escape text content and attributes values', function() {
+    it('should properly escape text content and attributes values', () => {
       expect(
         ReactDOMServer.renderToStaticMarkup(
           React.DOM.div({
@@ -1097,8 +1097,8 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('unmountComponent', function() {
-    it('should clean up listeners', function() {
+  describe('unmountComponent', () => {
+    it('should clean up listeners', () => {
       var EventPluginHub = require('EventPluginHub');
       var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
@@ -1123,7 +1123,7 @@ describe('ReactDOMComponent', function() {
       ).toBe(undefined);
     });
 
-    it('unmounts children before unsetting DOM node info', function() {
+    it('unmounts children before unsetting DOM node info', () => {
       class Inner extends React.Component {
         render() {
           return <span />;
@@ -1141,7 +1141,7 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('onScroll warning', function() {
+  describe('onScroll warning', () => {
     it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
       // Mock this here so we can mimic IE8 support. We require isEventSupported
       // before React so it's pre-mocked before React would require it.
@@ -1160,14 +1160,14 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should not warn when server-side rendering `onScroll`', function() {
+    it('should not warn when server-side rendering `onScroll`', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(<div onScroll={() => {}}/>);
       expect(console.error).not.toHaveBeenCalled();
     });
   });
 
-  describe('tag sanitization', function() {
+  describe('tag sanitization', () => {
     it('should throw when an invalid tag name is used', () => {
       var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('script tag');
@@ -1189,10 +1189,10 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('nesting validation', function() {
+  describe('nesting validation', () => {
     var ReactTestUtils;
 
-    beforeEach(function() {
+    beforeEach(() => {
       ReactTestUtils = require('ReactTestUtils');
     });
 
@@ -1330,14 +1330,14 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('should warn about incorrect casing on properties (ssr)', function() {
+    it('should warn about incorrect casing on properties (ssr)', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', tabindex: '1'}));
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
     });
 
-    it('should warn about incorrect casing on event handlers (ssr)', function() {
+    it('should warn about incorrect casing on event handlers (ssr)', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onclick: '1'}));
       ReactDOMServer.renderToString(React.createElement('input', {type: 'text', onKeydown: '1'}));
@@ -1346,14 +1346,14 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
     });
 
-    it('should warn about incorrect casing on properties', function() {
+    it('should warn about incorrect casing on properties', () => {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', tabindex: '1'}));
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
     });
 
-    it('should warn about incorrect casing on event handlers', function() {
+    it('should warn about incorrect casing on event handlers', () => {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onclick: '1'}));
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', onKeydown: '1'}));
@@ -1362,14 +1362,14 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
     });
 
-    it('should warn about class', function() {
+    it('should warn about class', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('div', {class: 'muffins'}));
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain('className');
     });
 
-    it('should warn about props that are no longer supported', function() {
+    it('should warn about props that are no longer supported', () => {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div />);
       expect(console.error.calls.count()).toBe(0);
@@ -1381,7 +1381,7 @@ describe('ReactDOMComponent', function() {
       expect(console.error.calls.count()).toBe(2);
     });
 
-    it('gives source code refs for unknown prop warning', function() {
+    it('gives source code refs for unknown prop warning', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(<div class="paladin"/>);
       ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
@@ -1399,7 +1399,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it('gives source code refs for unknown prop warning for update render', function() {
+    it('gives source code refs for unknown prop warning for update render', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
 
@@ -1416,7 +1416,7 @@ describe('ReactDOMComponent', function() {
 
     });
 
-    it('gives source code refs for unknown prop warning for exact elements ', function() {
+    it('gives source code refs for unknown prop warning for exact elements ', () => {
       spyOn(console, 'error');
 
       ReactDOMServer.renderToString(
@@ -1444,7 +1444,7 @@ describe('ReactDOMComponent', function() {
       expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
     });
 
-    it('gives source code refs for unknown prop warning for exact elements in composition ', function() {
+    it('gives source code refs for unknown prop warning for exact elements in composition ', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
 

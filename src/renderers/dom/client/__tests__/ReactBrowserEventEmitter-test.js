@@ -55,8 +55,8 @@ function getInternal(node) {
 }
 
 
-describe('ReactBrowserEventEmitter', function() {
-  beforeEach(function() {
+describe('ReactBrowserEventEmitter', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     LISTENER.mockClear();
     EventListener = require('EventListener');
@@ -83,26 +83,26 @@ describe('ReactBrowserEventEmitter', function() {
     });
   });
 
-  it('should store a listener correctly', function() {
+  it('should store a listener correctly', () => {
     registerSimpleTestHandler();
     var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(LISTENER);
   });
 
-  it('should retrieve a listener correctly', function() {
+  it('should retrieve a listener correctly', () => {
     registerSimpleTestHandler();
     var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
   });
 
-  it('should clear all handlers when asked to', function() {
+  it('should clear all handlers when asked to', () => {
     registerSimpleTestHandler();
     EventPluginHub.deleteAllListeners(getInternal(CHILD));
     var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(undefined);
   });
 
-  it('should invoke a simple handler registered on a node', function() {
+  it('should invoke a simple handler registered on a node', () => {
     registerSimpleTestHandler();
     ReactTestUtils.Simulate.click(CHILD);
     expect(LISTENER.mock.calls.length).toBe(1);
@@ -110,7 +110,7 @@ describe('ReactBrowserEventEmitter', function() {
 
   it(
     'should not invoke handlers if ReactBrowserEventEmitter is disabled',
-    function() {
+    () => {
       registerSimpleTestHandler();
       ReactBrowserEventEmitter.setEnabled(false);
       ReactTestUtils.SimulateNative.click(CHILD);
@@ -121,7 +121,7 @@ describe('ReactBrowserEventEmitter', function() {
     }
   );
 
-  it('should bubble simply', function() {
+  it('should bubble simply', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
@@ -144,7 +144,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
   });
 
-  it('should continue bubbling if an error is thrown', function() {
+  it('should continue bubbling if an error is thrown', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
@@ -172,7 +172,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
   });
 
-  it('should set currentTarget', function() {
+  it('should set currentTarget', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
@@ -204,7 +204,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
   });
 
-  it('should support stopPropagation()', function() {
+  it('should support stopPropagation()', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
@@ -226,7 +226,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[1]).toBe(getInternal(PARENT));
   });
 
-  it('should stop after first dispatch if stopPropagation', function() {
+  it('should stop after first dispatch if stopPropagation', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
@@ -247,7 +247,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
   });
 
-  it('should not stopPropagation if false is returned', function() {
+  it('should not stopPropagation if false is returned', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
@@ -281,7 +281,7 @@ describe('ReactBrowserEventEmitter', function() {
    * these new listeners.
    */
 
-  it('should invoke handlers that were removed while bubbling', function() {
+  it('should invoke handlers that were removed while bubbling', () => {
     var handleParentClick = jest.fn();
     var handleChildClick = function(event) {
       EventPluginHub.deleteAllListeners(getInternal(PARENT));
@@ -300,7 +300,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(handleParentClick.mock.calls.length).toBe(1);
   });
 
-  it('should not invoke newly inserted handlers while bubbling', function() {
+  it('should not invoke newly inserted handlers while bubbling', () => {
     var handleParentClick = jest.fn();
     var handleChildClick = function(event) {
       EventPluginHub.putListener(
@@ -318,7 +318,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(handleParentClick.mock.calls.length).toBe(0);
   });
 
-  it('should have mouse enter simulated by test utils', function() {
+  it('should have mouse enter simulated by test utils', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_MOUSE_ENTER_KEY,
@@ -329,7 +329,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
   });
 
-  it('should infer onTouchTap from a touchStart/End', function() {
+  it('should infer onTouchTap from a touchStart/End', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -347,7 +347,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
   });
 
-  it('should infer onTouchTap from when dragging below threshold', function() {
+  it('should infer onTouchTap from when dragging below threshold', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -365,7 +365,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
   });
 
-  it('should not onTouchTap from when dragging beyond threshold', function() {
+  it('should not onTouchTap from when dragging beyond threshold', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -382,14 +382,14 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder.length).toBe(0);
   });
 
-  it('should listen to events only once', function() {
+  it('should listen to events only once', () => {
     spyOn(EventListener, 'listen');
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
     expect(EventListener.listen.calls.count()).toBe(1);
   });
 
-  it('should work with event plugins without dependencies', function() {
+  it('should work with event plugins without dependencies', () => {
     spyOn(EventListener, 'listen');
 
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
@@ -397,7 +397,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(EventListener.listen.calls.argsFor(0)[1]).toBe('click');
   });
 
-  it('should work with event plugins with dependencies', function() {
+  it('should work with event plugins with dependencies', () => {
     spyOn(EventListener, 'listen');
     spyOn(EventListener, 'capture');
 
@@ -422,7 +422,7 @@ describe('ReactBrowserEventEmitter', function() {
     }
   });
 
-  it('should bubble onTouchTap', function() {
+  it('should bubble onTouchTap', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -452,7 +452,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
   });
 
-  it('should not crash ensureScrollValueMonitoring when createEvent returns null', function() {
+  it('should not crash ensureScrollValueMonitoring when createEvent returns null', () => {
     var originalCreateEvent = document.createEvent;
     document.createEvent = function() {
       return null;

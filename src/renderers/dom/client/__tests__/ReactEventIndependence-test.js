@@ -15,8 +15,8 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('ReactEventIndependence', function() {
-  beforeEach(function() {
+describe('ReactEventIndependence', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -24,7 +24,7 @@ describe('ReactEventIndependence', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('does not crash with other react inside', function() {
+  it('does not crash with other react inside', () => {
     var clicks = 0;
     var div = ReactTestUtils.renderIntoDocument(
       <div
@@ -38,7 +38,7 @@ describe('ReactEventIndependence', function() {
     expect(clicks).toBe(1);
   });
 
-  it('does not crash with other react outside', function() {
+  it('does not crash with other react outside', () => {
     var clicks = 0;
     var outer = document.createElement('div');
     outer.setAttribute('data-reactid', '.z');
@@ -50,7 +50,7 @@ describe('ReactEventIndependence', function() {
     expect(clicks).toBe(1);
   });
 
-  it('does not when event fired on unmounted tree', function() {
+  it('does not when event fired on unmounted tree', () => {
     var clicks = 0;
     var container = document.createElement('div');
     var button = ReactDOM.render(
