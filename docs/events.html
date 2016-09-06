@@ -469,8 +469,11 @@ As such, you cannot access the event in an asynchronous way.</p>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eventType</span><span class="p">);</span> <span class="c1">// =&gt; &quot;click&quot;</span>
   <span class="p">},</span> <span class="mi">0</span><span class="p">);</span>
 
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">clickEvent</span><span class="o">:</span> <span class="nx">event</span><span class="p">});</span> <span class="c1">// Won&#39;t work. this.state.clickEvent will only contain null values.</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">eventType</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">});</span> <span class="c1">// You can still export event properties.</span>
+  <span class="c1">// Won&#39;t work. this.state.clickEvent will only contain null values.</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">clickEvent</span><span class="o">:</span> <span class="nx">event</span><span class="p">});</span>
+
+  <span class="c1">// You can still export event properties.</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">eventType</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">type</span><span class="p">});</span>
 <span class="p">}</span>
 </code></pre></div>
 <blockquote>

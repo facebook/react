@@ -91,7 +91,7 @@
 <h2><a class="anchor" name="multiple-copies-of-react"></a>Multiple copies of React <a class="hash-link" href="#multiple-copies-of-react">#</a></h2>
 <p>Bower does a good job of deduplicating dependencies, but NPM does not. If you aren&#39;t doing anything (fancy) with refs, there is a good chance that the problem is not with your refs, but rather an issue with having multiple copies of React loaded into your project. Sometimes, when you pull in a third-party module via npm, you will get a duplicate copy of the dependency library, and this can create problems.</p>
 
-<p>If you are using npm... <code>npm ls</code> or <code>npm ls | grep react</code> might help illuminate.</p>
+<p>If you are using npm... <code>npm ls</code> or <code>npm ls react</code> might help illuminate.</p>
 
 
     

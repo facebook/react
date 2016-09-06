@@ -462,11 +462,11 @@
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">&quot;utf-8&quot;</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;title&gt;</span>React Tutorial<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://npmcdn.com/react@15.3.1/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://npmcdn.com/babel-core@5.8.38/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15.3.1/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15.3.1/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/babel-core@5.8.38/browser.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/jquery@3.1.0/dist/jquery.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
@@ -578,7 +578,7 @@
 </code></pre></div>
 <p>Notice how we&#39;re mixing HTML tags and components we&#39;ve built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to <code>React.createElement(tagName)</code> expressions and leave everything else alone. This is to prevent the pollution of the global namespace.</p>
 <h3><a class="anchor" name="using-props"></a>Using props <a class="hash-link" href="#using-props">#</a></h3>
-<p>Let&#39;s create the <code>Comment</code> component, which will depend on data passed in from its parent. Data passed in from a parent component is available as a &#39;property&#39; on the child component. These &#39;properties&#39; are accessed through <code>this.props</code>. Using props, we will be able to read the data passed to the <code>Comment</code> from the <code>CommentList</code>, and render some markup:</p>
+<p>Let&#39;s create the <code>Comment</code> component, which will depend on data passed in from its parent, <code>CommentList</code>. Data passed in from a parent component is available as a &#39;property&#39; on the child component. These &#39;properties&#39; are accessed through <code>this.props</code>. Using props, we will be able to read the data passed to the <code>Comment</code> from the <code>CommentList</code>, and render some markup:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial4.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -608,7 +608,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Note that we have passed some data from the parent <code>CommentList</code> component to the child <code>Comment</code> components. For example, we passed <em>Pete Hunt</em> (via an attribute) and <em>This is one comment</em> (via an XML-like child node) to the first <code>Comment</code>. As noted above, the <code>Comment</code> component will access these &#39;properties&#39; through <code>this.props.author</code>, and <code>this.props.children</code>.</p>
+<p>Note that we have passed some data from the parent <code>CommentList</code> component to the child <code>Comment</code> components. For example, we passed <em>Pete Hunt</em> (via the <code>author</code> attribute) and <em>This is one comment</em> (via an XML-like child node) to the first <code>Comment</code>. As noted above, the <code>Comment</code> component will access these &#39;properties&#39; through <code>this.props.author</code>, and <code>this.props.children</code>.</p>
 <h3><a class="anchor" name="adding-markdown"></a>Adding Markdown <a class="hash-link" href="#adding-markdown">#</a></h3>
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 

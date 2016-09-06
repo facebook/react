@@ -463,10 +463,13 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Aggiungi</span> <span class="nx">Elemento</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span> <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="hll">          <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> 
+</span><span class="hll">          <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> 
+</span><span class="hll">          <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span> 
+</span>          <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
@@ -503,10 +506,13 @@
 <p><code>ReactCSSTransitionGroup</code> fornisce la proprietà opzionale <code>transitionAppear</code>, per aggiungere una fase aggiuntiva di transizione al montaggio iniziale del componente. In genere non c&#39;è alcuna fase di transizione al montaggio iniziale in quanto il valore predefinito di <code>transitionAppear</code> è <code>false</code>. L&#39;esempio seguente passa la proprietà <code>transitionAppear</code> con il valore <code>true</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Dissolvenza</span> <span class="nx">al</span> <span class="nx">Montaggio</span> <span class="nx">Iniziale</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
-</span><span class="hll">      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
-</span>    <span class="p">);</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> 
+</span><span class="hll">        <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> 
+</span><span class="hll">        <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> 
+</span>        <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Dissolvenza</span> <span class="nx">al</span> <span class="nx">Montaggio</span> <span class="nx">Iniziale</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
 <p>Durante il montaggio iniziale <code>ReactCSSTransitionGroup</code> otterrà la classe CSS <code>example-appear</code> e la classe CSS <code>example-appear-active</code> allo scatto successivo.</p>
@@ -580,10 +586,13 @@
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span> <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span> <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="hll">          <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> 
+</span><span class="hll">          <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span> 
+</span><span class="hll">          <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span> 
+</span>          <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
