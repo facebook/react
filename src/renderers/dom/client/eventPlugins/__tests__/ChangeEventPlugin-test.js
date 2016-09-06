@@ -39,8 +39,8 @@ function setUntrackedValue(elem, value) {
   tracker.setValue(current);
 }
 
-describe('ChangeEventPlugin', function() {
-  it('should fire change for checkbox input', function() {
+describe('ChangeEventPlugin', () => {
+  it('should fire change for checkbox input', () => {
     var called = 0;
 
     function cb(e) {
@@ -56,7 +56,7 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(1);
   });
 
-  it('should catch setting the value programmatically', function() {
+  it('should catch setting the value programmatically', () => {
     var input = ReactTestUtils.renderIntoDocument(
       <input type="text" defaultValue="foo"/>
     );
@@ -65,7 +65,7 @@ describe('ChangeEventPlugin', function() {
     expect(getTrackedValue(input)).toBe('bar');
   });
 
-  it('should not fire change when setting the value programmatically', function() {
+  it('should not fire change when setting the value programmatically', () => {
     var called = 0;
 
     function cb(e) {
@@ -87,7 +87,7 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(1);
   });
 
-  it('should not fire change when setting checked programmatically', function() {
+  it('should not fire change when setting checked programmatically', () => {
     var called = 0;
 
     function cb(e) {
@@ -110,14 +110,14 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(1);
   });
 
-  it('should unmount', function() {
+  it('should unmount', () => {
     var container = document.createElement('div');
     var input = ReactDOM.render(<input />, container);
 
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('should only fire change for checked radio button once', function() {
+  it('should only fire change for checked radio button once', () => {
     var called = 0;
 
     function cb(e) {
@@ -131,7 +131,7 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(1);
   });
 
-  it('should deduplicate input value change events', function() {
+  it('should deduplicate input value change events', () => {
     var input;
     var called = 0;
 
@@ -169,7 +169,7 @@ describe('ChangeEventPlugin', function() {
     });
   });
 
-  it('should listen for both change and input events when supported', function() {
+  it('should listen for both change and input events when supported', () => {
     var called = 0;
 
     function cb(e) {
@@ -193,7 +193,7 @@ describe('ChangeEventPlugin', function() {
     expect(called).toBe(2);
   });
 
-  it('should only fire events when the value changes for range inputs', function() {
+  it('should only fire events when the value changes for range inputs', () => {
     var called = 0;
 
     function cb(e) {

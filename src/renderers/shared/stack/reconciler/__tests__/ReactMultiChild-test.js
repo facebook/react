@@ -11,7 +11,7 @@
 
 'use strict';
 
-describe('ReactMultiChild', function() {
+describe('ReactMultiChild', () => {
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
@@ -19,14 +19,14 @@ describe('ReactMultiChild', function() {
   var React;
   var ReactDOM;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
   });
 
-  describe('reconciliation', function() {
-    it('should update children when possible', function() {
+  describe('reconciliation', () => {
+    it('should update children when possible', () => {
       var container = document.createElement('div');
 
       var mockMount = jest.fn();
@@ -59,7 +59,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(0);
     });
 
-    it('should replace children with different constructors', function() {
+    it('should replace children with different constructors', () => {
       var container = document.createElement('div');
 
       var mockMount = jest.fn();
@@ -87,7 +87,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should NOT replace children with different owners', function() {
+    it('should NOT replace children with different owners', () => {
       var container = document.createElement('div');
 
       var mockMount = jest.fn();
@@ -124,7 +124,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(0);
     });
 
-    it('should replace children with different keys', function() {
+    it('should replace children with different keys', () => {
       var container = document.createElement('div');
 
       var mockMount = jest.fn();
@@ -152,7 +152,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should warn for duplicated keys with component stack info', function() {
+    it('should warn for duplicated keys with component stack info', () => {
       spyOn(console, 'error');
 
       var container = document.createElement('div');

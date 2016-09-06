@@ -327,8 +327,8 @@ var siblings = {
   childTwo: CHILD_ID2,
 };
 
-describe('ResponderEventPlugin', function() {
-  beforeEach(function() {
+describe('ResponderEventPlugin', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     EventPluginHub = require('EventPluginHub');
@@ -378,7 +378,7 @@ describe('ResponderEventPlugin', function() {
     });
   });
 
-  it('should do nothing when no one wants to respond', function() {
+  it('should do nothing when no one wants to respond', () => {
     var config = oneEventLoopTestConfig(three);
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
     config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};

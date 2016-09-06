@@ -16,16 +16,16 @@ var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
-describe('ReactTestUtils', function() {
+describe('ReactTestUtils', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should have shallow rendering', function() {
+  it('should have shallow rendering', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
@@ -47,7 +47,7 @@ describe('ReactTestUtils', function() {
     ]);
   });
 
-  it('should shallow render a functional component', function() {
+  it('should shallow render a functional component', () => {
     function SomeComponent() {
       return (
         <div>
@@ -67,7 +67,7 @@ describe('ReactTestUtils', function() {
     ]);
   });
 
-  it('should throw for invalid elements', function() {
+  it('should throw for invalid elements', () => {
     class SomeComponent extends React.Component {
       render() {
         return <div />;
@@ -88,7 +88,7 @@ describe('ReactTestUtils', function() {
     );
   });
 
-  it('should have shallow unmounting', function() {
+  it('should have shallow unmounting', () => {
     var componentWillUnmount = jest.fn();
 
     var SomeComponent = React.createClass({
@@ -105,7 +105,7 @@ describe('ReactTestUtils', function() {
     expect(componentWillUnmount).toBeCalled();
   });
 
-  it('can shallow render to null', function() {
+  it('can shallow render to null', () => {
     class SomeComponent extends React.Component {
       render() {
         return null;
@@ -118,7 +118,7 @@ describe('ReactTestUtils', function() {
     expect(result).toBe(null);
   });
 
-  it('can shallow render with a ref', function() {
+  it('can shallow render with a ref', () => {
     class SomeComponent extends React.Component {
       render() {
         return <div ref="hello" />;
@@ -130,7 +130,7 @@ describe('ReactTestUtils', function() {
     shallowRenderer.render(<SomeComponent />);
   });
 
-  it('lets you update shallowly rendered components', function() {
+  it('lets you update shallowly rendered components', () => {
     class SomeComponent extends React.Component {
       state = {clicked: false};
 
@@ -180,7 +180,7 @@ describe('ReactTestUtils', function() {
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
   });
 
-  it('can access the mounted component instance', function() {
+  it('can access the mounted component instance', () => {
     class SimpleComponent extends React.Component {
       someMethod = () => {
         return this.props.n;
@@ -196,7 +196,7 @@ describe('ReactTestUtils', function() {
     expect(shallowRenderer.getMountedInstance().someMethod()).toEqual(5);
   });
 
-  it('can shallowly render components with contextTypes', function() {
+  it('can shallowly render components with contextTypes', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
         name: React.PropTypes.string,
@@ -212,7 +212,7 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div />);
   });
 
-  it('can shallowly render components with ref as function', function() {
+  it('can shallowly render components with ref as function', () => {
     class SimpleComponent extends React.Component {
       state = {clicked: false};
 
@@ -243,7 +243,7 @@ describe('ReactTestUtils', function() {
     expect(result.props.className).toEqual('clicked');
   });
 
-  it('can setState in componentWillMount when shallow rendering', function() {
+  it('can setState in componentWillMount when shallow rendering', () => {
     class SimpleComponent extends React.Component {
       componentWillMount() {
         this.setState({groovy: 'doovy'});
@@ -259,7 +259,7 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>doovy</div>);
   });
 
-  it('can pass context when shallowly rendering', function() {
+  it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
         name: React.PropTypes.string,
@@ -277,7 +277,7 @@ describe('ReactTestUtils', function() {
     expect(result).toEqual(<div>foo</div>);
   });
 
-  it('can fail context when shallowly rendering', function() {
+  it('can fail context when shallowly rendering', () => {
     spyOn(console, 'error');
 
     class SimpleComponent extends React.Component {
@@ -302,7 +302,7 @@ describe('ReactTestUtils', function() {
     );
   });
 
-  it('can scryRenderedDOMComponentsWithClass with TextComponent', function() {
+  it('can scryRenderedDOMComponentsWithClass with TextComponent', () => {
     class Wrapper extends React.Component {
       render() {
         return <div>Hello <span>Jim</span></div>;
@@ -317,7 +317,7 @@ describe('ReactTestUtils', function() {
     expect(scryResults.length).toBe(0);
   });
 
-  it('can scryRenderedDOMComponentsWithClass with className contains \\n', function() {
+  it('can scryRenderedDOMComponentsWithClass with className contains \\n', () => {
     class Wrapper extends React.Component {
       render() {
         return <div>Hello <span className={'x\ny'}>Jim</span></div>;
@@ -332,7 +332,7 @@ describe('ReactTestUtils', function() {
     expect(scryResults.length).toBe(1);
   });
 
-  it('can scryRenderedDOMComponentsWithClass with multiple classes', function() {
+  it('can scryRenderedDOMComponentsWithClass with multiple classes', () => {
     class Wrapper extends React.Component {
       render() {
         return <div>Hello <span className={'x y z'}>Jim</span></div>;
@@ -374,7 +374,7 @@ describe('ReactTestUtils', function() {
     expect(scryResults5.length).toBe(0);
   });
 
-  it('traverses children in the correct order', function() {
+  it('traverses children in the correct order', () => {
     class Wrapper extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
@@ -408,7 +408,7 @@ describe('ReactTestUtils', function() {
     expect(log).toEqual(['orangepurple', 'orange', 'purple']);
   });
 
-  it('should support injected wrapper components as DOM components', function() {
+  it('should support injected wrapper components as DOM components', () => {
     var getTestDocument = require('getTestDocument');
 
     var injectedDOMComponents = [
@@ -459,7 +459,7 @@ describe('ReactTestUtils', function() {
     expect(ReactTestUtils.isDOMComponent(component.refs.body)).toBe(true);
   });
 
-  it('should change the value of an input field', function() {
+  it('should change the value of an input field', () => {
     var obj = {
       handler: function(e) {
         e.persist();
@@ -476,7 +476,7 @@ describe('ReactTestUtils', function() {
     expect(obj.handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
   });
 
-  it('should change the value of an input field in a component', function() {
+  it('should change the value of an input field in a component', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
@@ -503,7 +503,7 @@ describe('ReactTestUtils', function() {
     expect(obj.handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
   });
 
-  it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', function() {
+  it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
@@ -525,7 +525,7 @@ describe('ReactTestUtils', function() {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  it('should not warn when simulating events with extra properties', function() {
+  it('should not warn when simulating events with extra properties', () => {
     spyOn(console, 'error');
 
     var CLIENT_X = 100;
@@ -549,7 +549,7 @@ describe('ReactTestUtils', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('can scry with stateless components involved', function() {
+  it('can scry with stateless components involved', () => {
     var Stateless = () => <div><hr /></div>;
 
     class SomeComponent extends React.Component {

@@ -14,10 +14,10 @@ var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var inputValueTracking = require('inputValueTracking');
 
-describe('inputValueTracking', function() {
+describe('inputValueTracking', () => {
   var input, checkbox, mockComponent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     input = document.createElement('input');
     input.type = 'text';
     checkbox = document.createElement('input');
@@ -25,7 +25,7 @@ describe('inputValueTracking', function() {
     mockComponent = { _hostNode: input, _wrapperState: {} };
   });
 
-  it('should attach tracker to wrapper state', function() {
+  it('should attach tracker to wrapper state', () => {
     inputValueTracking.track(mockComponent);
 
     expect(
@@ -33,7 +33,7 @@ describe('inputValueTracking', function() {
     ).toBe(true);
   });
 
-  it('should define `value` on the instance node', function() {
+  it('should define `value` on the instance node', () => {
     inputValueTracking.track(mockComponent);
 
     expect(
@@ -41,14 +41,14 @@ describe('inputValueTracking', function() {
     ).toBe(true);
   });
 
-  it('should define `checked` on the instance node', function() {
+  it('should define `checked` on the instance node', () => {
     mockComponent._hostNode = checkbox;
     inputValueTracking.track(mockComponent);
 
     expect(checkbox.hasOwnProperty('checked')).toBe(true);
   });
 
-  it('should initialize with the current value', function() {
+  it('should initialize with the current value', () => {
     input.value ='foo';
 
     inputValueTracking.track(mockComponent);
@@ -58,7 +58,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('foo');
   });
 
-  it('should initialize with the current `checked`', function() {
+  it('should initialize with the current `checked`', () => {
     mockComponent._hostNode = checkbox;
     checkbox.checked = true;
     inputValueTracking.track(mockComponent);
@@ -68,7 +68,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('true');
   });
 
-  it('should track value changes', function() {
+  it('should track value changes', () => {
     input.value ='foo';
 
     inputValueTracking.track(mockComponent);
@@ -79,7 +79,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('bar');
   });
 
-  it('should tracked`checked` changes', function() {
+  it('should tracked`checked` changes', () => {
     mockComponent._hostNode = checkbox;
     checkbox.checked = true;
     inputValueTracking.track(mockComponent);
@@ -90,7 +90,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('false');
   });
 
-  it('should update value manually', function() {
+  it('should update value manually', () => {
     input.value ='foo';
     inputValueTracking.track(mockComponent);
 
@@ -100,7 +100,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('bar');
   });
 
-  it('should coerce value to a string', function() {
+  it('should coerce value to a string', () => {
     input.value ='foo';
     inputValueTracking.track(mockComponent);
 
@@ -110,7 +110,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('500');
   });
 
-  it('should update value if it changed and return result', function() {
+  it('should update value if it changed and return result', () => {
     inputValueTracking.track(mockComponent);
     input.value ='foo';
 
@@ -129,7 +129,7 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('foo');
   });
 
-  it('should track value and return true when updating untracked instance', function() {
+  it('should track value and return true when updating untracked instance', () => {
     input.value ='foo';
 
     expect(
@@ -141,13 +141,13 @@ describe('inputValueTracking', function() {
     expect(tracker.getValue()).toEqual('foo');
   });
 
-  it('should return tracker from node', function() {
+  it('should return tracker from node', () => {
     var node = ReactTestUtils.renderIntoDocument(<input type="text" defaultValue="foo" />);
     var tracker = inputValueTracking._getTrackerFromNode(node);
     expect(tracker.getValue()).toEqual('foo');
   });
 
-  it('should stop tracking', function() {
+  it('should stop tracking', () => {
     inputValueTracking.track(mockComponent);
 
     expect(

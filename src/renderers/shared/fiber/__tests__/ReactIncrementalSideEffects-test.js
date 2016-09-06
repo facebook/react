@@ -14,8 +14,8 @@
 var React;
 var ReactNoop;
 
-describe('ReactIncrementalSideEffects', function() {
-  beforeEach(function() {
+describe('ReactIncrementalSideEffects', () => {
+  beforeEach(() => {
     React = require('React');
     ReactNoop = require('ReactNoop');
   });
@@ -28,7 +28,7 @@ describe('ReactIncrementalSideEffects', function() {
     return { type: 'span', children: [], prop };
   }
 
-  it('can update child nodes of a host instance', function() {
+  it('can update child nodes of a host instance', () => {
 
     function Bar(props) {
       return <span>{props.text}</span>;
@@ -57,7 +57,7 @@ describe('ReactIncrementalSideEffects', function() {
 
   });
 
-  it('does not update child nodes if a flush is aborted', function() {
+  it('does not update child nodes if a flush is aborted', () => {
 
     function Bar(props) {
       return <span prop={props.text} />;
@@ -89,7 +89,7 @@ describe('ReactIncrementalSideEffects', function() {
 
   });
 
-  it('preserves a previously rendered node when deprioritized', function() {
+  it('preserves a previously rendered node when deprioritized', () => {
 
     function Middle(props) {
       return <span prop={props.children} />;
@@ -127,7 +127,7 @@ describe('ReactIncrementalSideEffects', function() {
 
   });
 
-  it('can reuse side-effects after being preempted', function() {
+  it('can reuse side-effects after being preempted', () => {
 
     function Bar(props) {
       return <span prop={props.children} />;
@@ -188,7 +188,7 @@ describe('ReactIncrementalSideEffects', function() {
     ]);
   });
 
-  it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', function() {
+  it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
 
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -254,7 +254,7 @@ describe('ReactIncrementalSideEffects', function() {
     ]);
   });
 
-  it('updates a child even though the old props is empty', function() {
+  it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
         <div hidden={true}>

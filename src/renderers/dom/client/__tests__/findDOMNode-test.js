@@ -15,12 +15,12 @@ var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 
-describe('findDOMNode', function() {
-  it('findDOMNode should return null if passed null', function() {
+describe('findDOMNode', () => {
+  it('findDOMNode should return null if passed null', () => {
     expect(ReactDOM.findDOMNode(null)).toBe(null);
   });
 
-  it('findDOMNode should find dom element', function() {
+  it('findDOMNode should find dom element', () => {
     class MyNode extends React.Component {
       render() {
         return <div><span>Noise</span></div>;
@@ -34,7 +34,7 @@ describe('findDOMNode', function() {
     expect(mySameDiv).toBe(myDiv);
   });
 
-  it('findDOMNode should reject random objects', function() {
+  it('findDOMNode should reject random objects', () => {
     expect(function() {
       ReactDOM.findDOMNode({foo: 'bar'});
     }).toThrowError(
@@ -42,7 +42,7 @@ describe('findDOMNode', function() {
     );
   });
 
-  it('findDOMNode should reject unmounted objects with render func', function() {
+  it('findDOMNode should reject unmounted objects with render func', () => {
     class Foo extends React.Component {
       render() {
         return <div />;
@@ -58,7 +58,7 @@ describe('findDOMNode', function() {
     );
   });
 
-  it('findDOMNode should not throw an error when called within a component that is not mounted', function() {
+  it('findDOMNode should not throw an error when called within a component that is not mounted', () => {
     class Bar extends React.Component {
       componentWillMount() {
         expect(ReactDOM.findDOMNode(this)).toBeNull();

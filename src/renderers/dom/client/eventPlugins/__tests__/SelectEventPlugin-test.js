@@ -17,7 +17,7 @@ var ReactDOMComponentTree;
 var ReactTestUtils;
 var SelectEventPlugin;
 
-describe('SelectEventPlugin', function() {
+describe('SelectEventPlugin', () => {
   function extract(node, topLevelEvent) {
     return SelectEventPlugin.extractEvents(
       topLevelEvent,
@@ -27,7 +27,7 @@ describe('SelectEventPlugin', function() {
     );
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -35,7 +35,7 @@ describe('SelectEventPlugin', function() {
     SelectEventPlugin = require('SelectEventPlugin');
   });
 
-  it('should skip extraction if no listeners are present', function() {
+  it('should skip extraction if no listeners are present', () => {
     class WithoutSelect extends React.Component {
       render() {
         return <input type="text" />;
@@ -53,7 +53,7 @@ describe('SelectEventPlugin', function() {
     expect(mouseup).toBe(null);
   });
 
-  it('should extract if an `onSelect` listener is present', function() {
+  it('should extract if an `onSelect` listener is present', () => {
     class WithSelect extends React.Component {
       render() {
         return <input type="text" onSelect={this.props.onSelect} />;

@@ -13,10 +13,10 @@
 
 var getEventCharCode = require('getEventCharCode');
 
-describe('getEventCharCode', function() {
-  describe('when charCode is present in nativeEvent', function() {
-    describe('when charCode is 0 and keyCode is 13', function() {
-      it('returns 13', function() {
+describe('getEventCharCode', () => {
+  describe('when charCode is present in nativeEvent', () => {
+    describe('when charCode is 0 and keyCode is 13', () => {
+      it('returns 13', () => {
         var nativeEvent = new KeyboardEvent(
           'keypress', {charCode: 0, keyCode: 13}
         );
@@ -25,26 +25,26 @@ describe('getEventCharCode', function() {
       });
     });
 
-    describe('when charCode is not 0 and/or keyCode is not 13', function() {
-      describe('when charCode is 32 or bigger', function() {
-        it('returns charCode', function() {
+    describe('when charCode is not 0 and/or keyCode is not 13', () => {
+      describe('when charCode is 32 or bigger', () => {
+        it('returns charCode', () => {
           var nativeEvent = new KeyboardEvent('keypress', {charCode: 32});
 
           expect(getEventCharCode(nativeEvent)).toBe(32);
         });
       });
 
-      describe('when charCode is smaller than 32', function() {
-        describe('when charCode is 13', function() {
-          it('returns 13', function() {
+      describe('when charCode is smaller than 32', () => {
+        describe('when charCode is 13', () => {
+          it('returns 13', () => {
             var nativeEvent = new KeyboardEvent('keypress', {charCode: 13});
 
             expect(getEventCharCode(nativeEvent)).toBe(13);
           });
         });
 
-        describe('when charCode is not 13', function() {
-          it('returns 0', function() {
+        describe('when charCode is not 13', () => {
+          it('returns 0', () => {
             var nativeEvent = new KeyboardEvent('keypress', {charCode: 31});
 
             expect(getEventCharCode(nativeEvent)).toBe(0);
@@ -59,26 +59,26 @@ describe('getEventCharCode', function() {
     KeyboardEvent's 'charCode' event key cannot be deleted to simulate a missing
     charCode key.
   */
-  describe('when charCode is not present in nativeEvent', function() {
-    describe('when keyCode is 32 or bigger', function() {
-      it('returns keyCode', function() {
+  describe('when charCode is not present in nativeEvent', () => {
+    describe('when keyCode is 32 or bigger', () => {
+      it('returns keyCode', () => {
         var nativeEvent = {'keyCode': 32};
 
         expect(getEventCharCode(nativeEvent)).toBe(32);
       });
     });
 
-    describe('when keyCode is smaller than 32', function() {
-      describe('when keyCode is 13', function() {
-        it('returns 13', function() {
+    describe('when keyCode is smaller than 32', () => {
+      describe('when keyCode is 13', () => {
+        it('returns 13', () => {
           var nativeEvent = {'keyCode': 13};
 
           expect(getEventCharCode(nativeEvent)).toBe(13);
         });
       });
 
-      describe('when keyCode is not 13', function() {
-        it('returns 0', function() {
+      describe('when keyCode is not 13', () => {
+        it('returns 0', () => {
           var nativeEvent = {'keyCode': 31};
 
           expect(getEventCharCode(nativeEvent)).toBe(0);

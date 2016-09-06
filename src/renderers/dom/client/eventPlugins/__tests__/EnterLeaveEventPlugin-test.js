@@ -16,8 +16,8 @@ var React;
 var ReactDOM;
 var ReactDOMComponentTree;
 
-describe('EnterLeaveEventPlugin', function() {
-  beforeEach(function() {
+describe('EnterLeaveEventPlugin', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
@@ -26,7 +26,7 @@ describe('EnterLeaveEventPlugin', function() {
     ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 
-  it('should set relatedTarget properly in iframe', function() {
+  it('should set relatedTarget properly in iframe', () => {
     var iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
 

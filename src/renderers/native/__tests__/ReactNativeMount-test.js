@@ -16,15 +16,15 @@ var ReactNative;
 var createReactNativeComponentClass;
 var UIManager;
 
-describe('ReactNative', function() {
-  beforeEach(function() {
+describe('ReactNative', () => {
+  beforeEach(() => {
     React = require('React');
     ReactNative = require('ReactNative');
     UIManager = require('UIManager');
     createReactNativeComponentClass = require('createReactNativeComponentClass');
   });
 
-  it('should be able to create and render a native component', function() {
+  it('should be able to create and render a native component', () => {
     var View = createReactNativeComponentClass({
       validAttributes: { foo: true },
       uiViewClassName: 'View',
@@ -37,7 +37,7 @@ describe('ReactNative', function() {
     expect(UIManager.updateView).not.toBeCalled();
   });
 
-  it('should be able to create and update a native component', function() {
+  it('should be able to create and update a native component', () => {
     var View = createReactNativeComponentClass({
       validAttributes: { foo: true },
       uiViewClassName: 'View',
