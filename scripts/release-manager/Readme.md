@@ -3,7 +3,7 @@
 This is a WIP tool that is being used to manage React releases.
 
 General prereqs:
-- A separate clone of React, checked out to this branch (currently `release-manager`). This clone should be a sibling to your primary working copy of React. I have these 2 as siblings: `react/` & `react@release-manager`.
+- A separate clone of React, checked out to this branch (currently `release-manager`). This clone can be anywhere, so long as it is a separate working copy. Ideally this is where you are most comfortable working on React.
 - Your `react` clone should have the latest commits fetched before running commands. You may need to rebase or reset & re-run commands if not.
 
 

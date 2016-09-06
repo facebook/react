@@ -11,6 +11,7 @@
     "glob": "^7.0.5",
     "opn": "^4.0.2",
     "semver": "^5.3.0",
+    "untildify": "^3.0.2",
     "vorpal": "^1.10.10"
   },
   "devDependencies": {},

@@ -117,13 +117,13 @@ module.exports = function(vorpal, app) {
             fields: ['version', 'peerDependencies.react'],
           },
         ].forEach((opts) => {
-          updateJSON.apply(this, [path.join(app.PATH_TO_REPO, opts.file), opts.fields, newVersion]);
+          updateJSON.apply(this, [path.join(app.config.reactPath, opts.file), opts.fields, newVersion]);
         });
 
         // We also need to update src/ReactVersion.js which has the version in
         // string form in JS code. We'll just do a string replace.
 
-        const PATH_TO_REACTVERSION = path.join(app.PATH_TO_REPO, 'src/ReactVersion.js');
+        const PATH_TO_REACTVERSION = path.join(app.config.reactPath, 'src/ReactVersion.js');
 
         let reactVersionContents = fs.readFileSync(PATH_TO_REACTVERSION, 'utf8');
 
