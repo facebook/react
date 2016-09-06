@@ -67,7 +67,6 @@ function ChildReconciler(shouldClone) {
             clone.pendingWorkPriority = priority;
           }
           clone.pendingProps = element.props;
-          // clone.child = existingChild.child;
           clone.sibling = null;
           clone.return = returnFiber;
           previousSibling.sibling = clone;
@@ -139,7 +138,6 @@ function ChildReconciler(shouldClone) {
             clone.pendingWorkPriority = priority;
           }
           clone.pendingProps = element.props;
-          // clone.child = existingChild.child;
           clone.sibling = null;
           clone.return = returnFiber;
           return clone;
@@ -240,34 +238,30 @@ exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
   if (!workInProgress.child) {
     return;
   }
-  if (!current || workInProgress.child !== current.child) {
-    // If there is no alternate, then we don't need to clone the children.
-    // If the children of the alternate fiber is a different set, then we don't
-    // need to clone. We need to reset the return fiber though since we'll
-    // traverse down into them.
-    let child = workInProgress.child;
-    while (child) {
-      child.return = workInProgress;
-      child = child.sibling;
-    }
-    return;
+  if (current && workInProgress.child === current.child) {
+    // We use workInProgress.child since that lets Flow know that it can't be
+    // null since we validated that already. However, as the line above suggests
+    // they're actually the same thing.
+    const currentChild = workInProgress.child;
+    // TODO: This used to reset the pending priority. Not sure if that is needed.
+    // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
+    // TODO: The below priority used to be set to NoWork which would've
+    // dropped work. This is currently unobservable but will become
+    // observable when the first sibling has lower priority work remaining
+    // than the next sibling. At that point we should add tests that catches
+    // this.
+    const newChild = cloneFiber(currentChild, currentChild.pendingWorkPriority);
+    workInProgress.child = newChild;
+    cloneSiblings(currentChild, newChild, workInProgress);
   }
-  // TODO: This used to reset the pending priority. Not sure if that is needed.
-  // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
 
-  // TODO: The below priority used to be set to NoWork which would've
-  // dropped work. This is currently unobservable but will become
-  // observable when the first sibling has lower priority work remaining
-  // than the next sibling. At that point we should add tests that catches
-  // this.
-
-  const currentChild = workInProgress.child;
-  if (!currentChild) {
-    return;
+  // If there is no alternate, then we don't need to clone the children.
+  // If the children of the alternate fiber is a different set, then we don't
+  // need to clone. We need to reset the return fiber though since we'll
+  // traverse down into them.
+  let child = workInProgress.child;
+  while (child) {
+    child.return = workInProgress;
+    child = child.sibling;
   }
-  workInProgress.child = cloneFiber(
-    currentChild,
-    currentChild.pendingWorkPriority
-  );
-  cloneSiblings(currentChild, workInProgress.child, workInProgress);
 };
