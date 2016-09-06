@@ -89,7 +89,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     // TODO: Error handling.
     let effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
-      commitWork(effectfulFiber);
+      const current = effectfulFiber.alternate;
+      commitWork(current, effectfulFiber);
       const next = effectfulFiber.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.
       // I'm not actually sure this matters because we can't reset firstEffect
