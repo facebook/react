@@ -166,15 +166,15 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     if (typeof value === 'object' && value && typeof value.render === 'function') {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
-      if (workInProgress.alternate) {
-        workInProgress.alternate.tag = ClassComponent;
+      if (current) {
+        current.tag = ClassComponent;
       }
       value = value.render();
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
-      if (workInProgress.alternate) {
-        workInProgress.alternate.tag = FunctionalComponent;
+      if (current) {
+        current.tag = FunctionalComponent;
       }
     }
     reconcileChildren(current, workInProgress, value);
@@ -225,7 +225,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     //   return null;
     // }
 
-    cloneChildFibers(workInProgress);
+    cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
     return workInProgress.child;
   }

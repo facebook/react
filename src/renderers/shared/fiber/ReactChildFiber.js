@@ -236,11 +236,10 @@ function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fi
   workInProgress.sibling = null;
 }
 
-exports.cloneChildFibers = function(workInProgress : Fiber) {
+exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
   if (!workInProgress.child) {
     return;
   }
-  const current = workInProgress.alternate;
   if (!current || workInProgress.child !== current.child) {
     // If there is no alternate, then we don't need to clone the children.
     // If the children of the alternate fiber is a different set, then we don't
