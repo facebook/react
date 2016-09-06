@@ -1107,7 +1107,9 @@ var ReactCompositeComponent = {
     if (__DEV__) {
       var componentName = component && component.getName ?
         component.getName() : 'a component';
-      warning(publicComponentInstance != null,
+      warning(
+        publicComponentInstance != null ||
+        component._compositeType !== CompositeTypes.StatelessFunctional,
         'Stateless function components cannot be given refs ' +
         '(See ref "%s" in %s created by %s). ' +
         'Attempts to access this ref will fail.',
