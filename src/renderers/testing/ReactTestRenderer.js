@@ -39,6 +39,7 @@ function getRenderedHostOrTextFromComponent(component) {
 // =============================================================================
 
 var ReactTestComponent = function(element) {
+  this._unmounted = false;
   this._currentElement = element;
   this._renderedChildren = null;
   this._topLevelWrapper = null;
@@ -66,7 +67,10 @@ ReactTestComponent.prototype.getPublicInstance = function() {
   // Maybe we'll revise later if someone has a good use case.
   return null;
 };
-ReactTestComponent.prototype.unmountComponent = function() {};
+ReactTestComponent.prototype.unmountComponent = function() {
+  this._unmounted = true;
+  this.unmountChildren(/* safely */ false);
+};
 ReactTestComponent.prototype.toJSON = function() {
   var {children, ...props} = this._currentElement.props;
   var childrenJSON = [];
@@ -93,6 +97,7 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 // =============================================================================
 
 var ReactTestTextComponent = function(element) {
+  this._unmounted = false;
   this._currentElement = element;
 };
 ReactTestTextComponent.prototype.mountComponent = function() {};
@@ -100,7 +105,9 @@ ReactTestTextComponent.prototype.receiveComponent = function(nextElement) {
   this._currentElement = nextElement;
 };
 ReactTestTextComponent.prototype.getHostNode = function() {};
-ReactTestTextComponent.prototype.unmountComponent = function() {};
+ReactTestTextComponent.prototype.unmountComponent = function() {
+  this._unmounted = true;
+};
 ReactTestTextComponent.prototype.toJSON = function() {
   return this._currentElement;
 };
@@ -108,12 +115,15 @@ ReactTestTextComponent.prototype.toJSON = function() {
 // =============================================================================
 
 var ReactTestEmptyComponent = function(element) {
+  this._unmounted = false;
   this._currentElement = null;
 };
 ReactTestEmptyComponent.prototype.mountComponent = function() {};
 ReactTestEmptyComponent.prototype.receiveComponent = function() {};
 ReactTestEmptyComponent.prototype.getHostNode = function() {};
-ReactTestEmptyComponent.prototype.unmountComponent = function() {};
+ReactTestEmptyComponent.prototype.unmountComponent = function() {
+  this._unmounted = true;
+};
 ReactTestEmptyComponent.prototype.toJSON = function() {};
 
 // =============================================================================

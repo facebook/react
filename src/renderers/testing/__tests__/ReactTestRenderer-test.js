@@ -119,7 +119,9 @@ describe('ReactTestRenderer', function() {
     });
   });
 
-  it('updates types', function() {
+  it('updates types with a warning', function() {
+    spyOn(console, 'error');
+
     var renderer = ReactTestRenderer.create(<div>mouse</div>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
@@ -133,6 +135,18 @@ describe('ReactTestRenderer', function() {
       props: {},
       children: ['mice'],
     });
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: ReactTestRenderer: Component type and key must be preserved ' +
+      'when updating. If necessary, call ReactTestRenderer.create again ' +
+      'instead.'
+    );
+
+    expect(() => renderer.getType()).toThrow(new Error(
+      'ReactTestRenderer: Can\'t inspect or traverse after changing ' +
+      'component type or key. Fix the earlier warning and try again.'
+    ));
   });
 
   it('updates children', function() {
@@ -186,16 +200,20 @@ describe('ReactTestRenderer', function() {
       }
     }
 
-    var renderer = ReactTestRenderer.create(<Log key="foo" name="Foo" />);
-    renderer.update(<Log key="bar" name="Bar" />);
+    var renderer = ReactTestRenderer.create(
+      <div><Log key="foo" name="Foo" /></div>
+    );
+    renderer.update(<div><Log key="bar" name="Bar" /></div>);
     renderer.unmount();
 
     expect(log).toEqual([
       'render Foo',
       'mount Foo',
-      'unmount Foo',
+
       'render Bar',
+      'unmount Foo',
       'mount Bar',
+
       'unmount Bar',
     ]);
   });
