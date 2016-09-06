@@ -5,9 +5,11 @@
 const chalk = require('chalk');
 const Vorpal = require('vorpal');
 const GitHubAPI = require('github-api');
+const untildify = require('untildify');
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 const child_process = require('child_process');
 const execSync = child_process.execSync;
@@ -17,7 +19,14 @@ const vorpal = new Vorpal();
 // Expects to be in a checkout of react that is a sibling of the react checkout you want to operate on
 // eg ~/code/react@release-manager/scripts/release-manager & ~/code/react
 // TODO: Make this an argument to the script
-const PATH_TO_REPO = path.resolve('../../../react');
+let PATH_TO_REPO = null;
+
+const PATH_TO_CONFIG = path.resolve(os.homedir(), '.react-release-manager.json');
+
+const DEFAULT_CONFIG = {
+  githubToken: null,
+  reactPath: path.resolve('../../../react'),
+};
 
 // Quick dry run opt-in. This allows quick debugging of execInRepo without
 // actually running the command, ensuring no accidental publishing.
@@ -92,24 +101,30 @@ const app = {
     // TODO: write this. This should make it possible to start without a config
     // and go through the init process to create one and then re-init the github
     // setup.
+    this.config = this.loadConfig();
+  },
+
+  loadConfig() {
+    try {
+      // TODO: validate config
+      let config = JSON.parse(fs.readFileSync(PATH_TO_CONFIG, 'utf8'));
+      config.reactPath = path.normalize(untildify(config.reactPath));
+      PATH_TO_REPO = config.reactPath;
+      return config;
+    } catch (e) {
+      console.error('Attempt to load config file failed. Please run `init` command for initial setup or make sure ~/.react-release-manager.json is valid JSON. Using a default config which may not work properly.');
+      return DEFAULT_CONFIG;
+    }
   },
 
   init() {
-    // Config
-    try {
-      this.config = JSON.parse(fs.readFileSync('./.config.json', 'utf8'));
-    } catch (e) {
-      this.config = {
-        token: null,
-      };
-      console.error('Could not read .config.json. Rate limits are much stricter as a result. Run init to setup.');
-    }
+    this.config = this.loadConfig();
 
-    this.PATH_TO_REPO = PATH_TO_REPO;
+    this.PATH_TO_CONFIG = PATH_TO_CONFIG;
 
     // GITHUB
     this.github = new GitHubAPI({
-      token: this.config.token,
+      token: this.config.githubToken,
     });
     this.ghrepo = this.github.getRepo('facebook', 'react');
     this.ghissues = this.github.getIssues('facebook', 'react');

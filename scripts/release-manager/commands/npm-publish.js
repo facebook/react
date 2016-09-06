@@ -44,7 +44,7 @@ module.exports = function(vorpal, app) {
           // just npm publish pkg1.tgz && npm publish pkg2.tgz. This
           // avoided the need to cd and publish.
           const tgz = glob.sync('build/packages/*.tgz', {
-            cwd: app.PATH_TO_REPO,
+            cwd: app.config.reactPath,
           });
 
           // Just in case they didn't actually prep this.
