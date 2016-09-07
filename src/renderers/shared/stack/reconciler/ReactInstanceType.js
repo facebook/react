@@ -28,6 +28,7 @@ export type ReactInstance = {
   detachRef: (ref: string) => void,
   getName: () => string,
   getPublicInstance: any,
+  _rootNodeID: number,
 
   // instantiateReactComponent
   _mountIndex: number,
