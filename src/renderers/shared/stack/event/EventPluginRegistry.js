@@ -15,15 +15,15 @@
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'ReactSyntheticEvent';
+} from 'ReactSyntheticEventType';
 
-type PluginName = string;
+import type {
+  AnyNativeEvent,
+  PluginName,
+  PluginModule,
+} from 'PluginModuleType';
 
-type PluginModule = {
-  eventTypes: any,
-};
-
-type NamesToPlugins = {[key: PluginName]: PluginModule};
+type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 
 type EventPluginOrder = null | Array<PluginName>;
 
@@ -94,7 +94,7 @@ function recomputePluginOrdering(): void {
  */
 function publishEventForPlugin(
   dispatchConfig: DispatchConfig,
-  pluginModule: PluginModule,
+  pluginModule: PluginModule<AnyNativeEvent>,
   eventName: string,
 ): boolean {
   invariant(
@@ -139,7 +139,7 @@ function publishEventForPlugin(
  */
 function publishRegistrationName(
   registrationName: string,
-  pluginModule: PluginModule,
+  pluginModule: PluginModule<AnyNativeEvent>,
   eventName: string,
 ): void {
   invariant(
@@ -267,22 +267,27 @@ var EventPluginRegistry = {
    */
   getPluginModuleForEvent: function(
     event: ReactSyntheticEvent,
-  ): null | PluginModule {
+  ): null | PluginModule<AnyNativeEvent> {
     var dispatchConfig = event.dispatchConfig;
     if (dispatchConfig.registrationName) {
       return EventPluginRegistry.registrationNameModules[
         dispatchConfig.registrationName
       ] || null;
     }
-    for (var phase in dispatchConfig.phasedRegistrationNames) {
-      if (!dispatchConfig.phasedRegistrationNames.hasOwnProperty(phase)) {
-        continue;
-      }
-      var pluginModule = EventPluginRegistry.registrationNameModules[
-        dispatchConfig.phasedRegistrationNames[phase]
-      ];
-      if (pluginModule) {
-        return pluginModule;
+    if (dispatchConfig.phasedRegistrationNames !== undefined) {
+      // pulling phasedRegistrationNames out of dispatchConfig helps Flow see
+      // that it is not undefined.
+      var {phasedRegistrationNames} = dispatchConfig;
+      for (var phase in phasedRegistrationNames) {
+        if (!phasedRegistrationNames.hasOwnProperty(phase)) {
+          continue;
+        }
+        var pluginModule = EventPluginRegistry.registrationNameModules[
+          phasedRegistrationNames[phase]
+        ];
+        if (pluginModule) {
+          return pluginModule;
+        }
       }
     }
     return null;
