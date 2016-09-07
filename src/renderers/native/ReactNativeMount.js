@@ -24,6 +24,8 @@ var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
+import type { ReactElement } from 'ReactElementType';
+
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
  * composites instead of having to worry about different types of components
@@ -99,10 +101,10 @@ var ReactNativeMount = {
    * @param {containerTag} containerView Handle to native view tag
    */
   renderComponent: function(
-    nextElement: ReactElement<*>,
+    nextElement: ReactElement | string | number | null | false,
     containerTag: number,
     callback?: ?(() => void)
-  ): ?ReactComponent<any, any, any> {
+  ): ReactElement | string | number | null | false {
     var nextWrappedElement = React.createElement(
       TopLevelWrapper,
       { child: nextElement }

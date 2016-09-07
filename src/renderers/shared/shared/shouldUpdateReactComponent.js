@@ -7,9 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule shouldUpdateReactComponent
+ * @flow
  */
 
 'use strict';
+
+import type { ReactElement } from 'ReactElementType';
 
 /**
  * Given a `prevElement` and `nextElement`, determines if the existing
@@ -22,24 +25,29 @@
  * @return {boolean} True if the existing instance should be updated.
  * @protected
  */
-function shouldUpdateReactComponent(prevElement, nextElement) {
-  var prevEmpty = prevElement === null || prevElement === false;
-  var nextEmpty = nextElement === null || nextElement === false;
-  if (prevEmpty || nextEmpty) {
-    return prevEmpty === nextEmpty;
+function shouldUpdateReactComponent(
+  prevElement: ReactElement | string | number | null | false,
+  nextElement: ReactElement | string | number | null | false,
+): boolean {
+  if (prevElement === null || prevElement === false) {
+    return nextElement === null || nextElement === false;
   }
 
-  var prevType = typeof prevElement;
-  var nextType = typeof nextElement;
-  if (prevType === 'string' || prevType === 'number') {
-    return (nextType === 'string' || nextType === 'number');
-  } else {
-    return (
-      nextType === 'object' &&
-      prevElement.type === nextElement.type &&
-      prevElement.key === nextElement.key
-    );
+  if (nextElement === null || nextElement === false) {
+    // We already checked that "prevElement === null || prevElement === false"
+    // didn't pass so we can just return false and not recompute it
+    return false;
   }
+
+  if (typeof prevElement === 'string' || typeof prevElement === 'number') {
+    return typeof nextElement === 'string' || typeof nextElement === 'number';
+  }
+
+  return (
+    typeof nextElement === 'object' &&
+    prevElement.type === nextElement.type &&
+    prevElement.key === nextElement.key
+  );
 }
 
 module.exports = shouldUpdateReactComponent;
