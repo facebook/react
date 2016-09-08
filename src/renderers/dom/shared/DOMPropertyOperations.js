@@ -166,11 +166,11 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onHostOperation(
-        ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        'update attribute',
-        payload
-      );
+      ReactInstrumentation.debugTool.onHostOperation({
+        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        type: 'update attribute',
+        payload: payload,
+      });
     }
   },
 
@@ -187,11 +187,11 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onHostOperation(
-        ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        'update attribute',
-        payload
-      );
+      ReactInstrumentation.debugTool.onHostOperation({
+        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        type: 'update attribute',
+        payload: payload,
+      });
     }
   },
 
@@ -204,11 +204,11 @@ var DOMPropertyOperations = {
   deleteValueForAttribute: function(node, name) {
     node.removeAttribute(name);
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation(
-        ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        'remove attribute',
-        name
-      );
+      ReactInstrumentation.debugTool.onHostOperation({
+        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        type: 'remove attribute',
+        payload: name,
+      });
     }
   },
 
@@ -240,11 +240,11 @@ var DOMPropertyOperations = {
     }
 
     if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation(
-        ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        'remove attribute',
-        name
-      );
+      ReactInstrumentation.debugTool.onHostOperation({
+        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        type: 'remove attribute',
+        payload: name,
+      });
     }
   },
 
