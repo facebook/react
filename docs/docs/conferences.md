@@ -41,7 +41,7 @@ June 2 & 3 in Paris, France
 ### ReactRally 2016
 August 25-26 in Salt Lake City, UT
 
-[Website](http://www.reactrally.com/) - [Schedule](http://www.reactrally.com/#/schedule)
+[Website](http://www.reactrally.com/) - [Schedule](http://www.reactrally.com/#/schedule) - [Videos](https://www.youtube.com/channel/UCXBhQ05nu3L1abBUGeQ0ahw)
 
 ### ReactNext 2016
 September 15 in Tel Aviv, Israel
