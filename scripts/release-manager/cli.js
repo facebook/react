@@ -42,6 +42,7 @@ const COMMANDS = [
   'npm-publish',
   'npm-check-access',
   'npm-grant-access',
+  'start-release',
 ];
 
 
