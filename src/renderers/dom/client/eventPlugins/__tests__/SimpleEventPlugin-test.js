@@ -12,22 +12,22 @@
 'use strict';
 
 
-describe('DisabledInputUtils', () => {
+describe('SimpleEventPlugin', function() {
   var React;
   var ReactDOM;
   var ReactTestUtils;
 
-  var elements = ['button', 'input', 'select', 'textarea'];
+  var onClick = jest.fn();
 
   function expectClickThru(element) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
     expect(onClick.mock.calls.length).toBe(1);
   }
 
   function expectNoClickThru(element) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(element));
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
     expect(onClick.mock.calls.length).toBe(0);
   }
 
@@ -36,17 +36,31 @@ describe('DisabledInputUtils', () => {
     return element;
   }
 
-  var onClick = jest.fn();
+  beforeEach(function() {
+    React = require('React');
+    ReactDOM = require('ReactDOM');
+    ReactTestUtils = require('ReactTestUtils');
+  });
 
-  elements.forEach(function(tagName) {
+  it('A non-interactive tags click when disabled', function() {
+    var element = (<div onClick={ onClick } />);
+    expectClickThru(mounted(element));
+  });
 
-    describe(tagName, () => {
+  it('A non-interactive tags clicks bubble when disabled', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <div onClick={onClick}><div /></div>
+    );
+    var child = ReactDOM.findDOMNode(element).firstChild;
 
-      beforeEach(() => {
-        React = require('React');
-        ReactDOM = require('ReactDOM');
-        ReactTestUtils = require('ReactTestUtils');
-      });
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  ['button', 'input', 'select', 'textarea'].forEach(function(tagName) {
+
+    describe(tagName, function() {
 
       it('should forward clicks when it starts out not disabled', () => {
         var element = React.createElement(tagName, {
@@ -103,6 +117,39 @@ describe('DisabledInputUtils', () => {
         );
         expectClickThru(element);
       });
+    });
+  });
+
+
+  describe('iOS bubbling click fix', function() {
+    // See http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+
+    beforeEach(function() {
+      onClick.mockClear();
+    });
+
+    it ('does not add a local click to interactive elements', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<button onClick={ onClick }></button>, container);
+
+      var node = container.firstChild;
+
+      node.dispatchEvent(new MouseEvent('click'));
+
+      expect(onClick.mock.calls.length).toBe(0);
+    });
+
+    it ('adds a local click listener to non-interactive elements', function() {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div onClick={ onClick }></div>, container);
+
+      var node = container.firstChild;
+
+      node.dispatchEvent(new MouseEvent('click'));
+
+      expect(onClick.mock.calls.length).toBe(0);
     });
   });
 });
