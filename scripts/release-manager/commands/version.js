@@ -6,6 +6,8 @@ const semver = require('semver');
 
 const chalk = require('chalk');
 
+const git = require('./utils/git');
+
 
 // Overview
 // 1. Display current version
@@ -147,10 +149,10 @@ module.exports = function(vorpal, app) {
           },
         ]).then((res) => {
           if (res.commit) {
-            app.execInRepo(`git commit -a -m "${newVersion}"`);
+            git.commit(app, newVersion, true);
           }
           if (res.tag) {
-            app.execInRepo(`git tag v${newVersion}`);
+            git.tag(app, `v${newVersion}`);
           }
           actionCB();
         });

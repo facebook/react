@@ -1,6 +1,7 @@
 'use strict';
 
 const chalk = require('chalk');
+const git = require('./utils/git');
 
 const DOCS_LABEL = 'Documentation: needs merge to stable';
 
@@ -78,7 +79,7 @@ module.exports = function(vorpal, app) {
           }, (res) => {
             if (res.merge) {
               richPulls.forEach((pr) => {
-                app.gitCherryPickMerge(pr.merge_commit_sha);
+                git.cherryPickMerge(app, pr.merge_commit_sha);
               });
 
               this.prompt({
@@ -87,7 +88,7 @@ module.exports = function(vorpal, app) {
                 message: 'Push these commits upstream?',
               }, (res) => {
                 if (res.push) {
-                  app.execInRepo('git push');
+                  git.push(app);
                   this.log(`Pushed upstream! Removing "${DOCS_LABEL}" label from pull requests.`);
                 }
 

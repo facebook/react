@@ -70,26 +70,6 @@ function execInRepo(command) {
   }).trim();
 }
 
-/**
- * Cherry picks a single sha to the given branch. Very crude, but establishes
- * some API. We don't know if the sha is a merge or a squashed commit so just
- * try both.
- *
- * Assume we're already on the right branch.
- */
-function gitCherryPickMerge(sha) {
-  // console.log(`cherry picking ${sha}`)
-  // git cherry-pick -x sha || git cherry-pick -x -m1 sha
-  try {
-    execInRepo(`git cherry-pick -x ${sha}`);
-  } catch (e) {
-    // Assume for now this just means it was actually a merge.
-    // TODO: gracefully handle other cases, like possibility the commit was
-    // already cherry-picked and should be skipped.
-
-    execInRepo(`git cherry-pick -x -m1 ${sha}`);
-  }
-}
 
 function getReactVersion() {
   return (JSON.parse(fs.readFileSync(path.join(PATH_TO_REPO, 'package.json'), 'utf8'))).version;
@@ -133,7 +113,6 @@ const app = {
     // HELPERS
     this.writeTo = writeTo;
     this.execInRepo = execInRepo;
-    this.gitCherryPickMerge = gitCherryPickMerge;
     this.getReactVersion = getReactVersion;
 
     // Register commands
