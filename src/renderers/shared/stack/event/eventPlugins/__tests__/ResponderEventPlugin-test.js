@@ -12,7 +12,6 @@
 'use strict';
 
 var EventPluginHub;
-var ReactInstanceHandles;
 var ResponderEventPlugin;
 var EventPluginUtils;
 
@@ -328,12 +327,89 @@ var siblings = {
 };
 
 describe('ResponderEventPlugin', () => {
+
+  // This test is written against React IDs such as 'root.a.b[10]' but we
+  // removed those. In order to make those tests still pass with minimum
+  // surgery, we are inlining the implementation of those IDs here as it
+  // is the only remaining call site.
+
+  var SEPARATOR = '.';
+
+  function isBoundary(id, index) {
+    return id.charAt(index) === SEPARATOR || index === id.length;
+  }
+
+  function isAncestorIDOf(ancestorID, descendantID) {
+    return (
+      descendantID.indexOf(ancestorID) === 0 &&
+      isBoundary(descendantID, ancestorID.length)
+    );
+  }
+
+  function getParentID(id) {
+    return id ? id.substr(0, id.lastIndexOf(SEPARATOR)) : '';
+  }
+
+  function getNextDescendantID(ancestorID, destinationID) {
+    if (ancestorID === destinationID) {
+      return ancestorID;
+    }
+    // Skip over the ancestor and the immediate separator. Traverse until we hit
+    // another separator or we reach the end of `destinationID`.
+    var start = ancestorID.length + SEPARATOR.length;
+    var i;
+    for (i = start; i < destinationID.length; i++) {
+      if (isBoundary(destinationID, i)) {
+        break;
+      }
+    }
+    return destinationID.substr(0, i);
+  }
+
+  function getFirstCommonAncestorID(oneID, twoID) {
+    var minLength = Math.min(oneID.length, twoID.length);
+    if (minLength === 0) {
+      return '';
+    }
+    var lastCommonMarkerIndex = 0;
+    // Use `<=` to traverse until the "EOL" of the shorter string.
+    for (var i = 0; i <= minLength; i++) {
+      if (isBoundary(oneID, i) && isBoundary(twoID, i)) {
+        lastCommonMarkerIndex = i;
+      } else if (oneID.charAt(i) !== twoID.charAt(i)) {
+        break;
+      }
+    }
+    return oneID.substr(0, lastCommonMarkerIndex);
+  }
+
+  function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
+    var traverseUp = isAncestorIDOf(stop, start);
+    var traverse = traverseUp ? getParentID : getNextDescendantID;
+    for (var id = start; /* until break */; id = traverse(id, stop)) {
+      var ret;
+      if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
+        ret = cb(id, traverseUp, arg);
+      }
+      if (ret === false || id === stop) {
+        // Only break //after// visiting `stop`.
+        break;
+      }
+    }
+  }
+
+  function traverseTwoPhase(targetID, cb, arg) {
+    traverseParentPath('', targetID, cb, arg, true, false);
+    traverseParentPath(targetID, '', cb, arg, false, true);
+  }
+
+  // -- end of the React ID implementation
+
   beforeEach(() => {
     jest.resetModuleRegistry();
 
     EventPluginHub = require('EventPluginHub');
     EventPluginUtils = require('EventPluginUtils');
-    ReactInstanceHandles = require('ReactInstanceHandles');
     ResponderEventPlugin = require('ResponderEventPlugin');
 
     EventPluginUtils.injection.injectComponentTree({
@@ -347,28 +423,19 @@ describe('ResponderEventPlugin', () => {
 
     EventPluginUtils.injection.injectTreeTraversal({
       isAncestor: function(a, b) {
-        return ReactInstanceHandles.isAncestorIDOf(
-          a._rootNodeID,
-          b._rootNodeID
-        );
+        return isAncestorIDOf(a._rootNodeID, b._rootNodeID);
       },
       getLowestCommonAncestor: function(a, b) {
-        if (!a || !b) {
-          return null;
-        }
-        var commonID = ReactInstanceHandles.getFirstCommonAncestorID(
-          a._rootNodeID,
-          b._rootNodeID
-        );
+        var commonID = getFirstCommonAncestorID(a._rootNodeID, b._rootNodeID);
         return idToInstance[commonID] || null;
       },
       getParentInstance: function(inst) {
         var id = inst._rootNodeID;
-        var parentID = id.substr(0, id.lastIndexOf('.'));
+        var parentID = id.substr(0, id.lastIndexOf(SEPARATOR));
         return idToInstance[parentID] || null;
       },
       traverseTwoPhase: function(target, fn, arg) {
-        ReactInstanceHandles.traverseTwoPhase(
+        traverseTwoPhase(
           target._rootNodeID,
           function(id, upwards) {
             fn(idToInstance[id], upwards, arg);

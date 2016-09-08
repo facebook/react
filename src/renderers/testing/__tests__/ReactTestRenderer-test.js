@@ -209,16 +209,16 @@ describe('ReactTestRenderer', () => {
   it('warns correctly for refs on SFCs', () => {
     spyOn(console, 'error');
     function Bar() {
-      return <div>Hello, world</div>
+      return <div>Hello, world</div>;
     }
     class Foo extends React.Component {
       render() {
-        return <Bar ref="foo" />
+        return <Bar ref="foo" />;
       }
     }
     class Baz extends React.Component {
       render() {
-        return <div ref="baz" />
+        return <div ref="baz" />;
       }
     }
     ReactTestRenderer.create(<Baz />);
