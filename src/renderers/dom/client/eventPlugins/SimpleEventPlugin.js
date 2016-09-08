@@ -147,8 +147,10 @@ function getDictionaryKey(inst: ReactInstance): string {
 }
 
 function isInteractive(tag) {
-  return tag === 'button' || tag === 'input' ||
-         tag === 'select' || tag === 'textarea';
+  return (
+    tag === 'button' || tag === 'input' ||
+    tag === 'select' || tag === 'textarea'
+  );
 }
 
 function shouldPreventMouseEvent(inst) {
