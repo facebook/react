@@ -868,15 +868,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('does not raise a validation warning when it switches types', () => {
-    var Input = React.createClass({
-      getInitialState() {
-        return { type: 'number', value: 1000 };
-      },
+    class Input extends React.Component {
+      state = { type: 'number', value: 1000 };
+
       render() {
         var { value, type } = this.state;
         return (<input onChange={() => {}} type={type} value={value} />);
-      },
-    });
+      }
+    }
 
     var input = ReactTestUtils.renderIntoDocument(<Input />);
     var node = ReactDOM.findDOMNode(input);

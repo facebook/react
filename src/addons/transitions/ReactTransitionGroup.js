@@ -22,44 +22,40 @@ var emptyFunction = require('emptyFunction');
  * special lifecycle hooks are called.
  * See https://facebook.github.io/react/docs/animation.html#low-level-api-reacttransitiongroup
  */
-var ReactTransitionGroup = React.createClass({
-  displayName: 'ReactTransitionGroup',
+class ReactTransitionGroup extends React.Component {
+  static displayName = 'ReactTransitionGroup';
 
-  propTypes: {
+  static propTypes = {
     component: React.PropTypes.any,
     childFactory: React.PropTypes.func,
-  },
+  };
 
-  getDefaultProps: function() {
-    return {
-      component: 'span',
-      childFactory: emptyFunction.thatReturnsArgument,
-    };
-  },
+  static defaultProps = {
+    component: 'span',
+    childFactory: emptyFunction.thatReturnsArgument,
+  };
 
-  getInitialState: function() {
-    return {
-      // TODO: can we get useful debug information to show at this point?
-      children: ReactTransitionChildMapping.getChildMapping(this.props.children),
-    };
-  },
+  state = {
+    // TODO: can we get useful debug information to show at this point?
+    children: ReactTransitionChildMapping.getChildMapping(this.props.children),
+  };
 
-  componentWillMount: function() {
+  componentWillMount() {
     this.currentlyTransitioningKeys = {};
     this.keysToEnter = [];
     this.keysToLeave = [];
-  },
+  }
 
-  componentDidMount: function() {
+  componentDidMount() {
     var initialChildMapping = this.state.children;
     for (var key in initialChildMapping) {
       if (initialChildMapping[key]) {
         this.performAppear(key);
       }
     }
-  },
+  }
 
-  componentWillReceiveProps: function(nextProps) {
+  componentWillReceiveProps(nextProps) {
     var nextChildMapping;
     if (__DEV__) {
       nextChildMapping = ReactTransitionChildMapping.getChildMapping(
@@ -99,9 +95,9 @@ var ReactTransitionGroup = React.createClass({
     }
 
     // If we want to someday check for reordering, we could do it here.
-  },
+  }
 
-  componentDidUpdate: function() {
+  componentDidUpdate() {
     var keysToEnter = this.keysToEnter;
     this.keysToEnter = [];
     keysToEnter.forEach(this.performEnter);
@@ -109,9 +105,9 @@ var ReactTransitionGroup = React.createClass({
     var keysToLeave = this.keysToLeave;
     this.keysToLeave = [];
     keysToLeave.forEach(this.performLeave);
-  },
+  }
 
-  performAppear: function(key) {
+  performAppear = (key) => {
     this.currentlyTransitioningKeys[key] = true;
 
     var component = this.refs[key];
@@ -123,9 +119,9 @@ var ReactTransitionGroup = React.createClass({
     } else {
       this._handleDoneAppearing(key);
     }
-  },
+  };
 
-  _handleDoneAppearing: function(key) {
+  _handleDoneAppearing = (key) => {
     var component = this.refs[key];
     if (component.componentDidAppear) {
       component.componentDidAppear();
@@ -149,9 +145,9 @@ var ReactTransitionGroup = React.createClass({
       // This was removed before it had fully appeared. Remove it.
       this.performLeave(key);
     }
-  },
+  };
 
-  performEnter: function(key) {
+  performEnter = (key) => {
     this.currentlyTransitioningKeys[key] = true;
 
     var component = this.refs[key];
@@ -163,9 +159,9 @@ var ReactTransitionGroup = React.createClass({
     } else {
       this._handleDoneEntering(key);
     }
-  },
+  };
 
-  _handleDoneEntering: function(key) {
+  _handleDoneEntering = (key) => {
     var component = this.refs[key];
     if (component.componentDidEnter) {
       component.componentDidEnter();
@@ -189,9 +185,9 @@ var ReactTransitionGroup = React.createClass({
       // This was removed before it had fully entered. Remove it.
       this.performLeave(key);
     }
-  },
+  };
 
-  performLeave: function(key) {
+  performLeave = (key) => {
     this.currentlyTransitioningKeys[key] = true;
 
     var component = this.refs[key];
@@ -203,9 +199,9 @@ var ReactTransitionGroup = React.createClass({
       // is done.
       this._handleDoneLeaving(key);
     }
-  },
+  };
 
-  _handleDoneLeaving: function(key) {
+  _handleDoneLeaving = (key) => {
     var component = this.refs[key];
 
     if (component.componentDidLeave) {
@@ -236,9 +232,9 @@ var ReactTransitionGroup = React.createClass({
         return {children: newChildren};
       });
     }
-  },
+  };
 
-  render: function() {
+  render() {
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
     var childrenToRender = [];
@@ -274,7 +270,7 @@ var ReactTransitionGroup = React.createClass({
       props,
       childrenToRender
     );
-  },
-});
+  }
+}
 
 module.exports = ReactTransitionGroup;
