@@ -2,6 +2,8 @@
 
 const chalk = require('chalk');
 
+const git = require('./utils/git');
+
 // currently 15-next
 // IDEA: maybe just always use this milestone across major releases too?
 const MILESTONE_NUMBER = 25;
@@ -152,7 +154,7 @@ function promptForPRs(app, prs, start) {
         let pr = prs[i];
         this.log(chalk.grey.italic(`Cherry-picking ${pr.number}`));
         try {
-          app.gitCherryPickMerge(pr.merge_commit_sha);
+          git.cherryPickMerge(app, pr.merge_commit_sha);
         } catch (e) {
 
           // TODO: add ability to mark a PR as skipped
