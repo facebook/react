@@ -240,9 +240,12 @@ describe('ReactTestRenderer', () => {
     var log = [];
 
     class Bar extends React.Component {
+      componentDidMount() {
+        log.push(this.refs.bar);
+      }
       render() {
         return (
-          <a ref={r => log.push(r)}>Hello, world</a>
+          <a ref="bar">Hello, world</a>
         );
       }
     }

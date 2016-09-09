@@ -29,7 +29,12 @@ function attachRef(ref, component, owner, mockConfig) {
     }
   } else {
     // Legacy ref
-    ReactOwner.addComponentAsRefTo(component, ref, owner);
+    ReactOwner.addComponentAsRefTo(
+      component,
+      ref,
+      owner,
+      mockConfig,
+    );
   }
 }
 
