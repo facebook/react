@@ -16,6 +16,7 @@ var ReactOwner = require('ReactOwner');
 
 import type { ReactInstance } from 'ReactInstanceType';
 import type { ReactElement } from 'ReactElementType';
+import type { TestRendererMockConfig } from 'ReactTestMount';
 
 var ReactRef = {};
 
@@ -44,7 +45,7 @@ function detachRef(ref, component, owner) {
 ReactRef.attachRefs = function(
   instance: ReactInstance,
   element: ReactElement | string | number | null | false,
-  mockConfig: Object,
+  mockConfig: TestRendererMockConfig,
 ): void {
   if (element === null || typeof element !== 'object') {
     return;
