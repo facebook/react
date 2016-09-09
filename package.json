@@ -1,0 +1,90 @@
+{
+  "name": "react",
+  "description": "React is a JavaScript library for building user interfaces.",
+  "version": "15.3.1",
+  "keywords": [
+    "react"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "license": "BSD-3-Clause",
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "addons.js",
+    "react.js",
+    "addons/",
+    "dist/",
+    "lib/"
+  ],
+  "main": "react.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "fbjs": "^0.8.4",
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.0"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  },
+  "_id": "react@15.3.1",
+  "_shasum": "f78501ed8c2ec6e6e31c3223652e97f1369d2bd6",
+  "_resolved": "https://registry.npmjs.org/react/-/react-15.3.1.tgz",
+  "_from": "react@15.3.1",
+  "scripts": {},
+  "_npmVersion": "2.15.5",
+  "_nodeVersion": "4.4.5",
+  "_npmUser": {
+    "name": "zpao",
+    "email": "paul@oshannessy.com"
+  },
+  "maintainers": [
+    {
+      "name": "fb",
+      "email": "opensource+npm@fb.com"
+    },
+    {
+      "name": "gaearon",
+      "email": "dan.abramov@gmail.com"
+    },
+    {
+      "name": "graue",
+      "email": "scott@oceanbase.org"
+    },
+    {
+      "name": "jeffmo",
+      "email": "lbljeffmo@gmail.com"
+    },
+    {
+      "name": "sebmarkbage",
+      "email": "sebastian@calyptus.eu"
+    },
+    {
+      "name": "spicyj",
+      "email": "ben@benalpert.com"
+    },
+    {
+      "name": "zpao",
+      "email": "paul@oshannessy.com"
+    }
+  ],
+  "dist": {
+    "shasum": "f78501ed8c2ec6e6e31c3223652e97f1369d2bd6",
+    "tarball": "https://registry.npmjs.org/react/-/react-15.3.1.tgz"
+  },
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/react-15.3.1.tgz_1471632623070_0.8903805704321712"
+  },
+  "directories": {}
+}
