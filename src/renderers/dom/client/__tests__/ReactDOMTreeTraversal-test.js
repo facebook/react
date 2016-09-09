@@ -50,7 +50,7 @@ function renderParentIntoDocument() {
   return ReactTestUtils.renderIntoDocument(<ParentComponent />);
 }
 
-describe('ReactDOMTreeTraversal', function() {
+describe('ReactDOMTreeTraversal', () => {
   var ReactDOMTreeTraversal;
 
   var aggregatedArgs;
@@ -66,19 +66,19 @@ describe('ReactDOMTreeTraversal', function() {
     return ReactDOMComponentTree.getInstanceFromNode(node);
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
     aggregatedArgs = [];
   });
 
-  describe('traverseTwoPhase', function() {
-    it('should not traverse when traversing outside DOM', function() {
+  describe('traverseTwoPhase', () => {
+    it('should not traverse when traversing outside DOM', () => {
       var expectedAggregation = [];
       ReactDOMTreeTraversal.traverseTwoPhase(null, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse two phase across component boundary', function() {
+    it('should traverse two phase across component boundary', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [
@@ -96,7 +96,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse two phase at shallowest node', function() {
+    it('should traverse two phase at shallowest node', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P);
       var expectedAggregation = [
@@ -108,8 +108,8 @@ describe('ReactDOMTreeTraversal', function() {
     });
   });
 
-  describe('traverseEnterLeave', function() {
-    it('should not traverse when enter/leaving outside DOM', function() {
+  describe('traverseEnterLeave', () => {
+    it('should not traverse when enter/leaving outside DOM', () => {
       var target = null;
       var expectedAggregation = [];
       ReactDOMTreeTraversal.traverseEnterLeave(
@@ -118,7 +118,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should not traverse if enter/leave the same node', function() {
+    it('should not traverse if enter/leave the same node', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_1);
@@ -129,7 +129,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse enter/leave to sibling - avoids parent', function() {
+    it('should traverse enter/leave to sibling - avoids parent', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_2);
@@ -144,7 +144,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should traverse enter/leave to parent - avoids parent', function() {
+    it('should traverse enter/leave to parent - avoids parent', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
@@ -157,7 +157,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should enter from the window', function() {
+    it('should enter from the window', () => {
       var parent = renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
@@ -172,7 +172,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should enter from the window to the shallowest', function() {
+    it('should enter from the window to the shallowest', () => {
       var parent = renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P);
@@ -185,7 +185,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should leave to the window', function() {
+    it('should leave to the window', () => {
       var parent = renderParentIntoDocument();
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
@@ -200,7 +200,7 @@ describe('ReactDOMTreeTraversal', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it('should leave to the window from the shallowest', function() {
+    it('should leave to the window from the shallowest', () => {
       var parent = renderParentIntoDocument();
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
@@ -216,8 +216,8 @@ describe('ReactDOMTreeTraversal', function() {
     });
   });
 
-  describe('getFirstCommonAncestor', function() {
-    it('should determine the first common ancestor correctly', function() {
+  describe('getFirstCommonAncestor', () => {
+    it('should determine the first common ancestor correctly', () => {
       var parent = renderParentIntoDocument();
       var ancestors = [
         // Common ancestor with self is self.

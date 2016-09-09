@@ -11,7 +11,7 @@
 
 'use strict';
 
-describe('ReactDOMComponentTree', function() {
+describe('ReactDOMComponentTree', () => {
   var React;
   var ReactDOM;
   var ReactDOMComponentTree;
@@ -24,14 +24,14 @@ describe('ReactDOMComponentTree', function() {
     return ReactDOM.render(elt, container);
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMServer = require('ReactDOMServer');
   });
 
-  it('finds nodes for instances', function() {
+  it('finds nodes for instances', () => {
     // This is a little hard to test directly. But refs rely on it -- so we
     // check that we can find a ref at arbitrary points in the tree, even if
     // other nodes don't have a ref.
@@ -61,7 +61,7 @@ describe('ReactDOMComponentTree', function() {
     expect(renderAndGetRef('input')).toBe('INPUT');
   });
 
-  it('finds instances for nodes', function() {
+  it('finds instances for nodes', () => {
     class Component extends React.Component {
       render() {
         return (

@@ -15,14 +15,14 @@ var React;
 var ReactNoop;
 var ReactCoroutine;
 
-describe('ReactCoroutine', function() {
-  beforeEach(function() {
+describe('ReactCoroutine', () => {
+  beforeEach(() => {
     React = require('React');
     ReactNoop = require('ReactNoop');
     ReactCoroutine = require('ReactCoroutine');
   });
 
-  it('should render a coroutine', function() {
+  it('should render a coroutine', () => {
 
     var ops = [];
 

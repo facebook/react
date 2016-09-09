@@ -115,8 +115,8 @@ var expectClickLogsLengthToBe = function(instance, length) {
   expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
 };
 
-describe('reactiverefs', function() {
-  beforeEach(function() {
+describe('reactiverefs', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
   });
 
@@ -124,7 +124,7 @@ describe('reactiverefs', function() {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
-  it('Should increase refs with an increase in divs', function() {
+  it('Should increase refs with an increase in divs', () => {
     var testRefsComponent = renderTestRefsComponent();
     var clickIncrementer =
       ReactTestUtils.findRenderedDOMComponentWithClass(
@@ -158,8 +158,8 @@ describe('reactiverefs', function() {
 /**
  * Tests that when a ref hops around children, we can track that correctly.
  */
-describe('ref swapping', function() {
-  beforeEach(function() {
+describe('ref swapping', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
   });
 
@@ -197,7 +197,7 @@ describe('ref swapping', function() {
     }
   }
 
-  it('Allow refs to hop around children correctly', function() {
+  it('Allow refs to hop around children correctly', () => {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
     var firstDiv =
@@ -232,7 +232,7 @@ describe('ref swapping', function() {
   });
 
 
-  it('always has a value for this.refs', function() {
+  it('always has a value for this.refs', () => {
     class Component extends React.Component {
       render() {
         return <div />;
@@ -267,14 +267,14 @@ describe('ref swapping', function() {
     expect(refCalled).toBe(1);
   }
 
-  it('ref called correctly for stateless component when __DEV__ = false', function() {
+  it('ref called correctly for stateless component when __DEV__ = false', () => {
     var originalDev = __DEV__;
     __DEV__ = false;
     testRefCall();
     __DEV__ = originalDev;
   });
 
-  it('ref called correctly for stateless component when __DEV__ = true', function() {
+  it('ref called correctly for stateless component when __DEV__ = true', () => {
     var originalDev = __DEV__;
     __DEV__ = true;
     testRefCall();

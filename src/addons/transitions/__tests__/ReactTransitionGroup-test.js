@@ -17,14 +17,14 @@ var ReactTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
-describe('ReactTransitionGroup', function() {
+describe('ReactTransitionGroup', () => {
   var container;
 
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTransitionGroup = require('ReactTransitionGroup');
@@ -33,7 +33,7 @@ describe('ReactTransitionGroup', function() {
   });
 
 
-  it('should handle willEnter correctly', function() {
+  it('should handle willEnter correctly', () => {
     var log = [];
 
     class Child extends React.Component {
@@ -103,7 +103,7 @@ describe('ReactTransitionGroup', function() {
     });
   });
 
-  it('should handle enter/leave/enter/leave correctly', function() {
+  it('should handle enter/leave/enter/leave correctly', () => {
     var log = [];
     var willEnterCb;
 
@@ -168,7 +168,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should handle enter/leave/enter correctly', function() {
+  it('should handle enter/leave/enter correctly', () => {
     var log = [];
     var willEnterCb;
 
@@ -231,7 +231,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should handle entering/leaving several elements at once', function() {
+  it('should handle entering/leaving several elements at once', () => {
     var log = [];
 
     class Child extends React.Component {
@@ -296,7 +296,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should warn for duplicated keys with component stack info', function() {
+  it('should warn for duplicated keys with component stack info', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {

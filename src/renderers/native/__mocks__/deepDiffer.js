@@ -11,7 +11,7 @@
 
 // TODO: Move deepDiffer into react
 
-var deepDiffer = function(one: any, two: any): bool {
+var deepDiffer = function(one: any, two: any): boolean {
   if (one === two) {
     // Short circuit on identical object references instead of traversing them.
     return false;

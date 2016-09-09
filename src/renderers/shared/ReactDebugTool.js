@@ -23,9 +23,9 @@ var warning = require('warning');
 
 import type { ReactElement } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
+import type { Operation } from 'ReactHostOperationHistoryHook';
 
 type Hook = any;
-type Payload = mixed;
 
 type TimerType =
   'ctor' |
@@ -37,21 +37,6 @@ type TimerType =
   'componentWillUpdate' |
   'componentDidUpdate' |
   'componentDidMount';
-
-type HostOperationType =
-  'mount' |
-  'insert child' |
-  'move child' |
-  'remove child' |
-  'replace children' |
-  'replace text' |
-  'replace with';
-
-type Operation = {
-  instanceID: DebugID,
-  type: string,
-  payload: Payload,
-};
 
 type Measurement = {
   timerType: TimerType,
@@ -254,7 +239,7 @@ function resumeCurrentLifeCycleTimer() {
 }
 
 var lastMarkTimeStamp = 0;
-var canUsePerformanceMeasure: bool =
+var canUsePerformanceMeasure: boolean =
 // $FlowFixMe https://github.com/facebook/flow/issues/2345
   typeof performance !== 'undefined' &&
   typeof performance.mark === 'function' &&
@@ -323,7 +308,7 @@ var ReactDebugTool = {
       }
     }
   },
-  isProfiling(): bool {
+  isProfiling(): boolean {
     return isProfiling;
   },
   beginProfiling(): void {
@@ -378,9 +363,9 @@ var ReactDebugTool = {
   onEndProcessingChildContext(): void {
     emitEvent('onEndProcessingChildContext');
   },
-  onHostOperation(debugID: DebugID, type: HostOperationType, payload: Payload): void {
-    checkDebugID(debugID);
-    emitEvent('onHostOperation', debugID, type, payload);
+  onHostOperation(operation: Operation) {
+    checkDebugID(operation.instanceID);
+    emitEvent('onHostOperation', operation);
   },
   onSetState(): void {
     emitEvent('onSetState');

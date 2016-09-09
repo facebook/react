@@ -17,11 +17,11 @@
 var React;
 var ReactTestUtils;
 
-describe('ReactJSXElementValidator', function() {
+describe('ReactJSXElementValidator', () => {
   var Component;
   var RequiredPropComponent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -42,7 +42,7 @@ describe('ReactJSXElementValidator', function() {
     RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
   });
 
-  it('warns for keys for arrays of elements in children position', function() {
+  it('warns for keys for arrays of elements in children position', () => {
     spyOn(console, 'error');
 
     void <Component>{[<Component />, <Component />]}</Component>;
@@ -53,7 +53,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('warns for keys for arrays of elements with owner info', function() {
+  it('warns for keys for arrays of elements with owner info', () => {
     spyOn(console, 'error');
 
     class InnerComponent extends React.Component {
@@ -82,7 +82,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('warns for keys for iterables of elements in rest args', function() {
+  it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
 
     var iterable = {
@@ -105,7 +105,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('does not warns for arrays of elements with keys', function() {
+  it('does not warns for arrays of elements with keys', () => {
     spyOn(console, 'error');
 
     void <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>;
@@ -113,7 +113,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warns for iterable elements with keys', function() {
+  it('does not warns for iterable elements with keys', () => {
     spyOn(console, 'error');
 
     var iterable = {
@@ -136,7 +136,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warn for numeric keys in entry iterable as a child', function() {
+  it('does not warn for numeric keys in entry iterable as a child', () => {
     spyOn(console, 'error');
 
     var iterable = {
@@ -157,7 +157,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warn when the element is directly as children', function() {
+  it('does not warn when the element is directly as children', () => {
     spyOn(console, 'error');
 
     void <Component><Component /><Component /></Component>;
@@ -165,7 +165,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warn when the child array contains non-elements', function() {
+  it('does not warn when the child array contains non-elements', () => {
     spyOn(console, 'error');
 
     void <Component>{[{}, {}]}</Component>;
@@ -238,7 +238,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.calls.count()).toBe(4);
   });
 
-  it('should check default prop values', function() {
+  it('should check default prop values', () => {
     spyOn(console, 'error');
 
     RequiredPropComponent.defaultProps = {prop: null};
@@ -255,7 +255,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('should not check the default for explicit null', function() {
+  it('should not check the default for explicit null', () => {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
@@ -270,7 +270,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('should check declared prop types', function() {
+  it('should check declared prop types', () => {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
@@ -301,7 +301,7 @@ describe('ReactJSXElementValidator', function() {
     expect(console.error.calls.count()).toBe(2);
   });
 
-  it('should warn on invalid prop types', function() {
+  it('should warn on invalid prop types', () => {
     // Since there is no prevalidation step for ES6 classes, there is no hook
     // for us to issue a warning earlier than element creation when the error
     // actually occurs. Since this step is skipped in production, we should just
@@ -323,7 +323,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('should warn on invalid context types', function() {
+  it('should warn on invalid context types', () => {
     spyOn(console, 'error');
     class NullContextTypeComponent extends React.Component {
       render() {
@@ -341,7 +341,7 @@ describe('ReactJSXElementValidator', function() {
     );
   });
 
-  it('should warn if getDefaultProps is specificed on the class', function() {
+  it('should warn if getDefaultProps is specificed on the class', () => {
     spyOn(console, 'error');
     class GetDefaultPropsComponent extends React.Component {
       render() {

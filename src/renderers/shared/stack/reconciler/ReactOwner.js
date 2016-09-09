@@ -21,7 +21,7 @@ import type { ReactInstance } from 'ReactInstanceType';
  * @return {boolean} True if `object` is a valid owner.
  * @final
  */
-function isValidOwner(object: any): bool {
+function isValidOwner(object: any): boolean {
   return !!(
     object &&
     typeof object.attachRef === 'function' &&

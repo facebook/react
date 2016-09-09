@@ -7,22 +7,33 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactHostOperationHistoryHook
+ * @flow
  */
 
 'use strict';
 
-var history = [];
+import type { DebugID } from 'ReactInstanceType';
+
+export type Operation = {instanceID: DebugID} & (
+  {type: 'mount', payload: string} |
+  {type: 'insert child', payload: {toIndex: number, content: string}} |
+  {type: 'move child', payload: {fromIndex: number, toIndex: number}} |
+  {type: 'replace children', payload: string} |
+  {type: 'replace text', payload: string} |
+  {type: 'replace with', payload: string} |
+  {type: 'update styles', payload: mixed /* Style Object */} |
+  {type: 'update attribute', payload: {[name: string]: string}} |
+  {type: 'remove attribute', payload: string}
+);
+
+var history: Array<Operation> = [];
 
 var ReactHostOperationHistoryHook = {
-  onHostOperation(debugID, type, payload) {
-    history.push({
-      instanceID: debugID,
-      type,
-      payload,
-    });
+  onHostOperation(operation: Operation) {
+    history.push(operation);
   },
 
-  clearHistory() {
+  clearHistory(): void {
     if (ReactHostOperationHistoryHook._preventClearing) {
       // Should only be used for tests.
       return;
@@ -31,7 +42,7 @@ var ReactHostOperationHistoryHook = {
     history = [];
   },
 
-  getHistory() {
+  getHistory(): Array<Operation> {
     return history;
   },
 };

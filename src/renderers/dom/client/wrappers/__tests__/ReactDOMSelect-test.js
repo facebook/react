@@ -12,7 +12,7 @@
 'use strict';
 
 
-describe('ReactDOMSelect', function() {
+describe('ReactDOMSelect', () => {
   var React;
   var ReactDOM;
   var ReactDOMServer;
@@ -21,7 +21,7 @@ describe('ReactDOMSelect', function() {
 
   var noop = function() {};
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
@@ -29,7 +29,7 @@ describe('ReactDOMSelect', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should allow setting `defaultValue`', function() {
+  it('should allow setting `defaultValue`', () => {
     var stub =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -51,7 +51,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('giraffe');
   });
 
-  it('should not throw with `defaultValue` and without children', function() {
+  it('should not throw with `defaultValue` and without children', () => {
     var stub = <select defaultValue="dummy"></select>;
 
     expect(() => {
@@ -59,7 +59,7 @@ describe('ReactDOMSelect', function() {
     }).not.toThrow();
   });
 
-  it('should not control when using `defaultValue`', function() {
+  it('should not control when using `defaultValue`', () => {
     var el =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -78,7 +78,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('monkey');
   });
 
-  it('should allow setting `defaultValue` with multiple', function() {
+  it('should allow setting `defaultValue` with multiple', () => {
     var stub =
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -105,7 +105,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
   });
 
-  it('should allow setting `value`', function() {
+  it('should allow setting `value`', () => {
     var stub =
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -127,7 +127,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('gorilla');
   });
 
-  it('should not throw with `value` and without children', function() {
+  it('should not throw with `value` and without children', () => {
     var stub = <select value="dummy" onChange={noop}></select>;
 
     expect(() => {
@@ -135,7 +135,7 @@ describe('ReactDOMSelect', function() {
     }).not.toThrow();
   });
 
-  it('should allow setting `value` with multiple', function() {
+  it('should allow setting `value` with multiple', () => {
     var stub =
       <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -164,7 +164,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should not select other options automatically', function() {
+  it('should not select other options automatically', () => {
     var stub =
       <select multiple={true} value={['12']} onChange={noop}>
         <option value="1">one</option>
@@ -179,7 +179,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // twelve
   });
 
-  it('should reset child options selected when they are changed and `value` is set', function() {
+  it('should reset child options selected when they are changed and `value` is set', () => {
     var stub = <select multiple={true} value={['a', 'b']} onChange={noop} />;
     var container = document.createElement('div');
     stub = ReactDOM.render(stub, container);
@@ -200,7 +200,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // c
   });
 
-  it('should allow setting `value` with `objectToString`', function() {
+  it('should allow setting `value` with `objectToString`', () => {
     var objectToString = {
       animal: 'giraffe',
       toString: function() {
@@ -238,7 +238,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should allow switching to multiple', function() {
+  it('should allow switching to multiple', () => {
     var stub =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -267,7 +267,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
   });
 
-  it('should allow switching from multiple', function() {
+  it('should allow switching from multiple', () => {
     var stub =
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -296,7 +296,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
   });
 
-  it('should remember value when switching to uncontrolled', function() {
+  it('should remember value when switching to uncontrolled', () => {
     var stub =
       <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -319,7 +319,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should remember updated value when switching to uncontrolled', function() {
+  it('should remember updated value when switching to uncontrolled', () => {
     var stub =
       <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -347,7 +347,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
   });
 
-  it('should support ReactLink', function() {
+  it('should support ReactLink', () => {
     var link = new ReactLink('giraffe', jest.fn());
     var stub =
       <select valueLink={link}>
@@ -381,7 +381,7 @@ describe('ReactDOMSelect', function() {
 
   });
 
-  it('should support server-side rendering', function() {
+  it('should support server-side rendering', () => {
     var stub =
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -394,7 +394,7 @@ describe('ReactDOMSelect', function() {
     expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
-  it('should support server-side rendering with defaultValue', function() {
+  it('should support server-side rendering with defaultValue', () => {
     var stub =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -407,7 +407,7 @@ describe('ReactDOMSelect', function() {
     expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
-  it('should support server-side rendering with multiple', function() {
+  it('should support server-side rendering with multiple', () => {
     var stub =
       <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -420,7 +420,7 @@ describe('ReactDOMSelect', function() {
     expect(markup).not.toContain('<option selected="" value="monkey"');
   });
 
-  it('should not control defaultValue if readding options', function() {
+  it('should not control defaultValue if readding options', () => {
     var container = document.createElement('div');
 
     var select = ReactDOM.render(
@@ -462,7 +462,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should warn if value is null', function() {
+  it('should warn if value is null', () => {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
@@ -476,7 +476,7 @@ describe('ReactDOMSelect', function() {
     expect(console.error.calls.count()).toBe(1);
   });
 
-  it('should refresh state on change', function() {
+  it('should refresh state on change', () => {
     var stub =
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -491,7 +491,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toBe('giraffe');
   });
 
-  it('should warn if value and defaultValue props are specified', function() {
+  it('should warn if value and defaultValue props are specified', () => {
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(
       <select value="giraffe" defaultValue="giraffe" readOnly={true}>
@@ -518,7 +518,7 @@ describe('ReactDOMSelect', function() {
     expect(console.error.calls.count()).toBe(1);
   });
 
-  it('should be able to safely remove select onChange', function() {
+  it('should be able to safely remove select onChange', () => {
     function changeView() {
       ReactDOM.unmountComponentAtNode(container);
     }
@@ -538,7 +538,7 @@ describe('ReactDOMSelect', function() {
     );
   });
 
-  it('should select grandchild options nested inside an optgroup', function() {
+  it('should select grandchild options nested inside an optgroup', () => {
     var stub =
       <select value="b" onChange={noop}>
         <optgroup label="group">

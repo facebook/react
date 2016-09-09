@@ -12,18 +12,18 @@
 'use strict';
 
 
-describe('ReactDOMOption', function() {
+describe('ReactDOMOption', () => {
   var React;
   var ReactDOM;
   var ReactTestUtils;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should flatten children to a string', function() {
+  it('should flatten children to a string', () => {
     var stub = <option>{1} {'foo'}</option>;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
@@ -31,7 +31,7 @@ describe('ReactDOMOption', function() {
     expect(node.innerHTML).toBe('1 foo');
   });
 
-  it('should ignore and warn invalid children types', function() {
+  it('should ignore and warn invalid children types', () => {
     spyOn(console, 'error');
     var stub = <option>{1} <div /> {2}</option>;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -43,7 +43,7 @@ describe('ReactDOMOption', function() {
     expect(console.error.calls.argsFor(0)[0]).toContain('Only strings and numbers are supported as <option> children.');
   });
 
-  it('should ignore null/undefined/false children without warning', function() {
+  it('should ignore null/undefined/false children without warning', () => {
     var stub = <option>{1} {false}{true}{null}{undefined} {2}</option>;
     spyOn(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -54,7 +54,7 @@ describe('ReactDOMOption', function() {
     expect(node.innerHTML).toBe('1  2');
   });
 
-  it('should be able to use dangerouslySetInnerHTML on option', function() {
+  it('should be able to use dangerouslySetInnerHTML on option', () => {
     var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
@@ -62,7 +62,7 @@ describe('ReactDOMOption', function() {
     expect(node.innerHTML).toBe('foobar');
   });
 
-  it('should set attribute for empty value', function() {
+  it('should set attribute for empty value', () => {
     var container = document.createElement('div');
     var option = ReactDOM.render(<option value="" />, container);
     expect(option.hasAttribute('value')).toBe(true);
@@ -73,7 +73,7 @@ describe('ReactDOMOption', function() {
     expect(option.getAttribute('value')).toBe('lava');
   });
 
-  it('should allow ignoring `value` on option', function() {
+  it('should allow ignoring `value` on option', () => {
     var a = 'a';
     var stub =
       <select value="giraffe" onChange={() => {}}>

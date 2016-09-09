@@ -13,62 +13,62 @@
 
 var update = require('update');
 
-describe('update', function() {
+describe('update', () => {
 
-  describe('$push', function() {
-    it('pushes', function() {
+  describe('$push', () => {
+    it('pushes', () => {
       expect(update([1], {$push: [7]})).toEqual([1, 7]);
     });
-    it('does not mutate the original object', function() {
+    it('does not mutate the original object', () => {
       var obj = [1];
       update(obj, {$push: [7]});
       expect(obj).toEqual([1]);
     });
-    it('only pushes an array', function() {
+    it('only pushes an array', () => {
       expect(update.bind(null, [], {$push: 7})).toThrowError(
         'update(): expected spec of $push to be an array; got 7. Did you ' +
         'forget to wrap your parameter in an array?'
       );
     });
-    it('only pushes unto an array', function() {
+    it('only pushes unto an array', () => {
       expect(update.bind(null, 1, {$push: 7})).toThrowError(
         'update(): expected target of $push to be an array; got 1.'
       );
     });
   });
 
-  describe('$unshift', function() {
-    it('unshifts', function() {
+  describe('$unshift', () => {
+    it('unshifts', () => {
       expect(update([1], {$unshift: [7]})).toEqual([7, 1]);
     });
-    it('does not mutate the original object', function() {
+    it('does not mutate the original object', () => {
       var obj = [1];
       update(obj, {$unshift: [7]});
       expect(obj).toEqual([1]);
     });
-    it('only unshifts an array', function() {
+    it('only unshifts an array', () => {
       expect(update.bind(null, [], {$unshift: 7})).toThrowError(
         'update(): expected spec of $unshift to be an array; got 7. Did you ' +
         'forget to wrap your parameter in an array?'
       );
     });
-    it('only unshifts unto an array', function() {
+    it('only unshifts unto an array', () => {
       expect(update.bind(null, 1, {$unshift: 7})).toThrowError(
         'update(): expected target of $unshift to be an array; got 1.'
       );
     });
   });
 
-  describe('$splice', function() {
-    it('splices', function() {
+  describe('$splice', () => {
+    it('splices', () => {
       expect(update([1, 4, 3], {$splice: [[1, 1, 2]]})).toEqual([1, 2, 3]);
     });
-    it('does not mutate the original object', function() {
+    it('does not mutate the original object', () => {
       var obj = [1, 4, 3];
       update(obj, {$splice: [[1, 1, 2]]});
       expect(obj).toEqual([1, 4, 3]);
     });
-    it('only splices an array of arrays', function() {
+    it('only splices an array of arrays', () => {
       expect(update.bind(null, [], {$splice: 1})).toThrowError(
         'update(): expected spec of $splice to be an array of arrays; got 1. ' +
         'Did you forget to wrap your parameters in an array?'
@@ -78,65 +78,65 @@ describe('update', function() {
         'Did you forget to wrap your parameters in an array?'
       );
     });
-    it('only splices unto an array', function() {
+    it('only splices unto an array', () => {
       expect(update.bind(null, 1, {$splice: 7})).toThrowError(
         'Expected $splice target to be an array; got 1'
       );
     });
   });
 
-  describe('$merge', function() {
-    it('merges', function() {
+  describe('$merge', () => {
+    it('merges', () => {
       expect(update({a: 'b'}, {$merge: {c: 'd'}})).toEqual({a: 'b', c: 'd'});
     });
-    it('does not mutate the original object', function() {
+    it('does not mutate the original object', () => {
       var obj = {a: 'b'};
       update(obj, {$merge: {c: 'd'}});
       expect(obj).toEqual({a: 'b'});
     });
-    it('only merges with an object', function() {
+    it('only merges with an object', () => {
       expect(update.bind(null, {}, {$merge: 7})).toThrowError(
         'update(): $merge expects a spec of type \'object\'; got 7'
       );
     });
-    it('only merges with an object', function() {
+    it('only merges with an object', () => {
       expect(update.bind(null, 7, {$merge: {a: 'b'}})).toThrowError(
         'update(): $merge expects a target of type \'object\'; got 7'
       );
     });
   });
 
-  describe('$set', function() {
-    it('sets', function() {
+  describe('$set', () => {
+    it('sets', () => {
       expect(update({a: 'b'}, {$set: {c: 'd'}})).toEqual({c: 'd'});
     });
-    it('does not mutate the original object', function() {
+    it('does not mutate the original object', () => {
       var obj = {a: 'b'};
       update(obj, {$set: {c: 'd'}});
       expect(obj).toEqual({a: 'b'});
     });
   });
 
-  describe('$apply', function() {
+  describe('$apply', () => {
     var applier = function(node) {
       return {v: node.v * 2};
     };
-    it('applies', function() {
+    it('applies', () => {
       expect(update({v: 2}, {$apply: applier})).toEqual({v: 4});
     });
-    it('does not mutate the original object', function() {
+    it('does not mutate the original object', () => {
       var obj = {v: 2};
       update(obj, {$apply: applier});
       expect(obj).toEqual({v: 2});
     });
-    it('only applies a function', function() {
+    it('only applies a function', () => {
       expect(update.bind(null, 2, {$apply: 123})).toThrowError(
         'update(): expected spec of $apply to be a function; got 123.'
       );
     });
   });
 
-  it('should support deep updates', function() {
+  it('should support deep updates', () => {
     expect(update({
       a: 'b',
       c: {
@@ -169,7 +169,7 @@ describe('update', function() {
     });
   });
 
-  it('should require a command', function() {
+  it('should require a command', () => {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrowError(
       'update(): You provided a key path to update() that did not contain ' +
       'one of $push, $unshift, $splice, $set, $merge, $apply. Did you ' +
@@ -177,7 +177,7 @@ describe('update', function() {
     );
   });
 
-  it('should perform safe hasOwnProperty check', function() {
+  it('should perform safe hasOwnProperty check', () => {
     expect(update({}, {'hasOwnProperty': {$set: 'a'}})).toEqual({
       'hasOwnProperty': 'a',
     });

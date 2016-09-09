@@ -45,14 +45,14 @@ function isTagStackValid(stack) {
   return true;
 }
 
-describe('ReactContextValidator', function() {
-  beforeEach(function() {
+describe('ReactContextValidator', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     validateDOMNesting = require('validateDOMNesting');
   });
 
-  it('allows any tag with no context', function() {
+  it('allows any tag with no context', () => {
     // With renderToString (for example), we don't know where we're mounting the
     // tag so we must err on the side of leniency.
     var allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
@@ -61,7 +61,7 @@ describe('ReactContextValidator', function() {
     });
   });
 
-  it('allows valid nestings', function() {
+  it('allows valid nestings', () => {
     expect(isTagStackValid(['table', 'tbody', 'tr', 'td', 'b'])).toBe(true);
     expect(isTagStackValid(['body', 'datalist', 'option'])).toBe(true);
     expect(isTagStackValid(['div', 'a', 'object', 'a'])).toBe(true);
@@ -76,7 +76,7 @@ describe('ReactContextValidator', function() {
     expect(isTagStackValid(['div', 'ul', 'li', 'dd', 'li'])).toBe(true);
   });
 
-  it('prevents problematic nestings', function() {
+  it('prevents problematic nestings', () => {
     expect(isTagStackValid(['a', 'a'])).toBe(false);
     expect(isTagStackValid(['form', 'form'])).toBe(false);
     expect(isTagStackValid(['p', 'p'])).toBe(false);

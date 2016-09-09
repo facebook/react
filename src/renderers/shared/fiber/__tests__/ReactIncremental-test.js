@@ -14,13 +14,13 @@
 var React;
 var ReactNoop;
 
-describe('ReactIncremental', function() {
-  beforeEach(function() {
+describe('ReactIncremental', () => {
+  beforeEach(() => {
     React = require('React');
     ReactNoop = require('ReactNoop');
   });
 
-  it('should render a simple component', function() {
+  it('should render a simple component', () => {
 
     function Bar() {
       return <div>Hello World</div>;
@@ -35,7 +35,7 @@ describe('ReactIncremental', function() {
 
   });
 
-  it('should render a simple component, in steps if needed', function() {
+  it('should render a simple component, in steps if needed', () => {
 
     var barCalled = false;
     function Bar() {
@@ -65,7 +65,7 @@ describe('ReactIncremental', function() {
     expect(barCalled).toBe(true);
   });
 
-  it('updates a previous render', function() {
+  it('updates a previous render', () => {
 
     var ops = [];
 
@@ -116,7 +116,7 @@ describe('ReactIncremental', function() {
 
   });
 
-  it('can cancel partially rendered work and restart', function() {
+  it('can cancel partially rendered work and restart', () => {
 
     var ops = [];
 
@@ -164,7 +164,7 @@ describe('ReactIncremental', function() {
 
   });
 
-  it('can deprioritize unfinished work and resume it later', function() {
+  it('can deprioritize unfinished work and resume it later', () => {
 
     var ops = [];
 
@@ -218,7 +218,7 @@ describe('ReactIncremental', function() {
 
   });
 
-  it('can resume work in a subtree even when a parent bails out', function() {
+  it('can resume work in a subtree even when a parent bails out', () => {
 
     var ops = [];
 
@@ -282,7 +282,7 @@ describe('ReactIncremental', function() {
     expect(ops).toEqual(['Middle']);
   });
 
-  it('can resume work in a bailed subtree within one pass', function() {
+  it('can resume work in a bailed subtree within one pass', () => {
     var ops = [];
 
     function Bar(props) {
@@ -362,7 +362,7 @@ describe('ReactIncremental', function() {
     expect(ops).toEqual(['Bar', 'Middle', 'Bar']);
   });
 
-  it('can reuse work done after being preempted', function() {
+  it('can reuse work done after being preempted', () => {
 
     var ops = [];
 
@@ -461,7 +461,7 @@ describe('ReactIncremental', function() {
 
   });
 
-  it('can reuse work if shouldComponentUpdate is false, after being preempted', function() {
+  it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
 
     var ops = [];
 

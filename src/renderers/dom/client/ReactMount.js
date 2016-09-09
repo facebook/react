@@ -729,11 +729,11 @@ var ReactMount = {
     if (__DEV__) {
       var hostNode = ReactDOMComponentTree.getInstanceFromNode(container.firstChild);
       if (hostNode._debugID !== 0) {
-        ReactInstrumentation.debugTool.onHostOperation(
-          hostNode._debugID,
-          'mount',
-          markup.toString()
-        );
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: hostNode._debugID,
+          type: 'mount',
+          payload: markup.toString(),
+        });
       }
     }
   },

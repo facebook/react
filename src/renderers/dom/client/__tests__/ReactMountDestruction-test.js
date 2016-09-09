@@ -14,8 +14,8 @@
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 
-describe('ReactMount', function() {
-  it('should destroy a react root upon request', function() {
+describe('ReactMount', () => {
+  it('should destroy a react root upon request', () => {
     var mainContainerDiv = document.createElement('div');
     document.body.appendChild(mainContainerDiv);
 
@@ -40,7 +40,7 @@ describe('ReactMount', function() {
     expect(secondRootDiv.firstChild).toBeNull();
   });
 
-  it('should warn when unmounting a non-container root node', function() {
+  it('should warn when unmounting a non-container root node', () => {
     var mainContainerDiv = document.createElement('div');
 
     var component =
@@ -62,7 +62,7 @@ describe('ReactMount', function() {
     );
   });
 
-  it('should warn when unmounting a non-container, non-root node', function() {
+  it('should warn when unmounting a non-container, non-root node', () => {
     var mainContainerDiv = document.createElement('div');
 
     var component =
