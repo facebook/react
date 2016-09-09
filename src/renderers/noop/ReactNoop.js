@@ -25,11 +25,11 @@ import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var {
-  HighPriority,
+  AnimationPriority,
 } = require('ReactPriorityLevel');
 
-var scheduledHighPriCallback = null;
-var scheduledLowPriCallback = null;
+var scheduledAnimationCallback = null;
+var scheduledDeferredCallback = null;
 
 const TERMINAL_TAG = 99;
 
@@ -91,12 +91,12 @@ var NoopRenderer = ReactFiberReconciler({
   deleteInstance(instance : Instance) : void {
   },
 
-  scheduleHighPriCallback(callback) {
-    scheduledHighPriCallback = callback;
+  scheduleAnimationCallback(callback) {
+    scheduledAnimationCallback = callback;
   },
 
-  scheduleLowPriCallback(callback) {
-    scheduledLowPriCallback = callback;
+  scheduleDeferredCallback(callback) {
+    scheduledDeferredCallback = callback;
   },
 
 });
@@ -117,21 +117,21 @@ var ReactNoop = {
     }
   },
 
-  flushHighPri() {
-    var cb = scheduledHighPriCallback;
+  flushAnimationPri() {
+    var cb = scheduledAnimationCallback;
     if (cb === null) {
       return;
     }
-    scheduledHighPriCallback = null;
+    scheduledAnimationCallback = null;
     cb();
   },
 
-  flushLowPri(timeout : number = Infinity) {
-    var cb = scheduledLowPriCallback;
+  flushDeferredPri(timeout : number = Infinity) {
+    var cb = scheduledDeferredCallback;
     if (cb === null) {
       return;
     }
-    scheduledLowPriCallback = null;
+    scheduledDeferredCallback = null;
     var timeRemaining = timeout;
     cb({
       timeRemaining() {
@@ -146,12 +146,12 @@ var ReactNoop = {
   },
 
   flush() {
-    ReactNoop.flushHighPri();
-    ReactNoop.flushLowPri();
+    ReactNoop.flushAnimationPri();
+    ReactNoop.flushDeferredPri();
   },
 
-  performHighPriWork(fn: Function) {
-    NoopRenderer.performWithPriority(HighPriority, fn);
+  performAnimationWork(fn: Function) {
+    NoopRenderer.performWithPriority(AnimationPriority, fn);
   },
 
   // Logs the current state of the tree.

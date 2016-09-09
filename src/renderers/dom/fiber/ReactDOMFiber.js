@@ -78,9 +78,9 @@ var DOMRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  scheduleHighPriCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: window.requestAnimationFrame,
 
-  scheduleLowPriCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: window.requestIdleCallback,
 
 });
 

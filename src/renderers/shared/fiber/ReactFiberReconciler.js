@@ -41,8 +41,8 @@ export type HostConfig<T, P, I, C> = {
   commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : void,
   deleteInstance(instance : I) : void,
 
-  scheduleHighPriCallback(callback : () => void) : void,
-  scheduleLowPriCallback(callback : (deadline : Deadline) => void) : void
+  scheduleAnimationCallback(callback : () => void) : void,
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void
 
 };
 
