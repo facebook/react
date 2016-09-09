@@ -13,8 +13,8 @@ next: expose-component-functions-ko-KR.html
 `GroceryList` 컴포넌트가 배열로 생성된 아이템 목록을 가지고 있다고 해봅시다. 목록의 아이템이 클릭되면 아이템의 이름이 보이길 원할 겁니다:
 
 ```js
-var handleClick = function(i, props) {
-  console.log('클릭한 아이템: ' + props.items[i]);
+var handleClick = function(i, items) {
+  console.log('클릭한 아이템: ' + items[i]);
 }
 
 function GroceryList(props) {  
@@ -22,7 +22,7 @@ function GroceryList(props) {
     <div>
       {props.items.map(function(item, i) {
         return (
-          <div onClick={handleClick.bind(this, i, props)} key={i}>{item}</div>
+          <div onClick={handleClick.bind(this, i, props.items)} key={i}>{item}</div>
         );
       })}
     </div>
