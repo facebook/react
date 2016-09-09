@@ -21,9 +21,11 @@ var warning = require('warning');
  * to avoid allocations in the transaction mount-ready queue.
  */
 function attachRefs(transaction) {
-
-  console.log('attachRefs', transaction)
-  ReactRef.attachRefs(this, this._currentElement);
+  ReactRef.attachRefs(
+    this,
+    this._currentElement,
+    transaction,
+  );
 }
 
 var ReactReconciler = {
@@ -65,11 +67,7 @@ var ReactReconciler = {
     );
     if (internalInstance._currentElement &&
         internalInstance._currentElement.ref != null) {
-      transaction.getReactMountReady().enqueue(
-        attachRefs,
-        internalInstance,
-        transaction,
-      );
+      transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {

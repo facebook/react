@@ -27,9 +27,10 @@ var invariant = require('invariant');
  * @implements PooledClass
  * @internal
  */
-function CallbackQueue() {
+function CallbackQueue(arg) {
   this._callbacks = null;
   this._contexts = null;
+  this._arg = arg;
 }
 
 Object.assign(CallbackQueue.prototype, {
@@ -57,6 +58,7 @@ Object.assign(CallbackQueue.prototype, {
   notifyAll: function() {
     var callbacks = this._callbacks;
     var contexts = this._contexts;
+    var arg = this._arg;
     if (callbacks) {
       invariant(
         callbacks.length === contexts.length,
@@ -65,7 +67,7 @@ Object.assign(CallbackQueue.prototype, {
       this._callbacks = null;
       this._contexts = null;
       for (var i = 0; i < callbacks.length; i++) {
-        callbacks[i].call(contexts[i]);
+        callbacks[i].call(contexts[i], arg);
       }
       callbacks.length = 0;
       contexts.length = 0;

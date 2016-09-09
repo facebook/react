@@ -60,7 +60,7 @@ var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
 function ReactTestReconcileTransaction(mockConfig) {
   this._mockConfig = mockConfig;
   this.reinitializeTransaction();
-  this.reactMountReady = CallbackQueue.getPooled(null);
+  this.reactMountReady = CallbackQueue.getPooled(mockConfig);
 }
 
 var Mixin = {

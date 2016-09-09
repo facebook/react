@@ -49,8 +49,7 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  */
 function mountComponentIntoNode(
     componentInstance,
-    transaction,
-    mockConfig,
+    transaction
   ) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
@@ -60,7 +59,6 @@ function mountComponentIntoNode(
     emptyObject
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
-  componentInstance._renderedComponent._mockConfig = mockConfig;
   return image;
 }
 

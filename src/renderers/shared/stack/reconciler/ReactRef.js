@@ -15,9 +15,13 @@ var ReactOwner = require('ReactOwner');
 
 var ReactRef = {};
 
-function attachRef(ref, component, owner, transaction) {
+function attachRef(ref, component, owner, mockConfig) {
   if (typeof ref === 'function') {
-    ref(component.getPublicInstance());
+    if (mockConfig && mockConfig.getMockRef) {
+      ref(mockConfig.getMockRef(component._currentElement));
+    } else {
+      ref(component.getPublicInstance());
+    }
   } else {
     // Legacy ref
     ReactOwner.addComponentAsRefTo(component, ref, owner);
@@ -33,13 +37,13 @@ function detachRef(ref, component, owner) {
   }
 }
 
-ReactRef.attachRefs = function(instance, element) {
+ReactRef.attachRefs = function(instance, element, mockConfig) {
   if (element === null || element === false) {
     return;
   }
   var ref = element.ref;
   if (ref != null) {
-    attachRef(ref, instance, element._owner);
+    attachRef(ref, instance, element._owner, mockConfig);
   }
 };
 
