@@ -531,7 +531,7 @@ React使用小驼峰命名规范(camelCase)给组件绑定事件处理器。我�
 
 让我们使表单具有交互性。当用户提交表单时，我们应该清除它，提交一个请求到服务器，并刷新评论列表。让我们监听表单的提交事件并清除它。
 
-```javascript{12-21,24}
+```javascript{12-21,24,38}
 // tutorial17.js
 var CommentForm = React.createClass({
   getInitialState: function() {
