@@ -204,7 +204,7 @@ describe('ReactTestRenderer', () => {
   it('gives a ref to native components', () => {
     var log = [];
     ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
-    expect(log).toEqual([null]);
+    expect(log).toEqual([{}]);
   });
 
   it('warns correctly for refs on SFCs', () => {
