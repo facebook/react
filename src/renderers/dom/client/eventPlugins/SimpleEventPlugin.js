@@ -37,7 +37,10 @@ import type {
   ReactSyntheticEvent,
 } from 'ReactSyntheticEventType';
 import type {ReactInstance} from 'ReactInstanceType';
-import type {PluginModule} from 'PluginModuleType';
+import type {
+  EventTypes,
+  PluginModule,
+} from 'PluginModuleType';
 
 /**
  * Turns
@@ -57,7 +60,7 @@ import type {PluginModule} from 'PluginModuleType';
  *   'topAbort': { sameConfig }
  * };
  */
-var eventTypes: {[key: string]: DispatchConfig} = {};
+var eventTypes: EventTypes = {};
 var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 [
   'abort',

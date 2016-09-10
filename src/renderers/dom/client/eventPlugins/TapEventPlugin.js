@@ -21,8 +21,10 @@ var ViewportMetrics = require('ViewportMetrics');
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
 
-import type {DispatchConfig} from 'ReactSyntheticEventType';
-import type {PluginModule} from 'PluginModuleType';
+import type {
+  EventTypes,
+  PluginModule,
+} from 'PluginModuleType';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {TopLevelTypes} from 'EventConstants';
 
@@ -109,7 +111,7 @@ var dependencies = [
   'topMouseUp',
 ].concat(touchEvents);
 
-var eventTypes: DispatchConfig = {
+var eventTypes: EventTypes = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: 'onTouchTap',

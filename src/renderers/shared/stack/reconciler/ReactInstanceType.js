@@ -30,6 +30,9 @@ export type ReactInstance = {
   getPublicInstance: any,
   _rootNodeID: number,
 
+  // ReactDOMComponent
+  _tag: string,
+
   // instantiateReactComponent
   _mountIndex: number,
   _mountImage: any,
