@@ -109,14 +109,14 @@ var dependencies = [
   'topMouseUp',
 ].concat(touchEvents);
 
-var eventTypes: DispatchConfig = {
-  touchTap: {
+var eventTypes = {
+  touchTap: ({
     phasedRegistrationNames: {
       bubbled: 'onTouchTap',
       captured: 'onTouchTapCapture',
     },
     dependencies: dependencies,
-  },
+  }: DispatchConfig),
 };
 
 var usedTouch = false;
