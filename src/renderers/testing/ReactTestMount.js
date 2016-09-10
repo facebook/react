@@ -26,9 +26,9 @@ type TestRendererMockConfig = {
 
 var defaultMockConfig = {
   getMockRef: function() {
-    return {};
+    return null;
   },
-}
+};
 
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
@@ -79,9 +79,7 @@ function batchedMountComponentIntoNode(
     componentInstance,
     mockConfig,
   ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
-    mockConfig || defaultMockConfig
-  );
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(mockConfig);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
@@ -168,7 +166,7 @@ var ReactTestMount = {
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
       instance,
-      mockConfig,
+      mockConfig || defaultMockConfig,
     );
     return new ReactTestInstance(instance);
   },

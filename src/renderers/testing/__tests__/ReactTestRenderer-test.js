@@ -204,7 +204,7 @@ describe('ReactTestRenderer', () => {
   it('gives a ref to native components', () => {
     var log = [];
     ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
-    expect(log).toEqual([{}]);
+    expect(log).toEqual([null]);
   });
 
   it('warns correctly for refs on SFCs', () => {
@@ -267,12 +267,12 @@ describe('ReactTestRenderer', () => {
 
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
-      { getMockRef }
+      {getMockRef}
     );
 
     ReactTestRenderer.create(
       <input ref={(r) => log.push(r)} />,
-      { getMockRef },
+      {getMockRef},
     );
 
     ReactTestRenderer.create(
@@ -287,14 +287,13 @@ describe('ReactTestRenderer', () => {
           </ul>
         </span>
       </div>,
-      { getMockRef, foobar: true },
+      {getMockRef, foobar: true},
     );
-
 
     ReactTestRenderer.create(
       <Foo />,
-      { getMockRef },
-    )
+      {getMockRef},
+    );
 
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
@@ -307,10 +306,9 @@ describe('ReactTestRenderer', () => {
       mockListItemInstance,
       mockListItemInstance,
       mockAnchorInstance,
-      {},
+      null,
     ]);
   });
-
 
   it('supports error boundaries', () => {
     var log = [];
