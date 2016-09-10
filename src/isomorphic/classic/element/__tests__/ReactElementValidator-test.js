@@ -433,6 +433,29 @@ describe('ReactElementValidator', () => {
     expect(console.error.calls.count()).toBe(2);
   });
 
+  it('should throw on mispelling a prop type', () => {
+    spyOn(console, 'error');
+
+    var Foo = React.createClass({
+      displayName: 'Foo',
+      propTypes: {
+        onAction: React.PropTypes.func,
+      },
+      render: function() {
+        return <span onClick={this.props.onAction}></span>;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(
+      React.createElement(Foo, {onaction: () => console.log('action')})
+    );
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Foo: prop type `onaction` was not defined in PropTypes; ' +
+      'did you mean to use `onAction`?'
+    );
+  });
+
   it('should warn if a PropType creator is used as a PropType', () => {
     spyOn(console, 'error');
 

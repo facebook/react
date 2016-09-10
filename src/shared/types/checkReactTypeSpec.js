@@ -62,6 +62,21 @@ function checkReactTypeSpec(
       // Prop type validation may throw. In case they do, we don't want to
       // fail the render phase where it didn't fail before. So we log it.
       // After these have been cleaned up, we'll let them throw.
+
+      // Check for potential improperly cased property name that was defined
+      // in the element's propTypes
+      let keys = Object.keys(values);
+      if (!keys.includes(typeSpecName)) {
+        let equiPos = keys.map(a => a.toLowerCase()).indexOf(typeSpecName.toLowerCase());
+        warning(
+          equiPos === -1,
+          '%s: prop type `%s` was not defined in PropTypes; did you mean to use `%s`?',
+          componentName,
+          keys[equiPos],
+          typeSpecName
+        );
+      }
+
       try {
         // This is intentionally an invariant that gets caught. It's the same
         // behavior as without this statement except with a better message.
