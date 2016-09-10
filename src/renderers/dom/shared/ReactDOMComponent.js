@@ -34,6 +34,7 @@ var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction')
 
 var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var flattenStyleArray = require('flattenStyleArray');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var shallowEqual = require('shallowEqual');
@@ -995,6 +996,9 @@ ReactDOMComponent.Mixin = {
       }
       if (propKey === STYLE) {
         if (nextProp) {
+          if (Array.isArray(nextProp)) {
+            nextProp = flattenStyleArray(nextProp);
+          }
           if (__DEV__) {
             checkAndWarnForMutatedStyle(
               this._previousStyleCopy,

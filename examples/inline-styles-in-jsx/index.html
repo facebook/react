@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Inline Styles with JSX</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+  </head>
+  <body>
+    <h1>Inline Styles with JSX</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="https://github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is <strong>not</strong> working right.
+        If you checked out the source from GitHub make sure to run <code>grunt</code>.
+      </p>
+    </div>
+    <h4>Example Details</h4>
+    <p>
+      This example includes inline styles.
+      It is written with JSX and transformed in the browser.
+    </p>
+    <p>
+      Learn more about React at
+      <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+    </p>
+    <script src="../../build/react.js"></script>
+    <script src="../../build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script type="text/babel">
+      var ExampleApplication = React.createClass({
+        render: function() {
+          var elapsed = Math.round(this.props.elapsed  / 100);
+          var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
+          var message1 =
+            'React has been successfully running for ' + seconds + ' seconds.';
+          var message2 = 'This message should be green and underlined.';
+          var styles = {
+            base: {textDecoration: 'underline'},
+            bold: {fontWeight: 'bold'},
+          };
+          var isBold = false;
+
+          return (
+            <div>
+              <p>
+                {message1}
+              </p>
+              <p style={[
+                styles.base,
+                isBold && styles.bold,
+                [{color: 'blue'}, {color: 'green'}],
+              ]}>
+                {message2}
+              </p>
+           </div>
+          );
+        }
+      });
+      var start = new Date().getTime();
+      setInterval(function() {
+        ReactDOM.render(
+          <ExampleApplication elapsed={new Date().getTime() - start} />,
+          document.getElementById('container')
+        );
+      }, 50);
+    </script>
+  </body>
+</html>
