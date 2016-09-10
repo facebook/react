@@ -18,7 +18,7 @@ import type {
   ReactSyntheticEvent,
 } from 'ReactSyntheticEventType';
 
-type EventTypes = {[key: string]: DispatchConfig};
+export type EventTypes = {[key: string]: DispatchConfig};
 
 export type AnyNativeEvent =
   Event |
