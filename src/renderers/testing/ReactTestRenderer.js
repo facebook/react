@@ -36,19 +36,12 @@ function getRenderedHostOrTextFromComponent(component) {
 }
 
 
-var defaultMockConfig = {
-  getMockRef: function() {
-    return {};
-  },
-}
-
 // =============================================================================
 
 var ReactTestComponent = function(element) {
   this._currentElement = element;
   this._renderedChildren = null;
   this._topLevelWrapper = null;
-  this._mockConfig = defaultMockConfig;
 };
 
 ReactTestComponent.prototype.mountComponent = function(
@@ -71,8 +64,8 @@ ReactTestComponent.prototype.receiveComponent = function(
 };
 
 ReactTestComponent.prototype.getHostNode = function() {};
-ReactTestComponent.prototype.getPublicInstance = function() {
-  return this._mockConfig.getMockRef(this._currentElement);
+ReactTestComponent.prototype.getPublicInstance = function(transaction) {
+  return transaction._mockConfig.getMockRef(this._currentElement);
 };
 
 ReactTestComponent.prototype.unmountComponent = function() {};

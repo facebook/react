@@ -16,24 +16,20 @@ var ReactOwner = require('ReactOwner');
 
 import type { ReactInstance } from 'ReactInstanceType';
 import type { ReactElement } from 'ReactElementType';
-import type { TestRendererMockConfig } from 'ReactTestMount';
+import type { Transaction } from 'Transaction';
 
 var ReactRef = {};
 
-function attachRef(ref, component, owner, mockConfig) {
+function attachRef(ref, component, owner, transaction) {
   if (typeof ref === 'function') {
-    if (mockConfig && mockConfig.getMockRef) {
-      ref(mockConfig.getMockRef(component._currentElement));
-    } else {
-      ref(component.getPublicInstance());
-    }
+    ref(component.getPublicInstance(transaction));
   } else {
     // Legacy ref
     ReactOwner.addComponentAsRefTo(
       component,
       ref,
       owner,
-      mockConfig,
+      transaction,
     );
   }
 }
@@ -50,14 +46,14 @@ function detachRef(ref, component, owner) {
 ReactRef.attachRefs = function(
   instance: ReactInstance,
   element: ReactElement | string | number | null | false,
-  mockConfig: TestRendererMockConfig,
+  transaction: Transaction,
 ): void {
   if (element === null || typeof element !== 'object') {
     return;
   }
   var ref = element.ref;
   if (ref != null) {
-    attachRef(ref, instance, element._owner, mockConfig);
+    attachRef(ref, instance, element._owner, transaction);
   }
 };
 

@@ -239,7 +239,7 @@ describe('ReactTestRenderer', () => {
     var mockAnchorInstance = { hover: () => {} };
     var log = [];
 
-    class Bar extends React.Component {
+    class Foo extends React.Component {
       componentDidMount() {
         log.push(this.refs.bar);
       }
@@ -247,14 +247,6 @@ describe('ReactTestRenderer', () => {
         return (
           <a ref="bar">Hello, world</a>
         );
-      }
-    }
-
-    class Foo extends React.Component {
-      render() {
-        return (
-          <Bar ref={r => log.push(r)}/>
-        )
       }
     }
 
@@ -268,8 +260,6 @@ describe('ReactTestRenderer', () => {
           return mockListItemInstance;
         case 'a':
           return mockAnchorInstance;
-        case Bar:
-          return Bar;
         default:
           return {};
       }
@@ -317,7 +307,6 @@ describe('ReactTestRenderer', () => {
       mockListItemInstance,
       mockListItemInstance,
       mockAnchorInstance,
-      Bar,
       {},
     ]);
   });

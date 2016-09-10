@@ -24,6 +24,12 @@ type TestRendererMockConfig = {
   getMockRef: (element: ReactElement) => Object,
 };
 
+var defaultMockConfig = {
+  getMockRef: function() {
+    return {};
+  },
+}
+
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
  * composites instead of having to worry about different types of components
@@ -73,13 +79,14 @@ function batchedMountComponentIntoNode(
     componentInstance,
     mockConfig,
   ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(mockConfig);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
+    mockConfig || defaultMockConfig
+  );
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
     transaction,
-    mockConfig,
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;
@@ -163,7 +170,7 @@ var ReactTestMount = {
       instance,
       mockConfig,
     );
-    return new ReactTestInstance(instance, mockConfig);
+    return new ReactTestInstance(instance);
   },
 
 };
