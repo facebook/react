@@ -193,9 +193,13 @@ var DOMProperty = {
   /**
    * Mapping from lowercase property names to the properly cased version, used
    * to warn in the case of missing properties. Available only in __DEV__.
+   *
+   * autofocus is predefined, because adding it to the property whitelist
+   * causes unintended side effects.
+   *
    * @type {Object}
    */
-  getPossibleStandardName: __DEV__ ? {} : null,
+  getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
 
   /**
    * All of the isCustomAttribute() functions that have been injected.
