@@ -57,9 +57,9 @@ var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
  *
  * @class ReactTestReconcileTransaction
  */
-function ReactTestReconcileTransaction(mockConfig) {
+function ReactTestReconcileTransaction(testOptions) {
   this.reinitializeTransaction();
-  this.mockConfig = mockConfig;
+  this.testOptions = testOptions;
   this.reactMountReady = CallbackQueue.getPooled(this);
 }
 
@@ -84,10 +84,10 @@ var Mixin = {
   },
 
   /**
-   * @return {object} the config that determines how to mock instances
+   * @return {object} the options passed to ReactTestRenderer
    */
-  getMockConfig: function() {
-    return this.mockConfig;
+  getTestOptions: function() {
+    return this.testOptions;
   },
 
   /**

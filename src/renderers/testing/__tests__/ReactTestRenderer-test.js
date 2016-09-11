@@ -237,7 +237,6 @@ describe('ReactTestRenderer', () => {
     var mockListItemInstance = { click: () => {} };
     var mockAnchorInstance = { hover: () => {} };
     var log = [];
-
     class Foo extends React.Component {
       componentDidMount() {
         log.push(this.refs.bar);
@@ -248,7 +247,6 @@ describe('ReactTestRenderer', () => {
         );
       }
     }
-
     function getMockRef(element) {
       switch (element.type) {
         case 'div':
@@ -263,17 +261,14 @@ describe('ReactTestRenderer', () => {
           return {};
       }
     }
-
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
       {getMockRef}
     );
-
     ReactTestRenderer.create(
       <input ref={(r) => log.push(r)} />,
       {getMockRef},
     );
-
     ReactTestRenderer.create(
       <div>
         <span>
@@ -288,21 +283,17 @@ describe('ReactTestRenderer', () => {
       </div>,
       {getMockRef, foobar: true},
     );
-
     ReactTestRenderer.create(
       <Foo />,
       {getMockRef},
     );
-
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
     );
-
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
       {}
     );
-
     expect(log).toEqual([
       mockDivInstance,
       mockInputInstance,

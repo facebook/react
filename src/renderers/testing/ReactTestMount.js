@@ -20,11 +20,11 @@ var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
-type TestRendererMockConfig = {
+type TestRendererOptions = {
   getMockRef: (element: ReactElement) => Object,
 };
 
-var defaultMockConfig = {
+var defaultTestOptions = {
   getMockRef: function() {
     return null;
   },
@@ -77,9 +77,9 @@ function mountComponentIntoNode(
  */
 function batchedMountComponentIntoNode(
     componentInstance,
-    mockConfig,
+    options,
   ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(mockConfig);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(options);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
@@ -149,7 +149,7 @@ var ReactTestMount = {
 
   render: function(
     nextElement: ReactElement<any>,
-    mockConfig?: TestRendererMockConfig,
+    options?: TestRendererOptions,
   ): ReactTestInstance {
     var nextWrappedElement = React.createElement(
       TopLevelWrapper,
@@ -164,7 +164,7 @@ var ReactTestMount = {
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
       instance,
-      Object.assign({}, defaultMockConfig, mockConfig),
+      Object.assign({}, defaultTestOptions, options),
     );
     return new ReactTestInstance(instance);
   },
