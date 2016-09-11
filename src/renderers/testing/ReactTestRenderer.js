@@ -66,7 +66,9 @@ ReactTestComponent.prototype.receiveComponent = function(
 ReactTestComponent.prototype.getHostNode = function() {};
 
 ReactTestComponent.prototype.getPublicInstance = function(transaction) {
-  return transaction.getTestOptions().getMockRef(this._currentElement);
+  var element = this._currentElement;
+  var options = transaction.getTestOptions();
+  return options.getMockRef(element);
 };
 
 ReactTestComponent.prototype.unmountComponent = function() {};
