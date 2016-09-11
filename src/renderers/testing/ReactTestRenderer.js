@@ -64,11 +64,13 @@ ReactTestComponent.prototype.receiveComponent = function(
 };
 
 ReactTestComponent.prototype.getHostNode = function() {};
+
 ReactTestComponent.prototype.getPublicInstance = function(transaction) {
   return transaction.getMockConfig().getMockRef(this._currentElement);
 };
 
 ReactTestComponent.prototype.unmountComponent = function() {};
+
 ReactTestComponent.prototype.toJSON = function() {
   var {children, ...props} = this._currentElement.props;
   var childrenJSON = [];
@@ -135,7 +137,6 @@ ReactComponentEnvironment.injection.injectEnvironment({
   processChildrenUpdates: function() {},
   replaceNodeWithMarkup: function() {},
 });
-
 
 var ReactTestRenderer = {
   create: ReactTestMount.render,

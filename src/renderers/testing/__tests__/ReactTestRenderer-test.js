@@ -1,4 +1,3 @@
-
 /**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -299,6 +298,11 @@ describe('ReactTestRenderer', () => {
       <div ref={(r) => log.push(r)} />,
     );
 
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+      {}
+    );
+
     expect(log).toEqual([
       mockDivInstance,
       mockInputInstance,
@@ -306,6 +310,7 @@ describe('ReactTestRenderer', () => {
       mockListItemInstance,
       mockListItemInstance,
       mockAnchorInstance,
+      null,
       null,
     ]);
   });

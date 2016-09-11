@@ -55,7 +55,7 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  */
 function mountComponentIntoNode(
     componentInstance,
-    transaction
+    transaction,
   ) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
@@ -149,11 +149,11 @@ var ReactTestMount = {
 
   render: function(
     nextElement: ReactElement<any>,
-    mockConfig: TestRendererMockConfig,
+    mockConfig?: TestRendererMockConfig,
   ): ReactTestInstance {
     var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      { child: nextElement },
+      {child: nextElement},
     );
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
@@ -161,12 +161,10 @@ var ReactTestMount = {
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
-    //
-
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
       instance,
-      mockConfig || defaultMockConfig,
+      Object.assign({}, defaultMockConfig, mockConfig),
     );
     return new ReactTestInstance(instance);
   },
