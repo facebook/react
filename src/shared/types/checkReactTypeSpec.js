@@ -66,7 +66,7 @@ function checkReactTypeSpec(
       // Check for potential improperly cased property name that was defined
       // in the element's propTypes
       let keys = Object.keys(values);
-      if (!keys.includes(typeSpecName)) {
+      if (keys.indexOf(typeSpecName) === -1) {
         let equiPos = keys.map(a => a.toLowerCase()).indexOf(typeSpecName.toLowerCase());
         warning(
           equiPos === -1,
