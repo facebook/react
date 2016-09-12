@@ -32,8 +32,10 @@ function testDOMNodeStructure(domNode, expectedStructure) {
   expect(domNode).toBeDefined();
   expect(domNode.nodeName).toBe(expectedStructure.nodeName);
   for (var prop in expectedStructure) {
-    if (!expectedStructure.hasOwnProperty(prop)) continue;
-    if (prop != 'nodeName' && prop != 'children') {
+    if (!expectedStructure.hasOwnProperty(prop)) {
+      continue;
+    }
+    if (prop !== 'nodeName' && prop !== 'children') {
       if (expectedStructure[prop] === Missing) {
         expect(domNode.hasAttribute(prop)).toBe(false);
       } else {
@@ -63,7 +65,7 @@ describe('ReactART', () => {
         var a =
           <Shape
             d="M0,0l50,0l0,50l-50,0z"
-            fill={new ReactART.LinearGradient(["black", "white"])}
+            fill={new ReactART.LinearGradient(['black', 'white'])}
             key="a"
             width={50} height={50}
             x={50} y={50}
@@ -120,15 +122,15 @@ describe('ReactART', () => {
             {
               nodeName: 'defs',
               children: [
-                { nodeName: 'linearGradient' }
-              ]
+                { nodeName: 'linearGradient' },
+              ],
             },
             { nodeName: 'path' },
             { nodeName: 'path' },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
+            { nodeName: 'g' },
+          ],
+        },
+      ],
     };
 
     var realNode = ReactDOM.findDOMNode(instance);
@@ -149,10 +151,10 @@ describe('ReactART', () => {
             { nodeName: 'defs' },
             { nodeName: 'path', opacity: '0.1' },
             { nodeName: 'path', opacity: Missing },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
+            { nodeName: 'g' },
+          ],
+        },
+      ],
     };
 
     var realNode = ReactDOM.findDOMNode(instance);
@@ -170,10 +172,10 @@ describe('ReactART', () => {
             { nodeName: 'defs' },
             { nodeName: 'path', opacity: Missing },
             { nodeName: 'path', opacity: '0.1' },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
+            { nodeName: 'g' },
+          ],
+        },
+      ],
     };
 
     testDOMNodeStructure(realNode, expectedNewStructure);

@@ -168,7 +168,7 @@ const ContainerMixin = assign({}, ReactMultiChild, {
         i++;
       }
     }
-  }
+  },
 
 });
 
@@ -199,9 +199,12 @@ const Surface = React.createClass({
 
   componentDidUpdate: function(oldProps) {
     const node = this.node;
-    if (this.props.width != oldProps.width ||
-        this.props.height != oldProps.height) {
-      node.resize(+this.props.width, +this.props.height);
+    const width = +this.props.width;
+    const height = +this.props.height;
+    const oldWidth = +oldProps.width;
+    const oldHeight = +oldProps.height;
+    if (width !== oldWidth || height !== +oldHeight) {
+      node.resize(width, height);
     }
 
     const transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
@@ -241,7 +244,7 @@ const Surface = React.createClass({
         title={props.title}
       />
     );
-  }
+  },
 
 });
 
@@ -253,7 +256,7 @@ const EventTypes = {
   onMouseOut: 'mouseout',
   onMouseUp: 'mouseup',
   onMouseDown: 'mousedown',
-  onClick: 'click'
+  onClick: 'click',
 };
 
 const NodeMixin = {
@@ -329,7 +332,7 @@ const NodeMixin = {
 
     if (node.xx !== pooledTransform.xx || node.yx !== pooledTransform.yx ||
         node.xy !== pooledTransform.xy || node.yy !== pooledTransform.yy ||
-        node.x  !== pooledTransform.x  || node.y  !== pooledTransform.y) {
+        node.x !== pooledTransform.x || node.y !== pooledTransform.y) {
       node.transformTo(pooledTransform);
     }
 
@@ -359,7 +362,7 @@ const NodeMixin = {
       'You cannot render an ART component standalone. ' +
       'You need to wrap it in a Surface.'
     );
-  }
+  },
 
 };
 
@@ -397,49 +400,49 @@ const Group = createComponent('Group', NodeMixin, ContainerMixin, {
   unmountComponent: function() {
     this.destroyEventListeners();
     this.unmountChildren();
-  }
+  },
 
 });
 
 // ClippingRectangle
 const ClippingRectangle = createComponent(
-    'ClippingRectangle', NodeMixin, ContainerMixin, {
+  'ClippingRectangle', NodeMixin, ContainerMixin, {
+    mountComponent: function(
+      transaction,
+      nativeParent,
+      nativeContainerInfo,
+      context
+    ) {
+      this.node = Mode.ClippingRectangle();
+      const props = this._currentElement.props;
+      this.applyClippingProps(emptyObject, props);
+      this.mountAndInjectChildren(props.children, transaction, context);
+      return this.node;
+    },
 
-  mountComponent: function(
-    transaction,
-    nativeParent,
-    nativeContainerInfo,
-    context
-  ) {
-    this.node = Mode.ClippingRectangle();
-    const props = this._currentElement.props;
-    this.applyClippingProps(emptyObject, props);
-    this.mountAndInjectChildren(props.children, transaction, context);
-    return this.node;
-  },
+    receiveComponent: function(nextComponent, transaction, context) {
+      const props = nextComponent.props;
+      const oldProps = this._currentElement.props;
+      this.applyClippingProps(oldProps, props);
+      this.updateChildren(props.children, transaction, context);
+      this._currentElement = nextComponent;
+    },
 
-  receiveComponent: function(nextComponent, transaction, context) {
-    const props = nextComponent.props;
-    const oldProps = this._currentElement.props;
-    this.applyClippingProps(oldProps, props);
-    this.updateChildren(props.children, transaction, context);
-    this._currentElement = nextComponent;
-  },
+    applyClippingProps: function(oldProps, props) {
+      this.node.width = props.width;
+      this.node.height = props.height;
+      this.node.x = props.x;
+      this.node.y = props.y;
+      this.applyNodeProps(oldProps, props);
+    },
 
-  applyClippingProps: function(oldProps, props) {
-    this.node.width = props.width;
-    this.node.height = props.height;
-    this.node.x = props.x;
-    this.node.y = props.y;
-    this.applyNodeProps(oldProps, props);
-  },
+    unmountComponent: function() {
+      this.destroyEventListeners();
+      this.unmountChildren();
+    },
 
-  unmountComponent: function() {
-    this.destroyEventListeners();
-    this.unmountChildren();
   }
-
-});
+);
 
 
 // Renderables
@@ -476,7 +479,7 @@ const RenderableMixin = assign({}, NodeMixin, {
 
   unmountComponent: function() {
     this.destroyEventListeners();
-  }
+  },
 
 });
 
@@ -530,7 +533,7 @@ const Shape = createComponent('Shape', RenderableMixin, {
     }
 
     this.applyRenderableProps(oldProps, props);
-  }
+  },
 
 });
 
@@ -595,7 +598,7 @@ const Text = createComponent('Text', RenderableMixin, {
 
     this.applyRenderableProps(oldProps, props);
     this._currentElement = nextComponent;
-  }
+  },
 
 });
 
