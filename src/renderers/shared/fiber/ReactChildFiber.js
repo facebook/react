@@ -30,6 +30,7 @@ var ReactReifiedYield = require('ReactReifiedYield');
 const {
   cloneFiber,
   createFiberFromElement,
+  createFiberFromFragment,
   createFiberFromCoroutine,
   createFiberFromYield,
 } = ReactFiber;
@@ -46,7 +47,7 @@ function ChildReconciler(shouldClone) {
     returnFiber : Fiber,
     existingChild : ?Fiber,
     previousSibling : Fiber,
-    newChildren,
+    newChildren : any,
     priority : PriorityLevel
   ) : Fiber {
     if (typeof newChildren !== 'object' || newChildren === null) {
@@ -98,35 +99,24 @@ function ChildReconciler(shouldClone) {
     }
 
     if (isArray(newChildren)) {
-      let prev : Fiber = previousSibling;
-      let existing : ?Fiber = existingChild;
-      for (var i = 0; i < newChildren.length; i++) {
-        var nextExisting = existing && existing.sibling;
-        prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
-        if (prev && existing) {
-          // TODO: This is not correct because there could've been more
-          // than one sibling consumed but I don't want to return a tuple.
-          existing = nextExisting;
-        }
-      }
-      return prev;
+      // Nested arrays have a special fiber type.
+      const fragment = createFiberFromFragment(newChildren, priority);
+      previousSibling.sibling = fragment;
+      fragment.return = returnFiber;
+      return fragment;
     } else {
       // TODO: Throw for unknown children.
       return previousSibling;
     }
   }
 
-  function createFirstChild(returnFiber, existingChild, newChildren, priority) {
+  function createFirstChild(returnFiber, existingChild, newChildren : any, priority) {
     if (typeof newChildren !== 'object' || newChildren === null) {
       return null;
     }
 
     switch (newChildren.$$typeof) {
       case REACT_ELEMENT_TYPE: {
-        /* $FlowFixMe(>=0.31.0): This is an unsafe cast. Consider adding a type
-         *                       annotation to the `newChildren` param of this
-         *                       function.
-         */
         const element = (newChildren : ReactElement<any>);
         if (existingChild &&
             element.type === existingChild.type &&
@@ -148,8 +138,6 @@ function ChildReconciler(shouldClone) {
       }
 
       case REACT_COROUTINE_TYPE: {
-        /* $FlowFixMe(>=0.31.0): No 'handler' property found in object type
-         */
         const coroutine = (newChildren : ReactCoroutine);
         const child = createFiberFromCoroutine(coroutine, priority);
         child.return = returnFiber;
@@ -160,9 +148,6 @@ function ChildReconciler(shouldClone) {
         // A yield results in a fragment fiber whose output is the continuation.
         // TODO: When there is only a single child, we can optimize this to avoid
         // the fragment.
-        /* $FlowFixMe(>=0.31.0): No 'continuation' property found in object
-         * type
-         */
         const yieldNode = (newChildren : ReactYield);
         const reifiedYield = createReifiedYield(yieldNode);
         const child = createFiberFromYield(yieldNode, priority);
@@ -173,14 +158,38 @@ function ChildReconciler(shouldClone) {
     }
 
     if (isArray(newChildren)) {
-      var first : ?Fiber = null;
-      var prev : ?Fiber = null;
-      var existing : ?Fiber = existingChild;
+      // Nested arrays have a special fiber type.
+      const fragment = createFiberFromFragment(newChildren, priority);
+      fragment.return = returnFiber;
+      return fragment;
+    } else {
+      // TODO: Throw for unknown children.
+      return null;
+    }
+  }
+
+  // TODO: This API won't work because we'll need to transfer the side-effects of
+  // unmounting children to the returnFiber.
+  function reconcileChildFibers(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    newChild : ReactNodeList,
+    priority : PriorityLevel
+  ) : ?Fiber {
+    // This function is not recursive.
+    // If the top level item is an array, we treat it as a set of children,
+    // not as a fragment. Nested arrays on the other hand will be treated as
+    // fragment nodes. Recursion happens at the normal flow.
+    if (isArray(newChild)) {
       /* $FlowIssue(>=0.31.0) #12747709
        *
        * `Array.isArray` is matched syntactically for now until predicate
        * support is complete.
        */
+      var newChildren : Array<*> = newChild;
+      var first : ?Fiber = null;
+      var prev : ?Fiber = null;
+      var existing : ?Fiber = currentFirstChild;
       for (var i = 0; i < newChildren.length; i++) {
         var nextExisting = existing && existing.sibling;
         if (prev == null) {
@@ -196,21 +205,8 @@ function ChildReconciler(shouldClone) {
         }
       }
       return first;
-    } else {
-      // TODO: Throw for unknown children.
-      return null;
     }
-  }
-
-  // TODO: This API won't work because we'll need to transfer the side-effects of
-  // unmounting children to the returnFiber.
-  function reconcileChildFibers(
-    returnFiber : Fiber,
-    currentFirstChild : ?Fiber,
-    newChildren : ReactNodeList,
-    priority : PriorityLevel
-  ) : ?Fiber {
-    return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);
+    return createFirstChild(returnFiber, currentFirstChild, newChild, priority);
   }
 
   return reconcileChildFibers;
