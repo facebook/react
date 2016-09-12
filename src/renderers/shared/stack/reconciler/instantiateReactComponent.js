@@ -85,30 +85,35 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
     instance = ReactEmptyComponent.create(instantiateReactComponent);
   } else if (typeof node === 'object') {
     var element = node;
+    var {type} = element;
     invariant(
-      element && (typeof element.type === 'function' ||
-                  typeof element.type === 'string'),
+      element && (typeof type === 'function' ||
+                  typeof type === 'string'),
       'Element type is invalid: expected a string (for built-in components) ' +
       'or a class/function (for composite components) but got: %s.%s',
-      element.type == null ? element.type : typeof element.type,
+      type == null ? type : typeof type,
       getDeclarationErrorAddendum(element._owner)
     );
 
     // Special case string values
-    if (typeof element.type === 'string') {
+    if (typeof type === 'string') {
       instance = ReactHostComponent.createInternalComponent(element);
-    } else if (isInternalComponentType(element.type)) {
+    } else if (isInternalComponentType(type)) {
       // This is temporarily available for custom components that are not string
       // representations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
-      instance = new element.type(element);
+      instance = new type(element);
 
       // We renamed this. Allow the old name for compat. :(
       if (!instance.getHostNode) {
         instance.getHostNode = instance.getNativeNode;
       }
     } else {
-      instance = new ReactClassComponentWrapper(element);
+      if (type.prototype && type.prototype.isReactComponent) {
+        instance = new ReactClassComponentWrapper(element);
+      } else {
+        instance = new ReactFunctionalComponentWrapper(element);
+      }
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactHostComponent.createInstanceForText(node);

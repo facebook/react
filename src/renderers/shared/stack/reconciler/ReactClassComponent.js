@@ -32,12 +32,6 @@ var warning = require('warning');
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
-var CompositeTypes = {
-  ImpureClass: 0,
-  PureClass: 1,
-  StatelessFunctional: 2,
-};
-
 function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
@@ -61,14 +55,6 @@ function warnIfInvalidElement(Component, element) {
       Component.displayName || Component.name || 'Component'
     );
   }
-}
-
-function shouldConstruct(Component) {
-  return !!(Component.prototype && Component.prototype.isReactComponent);
-}
-
-function isPureComponent(Component) {
-  return !!(Component.prototype && Component.prototype.isPureReactComponent);
 }
 
 // Separated into a function to contain deoptimizations caused by try/finally.
@@ -138,10 +124,10 @@ var ReactClassComponent = {
   construct: function(element) {
     this._currentElement = element;
     this._rootNodeID = 0;
-    this._compositeType = null;
     this._instance = null;
     this._hostParent = null;
     this._hostContainerInfo = null;
+    this._isPure = !!element.type.prototype.isPureReactComponent;
 
     // See ReactUpdateQueue
     this._updateBatchNumber = null;
@@ -191,42 +177,15 @@ var ReactClassComponent = {
 
     var publicProps = this._currentElement.props;
     var publicContext = this._processContext(context);
-
     var Component = this._currentElement.type;
-
     var updateQueue = transaction.getUpdateQueue();
 
     // Initialize the public class
-    var doConstruct = shouldConstruct(Component);
     var inst = this._constructComponent(
-      doConstruct,
       publicProps,
       publicContext,
       updateQueue
     );
-    var renderedElement;
-
-    // Support functional components
-    if (!doConstruct && (inst == null || inst.render == null)) {
-      renderedElement = inst;
-      warnIfInvalidElement(Component, renderedElement);
-      invariant(
-        inst === null ||
-        inst === false ||
-        React.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
-        Component.displayName || Component.name || 'Component'
-      );
-      inst = new StatelessComponent(Component);
-      this._compositeType = CompositeTypes.StatelessFunctional;
-    } else {
-      if (isPureComponent(Component)) {
-        this._compositeType = CompositeTypes.PureClass;
-      } else {
-        this._compositeType = CompositeTypes.ImpureClass;
-      }
-    }
 
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
@@ -336,14 +295,13 @@ var ReactClassComponent = {
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
-        renderedElement,
         hostParent,
         hostContainerInfo,
         transaction,
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     }
 
     if (inst.componentDidMount) {
@@ -364,7 +322,6 @@ var ReactClassComponent = {
   },
 
   _constructComponent: function(
-    doConstruct,
     publicProps,
     publicContext,
     updateQueue
@@ -373,7 +330,6 @@ var ReactClassComponent = {
       ReactCurrentOwner.current = this;
       try {
         return this._constructComponentWithoutOwner(
-          doConstruct,
           publicProps,
           publicContext,
           updateQueue
@@ -383,7 +339,6 @@ var ReactClassComponent = {
       }
     } else {
       return this._constructComponentWithoutOwner(
-        doConstruct,
         publicProps,
         publicContext,
         updateQueue
@@ -392,40 +347,23 @@ var ReactClassComponent = {
   },
 
   _constructComponentWithoutOwner: function(
-    doConstruct,
     publicProps,
     publicContext,
     updateQueue
   ) {
     var Component = this._currentElement.type;
-
-    if (doConstruct) {
-      if (__DEV__) {
-        return measureLifeCyclePerf(
-          () => new Component(publicProps, publicContext, updateQueue),
-          this._debugID,
-          'ctor'
-        );
-      } else {
-        return new Component(publicProps, publicContext, updateQueue);
-      }
-    }
-
-    // This can still be an instance in case of factory components
-    // but we'll count this as time spent rendering as the more common case.
     if (__DEV__) {
       return measureLifeCyclePerf(
-        () => Component(publicProps, publicContext, updateQueue),
+        () => new Component(publicProps, publicContext, updateQueue),
         this._debugID,
-        'render'
+        'ctor'
       );
     } else {
-      return Component(publicProps, publicContext, updateQueue);
+      return new Component(publicProps, publicContext, updateQueue);
     }
   },
 
   performInitialMountWithErrorHandling: function(
-    renderedElement,
     hostParent,
     hostContainerInfo,
     transaction,
@@ -434,7 +372,7 @@ var ReactClassComponent = {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
@@ -449,12 +387,12 @@ var ReactClassComponent = {
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
+  performInitialMount: function(hostParent, hostContainerInfo, transaction, context) {
     var inst = this._instance;
 
     var debugID = 0;
@@ -479,11 +417,7 @@ var ReactClassComponent = {
       }
     }
 
-    // If not a stateless component, we now render
-    if (renderedElement === undefined) {
-      renderedElement = this._renderValidatedComponent();
-    }
-
+    var renderedElement = this._renderValidatedComponent();
     var nodeType = ReactNodeTypes.getType(renderedElement);
     this._renderedNodeType = nodeType;
     var child = this._instantiateReactComponent(
@@ -822,7 +756,7 @@ var ReactClassComponent = {
           shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
         }
       } else {
-        if (this._compositeType === CompositeTypes.PureClass) {
+        if (this._isPure) {
           shouldUpdate =
             !shallowEqual(prevProps, nextProps) ||
             !shallowEqual(inst.state, nextState);
@@ -1068,17 +1002,12 @@ var ReactClassComponent = {
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
-    if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
-      ReactCurrentOwner.current = this;
-      try {
-        renderedComponent =
-          this._renderValidatedComponentWithoutOwnerOrContext();
-      } finally {
-        ReactCurrentOwner.current = null;
-      }
-    } else {
+    ReactCurrentOwner.current = this;
+    try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
+    } finally {
+      ReactCurrentOwner.current = null;
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
@@ -1159,11 +1088,7 @@ var ReactClassComponent = {
    * @internal
    */
   getPublicInstance: function() {
-    var inst = this._instance;
-    if (this._compositeType === CompositeTypes.StatelessFunctional) {
-      return null;
-    }
-    return inst;
+    return this._instance;
   },
 
   // Stub
