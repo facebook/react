@@ -21,11 +21,11 @@ var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
 type TestRendererOptions = {
-  getMockRef: (element: ReactElement) => Object,
+  createNodeMock: (element: ReactElement) => Object,
 };
 
 var defaultTestOptions = {
-  getMockRef: function() {
+  createNodeMock: function() {
     return null;
   },
 };

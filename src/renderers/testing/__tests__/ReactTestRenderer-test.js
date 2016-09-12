@@ -231,7 +231,7 @@ describe('ReactTestRenderer', () => {
     );
   });
 
-  it('allows an optional getMockRef function', () => {
+  it('allows an optional createNodeMock function', () => {
     var mockDivInstance = { appendChild: () => {} };
     var mockInputInstance = { focus: () => {} };
     var mockListItemInstance = { click: () => {} };
@@ -247,7 +247,7 @@ describe('ReactTestRenderer', () => {
         );
       }
     }
-    function getMockRef(element) {
+    function createNodeMock(element) {
       switch (element.type) {
         case 'div':
           return mockDivInstance;
@@ -263,11 +263,11 @@ describe('ReactTestRenderer', () => {
     }
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
-      {getMockRef}
+      {createNodeMock}
     );
     ReactTestRenderer.create(
       <input ref={(r) => log.push(r)} />,
-      {getMockRef},
+      {createNodeMock},
     );
     ReactTestRenderer.create(
       <div>
@@ -281,11 +281,11 @@ describe('ReactTestRenderer', () => {
           </ul>
         </span>
       </div>,
-      {getMockRef, foobar: true},
+      {createNodeMock, foobar: true},
     );
     ReactTestRenderer.create(
       <Foo />,
-      {getMockRef},
+      {createNodeMock},
     );
     ReactTestRenderer.create(
       <div ref={(r) => log.push(r)} />,
