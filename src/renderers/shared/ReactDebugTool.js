@@ -15,7 +15,6 @@
 var ReactInvalidSetStateWarningHook = require('ReactInvalidSetStateWarningHook');
 var ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
-var ReactChildrenMutationWarningHook = require('ReactChildrenMutationWarningHook');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var performanceNow = require('performanceNow');
@@ -417,7 +416,6 @@ var ReactDebugTool = {
 
 ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
 ReactDebugTool.addHook(ReactComponentTreeHook);
-ReactDebugTool.addHook(ReactChildrenMutationWarningHook);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
 if ((/[?&]react_perf\b/).test(url)) {
   ReactDebugTool.beginProfiling();
