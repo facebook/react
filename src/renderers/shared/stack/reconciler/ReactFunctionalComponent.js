@@ -57,6 +57,7 @@ var ReactFunctionalComponent = {
     this._renderedNodeType = null;
     this._renderedComponent = null;
     this._context = null;
+    this._maskedContext = null;
     this._mountOrder = 0;
     this._topLevelWrapper = null;
 
@@ -86,6 +87,7 @@ var ReactFunctionalComponent = {
     context
   ) {
     this._context = context;
+    this._maskedContext = this._processContext(context);
     this._mountOrder = getNextMountID();
     this._hostParent = hostParent;
     this._hostContainerInfo = hostContainerInfo;
@@ -155,6 +157,7 @@ var ReactFunctionalComponent = {
     // These fields do not really need to be reset since this object is no
     // longer accessible.
     this._context = null;
+    this._maskedContext = null;
     this._rootNodeID = 0;
     this._topLevelWrapper = null;
   },
@@ -295,7 +298,10 @@ var ReactFunctionalComponent = {
   ) {
     this._updateBatchNumber = null;
     this._currentElement = nextParentElement;
-    this._context = nextUnmaskedContext;
+    if (this._context !== nextUnmaskedContext) {
+      this._context = nextUnmaskedContext;
+      this._maskedContext = this._processContext(nextUnmaskedContext);
+    }
     this._pendingForceUpdate = false;
     this._updateRenderedComponent(transaction, nextUnmaskedContext);
   },
@@ -390,7 +396,7 @@ var ReactFunctionalComponent = {
   _renderValidatedComponentWithoutOwner: function() {
     var Component = this._currentElement.type;
     var publicProps = this._currentElement.props;
-    var publicContext = this._processContext(this._context);
+    var publicContext = this._maskedContext;
     var renderedElement;
 
     if (__DEV__) {
