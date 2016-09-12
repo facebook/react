@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -30,49 +31,9 @@ var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
+var {getNextMountID, measureLifeCyclePerf} = require('ReactCompositeComponent');
+
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
-
-function StatelessComponent(Component) {
-}
-StatelessComponent.prototype.render = function() {
-  var Component = ReactInstanceMap.get(this)._currentElement.type;
-  var element = Component(this.props, this.context, this.updater);
-  warnIfInvalidElement(Component, element);
-  return element;
-};
-
-function warnIfInvalidElement(Component, element) {
-  if (__DEV__) {
-    warning(
-      element === null || element === false || React.isValidElement(element),
-      '%s(...): A valid React element (or null) must be returned. You may have ' +
-      'returned undefined, an array or some other invalid object.',
-      Component.displayName || Component.name || 'Component'
-    );
-    warning(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a functional component.',
-      Component.displayName || Component.name || 'Component'
-    );
-  }
-}
-
-// Separated into a function to contain deoptimizations caused by try/finally.
-function measureLifeCyclePerf(fn, debugID, timerType) {
-  if (debugID === 0) {
-    // Top-level wrappers (see ReactMount) and empty components (see
-    // ReactDOMEmptyComponent) are invisible to hooks and devtools.
-    // Both are implementation details that should go away in the future.
-    return fn();
-  }
-
-  ReactInstrumentation.debugTool.onBeginLifeCycleTimer(debugID, timerType);
-  try {
-    return fn();
-  } finally {
-    ReactInstrumentation.debugTool.onEndLifeCycleTimer(debugID, timerType);
-  }
-}
 
 /**
  * ------------------ The Life-Cycle of a Composite Component ------------------
@@ -100,14 +61,6 @@ function measureLifeCyclePerf(fn, debugID, timerType) {
  *
  * -----------------------------------------------------------------------------
  */
-
-/**
- * An incrementing ID assigned to each component when it is mounted. This is
- * used to enforce the order in which `ReactUpdates` updates dirty components.
- *
- * @private
- */
-var nextMountID = 1;
 
 /**
  * @lends {ReactClassComponent.prototype}
@@ -171,7 +124,7 @@ var ReactClassComponent = {
     context
   ) {
     this._context = context;
-    this._mountOrder = nextMountID++;
+    this._mountOrder = getNextMountID();
     this._hostParent = hostParent;
     this._hostContainerInfo = hostContainerInfo;
 
