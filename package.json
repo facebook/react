@@ -15,7 +15,7 @@
     "babel-plugin-transform-es2015-arrow-functions": "^6.5.2",
     "babel-plugin-transform-es2015-block-scoped-functions": "^6.5.0",
     "babel-plugin-transform-es2015-block-scoping": "^6.5.0",
-    "babel-plugin-transform-es2015-classes": "^6.5.2",
+    "babel-plugin-transform-es2015-classes": "^6.14.0",
     "babel-plugin-transform-es2015-computed-properties": "^6.5.2",
     "babel-plugin-transform-es2015-destructuring": "^6.5.0",
     "babel-plugin-transform-es2015-for-of": "^6.5.2",
