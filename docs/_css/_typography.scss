@@ -112,8 +112,6 @@ li {
   line-height: 20px;
 }
 
-
-
 a {
   color: $linkColor;
   text-decoration: none;
@@ -130,4 +128,8 @@ a {
 }
 .center {
   text-align: center;
+}
+
+input {
+  font-family: inherit;
 }
