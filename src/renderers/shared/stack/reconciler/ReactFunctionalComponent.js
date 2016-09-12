@@ -27,7 +27,7 @@ var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
-var {getNextMountID, measureLifeCyclePerf} = require('ReactCompositeComponent');
+var {getNextMountID, measureLifeCyclePerf} = require('ReactCompositeUtils');
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 

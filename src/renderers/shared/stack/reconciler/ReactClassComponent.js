@@ -13,7 +13,6 @@
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -31,7 +30,7 @@ var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
-var {getNextMountID, measureLifeCyclePerf} = require('ReactCompositeComponent');
+var {getNextMountID, measureLifeCyclePerf} = require('ReactCompositeUtils');
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
