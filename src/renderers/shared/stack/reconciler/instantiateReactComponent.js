@@ -11,24 +11,36 @@
 
 'use strict';
 
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClassComponent = require('ReactClassComponent');
+var ReactFunctionalComponent = require('ReactFunctionalComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
 
 var invariant = require('invariant');
 var warning = require('warning');
 
-// To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function(element) {
+// To avoid a cyclic dependency, we create the final classes in this module
+var ReactClassComponentWrapper = function(element) {
   this.construct(element);
 };
 Object.assign(
-  ReactCompositeComponentWrapper.prototype,
-  ReactCompositeComponent,
+  ReactClassComponentWrapper.prototype,
+  ReactClassComponent,
   {
     _instantiateReactComponent: instantiateReactComponent,
   }
 );
+var ReactFunctionalComponentWrapper = function(element) {
+  this.construct(element);
+};
+Object.assign(
+  ReactFunctionalComponentWrapper.prototype,
+  ReactFunctionalComponent,
+  {
+    _instantiateReactComponent: instantiateReactComponent,
+  }
+);
+
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -96,7 +108,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
         instance.getHostNode = instance.getNativeNode;
       }
     } else {
-      instance = new ReactCompositeComponentWrapper(element);
+      instance = new ReactClassComponentWrapper(element);
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactHostComponent.createInstanceForText(node);

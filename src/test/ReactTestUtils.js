@@ -20,7 +20,7 @@ var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClassComponent = require('ReactClassComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
@@ -419,15 +419,15 @@ var ShallowComponentWrapper = function(element) {
 };
 Object.assign(
   ShallowComponentWrapper.prototype,
-  ReactCompositeComponent, {
+  ReactClassComponent, {
     _constructComponent:
-      ReactCompositeComponent._constructComponentWithoutOwner,
+      ReactClassComponent._constructComponentWithoutOwner,
     _instantiateReactComponent: function(element) {
       return new NoopInternalComponent(element);
     },
     _replaceNodeWithMarkup: function() {},
     _renderValidatedComponent:
-      ReactCompositeComponent
+      ReactClassComponent
         ._renderValidatedComponentWithoutOwnerOrContext,
   }
 );

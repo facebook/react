@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactCompositeComponent
+ * @providesModule ReactClassComponent
  */
 
 'use strict';
@@ -124,9 +124,9 @@ function measureLifeCyclePerf(fn, debugID, timerType) {
 var nextMountID = 1;
 
 /**
- * @lends {ReactCompositeComponent.prototype}
+ * @lends {ReactClassComponent.prototype}
  */
-var ReactCompositeComponent = {
+var ReactClassComponent = {
 
   /**
    * Base constructor for all composite component.
@@ -326,7 +326,7 @@ var ReactCompositeComponent = {
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
       '%s.state: must be set to an object or null',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactClassComponent'
     );
 
     this._pendingStateQueue = null;
@@ -653,7 +653,7 @@ var ReactCompositeComponent = {
         typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
         'use getChildContext().',
-        this.getName() || 'ReactCompositeComponent'
+        this.getName() || 'ReactClassComponent'
       );
       if (__DEV__) {
         this._checkContextTypes(
@@ -666,7 +666,7 @@ var ReactCompositeComponent = {
         invariant(
           name in Component.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-          this.getName() || 'ReactCompositeComponent',
+          this.getName() || 'ReactClassComponent',
           name
         );
       }
@@ -770,7 +770,7 @@ var ReactCompositeComponent = {
       inst != null,
       'Attempted to update component `%s` that has already been unmounted ' +
       '(or failed to mount).',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactClassComponent'
     );
 
     var willReceive = false;
@@ -835,7 +835,7 @@ var ReactCompositeComponent = {
         shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
-        this.getName() || 'ReactCompositeComponent'
+        this.getName() || 'ReactClassComponent'
       );
     }
 
@@ -1086,7 +1086,7 @@ var ReactCompositeComponent = {
       React.isValidElement(renderedComponent),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactClassComponent'
     );
 
     return renderedComponent;
@@ -1171,4 +1171,4 @@ var ReactCompositeComponent = {
 
 };
 
-module.exports = ReactCompositeComponent;
+module.exports = ReactClassComponent;
