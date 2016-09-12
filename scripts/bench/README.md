@@ -2,10 +2,20 @@ Work-in-progress benchmarks.
 
 ## Running the suite
 
+You'll need two folders to compare, each of them containing `react.min.js` and `react-dom-server.min.js`. You can run `npm run build` at the repo root to get a `build` folder with these files.
+
+For example, if you want to compare a stable verion against master, you can create folders called `build-stable` and `build-master` and use the benchmark scripts like this:
+
 ```
-$ ./measure.py react-a.min.js a.txt react-b.min.js b.txt
-$ ./analyze.py a.txt b.txt
+$ ./measure.py build-stable stable.txt build-master master.txt
+$ ./analyze.py stable.txt master.txt
 ```
+
+The test measurements (second argument to `analyze`, `master.txt` in this example) will be compared to the control measurements (first argument to `analyze`, `stable.txt` in this example).
+
+Changes with the `-` sign in the output mean `master` is faster than `stable`.
+
+You can name folders any way you like, this was just an example.
 
 ## Running one
 One thing you can do with them is benchmark initial render time for a realistic hierarchy:
