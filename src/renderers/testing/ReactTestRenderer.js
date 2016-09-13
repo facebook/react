@@ -19,6 +19,7 @@ var ReactHostComponent = require('ReactHostComponent');
 var ReactTestMount = require('ReactTestMount');
 var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
+var ReactTestTextComponent = require('ReactTestTextComponent');
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -95,21 +96,6 @@ ReactTestComponent.prototype.toJSON = function() {
   return object;
 };
 Object.assign(ReactTestComponent.prototype, ReactMultiChild);
-
-// =============================================================================
-
-var ReactTestTextComponent = function(element) {
-  this._currentElement = element;
-};
-ReactTestTextComponent.prototype.mountComponent = function() {};
-ReactTestTextComponent.prototype.receiveComponent = function(nextElement) {
-  this._currentElement = nextElement;
-};
-ReactTestTextComponent.prototype.getHostNode = function() {};
-ReactTestTextComponent.prototype.unmountComponent = function() {};
-ReactTestTextComponent.prototype.toJSON = function() {
-  return this._currentElement;
-};
 
 // =============================================================================
 
