@@ -25,12 +25,15 @@ var { cloneFiber } = require('ReactFiber');
 
 var {
   NoWork,
+  LowPriority,
+  AnimationPriority,
+  SynchronousPriority,
 } = require('ReactPriorityLevel');
 
 var timeHeuristicForUnitOfWork = 1;
 
 export type Scheduler = {
-  scheduleLowPriWork: (root : FiberRoot, priority : PriorityLevel) => void
+  scheduleDeferredWork: (root : FiberRoot, priority : PriorityLevel) => void
 };
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
@@ -45,8 +48,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   const { completeWork } = ReactFiberCompleteWork(config);
   const { commitWork } = ReactFiberCommitWork(config);
 
-  // const scheduleHighPriCallback = config.scheduleHighPriCallback;
-  const scheduleLowPriCallback = config.scheduleLowPriCallback;
+  const scheduleAnimationCallback = config.scheduleAnimationCallback;
+  const scheduleDeferredCallback = config.scheduleDeferredCallback;
+
+  // The default priority to use for updates.
+  let defaultPriority : PriorityLevel = LowPriority;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -217,7 +223,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  function performLowPriWork(deadline) {
+  function performDeferredWork(deadline) {
     if (!nextUnitOfWork) {
       nextUnitOfWork = findNextUnitOfWork();
     }
@@ -229,18 +235,24 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           nextUnitOfWork = findNextUnitOfWork();
         }
       } else {
-        scheduleLowPriCallback(performLowPriWork);
+        scheduleDeferredCallback(performDeferredWork);
         return;
       }
     }
   }
 
-  function scheduleLowPriWork(root : FiberRoot, priority : PriorityLevel) {
+  function scheduleDeferredWork(root : FiberRoot, priority : PriorityLevel) {
     // We must reset the current unit of work pointer so that we restart the
     // search from the root during the next tick, in case there is now higher
     // priority work somewhere earlier than before.
     if (priority <= nextPriorityLevel) {
       nextUnitOfWork = null;
+    }
+
+    // Set the priority on the root, without deprioritizing
+    if (root.current.pendingWorkPriority === NoWork ||
+        priority <= root.current.pendingWorkPriority) {
+      root.current.pendingWorkPriority = priority;
     }
 
     if (root.isScheduled) {
@@ -256,22 +268,81 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // We're the only work scheduled.
       nextScheduledRoot = root;
       lastScheduledRoot = root;
-      scheduleLowPriCallback(performLowPriWork);
+      scheduleDeferredCallback(performDeferredWork);
     }
   }
 
-  /*
-  function performHighPriWork() {
-    // There is no such thing as high pri work yet.
+  function performAnimationWork() {
+    // Always start from the root
+    nextUnitOfWork = findNextUnitOfWork();
+    while (nextUnitOfWork &&
+           nextPriorityLevel !== NoWork) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      if (!nextUnitOfWork) {
+        // Keep searching for animation work until there's no more left
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+      // Stop if the next unit of work is low priority
+      if (nextPriorityLevel > AnimationPriority) {
+        scheduleDeferredCallback(performDeferredWork);
+        return;
+      }
+    }
   }
 
-  function ensureHighPriIsScheduled() {
-    scheduleHighPriCallback(performHighPriWork);
+  function scheduleAnimationWork(root: FiberRoot, priorityLevel : PriorityLevel) {
+    // Set the priority on the root, without deprioritizing
+    if (root.current.pendingWorkPriority === NoWork ||
+        priorityLevel <= root.current.pendingWorkPriority) {
+      root.current.pendingWorkPriority = priorityLevel;
+    }
+
+    if (root.isScheduled) {
+      // If we're already scheduled, we can bail out.
+      return;
+    }
+    root.isScheduled = true;
+    if (lastScheduledRoot) {
+      // Schedule ourselves to the end.
+      lastScheduledRoot.nextScheduledRoot = root;
+      lastScheduledRoot = root;
+    } else {
+      // We're the only work scheduled.
+      nextScheduledRoot = root;
+      lastScheduledRoot = root;
+      scheduleAnimationCallback(performAnimationWork);
+    }
   }
-  */
+
+  function scheduleWork(root : FiberRoot) {
+    if (defaultPriority === SynchronousPriority) {
+      throw new Error('Not implemented yet');
+    }
+
+    if (defaultPriority === NoWork) {
+      return;
+    }
+    if (defaultPriority > AnimationPriority) {
+      scheduleDeferredWork(root, defaultPriority);
+      return;
+    }
+    scheduleAnimationWork(root, defaultPriority);
+  }
+
+  function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
+    const previousDefaultPriority = defaultPriority;
+    defaultPriority = priorityLevel;
+    try {
+      fn();
+    } finally {
+      defaultPriority = previousDefaultPriority;
+    }
+  }
 
   scheduler = {
-    scheduleLowPriWork: scheduleLowPriWork,
+    scheduleWork: scheduleWork,
+    scheduleDeferredWork: scheduleDeferredWork,
+    performWithPriority: performWithPriority,
   };
   return scheduler;
 };
