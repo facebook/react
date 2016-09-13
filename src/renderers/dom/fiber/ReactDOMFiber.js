@@ -15,6 +15,7 @@
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var warning = require('warning');
 
@@ -98,8 +99,9 @@ var DOMRenderer = ReactFiberReconciler({
 var warned = false;
 
 function warnAboutUnstableUse() {
+  // Ignore this warning is the feature flag is turned on. E.g. for tests.
   warning(
-    warned,
+    warned || ReactDOMFeatureFlags.useFiber,
     'You are using React DOM Fiber which is an experimental renderer. ' +
     'It is likely to have bugs, breaking changes and is unsupported.'
   );
