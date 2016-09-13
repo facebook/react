@@ -73,6 +73,7 @@ var ReactOwner = {
     component: ReactInstance,
     ref: string,
     owner: ReactInstance,
+    transaction,
   ): void {
     invariant(
       isValidOwner(owner),
@@ -81,7 +82,7 @@ var ReactOwner = {
       '`render` method, or you have multiple copies of React loaded ' +
       '(details: https://fb.me/react-refs-must-have-owner).'
     );
-    owner.attachRef(ref, component);
+    owner.attachRef(ref, component, transaction);
   },
 
   /**

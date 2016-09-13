@@ -57,9 +57,10 @@ var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
  *
  * @class ReactTestReconcileTransaction
  */
-function ReactTestReconcileTransaction() {
+function ReactTestReconcileTransaction(testOptions) {
   this.reinitializeTransaction();
-  this.reactMountReady = CallbackQueue.getPooled(null);
+  this.testOptions = testOptions;
+  this.reactMountReady = CallbackQueue.getPooled(this);
 }
 
 var Mixin = {
@@ -80,6 +81,13 @@ var Mixin = {
    */
   getReactMountReady: function() {
     return this.reactMountReady;
+  },
+
+  /**
+   * @return {object} the options passed to ReactTestRenderer
+   */
+  getTestOptions: function() {
+    return this.testOptions;
   },
 
   /**

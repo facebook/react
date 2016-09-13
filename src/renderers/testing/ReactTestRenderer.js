@@ -43,6 +43,7 @@ var ReactTestComponent = function(element) {
   this._renderedChildren = null;
   this._topLevelWrapper = null;
 };
+
 ReactTestComponent.prototype.mountComponent = function(
   transaction,
   nativeParent,
@@ -52,6 +53,7 @@ ReactTestComponent.prototype.mountComponent = function(
   var element = this._currentElement;
   this.mountChildren(element.props.children, transaction, context);
 };
+
 ReactTestComponent.prototype.receiveComponent = function(
   nextElement,
   transaction,
@@ -60,13 +62,17 @@ ReactTestComponent.prototype.receiveComponent = function(
   this._currentElement = nextElement;
   this.updateChildren(nextElement.props.children, transaction, context);
 };
+
 ReactTestComponent.prototype.getHostNode = function() {};
-ReactTestComponent.prototype.getPublicInstance = function() {
-  // I can't say this makes a ton of sense but it seems better than throwing.
-  // Maybe we'll revise later if someone has a good use case.
-  return null;
+
+ReactTestComponent.prototype.getPublicInstance = function(transaction) {
+  var element = this._currentElement;
+  var options = transaction.getTestOptions();
+  return options.createNodeMock(element);
 };
+
 ReactTestComponent.prototype.unmountComponent = function() {};
+
 ReactTestComponent.prototype.toJSON = function() {
   var {children, ...props} = this._currentElement.props;
   var childrenJSON = [];
@@ -136,7 +142,6 @@ ReactComponentEnvironment.injection.injectEnvironment({
 
 var ReactTestRenderer = {
   create: ReactTestMount.render,
-
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */

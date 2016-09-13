@@ -20,6 +20,16 @@ var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
+type TestRendererOptions = {
+  createNodeMock: (element: ReactElement) => Object,
+};
+
+var defaultTestOptions = {
+  createNodeMock: function() {
+    return null;
+  },
+};
+
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
  * composites instead of having to worry about different types of components
@@ -45,7 +55,8 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  */
 function mountComponentIntoNode(
     componentInstance,
-    transaction) {
+    transaction,
+  ) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
@@ -65,13 +76,15 @@ function mountComponentIntoNode(
  * @param {number} containerTag container element to mount into.
  */
 function batchedMountComponentIntoNode(
-    componentInstance) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+    componentInstance,
+    options,
+  ) {
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(options);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
-    transaction
+    transaction,
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;
@@ -135,11 +148,12 @@ ReactTestInstance.prototype.toJSON = function() {
 var ReactTestMount = {
 
   render: function(
-    nextElement: ReactElement<any>
+    nextElement: ReactElement<any>,
+    options?: TestRendererOptions,
   ): ReactTestInstance {
     var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      { child: nextElement }
+      {child: nextElement},
     );
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
@@ -147,10 +161,10 @@ var ReactTestMount = {
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
-
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
-      instance
+      instance,
+      Object.assign({}, defaultTestOptions, options),
     );
     return new ReactTestInstance(instance);
   },
