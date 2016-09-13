@@ -20,6 +20,7 @@ var ReactTestMount = require('ReactTestMount');
 var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
+var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -36,77 +37,65 @@ function getRenderedHostOrTextFromComponent(component) {
   return component;
 }
 
-
-// =============================================================================
-
-var ReactTestComponent = function(element) {
-  this._currentElement = element;
-  this._renderedChildren = null;
-  this._topLevelWrapper = null;
-};
-
-ReactTestComponent.prototype.mountComponent = function(
-  transaction,
-  nativeParent,
-  nativeContainerInfo,
-  context
-) {
-  var element = this._currentElement;
-  this.mountChildren(element.props.children, transaction, context);
-};
-
-ReactTestComponent.prototype.receiveComponent = function(
-  nextElement,
-  transaction,
-  context
-) {
-  this._currentElement = nextElement;
-  this.updateChildren(nextElement.props.children, transaction, context);
-};
-
-ReactTestComponent.prototype.getHostNode = function() {};
-
-ReactTestComponent.prototype.getPublicInstance = function(transaction) {
-  var element = this._currentElement;
-  var options = transaction.getTestOptions();
-  return options.createNodeMock(element);
-};
-
-ReactTestComponent.prototype.unmountComponent = function() {};
-
-ReactTestComponent.prototype.toJSON = function() {
-  var {children, ...props} = this._currentElement.props;
-  var childrenJSON = [];
-  for (var key in this._renderedChildren) {
-    var inst = this._renderedChildren[key];
-    inst = getRenderedHostOrTextFromComponent(inst);
-    var json = inst.toJSON();
-    if (json !== undefined) {
-      childrenJSON.push(json);
-    }
+class ReactTestComponent {
+  constructor(element) {
+    this._currentElement = element;
+    this._renderedChildren = null;
+    this._topLevelWrapper = null;
   }
-  var object = {
-    type: this._currentElement.type,
-    props: props,
-    children: childrenJSON.length ? childrenJSON : null,
-  };
-  Object.defineProperty(object, '$$typeof', {
-    value: Symbol.for('react.test.json'),
-  });
-  return object;
-};
+
+  mountComponent(
+    transaction,
+    nativeParent,
+    nativeContainerInfo,
+    context,
+  ) {
+    var element = this._currentElement;
+    this.mountChildren(element.props.children, transaction, context);
+  }
+
+  receiveComponent(
+    nextElement,
+    transaction,
+    context,
+  ) {
+    this._currentElement = nextElement;
+    this.updateChildren(nextElement.props.children, transaction, context);
+  }
+
+  getPublicInstance(transaction) {
+    var element = this._currentElement;
+    var options = transaction.getTestOptions();
+    return options.createNodeMock(element);
+  }
+
+  toJSON() {
+    var {children, ...props} = this._currentElement.props;
+    var childrenJSON = [];
+    for (var key in this._renderedChildren) {
+      var inst = this._renderedChildren[key];
+      inst = getRenderedHostOrTextFromComponent(inst);
+      var json = inst.toJSON();
+      if (json !== undefined) {
+        childrenJSON.push(json);
+      }
+    }
+    var object = {
+      type: this._currentElement.type,
+      props: props,
+      children: childrenJSON.length ? childrenJSON : null,
+    };
+    Object.defineProperty(object, '$$typeof', {
+      value: Symbol.for('react.test.json'),
+    });
+    return object;
+  }
+
+  getHostNode() {}
+  unmountComponent() {}
+}
+
 Object.assign(ReactTestComponent.prototype, ReactMultiChild);
-
-// =============================================================================
-
-var ReactTestEmptyComponent = function(element) {
-  this._currentElement = null;
-};
-ReactTestEmptyComponent.prototype.mountComponent = function() {};
-ReactTestEmptyComponent.prototype.receiveComponent = function() {};
-ReactTestEmptyComponent.prototype.getHostNode = function() {};
-ReactTestEmptyComponent.prototype.unmountComponent = function() {};
-ReactTestEmptyComponent.prototype.toJSON = function() {};
 
 // =============================================================================
 
