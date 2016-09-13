@@ -539,37 +539,20 @@ describe('ReactServerRendering', () => {
     expect(markup).toBe('<div></div>');
   });
 
-  it('warns when children are mutated before render', () => {
-    function normalizeCodeLocInfo(str) {
-      return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-    }
-
+  it('should warn when children are mutated during render', () => {
     spyOn(console, 'error');
-    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
-    var element = <div>{children}</div>;
-    children[1] = <p key={1} />; // Mutation is illegal
-    ReactServerRendering.renderToString(element);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Component\'s children should not be mutated.\n    in div (at **)'
-    );
-  });
-
-  it('should warn when children are mutated', () => {
-    function normalizeCodeLocInfo(str) {
-      return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-    }
-
-    spyOn(console, 'error');
-    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    ReactServerRendering.renderToString(<Wrapper>{children}</Wrapper>);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Component\'s children should not be mutated.\n    in Wrapper (at **)'
-    );
+    expect(() => {
+      ReactServerRendering.renderToStaticMarkup(
+        <Wrapper>
+          <span key={0}/>
+          <span key={1}/>
+          <span key={2}/>
+        </Wrapper>
+      );
+    }).toThrowError(/Cannot assign to read only property.*/);
   });
 });
