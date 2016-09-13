@@ -3,7 +3,7 @@ id: introduction-ru-RU
 title: Введение
 layout: tips
 permalink: tips/introduction-ru-RU.html
-next: inline-styles.html
+next: inline-styles-ru-RU.html
 ---
 
 Данный раздел советов по React содержит краткую информацию, которая поможет ответить на многие ваши вопросы и предостеречь вас от распространенных ошибок.
