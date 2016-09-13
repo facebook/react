@@ -80,13 +80,18 @@ function getParentInstance(inst) {
 }
 
 /**
- * Simulates the traversal of a two-phase, capture/bubble event dispatch.
+ * Simulates the traversal of a two-phase, capture/bubble event dispatch
+ * with skipping disabled instances.
  */
 function traverseTwoPhase(inst, fn, arg) {
   var path = [];
   while (inst) {
     path.push(inst);
-    inst = inst._hostParent;
+    var parent = getParentInstance(inst);
+    while (parent && parent._currentElement && parent._currentElement.props.disabled) {
+      parent = getParentInstance(parent);
+    }
+    inst = parent;
   }
   var i;
   for (i = path.length; i-- > 0;) {

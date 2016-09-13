@@ -40,6 +40,10 @@ class ParentComponent extends React.Component {
           <ChildComponent ref="P_P1_C1" />
           <ChildComponent ref="P_P1_C2" />
         </div>
+        <div disabled={true} ref="P_P2" >
+          <ChildComponent ref="P_P2_C1" />
+          <ChildComponent ref="P_P2_C2" />
+        </div>
         <div ref="P_OneOff" />
       </div>
     );
@@ -90,6 +94,22 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P_P1_C1.refs.DIV_1, isUp: true, arg: ARG},
         {node: parent.refs.P_P1_C1.refs.DIV, isUp: true, arg: ARG},
         {node: parent.refs.P_P1, isUp: true, arg: ARG},
+        {node: parent.refs.P, isUp: true, arg: ARG},
+      ];
+      ReactDOMTreeTraversal.traverseTwoPhase(target, argAggregator, ARG);
+      expect(aggregatedArgs).toEqual(expectedAggregation);
+    });
+
+    it('should traverse two phase across component boundary exlude disabled ones', () => {
+      var parent = renderParentIntoDocument();
+      var target = getInst(parent.refs.P_P2_C1.refs.DIV_1);
+      var expectedAggregation = [
+        {node: parent.refs.P, isUp: false, arg: ARG},
+        {node: parent.refs.P_P2_C1.refs.DIV, isUp: false, arg: ARG},
+        {node: parent.refs.P_P2_C1.refs.DIV_1, isUp: false, arg: ARG},
+
+        {node: parent.refs.P_P2_C1.refs.DIV_1, isUp: true, arg: ARG},
+        {node: parent.refs.P_P2_C1.refs.DIV, isUp: true, arg: ARG},
         {node: parent.refs.P, isUp: true, arg: ARG},
       ];
       ReactDOMTreeTraversal.traverseTwoPhase(target, argAggregator, ARG);
