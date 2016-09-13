@@ -36,6 +36,7 @@ var {
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
 var {
   NoWork,
@@ -95,6 +96,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       );
     }
     markChildAsProgressed(current, workInProgress, priorityLevel);
+  }
+
+  function updateFragment(current, workInProgress) {
+    var nextChildren = workInProgress.pendingProps;
+    reconcileChildren(current, workInProgress, nextChildren);
   }
 
   function updateFunctionalComponent(current, workInProgress) {
@@ -408,6 +414,16 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
           return beginWork(
             workInProgress.sibling.alternate,
             workInProgress.sibling,
+            priorityLevel
+          );
+        }
+        return null;
+      case Fragment:
+        updateFragment(current, workInProgress);
+        if (workInProgress.child) {
+          return beginWork(
+            workInProgress.child.alternate,
+            workInProgress.child,
             priorityLevel
           );
         }
