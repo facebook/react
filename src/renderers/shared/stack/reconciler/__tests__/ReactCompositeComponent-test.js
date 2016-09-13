@@ -69,7 +69,7 @@ describe('ReactCompositeComponent', () => {
     };
   });
 
-  it('should support module pattern components', () => {
+  xit('should support module pattern components', () => {
     function Child({test}) {
       return {
         render() {

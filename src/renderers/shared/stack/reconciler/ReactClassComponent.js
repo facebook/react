@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactCompositeComponent
+ * @providesModule ReactClassComponent
  */
 
 'use strict';
@@ -30,63 +30,9 @@ var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
+var {getNextMountID, measureLifeCyclePerf} = require('ReactCompositeUtils');
+
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
-
-var CompositeTypes = {
-  ImpureClass: 0,
-  PureClass: 1,
-  StatelessFunctional: 2,
-};
-
-function StatelessComponent(Component) {
-}
-StatelessComponent.prototype.render = function() {
-  var Component = ReactInstanceMap.get(this)._currentElement.type;
-  var element = Component(this.props, this.context, this.updater);
-  warnIfInvalidElement(Component, element);
-  return element;
-};
-
-function warnIfInvalidElement(Component, element) {
-  if (__DEV__) {
-    warning(
-      element === null || element === false || React.isValidElement(element),
-      '%s(...): A valid React element (or null) must be returned. You may have ' +
-      'returned undefined, an array or some other invalid object.',
-      Component.displayName || Component.name || 'Component'
-    );
-    warning(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a functional component.',
-      Component.displayName || Component.name || 'Component'
-    );
-  }
-}
-
-function shouldConstruct(Component) {
-  return !!(Component.prototype && Component.prototype.isReactComponent);
-}
-
-function isPureComponent(Component) {
-  return !!(Component.prototype && Component.prototype.isPureReactComponent);
-}
-
-// Separated into a function to contain deoptimizations caused by try/finally.
-function measureLifeCyclePerf(fn, debugID, timerType) {
-  if (debugID === 0) {
-    // Top-level wrappers (see ReactMount) and empty components (see
-    // ReactDOMEmptyComponent) are invisible to hooks and devtools.
-    // Both are implementation details that should go away in the future.
-    return fn();
-  }
-
-  ReactInstrumentation.debugTool.onBeginLifeCycleTimer(debugID, timerType);
-  try {
-    return fn();
-  } finally {
-    ReactInstrumentation.debugTool.onEndLifeCycleTimer(debugID, timerType);
-  }
-}
 
 /**
  * ------------------ The Life-Cycle of a Composite Component ------------------
@@ -116,17 +62,9 @@ function measureLifeCyclePerf(fn, debugID, timerType) {
  */
 
 /**
- * An incrementing ID assigned to each component when it is mounted. This is
- * used to enforce the order in which `ReactUpdates` updates dirty components.
- *
- * @private
+ * @lends {ReactClassComponent.prototype}
  */
-var nextMountID = 1;
-
-/**
- * @lends {ReactCompositeComponent.prototype}
- */
-var ReactCompositeComponent = {
+var ReactClassComponent = {
 
   /**
    * Base constructor for all composite component.
@@ -138,10 +76,10 @@ var ReactCompositeComponent = {
   construct: function(element) {
     this._currentElement = element;
     this._rootNodeID = 0;
-    this._compositeType = null;
     this._instance = null;
     this._hostParent = null;
     this._hostContainerInfo = null;
+    this._isPure = !!element.type.prototype.isPureReactComponent;
 
     // See ReactUpdateQueue
     this._updateBatchNumber = null;
@@ -185,48 +123,21 @@ var ReactCompositeComponent = {
     context
   ) {
     this._context = context;
-    this._mountOrder = nextMountID++;
+    this._mountOrder = getNextMountID();
     this._hostParent = hostParent;
     this._hostContainerInfo = hostContainerInfo;
 
     var publicProps = this._currentElement.props;
     var publicContext = this._processContext(context);
-
     var Component = this._currentElement.type;
-
     var updateQueue = transaction.getUpdateQueue();
 
     // Initialize the public class
-    var doConstruct = shouldConstruct(Component);
     var inst = this._constructComponent(
-      doConstruct,
       publicProps,
       publicContext,
       updateQueue
     );
-    var renderedElement;
-
-    // Support functional components
-    if (!doConstruct && (inst == null || inst.render == null)) {
-      renderedElement = inst;
-      warnIfInvalidElement(Component, renderedElement);
-      invariant(
-        inst === null ||
-        inst === false ||
-        React.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
-        Component.displayName || Component.name || 'Component'
-      );
-      inst = new StatelessComponent(Component);
-      this._compositeType = CompositeTypes.StatelessFunctional;
-    } else {
-      if (isPureComponent(Component)) {
-        this._compositeType = CompositeTypes.PureClass;
-      } else {
-        this._compositeType = CompositeTypes.ImpureClass;
-      }
-    }
 
     if (__DEV__) {
       // This will throw later in _renderValidatedComponent, but add an early
@@ -326,7 +237,7 @@ var ReactCompositeComponent = {
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
       '%s.state: must be set to an object or null',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactClassComponent'
     );
 
     this._pendingStateQueue = null;
@@ -336,14 +247,13 @@ var ReactCompositeComponent = {
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
-        renderedElement,
         hostParent,
         hostContainerInfo,
         transaction,
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     }
 
     if (inst.componentDidMount) {
@@ -364,7 +274,6 @@ var ReactCompositeComponent = {
   },
 
   _constructComponent: function(
-    doConstruct,
     publicProps,
     publicContext,
     updateQueue
@@ -373,7 +282,6 @@ var ReactCompositeComponent = {
       ReactCurrentOwner.current = this;
       try {
         return this._constructComponentWithoutOwner(
-          doConstruct,
           publicProps,
           publicContext,
           updateQueue
@@ -383,7 +291,6 @@ var ReactCompositeComponent = {
       }
     } else {
       return this._constructComponentWithoutOwner(
-        doConstruct,
         publicProps,
         publicContext,
         updateQueue
@@ -392,40 +299,23 @@ var ReactCompositeComponent = {
   },
 
   _constructComponentWithoutOwner: function(
-    doConstruct,
     publicProps,
     publicContext,
     updateQueue
   ) {
     var Component = this._currentElement.type;
-
-    if (doConstruct) {
-      if (__DEV__) {
-        return measureLifeCyclePerf(
-          () => new Component(publicProps, publicContext, updateQueue),
-          this._debugID,
-          'ctor'
-        );
-      } else {
-        return new Component(publicProps, publicContext, updateQueue);
-      }
-    }
-
-    // This can still be an instance in case of factory components
-    // but we'll count this as time spent rendering as the more common case.
     if (__DEV__) {
       return measureLifeCyclePerf(
-        () => Component(publicProps, publicContext, updateQueue),
+        () => new Component(publicProps, publicContext, updateQueue),
         this._debugID,
-        'render'
+        'ctor'
       );
     } else {
-      return Component(publicProps, publicContext, updateQueue);
+      return new Component(publicProps, publicContext, updateQueue);
     }
   },
 
   performInitialMountWithErrorHandling: function(
-    renderedElement,
     hostParent,
     hostContainerInfo,
     transaction,
@@ -434,7 +324,7 @@ var ReactCompositeComponent = {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
@@ -449,12 +339,12 @@ var ReactCompositeComponent = {
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(hostParent, hostContainerInfo, transaction, context);
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
+  performInitialMount: function(hostParent, hostContainerInfo, transaction, context) {
     var inst = this._instance;
 
     var debugID = 0;
@@ -479,11 +369,7 @@ var ReactCompositeComponent = {
       }
     }
 
-    // If not a stateless component, we now render
-    if (renderedElement === undefined) {
-      renderedElement = this._renderValidatedComponent();
-    }
-
+    var renderedElement = this._renderValidatedComponent();
     var nodeType = ReactNodeTypes.getType(renderedElement);
     this._renderedNodeType = nodeType;
     var child = this._instantiateReactComponent(
@@ -653,7 +539,7 @@ var ReactCompositeComponent = {
         typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
         'use getChildContext().',
-        this.getName() || 'ReactCompositeComponent'
+        this.getName() || 'ReactClassComponent'
       );
       if (__DEV__) {
         this._checkContextTypes(
@@ -666,7 +552,7 @@ var ReactCompositeComponent = {
         invariant(
           name in Component.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-          this.getName() || 'ReactCompositeComponent',
+          this.getName() || 'ReactClassComponent',
           name
         );
       }
@@ -770,7 +656,7 @@ var ReactCompositeComponent = {
       inst != null,
       'Attempted to update component `%s` that has already been unmounted ' +
       '(or failed to mount).',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactClassComponent'
     );
 
     var willReceive = false;
@@ -822,7 +708,7 @@ var ReactCompositeComponent = {
           shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
         }
       } else {
-        if (this._compositeType === CompositeTypes.PureClass) {
+        if (this._isPure) {
           shouldUpdate =
             !shallowEqual(prevProps, nextProps) ||
             !shallowEqual(inst.state, nextState);
@@ -835,7 +721,7 @@ var ReactCompositeComponent = {
         shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
-        this.getName() || 'ReactCompositeComponent'
+        this.getName() || 'ReactClassComponent'
       );
     }
 
@@ -1068,17 +954,12 @@ var ReactCompositeComponent = {
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
-    if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
-      ReactCurrentOwner.current = this;
-      try {
-        renderedComponent =
-          this._renderValidatedComponentWithoutOwnerOrContext();
-      } finally {
-        ReactCurrentOwner.current = null;
-      }
-    } else {
+    ReactCurrentOwner.current = this;
+    try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
+    } finally {
+      ReactCurrentOwner.current = null;
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
@@ -1086,7 +967,7 @@ var ReactCompositeComponent = {
       React.isValidElement(renderedComponent),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactClassComponent'
     );
 
     return renderedComponent;
@@ -1159,11 +1040,7 @@ var ReactCompositeComponent = {
    * @internal
    */
   getPublicInstance: function() {
-    var inst = this._instance;
-    if (this._compositeType === CompositeTypes.StatelessFunctional) {
-      return null;
-    }
-    return inst;
+    return this._instance;
   },
 
   // Stub
@@ -1171,4 +1048,4 @@ var ReactCompositeComponent = {
 
 };
 
-module.exports = ReactCompositeComponent;
+module.exports = ReactClassComponent;

@@ -16,7 +16,7 @@ var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
-describe('ReactTestUtils', () => {
+xdescribe('ReactTestUtils', () => {
 
   beforeEach(() => {
     React = require('React');
