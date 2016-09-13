@@ -15,6 +15,7 @@
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -76,6 +77,12 @@ export type Fiber = Instance & {
   pendingProps: any, // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
+  // A queue of local state updates.
+  updateQueue: ?UpdateQueue,
+  // The state used to create the output. This is a full state object.
+  memoizedState: any,
+  // Linked list of callbacks to call after updates are committed.
+  callbackList: ?UpdateQueue,
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
@@ -151,6 +158,9 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     pendingProps: null,
     memoizedProps: null,
+    updateQueue: null,
+    memoizedState: null,
+    callbackList: null,
     output: null,
 
     nextEffect: null,
@@ -192,6 +202,8 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
     alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
     alt.ref = fiber.ref;
     alt.pendingProps = fiber.pendingProps; // TODO: Pass as argument.
+    alt.updateQueue = fiber.updateQueue;
+    alt.callbackList = fiber.callbackList;
     alt.pendingWorkPriority = priorityLevel;
 
     alt.child = fiber.child;
@@ -217,6 +229,8 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
+  alt.updateQueue = fiber.updateQueue;
+  alt.callbackList = fiber.callbackList;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;

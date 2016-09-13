@@ -22,6 +22,7 @@ var {
   HostContainer,
   HostComponent,
 } = ReactTypeOfWork;
+var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
@@ -31,6 +32,18 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
+        // Clear updates from current fiber. This must go before the callbacks
+        // are reset, in case an update is triggered from inside a callback. Is
+        // this safe? Relies on the assumption that work is only committed if
+        // the update queue is empty.
+        if (finishedWork.alternate) {
+          finishedWork.alternate.updateQueue = null;
+        }
+        if (finishedWork.callbackList) {
+          const { callbackList } = finishedWork;
+          finishedWork.callbackList = null;
+          callCallbacks(callbackList, finishedWork.stateNode);
+        }
         // TODO: Fire componentDidMount/componentDidUpdate, update refs
         return;
       }
