@@ -26,17 +26,17 @@ var testAllPermutations = function(testCases) {
       var expectedResultAfterUpdate = testCases[j + 1];
 
       var container = document.createElement('div');
-      var d = ReactDOM.render(<div>{renderWithChildren}</div>, container);
-      expectChildren(d, expectedResultAfterRender);
+      ReactDOM.render(<div>{renderWithChildren}</div>, container);
+      expectChildren(container, expectedResultAfterRender);
 
-      d = ReactDOM.render(<div>{updateWithChildren}</div>, container);
-      expectChildren(d, expectedResultAfterUpdate);
+      ReactDOM.render(<div>{updateWithChildren}</div>, container);
+      expectChildren(container, expectedResultAfterUpdate);
     }
   }
 };
 
-var expectChildren = function(d, children) {
-  var outerNode = ReactDOM.findDOMNode(d);
+var expectChildren = function(container, children) {
+  var outerNode = container.firstChild;
   var textNode;
   if (typeof children === 'string') {
     textNode = outerNode.firstChild;
