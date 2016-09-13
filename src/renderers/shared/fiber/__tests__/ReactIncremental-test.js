@@ -410,7 +410,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushLowPri(55);
+    ReactNoop.flushLowPri(55 + 25);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -432,7 +432,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" text2="bar" step={1} />);
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushLowPri(30 + 25);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -526,7 +526,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushLowPri(30 + 25);
     expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
 
     ops = [];
@@ -555,5 +555,254 @@ describe('ReactIncremental', () => {
     // auto-bail out from Bar.
     expect(ops).toEqual(['Content', 'Bar', 'Middle']);
 
+  });
+
+  it('can update in the middle of a tree using setState', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { a: 'a' };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a' });
+    instance.setState({ b: 'b' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+  });
+
+  it('can queue multiple state updates', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { a: 'a' };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    // Call setState multiple times before flushing
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.setState({ d: 'd' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
+  });
+
+  it('can use updater form of setState', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { num: 1 };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({ multiplier }) {
+      return (
+        <div>
+          <Bar multiplier={multiplier} />
+        </div>
+      );
+    }
+
+    function updater(state, props) {
+      return { num: state.num * props.multiplier };
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(1);
+    instance.setState(updater);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(2);
+    instance.setState(updater);
+    ReactNoop.render(<Foo multiplier={3} />);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(6);
+  });
+
+  it('can call setState inside update callback', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { num: 1 };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({ multiplier }) {
+      return (
+        <div>
+          <Bar multiplier={multiplier} />
+        </div>
+      );
+    }
+
+    function updater(state, props) {
+      return { num: state.num * props.multiplier };
+    }
+
+    function callback() {
+      this.setState({ called: true });
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    instance.setState(updater);
+    instance.setState(updater, callback);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(4);
+    expect(instance.state.called).toEqual(true);
+  });
+
+  it('can setState without overriding its parents\' priority', () => {
+    let ops = [];
+    let instance;
+    class Baz extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+        this.state = { num: 0 };
+      }
+      render() {
+        ops.push('Baz');
+        return <span />;
+      }
+    }
+
+    function Bar({ id }) {
+      ops.push('Bar' + id);
+      return <div />;
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return [
+        <section hidden={true}>
+          <Bar id={1} />
+          <Baz />
+        </section>,
+        <Bar id={2} />,
+      ];
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar2', 'Bar1', 'Baz']);
+    ops = [];
+    ReactNoop.render(<Foo />);
+    // Even though Baz is in a hidden subtree, calling setState gives it a
+    // higher priority. It should not affect the priority of anything else in
+    // the subtree.
+    instance.setState({ num: 1 });
+    ReactNoop.flush();
+    // Baz should come before Bar1 because it has higher priority
+    expect(ops).toEqual(['Foo', 'Bar2', 'Baz', 'Bar1']);
+  });
+
+  it('can replaceState', () => {
+    let instance;
+    const Bar = React.createClass({
+      getInitialState() {
+        instance = this;
+        return { a: 'a' };
+      },
+      render() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.replaceState({ d: 'd' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ d: 'd' });
+  });
+
+  it('can forceUpdate', () => {
+    const ops = [];
+
+    function Baz() {
+      ops.push('Baz');
+      return <div />;
+    }
+
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+      }
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        ops.push('Bar');
+        return <Baz />;
+      }
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+    instance.forceUpdate();
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
 });

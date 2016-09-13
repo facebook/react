@@ -46,7 +46,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  /*
   // TODO: It's possible this will create layout thrash issues because mutations
   // of the DOM and life-cycles are interleaved. E.g. if a componentDidMount
   // of a sibling reads, then the next sibling updates and reads etc.
@@ -59,7 +58,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
     workInProgress.lastEffect = workInProgress;
   }
-  */
 
   function transferOutput(child : ?Fiber, returnFiber : Fiber) {
     // If we have a single result, we just pass that through as the output to
@@ -115,7 +113,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
     var currentFirstChild = current ? current.stateNode : null;
     // Inherit the priority of the returnFiber.
-    const priority = workInProgress.pendingWorkPriority;
+    const priority = workInProgress.pendingUpdatePriority;
     workInProgress.stateNode = reconcileChildFibers(
       workInProgress,
       currentFirstChild,
@@ -132,6 +130,17 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return null;
       case ClassComponent:
         transferOutput(workInProgress.child, workInProgress);
+        // Don't use the state queue to compute the memoized state. We already
+        // merged it and assigned it to the instance. Transfer it from there.
+        // Also need to transfer the props, because pendingProps will be null
+        // in the case of an update
+        const { state, props } = workInProgress.stateNode;
+        workInProgress.memoizedState = state;
+        workInProgress.memoizedProps = props;
+        // Transfer update queue to callbackList field so callbacks can be
+        // called during commit phase.
+        workInProgress.callbackList = workInProgress.updateQueue;
+        markForPostEffect(workInProgress);
         return null;
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);
@@ -162,10 +171,16 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
             // This returns true if there was something to update.
             markForPreEffect(workInProgress);
           }
+          // TODO: Is this actually ever going to change? Why set it every time?
           workInProgress.output = instance;
         } else {
           if (!newProps) {
-            throw new Error('We must have new props for new mounts.');
+            if (workInProgress.stateNode === null) {
+              throw new Error('We must have new props for new mounts.');
+            } else {
+              // This can happen when we abort work.
+              return null;
+            }
           }
           const instance = createInstance(workInProgress.type, newProps, children);
           // TODO: This seems like unnecessary duplication.
