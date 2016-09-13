@@ -556,4 +556,208 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Content', 'Bar', 'Middle']);
 
   });
+
+  it('can update in the middle of a tree using setState', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { a: 'a' };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a' });
+    instance.setState({ b: 'b' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+  });
+
+  it('can queue multiple state updates', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { a: 'a' };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    // Call setState multiple times before flushing
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.setState({ d: 'd' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
+  });
+
+  it('can use updater form of setState', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { num: 1 };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({ multiplier }) {
+      return (
+        <div>
+          <Bar multiplier={multiplier} />
+        </div>
+      );
+    }
+
+    function updater(state, props) {
+      return { num: state.num * props.multiplier };
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(1);
+    instance.setState(updater);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(2);
+    instance.setState(updater);
+    ReactNoop.render(<Foo multiplier={3} />);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(6);
+  });
+
+  it('can call setState inside update callback', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = { num: 1 };
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({ multiplier }) {
+      return (
+        <div>
+          <Bar multiplier={multiplier} />
+        </div>
+      );
+    }
+
+    function updater(state, props) {
+      return { num: state.num * props.multiplier };
+    }
+
+    function callback() {
+      this.setState({ called: true });
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    instance.setState(updater);
+    instance.setState(updater, callback);
+    ReactNoop.flush();
+    expect(instance.state.num).toEqual(4);
+    expect(instance.state.called).toEqual(true);
+  });
+
+  it('can replaceState', () => {
+    let instance;
+    const Bar = React.createClass({
+      getInitialState() {
+        instance = this;
+        return { a: 'a' };
+      },
+      render() {
+        return <div>{this.props.children}</div>;
+      },
+    });
+
+    function Foo() {
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    instance.setState({ b: 'b' });
+    instance.setState({ c: 'c' });
+    instance.replaceState({ d: 'd' });
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ d: 'd' });
+  });
+
+  it('can forceUpdate', () => {
+    const ops = [];
+
+    function Baz() {
+      ops.push('Baz');
+      return <div />;
+    }
+
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+      }
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        ops.push('Bar');
+        return <Baz />;
+      }
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+    instance.forceUpdate();
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
+  });
 });

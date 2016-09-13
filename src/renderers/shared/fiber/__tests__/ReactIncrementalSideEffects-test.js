@@ -354,4 +354,34 @@ describe('ReactIncrementalSideEffects', () => {
   // moves to "current" without flushing due to having lower priority. Does this
   // even happen? Maybe a child doesn't get processed because it is lower prio?
 
+  it('calls callback after update is flushed', () => {
+    let instance;
+    class Foo extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+        this.state = { text: 'foo' };
+      }
+      render() {
+        return <span prop={this.state.text} />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      span('foo'),
+    ]);
+    let called = false;
+    instance.setState({ text: 'bar' }, () => {
+      expect(ReactNoop.root.children).toEqual([
+        span('bar'),
+      ]);
+      called = true;
+    });
+    ReactNoop.flush();
+    expect(called).toBe(true);
+  });
+
+  // TODO: Test that callbacks are not lost if an update is preempted.
 });

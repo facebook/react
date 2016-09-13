@@ -14,14 +14,18 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
+import type { Scheduler } from 'ReactFiberScheduler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var {
   reconcileChildFibers,
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
+var { LowPriority } = require('ReactPriorityLevel');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -37,8 +41,15 @@ var {
   NoWork,
   OffscreenPriority,
 } = require('ReactPriorityLevel');
+var {
+  createUpdateQueue,
+  addToQueue,
+  addCallbackToQueue,
+  mergeUpdateQueue,
+} = require('ReactFiberUpdateQueue');
+var ReactInstanceMap = require('ReactInstanceMap');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler : () => Scheduler) {
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -105,25 +116,116 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     return workInProgress.child;
   }
 
+  function scheduleUpdate(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel): void {
+    const { scheduleLowPriWork } = getScheduler();
+    fiber.updateQueue = updateQueue;
+    // Schedule update on the alternate as well, since we don't know which tree
+    // is current.
+    if (fiber.alternate) {
+      fiber.alternate.updateQueue = updateQueue;
+    }
+    while (true) {
+      if (fiber.pendingWorkPriority === NoWork ||
+          fiber.pendingWorkPriority >= priorityLevel) {
+        fiber.pendingWorkPriority = priorityLevel;
+      }
+      if (fiber.alternate) {
+        if (fiber.alternate.pendingWorkPriority === NoWork ||
+            fiber.alternate.pendingWorkPriority >= priorityLevel) {
+          fiber.alternate.pendingWorkPriority = priorityLevel;
+        }
+      }
+      // Duck type root
+      if (fiber.stateNode && fiber.stateNode.containerInfo) {
+        const root : FiberRoot = (fiber.stateNode : any);
+        scheduleLowPriWork(root, priorityLevel);
+        return;
+      }
+      if (!fiber.return) {
+        throw new Error('No root!');
+      }
+      fiber = fiber.return;
+    }
+  }
+
+  // Class component state updater
+  const updater = {
+    enqueueSetState(instance, partialState) {
+      const fiber = ReactInstanceMap.get(instance);
+      const updateQueue = fiber.updateQueue ?
+        addToQueue(fiber.updateQueue, partialState) :
+        createUpdateQueue(partialState);
+      scheduleUpdate(fiber, updateQueue, LowPriority);
+    },
+    enqueueReplaceState(instance, state) {
+      const fiber = ReactInstanceMap.get(instance);
+      const updateQueue = createUpdateQueue(state);
+      updateQueue.isReplace = true;
+      scheduleUpdate(fiber, updateQueue, LowPriority);
+    },
+    enqueueForceUpdate(instance) {
+      const fiber = ReactInstanceMap.get(instance);
+      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
+      updateQueue.isForced = true;
+      scheduleUpdate(fiber, updateQueue, LowPriority);
+    },
+    enqueueCallback(instance, callback) {
+      const fiber = ReactInstanceMap.get(instance);
+      let updateQueue = fiber.updateQueue ?
+        fiber.updateQueue :
+        createUpdateQueue(null);
+      addCallbackToQueue(updateQueue, callback);
+      fiber.updateQueue = updateQueue;
+      if (fiber.alternate) {
+        fiber.alternate.updateQueue = updateQueue;
+      }
+    },
+  };
+
   function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
+    // A class component update is the result of either new props or new state.
+    // Account for the possibly of missing pending props by falling back to the
+    // memoized props.
     var props = workInProgress.pendingProps;
+    if (!props && current) {
+      props = current.memoizedProps;
+    }
+    // Compute the state using the memoized state and the update queue.
+    var updateQueue = workInProgress.updateQueue;
+    var previousState = current ? current.memoizedState : null;
+    var state = updateQueue ?
+      mergeUpdateQueue(updateQueue, previousState, props) :
+      previousState;
+
     var instance = workInProgress.stateNode;
     if (!instance) {
       var ctor = workInProgress.type;
       workInProgress.stateNode = instance = new ctor(props);
-    } else if (typeof instance.shouldComponentUpdate === 'function') {
+      state = instance.state || null;
+      // The initial state must be added to the update queue in case
+      // setState is called before the initial render.
+      if (state !== null) {
+        workInProgress.updateQueue = createUpdateQueue(state);
+      }
+      // The instance needs access to the fiber so that it can schedule updates
+      ReactInstanceMap.set(instance, workInProgress);
+      instance.updater = updater;
+    } else if (typeof instance.shouldComponentUpdate === 'function' &&
+               !(updateQueue && updateQueue.isForced)) {
       if (workInProgress.memoizedProps !== null) {
         // Reset the props, in case this is a ping-pong case rather than a
         // completed update case. For the completed update case, the instance
         // props will already be the memoizedProps.
         instance.props = workInProgress.memoizedProps;
-        if (!instance.shouldComponentUpdate(props)) {
+        instance.state = workInProgress.memoizedState;
+        if (!instance.shouldComponentUpdate(props, state)) {
           return bailoutOnAlreadyFinishedWork(current, workInProgress);
         }
       }
     }
 
     instance.props = props;
+    instance.state = state;
     var nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
 
@@ -251,10 +353,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       workInProgress.child = workInProgress.progressedChild;
     }
 
-    if (workInProgress.pendingProps === null || (
+    if ((workInProgress.pendingProps === null || (
       workInProgress.memoizedProps !== null &&
       workInProgress.pendingProps === workInProgress.memoizedProps
-      )) {
+      )) &&
+      workInProgress.updateQueue === null) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
