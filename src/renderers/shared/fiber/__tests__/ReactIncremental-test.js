@@ -56,11 +56,11 @@ describe('ReactIncremental', () => {
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
     // Do one step of work.
-    ReactNoop.flushLowPri(7);
+    ReactNoop.flushDeferredPri(7);
     expect(fooCalled).toBe(true);
     expect(barCalled).toBe(false);
     // Do the rest of the work.
-    ReactNoop.flushLowPri(50);
+    ReactNoop.flushDeferredPri(50);
     expect(fooCalled).toBe(true);
     expect(barCalled).toBe(true);
   });
@@ -143,7 +143,7 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo text="bar" />);
     // Flush part of the work
-    ReactNoop.flushLowPri(20);
+    ReactNoop.flushDeferredPri(20);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -153,7 +153,7 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo text="baz" />);
 
     // Flush part of the new work
-    ReactNoop.flushLowPri(20);
+    ReactNoop.flushDeferredPri(20);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -205,7 +205,7 @@ describe('ReactIncremental', () => {
     // Render part of the work. This should be enough to flush everything except
     // the middle which has lower priority.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushLowPri(40);
+    ReactNoop.flushDeferredPri(40);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
@@ -216,6 +216,63 @@ describe('ReactIncremental', () => {
 
     expect(ops).toEqual(['Middle', 'Middle']);
 
+  });
+
+  it('can deprioritize a tree from without dropping work', () => {
+    var ops = [];
+
+    function Bar(props) {
+      ops.push('Bar');
+      return <div>{props.children}</div>;
+    }
+
+    function Middle(props) {
+      ops.push('Middle');
+      return <span>{props.children}</span>;
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <Bar>{props.text}</Bar>
+          <section hidden={true}>
+            <Middle>{props.text}</Middle>
+          </section>
+          <Bar>{props.text}</Bar>
+          <footer hidden={true}>
+            <Middle>Footer</Middle>
+          </footer>
+        </div>
+      );
+    }
+
+    // Init
+    ReactNoop.performAnimationWork(() => {
+      ReactNoop.render(<Foo text="foo" />);
+    });
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle', 'Middle']);
+
+    ops = [];
+
+    // Render the high priority work (everying except the hidden trees).
+    ReactNoop.performAnimationWork(() => {
+      ReactNoop.render(<Foo text="foo" />);
+    });
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flushAnimationPri();
+
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+
+    ops = [];
+
+    // The hidden content was deprioritized from high to low priority. A low
+    // priority callback should have been scheduled. Flush it now.
+    ReactNoop.flushDeferredPri();
+
+    expect(ops).toEqual(['Middle', 'Middle']);
   });
 
   it('can resume work in a subtree even when a parent bails out', () => {
@@ -263,7 +320,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" />);
-    ReactNoop.flushLowPri(52);
+    ReactNoop.flushDeferredPri(52);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Tester', 'Bar']);
 
@@ -271,7 +328,7 @@ describe('ReactIncremental', () => {
 
     // We're now rendering an update that will bail out on updating middle.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushLowPri(45);
+    ReactNoop.flushDeferredPri(45);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
@@ -338,7 +395,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" />);
-    ReactNoop.flushLowPri(52);
+    ReactNoop.flushDeferredPri(52);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Tester', 'Bar']);
 
@@ -347,7 +404,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will create a low pri tree on top of the
     // already low pri tree.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushLowPri(15);
+    ReactNoop.flushDeferredPri(15);
 
     expect(ops).toEqual(['Foo']);
 
@@ -410,7 +467,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushLowPri(55 + 25);
+    ReactNoop.flushDeferredPri(55 + 25);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -432,14 +489,14 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" text2="bar" step={1} />);
-    ReactNoop.flushLowPri(30 + 25);
+    ReactNoop.flushDeferredPri(30 + 25);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushDeferredPri(30);
     expect(ops).toEqual(['Middle', 'Bar']);
 
     ops = [];
@@ -447,7 +504,7 @@ describe('ReactIncremental', () => {
     // but we'll interupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
     ReactNoop.render(<Foo text="foo" text2="bar" step={1} />);
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushDeferredPri(30);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -519,14 +576,14 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" step={1} />);
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushDeferredPri(30);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushLowPri(30 + 25);
+    ReactNoop.flushDeferredPri(30 + 25);
     expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
 
     ops = [];
@@ -534,7 +591,7 @@ describe('ReactIncremental', () => {
     // but we'll interupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
     ReactNoop.render(<Foo text="foo" step={1} />);
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushDeferredPri(30);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
