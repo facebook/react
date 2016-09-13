@@ -170,16 +170,12 @@ var ReactNoop = {
         '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
         '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
       );
-      const childInProgress = fiber.childInProgress;
-      if (childInProgress) {
-        if (childInProgress === fiber.child) {
-          console.log('  '.repeat(depth + 1) + 'ERROR: IN PROGRESS == CURRENT');
-        } else {
-          console.log('  '.repeat(depth + 1) + 'IN PROGRESS');
-          logFiber(childInProgress, depth + 1);
-          if (fiber.child) {
-            console.log('  '.repeat(depth + 1) + 'CURRENT');
-          }
+      const childInProgress = fiber.progressedChild;
+      if (childInProgress && childInProgress !== fiber.child) {
+        console.log('  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.progressedPriority);
+        logFiber(childInProgress, depth + 1);
+        if (fiber.child) {
+          console.log('  '.repeat(depth + 1) + 'CURRENT');
         }
       }
       if (fiber.child) {
