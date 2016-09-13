@@ -30,10 +30,12 @@ var invariant = require('invariant');
 class CallbackQueue<T> {
   _callbacks: ?Array<() => void>;
   _contexts: ?Array<T>;
+  _arg: ?mixed;
 
-  constructor() {
+  constructor(arg) {
     this._callbacks = null;
     this._contexts = null;
+    this._arg = arg;
   }
 
   /**
@@ -59,6 +61,7 @@ class CallbackQueue<T> {
   notifyAll() {
     var callbacks = this._callbacks;
     var contexts = this._contexts;
+    var arg = this._arg;
     if (callbacks && contexts) {
       invariant(
         callbacks.length === contexts.length,
@@ -67,7 +70,7 @@ class CallbackQueue<T> {
       this._callbacks = null;
       this._contexts = null;
       for (var i = 0; i < callbacks.length; i++) {
-        callbacks[i].call(contexts[i]);
+        callbacks[i].call(contexts[i], arg);
       }
       callbacks.length = 0;
       contexts.length = 0;

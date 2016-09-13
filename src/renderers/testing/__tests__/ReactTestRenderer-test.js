@@ -231,6 +231,81 @@ describe('ReactTestRenderer', () => {
     );
   });
 
+  it('allows an optional createNodeMock function', () => {
+    var mockDivInstance = { appendChild: () => {} };
+    var mockInputInstance = { focus: () => {} };
+    var mockListItemInstance = { click: () => {} };
+    var mockAnchorInstance = { hover: () => {} };
+    var log = [];
+    class Foo extends React.Component {
+      componentDidMount() {
+        log.push(this.refs.bar);
+      }
+      render() {
+        return (
+          <a ref="bar">Hello, world</a>
+        );
+      }
+    }
+    function createNodeMock(element) {
+      switch (element.type) {
+        case 'div':
+          return mockDivInstance;
+        case 'input':
+          return mockInputInstance;
+        case 'li':
+          return mockListItemInstance;
+        case 'a':
+          return mockAnchorInstance;
+        default:
+          return {};
+      }
+    }
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+      {createNodeMock}
+    );
+    ReactTestRenderer.create(
+      <input ref={(r) => log.push(r)} />,
+      {createNodeMock},
+    );
+    ReactTestRenderer.create(
+      <div>
+        <span>
+          <ul>
+            <li ref={(r) => log.push(r)} />
+          </ul>
+          <ul>
+            <li ref={(r) => log.push(r)} />
+            <li ref={(r) => log.push(r)} />
+          </ul>
+        </span>
+      </div>,
+      {createNodeMock, foobar: true},
+    );
+    ReactTestRenderer.create(
+      <Foo />,
+      {createNodeMock},
+    );
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+    );
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+      {}
+    );
+    expect(log).toEqual([
+      mockDivInstance,
+      mockInputInstance,
+      mockListItemInstance,
+      mockListItemInstance,
+      mockListItemInstance,
+      mockAnchorInstance,
+      null,
+      null,
+    ]);
+  });
+
   it('supports error boundaries', () => {
     var log = [];
     class Angry extends React.Component {

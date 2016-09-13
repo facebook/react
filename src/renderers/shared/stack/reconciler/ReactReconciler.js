@@ -20,8 +20,12 @@ var warning = require('warning');
  * Helper to call ReactRef.attachRefs with this composite component, split out
  * to avoid allocations in the transaction mount-ready queue.
  */
-function attachRefs() {
-  ReactRef.attachRefs(this, this._currentElement);
+function attachRefs(transaction) {
+  ReactRef.attachRefs(
+    this,
+    this._currentElement,
+    transaction,
+  );
 }
 
 var ReactReconciler = {
