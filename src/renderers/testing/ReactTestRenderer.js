@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactTestRenderer
+ * @flow
  */
 
 'use strict';
@@ -21,6 +22,14 @@ var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
+
+import type { ReactElement } from 'ReactElementType';
+
+type ReactTestRendererJSON = {
+  type: string,
+  props: { [propName: string]: string },
+  children: Array<string | ReactTestRendererJSON>,
+}
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -38,38 +47,38 @@ function getRenderedHostOrTextFromComponent(component) {
 }
 
 class ReactTestComponent {
-  constructor(element) {
+  constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
   }
 
   mountComponent(
-    transaction,
-    nativeParent,
-    nativeContainerInfo,
-    context,
+    transaction: ReactTestReconcileTransaction,
+    nativeParent: null | ReactTestComponent,
+    nativeContainerInfo: ?null,
+    context: Object,
   ) {
     var element = this._currentElement;
     this.mountChildren(element.props.children, transaction, context);
   }
 
   receiveComponent(
-    nextElement,
-    transaction,
-    context,
+    nextElement: ReactElement,
+    transaction: ReactTestReconcileTransaction,
+    context: Object,
   ) {
     this._currentElement = nextElement;
     this.updateChildren(nextElement.props.children, transaction, context);
   }
 
-  getPublicInstance(transaction) {
+  getPublicInstance(transaction: ReactTestReconcileTransaction): Object {
     var element = this._currentElement;
     var options = transaction.getTestOptions();
     return options.createNodeMock(element);
   }
 
-  toJSON() {
+  toJSON(): ReactTestRendererJSON {
     var {children, ...props} = this._currentElement.props;
     var childrenJSON = [];
     for (var key in this._renderedChildren) {
@@ -91,8 +100,8 @@ class ReactTestComponent {
     return object;
   }
 
-  getHostNode() {}
-  unmountComponent() {}
+  getHostNode(): void {}
+  unmountComponent(): void {}
 }
 
 Object.assign(ReactTestComponent.prototype, ReactMultiChild);
