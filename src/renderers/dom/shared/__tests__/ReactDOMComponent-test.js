@@ -971,6 +971,13 @@ describe('ReactDOMComponent', () => {
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
+
+      expect(function() {
+        mountComponent({dangerouslySetInnerHTML: {__html: {foo: 'bar'} } });
+      }).toThrowError(
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
+      );
     });
 
     it('should allow {__html: null}', () => {
