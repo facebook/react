@@ -28,6 +28,7 @@ var {
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
@@ -198,6 +199,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return null;
       case YieldComponent:
         // Does nothing.
+        return null;
+      case Fragment:
+        transferOutput(workInProgress.child, workInProgress);
         return null;
 
       // Error cases

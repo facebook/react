@@ -57,6 +57,38 @@ describe('ReactIncrementalSideEffects', () => {
 
   });
 
+  it('can update child nodes of a fragment', function() {
+
+    function Bar(props) {
+      return <span>{props.text}</span>;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          <Bar text={props.text} />
+          {props.text === 'World' ? [
+            <Bar key="a" text={props.text} />,
+            <div key="b" />,
+          ] : null}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo text="Hello" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span()),
+    ]);
+
+    ReactNoop.render(<Foo text="World" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span(), span(), div()),
+    ]);
+
+  });
+
   it('does not update child nodes if a flush is aborted', () => {
 
     function Bar(props) {

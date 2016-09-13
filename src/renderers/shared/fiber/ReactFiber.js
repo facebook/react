@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -25,6 +26,7 @@ var {
   HostComponent,
   CoroutineComponent,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
 
 var {
@@ -245,6 +247,15 @@ exports.createFiberFromElement = function(element : ReactElement<*>, priorityLev
   return fiber;
 };
 
+exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) {
+  // TODO: Consider supporting keyed fragments. Technically, we accidentally
+  // support that in the existing React.
+  const fiber = createFiber(Fragment, null);
+  fiber.pendingProps = elements;
+  fiber.pendingWorkPriority = priorityLevel;
+  return fiber;
+};
+
 function createFiberFromElementType(type : mixed, key : null | string) {
   let fiber;
   if (typeof type === 'function') {
@@ -279,3 +290,4 @@ exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : 
   fiber.pendingProps = {};
   return fiber;
 };
+
