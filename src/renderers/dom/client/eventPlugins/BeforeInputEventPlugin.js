@@ -345,11 +345,12 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
 function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
   // If we are currently composing (IME) and using a fallback to do so,
   // try to extract the composed characters from the fallback object.
+  // If composition event is available, we extract a string only at
+  // compositionevent, otherwise extract it at fallback events.
   if (currentComposition) {
-    if (
-      topLevelType === 'topCompositionEnd' ||
-      isFallbackCompositionEnd(topLevelType, nativeEvent)
-    ) {
+    if (topLevelType === 'topCompositionEnd'
+        || (!canUseCompositionEvent
+            && isFallbackCompositionEnd(topLevelType, nativeEvent))) {
       var chars = currentComposition.getData();
       FallbackCompositionState.release(currentComposition);
       currentComposition = null;
