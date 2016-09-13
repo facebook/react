@@ -117,7 +117,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   }
 
   function scheduleUpdate(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel): void {
-    const { scheduleLowPriWork } = getScheduler();
+    const { scheduleDeferredWork } = getScheduler();
     fiber.updateQueue = updateQueue;
     // Schedule update on the alternate as well, since we don't know which tree
     // is current.
@@ -138,7 +138,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       // Duck type root
       if (fiber.stateNode && fiber.stateNode.containerInfo) {
         const root : FiberRoot = (fiber.stateNode : any);
-        scheduleLowPriWork(root, priorityLevel);
+        scheduleDeferredWork(root, priorityLevel);
         return;
       }
       if (!fiber.return) {

@@ -33,7 +33,7 @@ var {
 var timeHeuristicForUnitOfWork = 1;
 
 export type Scheduler = {
-  scheduleLowPriWork: (root : FiberRoot, priority : PriorityLevel) => void
+  scheduleDeferredWork: (root : FiberRoot, priority : PriorityLevel) => void
 };
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
@@ -316,7 +316,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   function scheduleWork(root : FiberRoot) {
     if (defaultPriority === SynchronousPriority) {
-      throw new Error('Not implemented yet')
+      throw new Error('Not implemented yet');
     }
 
     if (defaultPriority === NoWork) {
