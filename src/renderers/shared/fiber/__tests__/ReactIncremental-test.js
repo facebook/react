@@ -410,7 +410,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushLowPri(55);
+    ReactNoop.flushLowPri(55 + 25);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -432,7 +432,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" text2="bar" step={1} />);
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushLowPri(30 + 25);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -526,7 +526,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushLowPri(30);
+    ReactNoop.flushLowPri(30 + 25);
     expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
 
     ops = [];

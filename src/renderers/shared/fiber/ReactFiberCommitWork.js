@@ -28,7 +28,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
 
-  function commitWork(finishedWork : Fiber) : void {
+  function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         // TODO: Fire componentDidMount/componentDidUpdate, update refs
@@ -43,14 +43,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return;
       }
       case HostComponent: {
-        if (finishedWork.stateNode == null || !finishedWork.alternate) {
+        if (finishedWork.stateNode == null || !current) {
           throw new Error('This should only be done during updates.');
         }
         // Commit the work prepared earlier.
         const child = finishedWork.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = finishedWork.memoizedProps;
-        const current = finishedWork.alternate;
         const oldProps = current.memoizedProps;
         const instance : I = finishedWork.stateNode;
         commitUpdate(instance, oldProps, newProps, children);
