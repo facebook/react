@@ -62,6 +62,7 @@ class ReactTestComponent {
     transaction: ReactTestReconcileTransaction,
     context: Object,
   ) => void;
+
   constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;

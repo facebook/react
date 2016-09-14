@@ -14,6 +14,7 @@
 
 class ReactTestEmptyComponent {
   _currentElement: null;
+  
   constructor() {
     this._currentElement = null;
   }
