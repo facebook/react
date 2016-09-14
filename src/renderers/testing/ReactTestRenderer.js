@@ -48,22 +48,13 @@ function getRenderedHostOrTextFromComponent(component) {
   return component;
 }
 
-class ReactTestComponent {
+class ReactTestComponent extends ReactMultiChild {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
-  mountChildren: (
-    children: Object,
-    transaction: ReactTestReconcileTransaction,
-    context: Object,
-  ) => void;
-  updateChildren: (
-    children: Object,
-    transaction: ReactTestReconcileTransaction,
-    context: Object,
-  ) => void;
-
+  
   constructor(element: ReactElement) {
+    super();
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
@@ -119,8 +110,6 @@ class ReactTestComponent {
   getHostNode(): void {}
   unmountComponent(): void {}
 }
-
-Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 
