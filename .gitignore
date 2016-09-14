@@ -19,6 +19,7 @@ docs/downloads
 docs/vendor/bundle
 examples/shared/*.js
 examples/**/bundle.js
+scripts/bench/arena
 test/the-files-to-test.generated.js
 *.log*
 chrome-user-data

@@ -64,6 +64,7 @@
     "object-assign": "^4.1.0",
     "platform": "^1.1.0",
     "run-sequence": "^1.1.4",
+    "shelljs": "^0.7.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
