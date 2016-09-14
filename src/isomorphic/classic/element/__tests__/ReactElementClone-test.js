@@ -75,18 +75,6 @@ describe('ReactElementClone', () => {
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
-  it('should warn if the config object inherits from any type other than Object', () => {
-    spyOn(console, 'error');
-    React.cloneElement('div', {foo: 1});
-    expect(console.error).not.toHaveBeenCalled();
-    React.cloneElement('div', Object.create({foo: 1}));
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'React.cloneElement(...): Expected props argument to be a plain object. ' +
-      'Properties defined in its prototype chain will be ignored.'
-    );
-  });
-
   it('does not fail if config has no prototype', () => {
     var config = Object.create(null, {foo: {value: 1, enumerable: true}});
     React.cloneElement(<div />, config);
