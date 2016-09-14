@@ -24,11 +24,13 @@ var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
 
 import type { ReactElement } from 'ReactElementType';
+import type { ReactInstance } from 'ReactInstanceType';
 
 type ReactTestRendererJSON = {
   type: string,
   props: { [propName: string]: string },
-  children: Array<string | ReactTestRendererJSON>,
+  children: null | Array<string | ReactTestRendererJSON>,
+  $$typeof?: any
 }
 
 /**
@@ -47,6 +49,19 @@ function getRenderedHostOrTextFromComponent(component) {
 }
 
 class ReactTestComponent {
+  _currentElement: ReactElement;
+  _renderedChildren: null | Object;
+  _topLevelWrapper: null | ReactInstance;
+  mountChildren: (
+    children: Object,
+    transaction: ReactTestReconcileTransaction,
+    context: Object,
+  ) => void;
+  updateChildren: (
+    children: Object,
+    transaction: ReactTestReconcileTransaction,
+    context: Object,
+  ) => void;
   constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;
@@ -89,7 +104,7 @@ class ReactTestComponent {
         childrenJSON.push(json);
       }
     }
-    var object = {
+    var object: ReactTestRendererJSON = {
       type: this._currentElement.type,
       props: props,
       children: childrenJSON.length ? childrenJSON : null,

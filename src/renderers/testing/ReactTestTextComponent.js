@@ -15,6 +15,7 @@
 import type { ReactText } from 'ReactTypes';
 
 class ReactTestTextComponent {
+  _currentElement: ReactText;
   constructor(element: ReactText) {
     this._currentElement = element;
   }
