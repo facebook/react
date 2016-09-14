@@ -31,6 +31,7 @@ const {
   cloneFiber,
   createFiberFromElement,
   createFiberFromFragment,
+  createFiberFromText,
   createFiberFromCoroutine,
   createFiberFromYield,
 } = ReactFiber;
@@ -50,6 +51,13 @@ function ChildReconciler(shouldClone) {
     newChildren : any,
     priority : PriorityLevel
   ) : Fiber {
+    if (typeof newChildren === 'string') {
+      const textNode = createFiberFromText(newChildren, priority);
+      previousSibling.sibling = textNode;
+      textNode.return = returnFiber;
+      return textNode;
+    }
+
     if (typeof newChildren !== 'object' || newChildren === null) {
       return previousSibling;
     }
@@ -111,6 +119,12 @@ function ChildReconciler(shouldClone) {
   }
 
   function createFirstChild(returnFiber, existingChild, newChildren : any, priority) {
+    if (typeof newChildren === 'string') {
+      const textNode = createFiberFromText(newChildren, priority);
+      textNode.return = returnFiber;
+      return textNode;
+    }
+
     if (typeof newChildren !== 'object' || newChildren === null) {
       return null;
     }
