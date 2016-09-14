@@ -198,30 +198,23 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // extra memory if needed.
   let alt = fiber.alternate;
   if (alt) {
-    alt.stateNode = fiber.stateNode;
-    alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
-    alt.ref = fiber.ref;
-    alt.pendingProps = fiber.pendingProps; // TODO: Pass as argument.
-    alt.updateQueue = fiber.updateQueue;
-    alt.callbackList = fiber.callbackList;
-    alt.pendingWorkPriority = priorityLevel;
-
-    alt.child = fiber.child;
-    alt.memoizedProps = fiber.memoizedProps;
-    alt.output = fiber.output;
-
     // Whenever we clone, we do so to get a new work in progress.
     // This ensures that we've reset these in the new tree.
     alt.nextEffect = null;
     alt.firstEffect = null;
     alt.lastEffect = null;
+  } else {
+    // This should not have an alternate already
+    alt = createFiber(fiber.tag, fiber.key);
+    alt.type = fiber.type;
 
-    return alt;
+    alt.progressedChild = fiber.progressedChild;
+    alt.progressedPriority = fiber.progressedPriority;
+
+    alt.alternate = fiber;
+    fiber.alternate = alt;
   }
 
-  // This should not have an alternate already
-  alt = createFiber(fiber.tag, fiber.key);
-  alt.type = fiber.type;
   alt.stateNode = fiber.stateNode;
   alt.child = fiber.child;
   alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
@@ -236,11 +229,6 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.memoizedProps = fiber.memoizedProps;
   alt.output = fiber.output;
 
-  alt.progressedChild = fiber.progressedChild;
-  alt.progressedPriority = fiber.progressedPriority;
-
-  alt.alternate = fiber;
-  fiber.alternate = alt;
   return alt;
 };
 
