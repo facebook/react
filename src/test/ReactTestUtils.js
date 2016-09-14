@@ -16,17 +16,14 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
-var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
+var ReactShallowRenderer = require('ReactShallowRenderer');
 
-var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
 
@@ -363,138 +360,6 @@ var ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
-};
-
-/**
- * @class ReactShallowRenderer
- */
-var ReactShallowRenderer = function() {
-  this._instance = null;
-};
-
-ReactShallowRenderer.prototype.getMountedInstance = function() {
-  return this._instance ? this._instance._instance : null;
-};
-
-var nextDebugID = 1;
-
-var NoopInternalComponent = function(element) {
-  this._renderedOutput = element;
-  this._currentElement = element;
-
-  if (__DEV__) {
-    this._debugID = nextDebugID++;
-  }
-};
-
-NoopInternalComponent.prototype = {
-
-  mountComponent: function() {
-  },
-
-  receiveComponent: function(element) {
-    this._renderedOutput = element;
-    this._currentElement = element;
-  },
-
-  getHostNode: function() {
-    return undefined;
-  },
-
-  unmountComponent: function() {
-  },
-
-  getPublicInstance: function() {
-    return null;
-  },
-};
-
-var ShallowComponentWrapper = function(element) {
-  // TODO: Consolidate with instantiateReactComponent
-  if (__DEV__) {
-    this._debugID = nextDebugID++;
-  }
-
-  this.construct(element);
-};
-Object.assign(
-  ShallowComponentWrapper.prototype,
-  ReactCompositeComponent, {
-    _constructComponent:
-      ReactCompositeComponent._constructComponentWithoutOwner,
-    _instantiateReactComponent: function(element) {
-      return new NoopInternalComponent(element);
-    },
-    _replaceNodeWithMarkup: function() {},
-    _renderValidatedComponent:
-      ReactCompositeComponent
-        ._renderValidatedComponentWithoutOwnerOrContext,
-  }
-);
-
-ReactShallowRenderer.prototype.render = function(element, context) {
-  // Ensure we've done the default injections. This might not be true in the
-  // case of a simple test that only requires React and the TestUtils in
-  // conjunction with an inline-requires transform.
-  ReactDefaultInjection.inject();
-
-  invariant(
-    React.isValidElement(element),
-    'ReactShallowRenderer render(): Invalid component element.%s',
-    typeof element === 'function' ?
-      ' Instead of passing a component class, make sure to instantiate ' +
-      'it by passing it to React.createElement.' :
-      ''
-  );
-  invariant(
-    typeof element.type !== 'string',
-    'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
-    'components, not primitives (%s). Instead of calling `.render(el)` and ' +
-    'inspecting the rendered output, look at `el.props` directly instead.',
-    element.type
-  );
-
-  if (!context) {
-    context = emptyObject;
-  }
-  ReactUpdates.batchedUpdates(_batchedRender, this, element, context);
-
-  return this.getRenderOutput();
-};
-
-function _batchedRender(renderer, element, context) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
-  renderer._render(element, transaction, context);
-  ReactUpdates.ReactReconcileTransaction.release(transaction);
-}
-
-ReactShallowRenderer.prototype.getRenderOutput = function() {
-  return (
-    (this._instance && this._instance._renderedComponent &&
-     this._instance._renderedComponent._renderedOutput)
-    || null
-  );
-};
-
-ReactShallowRenderer.prototype.unmount = function() {
-  if (this._instance) {
-    ReactReconciler.unmountComponent(this._instance, false);
-  }
-};
-
-ReactShallowRenderer.prototype._render = function(element, transaction, context) {
-  if (this._instance) {
-    ReactReconciler.receiveComponent(
-      this._instance,
-      element,
-      transaction,
-      context
-    );
-  } else {
-    var instance = new ShallowComponentWrapper(element);
-    ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
-    this._instance = instance;
-  }
 };
 
 /**
