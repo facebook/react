@@ -36,7 +36,7 @@ export type Scheduler = {
   scheduleDeferredWork: (root : FiberRoot, priority : PriorityLevel) => void
 };
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Use a closure to circumvent the circular dependency between the scheduler
   // and ReactFiberBeginWork. Don't know if there's a better way to do this.
   let scheduler;

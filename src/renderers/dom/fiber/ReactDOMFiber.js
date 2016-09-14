@@ -23,13 +23,14 @@ type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 type Container = Element;
 type Props = { };
 type Instance = Element;
+type TextInstance = Text;
 
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance>) {
+function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
   if (!child) {
     return;
   }
-  /* $FlowFixMe: Element should have this property. */
-  if (child.nodeType === 1) {
+  /* $FlowFixMe: Element and Text should have this property. */
+  if (child.nodeType === 1 || child.nodeType === 3) {
     /* $FlowFixMe: Refinement issue. I don't know how to express different. */
     parent.appendChild(child);
   } else {
@@ -43,15 +44,16 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
 
 var DOMRenderer = ReactFiberReconciler({
 
-  updateContainer(container : Container, children : HostChildren<Instance>) : void {
+  updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
     container.innerHTML = '';
     recursivelyAppendChildren(container, children);
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
+  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.children === 'string') {
+    if (typeof props.children === 'string' ||
+        typeof props.children === 'number') {
       domElement.textContent = props.children;
     }
     return domElement;
@@ -61,21 +63,30 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     oldProps : Props,
     newProps : Props,
-    children : HostChildren<Instance>
+    children : HostChildren<Instance | TextInstance>
   ) : boolean {
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
+  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance | TextInstance>) : void {
     domElement.innerHTML = '';
     recursivelyAppendChildren(domElement, children);
-    if (typeof newProps.children === 'string') {
+    if (typeof newProps.children === 'string' ||
+        typeof newProps.children === 'number') {
       domElement.textContent = newProps.children;
     }
   },
 
   deleteInstance(instance : Instance) : void {
     // Noop
+  },
+
+  createTextInstance(text : string) : TextInstance {
+    return document.createTextNode(text);
+  },
+
+  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
+    textInstance.nodeValue = newText;
   },
 
   scheduleAnimationCallback: window.requestAnimationFrame,

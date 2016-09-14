@@ -21,13 +21,15 @@ var {
   ClassComponent,
   HostContainer,
   HostComponent,
+  HostText,
 } = ReactTypeOfWork;
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
+  const commitTextUpdate = config.commitTextUpdate;
 
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
@@ -67,6 +69,18 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         const instance : I = finishedWork.stateNode;
         commitUpdate(instance, oldProps, newProps, children);
         return;
+      }
+      case HostText: {
+        if (finishedWork.stateNode == null || !current) {
+          throw new Error('This should only be done during updates.');
+        }
+        // TODO: This never gets called yet because I don't have update support
+        // for text nodes. This only gets updated through a host component or
+        // container updating with this as one of its child nodes.
+        const textInstance : TI = finishedWork.stateNode;
+        const oldText : string = finishedWork.memoizedProps;
+        const newText : string = current.memoizedProps;
+        commitTextUpdate(textInstance, oldText, newText);
       }
       default:
         throw new Error('This unit of work tag should not have side-effects.');

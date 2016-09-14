@@ -33,6 +33,7 @@ var {
   ClassComponent,
   HostContainer,
   HostComponent,
+  HostText,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
@@ -50,7 +51,7 @@ var {
 } = require('ReactFiberUpdateQueue');
 var ReactInstanceMap = require('ReactInstanceMap');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler : () => Scheduler) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, getScheduler : () => Scheduler) {
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -239,7 +240,14 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   }
 
   function updateHostComponent(current, workInProgress) {
-    const nextChildren = workInProgress.pendingProps.children;
+    let nextChildren = workInProgress.pendingProps.children;
+    if (typeof nextChildren === 'string' || typeof nextChildren === 'number') {
+      // We special case a direct text child of a host node. This is a common
+      // case. We won't handle it as a reified child. We will instead handle
+      // this in the host environment that also have access to this prop. That
+      // avoids allocating another HostText fiber and traversing it.
+      nextChildren = null;
+    }
     if (workInProgress.pendingProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
@@ -391,6 +399,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);
+      case HostText:
+        // Nothing to do here. This is terminal. We'll do the completion step
+        // immediately after.
+        return null;
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;

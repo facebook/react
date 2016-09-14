@@ -24,6 +24,7 @@ var {
   ClassComponent,
   HostContainer,
   HostComponent,
+  HostText,
   CoroutineComponent,
   YieldComponent,
   Fragment,
@@ -252,6 +253,13 @@ exports.createFiberFromFragment = function(elements : ReactFragment, priorityLev
   // support that in the existing React.
   const fiber = createFiber(Fragment, null);
   fiber.pendingProps = elements;
+  fiber.pendingWorkPriority = priorityLevel;
+  return fiber;
+};
+
+exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) {
+  const fiber = createFiber(HostText, null);
+  fiber.pendingProps = content;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };

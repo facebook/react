@@ -28,18 +28,21 @@ type HostChildNode<I> = { tag: TypeOfWork, output: HostChildren<I>, sibling: any
 
 export type HostChildren<I> = null | void | I | HostChildNode<I>;
 
-export type HostConfig<T, P, I, C> = {
+export type HostConfig<T, P, I, TI, C> = {
 
   // TODO: We don't currently have a quick way to detect that children didn't
   // reorder so we host will always need to check the set. We should make a flag
   // or something so that it can bailout easily.
 
-  updateContainer(containerInfo : C, children : HostChildren<I>) : void;
+  updateContainer(containerInfo : C, children : HostChildren<I | TI>) : void;
 
-  createInstance(type : T, props : P, children : HostChildren<I>) : I,
-  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : boolean,
-  commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : void,
+  createInstance(type : T, props : P, children : HostChildren<I | TI>) : I,
+  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I | TI>) : boolean,
+  commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I | TI>) : void,
   deleteInstance(instance : I) : void,
+
+  createTextInstance(text : string) : TI,
+  commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
   scheduleAnimationCallback(callback : () => void) : void,
   scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void
@@ -58,7 +61,7 @@ export type Reconciler<C> = {
   getPublicRootInstance(container : OpaqueNode) : (C | null),
 };
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconciler<C> {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C> {
 
   var { scheduleWork, performWithPriority } = ReactFiberScheduler(config);
 

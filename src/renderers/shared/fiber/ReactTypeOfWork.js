@@ -12,7 +12,7 @@
 
 'use strict';
 
-export type TypeOfWork = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type TypeOfWork = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 module.exports = {
   IndeterminateComponent: 0, // Before we know whether it is functional or class
@@ -20,8 +20,9 @@ module.exports = {
   ClassComponent: 2,
   HostContainer: 3, // Root of a host tree. Could be nested inside another node.
   HostComponent: 4,
-  CoroutineComponent: 5,
-  CoroutineHandlerPhase: 6,
-  YieldComponent: 7,
-  Fragment: 8,
+  HostText: 5,
+  CoroutineComponent: 6,
+  CoroutineHandlerPhase: 7,
+  YieldComponent: 8,
+  Fragment: 9,
 };
