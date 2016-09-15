@@ -32,13 +32,27 @@ describe('ReactDOMInvalidARIAHook', () => {
       mountComponent({'aria-label': 'Bumble bees'});
       expect(console.error.calls.count()).toBe(0);
     });
-    it('should warn for invalid aria-* props', () => {
+    it('should warn for one invalid aria-* prop', () => {
       spyOn(console, 'error');
       mountComponent({'aria-badprop': 'maybe'});
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid aria prop `aria-badprop` on <div> tag. ' +
         'For details, see https://fb.me/invalid-aria-prop'
+      );
+    });
+    it('should warn for many invalid aria-* props', () => {
+      spyOn(console, 'error');
+      mountComponent(
+        {
+          'aria-badprop': 'Very tall trees',
+          'aria-malprop': 'Turbulent seas',
+        }
+      );
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid aria props `aria-badprop`, `aria-malprop` on <div> ' +
+        'tag. For details, see https://fb.me/invalid-aria-prop'
       );
     });
   });
