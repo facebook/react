@@ -55,5 +55,15 @@ describe('ReactDOMInvalidARIAHook', () => {
         'tag. For details, see https://fb.me/invalid-aria-prop'
       );
     });
+    it('should warn for an improperly cased aria-* prop', () => {
+      spyOn(console, 'error');
+      // The valid attribute name is aria-haspopup.
+      mountComponent({'aria-hasPopup': 'true'});
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid aria prop `aria-hasPopup` on <div> tag. ' +
+        'For details, see https://fb.me/invalid-aria-prop'
+      );
+    });
   });
 });
