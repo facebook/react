@@ -7,7 +7,7 @@ prev: webcomponents-zh-CN.html
 
 在 React 的术语中,有五个要重点区分的核心类型:
 
-- [ReactElement / ReactElement Factory](#react-elements)
+- [ReactElement / ReactElement Factory](#react-elementsreact-元素)
 - [ReactNode](#react-nodes)
 - [ReactComponent / ReactComponent Class](#react-components)
 

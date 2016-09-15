@@ -41,11 +41,11 @@ For this tutorial, we're going to make it as easy as possible. Included in the s
   <head>
     <meta charset="utf-8" />
     <title>React Tutorial</title>
-    <script src="https://npmcdn.com/react@{{site.react_version}}/dist/react.js"></script>
-    <script src="https://npmcdn.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
-    <script src="https://npmcdn.com/babel-core@5.8.38/browser.min.js"></script>
-    <script src="https://npmcdn.com/jquery@3.1.0/dist/jquery.min.js"></script>
-    <script src="https://npmcdn.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+    <script src="https://unpkg.com/react@{{site.react_version}}/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
+    <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
+    <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -62,7 +62,7 @@ For the remainder of this tutorial, we'll be writing our JavaScript code in this
 
 > Note:
 >
-> We included jQuery here because we want to simplify the code of our future ajax calls, but it's **NOT** mandatory for React to work.
+> We included jQuery here because we want to simplify the code of our future AJAX calls, but it's **NOT** mandatory for React to work.
 
 ### Your first component
 
@@ -181,7 +181,7 @@ Notice how we're mixing HTML tags and components we've built. HTML components ar
 
 ### Using props
 
-Let's create the `Comment` component, which will depend on data passed in from its parent. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props, we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
+Let's create the `Comment` component, which will depend on data passed in from its parent, `CommentList`. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props, we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
 
 ```javascript
 // tutorial4.js
@@ -219,7 +219,7 @@ var CommentList = React.createClass({
 });
 ```
 
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via the `author` attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
 
 ### Adding Markdown
 

@@ -10,7 +10,7 @@ One of the first questions people ask when considering React for a project is wh
 
 ## Use the production build
 
-If you're benchmarking or seeing performance problems in your React apps, make sure you're testing with the [minified production build](/react/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the [minified production build](/react/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
 
 ## Avoiding reconciling the DOM
 
