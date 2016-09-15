@@ -12,7 +12,6 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var EventPluginRegistry = require('EventPluginRegistry');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 var warning = require('warning');
@@ -72,7 +71,7 @@ function warnInvalidARIAProps(debugID, element) {
       ReactComponentTreeHook.getStackAddendumByID(debugID)
     );
   }
-};
+}
 
 function handleElement(debugID, element) {
   if (element == null || typeof element.type !== 'string') {

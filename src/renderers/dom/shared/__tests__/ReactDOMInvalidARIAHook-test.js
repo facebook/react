@@ -13,14 +13,12 @@
 
 describe('ReactDOMInvalidARIAHook', () => {
   var React;
-  var ReactDOM;
   var ReactTestUtils;
   var mountComponent;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
-    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
     mountComponent = function(props) {
