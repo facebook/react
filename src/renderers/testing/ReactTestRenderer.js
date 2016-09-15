@@ -52,7 +52,7 @@ class ReactTestComponent extends ReactMultiChild {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
-  
+
   constructor(element: ReactElement) {
     super();
     this._currentElement = element;

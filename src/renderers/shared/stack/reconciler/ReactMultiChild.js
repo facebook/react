@@ -169,8 +169,8 @@ if (__DEV__) {
  * children. This is used by `ReactDOMComponent` to mount, update, and
  * unmount child components.
  */
-var ReactMultiChild = {
-  _reconcilerInstantiateChildren: function(nestedChildren, transaction, context) {
+class ReactMultiChild {
+  _reconcilerInstantiateChildren(nestedChildren, transaction, context) {
     if (__DEV__) {
       var selfDebugID = getDebugID(this);
       if (this._currentElement) {
@@ -187,9 +187,9 @@ var ReactMultiChild = {
     return ReactChildReconciler.instantiateChildren(
       nestedChildren, transaction, context
     );
-  },
+  }
 
-  _reconcilerUpdateChildren: function(
+  _reconcilerUpdateChildren(
     prevChildren,
     nextNestedChildrenElements,
     mountImages,
@@ -235,7 +235,7 @@ var ReactMultiChild = {
       selfDebugID
     );
     return nextChildren;
-  },
+  }
 
   /**
    * Generates a "mount image" for each of the supplied children. In the case
@@ -245,7 +245,7 @@ var ReactMultiChild = {
    * @return {array} An array of mounted representations.
    * @internal
    */
-  mountChildren: function(nestedChildren, transaction, context) {
+  mountChildren(nestedChildren, transaction, context) {
     var children = this._reconcilerInstantiateChildren(
       nestedChildren, transaction, context
     );
@@ -278,7 +278,7 @@ var ReactMultiChild = {
     }
 
     return mountImages;
-  },
+  }
 
   /**
    * Replaces any rendered children with a text content string.
@@ -286,7 +286,7 @@ var ReactMultiChild = {
    * @param {string} nextContent String of content.
    * @internal
    */
-  updateTextContent: function(nextContent) {
+  updateTextContent(nextContent) {
     var prevChildren = this._renderedChildren;
     // Remove any rendered children.
     ReactChildReconciler.unmountChildren(prevChildren, false);
@@ -298,7 +298,7 @@ var ReactMultiChild = {
     // Set new text content.
     var updates = [makeTextContent(nextContent)];
     processQueue(this, updates);
-  },
+  }
 
   /**
    * Replaces any rendered children with a markup string.
@@ -306,7 +306,7 @@ var ReactMultiChild = {
    * @param {string} nextMarkup String of markup.
    * @internal
    */
-  updateMarkup: function(nextMarkup) {
+  updateMarkup(nextMarkup) {
     var prevChildren = this._renderedChildren;
     // Remove any rendered children.
     ReactChildReconciler.unmountChildren(prevChildren, false);
@@ -317,7 +317,7 @@ var ReactMultiChild = {
     }
     var updates = [makeSetMarkup(nextMarkup)];
     processQueue(this, updates);
-  },
+  }
 
   /**
    * Updates the rendered children with new children.
@@ -326,10 +326,10 @@ var ReactMultiChild = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  updateChildren: function(nextNestedChildrenElements, transaction, context) {
+  updateChildren(nextNestedChildrenElements, transaction, context) {
     // Hook used by React ART
     this._updateChildren(nextNestedChildrenElements, transaction, context);
-  },
+  }
 
   /**
    * @param {?object} nextNestedChildrenElements Nested child element maps.
@@ -337,7 +337,7 @@ var ReactMultiChild = {
    * @final
    * @protected
    */
-  _updateChildren: function(nextNestedChildrenElements, transaction, context) {
+  _updateChildren(nextNestedChildrenElements, transaction, context) {
     var prevChildren = this._renderedChildren;
     var removedNodes = {};
     var mountImages = [];
@@ -414,7 +414,7 @@ var ReactMultiChild = {
     if (__DEV__) {
       setChildrenForInstrumentation.call(this, nextChildren);
     }
-  },
+  }
 
   /**
    * Unmounts all rendered children. This should be used to clean up children
@@ -423,11 +423,11 @@ var ReactMultiChild = {
    *
    * @internal
    */
-  unmountChildren: function(safely) {
+  unmountChildren(safely) {
     var renderedChildren = this._renderedChildren;
     ReactChildReconciler.unmountChildren(renderedChildren, safely);
     this._renderedChildren = null;
-  },
+  }
 
   /**
    * Moves a child component to the supplied index.
@@ -437,14 +437,14 @@ var ReactMultiChild = {
    * @param {number} lastIndex Last index visited of the siblings of `child`.
    * @protected
    */
-  moveChild: function(child, afterNode, toIndex, lastIndex) {
+  moveChild(child, afterNode, toIndex, lastIndex) {
     // If the index of `child` is less than `lastIndex`, then it needs to
     // be moved. Otherwise, we do not need to move it because a child will be
     // inserted or moved before `child`.
     if (child._mountIndex < lastIndex) {
       return makeMove(child, afterNode, toIndex);
     }
-  },
+  }
 
   /**
    * Creates a child component.
@@ -453,9 +453,9 @@ var ReactMultiChild = {
    * @param {string} mountImage Markup to insert.
    * @protected
    */
-  createChild: function(child, afterNode, mountImage) {
+  createChild(child, afterNode, mountImage) {
     return makeInsertMarkup(mountImage, afterNode, child._mountIndex);
-  },
+  }
 
   /**
    * Removes a child component.
@@ -463,9 +463,9 @@ var ReactMultiChild = {
    * @param {ReactComponent} child Child to remove.
    * @protected
    */
-  removeChild: function(child, node) {
+  removeChild(child, node) {
     return makeRemove(child, node);
-  },
+  }
 
   /**
    * Mounts a child with the supplied name.
@@ -478,7 +478,7 @@ var ReactMultiChild = {
    * @param {ReactReconcileTransaction} transaction
    * @private
    */
-  _mountChildAtIndex: function(
+  _mountChildAtIndex(
     child,
     mountImage,
     afterNode,
@@ -487,7 +487,7 @@ var ReactMultiChild = {
     context) {
     child._mountIndex = index;
     return this.createChild(child, afterNode, mountImage);
-  },
+  }
 
   /**
    * Unmounts a rendered child.
@@ -497,11 +497,11 @@ var ReactMultiChild = {
    * @param {ReactComponent} child Component to unmount.
    * @private
    */
-  _unmountChild: function(child, node) {
+  _unmountChild(child, node) {
     var update = this.removeChild(child, node);
     child._mountIndex = null;
     return update;
-  },
+  }
 };
 
 module.exports = ReactMultiChild;
