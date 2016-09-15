@@ -24,11 +24,13 @@ var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
 
 import type { ReactElement } from 'ReactElementType';
+import type { ReactInstance } from 'ReactInstanceType';
 
 type ReactTestRendererJSON = {
   type: string,
   props: { [propName: string]: string },
-  children: Array<string | ReactTestRendererJSON>,
+  children: null | Array<string | ReactTestRendererJSON>,
+  $$typeof?: any
 }
 
 /**
@@ -46,8 +48,13 @@ function getRenderedHostOrTextFromComponent(component) {
   return component;
 }
 
-class ReactTestComponent {
+class ReactTestComponent extends ReactMultiChild {
+  _currentElement: ReactElement;
+  _renderedChildren: null | Object;
+  _topLevelWrapper: null | ReactInstance;
+
   constructor(element: ReactElement) {
+    super();
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
@@ -89,7 +96,7 @@ class ReactTestComponent {
         childrenJSON.push(json);
       }
     }
-    var object = {
+    var object: ReactTestRendererJSON = {
       type: this._currentElement.type,
       props: props,
       children: childrenJSON.length ? childrenJSON : null,
@@ -103,8 +110,6 @@ class ReactTestComponent {
   getHostNode(): void {}
   unmountComponent(): void {}
 }
-
-Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 

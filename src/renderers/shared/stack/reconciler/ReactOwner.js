@@ -15,6 +15,7 @@
 var invariant = require('invariant');
 
 import type { ReactInstance } from 'ReactInstanceType';
+import type { Transaction } from 'Transaction';
 
 /**
  * @param {?object} object
@@ -73,7 +74,7 @@ var ReactOwner = {
     component: ReactInstance,
     ref: string,
     owner: ReactInstance,
-    transaction,
+    transaction: Transaction,
   ): void {
     invariant(
       isValidOwner(owner),

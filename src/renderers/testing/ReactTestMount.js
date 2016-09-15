@@ -20,8 +20,10 @@ var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
-type TestRendererOptions = {
-  createNodeMock: (element: ReactElement) => Object,
+import type { ReactElement } from 'ReactElementType';
+
+export type TestRendererOptions = {
+  createNodeMock: (element: ReactElement) => any,
 };
 
 var defaultTestOptions = {
