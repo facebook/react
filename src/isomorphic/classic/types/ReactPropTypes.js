@@ -324,10 +324,10 @@ function createEnumTypeChecker(expectedValues) {
   }
 
   function functionPrettifier(name, values) {
-    for (var i = 0; i < values.length; i++) {
-      if (getPropType(values[i]) === 'function') {
-        values[i] = 'Unexpected function: ' + values[i].toString();
-      }
+    if (Array.isArray(values)) {
+      return values.map(value => (
+        getPropType(value) === 'function' ? `Unexpected function: ${value}` : value
+      ));
     }
     return values;
   }
