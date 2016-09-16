@@ -1200,7 +1200,7 @@ ReactDOMComponent.Mixin = {
 Object.assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.prototype
+  ReactMultiChild
 );
 
 module.exports = ReactDOMComponent;

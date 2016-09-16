@@ -48,13 +48,12 @@ function getRenderedHostOrTextFromComponent(component) {
   return component;
 }
 
-class ReactTestComponent extends ReactMultiChild {
+class ReactTestComponent {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
 
   constructor(element: ReactElement) {
-    super();
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
@@ -67,6 +66,7 @@ class ReactTestComponent extends ReactMultiChild {
     context: Object,
   ) {
     var element = this._currentElement;
+    // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.mountChildren(element.props.children, transaction, context);
   }
 
@@ -76,6 +76,7 @@ class ReactTestComponent extends ReactMultiChild {
     context: Object,
   ) {
     this._currentElement = nextElement;
+    // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.updateChildren(nextElement.props.children, transaction, context);
   }
 
@@ -110,6 +111,8 @@ class ReactTestComponent extends ReactMultiChild {
   getHostNode(): void {}
   unmountComponent(): void {}
 }
+
+Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 
