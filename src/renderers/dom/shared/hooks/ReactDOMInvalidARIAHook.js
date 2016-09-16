@@ -26,15 +26,34 @@ function validateProperty(tagName, name, debugID) {
   ) {
     return true;
   }
-  // If this is an aria-* attribute, but is not listed in the known DOM
-  // DOM properties, then it is an invalid aria-* attribute.
-  if (
-    rARIA.test(name)
-    && !DOMProperty.properties.hasOwnProperty(name)
-  ) {
-    warnedProperties[name] = true;
-    return false;
+
+  if (rARIA.test(name)) {
+    var lowerCasedName = name.toLowerCase();
+    var standardName =
+      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
+        DOMProperty.getPossibleStandardName[lowerCasedName] :
+        null;
+
+    // If this is an aria-* attribute, but is not listed in the known DOM
+    // DOM properties, then it is an invalid aria-* attribute.
+    if (standardName == null) {
+      warnedProperties[name] = true;
+      return false;
+    }
+    // aria-* attributes should be lowercase; suggest the lowercase version.
+    if (name !== standardName) {
+      warning(
+        false,
+        'Unknown ARIA attribute %s. Did you mean %s?%s',
+        name,
+        standardName,
+        ReactComponentTreeHook.getStackAddendumByID(debugID)
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
   }
+
   return true;
 }
 

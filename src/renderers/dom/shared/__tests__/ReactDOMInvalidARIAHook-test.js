@@ -61,8 +61,8 @@ describe('ReactDOMInvalidARIAHook', () => {
       mountComponent({'aria-hasPopup': 'true'});
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid aria prop `aria-hasPopup` on <div> tag. ' +
-        'For details, see https://fb.me/invalid-aria-prop'
+        'Warning: Unknown ARIA attribute aria-hasPopup. ' +
+        'Did you mean aria-haspopup?'
       );
     });
   });
