@@ -12,7 +12,7 @@ next: tags-and-attributes-zh-CN.html
 
 > 注意:
 >
-> 同样可以使用单纯的 JavaScript 类作为组件类. 这些类可以实现大多数相同的方法,虽然有一些不同. 更多的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
+> 同样可以使用单纯的 JavaScript 类作为组件类. 这些类可以实现大多数相同的方法,虽然有一些不同.更多关于不同的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
 
 ### render
 
@@ -39,7 +39,7 @@ object getInitialState()
 
 > 注意:
 >
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。
+> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。更多的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
 
 
 ### getDefaultProps
