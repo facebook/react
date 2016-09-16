@@ -232,6 +232,12 @@ var HTMLDOMPropertyConfig = {
   DOMMutationMethods: {
     value: function(node, next) {
       if (next == null) {
+        node.removeAttribute('value');
+      } else {
+        node.setAttribute('value', '' + next);
+      }
+
+      if (next == null) {
         next = '';
       } else if (next === 0) {
         // Since we use loose type checking below, zero is
