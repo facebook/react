@@ -389,7 +389,7 @@ describe('ResponderEventPlugin', () => {
     for (var id = start; /* until break */; id = traverse(id, stop)) {
       var ret;
       if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
-        ret = cb(id, traverseUp, arg);
+        ret = cb(id, traverseUp ? 'bubbled': 'captured', arg);
       }
       if (ret === false || id === stop) {
         // Only break //after// visiting `stop`.
@@ -437,8 +437,8 @@ describe('ResponderEventPlugin', () => {
       traverseTwoPhase: function(target, fn, arg) {
         traverseTwoPhase(
           target._rootNodeID,
-          function(id, upwards) {
-            fn(idToInstance[id], upwards, arg);
+          function(id, phase) {
+            fn(idToInstance[id], phase, arg);
           }
         );
       },

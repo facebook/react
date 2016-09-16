@@ -38,14 +38,13 @@ function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
  * Mutating the event's members allows us to not have to create a wrapping
  * "dispatch" object that pairs the event with the listener.
  */
-function accumulateDirectionalDispatches(inst, upwards, event) {
+function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
     warning(
       inst,
       'Dispatching inst must not be null'
     );
   }
-  var phase = upwards ? 'bubbled' : 'captured';
   var listener = listenerAtPhase(inst, event, phase);
   if (listener) {
     event._dispatchListeners =
