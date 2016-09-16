@@ -12,7 +12,7 @@ next: tags-and-attributes-zh-CN.html
 
 > 注意:
 >
-> 同样可以使用单纯的 JavaScript 类作为组件类. 这些类可以实现大多数相同的方法,虽然有一些不同.更多关于不同的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
+> 同样可以使用单纯的 JavaScript 类作为组件类. 这些类可以实现大多数相同的方法,虽然有一些不同. 更多的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
 
 ### render
 

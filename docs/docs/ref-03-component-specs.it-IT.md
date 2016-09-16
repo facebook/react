@@ -39,7 +39,7 @@ Invocato una volta prima che il componente venga montato. Il valore di ritorno s
 
 > Nota:
 >
-> Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React.
+> Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Potrebbe essere eliminato del tutto in una versione futura di React. Per maggiori informazioni, leggi la nostra documentazione sulle [classi ES6](/react/docs/reusable-components.html#es6-classes).
 
 
 ### getDefaultProps

@@ -39,7 +39,7 @@ object getInitialState()
 
 > 주의:
 >
-> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다. 관한 더 자세한 정보는 [ES6 클래스](/react/docs/reusable-components-ko-KR.html#es6-클래스)를 읽어보세요.
 
 
 ### getDefaultProps
