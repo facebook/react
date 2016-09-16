@@ -381,6 +381,19 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.value).toBe('');
     });
 
+    it('should always assign the value attribute for non-inputs', function() {
+      var stubNode = document.createElement('progress');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
+      spyOn(stubNode, 'setAttribute');
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '30');
+
+      expect(stubNode.setAttribute.calls.count()).toBe(2);
+    });
+
     it('should not leave all options selected when deleting multiple', () => {
       stubNode = document.createElement('select');
       ReactDOMComponentTree.precacheNode(stubInstance, stubNode);

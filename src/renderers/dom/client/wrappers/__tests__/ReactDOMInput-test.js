@@ -824,7 +824,7 @@ describe('ReactDOMInput', () => {
   });
 
   it('sets type, step, min, max before value always', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
+    if (!ReactDOMFeatureFlags.us3eCreateElement) {
       return;
     }
     var log = [];
@@ -852,7 +852,8 @@ describe('ReactDOMInput', () => {
       'set step',
       'set min',
       'set max',
-      'set value',
+      'set value', // attribute
+      'set value', // property
     ]);
   });
 
