@@ -56,7 +56,7 @@ User input will have no effect on the rendered element because React has declare
       <input
         type="text"
         value={this.state.value}
-        onChange={this.handleChange}
+        onChange={this.handleChange.bind(this)}
       />
     );
   }

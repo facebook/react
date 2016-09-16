@@ -56,7 +56,7 @@ next: working-with-the-browser-zh-CN.html
       <input
         type="text"
         value={this.state.value}
-        onChange={this.handleChange}
+        onChange={this.handleChange.bind(this)}
       />
     );
   }
