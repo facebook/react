@@ -44,6 +44,7 @@ var addons = {
   shallowCompare: {
     module: 'shallowCompare',
     name: 'shallow-compare',
+    docs: 'shallow-compare',
   },
   updates: {
     module: 'update',

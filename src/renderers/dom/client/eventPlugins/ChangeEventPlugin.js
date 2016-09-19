@@ -68,7 +68,7 @@ var doesChangeEventBubble = false;
 if (ExecutionEnvironment.canUseDOM) {
   // See `handleChange` comment below
   doesChangeEventBubble = isEventSupported('change') && (
-    !('documentMode' in document) || document.documentMode > 8
+    !document.documentMode || document.documentMode > 8
   );
 }
 
@@ -149,7 +149,7 @@ if (ExecutionEnvironment.canUseDOM) {
   // IE10+ fire input events to often, such when a placeholder
   // changes or when an input with a placeholder is focused.
   isInputEventSupported = isEventSupported('input') && (
-    !('documentMode' in document) || document.documentMode > 11
+    !document.documentMode || document.documentMode > 11
   );
 }
 
