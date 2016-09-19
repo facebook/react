@@ -1,5 +1,5 @@
 ---
-id: self-closing-tag
+id: self-closing-tag-ru-RU
 title: Одиночный тег
 layout: tips
 permalink: tips/self-closing-tag-ru-RU.html

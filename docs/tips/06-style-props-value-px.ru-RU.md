@@ -1,5 +1,5 @@
 ---
-id: style-props-value-px
+id: style-props-value-px-ru-RU
 title: Краткая форма значений в пикселях для атрибута style
 layout: tips
 permalink: tips/style-props-value-px-ru-RU.html

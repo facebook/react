@@ -1,10 +1,10 @@
 ---
-id: if-else-in-JSX
+id: if-else-in-JSX-ru-RU
 title: If-Else в JSX
 layout: tips
 permalink: tips/if-else-in-JSX-ru-RU.html
 prev: inline-styles-ru-RU.html
-next: self-closing-tag.html
+next: self-closing-tag-ru-RU.html
 ---
 
 Некоторые конструкции, такие как `if-else`, нельзя использовать внутри JSX, так как JSX в результате преобразуется в вызов функции JS, как показано в примере:
