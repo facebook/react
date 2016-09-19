@@ -3,7 +3,7 @@ id: inline-styles
 title: Встроенные стили
 layout: tips
 permalink: tips/inline-styles-ru-RU.html
-next: if-else-in-JSX.html
+next: if-else-in-JSX-ru-RU.html
 prev: introduction-ru-RU.html
 ---
 
