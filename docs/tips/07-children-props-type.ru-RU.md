@@ -4,7 +4,7 @@ title: Тип свойства дочерних элементов
 layout: tips
 permalink: tips/children-props-type-ru-RU.html
 prev: style-props-value-px-ru-RU.html
-next: controlled-input-null-value.html
+next: controlled-input-null-value-ru-RU.html
 ---
 
 Обычно свойство дочерних элементов (`this.props.children`) это массив из компонентов:
