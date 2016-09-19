@@ -21,6 +21,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   function div(...children) {
+    children = children.map(c => typeof c === 'string' ? { text: c } : c);
     return { type: 'div', children, prop: undefined };
   }
 

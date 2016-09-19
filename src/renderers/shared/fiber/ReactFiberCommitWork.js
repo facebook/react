@@ -74,13 +74,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (finishedWork.stateNode == null || !current) {
           throw new Error('This should only be done during updates.');
         }
-        // TODO: This never gets called yet because I don't have update support
-        // for text nodes. This only gets updated through a host component or
-        // container updating with this as one of its child nodes.
         const textInstance : TI = finishedWork.stateNode;
-        const oldText : string = finishedWork.memoizedProps;
-        const newText : string = current.memoizedProps;
+        const newText : string = finishedWork.memoizedProps;
+        const oldText : string = current.memoizedProps;
         commitTextUpdate(textInstance, oldText, newText);
+        return;
       }
       default:
         throw new Error('This unit of work tag should not have side-effects.');
