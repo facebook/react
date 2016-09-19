@@ -32,11 +32,12 @@ var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
 
 const TERMINAL_TAG = 99;
+const TEXT_TAG = 98;
 
 type Container = { rootID: number, children: Array<Instance | TextInstance> };
 type Props = { prop: any };
 type Instance = { tag: 99, type: string, id: number, children: Array<Instance | TextInstance>, prop: any };
-type TextInstance = string;
+type TextInstance = { tag: 98, text: string };
 
 var instanceCounter = 0;
 
@@ -44,7 +45,7 @@ function recursivelyAppendChildren(flatArray : Array<Instance | TextInstance>, c
   if (!child) {
     return;
   }
-  if (typeof child === 'string' || child.tag === TERMINAL_TAG) {
+  if (child.tag === TERMINAL_TAG || child.tag === TEXT_TAG) {
     flatArray.push(child);
   } else {
     let node = child;
@@ -93,11 +94,14 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   createTextInstance(text : string) : TextInstance {
-    return text;
+    var inst = { tag: TEXT_TAG, text : text };
+    // Hide from unit tests
+    Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
+    return inst;
   },
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
-    // Not yet supported.
+    textInstance.text = newText;
   },
 
   scheduleAnimationCallback(callback) {
@@ -178,8 +182,8 @@ var ReactNoop = {
     function logHostInstances(children: Array<Instance | TextInstance>, depth) {
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
-        if (typeof child === 'string') {
-          log('  '.repeat(depth) + '- ' + child);
+        if (child.tag === TEXT_TAG) {
+          log('  '.repeat(depth) + '- ' + child.text);
         } else {
           log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
           logHostInstances(child.children, depth + 1);
