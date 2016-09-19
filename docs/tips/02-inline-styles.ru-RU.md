@@ -1,5 +1,5 @@
 ---
-id: inline-styles
+id: inline-styles-ru-RU
 title: Встроенные стили
 layout: tips
 permalink: tips/inline-styles-ru-RU.html
