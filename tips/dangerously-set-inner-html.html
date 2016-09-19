@@ -427,7 +427,7 @@
   <div class="inner-content">
     <h1>Dangerously Set innerHTML</h1>
     <div class="subHeader"></div>
-    <p>Improper use of the <code>innerHTML</code> can open you up to a <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">cross-site scripting (XSS)</a> attack.  Sanitizing user input for display is notoriously error-prone, and failure to properly sanitize is one of the <a href="https://owasptop10.googlecode.com/files/OWASP%20Top%2010%20-%202013.pdf">leading causes of web vulnerabilities</a> on the internet.</p>
+    <p>Improper use of the <code>innerHTML</code> can open you up to a <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">cross-site scripting (XSS)</a> attack.  Sanitizing user input for display is notoriously error-prone, and failure to properly sanitize is one of the <a href="https://www.owasp.org/index.php/Top_10_2013-Top_10">leading causes of web vulnerabilities</a> on the internet.</p>
 
 <p>Our design philosophy is that it should be “easy” to make things safe, and developers should explicitly state their intent when performing “unsafe” operations.  The prop name <code>dangerouslySetInnerHTML</code> is intentionally chosen to be frightening, and the prop value (an object instead of a string) can be used to indicate sanitized data.</p>
 
