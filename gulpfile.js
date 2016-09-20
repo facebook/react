@@ -202,7 +202,8 @@ gulp.task('react:modules', function() {
       .src(paths.react.src)
       .pipe(babel(babelOptsReact))
       .pipe(flatten())
-      .pipe(gulp.dest(paths.react.lib)),
+      .pipe(gulp.dest(paths.react.lib))
+      .pipe(gulp.dest(paths.reactNative.lib)),
 
     gulp
       .src(paths.reactDOM.src)
