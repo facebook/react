@@ -84,7 +84,7 @@ gulp.task('react:modules', function() {
     .src(paths.react.src)
     .pipe(babel(babelOpts))
     .pipe(flatten())
-    .pipe(gulp.dest('lib'));
+    .pipe(gulp.dest(paths.react.lib));
 });
 
 gulp.task('react:extract-errors', function() {

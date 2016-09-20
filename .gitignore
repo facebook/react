@@ -6,7 +6,6 @@ static
 .grunt
 _SpecRunner.html
 __benchmarks__
-lib/
 build/
 coverage/
 .module-cache
