@@ -24,6 +24,12 @@ import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var MIXINS_KEY = 'mixins';
 
+// Helper function to allow the creation of anonymous functions which do not
+// have .name set to the name of the variable being assigned to.
+function identity(fn) {
+  return fn;
+}
+
 /**
  * Policies that describe methods in `ReactClassInterface`.
  */
@@ -762,7 +768,10 @@ var ReactClass = {
    * @public
    */
   createClass: function(spec) {
-    var Constructor = function(props, context, updater) {
+    // To keep our warnings more understandable, we'll use a little hack here to
+    // ensure that Constructor.name !== 'Constructor'. This makes sure we don't
+    // unnecessarily identify a class without displayName as 'Constructor'.
+    var Constructor = identity(function(props, context, updater) {
       // This constructor gets overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
 
@@ -806,7 +815,7 @@ var ReactClass = {
       );
 
       this.state = initialState;
-    };
+    });
     Constructor.prototype = new ReactClassComponent();
     Constructor.prototype.constructor = Constructor;
     Constructor.prototype.__reactAutoBindPairs = [];
