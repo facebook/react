@@ -12,7 +12,12 @@
 module.exports = function autoImporter(babel) {
   const t = babel.types;
 
-  function getAssignIdent(path, file, state) {
+  function isObjectAssign(file) {
+    var filename = file.opts.filename;
+    return filename.indexOf('object-assign') >= 0;
+  }
+
+  function getAssignIdent(path, state) {
     if (!state.id) {
       state.id = path.scope.generateUidIdentifier('assign');
       path.scope.getProgramParent().push({
@@ -33,17 +38,19 @@ module.exports = function autoImporter(babel) {
     },
 
     visitor: {
-      CallExpression: function(path, file) {
+      CallExpression: function(path, state) {
+        if (isObjectAssign(state.file)) { return }
         if (path.get('callee').matchesPattern('Object.assign')) {
           // generate identifier and require if it hasn't been already
-          var id = getAssignIdent(path, file, this);
+          var id = getAssignIdent(path, state);
           path.node.callee = id;
         }
       },
 
-      MemberExpression: function(path, file) {
+      MemberExpression: function(path, state) {
+        if (isObjectAssign(state.file)) { return }
         if (path.matchesPattern('Object.assign')) {
-          var id = getAssignIdent(path, file, this);
+          var id = getAssignIdent(path, state);
           path.replaceWith(id);
         }
       },
