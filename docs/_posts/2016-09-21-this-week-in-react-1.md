@@ -7,21 +7,20 @@ _This Week In React is a weekly publication highlighting interesting projects an
 
 ![Projects aimed at beginning React developers.](/react/img/blog/thisweekinreact/beginner.png)
 
-####📓 A Visual Intro to Redux & Relay####
+###📓 A Visual Intro to Redux & Relay###
 
 Lin Clark has developed a series of visual guides for learning Flux, Redux, and most recently released a four-part visual guide to Relay.
 
 
-Redux: [https://code-cartoons.com/a-cartoon-intro-to-redux-3afb775501a6](https://code-cartoons.com/a-cartoon-intro-to-redux-3afb775501a6)
+[A Cartoon Intro to Redux](https://code-cartoons.com/a-cartoon-intro-to-redux-3afb775501a6)
 
+[A Cartoon Intro to Relay](https://code-cartoons.com/a-cartoon-intro-to-facebook-s-relay-part-1-3ec1a127bca5)
 
-Relay: [https://code-cartoons.com/a-cartoon-intro-to-facebook-s-relay-part-1-3ec1a127bca5](https://code-cartoons.com/a-cartoon-intro-to-facebook-s-relay-part-1-3ec1a127bca5)
+###🎮 React Game Development ([react-game-kit](https://github.com/FormidableLabs/react-game-kit))###
 
-####🎮 React Game Development ([react-game-kit](https://github.com/FormidableLabs/react-game-kit))####
+React Game Kit lets you build games. It supports basic game engine functions like a game loop, sprites and tiles, and also supports simple physics.
 
-React Game Kit lets you build a game in React. It supports basic game engine functions like a game loop, sprites and tiles, and also supports a simple physic engine.
-
-You can also learn more about react-game-kit with this interactive presentation built using the game engine. [http://reactnext.surge.sh/](http://reactnext.surge.sh/)
+You can also learn more about react-game-kit with [this](http://reactnext.surge.sh/) interactive presentation built using the game engine.
 
 Read more about this project [here](https://formidable.com/blog/2016/09/15/introducing-react-game-kit/).
 
@@ -29,13 +28,13 @@ Read more about this project [here](https://formidable.com/blog/2016/09/15/intro
 
 ![Projects aimed at intermediate React developers.](/react/img/blog/thisweekinreact/intermediate.png)
 
-####👾 Animations for Games ([BoxArt](https://github.com/boxart/boxart))####
+###👾 Animations for Games ([BoxArt](https://github.com/boxart/boxart))###
 
-Animation is a core part of game development. The folks at Bocoup wrote up a guide for integrating Boxart, their library that better supports animations that a game may need. The guide demonstrates adding animations to a simple tile matching game. [https://bocoup.com/weblog/animating-react-elements-with-boxart](https://bocoup.com/weblog/animating-react-elements-with-boxart)
+Animation is a core part of game development. The folks at Bocoup wrote up [this](https://bocoup.com/weblog/animating-react-elements-with-boxart) guide for integrating Boxart, their library that better supports animations that a game may need. The guide demonstrates adding animations to a simple tile matching game.
 
-####🎹 Music in React ([react-music](https://github.com/FormidableLabs/react-music))####
+###🎹 Music in React ([react-music](https://github.com/FormidableLabs/react-music))###
 
-The react-music project allows you produce music in JSX. The project supports setting tempo, managing instruments, and applying effects and other things you would expect to find in a sequencer/sampler. [https://formidable.com/blog/2016/08/22/make-dope-beats-with-reactjs/](https://formidable.com/blog/2016/08/22/make-dope-beats-with-reactjs/)
+The react-music project allows you to produce music in React with JSX. The project supports setting tempo, managing instruments, and applying effects and other things you would expect to find in a sequencer/sampler. [This](https://formidable.com/blog/2016/08/22/make-dope-beats-with-reactjs/) article demonstrates what you can do with the library.
 
 
 ![An interview with someone from the React community.](/react/img/blog/thisweekinreact/interview.png)
@@ -53,7 +52,7 @@ Our interview this week is with [Ken Wheeler](https://github.com/kenwheeler) of 
 
 **Eric:** Why did you build [react-game-kit](https://github.com/FormidableLabs/react-game-kit)?
 
-**Ken: **One of the first things I built with React Native was a game. Next, I built a physics game. I originally wanted to write a lib to bridge SpriteKit via native modules, but wanted things to be cross platform. I also noticed some repetitive patterns in what I was doing, so I wanted to create a set of helpers that handled the noisy stuff, so that users could focus on their game logic. I then proposed some talks on the subject, and the looming deadlines really pushed me to get it done quick and properly. It might not be the best way to write a game, but at the end of the day you definitely have a game and it works. You aren't going to write call of duty with it, but you can certainly build some cool 2d stuff.
+**Ken:** One of the first things I built with React Native was a game. Next, I built a physics game. I originally wanted to write a lib to bridge SpriteKit via native modules, but wanted things to be cross platform. I also noticed some repetitive patterns in what I was doing, so I wanted to create a set of helpers that handled the noisy stuff, so that users could focus on their game logic. I then proposed some talks on the subject, and the looming deadlines really pushed me to get it done quick and properly. It might not be the best way to write a game, but at the end of the day you definitely have a game and it works. You aren't going to write call of duty with it, but you can certainly build some cool 2d stuff.
 
 **Eric:** Why did you build [react-music](https://github.com/FormidableLabs/react-music)?
 
@@ -70,7 +69,8 @@ Our interview this week is with [Ken Wheeler](https://github.com/kenwheeler) of 
 **Eric:** Are you working on anything new or exciting that you can talk about?
 
 **Ken:** Well, I suppose the next thing I build I want to be the sort of thing that people can use at work every day. I just have to think of what. Expect to see some really cool updates to the Formidable Victory project, where we are adding a tighter hyperterm integration to our victory-cli lib, and a new Victory UIExplorer app we are going to launch. I might look into making an electron or web based version of webpack dashboard, for better windows compat and because people generally want it.
-If you want to learn more about what Ken is working he will be speaking at [Seattle ReactJS on September 28, 2016](https://www.meetup.com/seattle-react-js/events/233723976/) and at [React London Meetup on March 18, 2017](https://meetup.react.london/).
+
+To learn more about what Ken is working see him speak at [Seattle ReactJS on September 28, 2016](https://www.meetup.com/seattle-react-js/events/233723976/) or [React London Meetup on March 18, 2017](https://meetup.react.london/).
 
 _Want us to interview someone from the React community? Contact [community@reactjs.org](mailto:community@reactjs.org?subject=Interview%20Request)_
 
@@ -78,15 +78,15 @@ _Want us to interview someone from the React community? Contact [community@react
 
 __Meetups__
 
-- [Thursday, September 22, 2016 San Francisco @ Minted](https://www.meetup.com/ReactJS-San-Francisco/events/231776842/)
-- [Thursday, September 22, 2016 Netherlands @ FrontMen](https://www.meetup.com/ReactJS-NL/events/233099575/)
-- [Saturday, September 24, 2016 Bangalore @ Multunus](https://www.meetup.com/ReactJS-Bangalore/events/233685933/)
-- [Wednesday, September 28, 2016 Seattle @ Redfin](https://www.meetup.com/seattle-react-js/)
-- [Thursday, September 29, 2016 Israel @ Klarna](https://www.meetup.com/ReactJS-IL/events/234262147/)
-- [Monday, October 3, 2016 Barcelona @ Lodgify](https://www.meetup.com/ReactJS-Barcelona/events/233971585/)
-- [Tuesday, October 18, 2016, London @ Facebook](https://meetup.react.london/)
+- [Thursday, September 22, 2016 San Francisco at Minted](https://www.meetup.com/ReactJS-San-Francisco/events/231776842/)
+- [Thursday, September 22, 2016 Netherlands at FrontMen](https://www.meetup.com/ReactJS-NL/events/233099575/)
+- [Saturday, September 24, 2016 Bangalore at Multunus](https://www.meetup.com/ReactJS-Bangalore/events/233685933/)
+- [Wednesday, September 28, 2016 Seattle at Redfin](https://www.meetup.com/seattle-react-js/)
+- [Thursday, September 29, 2016 Israel at Klarna](https://www.meetup.com/ReactJS-IL/events/234262147/)
+- [Monday, October 3, 2016 Barcelona at Lodgify](https://www.meetup.com/ReactJS-Barcelona/events/233971585/)
+- [Tuesday, October 18, 2016, London at Facebook](https://meetup.react.london/)
 
-_Do you know about a React event coming up in the next 2 months? [Check out this event.](mailto:community@reactjs.org?subject=React%20Event)_
+_Do you know about a React event coming up in the next 2 months? [Email us.](mailto:community@reactjs.org?subject=React%20Event)_
 
 ---
 
