@@ -94,4 +94,73 @@ describe('ReactTopLevelFragment', function() {
 
   });
 
+  it('preserves state if an implicit key slot switches from/to null', function() {
+
+    var instance = null;
+
+    class Stateful extends React.Component {
+      render() {
+        instance = this;
+        return <div>World</div>;
+      }
+    }
+
+    function Fragment({ condition }) {
+      return condition ? [null, <Stateful />] :
+        [<div>Hello</div>, <Stateful />];
+    }
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    expect(instanceA).not.toBe(null);
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(instanceB).toBe(instanceA);
+
+    ReactNoop.render(<Fragment condition={false} />);
+    ReactNoop.flush();
+
+    var instanceC = instance;
+
+    expect(instanceC === instanceA).toBe(true);
+
+  });
+
+  it('should preserve state in a reorder', function() {
+
+    var instance = null;
+
+    class Stateful extends React.Component {
+      render() {
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({ condition }) {
+      return condition ? [[<div key="b">World</div>, <Stateful key="a" />]] :
+        [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+    }
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    expect(instanceA).not.toBe(null);
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(instanceB).toBe(instanceA);
+
+  });
+
 });
