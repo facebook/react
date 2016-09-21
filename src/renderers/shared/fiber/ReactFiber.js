@@ -71,6 +71,7 @@ export type Fiber = Instance & {
   // Singly Linked List Tree Structure.
   child: ?Fiber,
   sibling: ?Fiber,
+  index: number,
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
@@ -156,6 +157,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     child: null,
     sibling: null,
+    index: 0,
 
     ref: null,
 
@@ -221,6 +223,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.stateNode = fiber.stateNode;
   alt.child = fiber.child;
   alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
+  alt.index = fiber.index; // This should always be overridden.
   alt.ref = fiber.ref;
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?

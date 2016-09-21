@@ -61,6 +61,11 @@ function deleteChild(
   returnFiber : Fiber,
   childToDelete : Fiber
 ) {
+  if (!shouldTrackSideEffects) {
+    // Noop.
+    return;
+  }
+
   // TODO: Add this child to the side-effect queue for deletion.
 }
 
@@ -68,6 +73,10 @@ function deleteRemainingChildren(
   returnFiber : Fiber,
   currentFirstChild : ?Fiber
 ) {
+  if (!shouldTrackSideEffects) {
+    // Noop.
+    return null;
+  }
   // TODO: Add these children to the side-effect queue for deletion.
   return null;
 }
@@ -81,10 +90,6 @@ function mapAndDeleteRemainingChildren(
   // we will then undo the deletion as we restore children. Implicit (null) keys
   // don't get added to this set.
   const existingChildren : Map<string, Fiber> = new Map();
-  // TODO: This also needs to store the "previous index of this node". That lets
-  // us determine whether something needs to be a placement. It might be best to
-  // just store this on the fiber itself since that lets us use the "implicit"
-  // index resolution mechanism without adding null values to the linked list.
   let existingChild = currentFirstChild;
   while (existingChild) {
     if (existingChild.key !== null) {
@@ -109,10 +114,11 @@ function mapAndDeleteRemainingChildren(
 function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
   function useFiber(fiber : Fiber, priority : PriorityLevel) {
-    // We currently set sibling to null here because it is easy to forget to do
-    // before returning it.
+    // We currently set sibling to null and index to 0 here because it is easy
+    // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
       const clone = cloneFiber(fiber, priority);
+      clone.index = 0;
       clone.sibling = null;
       return clone;
     } else {
@@ -120,8 +126,33 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           fiber.pendingWorkPriority > priority) {
         fiber.pendingWorkPriority = priority;
       }
+      fiber.index = 0;
       fiber.sibling = null;
       return fiber;
+    }
+  }
+
+  function placeChild(newFiber : Fiber, lastPlacedIndex : number, newIndex : number) {
+    newFiber.index = newIndex;
+    if (!shouldTrackSideEffects) {
+      // Noop.
+      return lastPlacedIndex;
+    }
+    const current = newFiber.alternate;
+    if (current) {
+      const oldIndex = current.index;
+      if (oldIndex < lastPlacedIndex) {
+        // This is a move.
+        // TODO: Schedule a move side-effect for this child.
+        return lastPlacedIndex;
+      } else {
+        // This item can stay in place.
+        return oldIndex;
+      }
+    } else {
+      // This is an insertion.
+      // TODO: Schedule an insertion side-effect for this child.
+      return lastPlacedIndex;
     }
   }
 
@@ -234,17 +265,19 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
   function updateSlot(
     returnFiber : Fiber,
-    oldFiber : Fiber,
+    oldFiber : ?Fiber,
     newChild : any,
     priority : PriorityLevel
   ) : ?Fiber {
     // Update the fiber if the keys match, otherwise return null.
 
+    const key = oldFiber ? oldFiber.key : null;
+
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes doesn't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
-      if (oldFiber.key !== null) {
+      if (key !== null) {
         return null;
       }
       return updateTextNode(returnFiber, oldFiber, '' + newChild, priority);
@@ -253,7 +286,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.key === oldFiber.key) {
+          if (newChild.key === key) {
             return updateElement(
               returnFiber,
               oldFiber,
@@ -266,7 +299,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_COROUTINE_TYPE: {
-          if (newChild.key === oldFiber.key) {
+          if (newChild.key === key) {
             return updateCoroutine(
               returnFiber,
               oldFiber,
@@ -279,7 +312,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          if (newChild.key === oldFiber.key) {
+          if (newChild.key === key) {
             return updateYield(
               returnFiber,
               oldFiber,
@@ -295,7 +328,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (isArray(newChild) || getIteratorFn(newChild)) {
         // Fragments doesn't have keys so if the previous key is implicit we can
         // update it.
-        if (oldFiber.key !== null) {
+        if (key !== null) {
           return null;
         }
         return updateFragment(returnFiber, oldFiber, newChild, priority);
@@ -433,13 +466,32 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     let previousNewFiber : ?Fiber = null;
 
     let oldFiber = currentFirstChild;
+    let lastPlacedIndex = 0;
     let newIdx = 0;
+    let nextOldFiber = null;
     for (; oldFiber && newIdx < newChildren.length; newIdx++) {
-      const nextOldFiber = oldFiber.sibling; // In-case we mutate this fiber.
-      const newFiber = updateSlot(returnFiber, oldFiber, newChildren[newIdx], priority);
+      if (oldFiber) {
+        if (oldFiber.index > newIdx) {
+          nextOldFiber = oldFiber;
+          oldFiber = null;
+        } else {
+          nextOldFiber = oldFiber.sibling;
+        }
+      }
+      const newFiber = updateSlot(
+        returnFiber,
+        oldFiber,
+        newChildren[newIdx],
+        priority
+      );
       if (!newFiber) {
+        // TODO: This breaks on empty slots like null children. That's
+        // unfortunate because it triggers the slow path all the time. We need
+        // a better way to communicate whether this was a miss or null,
+        // boolean, undefined, etc.
         break;
       }
+      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
       if (!previousNewFiber) {
         // TODO: Move out of the loop. This only happens for the first run.
         resultingFirstChild = newFiber;
@@ -467,7 +519,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     for (; newIdx < newChildren.length; newIdx++) {
       // TODO: Since the mutation of existing fibers can happen at any order
       // we might break the link before we're done with it. :(
-      const nextOldFiber = oldFiber ? oldFiber.sibling : null;
+      if (oldFiber) {
+        if (oldFiber.index > newIdx) {
+          nextOldFiber = oldFiber;
+          oldFiber = null;
+        } else {
+          nextOldFiber = oldFiber.sibling;
+        }
+      }
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
@@ -476,6 +535,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         priority
       );
       if (newFiber) {
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
         if (!previousNewFiber) {
           resultingFirstChild = newFiber;
         } else {
@@ -485,9 +545,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
       // We will keep traversing the oldFiber in order, in case the new child
       // has a null key that we'll need to match in the same slot.
-      if (oldFiber) {
-        oldFiber = nextOldFiber;
-      }
+      oldFiber = nextOldFiber;
     }
 
     // TODO: Add deletion side-effects to the returnFiber's side-effects.
