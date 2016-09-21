@@ -56,62 +56,60 @@ const {
   NoWork,
 } = ReactPriorityLevel;
 
-
-function deleteChild(
-  returnFiber : Fiber,
-  childToDelete : Fiber
-) {
-  if (!shouldTrackSideEffects) {
-    // Noop.
-    return;
-  }
-
-  // TODO: Add this child to the side-effect queue for deletion.
-}
-
-function deleteRemainingChildren(
-  returnFiber : Fiber,
-  currentFirstChild : ?Fiber
-) {
-  if (!shouldTrackSideEffects) {
-    // Noop.
-    return null;
-  }
-  // TODO: Add these children to the side-effect queue for deletion.
-  return null;
-}
-
-function mapAndDeleteRemainingChildren(
-  returnFiber : Fiber,
-  currentFirstChild : ?Fiber
-) : Map<string, Fiber> {
-  // Add the remaining children to a temporary map so that we can find them by
-  // keys quickly. At the same time, we'll flag them all for deletion. However,
-  // we will then undo the deletion as we restore children. Implicit (null) keys
-  // don't get added to this set.
-  const existingChildren : Map<string, Fiber> = new Map();
-  let existingChild = currentFirstChild;
-  while (existingChild) {
-    if (existingChild.key !== null) {
-      existingChildren.set(existingChild.key, existingChild);
-    }
-    // Add everything to the delete queue
-    // Actually... It is not possible to delete things from the queue since
-    // we don't have access to the previous link. Does that mean we need a
-    // second pass to add them? We should be able to keep track of the
-    // previous deletion as we're iterating through the list the next time.
-    // That way we know which item to patch when we delete a deletion.
-    existingChild = existingChild.sibling;
-  }
-  return existingChildren;
-}
-
-
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
 function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+
+  function deleteChild(
+    returnFiber : Fiber,
+    childToDelete : Fiber
+  ) {
+    if (!shouldTrackSideEffects) {
+      // Noop.
+      return;
+    }
+
+    // TODO: Add this child to the side-effect queue for deletion.
+  }
+
+  function deleteRemainingChildren(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber
+  ) {
+    if (!shouldTrackSideEffects) {
+      // Noop.
+      return null;
+    }
+    // TODO: Add these children to the side-effect queue for deletion.
+    return null;
+  }
+
+  function mapAndDeleteRemainingChildren(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber
+  ) : Map<string, Fiber> {
+    // Add the remaining children to a temporary map so that we can find them by
+    // keys quickly. At the same time, we'll flag them all for deletion. However,
+    // we will then undo the deletion as we restore children. Implicit (null) keys
+    // don't get added to this set.
+    const existingChildren : Map<string, Fiber> = new Map();
+    let existingChild = currentFirstChild;
+    while (existingChild) {
+      if (existingChild.key !== null) {
+        existingChildren.set(existingChild.key, existingChild);
+      }
+      // Add everything to the delete queue
+      // Actually... It is not possible to delete things from the queue since
+      // we don't have access to the previous link. Does that mean we need a
+      // second pass to add them? We should be able to keep track of the
+      // previous deletion as we're iterating through the list the next time.
+      // That way we know which item to patch when we delete a deletion.
+      existingChild = existingChild.sibling;
+    }
+    return existingChildren;
+  }
 
   function useFiber(fiber : Fiber, priority : PriorityLevel) {
     // We currently set sibling to null and index to 0 here because it is easy
