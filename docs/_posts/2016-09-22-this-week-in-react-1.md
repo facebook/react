@@ -76,15 +76,16 @@ _Want us to interview someone from the React community? Contact [community@react
 
 ![A list of upcoming React community events.](/react/img/blog/thisweekinreact/upcoming.png)
 
-__Meetups__
-
-- [Thursday, September 22, 2016 - San Francisco at Minted](https://www.meetup.com/ReactJS-San-Francisco/events/231776842/)
-- [Thursday, September 22, 2016 - Netherlands at FrontMen](https://www.meetup.com/ReactJS-NL/events/233099575/)
 - [Saturday, September 24, 2016 - Bangalore at Multunus](https://www.meetup.com/ReactJS-Bangalore/events/233685933/)
 - [Wednesday, September 28, 2016 - Seattle at Redfin](https://www.meetup.com/seattle-react-js/)
 - [Thursday, September 29, 2016 - Israel at Klarna](https://www.meetup.com/ReactJS-IL/events/234262147/)
 - [Monday, October 3, 2016 - Barcelona at Lodgify](https://www.meetup.com/ReactJS-Barcelona/events/233971585/)
 - [Tuesday, October 18, 2016 - London at Facebook](https://meetup.react.london/)
+
+__Past__
+
+- [Thursday, September 22, 2016 - San Francisco at Minted](https://www.meetup.com/ReactJS-San-Francisco/events/231776842/)
+- [Thursday, September 22, 2016 - Netherlands at FrontMen](https://www.meetup.com/ReactJS-NL/events/233099575/)
 
 _Do you know about a React event coming up in the next 2 months? [Email us.](mailto:community@reactjs.org?subject=React%20Event)_
 
