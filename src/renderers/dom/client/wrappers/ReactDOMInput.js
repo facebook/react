@@ -34,8 +34,12 @@ function forceUpdateIfMounted() {
 }
 
 function isControlled(props) {
-  var usesChecked = props.type === 'checkbox' || props.type === 'radio';
-  return usesChecked ? props.checked != null : props.value != null;
+  if (props.disabled) return false;
+  if (props.type === 'checkbox' || props.type === 'radio') {
+    return props.checked != null;
+  } else {
+    return props.readOnly ? false : props.value != null;
+  }
 }
 
 /**
