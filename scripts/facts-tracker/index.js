@@ -7,52 +7,59 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
- *
- * @flow
  */
+
 'use strict';
 
 var fs = require('fs');
+var path = require('path');
 var execSync = require('child_process').execSync;
 
 function escape(value) {
   return '\'' + value.replace(/'/g, "'\\''") + '\'';
 }
 
+var cwd = null;
 function exec(command) {
-  console.log('>', command.replace(process.env.GITHUB_TOKEN, '************'));
-  return execSync(command).toString();
+  console.error('>', command.replace(process.env.GITHUB_TOKEN, '************'));
+  return execSync(command, cwd ? {cwd: cwd} : undefined).toString();
 }
 
-if (process.env.TRAVIS_REPO_SLUG) {
+var isInsideOfTravis = !!process.env.TRAVIS_REPO_SLUG;
+
+if (isInsideOfTravis) {
   if (process.env.TRAVIS_BRANCH !== 'master') {
     console.error('facts-tracker: Branch is not master, exiting...');
-    process.exit(1);
+    process.exit(0);
   }
 
   if (process.env.TRAVIS_PULL_REQUEST !== 'false') {
     console.error('facts-tracker: This is a pull request, exiting...');
-    process.exit(1);
+    process.exit(0);
   }
 
-  if (!process.env.GITHUB_USER ||
-      !process.env.GITHUB_TOKEN) {
+  if (!process.env.GITHUB_USER || !process.env.GITHUB_TOKEN) {
     console.error(
       'In order to use facts-tracker, you need to configure a ' +
       'few environment variables in order to be able to commit to the ' +
       'repository. Follow those steps to get you setup:\n' +
       '\n' +
       'Go to https://github.com/settings/tokens/new\n' +
-      ' - Fill "Token description" with "facts-tracker for ' + process.env.TRAVIS_REPO_SLUG + '"\n' +
+      ' - Fill "Token description" with "facts-tracker for ' +
+        process.env.TRAVIS_REPO_SLUG + '"\n' +
       ' - Check "public_repo"\n' +
       ' - Press "Generate Token"\n' +
       '\n' +
-      'In a different tab, go to https://travis-ci.org/' + process.env.TRAVIS_REPO_SLUG + '/settings\n' +
+      'In a different tab, go to https://travis-ci.org/' +
+        process.env.TRAVIS_REPO_SLUG + '/settings\n' +
       ' - Make sure "Build only if .travis.yml is present" is ON\n' +
-      ' - Fill "Name" with "GITHUB_TOKEN" and "Value" with the token you just generated. Press "Add"\n' +
-      ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the account you generated the token with. Press "Add"\n' +
+      ' - Fill "Name" with "GITHUB_TOKEN" and "Value" with the token you ' +
+        'just generated. Press "Add"\n' +
+      ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
+        'account you generated the token with. Press "Add"\n' +
       '\n' +
-      'Once this is done, commit anything to the repository to restart Travis and it should work :)'
+      'Once this is done, commit anything to the repository to restart ' +
+        'Travis and it should work :)'
     );
     process.exit(1);
   }
@@ -62,12 +69,6 @@ if (process.env.TRAVIS_REPO_SLUG) {
     'login ' + escape(process.env.GITHUB_USER) + ' ' +
     'password ' + escape(process.env.GITHUB_TOKEN) +
     '" > ~/.netrc'
-  );
-  var remoteOriginChanged = true;
-  exec('git remote rename origin __old_origin');
-  exec(
-    'git remote add origin https://' + escape(process.env.GITHUB_TOKEN) +
-    '@github.com/' + escape(process.env.TRAVIS_REPO_SLUG)
   );
   exec(
     'git config --global user.name ' +
@@ -84,39 +85,61 @@ if (process.argv.length <= 2) {
   process.exit(1);
 }
 
-var currentBranch = exec('git rev-parse --abbrev-ref HEAD').trim();
+function getRepoSlug() {
+  if (isInsideOfTravis) {
+    return process.env.TRAVIS_REPO_SLUG;
+  }
+
+  var remotes = exec('git remote -v').split('\n');
+  for (var i = 0; i < remotes.length; ++i) {
+    var match = remotes[i].match(/^origin\t[^:]+:([^\.]+).+\(fetch\)/);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  console.error('Cannot find repository slug, sorry.');
+  process.exit(1);
+}
+
+var repoSlug = getRepoSlug();
 var currentCommitHash = exec('git rev-parse HEAD').trim();
 var currentTimestamp = new Date().toISOString()
   .replace('T', ' ')
   .replace(/\..+/, '');
 
-if (exec('git status --porcelain')) {
-  console.error('facts-tracker: `git status` is not clean, aborting.')
-  process.exit(1);
-}
+function checkoutFactsFolder() {
+  var factsFolder = '../' + repoSlug.split('/')[1] + '-facts';
+  if (!fs.existsSync(factsFolder)) {
+    var repoURL;
+    if (isInsideOfTravis) {
+      repoURL =
+        'https://' + process.env.GITHUB_TOKEN +
+        '@github.com/' + repoSlug + '.git';
+    } else {
+      repoURL = 'git@github.com:' + repoSlug + '.git';
+    }
 
-function checkoutFactsBranch() {
+    exec(
+      'git clone ' +
+      '--branch facts ' +
+      '--depth=5 ' +
+      escape(repoURL) + ' ' +
+      escape(factsFolder)
+    );
+  }
+
+  cwd = path.resolve(factsFolder);
   exec('git fetch');
-  try {
-    exec('git checkout facts');
-  } catch(e) {
-    exec('git checkout --orphan facts');
-    exec('rm `git ls-files`');
-    return;
+  if (exec('git status --porcelain')) {
+    console.error('facts-tracker: `git status` is not clean, aborting.');
+    process.exit(1);
   }
-
-  try {
-    exec('git rebase origin/facts');
-  } catch(e) {
-    exec('git rebase --abort');
-    exec('git checkout origin/facts');
-    exec('git branch -D facts');
-    exec('git checkout facts');
-  }
+  exec('git rebase origin/facts');
 }
-checkoutFactsBranch();
+checkoutFactsFolder();
 
-for (var i =  2; i < process.argv.length; i += 2) {
+for (var i = 2; i < process.argv.length; i += 2) {
   var name = process.argv[i].trim();
   var value = process.argv[i + 1];
   if (value.indexOf('\n') !== -1) {
@@ -130,7 +153,7 @@ for (var i =  2; i < process.argv.length; i += 2) {
   var filename = name + '.txt';
   try {
     var lastLine = exec('tail -n 1 ' + escape(filename));
-  } catch(e) {
+  } catch (e) {
     // ignore error
   }
   var lastValue = lastLine && lastLine
@@ -139,25 +162,21 @@ for (var i =  2; i < process.argv.length; i += 2) {
 
   if (value !== lastValue) {
     fs.appendFileSync(
-      filename,
+      path.resolve(cwd, filename),
       currentCommitHash + '\t' + currentTimestamp + '\t' + value + '\n'
     );    
   }
 
-  console.log(name, value);
+  console.log(name);
+  console.log(lastValue);
+  console.log(value);
 }
 
 if (exec('git status --porcelain')) {
   exec('git add --all');
-  exec('git commit -m "Adding facts for ' + escape(currentCommitHash) + '"');
+  exec('git commit -m ' + escape('Adding facts for ' + currentCommitHash));
+  exec('git push origin facts');
 } else {
-  console.log('facts-tracker: nothing to update');
+  console.error('facts-tracker: nothing to update');
 }
-
-exec('git push origin facts');
-exec('git checkout ' + escape(currentBranch));
-
-if (remoteOriginChanged) {
-  exec('git remote remove origin');
-  exec('git remote rename __old_origin origin');
-}
+cwd = null;
