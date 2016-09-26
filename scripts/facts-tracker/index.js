@@ -109,18 +109,18 @@ var currentTimestamp = new Date().toISOString()
 function checkoutFactsFolder() {
   var factsFolder = '../' + repoSlug.split('/')[1] + '-facts';
   if (!fs.existsSync(factsFolder)) {
-    var repoURL;
+    var escapedRepoURL;
     if (isInsideOfTravis) {
-      repoURL = 'https://$GITHUB_TOKEN@github.com/' + repoSlug + '.git';
+      escapedRepoURL = 'https://$GITHUB_TOKEN@github.com/' + escape(repoSlug) + '.git';
     } else {
-      repoURL = 'git@github.com:' + repoSlug + '.git';
+      escapedRepoURL = escape('git@github.com:' + repoSlug + '.git');
     }
 
     exec(
       'git clone ' +
       '--branch facts ' +
       '--depth=5 ' +
-      escape(repoURL) + ' ' +
+      escapedRepoURL + ' ' +
       escape(factsFolder)
     );
   }
