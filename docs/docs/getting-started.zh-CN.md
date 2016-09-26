@@ -161,7 +161,7 @@ ReactDOM.render(
 
 ## 下一步
 
-去看看[入门教程](/react/docs/tutorial.html) 和入门教程包 `examples` 目录下的其它例子学习更多。
+去看看[入门教程](/react/docs/tutorial-zh-CN.html) 和入门教程包 `examples` 目录下的其它例子学习更多。
 
 我们还有一个社区开发者共建的 Wiki：[workflows, UI-components, routing, data management etc.](https://github.com/facebook/react/wiki/Complementary-Tools)
 
