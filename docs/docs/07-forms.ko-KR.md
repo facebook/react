@@ -67,9 +67,9 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
 
 이것은 사용자 입력을 받아들이지만, 시작에서부터 140자로 값을 자릅니다.
 
-### 체크박스와 라디오 버튼의 잠제적인 문제
+### 체크박스와 라디오 버튼의 잠재적인 문제
 
-변경 핸들링을 일반화하기 위해 React는 `change` 이벤트 대신에 `click` 이벤트를 사용하는 것에 주의하세요. `change` 핸들러 안에서 `preventDefault`를 호출하는 경우를 재외하고 이 동작은 예상대로 동작합니다. 이런 경우 `preventDefault`를 제거하거나,  `setTimeout`에 `checked`의 전환을 넣어서 해결 가능합니다.
+변경 핸들링을 일반화하기 위해 React는 `change` 이벤트 대신에 `click` 이벤트를 사용하는 것에 주의하세요. `change` 핸들러 안에서 `preventDefault`를 호출하는 경우를 제외하고 이 동작은 예상대로 동작합니다. 이런 경우 `preventDefault`를 제거하거나,  `setTimeout`에 `checked`의 전환을 넣어서 해결 가능합니다.
 
 ## 제어되지 않는(Uncontrolled) 컴포넌트
 
