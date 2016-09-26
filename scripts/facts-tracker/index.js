@@ -65,10 +65,8 @@ if (isInsideOfTravis) {
   }
 
   exec(
-    'echo "machine github.com ' +
-    'login ' + escape(process.env.GITHUB_USER) + ' ' +
-    'password ' + escape(process.env.GITHUB_TOKEN) +
-    '" > ~/.netrc'
+    'echo "machine github.com login $GITHUB_USER password $GITHUB_TOKEN"' +
+    '> ~/.netrc'
   );
   exec(
     'git config --global user.name ' +
@@ -113,9 +111,7 @@ function checkoutFactsFolder() {
   if (!fs.existsSync(factsFolder)) {
     var repoURL;
     if (isInsideOfTravis) {
-      repoURL =
-        'https://' + process.env.GITHUB_TOKEN +
-        '@github.com/' + repoSlug + '.git';
+      repoURL = 'https://$GITHUB_TOKEN@github.com/' + repoSlug + '.git';
     } else {
       repoURL = 'git@github.com:' + repoSlug + '.git';
     }
