@@ -484,8 +484,8 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>이것은 사용자 입력을 받아들이지만, 시작에서부터 140자로 값을 자릅니다.</p>
-<h3><a class="anchor" name="체크박스와-라디오-버튼의-잠제적인-문제"></a>체크박스와 라디오 버튼의 잠제적인 문제 <a class="hash-link" href="#체크박스와-라디오-버튼의-잠제적인-문제">#</a></h3>
-<p>변경 핸들링을 일반화하기 위해 React는 <code>change</code> 이벤트 대신에 <code>click</code> 이벤트를 사용하는 것에 주의하세요. <code>change</code> 핸들러 안에서 <code>preventDefault</code>를 호출하는 경우를 재외하고 이 동작은 예상대로 동작합니다. 이런 경우 <code>preventDefault</code>를 제거하거나,  <code>setTimeout</code>에 <code>checked</code>의 전환을 넣어서 해결 가능합니다.</p>
+<h3><a class="anchor" name="체크박스와-라디오-버튼의-잠재적인-문제"></a>체크박스와 라디오 버튼의 잠재적인 문제 <a class="hash-link" href="#체크박스와-라디오-버튼의-잠재적인-문제">#</a></h3>
+<p>변경 핸들링을 일반화하기 위해 React는 <code>change</code> 이벤트 대신에 <code>click</code> 이벤트를 사용하는 것에 주의하세요. <code>change</code> 핸들러 안에서 <code>preventDefault</code>를 호출하는 경우를 제외하고 이 동작은 예상대로 동작합니다. 이런 경우 <code>preventDefault</code>를 제거하거나,  <code>setTimeout</code>에 <code>checked</code>의 전환을 넣어서 해결 가능합니다.</p>
 <h2><a class="anchor" name="제어되지-않는uncontrolled-컴포넌트"></a>제어되지 않는(Uncontrolled) 컴포넌트 <a class="hash-link" href="#제어되지-않는uncontrolled-컴포넌트">#</a></h2>
 <p><code>value</code> 가 없(거나 <code>null</code>로 설정되어 있)는 <code>&lt;input&gt;</code>은 <em>제어되지 않는</em> 컴포넌트입니다. 제어되지 않는 <code>&lt;input&gt;</code>에서 렌더된 엘리먼트의 value값은 사용자의 입력을 반영합니다. 예를 들어,</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
