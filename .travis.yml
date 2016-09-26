@@ -73,11 +73,27 @@ script:
       set -e
       ./node_modules/.bin/grunt jest:coverage
       cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
+
       echo 'Testing in server-render (HTML generation) mode...'
       printf '\nmodule.exports.useCreateElement = false;\n' \
         >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
       ./node_modules/.bin/grunt jest:normal
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
+
+      echo 'Testing in fiber mode...'
+      printf '\nmodule.exports.useFiber = true;\n' \
+        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      FIBER_TESTS=`\
+        NODE_ENV=test node node_modules/jest/bin/jest --json | \
+        node -e "\
+          var data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')); \
+          console.log(data.numPassedTests + '/' + data.numTotalTests)\
+        "\
+      `
+      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      node scripts/facts-tracker/index.js \
+        "fiber-tests" "$FIBER_TESTS"
+
       ./node_modules/.bin/gulp react:extract-errors
     elif [ "$TEST_TYPE" = flow ]; then
       set -e
