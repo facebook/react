@@ -28,8 +28,8 @@ script:
 
         GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
         echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
-        git config --global user.name "Travis CI"
-        git config --global user.email "travis@reactjs.org"
+        git config --global user.name "$GITHUB_USER_NAME"
+        git config --global user.email "$GITHUB_USER_EMAIL"
 
         git clone --branch gh-pages --depth=50 \
           https://reactjs-bot@github.com/facebook/react.git \
