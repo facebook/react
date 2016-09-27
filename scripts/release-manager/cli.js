@@ -50,8 +50,13 @@ const COMMANDS = [
 
 // Simple helper to write out some JSON for debugging
 function writeTo(file, data) {
+  var folder = path.join(__dirname, 'data');
+  if (!fs.existsSync(folder)) {
+    fs.mkdirSync(folder);
+  }
+
   fs.writeFile(
-    path.join(__dirname, 'data', file),
+    path.join(folder, file),
     JSON.stringify(data, null, 2)
   );
 }
