@@ -17,8 +17,8 @@ var ReactElement = require('ReactElement');
 var emptyFunction = require('emptyFunction');
 var traverseAllChildren = require('traverseAllChildren');
 
-var twoArgumentPooler = PooledClass.twoArgumentPooler;
-var fourArgumentPooler = PooledClass.fourArgumentPooler;
+var argumentsPooler = PooledClass.argumentsPooler;
+// var fourArgumentPooler = PooledClass.fourArgumentPooler;
 
 
 var userProvidedKeyEscapeRegex = /\/+/g;
@@ -45,7 +45,7 @@ ForEachBookKeeping.prototype.destructor = function() {
   this.context = null;
   this.count = 0;
 };
-PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
+PooledClass.addPoolingTo(ForEachBookKeeping, argumentsPooler);
 
 function forEachSingleChild(bookKeeping, child, name) {
   var {func, context} = bookKeeping;
@@ -98,7 +98,7 @@ MapBookKeeping.prototype.destructor = function() {
   this.context = null;
   this.count = 0;
 };
-PooledClass.addPoolingTo(MapBookKeeping, fourArgumentPooler);
+PooledClass.addPoolingTo(MapBookKeeping, argumentsPooler);
 
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
   var {result, keyPrefix, func, context} = bookKeeping;

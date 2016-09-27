@@ -52,7 +52,7 @@ Object.assign(TopLevelCallbackBookKeeping.prototype, {
 });
 PooledClass.addPoolingTo(
   TopLevelCallbackBookKeeping,
-  PooledClass.twoArgumentPooler
+  PooledClass.argumentsPooler
 );
 
 function handleTopLevelImpl(bookKeeping) {

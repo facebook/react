@@ -67,7 +67,7 @@ describe('Pooled class', () => {
     PoolableClassWithMultiArguments.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithMultiArguments,
-      PooledClass.twoArgumentPooler
+      PooledClass.argumentsPooler
     );
     PoolableClassWithMultiArguments.getPooled('a', 'b', 'c');
     expect(log).toEqual(['a', 'b']);
