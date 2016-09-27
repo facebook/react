@@ -18,7 +18,6 @@ var emptyFunction = require('emptyFunction');
 var traverseAllChildren = require('traverseAllChildren');
 
 var argumentsPooler = PooledClass.argumentsPooler;
-// var fourArgumentPooler = PooledClass.fourArgumentPooler;
 
 
 var userProvidedKeyEscapeRegex = /\/+/g;
