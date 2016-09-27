@@ -25,6 +25,17 @@ module.exports = function(vorpal, app) {
     .command('docs-prs')
     .description('Get list of documentation pull requests that need to be merged to the stable branch')
     .action(function(args, actionCB) {
+      const branch = git.getBranch(app);
+      if (!branch.match(/-stable$/)) {
+        this.log(chalk.red('Aborting...'));
+        this.log(
+          `You need to be on the latest stable branch in the React repo ` +
+          `to execute this command.\nYou are currently in ${branch}.`
+        );
+        actionCB();
+        return;
+      }
+
       const query = {
         labels: [DOCS_LABEL].join(), // github-api doesn't join automatically
         state: 'closed',
