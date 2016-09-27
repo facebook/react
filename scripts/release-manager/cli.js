@@ -125,10 +125,12 @@ const app = {
       vorpal.use(require(`./commands/${command}`)(vorpal, app));
     });
 
-    vorpal
+    var v = vorpal
       .history('react-release-manager')
-      .delimiter('rrm \u2234')
-      .show();
+      .delimiter('rrm \u2234');
+    v.exec('help');
+    v.show();
+
   },
 };
 
