@@ -41,7 +41,7 @@ const styles = {
     padding: '15px 30px',
     pointerEvents: 'auto',
     overflowY: 'hidden',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgb(254, 243, 161)',
     border: '1px solid rgba(0, 0, 0, 0.10)',
     borderRadius: '2px',
     boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.10)',
