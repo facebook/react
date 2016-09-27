@@ -54,9 +54,9 @@ And it's just as easy with [npm](http://npmjs.com):
 npm i --save react
 ```
 
-## Contribute
+## Contributing
 
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, check out our **[contribution guide](https://facebook.github.io/react/contributing/how-to-contribute.html)**.
+The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, check out our [contribution guide](https://facebook.github.io/react/contributing/how-to-contribute.html).
 
 ### [Code of Conduct](https://code.facebook.com/codeofconduct)
 
@@ -64,7 +64,7 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 
 ### Good First Bug
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of **[good first bugs](https://github.com/facebook/react/labels/good%20first%20bug)** that contain bugs which are fairly easy to fix. This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 ### License
 
