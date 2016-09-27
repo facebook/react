@@ -3,9 +3,10 @@ id: design-principles
 title: Design Principles
 layout: contributing
 permalink: contributing/design-principles.html
+prev: how-to-contribute.html
 ---
 
-After using React in a couple of applications, you might be interested in contributing to React. Before [diving into specifics](https://github.com/facebook/react/blob/master/CONTRIBUTING.md), we think it's important to establish a few design principles guiding our decisions about changes in React.
+After using React in a couple of applications, you might be interested in [contributing to React](/react/contributing/how-to-contribute.html). We think it's important to establish a few design principles guiding our decisions about changes in React.
 
 We wrote this document so that you have a better idea of how we decide what React does and what React doesn't do, and what our development philosophy is like. While we are excited to see community contributions, we are not likely to choose a path that violates one or more of these principles.
 

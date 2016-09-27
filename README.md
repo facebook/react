@@ -54,50 +54,17 @@ And it's just as easy with [npm](http://npmjs.com):
 npm i --save react
 ```
 
-## Contribute
+## Contributing
 
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, then keep reading. If you're not interested in helping right now that's ok too. :) Any feedback you have about using React would be greatly appreciated.
+The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, check out our [contribution guide](https://facebook.github.io/react/contributing/how-to-contribute.html).
 
-### Building Your Copy of React
+### [Code of Conduct](https://code.facebook.com/codeofconduct)
 
-The process to build `react.js` is built entirely on top of node.js, using many libraries you may already be familiar with.
-
-#### Prerequisites
-
-* You have `node` installed at v4.0.0+ and `npm` at v2.0.0+.
-* You have `gcc` installed or are comfortable installing a compiler if needed. Some of our `npm` dependencies may require a compilation step. On OS X, the Xcode Command Line Tools will cover this. On Ubuntu, `apt-get install build-essential` will install the required packages. Similar commands should work on other Linux distros. Windows will require some additional steps, see the [`node-gyp` installation instructions](https://github.com/nodejs/node-gyp#installation) for details.
-* You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
-* You are familiar with `git`.
-
-#### Build
-
-Once you have the repository cloned, building a copy of `react.js` is really easy.
-
-```sh
-# grunt-cli is needed by grunt; you might have this installed already
-npm install -g grunt-cli
-npm install
-grunt build
-```
-
-At this point, you should now have a `build/` directory populated with everything you need to use React. The examples should all work.
-
-### Grunt
-
-We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete listing. The important ones to know:
-
-```sh
-# Build and run tests with PhantomJS
-grunt test
-# Lint the code with ESLint
-grunt lint
-# Wipe out build directory
-grunt clean
-```
+Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
 ### Good First Bug
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix.  This is a great place to get started.
 
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 ### License
 
@@ -106,10 +73,6 @@ React is [BSD licensed](./LICENSE). We also provide an additional [patent grant]
 React documentation is [Creative Commons licensed](./LICENSE-docs).
 
 Examples provided in this repository and in the documentation are [separately licensed](./LICENSE-examples).
-
-### More…
-
-There's only so much we can cram in here. To read more about the community and guidelines for submitting pull requests, please read the [Contributing document](CONTRIBUTING.md).
 
 ## Troubleshooting
 See the [Troubleshooting Guide](https://github.com/facebook/react/wiki/Troubleshooting)
