@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ARIADOMPropertyConfig = require('ARIADOMPropertyConfig');
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
@@ -73,6 +74,7 @@ function inject() {
     ReactDOMTextComponent
   );
 
+  ReactInjection.DOMProperty.injectDOMPropertyConfig(ARIADOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
