@@ -7,6 +7,228 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Our First 50,000 Stars</title>
+				<description>&lt;p&gt;Just three and a half years ago we open sourced a little JavaScript library called React. The journey since that day has been incredibly exciting.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;commemorative-t-shirt&quot;&gt;&lt;/a&gt;Commemorative T-Shirt &lt;a class=&quot;hash-link&quot; href=&quot;#commemorative-t-shirt&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In order to celebrate 50,000 GitHub stars, &lt;a href=&quot;http://www.maggieappleton.com/&quot;&gt;Maggie Appleton&lt;/a&gt; from &lt;a href=&quot;http://egghead.io/&quot;&gt;egghead.io&lt;/a&gt; has designed us a special T-shirt, which will be available for purchase from Teespring &lt;strong&gt;only for a week&lt;/strong&gt; through Thursday, October 6. Maggie also wrote &lt;a href=&quot;https://www.behance.net/gallery/43269677/Reacts-50000-Stars-Shirt&quot;&gt;a blog post&lt;/a&gt; showing all the different concepts she came up with before settling on the final design.&lt;/p&gt;
+
+&lt;p&gt;&lt;a target=&quot;_blank&quot; href=&quot;https://teespring.com/react-50000-stars&quot;&gt;&lt;img src=&quot;/react/img/blog/react-50k-tshirt.jpg&quot; width=&quot;650&quot; height=&quot;340&quot; alt=&quot;React 50k Tshirt&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The T-shirts are super soft using American Apparel&amp;#39;s tri-blend fabric; we also have kids and toddler T-shirts and baby onesies available.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://teespring.com/react-50000-stars&quot;&gt;Adult T-shirts (straight-cut and fitted)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://teespring.com/react-50000-stars-kids&quot;&gt;Kids T-shirts&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://teespring.com/react-50000-stars-toddler&quot;&gt;Toddler T-Shirts&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://teespring.com/react-50000-stars-baby&quot;&gt;Baby Onesies&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Proceeds from the shirts will be donated to &lt;a href=&quot;http://www.code2040.org/&quot;&gt;CODE2040&lt;/a&gt;, a nonprofit that creates access, awareness, and opportunities in technology for underrepresented minorities with a specific focus on Black and Latinx talent.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;archeology&quot;&gt;&lt;/a&gt;Archeology &lt;a class=&quot;hash-link&quot; href=&quot;#archeology&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We&amp;#39;ve spent a lot of time trying to explain the concepts behind React and the problems it attempts to solve, but we haven&amp;#39;t talked much about how React evolved before being open sourced. This milestone seemed like as good a time as any to dig through the earliest commits and share some of the more important moments and fun facts.&lt;/p&gt;
+
+&lt;p&gt;The story begins in our ads org, where we were building incredibly sophisticated client side web apps using an internal MVC framework called &lt;a href=&quot;http://web.archive.org/web/20130608154901/http://shaneosullivan.github.io/boltjs/intro.html&quot;&gt;BoltJS&lt;/a&gt;. Here&amp;#39;s a sample of what some Bolt code looked like:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;CarView&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;javelin/core&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;CarView&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;extend&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;container&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Container&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;wheels&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;declare&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;childViews&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;I have &amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;wheelView&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39; wheels&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;setWheels&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;wheels&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;findRef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;wheelView&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setContent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;wheels&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;getWheels&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;findRef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;wheelView&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getContent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;car&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;CarView&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;car&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setWheels&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;car&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;placeIn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//&amp;lt;div&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//  &amp;lt;div&amp;gt;I have &amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//  &amp;lt;div&amp;gt;3&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//  &amp;lt;div&amp;gt; wheels&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Bolt introduced a number of APIs and features that would eventually make their way into React including &lt;code&gt;render&lt;/code&gt;, &lt;code&gt;createClass&lt;/code&gt;, and &lt;code&gt;refs&lt;/code&gt;. Bolt introduced the concept of &lt;code&gt;refs&lt;/code&gt; as a way to create references to nodes that can be used imperatively. This was relevant for legacy interoperability and incremental adoption, and while React would eventually strive to be a lot more functional, &lt;code&gt;refs&lt;/code&gt; proved to be a very useful way to break out of the functional paradigm when the need arose.&lt;/p&gt;
+
+&lt;p&gt;But as our applications grew more and more sophisticated, our Bolt codebases got pretty complicated. Recognizing some of the framework&amp;#39;s shortcomings, &lt;a href=&quot;https://twitter.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt; started experimenting with a side-project called &lt;a href=&quot;https://github.com/jordwalke/FaxJs&quot;&gt;FaxJS&lt;/a&gt;. His goal was to solve many of the same problems as Bolt, but in a very different way. This is actually where most of React&amp;#39;s fundamentals were born, including props, state, re-evaluating large portions of the tree to “diff” the UI, server-side rendering, and a basic concept of components.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;TestProject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PersonDisplayer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;structure&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;classSet&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;personDisplayerContainer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;titleDiv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;classSet&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;personNameTitle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}),&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;nestedAgeDiv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;content&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Interests: &amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;interests&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;fbolt-is-born&quot;&gt;&lt;/a&gt;FBolt is Born &lt;a class=&quot;hash-link&quot; href=&quot;#fbolt-is-born&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Through his FaxJS experiment, Jordan became convinced that functional APIs  — which discouraged mutation —  offered a better, more scalable way to build user interfaces. He imported his library into Facebook&amp;#39;s codebase in March of 2012 and renamed it “FBolt”, signifying an extension of Bolt where components are written a functional programming style. Or maybe “FBolt” was a nod to FaxJS – he didn&amp;#39;t tell us! ;)&lt;/p&gt;
+
+&lt;p&gt;The interoperability between FBolt and Bolt allowed us to experiment with replacing just one component at a time with more functional component APIs. We could test the waters of this new functional paradigm, without having to go all in. We started with the components that were clearly best expressed functionally and then we would later continue to push the boundaries of what we could express as functions.&lt;/p&gt;
+
+&lt;p&gt;Realizing that FBolt wouldn&amp;#39;t be a great name for the library when used on its own, Jordan Walke and &lt;a href=&quot;https://twitter.com/tomocchino&quot;&gt;Tom Occhino&lt;/a&gt; decided on a new name: “React.” After Tom sent out the diff to rename everything to React, Jordan commented:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Jordan Walke:
+I might add for the sake of discussion, that many systems advertise some kind of reactivity, but they usually require that you set up some kind of point-to-point listeners and won&amp;#39;t work on structured data. This API reacts to any state or property changes, and works with data of any form (as deeply structured as the graph itself) so I think the name is fitting.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Most of Tom&amp;#39;s other commits at the time were on the first version of &lt;a href=&quot;https://github.com/graphql/graphiql&quot;&gt;GraphiQL&lt;/a&gt;, a project which was recently open sourced.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;adding-jsx&quot;&gt;&lt;/a&gt;Adding JSX &lt;a class=&quot;hash-link&quot; href=&quot;#adding-jsx&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Since about 2010 Facebook has been using an extension of PHP called &lt;a href=&quot;https://www.facebook.com/notes/facebook-engineering/xhp-a-new-way-to-write-php/294003943919/&quot;&gt;XHP&lt;/a&gt;, which enables engineers to create UIs using XML literals right inside their PHP code. It was first introduced to help prevent XSS holes but ended up being an excellent way to structure applications with custom components.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;post&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;attribute&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;XHPRoot&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$anchor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getChildren&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/a&amp;gt;;&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$form&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;form&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;method&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;post&amp;quot;&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;action&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;href&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;postLink&amp;quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$anchor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/form&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;transferAllAttributes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$anchor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$form&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Before Jordan&amp;#39;s work even made its way into the Facebook codebase, Adam Hupp implemented an XHP-like concept for JavaScript, written in Haskell. This system enabled you to write the following inside a JavaScript file:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;example&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attrib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;special&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;h1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;World&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/h1&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It would compile the above into the following normal ES3-compatible JavaScript:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;jsx_example_hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;attrib&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;S&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;div&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;class&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;special&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;S&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;h1&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Hello, World!&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]),&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this prototype, &lt;code&gt;S.create&lt;/code&gt; would immediately create and return a DOM node. Most of the conversations on this prototype revolved around the performance characteristics of &lt;code&gt;innerHTML&lt;/code&gt; versus creating DOM nodes directly. At the time, it would have been less than ideal to push developers universally in the direction of creating DOM nodes directly since it did not perform as well, especially in Firefox and IE. Facebook&amp;#39;s then-CTO &lt;a href=&quot;https://twitter.com/btaylor&quot;&gt;Bret Taylor&lt;/a&gt; chimed in on the discussion at the time in favor of &lt;code&gt;innerHTML&lt;/code&gt; over &lt;code&gt;document.createElement&lt;/code&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Bret Taylor:
+If you are not convinced about innerHTML, here is a small microbenchmark. It is about the same in Chrome. innerHTML is about 30% faster in the latest version of Firefox (much more in previous versions), and about 90% faster in IE8.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This work was eventually abandoned but was revived after React made its way into the codebase. Jordan sidelined the previous performance discussions by introducing the concept of a “Virtual DOM,” though its eventual name didn&amp;#39;t exist yet.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Jordan Walke:
+For the first step, I propose that we do the easiest, yet most general transformation possible. My suggestion is to simply map xml expressions to function call expressions.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;x&amp;gt;&amp;lt;/x&amp;gt;&lt;/code&gt; becomes &lt;code&gt;x( )&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;x height=12&amp;gt;&amp;lt;/x&amp;gt;&lt;/code&gt; becomes &lt;code&gt;x( {height:12} )&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;x&amp;gt; &amp;lt;y&amp;gt; &amp;lt;/y&amp;gt; &amp;lt;/x&amp;gt;&lt;/code&gt; becomes &lt;code&gt;x({ childList: [y( )] })&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;At this point, JSX doesn&amp;#39;t need to know about React - it&amp;#39;s just a convenient way to write function calls. Coincidentally, React&amp;#39;s primary abstraction is the function. Okay maybe it&amp;#39;s not so coincidental ;)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Adam made a very insightful comment, which is now the default way we write lists in React with JSX.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Adam Hupp:
+I think we should just treat arrays of elements as a frag. This is useful for constructs like:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ul&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;li&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/li&amp;gt;; })}&amp;lt;/ul&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this case the ul(..) will get a childList with a single child, which is itself a list.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;React didn&amp;#39;t end up using Adam&amp;#39;s implementation directly. Instead, we created JSX by forking &lt;a href=&quot;https://github.com/laverdet/js-xml-literal&quot;&gt;js-xml-literal&lt;/a&gt;, a side project by XHP creator Marcel Laverdet. JSX took its name from js-xml-literal, which Jordan modified to just be syntactic sugar for deeply nested function calls.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;api-churn&quot;&gt;&lt;/a&gt;API Churn &lt;a class=&quot;hash-link&quot; href=&quot;#api-churn&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;During the first year of React, internal adoption was growing quickly but there was quite a lot of churn in the component APIs and naming conventions:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;project&lt;/code&gt; was renamed to &lt;code&gt;declare&lt;/code&gt; then to &lt;code&gt;structure&lt;/code&gt; and finally to &lt;code&gt;render&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Componentize&lt;/code&gt; was renamed to &lt;code&gt;createComponent&lt;/code&gt; and finally to &lt;code&gt;createClass&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;As the project was about to be open sourced, &lt;a href=&quot;https://twitter.com/leeb&quot;&gt;Lee Byron&lt;/a&gt; sat down with Jordan Walke, Tom Occhino and Sebastian Markbåge in order to refactor, reimplement, and rename one of React&amp;#39;s most beloved features – the lifecycle API. Lee &lt;a href=&quot;https://gist.github.com/vjeux/f2b015d230cc1ab18ed1df30550495ed&quot;&gt;came up with a well-designed API&lt;/a&gt; that is still in place today.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Concepts
+
+&lt;ul&gt;
+&lt;li&gt;component - a ReactComponent instance&lt;/li&gt;
+&lt;li&gt;state - internal state to a component&lt;/li&gt;
+&lt;li&gt;props - external state to a component&lt;/li&gt;
+&lt;li&gt;markup - the stringy HTML-ish stuff components generate&lt;/li&gt;
+&lt;li&gt;DOM - the document and elements within the document&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Actions
+
+&lt;ul&gt;
+&lt;li&gt;mount - to put a component into a DOM&lt;/li&gt;
+&lt;li&gt;initialize - to prepare a component for rendering&lt;/li&gt;
+&lt;li&gt;update - a transition of state (and props) resulting a render.&lt;/li&gt;
+&lt;li&gt;render - a side-effect-free process to get the representation (markup) of a component.&lt;/li&gt;
+&lt;li&gt;validate - make assertions about something created and provided&lt;/li&gt;
+&lt;li&gt;destroy - opposite of initialize&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Operands
+
+&lt;ul&gt;
+&lt;li&gt;create - make a new thing&lt;/li&gt;
+&lt;li&gt;get - get an existing thing&lt;/li&gt;
+&lt;li&gt;set - merge into existing&lt;/li&gt;
+&lt;li&gt;replace - replace existing&lt;/li&gt;
+&lt;li&gt;receive - respond to new data&lt;/li&gt;
+&lt;li&gt;force - skip checks to do action&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Notifications
+
+&lt;ul&gt;
+&lt;li&gt;shouldObjectAction&lt;/li&gt;
+&lt;li&gt;objectWillAction&lt;/li&gt;
+&lt;li&gt;objectDidAction&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;instagram&quot;&gt;&lt;/a&gt;Instagram &lt;a class=&quot;hash-link&quot; href=&quot;#instagram&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In 2012, Instagram got acquired by Facebook. &lt;a href=&quot;https://twitter.com/floydophone&quot;&gt;Pete Hunt&lt;/a&gt;, who was working on Facebook photos and videos at the time, joined their newly formed web team. He wanted to build their website completely in React, which was in stark contrast with the incremental adoption model that had been used at Facebook.&lt;/p&gt;
+
+&lt;p&gt;To make this happen, React had to be decoupled from Facebook&amp;#39;s infrastructure, since Instagram didn&amp;#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called Webpack. He also implemented the &lt;code&gt;renderToString&lt;/code&gt; primitive which was needed to do server-side rendering.&lt;/p&gt;
+
+&lt;p&gt;As we started to prepare for the open source launch, &lt;a href=&quot;https://twitter.com/miekd&quot;&gt;Maykel Loomans&lt;/a&gt;, a designer on Instagram, made a mock of what the website could look like. The header ended up defining the visual identity of React: its logo and the electric blue color!&lt;/p&gt;
+
+&lt;p&gt;&lt;center&gt;&lt;a target=&quot;_blank&quot; href=&quot;/react/img/blog/react-50k-mock-full.jpg&quot;&gt;&lt;img src=&quot;/react/img/blog/react-50k-mock.jpg&quot; width=&quot;400&quot; height=&quot;410&quot; alt=&quot;React website mock&quot; /&gt;&lt;/a&gt;&lt;/center&gt;&lt;/p&gt;
+
+&lt;p&gt;In its earliest days, React benefitted tremendously from feedback, ideas, and technical contributions of early adopters and collaborators all over the company. While it might look like an overnight success in hindsight, the story of React is actually a great example of how new ideas often need to go through several rounds of refinement, iteration, and course correction over a long period of time before reaching their full potential.&lt;/p&gt;
+
+&lt;p&gt;React&amp;#39;s approach to building user interfaces with functional programming principles has changed the way we do things in just a few short years. It goes without saying, but React would be nothing without the amazing open source community that&amp;#39;s built up around it!&lt;/p&gt;
+</description>
+				<pubDate>2016-09-28T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/09/28/our-first-50000-stars.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/09/28/our-first-50000-stars.html</guid>
+			</item>
+		
+			<item>
 				<title>Relay: State of the State</title>
 				<description>&lt;p&gt;This month marks a year since we released Relay and we&amp;#39;d like to share an update on the project and what&amp;#39;s next.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-year-in-review&quot;&gt;&lt;/a&gt;A Year In Review &lt;a class=&quot;hash-link&quot; href=&quot;#a-year-in-review&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -1182,59 +1404,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 				<pubDate>2016-03-07T00:00:00-08:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/03/07/react-v15-rc1.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/07/react-v15-rc1.html</guid>
-			</item>
-		
-			<item>
-				<title>New Versioning Scheme</title>
-				<description>&lt;p&gt;Today we&amp;#39;re announcing that we&amp;#39;re switching to major revisions for React. The current version is 0.14.7. The next release will be: &lt;strong&gt;15.0.0&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;This change shouldn&amp;#39;t materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&amp;#39;t have to wait as long to take advantage of improvements to React. Plus, if you&amp;#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&amp;#39;t need to leave anyone behind.&lt;/p&gt;
-
-&lt;p&gt;The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We&amp;#39;re committed to the stability as well as the progress of React going forward.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;bring-everyone-along&quot;&gt;&lt;/a&gt;Bring Everyone Along &lt;a class=&quot;hash-link&quot; href=&quot;#bring-everyone-along&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;React isn&amp;#39;t just a library but an ecosystem. We know that your applications and ours are not just isolated islands of code. It is a network of your own application code, your own open source components and third party libraries that all depend on React.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-1.png&quot; width=&quot;403&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;Therefore it is important that we don&amp;#39;t just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-poll.png&quot; width=&quot;596&quot;&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;introducing-minor-releases&quot;&gt;&lt;/a&gt;Introducing Minor Releases &lt;a class=&quot;hash-link&quot; href=&quot;#introducing-minor-releases&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Ideally everyone could just depend on the latest version of React all the time.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-2.png&quot; width=&quot;463&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;We know that in practice that is not possible. In the future, we expect more new additive APIs rather than breakage of existing ones. By moving to major revisions in the semver scheme, we can release new versions without breaking existing ones.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-3.png&quot; width=&quot;503&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-happened-to-1.0.0&quot;&gt;&lt;/a&gt;What Happened to 1.0.0? &lt;a class=&quot;hash-link&quot; href=&quot;#what-happened-to-1.0.0&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Part of React&amp;#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We&amp;#39;re still following semver. We&amp;#39;re just communicating stability by moving the 0 from the beginning to the end.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Minor revision releases will include deprecation warnings and tips for how to upgrade an API or pattern that will be removed or changed in the future.&lt;/p&gt;
-
-&lt;p&gt;We will continue to release &lt;a href=&quot;https://www.youtube.com/watch?v=d0pOgY8__JM&quot;&gt;codemods&lt;/a&gt; for common patterns to make automatic upgrades of your codebase easier.&lt;/p&gt;
-
-&lt;p&gt;Once we&amp;#39;ve reached the end of life for a particular major version, we&amp;#39;ll release a new major version where all deprecated APIs have been removed.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;avoiding-the-major-cliff&quot;&gt;&lt;/a&gt;Avoiding The Major Cliff &lt;a class=&quot;hash-link&quot; href=&quot;#avoiding-the-major-cliff&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;If you try to upgrade your component to 16.0.0 you might find that your application no longer works if you still have other dependencies. E.g. if Ryan&amp;#39;s and Jed&amp;#39;s components are only compatible with 15.x.x.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-4.png&quot; width=&quot;498&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;Worst case, you revert back to 15.1.0 for your application. Since you&amp;#39;ll want to use your component, you might also revert that one.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-5.png&quot; width=&quot;493&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;Of course, Ryan and Jed think the same way. If we&amp;#39;re not careful, we can hit a cliff where nobody upgrades. This has happened to many software project ecosystems in the past.&lt;/p&gt;
-
-&lt;p&gt;Therefore, we&amp;#39;re committed to making it easy for most components and libraries built on top of React to be compatible with two major versions at the same time. We will do this by introducing new APIs before completely removing the old ones, thereby avoiding those cliffs.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/versioning-6.png&quot; width=&quot;493&quot;&gt;&lt;/p&gt;
-</description>
-				<pubDate>2016-02-19T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html</guid>
 			</item>
 		
 	</channel>
