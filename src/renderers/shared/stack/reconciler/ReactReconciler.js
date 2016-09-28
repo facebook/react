@@ -13,6 +13,7 @@
 
 var ReactRef = require('ReactRef');
 var ReactInstrumentation = require('ReactInstrumentation');
+var shallowEqual = require('shallowEqual');
 
 var warning = require('warning');
 
@@ -127,7 +128,7 @@ var ReactReconciler = {
     var prevElement = internalInstance._currentElement;
 
     if (nextElement === prevElement &&
-        context === internalInstance._context
+        shallowEqual(context, internalInstance._context)
       ) {
       // Since elements are immutable after the owner is rendered,
       // we can do a cheap identity compare here to determine if this is a
