@@ -610,6 +610,40 @@ describe('ReactCompositeComponent', () => {
     expect(childRenders).toBe(1);
   });
 
+  it('should skip update when rerendering element in container and the context is unchanged', () => {
+    var context = { foo: 'bar' };
+
+    class Parent extends React.Component {
+      static childContextTypes = {
+        foo: ReactPropTypes.string,
+      };
+
+      getChildContext() {
+        return context;
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    var childRenders = 0;
+
+    class Child extends React.Component {
+      render() {
+        childRenders++;
+        return <div />;
+      }
+    }
+
+    var container = document.createElement('div');
+    var child = <Child />;
+
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    ReactDOM.render(<Parent>{child}</Parent>, container);
+    expect(childRenders).toBe(1);
+  });
+
   it('should pass context when re-rendered for static child', () => {
     var parentInstance = null;
     var childInstance = null;
