@@ -144,16 +144,18 @@ However, there are still some styles that the linter cannot pick up. If you are 
 * Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
-### License
+### Introductory Video
 
-By contributing to React, you agree that your contributions will be licensed under its BSD license.
+You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
 
 ### Meeting Notes
 
 React team meets once a week to discuss the development of React, future plans, and priorities. You can find the meeting notes in a [dedicated repository](https://github.com/reactjs/core-notes/).
 
+### License
+
+By contributing to React, you agree that your contributions will be licensed under its BSD license.
+
 ### What Next?
 
-You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
-
-Read the next sections to learn more about [understanding the codebase](/react/contributing/codebase-overview.html), and the [design principles](/react/contributing/design-principles.html) guiding the development of React.
+Read the [next section](/react/contributing/codebase-overview.html) to learn how the codebase is organized.
