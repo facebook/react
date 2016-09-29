@@ -37,6 +37,10 @@ object getInitialState()
 
 컴포넌트가 마운트되기 전에 한번 호출됩니다. 리턴값은 `this.state`의 초기값으로 사용됩니다.
 
+> 주의:
+>
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. 관한 더 자세한 정보는 [ES6 클래스](/react/docs/reusable-components-ko-KR.html#es6-클래스)를 읽어보세요.
+
 
 ### getDefaultProps
 

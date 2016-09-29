@@ -37,6 +37,10 @@ object getInitialState()
 
 Invocato una volta prima che il componente venga montato. Il valore di ritorno sarà usato come il valore iniziale di `this.state`.
 
+> Nota:
+>
+> Questo metodo non è disponibile il componenti `class` ES6 che estendono `React.Component`. Per maggiori informazioni, leggi la nostra documentazione sulle [classi ES6](/react/docs/reusable-components.html#es6-classes).
+
 
 ### getDefaultProps
 
