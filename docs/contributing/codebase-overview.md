@@ -93,7 +93,7 @@ warning(
 
 **The warning is shown when the `warning` condition is `false`.**
 
-One way to think about it is that the condition should reflect the normal situtation rather than the exceptional one.
+One way to think about it is that the condition should reflect the normal situation rather than the exceptional one.
 
 It is a good idea to avoid spamming the console with duplicate warnings:
 
@@ -167,7 +167,7 @@ The code for React core is located in [`src/isomorphic`](https://github.com/face
 
 >**Note:**
 >
->Until very recently, `react` npm package and `react.js` standalone build contained all React code (inlcuding React DOM) rather than just the core. This was done for backwards compatibility and historical reasons. Since React 15.4.0, the core is better separated in the build output.
+>Until very recently, `react` npm package and `react.js` standalone build contained all React code (including React DOM) rather than just the core. This was done for backwards compatibility and historical reasons. Since React 15.4.0, the core is better separated in the build output.
 >
 >There is also an additional standalone browser build called `react-with-addons.js` which we will consider separately further below.
 
