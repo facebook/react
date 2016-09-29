@@ -39,7 +39,7 @@ Invoked once before the component is mounted. The return value will be used as t
 
 > Note:
 >
-> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React. For more information, please read our documentation about [ES6 classes](/react/docs/reusable-components.html#es6-classes).
+> This method is not available on ES6 `class` components that extend `React.Component`. For more information, please read our documentation about [ES6 classes](/react/docs/reusable-components.html#es6-classes).
 
 
 ### getDefaultProps

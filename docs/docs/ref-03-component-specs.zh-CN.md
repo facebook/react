@@ -39,7 +39,7 @@ object getInitialState()
 
 > 注意:
 >
-> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。它也许会在未来的 React 版本中被完全移除。更多的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
+> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。 更多的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
 
 
 ### getDefaultProps
