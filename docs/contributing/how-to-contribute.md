@@ -80,7 +80,8 @@ The core team is monitoring for pull requests. We will review your pull request 
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
-6. If you haven't already, complete the CLA.
+6. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
+7. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
@@ -104,6 +105,7 @@ Then, you can run several commands:
 * `npm test` runs the complete test suite.
 * `npm test -- --watch` runs an interactive test watcher.
 * `npm test <pattern>` runs tests with matching filenames.
+* `npm run flow` runs the [Flow](https://flowtype.org/) typechecks.
 * `npm run build` creates a `build` folder with all the packages.
 
 We recommend running `npm test` (or its variations above) to make sure you don't introduce any regressions as you work on your change. However it can be handy to try your build of React in a real project.

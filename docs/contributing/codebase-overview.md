@@ -141,6 +141,101 @@ if (__DEV__) {
 }
 ```
 
+### JSDoc
+
+Some of the internal and public methods are annotated with [JSDoc annotations](http://usejsdoc.org/):
+
+```js
+/**
+  * Generates root tag markup then recurses. This method has side effects and
+  * is not idempotent.
+  *
+  * @internal
+  * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+  * @param {?ReactDOMComponent} the parent component instance
+  * @param {?object} info about the host container
+  * @param {object} context
+  * @return {string} The computed markup.
+  */
+mountComponent: function(
+  transaction,
+  hostParent,
+  hostContainerInfo,
+  context
+) {
+  // ...
+},
+```
+
+We try to keep existing annotations up-to-date but we don't enforce them. We don't use JSDoc in the newly written code, and instead use Flow to document and enforce types.
+
+### Flow
+
+We recently started introducing [Flow](https://flowtype.org/) checks to the codebase. Files marked with the `@flow` annotation in the license header comment are being typechecked.
+
+We accept pull requests [adding Flow annotations to existing code](https://github.com/facebook/react/pull/7600/files). Flow annotations look like this:
+
+```js
+ReactRef.detachRefs = function(
+  instance: ReactInstance,
+  element: ReactElement | string | number | null | false,
+): void {
+  // ...
+}
+```
+
+When possible, new code should use Flow annotations.  
+You can run `npm run flow` locally to check your code with Flow.
+
+
+### Classes and Mixins
+
+React was originally written in ES5. We have since enabled ES2015 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
+
+In particular, you might see the following pattern quite often:
+
+```js
+// Constructor
+function ReactDOMComponent(element) {
+  this._currentElement = element;
+}
+
+// Methods
+ReactDOMComponent.Mixin = {
+  mountComponent: function() {
+    // ...
+  }
+};
+
+// Put methods on the prototype
+Object.assign(
+  ReactDOMComponent.prototype,
+  ReactDOMComponent.Mixin
+);
+
+module.exports = ReactDOMComponent;
+```
+
+The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
+
+Equivalent code in ES2015 would like this:
+
+```js
+class ReactDOMComponent {
+  constructor(element) {
+    this._currentElement = element;
+  }
+
+  mountComponent() {
+    // ...
+  }
+}
+
+module.exports = ReactDOMComponent;
+```
+
+Sometimes we [convert old code to ES2015 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
+
 ### Multiple Packages
 
 React is a [monorepo](http://danluu.com/monorepo/). Its repository contains multiple separate packages so that their changes can be coordinated together, and documentation and issues live in one place.
