@@ -4,7 +4,7 @@ title: Значение null для управляемого поля ввода
 layout: tips
 permalink: tips/controlled-input-null-value-ru-RU.html
 prev: children-props-type-ru-RU.html
-next: componentWillReceiveProps-not-triggered-after-mounting.html
+next: componentWillReceiveProps-not-triggered-after-mounting-ru-RU.html
 ---
 
 Указание атрибута `value` для [управляемых компонентов](/react/docs/forms.html) не дает пользователю изменять значение в поле ввода, если не определить это явно.
