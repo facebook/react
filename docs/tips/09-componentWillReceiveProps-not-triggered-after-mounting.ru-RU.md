@@ -4,7 +4,7 @@ title: componentWillReceiveProps не срабатывает после появ
 layout: tips
 permalink: tips/componentWillReceiveProps-not-triggered-after-mounting.html
 prev: controlled-input-null-value-ru-RU.html
-next: props-in-getInitialState-as-anti-pattern.html
+next: props-in-getInitialState-as-anti-pattern-ru-RU.html
 ---
 
 Метод `componentWillReceiveProps` не вызывается после появления компонента. Это определено дизайном. Используйте [другой метод жизненного цикла](/react/docs/component-specs.html), который подходит для вашей ситуации.
