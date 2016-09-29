@@ -2,7 +2,7 @@
 id: componentWillReceiveProps-not-triggered-after-mounting-ru-RU
 title: componentWillReceiveProps не срабатывает после появления компонента
 layout: tips
-permalink: tips/componentWillReceiveProps-not-triggered-after-mounting.html
+permalink: tips/componentWillReceiveProps-not-triggered-after-mounting-ru-RU.html
 prev: controlled-input-null-value-ru-RU.html
 next: props-in-getInitialState-as-anti-pattern-ru-RU.html
 ---
