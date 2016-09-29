@@ -3,7 +3,7 @@ id: how-to-contribute
 title: How to Contribute
 layout: contributing
 permalink: contributing/how-to-contribute.html
-next: design-principles.html
+next: codebase-overview.html
 ---
 
 React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://www.facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and answers some questions that you may have.
@@ -154,4 +154,6 @@ React team meets once a week to discuss the development of React, future plans, 
 
 ### What Next?
 
-You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React. If you're interested specifically in the React event system, there is also [another video](https://www.youtube.com/watch?v=dRo_egw7tBc) (66 mins) which gives a deep dive into it. To learn more about the design principles guiding the development of React, [read the next section](/react/contributing/design-principles.html).
+You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
+
+Read the next sections to learn more about [understanding the codebase](/react/contributing/codebase-overview.html), and the [design principles](/react/contributing/design-principles.html) guiding the development of React.
