@@ -36,7 +36,7 @@ However, with Haste **all filenames are globally unique.** In the React codebase
 var setInnerHTML = require('setInnerHTML');
 ```
 
-Haste was originally developed for giant apps like Facebook. It's easy to move files to different folders and iports them without worrying about relative paths. The fuzzy file search in any editor always takes you to the correct place thanks to globally unique names.
+Haste was originally developed for giant apps like Facebook. It's easy to move files to different folders and imports them without worrying about relative paths. The fuzzy file search in any editor always takes you to the correct place thanks to globally unique names.
 
 React itself was extracted from Facebook codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.
 
@@ -255,7 +255,7 @@ There is a [video with a deep code dive into it](https://www.youtube.com/watch?v
 
 Each of the [React add-ons](/react/docs/addons.html) ships as a separate package on npm with a `react-addons-` prefix. Their source is located in [`src/addons`](https://github.com/facebook/react/tree/master/src/addons) with the exception of [`ReactPerf`](https://github.com/facebook/react/blob/master/src/renderers/shared/ReactPerf.js) and [`ReactTestUtils`](https://github.com/facebook/react/blob/master/src/test/ReactTestUtils.js).
 
-Additionally, we provide a standalone build called `react-with-addons.js` which includes React core *and* all add-ons exposed on the `addons` field of the React global object.
+Additionally, we provide a standalone build called `react-with-addons.js` which includes React core *and* all add-ons exposed on the `addons` field of the `React` global object.
 
 ### What Next?
 
