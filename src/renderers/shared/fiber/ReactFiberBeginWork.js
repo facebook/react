@@ -382,6 +382,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         return null;
       case HostComponent:
         if (workInProgress.stateNode && config.beginUpdate) {
+          // $FlowFixMe(>=0.33.0)
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);

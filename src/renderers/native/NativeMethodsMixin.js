@@ -212,6 +212,7 @@ function mountSafeCallback(
   callback: ?Function
 ): any {
   return function() {
+    // $FlowFixMe(>=0.33.0)
     if (!callback || (context.isMounted && !context.isMounted())) {
       return undefined;
     }
