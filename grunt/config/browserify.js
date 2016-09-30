@@ -62,6 +62,53 @@ function simpleBannerify(src) {
   );
 }
 
+// What is happening here???
+// I'm glad you asked. It became really to make our bundle splitting work.
+// Everything is fine in node and when bundling with those packages, but when
+// using our pre-packaged files, the splitting didn't work. Specifically due to
+// the UMD wrappers defining their own require and creating their own encapsulated
+// "registry" scope, we couldn't require across the boundaries. Webpack tries to
+// be smart and looks for top-level requires (even when aliasing to a bundle),
+// but since we didn't have those, we couldn't require 'react' from 'react-dom'.
+// But we are already shimming in some modules that look for a global React
+// variable. So we write a wrapper around the UMD bundle that browserify creates,
+// and define a React variable that will require across Webpack-boundaries or fall
+// back to the global, just like it would previously.
+function wrapperify(src) {
+  return `
+;(function() {
+  var React;
+
+  // CommonJS
+  if (typeof exports === "object" && typeof module !== "undefined") {
+    React = require('react');
+
+  // TODO: AMD/RequireJS
+  } else if (typeof define === "function" && define.amd) {
+    throw('How does RequireJS work again?');
+
+  // <script>
+  } else {
+    var g;
+    if (typeof window !== "undefined") {
+      React = window.React;
+    } else if (typeof global !== "undefined") {
+      React = global.React;
+    } else if (typeof self !== "undefined") {
+      React = self.React;
+    } else {
+      // works providing we're not in "use strict";
+      // needed for Java 8 Nashorn
+      // see https://github.com/facebook/react/issues/3037
+      React = this.React;
+    }
+  }
+
+  ${src}
+})()
+`
+}
+
 // Our basic config which we'll add to to make our other builds
 var basic = {
   entries: [
@@ -137,7 +184,7 @@ var dom = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domMin = {
