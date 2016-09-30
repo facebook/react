@@ -58,7 +58,9 @@ function mount(element) {
   if (isClass(type)) {
     // Component class
     var publicInstance = new type(props);
+    // Set the props
     publicInstance.props = props;
+    // Call the lifecycle if necessary
     if (publicInstance.componentWillMount) {
       publicInstance.componentWillMount();
     }
@@ -116,7 +118,9 @@ function mountComposite(element) {
   if (isClass(type)) {
     // Component class
     var publicInstance = new type(props);
+    // Set the props
     publicInstance.props = props;
+    // Call the lifecycle if necessary
     if (publicInstance.componentWillMount) {
       publicInstance.componentWillMount();
     }
@@ -237,7 +241,9 @@ class CompositeComponent {
     if (isClass(type)) {
       // Component class
       publicInstance = new type(props);
+      // Set the props
       publicInstance.props = props;
+      // Call the lifecycle if necessary
       if (publicInstance.componentWillMount) {
         publicInstance.componentWillMount();
       }
@@ -430,7 +436,7 @@ function unmountTree(containerNode) {
 }
 ```
 
-Note that in order for this to work, we need to read an internal root instance from a DOM node. We will modify `mountTree()` to add the `_internalInstance` property to the root DOM node.
+In order for this to work, we need to read an internal root instance from a DOM node. We will modify `mountTree()` to add the `_internalInstance` property to the root DOM node.
 
 We will also teach `mountTree()` to destroy any existing tree so it can be called multiple times:
 
@@ -477,7 +483,7 @@ Its job is to do whatever is necessary to bring the component (and any of its ch
 
 This is the part that is often described as "virtual DOM diffing" although what really happens is that we walk the internal tree recursively and let each internal instance receive an update.
 
-TODO
+[TODO](http://jsbin.com/gunocereye/1/edit?js,output)
 
 
 ### Future Directions
