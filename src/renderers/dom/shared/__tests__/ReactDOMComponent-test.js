@@ -325,7 +325,7 @@ describe('ReactDOMComponent', () => {
       var container = document.createElement('div');
       ReactDOM.render(<some-custom-element className="foo"/>, container);
       var node = container.firstChild;
-      expect(node.classList[0]).toBe('foo');
+      expect(node.className).toBe('foo');
 
     });
 
@@ -335,7 +335,7 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<some-custom-element className="foo"/>, container);
       ReactDOM.render(<some-custom-element className="bar"/>, container);
       var node = container.firstChild;
-      expect(node.classList[0]).toBe('bar');
+      expect(node.className).toBe('bar');
 
     });
 
@@ -345,7 +345,7 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<some-custom-element className="foo"/>, container);
       ReactDOM.render(<some-custom-element/>, container);
       var node = container.firstChild;
-      expect(node.classList.length).toBe(0);
+      expect(node.hasAttribute('class')).toBe(false);
 
     });
 
