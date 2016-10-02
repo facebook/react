@@ -240,6 +240,23 @@ Counter.propTypes = { initialCount: React.PropTypes.number };
 Counter.defaultProps = { initialCount: 0 };
 ```
 
+Alternatively, you can define `propTypes` and `defaultProps` as static properties of the class.
+
+```javascript
+export class Counter extends React.Component {
+  static get propTypes() {
+    return {
+      initialCount: React.PropTypes.number
+    };
+  }
+  static get defaultProps() {
+    return {
+      initialCount: 0
+    };
+  }
+}
+```
+
 ### No Autobinding
 
 Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions) `=>`:
