@@ -45,7 +45,7 @@ For this tutorial, we're going to make it as easy as possible. Included in the s
     <script src="https://unpkg.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
     <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
-    <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+    <script src="https://unpkg.com/remarkable@1.7.1/dist/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
