@@ -459,6 +459,12 @@
 <h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
 </code></pre></div>
 <p>컴포넌트가 마운트되기 전에 한번 호출됩니다. 리턴값은 <code>this.state</code>의 초기값으로 사용됩니다.</p>
+
+<blockquote>
+<p>주의:</p>
+
+<p>이 메소드는 <code>React.Component</code>를 확장한 ES6 <code>class</code> 컴포넌트에서는 사용할 수 없습니다. 관한 더 자세한 정보는 <a href="/react/docs/reusable-components-ko-KR.html#es6-%ED%81%B4%EB%9E%98%EC%8A%A4">ES6 클래스</a>를 읽어보세요.</p>
+</blockquote>
 <h3><a class="anchor" name="getdefaultprops"></a>getDefaultProps <a class="hash-link" href="#getdefaultprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getDefaultProps</span><span class="p">()</span>
 </code></pre></div>
 <p>클래스가 생성될 때 한번 호출되고 캐시됩니다. 부모 컴포넌트에서 prop이 넘어오지 않은 경우 (<code>in</code> 연산자로 확인) 매핑의 값이 <code>this.props</code>에 설정됩니다.</p>

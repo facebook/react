@@ -461,6 +461,12 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
 </code></pre></div>
 <p>当组件被挂载时调用一次.返回值会被用作为 <code>this.state</code> 的初始值.</p>
+
+<blockquote>
+<p>注意:</p>
+
+<p>这个方法在从 <code>React.Component</code> 扩展的 ES6 <code>class</code> 组件里不可用。 更多的信息,请阅读我们关于<a href="/react/docs/reusable-components.html#es6-classes">ES6 classes</a>的文档.</p>
+</blockquote>
 <h3><a class="anchor" name="getdefaultprops"></a>getDefaultProps <a class="hash-link" href="#getdefaultprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getDefaultProps</span><span class="p">()</span>
 </code></pre></div>
 <p>在类被创建时调用一次并被缓存.在这个mapping里的值会被设置给 <code>this.props</code> 如果父组件没有指定对应的 prop (例如 使用一个 <code>in</code> 检查).</p>

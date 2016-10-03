@@ -459,6 +459,12 @@
 <h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked once before the component is mounted. The return value will be used as the initial value of <code>this.state</code>.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>This method is not available on ES6 <code>class</code> components that extend <code>React.Component</code>. For more information, please read our documentation about <a href="/react/docs/reusable-components.html#es6-classes">ES6 classes</a>.</p>
+</blockquote>
 <h3><a class="anchor" name="getdefaultprops"></a>getDefaultProps <a class="hash-link" href="#getdefaultprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getDefaultProps</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked once and cached when the class is created. Values in the mapping will be set on <code>this.props</code> if that prop is not specified by the parent component (i.e. using an <code>in</code> check).</p>
