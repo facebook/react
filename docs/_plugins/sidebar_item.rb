@@ -15,6 +15,23 @@ module Jekyll
 
       return "<a href=\"#{href}\"#{className}>#{item["title"]}</a>"
     end
+
+    def community_sidebar_item_link(item)
+      pageID = @context.registers[:page]["id"]
+      itemID = item["id"]
+      href = item["href"] || "/react/community/#{itemID}.html"
+      classes = []
+      if pageID == itemID
+        classes.push("active")
+      end
+      if item["href"]
+        classes.push("external")
+      end
+      className = classes.size > 0  ? " class=\"#{classes.join(' ')}\"" : ""
+
+      return "<a href=\"#{href}\"#{className}>#{item["title"]}</a>"
+    end
+
   end
 end
 

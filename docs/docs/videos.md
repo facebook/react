@@ -2,7 +2,8 @@
 id: videos
 title: Videos
 layout: community
-permalink: docs/videos.html
+permalink: community/videos.html
+redirect_from: "docs/videos.html"
 ---
 
 ### Rethinking best practices - JSConf.eu

@@ -2,7 +2,8 @@
 id: conferences
 title: Conferences
 layout: community
-permalink: docs/conferences.html
+permalink: community/conferences.html
+redirect_from: "docs/conferences.html"
 ---
 
 ### React.js Conf 2015
