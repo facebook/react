@@ -36,6 +36,12 @@ defaults:
     type: pages
   values:
     sectionid: docs
+- scope:
+    path: community
+    type: pages
+  values:
+    layout: community
+    sectionid: community
 exclude:
 - Gemfile
 - Gemfile.lock
