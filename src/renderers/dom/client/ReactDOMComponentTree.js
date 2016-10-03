@@ -22,6 +22,25 @@ var Flags = ReactDOMComponentFlags;
 var internalInstanceKey =
   '__reactInternalInstance$' + Math.random().toString(36).slice(2);
 
+var instanceMap = {};
+var index = -1;
+
+function getInternalInstanceFromNode(node) {
+  return instanceMap[node[internalInstanceKey]];
+}
+
+function setInternalInstanceOnNode(node, instance) {
+  const id = ++index;
+  node[internalInstanceKey] = id;
+  return instanceMap[id] = instance;
+}
+
+function deleteInternalInstanceFromNode(node, instance) {
+  const id = node[internalInstanceKey];
+  delete node[internalInstanceKey];
+  delete instanceMap[id];
+}
+
 /**
  * Drill down (through composites and empty components) until we get a host or
  * host text component.
@@ -44,13 +63,13 @@ function getRenderedHostOrTextFromComponent(component) {
 function precacheNode(inst, node) {
   var hostInst = getRenderedHostOrTextFromComponent(inst);
   hostInst._hostNode = node;
-  node[internalInstanceKey] = hostInst;
+  setInternalInstanceOnNode(node, hostInst);
 }
 
 function uncacheNode(inst) {
   var node = inst._hostNode;
   if (node) {
-    delete node[internalInstanceKey];
+    deleteInternalInstanceFromNode(node);
     inst._hostNode = null;
   }
 }
@@ -108,13 +127,13 @@ function precacheChildNodes(inst, node) {
  * ReactDOMTextComponent instance ancestor.
  */
 function getClosestInstanceFromNode(node) {
-  if (node[internalInstanceKey]) {
-    return node[internalInstanceKey];
+  if (getInternalInstanceFromNode(node)) {
+    return getInternalInstanceFromNode(node);
   }
 
   // Walk up the tree until we find an ancestor whose instance we have cached.
   var parents = [];
-  while (!node[internalInstanceKey]) {
+  while (!getInternalInstanceFromNode(node)) {
     parents.push(node);
     if (node.parentNode) {
       node = node.parentNode;
@@ -127,7 +146,7 @@ function getClosestInstanceFromNode(node) {
 
   var closest;
   var inst;
-  for (; node && (inst = node[internalInstanceKey]); node = parents.pop()) {
+  for (; node && (inst = getInternalInstanceFromNode(node)); node = parents.pop()) {
     closest = inst;
     if (parents.length) {
       precacheChildNodes(inst, node);
