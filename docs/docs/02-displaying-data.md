@@ -36,16 +36,12 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
 For the rest of the documentation, we'll just focus on the JavaScript code and assume it's inserted into a template like the one above. Replace the placeholder comment above with the following JSX:
 
 ```javascript
-var HelloWorld = React.createClass({
-  render: function() {
-    return (
-      <p>
-        Hello, <input type="text" placeholder="Your name here" />!
-        It is {this.props.date.toTimeString()}
-      </p>
-    );
-  }
-});
+const HelloWorld = ({date}) => (
+  <p>
+    Hello, <input type="text" placeholder="Your name here" />!
+    It is {date.toTimeString()}
+  </p>
+);
 
 setInterval(function() {
   ReactDOM.render(
