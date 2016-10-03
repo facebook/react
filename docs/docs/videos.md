@@ -1,9 +1,8 @@
 ---
 id: videos
 title: Videos
+layout: community
 permalink: docs/videos.html
-prev: conferences.html
-next: complementary-tools.html
 ---
 
 ### Rethinking best practices - JSConf.eu

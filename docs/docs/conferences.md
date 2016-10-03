@@ -1,9 +1,8 @@
 ---
 id: conferences
 title: Conferences
+layout: community
 permalink: docs/conferences.html
-prev: thinking-in-react.html
-next: videos.html
 ---
 
 ### React.js Conf 2015
