@@ -1,9 +1,10 @@
 ---
 id: conferences
 title: Conferences
-permalink: docs/conferences.html
-prev: thinking-in-react.html
-next: videos.html
+layout: community
+sectionid: community
+permalink: community/conferences.html
+redirect_from: "docs/conferences.html"
 ---
 
 ### React.js Conf 2015

@@ -1,9 +1,10 @@
 ---
 id: videos
 title: Videos
-permalink: docs/videos.html
-prev: conferences.html
-next: complementary-tools.html
+layout: community
+sectionid: community
+permalink: community/videos.html
+redirect_from: "docs/videos.html"
 ---
 
 ### Rethinking best practices - JSConf.eu

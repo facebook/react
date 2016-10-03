@@ -1,9 +1,17 @@
 module Jekyll
   module SidebarItemFilter
-    def sidebar_item_link(item)
+    def docs_sidebar_link(item)
+      return sidebar_helper(item, 'docs')
+    end
+
+    def community_sidebar_link(item)
+      return sidebar_helper(item, 'community')
+    end
+
+    def sidebar_helper(item, group)
       pageID = @context.registers[:page]["id"]
       itemID = item["id"]
-      href = item["href"] || "/react/docs/#{itemID}.html"
+      href = item["href"] || "/react/#{group}/#{itemID}.html"
       classes = []
       if pageID == itemID
         classes.push("active")
@@ -15,6 +23,7 @@ module Jekyll
 
       return "<a href=\"#{href}\"#{className}>#{item["title"]}</a>"
     end
+
   end
 end
 
