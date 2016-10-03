@@ -16,6 +16,7 @@ var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var emptyFunction = require('emptyFunction');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  * A basis for animations. When children are declaratively added or removed,
@@ -49,7 +50,7 @@ class ReactTransitionGroup extends React.Component {
   componentDidMount() {
     var initialChildMapping = this.state.children;
     for (var key in initialChildMapping) {
-      if (initialChildMapping[key]) {
+      if (hasOwnProperty.call(initialChildMapping, key) && initialChildMapping[key]) {
         this.performAppear(key);
       }
     }
@@ -79,7 +80,7 @@ class ReactTransitionGroup extends React.Component {
     var key;
 
     for (key in nextChildMapping) {
-      var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
+      var hasPrev = prevChildMapping && hasOwnProperty.call(prevChildMapping, key);
       if (nextChildMapping[key] && !hasPrev &&
           !this.currentlyTransitioningKeys[key]) {
         this.keysToEnter.push(key);
@@ -87,7 +88,7 @@ class ReactTransitionGroup extends React.Component {
     }
 
     for (key in prevChildMapping) {
-      var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
+      var hasNext = nextChildMapping && hasOwnProperty.call(nextChildMapping, key);
       if (prevChildMapping[key] && !hasNext &&
           !this.currentlyTransitioningKeys[key]) {
         this.keysToLeave.push(key);
@@ -141,7 +142,7 @@ class ReactTransitionGroup extends React.Component {
       );
     }
 
-    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
+    if (!currentChildMapping || !hasOwnProperty.call(currentChildMapping, key)) {
       // This was removed before it had fully appeared. Remove it.
       this.performLeave(key);
     }
@@ -181,7 +182,7 @@ class ReactTransitionGroup extends React.Component {
       );
     }
 
-    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
+    if (!currentChildMapping || !hasOwnProperty.call(currentChildMapping, key)) {
       // This was removed before it had fully entered. Remove it.
       this.performLeave(key);
     }
@@ -222,7 +223,7 @@ class ReactTransitionGroup extends React.Component {
       );
     }
 
-    if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
+    if (currentChildMapping && hasOwnProperty.call(currentChildMapping, key)) {
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
