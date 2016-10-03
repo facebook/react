@@ -2,6 +2,7 @@
 id: videos
 title: Videos
 layout: community
+sectionid: community
 permalink: community/videos.html
 redirect_from: "docs/videos.html"
 ---

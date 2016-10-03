@@ -2,6 +2,7 @@
 id: conferences
 title: Conferences
 layout: community
+sectionid: community
 permalink: community/conferences.html
 redirect_from: "docs/conferences.html"
 ---
