@@ -6,12 +6,12 @@
       <ul>
         {% for item in section.items %}
           <li>
-            {{ item | sidebar_item_link}}
+            {{ item | docs_sidebar_link}}
             {% if item.subitems %}
               <ul>
                 {% for subitem in item.subitems %}
                   <li>
-                    {{ subitem | sidebar_item_link }}
+                    {{ subitem | docs_sidebar_link }}
                   </li>
                 {% endfor %}
               </ul>

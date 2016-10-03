@@ -6,12 +6,12 @@
       <ul>
         {% for item in section.items %}
           <li>
-            {{ item | community_sidebar_item_link }}
+            {{ item | community_sidebar_link }}
             {% if item.subitems %}
               <ul>
                 {% for subitem in item.subitems %}
                   <li>
-                    {{ subitem | community_sidebar_item_link }}
+                    {{ subitem | community_sidebar_link }}
                   </li>
                 {% endfor %}
               </ul>
