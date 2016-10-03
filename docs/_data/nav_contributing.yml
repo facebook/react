@@ -1,4 +1,8 @@
 - title: Contributing
   items:
+  - id: how-to-contribute
+    title: How to Contribute
+  - id: codebase-overview
+    title: Codebase Overview
   - id: design-principles
     title: Design Principles

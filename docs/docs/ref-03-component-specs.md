@@ -37,6 +37,10 @@ object getInitialState()
 
 Invoked once before the component is mounted. The return value will be used as the initial value of `this.state`.
 
+> Note:
+>
+> This method is not available on ES6 `class` components that extend `React.Component`. For more information, please read our documentation about [ES6 classes](/react/docs/reusable-components.html#es6-classes).
+
 
 ### getDefaultProps
 

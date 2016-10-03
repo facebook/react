@@ -45,7 +45,7 @@ next: thinking-in-react-zh-CN.html
     <script src="https://unpkg.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
     <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
     <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
-    <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+    <script src="https://unpkg.com/remarkable@1.7.1/dist/remarkable.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -783,4 +783,4 @@ var CommentBox = React.createClass({
 
 ### 祝贺!
 
-你刚刚通过几个简单的步骤建立了一个评论框。学习更多关于[为什么使用 React](/react/docs/why-react-zh-CN.html), 或者深入 [API 参考](/react/docs/top-level-api.html) 开始钻研！祝你好运！
+你刚刚通过几个简单的步骤建立了一个评论框。学习更多关于[为什么使用 React](/react/docs/why-react-zh-CN.html), 或者深入 [API 参考](/react/docs/top-level-api-zh-CN.html) 开始钻研！祝你好运！

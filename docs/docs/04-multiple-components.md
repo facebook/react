@@ -17,8 +17,8 @@ By building modular components that reuse other components with well-defined int
 Let's create a simple Avatar component which shows a Facebook page picture and name using the Facebook Graph API.
 
 ```javascript
-var Avatar = React.createClass({
-  render: function() {
+class Avatar extends React.Component {
+  render() {
     return (
       <div>
         <PagePic pagename={this.props.pagename} />
@@ -26,25 +26,25 @@ var Avatar = React.createClass({
       </div>
     );
   }
-});
+}
 
-var PagePic = React.createClass({
-  render: function() {
+class PagePic extends React.Component {
+  render() {
     return (
       <img src={'https://graph.facebook.com/' + this.props.pagename + '/picture'} />
     );
   }
-});
+}
 
-var PageLink = React.createClass({
-  render: function() {
+class PageLink extends React.Component {
+  render() {
     return (
       <a href={'https://www.facebook.com/' + this.props.pagename}>
         {this.props.pagename}
       </a>
     );
   }
-});
+}
 
 ReactDOM.render(
   <Avatar pagename="Engineering" />,
@@ -110,13 +110,12 @@ In most cases, this can be sidestepped by hiding elements instead of destroying 
 The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a `key`:
 
 ```javascript
-  render: function() {
-    var results = this.props.results;
+  render() {
     return (
       <ol>
-        {results.map(function(result) {
-          return <li key={result.id}>{result.text}</li>;
-        })}
+        {this.props.results.map((result) => (
+          <li key={result.id}>{result.text}</li>
+        ))}
       </ol>
     );
   }
@@ -128,41 +127,41 @@ The `key` should *always* be supplied directly to the components in the array, n
 
 ```javascript
 // WRONG!
-var ListItemWrapper = React.createClass({
-  render: function() {
+class ListItemWrapper extends React.Component {
+  render() {
     return <li key={this.props.data.id}>{this.props.data.text}</li>;
   }
-});
-var MyComponent = React.createClass({
-  render: function() {
+}
+class MyComponent extends React.Component {
+  render() {
     return (
       <ul>
-        {this.props.results.map(function(result) {
-          return <ListItemWrapper data={result}/>;
-        })}
+        {this.props.results.map((result) => (
+          <ListItemWrapper data={result} />
+        )}
       </ul>
     );
   }
-});
+}
 ```
 ```javascript
 // Correct :)
-var ListItemWrapper = React.createClass({
-  render: function() {
+class ListItemWrapper extends React.Component {
+  render() {
     return <li>{this.props.data.text}</li>;
   }
-});
-var MyComponent = React.createClass({
-  render: function() {
+}
+class MyComponent extends React.Component {
+  render() {
     return (
       <ul>
-        {this.props.results.map(function(result) {
-           return <ListItemWrapper key={result.id} data={result}/>;
-        })}
+        {this.props.results.map((result) => (
+          <ListItemWrapper key={result.id} data={result} />
+        )}
       </ul>
     );
   }
-});
+}
 ```
 
 You can also key children by passing a ReactFragment object. See [Keyed Fragments](create-fragment.html) for more details.

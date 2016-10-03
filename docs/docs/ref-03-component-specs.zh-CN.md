@@ -11,7 +11,7 @@ next: tags-and-attributes-zh-CN.html
 当调用 `React.createClass()` 创建一个组件类时,你应该提供一个包含有 `render` 方法以及可选的其他生命周期方法的 规范(Specifications)对象.
 
 > 注意:
-> 
+>
 > 同样可以使用单纯的 JavaScript 类作为组件类. 这些类可以实现大多数相同的方法,虽然有一些不同.更多关于不同的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
 
 ### render
@@ -21,21 +21,25 @@ ReactElement render()
 ```
 
  `render()` 是必须的
- 
+
  当被调用时,它应该检查 `this.props` 和 `this.state` 并返回单个子元素.这个子元素即可以是一个 对原生DOM的虚拟表达(比如 `<div />` 或 `React.DOM.div()`)也可以是其他你自定义的复合组件.
- 
+
  你也可以返回 `null` 或 `false` 来指示你不想要任何东西被渲染.幕后,React 渲染一个 `<noscript>` tag 来与我们当前的diffing算法协同工作.当返回 `null` 或 `false` ,`ReactDOM.findDOMNode(this)` 会返回 `null`.
- 
+
  `render()` 函数应该是纯净的,意味着它不改变组件的状态,它在每次调用时返回相同的结果,并且它不读和写 DOM 或者其他方式与浏览器互动(例如,使用 `setTimeout`).如果你需要与浏览器互动,在 `componentDidMount()` 里执行你的工作,或者其他生命周期方法里.保持 `render()` 纯净使服务器渲染更实用并且让组件更容易被思考.
- 
- 
+
+
  ### getInitialState
- 
+
  ```javascript
 object getInitialState()
 ```
 
 当组件被挂载时调用一次.返回值会被用作为 `this.state` 的初始值.
+
+> 注意:
+>
+> 这个方法在从 `React.Component` 扩展的 ES6 `class` 组件里不可用。 更多的信息,请阅读我们关于[ES6 classes](/react/docs/reusable-components.html#es6-classes)的文档.
 
 
 ### getDefaultProps
