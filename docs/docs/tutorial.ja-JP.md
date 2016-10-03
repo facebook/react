@@ -45,7 +45,7 @@ next: thinking-in-react-ja-JP.html
     <script src="https://unpkg.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
     <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
     <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
-    <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+    <script src="https://unpkg.com/remarkable@1.7.1/dist/remarkable.min.js"></script>
 
   </head>
   <body>
@@ -229,7 +229,7 @@ Markdown はインラインでテキストをフォーマットする簡単な�
   <script src="https://unpkg.com/react-dom@{{site.react_version}}/dist/react-dom.js"></script>
   <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
   <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
-  <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+  <script src="https://unpkg.com/remarkable@1.7.1/dist/remarkable.min.js"></script>
 </head>
 ```
 
