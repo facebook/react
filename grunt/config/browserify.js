@@ -76,37 +76,36 @@ function simpleBannerify(src) {
 // back to the global, just like it would previously.
 function wrapperify(src) {
   return `
-;(function() {
-  var React;
-
+;(function(f) {
   // CommonJS
   if (typeof exports === "object" && typeof module !== "undefined") {
-    React = require('react');
+    f(require('react'));
 
-  // TODO: AMD/RequireJS
+  // RequireJS
   } else if (typeof define === "function" && define.amd) {
-    throw('How does RequireJS work again?');
+    require(['react'], f);
 
   // <script>
   } else {
     var g;
     if (typeof window !== "undefined") {
-      React = window.React;
+      g = window;
     } else if (typeof global !== "undefined") {
-      React = global.React;
+      g = global;
     } else if (typeof self !== "undefined") {
-      React = self.React;
+      g = self;
     } else {
       // works providing we're not in "use strict";
       // needed for Java 8 Nashorn
       // see https://github.com/facebook/react/issues/3037
-      React = this.React;
+      g = this;
     }
+    f(g.React)
   }
-
+})(function(React) {
   ${src}
-})()
-`
+});
+`;
 }
 
 // Our basic config which we'll add to to make our other builds
@@ -202,7 +201,7 @@ var domMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 var domServer = {
@@ -216,7 +215,7 @@ var domServer = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domServerMin = {
@@ -234,7 +233,7 @@ var domServerMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 var domFiber = {
@@ -248,7 +247,7 @@ var domFiber = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domFiberMin = {
@@ -266,7 +265,7 @@ var domFiberMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 module.exports = {
