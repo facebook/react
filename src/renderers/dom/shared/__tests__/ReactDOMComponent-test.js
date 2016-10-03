@@ -1495,5 +1495,22 @@ describe('ReactDOMComponent', () => {
       //since hard coding the line number would make test too brittle
       expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
     });
+
+    it('should suggest property name if available', () => {
+      spyOn(console, 'error');
+
+      ReactTestUtils.renderIntoDocument(React.createElement('label', {for: 'test'}));
+      ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', autofocus: true}));
+
+      expect(console.error.calls.count()).toBe(2);
+
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label'
+      );
+
+      expect(console.error.calls.argsFor(1)[0]).toBe(
+        'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input'
+      );
+    });
   });
 });
