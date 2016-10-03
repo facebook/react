@@ -444,8 +444,8 @@
 <p>By building modular components that reuse other components with well-defined interfaces, you get much of the same benefits that you get by using functions or classes. Specifically you can <em>separate the different concerns</em> of your app however you please simply by building new components. By building a custom component library for your application, you are expressing your UI in a way that best fits your domain.</p>
 <h2><a class="anchor" name="composition-example"></a>Composition Example <a class="hash-link" href="#composition-example">#</a></h2>
 <p>Let&#39;s create a simple Avatar component which shows a Facebook page picture and name using the Facebook Graph API.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Avatar</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">PagePic</span> <span class="nx">pagename</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span> <span class="o">/&gt;</span>
@@ -453,25 +453,25 @@
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">PagePic</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="kr">class</span> <span class="nx">PagePic</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://graph.facebook.com/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span> <span class="o">+</span> <span class="s1">&#39;/picture&#39;</span><span class="p">}</span> <span class="o">/&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">PageLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="kr">class</span> <span class="nx">PageLink</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://www.facebook.com/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span><span class="o">&gt;</span>
         <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pagename</span><span class="p">}</span>
       <span class="o">&lt;</span><span class="err">/a&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 
 <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">pagename</span><span class="o">=</span><span class="s2">&quot;Engineering&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
@@ -515,13 +515,12 @@
 <span class="nt">&lt;/Card&gt;</span>
 </code></pre></div><h3><a class="anchor" name="dynamic-children"></a>Dynamic Children <a class="hash-link" href="#dynamic-children">#</a></h3>
 <p>The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a <code>key</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
-        <span class="p">})}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+          <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+        <span class="p">))}</span>
       <span class="o">&lt;</span><span class="err">/ol&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
@@ -530,39 +529,39 @@
 
 <p>The <code>key</code> should <em>always</em> be supplied directly to the components in the array, not to the container HTML child of each component in the array:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// WRONG!</span>
-<span class="kd">var</span> <span class="nx">ListItemWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="kr">class</span> <span class="nx">ListItemWrapper</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
   <span class="p">}</span>
-<span class="p">});</span>
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="p">}</span>
+<span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="o">&lt;</span><span class="nx">ListItemWrapper</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">;</span>
-        <span class="p">})}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+          <span class="o">&lt;</span><span class="nx">ListItemWrapper</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="p">)}</span>
       <span class="o">&lt;</span><span class="err">/ul&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 </code></pre></div><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Correct :)</span>
-<span class="kd">var</span> <span class="nx">ListItemWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="kr">class</span> <span class="nx">ListItemWrapper</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
   <span class="p">}</span>
-<span class="p">});</span>
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="p">}</span>
+<span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-           <span class="k">return</span> <span class="o">&lt;</span><span class="nx">ListItemWrapper</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">;</span>
-        <span class="p">})}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">result</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+          <span class="o">&lt;</span><span class="nx">ListItemWrapper</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="p">)}</span>
       <span class="o">&lt;</span><span class="err">/ul&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>You can also key children by passing a ReactFragment object. See <a href="create-fragment.html">Keyed Fragments</a> for more details.</p>
 <h2><a class="anchor" name="data-flow"></a>Data Flow <a class="hash-link" href="#data-flow">#</a></h2>
