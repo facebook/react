@@ -194,8 +194,9 @@ var ReactElementValidator = {
         false,
         'React.createElement: type should not be null, undefined, boolean, or ' +
           'number. It should be a string (for DOM elements) or a ReactClass ' +
-          '(for composite components).%s',
-        getDeclarationErrorAddendum()
+          '(for composite components).%s%s',
+        getDeclarationErrorAddendum(),
+        ReactComponentTreeHook.getCurrentStackAddendum()
       );
     }
 
