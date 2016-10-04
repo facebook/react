@@ -25,6 +25,7 @@ var {
 var ReactFiber = require('ReactFiber');
 var ReactPriorityLevel = require('ReactPriorityLevel');
 var ReactReifiedYield = require('ReactReifiedYield');
+var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var getIteratorFn = require('getIteratorFn');
@@ -55,6 +56,12 @@ const {
 const {
   NoWork,
 } = ReactPriorityLevel;
+
+const {
+  NoEffect,
+  Placement,
+  Deletion,
+} = ReactTypeOfSideEffect;
 
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
@@ -90,6 +97,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           childToDelete;
     }
     childToDelete.nextEffect = null;
+    childToDelete.effectTag = Deletion;
   }
 
   function deleteRemainingChildren(
@@ -145,6 +153,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           fiber.pendingWorkPriority > priority) {
         fiber.pendingWorkPriority = priority;
       }
+      fiber.effectTag = NoWork;
       fiber.index = 0;
       fiber.sibling = null;
       return fiber;
@@ -162,7 +171,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        // TODO: Schedule a move side-effect for this child.
+        newFiber.effectTag = Placement;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -170,7 +179,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      // TODO: Schedule an insertion side-effect for this child.
+      newFiber.effectTag = Placement;
       return lastPlacedIndex;
     }
   }
@@ -207,7 +216,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       created.return = returnFiber;
       return created;
     } else {
-      // Move based on index, TODO: This needs to restore a deletion marking.
+      // Move based on index
       const existing = useFiber(current, priority);
       existing.pendingProps = element.props;
       existing.return = returnFiber;
@@ -228,7 +237,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       created.return = returnFiber;
       return created;
     } else {
-      // Move based on index, TODO: This needs to restore a deletion marking.
+      // Move based on index
       const existing = useFiber(current, priority);
       existing.pendingProps = coroutine;
       existing.return = returnFiber;
@@ -251,7 +260,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       created.return = returnFiber;
       return created;
     } else {
-      // Move based on index, TODO: This needs to restore a deletion marking.
+      // Move based on index
       const existing = useFiber(current, priority);
       existing.output = createUpdatedReifiedYield(
         current.output,
@@ -396,9 +405,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     newChild : any,
     priority : PriorityLevel
   ) : ?Fiber {
-
-    // TODO: If this child matches, we need to undo the deletion. However,
-    // we don't do that for the updateSlot case because nothing was deleted yet.
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes doesn't have keys, so we neither have to check the old nor
@@ -571,10 +577,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     if (shouldTrackSideEffects) {
-      // Any existing children that we're consumed above were deleted. We need
+      // Any existing children that weren't consumed above were deleted. We need
       // to add them to the deletion list.
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
+
+    // TODO: Add deletions and insert/moves to the side-effect list.
+    // TODO: Clear the deletion list when we don't reconcile in place. When
+    // progressedChild isn't reused.
 
     return resultingFirstChild;
   }
@@ -718,10 +728,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return created;
   }
 
-  // TODO: This API will tag the children with the side-effect of the
-  // reconciliation itself. Deletes have to get added to the side-effect list
-  // of the return fiber right now. Other side-effects will be added as we
-  // pass through those children.
+  // This API will tag the children with the side-effect of the reconciliation
+  // itself. They will be added to the side-effect list as we pass through the
+  // children and the parent.
   function reconcileChildFibers(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,

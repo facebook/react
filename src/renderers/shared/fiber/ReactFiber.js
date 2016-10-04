@@ -15,6 +15,7 @@
 import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
+import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
@@ -33,6 +34,10 @@ var {
 var {
   NoWork,
 } = require('ReactPriorityLevel');
+
+var {
+  NoEffect,
+} = require('ReactTypeOfSideEffect');
 
 // An Instance is shared between all versions of a component. We can easily
 // break this out into a separate object to avoid copying so much to the
@@ -90,6 +95,9 @@ export type Fiber = Instance & {
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
+
+  // Effect
+  effectTag: TypeOfSideEffect,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: ?Fiber,
@@ -175,6 +183,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     callbackList: null,
     output: null,
 
+    effectTag: NoEffect,
     nextEffect: null,
     firstEffect: null,
     lastEffect: null,
@@ -214,6 +223,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   if (alt) {
     // Whenever we clone, we do so to get a new work in progress.
     // This ensures that we've reset these in the new tree.
+    alt.effectTag = NoEffect;
     alt.nextEffect = null;
     alt.firstEffect = null;
     alt.lastEffect = null;
