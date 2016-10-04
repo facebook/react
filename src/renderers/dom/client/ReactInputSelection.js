@@ -18,7 +18,7 @@ var focusNode = require('focusNode');
 var getActiveElement = require('getActiveElement');
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return containsNode(node.ownerDocument.documentElement, node);
 }
 
 /**
@@ -85,10 +85,10 @@ var ReactInputSelection = {
         start: input.selectionStart,
         end: input.selectionEnd,
       };
-    } else if (document.selection &&
+    } else if (input.ownerDocument.selection &&
         (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
       // IE8 input.
-      var range = document.selection.createRange();
+      var range = input.ownerDocument.selection.createRange();
       // There can only be one selection per document in IE, so it must
       // be in our element.
       if (range.parentElement() === input) {
