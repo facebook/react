@@ -70,8 +70,26 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Noop.
       return;
     }
-
-    // TODO: Add this child to the side-effect queue for deletion.
+    if (!shouldClone) {
+      // When we're reconciling in place we have a work in progress copy. We
+      // actually want the current copy. If there is no current copy, then we
+      // don't need to track deletion side-effects.
+      if (!childToDelete.alternate) {
+        return;
+      }
+      childToDelete = childToDelete.alternate;
+    }
+    // Deletions are added in reversed order so we add it to the front.
+    const last = returnFiber.progressedLastDeletion;
+    if (last) {
+      last.nextEffect = childToDelete;
+      returnFiber.progressedLastDeletion = childToDelete;
+    } else {
+      returnFiber.progressedFirstDeletion =
+        returnFiber.progressedLastDeletion =
+          childToDelete;
+    }
+    childToDelete.nextEffect = null;
   }
 
   function deleteRemainingChildren(
@@ -82,30 +100,33 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Noop.
       return null;
     }
-    // TODO: Add these children to the side-effect queue for deletion.
+
+    // TODO: For the shouldClone case, this could be micro-optimized a bit by
+    // assuming that after the first child we've already added everything.
+    let childToDelete = currentFirstChild;
+    while (childToDelete) {
+      deleteChild(returnFiber, childToDelete);
+      childToDelete = childToDelete.sibling;
+    }
     return null;
   }
 
-  function mapAndDeleteRemainingChildren(
+  function mapRemainingChildren(
     returnFiber : Fiber,
     currentFirstChild : Fiber
-  ) : Map<string, Fiber> {
+  ) : Map<string | number, Fiber> {
     // Add the remaining children to a temporary map so that we can find them by
-    // keys quickly. At the same time, we'll flag them all for deletion. However,
-    // we will then undo the deletion as we restore children. Implicit (null) keys
-    // don't get added to this set.
-    const existingChildren : Map<string, Fiber> = new Map();
+    // keys quickly. Implicit (null) keys get added to this set with their index
+    // instead.
+    const existingChildren : Map<string | number, Fiber> = new Map();
+
     let existingChild = currentFirstChild;
     while (existingChild) {
       if (existingChild.key !== null) {
         existingChildren.set(existingChild.key, existingChild);
+      } else {
+        existingChildren.set(existingChild.index, existingChild);
       }
-      // Add everything to the delete queue
-      // Actually... It is not possible to delete things from the queue since
-      // we don't have access to the previous link. Does that mean we need a
-      // second pass to add them? We should be able to keep track of the
-      // previous deletion as we're iterating through the list the next time.
-      // That way we know which item to patch when we delete a deletion.
       existingChild = existingChild.sibling;
     }
     return existingChildren;
@@ -332,12 +353,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           if (newChild.key === key) {
-            return updateElement(
-              returnFiber,
-              oldFiber,
-              newChild,
-              priority
-            );
+            return updateElement(returnFiber, oldFiber, newChild, priority);
           } else {
             return null;
           }
@@ -345,12 +361,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
         case REACT_COROUTINE_TYPE: {
           if (newChild.key === key) {
-            return updateCoroutine(
-              returnFiber,
-              oldFiber,
-              newChild,
-              priority
-            );
+            return updateCoroutine(returnFiber, oldFiber, newChild, priority);
           } else {
             return null;
           }
@@ -358,12 +369,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
         case REACT_YIELD_TYPE: {
           if (newChild.key === key) {
-            return updateYield(
-              returnFiber,
-              oldFiber,
-              newChild,
-              priority
-            );
+            return updateYield(returnFiber, oldFiber, newChild, priority);
           } else {
             return null;
           }
@@ -384,9 +390,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   }
 
   function updateFromMap(
-    existingChildren : Map<string, Fiber>,
+    existingChildren : Map<string | number, Fiber>,
     returnFiber : Fiber,
-    oldFiber : ?Fiber,
+    newIdx : number,
     newChild : any,
     priority : PriorityLevel
   ) : ?Fiber {
@@ -397,88 +403,37 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes doesn't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
-      return updateTextNode(returnFiber, oldFiber, '' + newChild, priority);
+      const matchedFiber = existingChildren.get(newIdx) || null;
+      return updateTextNode(returnFiber, matchedFiber, '' + newChild, priority);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.key === null) {
-            // For implicit keys, we'll use the existing fiber in this slot
-            // but only if it also is an implicit key.
-            return updateElement(
-              returnFiber,
-              oldFiber && oldFiber.key === null ? oldFiber : null,
-              newChild,
-              priority
-            );
-          } else {
-            // For explicit keys we look for an existing fiber in the map.
-            // TODO: We could test oldFiber.key first incase it happens to be
-            // the same key but it might not be worth it given the likelihood.
-            const matchedFiber = existingChildren.get(newChild.key);
-            return updateElement(
-              returnFiber,
-              matchedFiber ? matchedFiber : null,
-              newChild,
-              priority
-            );
-          }
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updateElement(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_COROUTINE_TYPE: {
-          if (newChild.key === null) {
-            // For implicit keys, we'll use the existing fiber in this slot
-            // but only if it also is an implicit key.
-            return updateCoroutine(
-              returnFiber,
-              oldFiber && oldFiber.key === null ? oldFiber : null,
-              newChild,
-              priority
-            );
-          } else {
-            // For explicit keys we look for an existing fiber in the map.
-            // TODO: We could test oldFiber.key first incase it happens to be
-            // the same key but it might not be worth it given the likelihood.
-            const matchedFiber = existingChildren.get(newChild.key);
-            return updateCoroutine(
-              returnFiber,
-              matchedFiber ? matchedFiber : null,
-              newChild,
-              priority
-            );
-          }
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updateCoroutine(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_YIELD_TYPE: {
-          if (newChild.key === null) {
-            // For implicit keys, we'll use the existing fiber in this slot
-            // but only if it also is an implicit key.
-            return updateYield(
-              returnFiber,
-              oldFiber && oldFiber.key === null ? oldFiber : null,
-              newChild,
-              priority
-            );
-          } else {
-            // For explicit keys we look for an existing fiber in the map.
-            // TODO: We could test oldFiber.key first incase it happens to be
-            // the same key but it might not be worth it given the likelihood.
-            const matchedFiber = existingChildren.get(newChild.key);
-            return updateYield(
-              returnFiber,
-              matchedFiber ? matchedFiber : null,
-              newChild,
-              priority
-            );
-          }
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updateYield(returnFiber, matchedFiber, newChild, priority);
         }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        // Fragments doesn't have keys so if the previous is a fragment, we
-        // update it.
-        return updateFragment(returnFiber, oldFiber, newChild, priority);
+        const matchedFiber = existingChildren.get(newIdx) || null;
+        return updateFragment(returnFiber, matchedFiber, newChild, priority);
       }
     }
 
@@ -581,29 +536,30 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return resultingFirstChild;
     }
 
-    // Mark all children as deleted and add them to a key map for quick lookups.
-    const existingChildren = mapAndDeleteRemainingChildren(returnFiber, oldFiber);
+    // Add all children to a key map for quick lookups.
+    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
     for (; newIdx < newChildren.length; newIdx++) {
-      // TODO: Since the mutation of existing fibers can happen at any order
-      // we might break the link before we're done with it. :(
-      if (oldFiber) {
-        if (oldFiber.index > newIdx) {
-          nextOldFiber = oldFiber;
-          oldFiber = null;
-        } else {
-          nextOldFiber = oldFiber.sibling;
-        }
-      }
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
-        oldFiber,
+        newIdx,
         newChildren[newIdx],
         priority
       );
       if (newFiber) {
+        if (shouldTrackSideEffects) {
+          if (newFiber.alternate) {
+            // The new fiber is a work in progress, but if there exists a
+            // current, that means that we reused the fiber. We need to delete
+            // it from the child list so that we don't add it to the deletion
+            // list.
+            existingChildren.delete(
+              newFiber.key === null ? newFiber.index : newFiber.key
+            );
+          }
+        }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
         if (!previousNewFiber) {
           resultingFirstChild = newFiber;
@@ -612,12 +568,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
         previousNewFiber = newFiber;
       }
-      // We will keep traversing the oldFiber in order, in case the new child
-      // has a null key that we'll need to match in the same slot.
-      oldFiber = nextOldFiber;
     }
 
-    // TODO: Add deletion side-effects to the returnFiber's side-effects.
+    if (shouldTrackSideEffects) {
+      // Any existing children that we're consumed above were deleted. We need
+      // to add them to the deletion list.
+      existingChildren.forEach(child => deleteChild(returnFiber, child));
+    }
 
     return resultingFirstChild;
   }
