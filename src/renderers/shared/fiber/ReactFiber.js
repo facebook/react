@@ -114,6 +114,13 @@ export type Fiber = Instance & {
   // or may not be the same as the "current" child.
   progressedChild: ?Fiber,
 
+  // When we reconcile children onto progressedChild it is possible that we have
+  // to delete some child fibers. We need to keep track of this side-effects so
+  // that if we continue later on, we have to include those effects. Deletions
+  // are added in the reverse order from sibling pointers.
+  progressedFirstDeletion: ?Fiber,
+  progressedLastDeletion: ?Fiber,
+
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
@@ -175,6 +182,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     pendingWorkPriority: NoWork,
     progressedPriority: NoWork,
     progressedChild: null,
+    progressedFirstDeletion: null,
+    progressedLastDeletion: null,
 
     alternate: null,
 
