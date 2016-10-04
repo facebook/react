@@ -106,8 +106,8 @@ var ReactInputSelection = {
   },
 
   /**
-   * @setSelection: Sets the selection bounds of a textarea or input and focuses
-   * the input.
+   * @setSelection: Sets the selection bounds of a textarea, input or
+   * contentEditable node.
    * -@input     Set selection bounds of this input or textarea
    * -@offsets   Object of same form that is returned from get*
    */
