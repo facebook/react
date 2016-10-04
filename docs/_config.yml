@@ -27,6 +27,12 @@ defaults:
     layout: docs
     sectionid: docs
 - scope:
+    path: docs-old
+    type: pages
+  values:
+    layout: docs-old
+    sectionid: docs-old
+- scope:
     path: tips
     type: pages
   values:
