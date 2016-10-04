@@ -138,7 +138,7 @@ class MyComponent extends React.Component {
       <ul>
         {this.props.results.map((result) => (
           <ListItemWrapper data={result} />
-        )}
+        ))}
       </ul>
     );
   }
@@ -157,7 +157,7 @@ class MyComponent extends React.Component {
       <ul>
         {this.props.results.map((result) => (
           <ListItemWrapper key={result.id} data={result} />
-        )}
+        ))}
       </ul>
     );
   }
