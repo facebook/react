@@ -19,6 +19,7 @@ import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -31,6 +32,9 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
+var {
+  Update,
+} = ReactTypeOfSideEffect;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
@@ -38,28 +42,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const createTextInstance = config.createTextInstance;
   const prepareUpdate = config.prepareUpdate;
 
-  function markForPreEffect(workInProgress : Fiber) {
-    // Schedule a side-effect on this fiber, BEFORE the children's side-effects.
-    if (workInProgress.firstEffect) {
-      workInProgress.nextEffect = workInProgress.firstEffect;
-      workInProgress.firstEffect = workInProgress;
-    } else {
-      workInProgress.firstEffect = workInProgress;
-      workInProgress.lastEffect = workInProgress;
-    }
-  }
-
-  // TODO: It's possible this will create layout thrash issues because mutations
-  // of the DOM and life-cycles are interleaved. E.g. if a componentDidMount
-  // of a sibling reads, then the next sibling updates and reads etc.
-  function markForPostEffect(workInProgress : Fiber) {
-    // Schedule a side-effect on this fiber, AFTER the children's side-effects.
-    if (workInProgress.lastEffect) {
-      workInProgress.lastEffect.nextEffect = workInProgress;
-    } else {
-      workInProgress.firstEffect = workInProgress;
-    }
-    workInProgress.lastEffect = workInProgress;
+  function markUpdate(workInProgress : Fiber) {
+    // Tag the fiber with an update effect. This turns a Placement into
+    // an UpdateAndPlacement.
+    workInProgress.effectTag |= Update;
   }
 
   function transferOutput(child : ?Fiber, returnFiber : Fiber) {
@@ -143,7 +129,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // Transfer update queue to callbackList field so callbacks can be
         // called during commit phase.
         workInProgress.callbackList = workInProgress.updateQueue;
-        markForPostEffect(workInProgress);
+        markUpdate(workInProgress);
         return null;
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);
@@ -152,7 +138,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // all the other side-effects in the subtree. We need to schedule it
         // before so that the entire tree is up-to-date before the life-cycles
         // are invoked.
-        markForPreEffect(workInProgress);
+        markUpdate(workInProgress);
         return null;
       case HostComponent:
         let newProps = workInProgress.pendingProps;
@@ -172,7 +158,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           const instance : I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps, children)) {
             // This returns true if there was something to update.
-            markForPreEffect(workInProgress);
+            markUpdate(workInProgress);
           }
           // TODO: Is this actually ever going to change? Why set it every time?
           workInProgress.output = instance;
@@ -197,7 +183,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
-          markForPreEffect(workInProgress);
+          markUpdate(workInProgress);
         } else {
           if (typeof newText !== 'string') {
             if (workInProgress.stateNode === null) {

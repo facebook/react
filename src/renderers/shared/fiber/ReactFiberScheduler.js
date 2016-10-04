@@ -30,6 +30,12 @@ var {
   SynchronousPriority,
 } = require('ReactPriorityLevel');
 
+var {
+  NoEffect,
+  Update,
+  PlacementAndUpdate,
+} = require('ReactTypeOfSideEffect');
+
 var timeHeuristicForUnitOfWork = 1;
 
 export type Scheduler = {
@@ -106,7 +112,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     let effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
       const current = effectfulFiber.alternate;
-      commitWork(current, effectfulFiber);
+      if (effectfulFiber.effectTag === Update ||
+          effectfulFiber.effectTag === PlacementAndUpdate) {
+        commitWork(current, effectfulFiber);
+      }
       const next = effectfulFiber.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.
       // I'm not actually sure this matters because we can't reset firstEffect
@@ -151,12 +160,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       workInProgress.pendingProps = null;
       workInProgress.updateQueue = null;
 
+      // If this fiber had side-effects, we append it to the end of its own
+      // effect list.
+      if (workInProgress.effectTag !== NoEffect) {
+        // Schedule a side-effect on this fiber, AFTER the children's
+        // side-effects. We can perform certain side-effects earlier if
+        // needed, by doing multiple passes over the effect list.
+        if (workInProgress.lastEffect) {
+          workInProgress.lastEffect.nextEffect = workInProgress;
+        } else {
+          workInProgress.firstEffect = workInProgress;
+        }
+        workInProgress.lastEffect = workInProgress;
+      }
+
       const returnFiber = workInProgress.return;
 
       if (returnFiber) {
-        // Ensure that the first and last effect of the parent corresponds
-        // to the children's first and last effect. This probably relies on
-        // children completing in order.
+        // Append all the effects of the subtree and this fiber onto the effect
+        // list of the parent. The completion order of the children affects the
+        // side-effect order.
         if (!returnFiber.firstEffect) {
           returnFiber.firstEffect = workInProgress.firstEffect;
         }
