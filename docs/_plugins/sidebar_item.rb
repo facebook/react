@@ -12,6 +12,10 @@ module Jekyll
       return sidebar_helper(item, 'community')
     end
 
+    def tutorial_sidebar_link(item)
+      return sidebar_helper(item, 'tutorial')
+    end
+
     def sidebar_helper(item, group)
       pageID = @context.registers[:page]["id"]
       itemID = item["id"]
