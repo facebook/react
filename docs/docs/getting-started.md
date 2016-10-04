@@ -7,7 +7,7 @@ redirect_from: "docs/index.html"
 redirect_from: "downloads.html"
 ---
 
-There are several different ways to use React. The right one for you depends on how you're using it.
+React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
 ## Trying Out React
 
