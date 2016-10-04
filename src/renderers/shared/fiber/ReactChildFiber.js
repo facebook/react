@@ -88,7 +88,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
   function mapAndDeleteRemainingChildren(
     returnFiber : Fiber,
-    currentFirstChild : ?Fiber
+    currentFirstChild : Fiber
   ) : Map<string, Fiber> {
     // Add the remaining children to a temporary map so that we can find them by
     // keys quickly. At the same time, we'll flag them all for deletion. However,
@@ -259,6 +259,53 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       existing.return = returnFiber;
       return existing;
     }
+  }
+
+  function createChild(
+    returnFiber : Fiber,
+    newChild : any,
+    priority : PriorityLevel
+  ) : ?Fiber {
+    if (typeof newChild === 'string' || typeof newChild === 'number') {
+      // Text nodes doesn't have keys. If the previous node is implicitly keyed
+      // we can continue to replace it without aborting even if it is not a text
+      // node.
+      const created = createFiberFromText('' + newChild, priority);
+      created.return = returnFiber;
+      return created;
+    }
+
+    if (typeof newChild === 'object' && newChild !== null) {
+      switch (newChild.$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          const created = createFiberFromElement(newChild, priority);
+          created.return = returnFiber;
+          return created;
+        }
+
+        case REACT_COROUTINE_TYPE: {
+          const created = createFiberFromCoroutine(newChild, priority);
+          created.return = returnFiber;
+          return created;
+        }
+
+        case REACT_YIELD_TYPE: {
+          const reifiedYield = createReifiedYield(newChild);
+          const created = createFiberFromYield(newChild, priority);
+          created.output = reifiedYield;
+          created.return = returnFiber;
+          return created;
+        }
+      }
+
+      if (isArray(newChild) || getIteratorFn(newChild)) {
+        const created = createFiberFromFragment(newChild, priority);
+        created.return = returnFiber;
+        return created;
+      }
+    }
+
+    return null;
   }
 
   function updateSlot(
@@ -507,6 +554,30 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (newIdx === newChildren.length) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      return resultingFirstChild;
+    }
+
+    if (!oldFiber) {
+      // If we don't have any more existing children we can choose a fast path
+      // since the rest will all be insertions.
+      for (; newIdx < newChildren.length; newIdx++) {
+        const newFiber = createChild(
+          returnFiber,
+          newChildren[newIdx],
+          priority
+        );
+        if (!newFiber) {
+          continue;
+        }
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        if (!previousNewFiber) {
+          // TODO: Move out of the loop. This only happens for the first run.
+          resultingFirstChild = newFiber;
+        } else {
+          previousNewFiber.sibling = newFiber;
+        }
+        previousNewFiber = newFiber;
+      }
       return resultingFirstChild;
     }
 
