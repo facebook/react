@@ -324,7 +324,7 @@ With `React.createClass()`, you have to provide a separate `getInitialState` met
 ```javascript
 var Counter = React.createClass({
   getInitialState: function() {
-    return {count: props.initialCount};
+    return {count: this.props.initialCount};
   },
   // ...
 });
