@@ -4,6 +4,10 @@ module Jekyll
       return sidebar_helper(item, 'docs')
     end
 
+    def docs_old_sidebar_link(item)
+      return sidebar_helper(item, 'docs-old')
+    end
+
     def community_sidebar_link(item)
       return sidebar_helper(item, 'community')
     end

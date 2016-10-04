@@ -22,20 +22,6 @@
     </div>
   {% endfor %}
 
-  <!-- Tips Nav -->
-  {% for section in site.data.nav_tips %}
-    <div class="nav-docs-section">
-      <h3>{{ section.title }}</h3>
-      <ul>
-        {% for item in section.items %}
-          <li>
-            <a href="/react/tips/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endfor %}
-
   <!-- Contributing Nav -->
   {% for section in site.data.nav_contributing %}
     <div class="nav-docs-section">
@@ -44,6 +30,45 @@
         {% for item in section.items %}
           <li>
             <a href="/react/contributing/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+
+  <!-- Old Docs Nav -->
+  <!-- TODO: remove it when new docs are ready -->
+  {% for section in site.data.nav_docs_old %}
+    <div class="nav-docs-section">
+      <h3>{{ section.title }}</h3>
+      <ul>
+        {% for item in section.items %}
+          <li>
+            {{ item | docs_old_sidebar_link }}
+            {% if item.subitems %}
+              <ul>
+                {% for subitem in item.subitems %}
+                  <li>
+                    {{ subitem | docs_old_sidebar_link }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+
+  <!-- Old Tips Nav -->
+  <!-- TODO: remove it when new docs are ready -->
+  {% for section in site.data.nav_tips %}
+    <div class="nav-docs-section">
+      <h3>{{ section.title }}</h3>
+      <ul>
+        {% for item in section.items %}
+          <li>
+            <a href="/react/tips/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
           </li>
         {% endfor %}
       </ul>
