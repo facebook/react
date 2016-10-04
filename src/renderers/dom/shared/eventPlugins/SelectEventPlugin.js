@@ -96,6 +96,7 @@ function getSelection(node) {
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {
