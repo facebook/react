@@ -13,7 +13,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 
 If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/o9gspf3e/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
 
-## Creating a New Application
+## Creating a Single Page Application
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It handles webpack, babel, and live reloading, so you don't have to think about them.
 
