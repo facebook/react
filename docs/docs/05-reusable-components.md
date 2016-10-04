@@ -347,7 +347,7 @@ class SayHello extends React.Component {
   }
 
   render() {
-    // Because we `this.tick` is bound, we can use it as an event handler.
+    // Because `this.handleClick` is bound, we can use it as an event handler.
     return (
       <button onClick={this.handleClick}>
         Say hello
