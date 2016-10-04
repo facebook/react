@@ -82,6 +82,6 @@ id: home
 <section class="home-bottom-section">
   <div class="buttons-unit">
     <a href="docs/installation.html" class="button">Get Started</a>
-    <a href="downloads.html" class="button">Download React v{{site.react_version}}</a>
+    <a href="docs/tutorial.html" class="button">Take the Tutorial</a>
   </div>
 </section>
