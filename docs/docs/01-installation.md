@@ -26,7 +26,7 @@ cd hello-world
 npm start
 ```
 
-Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses Webpack, Babel and ESLint under the hood, but configures them for you.
 
 ## Adding React to an Existing Application
 
