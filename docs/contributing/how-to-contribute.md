@@ -116,8 +116,6 @@ If you want to try your changes in your existing React project, you may copy `bu
 
 ```sh
 cd your_project
-rm -rf node_modules/react
-rm -rf node_modules/react-dom
 npm link ~/path_to_your_react_clone/build/packages/react
 npm link ~/path_to_your_react_clone/build/packages/react-dom
 ```
