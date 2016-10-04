@@ -62,6 +62,52 @@ function simpleBannerify(src) {
   );
 }
 
+// What is happening here???
+// I'm glad you asked. It became really to make our bundle splitting work.
+// Everything is fine in node and when bundling with those packages, but when
+// using our pre-packaged files, the splitting didn't work. Specifically due to
+// the UMD wrappers defining their own require and creating their own encapsulated
+// "registry" scope, we couldn't require across the boundaries. Webpack tries to
+// be smart and looks for top-level requires (even when aliasing to a bundle),
+// but since we didn't have those, we couldn't require 'react' from 'react-dom'.
+// But we are already shimming in some modules that look for a global React
+// variable. So we write a wrapper around the UMD bundle that browserify creates,
+// and define a React variable that will require across Webpack-boundaries or fall
+// back to the global, just like it would previously.
+function wrapperify(src) {
+  return `
+;(function(f) {
+  // CommonJS
+  if (typeof exports === "object" && typeof module !== "undefined") {
+    f(require('react'));
+
+  // RequireJS
+  } else if (typeof define === "function" && define.amd) {
+    require(['react'], f);
+
+  // <script>
+  } else {
+    var g;
+    if (typeof window !== "undefined") {
+      g = window;
+    } else if (typeof global !== "undefined") {
+      g = global;
+    } else if (typeof self !== "undefined") {
+      g = self;
+    } else {
+      // works providing we're not in "use strict";
+      // needed for Java 8 Nashorn
+      // see https://github.com/facebook/react/issues/3037
+      g = this;
+    }
+    f(g.React)
+  }
+})(function(React) {
+  ${src}
+});
+`;
+}
+
 // Our basic config which we'll add to to make our other builds
 var basic = {
   entries: [
@@ -137,7 +183,7 @@ var dom = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domMin = {
@@ -155,7 +201,7 @@ var domMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 var domServer = {
@@ -169,7 +215,7 @@ var domServer = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domServerMin = {
@@ -187,7 +233,7 @@ var domServerMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 var domFiber = {
@@ -201,7 +247,7 @@ var domFiber = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domFiberMin = {
@@ -219,7 +265,7 @@ var domFiberMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 module.exports = {

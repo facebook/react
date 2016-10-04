@@ -37,7 +37,7 @@ Like all DOM events, the `onChange` prop is supported on all native components a
 A **controlled** `<input>` has a `value` prop. Rendering a controlled `<input>` will reflect the value of the `value` prop.
 
 ```javascript
-  render: function() {
+  render() {
     return <input type="text" value="Hello!" />;
   }
 ```
@@ -45,13 +45,18 @@ A **controlled** `<input>` has a `value` prop. Rendering a controlled `<input>` 
 User input will have no effect on the rendered element because React has declared the value to be `Hello!`. To update the value in response to user input, you could use the `onChange` event:
 
 ```javascript
-  getInitialState: function() {
-    return {value: 'Hello!'};
-  },
-  handleChange: function(event) {
+class MyForm extends React.Component {
+  constructor(props) {
+    super(props);    
+    this.state = {value: 'Hello!'};
+    this.handleChange = this.handleChange.bind(this);
+  }
+  
+  handleChange(event) {
     this.setState({value: event.target.value});
-  },
-  render: function() {
+  }
+  
+  render() {
     return (
       <input
         type="text"
@@ -60,12 +65,13 @@ User input will have no effect on the rendered element because React has declare
       />
     );
   }
+}
 ```
 
 In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
 ```javascript
-  handleChange: function(event) {
+  handleChange(event) {
     this.setState({value: event.target.value.substr(0, 140)});
   }
 ```
@@ -83,7 +89,7 @@ Be aware that, in an attempt to normalize change handling for checkbox and radio
 An `<input>` without a `value` property is an *uncontrolled* component:
 
 ```javascript
-  render: function() {
+  render() {
     return <input type="text" />;
   }
 ```
@@ -97,7 +103,7 @@ An **uncontrolled** component maintains its own internal state.
 If you want to initialize the component with a non-empty value, you can supply a `defaultValue` prop. For example:
 
 ```javascript
-  render: function() {
+  render() {
     return <input type="text" defaultValue="Hello!" />;
   }
 ```
@@ -125,7 +131,7 @@ This renders an input *initialized* with the value, `Untitled`. When the user up
 Unlike HTML, React components must represent the state of the view at any point in time and not only at initialization time. For example, in React:
 
 ```javascript
-  render: function() {
+  render() {
     return <input type="text" name="title" value="Untitled" />;
   }
 ```
