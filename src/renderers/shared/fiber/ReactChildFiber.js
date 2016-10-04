@@ -58,7 +58,6 @@ const {
 } = ReactPriorityLevel;
 
 const {
-  NoEffect,
   Placement,
   Deletion,
 } = ReactTypeOfSideEffect;
@@ -581,10 +580,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // to add them to the deletion list.
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
-
-    // TODO: Add deletions and insert/moves to the side-effect list.
-    // TODO: Clear the deletion list when we don't reconcile in place. When
-    // progressedChild isn't reused.
 
     return resultingFirstChild;
   }

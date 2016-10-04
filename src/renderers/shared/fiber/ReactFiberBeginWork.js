@@ -66,6 +66,18 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
     }
   }
 
+  function clearDeletions(workInProgress) {
+    workInProgress.progressedFirstDeletion =
+      workInProgress.progressedLastDeletion =
+        null;
+  }
+
+  function transferDeletions(workInProgress) {
+    // Any deletions get added first into the effect list.
+    workInProgress.firstEffect = workInProgress.progressedFirstDeletion;
+    workInProgress.lastEffect = workInProgress.progressedLastDeletion;
+  }
+
   function reconcileChildren(current, workInProgress, nextChildren) {
     const priorityLevel = workInProgress.pendingWorkPriority;
     reconcileChildrenAtPriority(current, workInProgress, nextChildren, priorityLevel);
@@ -90,23 +102,31 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
       // If the current child is the same as the work in progress, it means that
       // we haven't yet started any work on these children. Therefore, we use
       // the clone algorithm to create a copy of all the current children.
+
+      // If we had any progressed work already, that is invalid at this point so
+      // let's throw it out.
+      clearDeletions(workInProgress);
+
       workInProgress.child = reconcileChildFibers(
         workInProgress,
         workInProgress.child,
         nextChildren,
         priorityLevel
       );
+
+      transferDeletions(workInProgress);
     } else {
-      // If, on the other hand, we don't have a current fiber or if it is
-      // already using a clone, that means we've already begun some work on this
-      // tree and we can continue where we left off by reconciling against the
-      // existing children.
+      // If, on the other hand, it is already using a clone, that means we've
+      // already begun some work on this tree and we can continue where we left
+      // off by reconciling against the existing children.
       workInProgress.child = reconcileChildFibersInPlace(
         workInProgress,
         workInProgress.child,
         nextChildren,
         priorityLevel
       );
+
+      transferDeletions(workInProgress);
     }
     markChildAsProgressed(current, workInProgress, priorityLevel);
   }
@@ -352,6 +372,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
     //   }
     //   return null;
     // }
+
+    if (current && workInProgress.child === current.child) {
+      // If we had any progressed work already, that is invalid at this point so
+      // let's throw it out.
+      clearDeletions(workInProgress);
+    }
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
