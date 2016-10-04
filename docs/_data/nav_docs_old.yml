@@ -22,8 +22,6 @@
     title: React (Virtual) DOM Terminology
 - title: Old Quick Start
   items:
-  - id: getting-started
-    title: Getting Started
   - id: tutorial
     title: Tutorial
   - id: thinking-in-react
