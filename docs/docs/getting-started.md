@@ -15,7 +15,7 @@ If you're just interested in playing around with React, you can use JSFiddle. Tr
 
 ## Creating a Single Page Application
 
-[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It handles webpack, babel, and live reloading, so you don't have to think about them.
+[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production..
 
 ```bash
 npm install -g create-react-app
@@ -28,19 +28,28 @@ Create React App doesn't handle backend logic or databases; it just creates a fr
 
 ## Adding React to an Existing Application
 
-We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you already have npm in your build pipeline, you can install it with:
+We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you already use npm for client package management, you can install it with:
 
 ```bash
 npm install --save react react-dom
 ```
 
-and import it from your code with:
+and import it from your code with something like:
 
 ```js
 var React = require('react');
 var ReactDOM = require('react-dom');
-ReactDOM.render(<App />, document.getElementById('the-element-id'));
+
+class App extends React.Component {
+  render() {
+    return <div>Hello world!</div>;
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
+
+This code renders into an HTML element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file. When you use React in this way, you should be transpiling your JavaScript using `babel` with the `es2015` and `react` presets.
 
 If you use Bower, React is available via the `react` package:
 
