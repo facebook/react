@@ -18,6 +18,20 @@ function isInDocument(node) {
   return containsNode(document.documentElement, node);
 }
 
+function getFocusedElement() {
+  var win = window;
+  var focusedElem = getActiveElement();
+  while (focusedElem instanceof win.HTMLIFrameElement) {
+    try {
+      win = focusedElem.contentDocument.defaultView;
+    } catch (e) {
+      return focusedElem;
+    }
+    focusedElem = getActiveElement(win.document);
+  }
+  return focusedElem;
+}
+
 /**
  * @ReactInputSelection: React input selection module. Based on Selection.js,
  * but modified to be suitable for react and has a couple of bug fixes (doesn't
@@ -36,7 +50,7 @@ var ReactInputSelection = {
   },
 
   getSelectionInformation: function() {
-    var focusedElem = getActiveElement();
+    var focusedElem = getFocusedElement();
     return {
       focusedElem: focusedElem,
       selectionRange: ReactInputSelection.hasSelectionCapabilities(focusedElem)
@@ -51,7 +65,7 @@ var ReactInputSelection = {
    * nodes and place them back in, resulting in focus being lost.
    */
   restoreSelection: function(priorSelectionInformation) {
-    var curFocusedElem = getActiveElement();
+    var curFocusedElem = getFocusedElement();
     var priorFocusedElem = priorSelectionInformation.focusedElem;
     var priorSelectionRange = priorSelectionInformation.selectionRange;
     if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
