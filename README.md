@@ -13,11 +13,11 @@ React is a JavaScript library for building user interfaces.
 We have several examples [on the website](https://facebook.github.io/react/). Here is the first one to get you started:
 
 ```js
-var HelloMessage = React.createClass({
-  render: function() {
+class HelloMessage extends React.Component {
+  render() {
     return <div>Hello {this.props.name}</div>;
   }
-});
+}
 
 ReactDOM.render(
   <HelloMessage name="John" />,
