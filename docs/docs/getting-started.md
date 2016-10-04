@@ -13,6 +13,8 @@ React is flexible and can be used in a variety of projects. You can create new a
 
 If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/o9gspf3e/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
 
+If you prefer to use your own text editor, you can also download [this HTML file](/react/downloads/single-file-example.html), edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
+
 ## Creating a Single Page Application
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production..
@@ -28,7 +30,9 @@ Create React App doesn't handle backend logic or databases; it just creates a fr
 
 ## Adding React to an Existing Application
 
-We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you already use npm for client package management, you can install it with:
+### Using npm
+
+We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you use npm for client package management, you can install React with:
 
 ```bash
 npm install --save react react-dom
@@ -51,44 +55,21 @@ ReactDOM.render(<App />, document.getElementById('root'));
 
 This code renders into an HTML element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file. When you use React in this way, you should be transpiling your JavaScript using `babel` with the `es2015` and `react` presets.
 
+### Using a CDN
+
+If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide UMD distributions in `dist` folders, which are hosted on a CDN:
+
+```html
+<script src="https://unpkg.com/react@latest/dist/react.js"></script>
+<script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+```
+
+To load a specific version of `react` and `react-dom`, replace `latest` with the version number.
+
+### Using Bower
+
 If you use Bower, React is available via the `react` package:
 
 ```bash
 bower install --save react
 ```
-
-## Using React From A CDN
-
-If you don't have any build pipeline set up, you can still use React directly from a CDN. You also need to load `babel` from a CDN and load your scripts with type `text/babel` so that they can get transformed. This code works as a single html file:
-
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello React World!</title>
-    <script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
-    <script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
-    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="text/babel">
-
-      class Hello extends React.Component {
-        render() {
-          return <h1>Hello, world!</h1>;
-        }
-      }
-
-      ReactDOM.render(
-        <Hello />,
-        document.getElementById('root')
-      );
-
-    </script>
-  </body>
-</html>
-```
-
-This setup is inefficient, because it's transforming your code at runtime. We don't recommend it in any production environment.
