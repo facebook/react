@@ -47,3 +47,39 @@ If you use Bower, React is available via the `react` package:
 ```bash
 bower install --save react
 ```
+
+## Using React From A CDN
+
+If you don't have any build pipeline set up, you can still use React directly from a CDN. You also need to load `babel` from a CDN and load your scripts with type `text/babel` so that they can get transformed. This code works as a single html file:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello React World!</title>
+    <script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      class Hello extends React.Component {
+        render() {
+          return <h1>Hello, world!</h1>;
+        }
+      }
+
+      ReactDOM.render(
+        <Hello />,
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>
+```
+
+This setup is inefficient, because it's transforming your code at runtime. We don't recommend it in any production environment.
