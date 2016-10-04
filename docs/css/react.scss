@@ -447,14 +447,6 @@ h1, h2, h3, h4, h5, h6 {
   float: right;
 }
 
-footer {
-  font-size: 13px;
-  font-weight: 600;
-  margin-top: 36px;
-  margin-bottom: 18px;
-  overflow: auto;
-}
-
 section.black content {
   padding-bottom: 18px;
 }
@@ -467,6 +459,7 @@ section.black content {
   @include clearfix;
 
   padding-top: 20px;
+  padding-bottom: 80px;
 
   blockquote {
     padding: 5px 15px;
@@ -501,6 +494,7 @@ section.black content {
   }
 
   padding-top: 20px;
+  padding-bottom: 80px;
 
   // Make a notice box out of blockquotes in the documentation:
   blockquote {
@@ -924,4 +918,96 @@ input#algolia-doc-search:focus {
 
 .aa-cursor .algolia-docsearch-suggestion {
   background: #f1f3f5;
+}
+
+/**
+ * Footer
+ */
+
+footer {
+  box-sizing: border-box;
+  border: none;
+  font-weight: 300;
+  color: #202020;
+  font-size: 15px;
+  line-height: 24px;
+  background: #2D2D2D;
+  box-shadow: inset 0 10px 10px -5px #0d1116;
+  padding-top: 2em;
+  padding-bottom: 2em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+footer .sitemap {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1080px;
+  margin: 0 auto 3em;
+}
+footer .sitemap div {
+  flex: 1;
+}
+footer .sitemap .nav-home {
+  display: table;
+  margin: -12px 20px 0 0;
+  padding: 10px;
+  width: 60px;
+  height: 60px;
+  // opacity: 0.4;
+  transition: opacity 0.15s ease-in-out;
+  background: url("../img/logo_small_gray.png") no-repeat content-box;
+}
+footer .sitemap .nav-home:hover,
+footer .sitemap .nav-home:focus {
+  background-image: url("../img/logo_small.png");
+}
+@media screen and (max-width: 740px) {
+  footer .sitemap {
+    display: none;
+  }
+}
+
+footer .sitemap a {
+  color: white;
+  display: table;
+  margin: 2px -10px;
+  padding: 3px 10px;
+}
+footer .sitemap a:hover,
+footer .sitemap a:focus {
+  color: #61dafb;
+  text-decoration: none;
+}
+footer .sitemap h6 > a:hover,
+footer .sitemap h6 > a:focus {
+  color: #61dafb;
+  text-decoration: none;
+}
+footer .sitemap h5,
+footer .sitemap h6 {
+  margin: 0 0 10px;
+}
+footer .sitemap h5,
+footer .sitemap h6,
+footer .sitemap h5 > a,
+footer .sitemap h6 > a {
+  color: white;
+}
+footer .sitemap h5 > a,
+footer .sitemap h6 > a {
+  margin: 0 -10px;
+}
+footer .fbOpenSource {
+  display: block;
+  margin: 1em auto;
+  opacity: 0.4;
+  transition: opacity 0.15s ease-in-out;
+  width: 170px;
+}
+footer .fbOpenSource:hover {
+  opacity: 1.0;
+}
+footer .copyright {
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
 }
