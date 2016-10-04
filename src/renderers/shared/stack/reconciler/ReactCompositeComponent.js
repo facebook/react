@@ -1038,58 +1038,58 @@ var ReactCompositeComponent = {
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
-    var renderedComponent;
+    var renderedElement;
 
     if (__DEV__) {
-      renderedComponent = measureLifeCyclePerf(
+      renderedElement = measureLifeCyclePerf(
         () => inst.render(),
         this._debugID,
         'render'
       );
     } else {
-      renderedComponent = inst.render();
+      renderedElement = inst.render();
     }
 
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (renderedComponent === undefined &&
+      if (renderedElement === undefined &&
           inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
-        renderedComponent = null;
+        renderedElement = null;
       }
     }
 
-    return renderedComponent;
+    return renderedElement;
   },
 
   /**
    * @private
    */
   _renderValidatedComponent: function() {
-    var renderedComponent;
+    var renderedElement;
     if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
       ReactCurrentOwner.current = this;
       try {
-        renderedComponent =
+        renderedElement =
           this._renderValidatedComponentWithoutOwnerOrContext();
       } finally {
         ReactCurrentOwner.current = null;
       }
     } else {
-      renderedComponent =
+      renderedElement =
         this._renderValidatedComponentWithoutOwnerOrContext();
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
-      renderedComponent === null || renderedComponent === false ||
-      React.isValidElement(renderedComponent),
+      renderedElement === null || renderedElement === false ||
+      React.isValidElement(renderedElement),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'
     );
 
-    return renderedComponent;
+    return renderedElement;
   },
 
   /**
