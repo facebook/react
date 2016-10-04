@@ -4,82 +4,46 @@ title: Getting Started
 permalink: docs/getting-started.html
 next: tutorial.html
 redirect_from: "docs/index.html"
+redirect_from: "downloads.html"
 ---
 
-## JSFiddle
+There are several different ways to use React. The right one for you depends on how you're using it.
 
-The easiest way to start hacking on React is using the following JSFiddle Hello World examples:
+## Trying Out React
 
- * **[React JSFiddle](https://jsfiddle.net/reactjs/69z2wepo/)**
- * [React JSFiddle without JSX](https://jsfiddle.net/reactjs/5vjqabv3/)
+If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/o9gspf3e/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
 
-## Create React App
+## Creating a New Application
 
-**[Create React App](http://github.com/facebookincubator/create-react-app)** is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration. It requires Node 4 or higher.
+[`create-react-app`](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It handles webpack, babel, and live reloading, so you don't have to think about them.
 
-Note that it has [some limitations](https://github.com/facebookincubator/create-react-app#limitations) and is only useful for single-page applications. If you need more flexibility, or if you want to integrate React into an existing project, consider other options below.
-
-## Starter Pack
-
-If you're just getting started, you can download the starter kit. The starter kit includes prebuilt copies of React and React DOM for the browser, as well as a collection of usage examples to help you get started.
-
-<div class="buttons-unit downloads">
-  <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
-    Download Starter Kit {{site.react_version}}
-  </a>
-</div>
-
-In the root directory of the starter kit, create a `helloworld.html` with the following contents.
-
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello React!</title>
-    <script src="build/react.js"></script>
-    <script src="build/react-dom.js"></script>
-    <script src="https://unpkg.com/babel-core@5.8.38/browser.min.js"></script>
-  </head>
-  <body>
-    <div id="example"></div>
-    <script type="text/babel">
-      ReactDOM.render(
-        <h1>Hello, world!</h1>,
-        document.getElementById('example')
-      );
-    </script>
-  </body>
-</html>
+```bash
+npm install -g create-react-app
+create-react-app hello-world
+cd hello-world
+npm start
 ```
 
-The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](/react/docs/jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/babel">` and include Babel to actually perform the transformation in the browser. Open the html from a browser and you should already be able to see the greeting!
+`create-react-app` doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want.
 
-### Separate File
+## Adding React to an Existing Application
 
-Your React JSX code can live in a separate file. Create the following `src/helloworld.js`.
+We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you already have npm in your build pipeline, you can install it with:
 
-```javascript
-ReactDOM.render(
-  <h1>Hello, world!</h1>,
-  document.getElementById('example')
-);
+```bash
+npm install --save react react-dom
 ```
 
-Then reference it from `helloworld.html`:
+and import it from your code with:
 
-```html{10}
-<script type="text/babel" src="src/helloworld.js"></script>
+```js
+var React = require('react');
+var ReactDOM = require('react-dom');
+ReactDOM.render(<App />, document.getElementById('the-element-id'));
 ```
 
-Note that some browsers (Chrome, e.g.) will fail to load the file unless it's served via HTTP.
+If you use Bower, React is available via the `react` package:
 
-## Using React with npm or Bower
-
-You can also use React with package managers like npm or Bower. You can learn more in our [Package Managers](/react/docs/package-management.html) section.
-
-## Next Steps
-
-Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the starter kit's `examples` directory to learn more.
-
-Good luck, and welcome!
+```bash
+bower install --save react
+```
