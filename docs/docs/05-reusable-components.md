@@ -201,7 +201,7 @@ Or using the new ES6 arrow syntax:
 
 ```javascript
 const Greeting = (props) => (
-  <h1>Hello, {props.name}</h1v>
+  <h1>Hello, {props.name}</h1>
 );
 
 ReactDOM.render(
@@ -217,7 +217,7 @@ However, you may still specify `.propTypes` and `.defaultProps` by setting them 
 ```javascript
 function Greeting(props) {
   return (
-    <h1>Hello, {props.name}</h1v>
+    <h1>Hello, {props.name}</h1>
   );
 }
 
