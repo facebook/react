@@ -105,8 +105,14 @@ var ReactPlayground = React.createClass({
 
   getDefaultProps: function () {
     return {
-      transformer: function (code) {
-        return babel.transform(code).code;
+      transformer: function (code, options) {
+        var presets = ['react'];
+        if (!options || !options.skipES2015Transform) {
+          presets.push('es2015');
+        }
+        return Babel.transform(code, {
+          presets: presets
+        }).code;
       },
       editorTabTitle: 'Live JSX Editor',
       showCompiledJSTab: true,
@@ -130,15 +136,15 @@ var ReactPlayground = React.createClass({
     this.setState({ mode: mode });
   },
 
-  compileCode: function () {
-    return this.props.transformer(this.state.code);
+  compileCode: function (options) {
+    return this.props.transformer(this.state.code, options);
   },
 
   render: function () {
     var isJS = this.state.mode === this.MODES.JS;
     var compiledCode = '';
     try {
-      compiledCode = this.compileCode();
+      compiledCode = this.compileCode({ skipES2015Transform: true });
     } catch (err) {}
 
     var JSContent = React.createElement(CodeMirrorEditor, {
@@ -150,7 +156,7 @@ var ReactPlayground = React.createClass({
       lineNumbers: this.props.showLineNumbers,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 130
+        lineNumber: 136
       }
     });
 
@@ -162,7 +168,7 @@ var ReactPlayground = React.createClass({
       lineNumbers: this.props.showLineNumbers,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 140
+        lineNumber: 146
       }
     });
 
@@ -175,7 +181,7 @@ var ReactPlayground = React.createClass({
         className: JSTabClassName,
         onClick: this.handleCodeModeSwitch.bind(this, this.MODES.JS), __source: {
           fileName: _jsxFileName,
-          lineNumber: 154
+          lineNumber: 160
         }
       },
       'Compiled JS'
@@ -187,7 +193,7 @@ var ReactPlayground = React.createClass({
         className: JSXTabClassName,
         onClick: this.handleCodeModeSwitch.bind(this, this.MODES.JSX), __source: {
           fileName: _jsxFileName,
-          lineNumber: 161
+          lineNumber: 167
         }
       },
       this.props.editorTabTitle
@@ -197,7 +203,7 @@ var ReactPlayground = React.createClass({
       'div',
       { className: 'playground', __source: {
           fileName: _jsxFileName,
-          lineNumber: 168
+          lineNumber: 174
         }
       },
       React.createElement(
@@ -205,7 +211,7 @@ var ReactPlayground = React.createClass({
         {
           __source: {
             fileName: _jsxFileName,
-            lineNumber: 169
+            lineNumber: 175
           }
         },
         JSXTab,
@@ -215,7 +221,7 @@ var ReactPlayground = React.createClass({
         'div',
         { className: 'playgroundCode', __source: {
             fileName: _jsxFileName,
-            lineNumber: 173
+            lineNumber: 179
           }
         },
         isJS ? JSContent : JSXContent
@@ -224,12 +230,12 @@ var ReactPlayground = React.createClass({
         'div',
         { className: 'playgroundPreview', __source: {
             fileName: _jsxFileName,
-            lineNumber: 176
+            lineNumber: 182
           }
         },
         React.createElement('div', { ref: 'mount', __source: {
             fileName: _jsxFileName,
-            lineNumber: 177
+            lineNumber: 183
           }
         })
       )
@@ -256,14 +262,16 @@ var ReactPlayground = React.createClass({
     } catch (e) {}
 
     try {
-      var compiledCode = this.compileCode();
+      var compiledCode;
       if (this.props.renderCode) {
+        compiledCode = this.compileCode({ skipES2015Transform: true });
         ReactDOM.render(React.createElement(CodeMirrorEditor, { codeText: compiledCode, readOnly: true, __source: {
             fileName: _jsxFileName,
-            lineNumber: 207
+            lineNumber: 214
           }
         }), mountNode);
       } else {
+        compiledCode = this.compileCode({ skipES2015Transform: false });
         eval(compiledCode);
       }
     } catch (err) {
@@ -272,7 +280,7 @@ var ReactPlayground = React.createClass({
           'div',
           { className: 'playgroundError', __source: {
               fileName: _jsxFileName,
-              lineNumber: 216
+              lineNumber: 224
             }
           },
           err.toString()
