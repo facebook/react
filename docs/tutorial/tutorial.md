@@ -10,7 +10,7 @@ permalink: /tutorial/tutorial.html
 
 Today, we're going to build an interactive tic-tac-toe game. We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before.
 
-If you like, you can check out the final result here: <a href="http://s.codepen.io/spicyj/debug/qNOZOP" target="_blank">FinalR Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: <a href="http://s.codepen.io/spicyj/debug/qNOZOP" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
 
 ## What is React?
 
@@ -41,7 +41,7 @@ We'll get to the funny XML-like tags in a second. Your components tell React wha
 
 Here, ShoppingList is a **React component class**, or **React component type**. A component takes in parameters, called `props`, and returns a hierarchy of views to display via the `render` method.
 
-The `render` method return a *description* of what you want to render, and then React takes that description and renders it to the screen. In particular, `render` returns a **React element**, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The `<div />` syntax is transformed at build time to `React.createElement('div')`. The example above is equivalent to
+The `render` method return a *description* of what you want to render, and then React takes that description and renders it to the screen. In particular, `render` returns a **React element**, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The `<div />` syntax is transformed at build time to `React.createElement('div')`. The example above is equivalent to:
 
 ```javascript
 return React.createElement('div', {className: 'shopping-list'},
@@ -74,11 +74,17 @@ The Square component renders a single `<div>`, the Board renders 9 squares, and 
 
 Just to get our feet wet, let's try passing some data from the Board component to the Square component. In Board's `_renderSquare` method, change the code to return `<Square value={i} />` then change Square's render method to show that value by replacing `{/* TODO */}` with `{this.props.value}`.
 
-You should see a number in each square in the rendered output.
+Before:
+
+![React Devtools](/react/img/tutorial/tictac-empty.png)
+
+After: You should see a number in each square in the rendered output.
+
+![React Devtools](/react/img/tutorial/tictac-numbers.png)
 
 ##An Interactive Component
 
-Let's make the Square component fill in an "X" when you click it. Try changing the opening tag to
+Let's make the Square component fill in an "X" when you click it. Try changing the tag returned in the `render()` function of the `Square` class to:
 
 ```html
 <button className="square" onClick={() => alert('click')}>
@@ -96,6 +102,8 @@ class Square extends React.Component {
       value: null,
     };
   }
+  ...
+}
 ```
 
 In JavaScript classes, you need to explicitly call `super();` when defining the constructor of a subclass.
@@ -142,6 +150,7 @@ class Board extends React.Component {
       squares: Array(9).fill(null),
     };
   }
+}
 ```
 
 We'll fill it in later so that a board looks something like
@@ -192,7 +201,7 @@ Square no longer keeps its own state; it receives its value from its parent (Boa
 
 ## Functional Components
 
-You can delete the `constructor` from Square; we won't need it any more. In fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
+You can delete the `constructor` from `Square`; we won't need it any more. In fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
 
 ```javascript
 function Square(props) {
@@ -241,7 +250,7 @@ render() {
 }
 ```
 
-You might also want to change `_handleClick` to return early and ignore the click if someone has already won the game or if a square is already filled:
+You can now change `_handleClick` to return early and ignore the click if someone has already won the game or if a square is already filled:
 
 ```javascript
 _handleClick(i) {
@@ -280,9 +289,9 @@ history = [
 ]
 ```
 
-We'll want the top-level Game component to be responsible for displaying the list of moves. So just as we pulled the state up before from Square into Board, let's now pull it up again from Board into Game – so that we have all the information we need at the top level.
+We'll want the top-level `Game` component to be responsible for displaying the list of moves. So just as we pulled the state up before from `Square` into `Board`, let's now pull it up again from `Board` into `Game` – so that we have all the information we need at the top level.
 
-Set up the initial state for Game:
+First, set up the initial state for `Game`:
 
 ```javascript
 class Game extends React.Component {
@@ -297,15 +306,17 @@ class Game extends React.Component {
       }],
     };
   }
+  ...
+}
 ```
 
-then change Board so that it takes `squares` via props and has its own `onClick` prop specified by `Game`, like the transformation we made for Square and Board earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
+Then change `Board` so that it takes `squares` via props and has its own `onClick` prop specified by `Game`, like the transformation we made for `Square` and `Board` earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
 
 ```javascript
-return <Square value={squares[i]} onClick={() => this.props.onClick(i)} />;
+return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />;
 ```
 
-Game's `render` should look at the most recent history entry and can take over calculating the game status:
+`Game`'s `render` should look at the most recent history entry and can take over calculating the game status:
 
 ```javascript
 const history = this.state.history;
@@ -377,7 +388,8 @@ const moves = history.map((step, i) => {
 
 For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says
 
-(IMPORTANT) Warning: Each child in an array or iterator should have a unique "key" prop. Check the render method of "Game".
+>  Warning:
+>  Each child in an array or iterator should have a unique "key" prop. Check the render method of "Game".
 
 Let's talk about what that warning means.
 
@@ -401,8 +413,8 @@ to
 <li>Claudia: 8 tasks left</li>
 <li>Alexa: 5 tasks left</li>
 ```
-cript
-To a human eye, it looks likely that Alexa and Ben swapped places and Claudia was added – but React is just a computer program and doesn't know what you intended it to do. As a result, React asks you to specify a //key// property on each element in a list, a string to differentiate each component from its siblings. In this case, `alexa`, `ben`, `claudia` might be sensible keys; if the items correspond to objects in a database, the database ID is usually a good choice:
+
+To a human eye, it looks likely that Alexa and Ben swapped places and Claudia was added – but React is just a computer program and doesn't know what you intended it to do. As a result, React asks you to specify a *key* property on each element in a list, a string to differentiate each component from its siblings. In this case, `alexa`, `ben`, `claudia` might be sensible keys; if the items correspond to objects in a database, the database ID is usually a good choice:
 
 ```html
 <li key={user.id}>{user.name}: {user.taskCount} tasks left</li>
