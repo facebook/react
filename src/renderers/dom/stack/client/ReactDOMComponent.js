@@ -98,19 +98,17 @@ function assertValidProps(component, props) {
     );
     invariant(
       typeof props.dangerouslySetInnerHTML === 'object' &&
-      HTML in props.dangerouslySetInnerHTML &&
-      (!props.dangerouslySetInnerHTML[HTML] || typeof props.dangerouslySetInnerHTML[HTML] === 'string'),
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-      'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
-      'for more information.'
-    );
-    invariant(
-      typeof props.dangerouslySetInnerHTML === 'object' &&
       HTML in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
       'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
     );
+    if (props.dangerouslySetInnerHTML[HTML]) {
+      warning(
+        props.dangerouslySetInnerHTML[HTML].toString !== Object.prototype.toString,
+        '`props.dangerouslySetInnerHTML` should be a string.'
+      );
+    }
   }
   if (__DEV__) {
     warning(

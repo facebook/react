@@ -946,7 +946,6 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should validate against use of innerHTML', () => {
-
       spyOn(console, 'error');
       mountComponent({innerHTML: '<span>Hi Jim!</span>'});
       expectDev(console.error.calls.count()).toBe(1);
@@ -971,12 +970,14 @@ describe('ReactDOMComponent', () => {
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
       );
+    });
 
-      expect(function() {
-        mountComponent({dangerouslySetInnerHTML: {__html: {foo: 'bar'} } });
-      }).toThrowError(
-        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.'
+    it('should warn if dangerouslySetInnerHTML is not a string', () => {
+      spyOn(console, 'error');
+      mountComponent({dangerouslySetInnerHTML: {__html: {foo: 'bar'} } });
+      expect(console.error.calls.count(0)).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        '`props.dangerouslySetInnerHTML` should be a string.'
       );
     });
 
