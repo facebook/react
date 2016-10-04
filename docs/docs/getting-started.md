@@ -15,7 +15,7 @@ If you're just interested in playing around with React, you can use JSFiddle. Tr
 
 ## Creating a New Application
 
-[`create-react-app`](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It handles webpack, babel, and live reloading, so you don't have to think about them.
+[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It handles webpack, babel, and live reloading, so you don't have to think about them.
 
 ```bash
 npm install -g create-react-app
@@ -24,7 +24,7 @@ cd hello-world
 npm start
 ```
 
-`create-react-app` doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want.
 
 ## Adding React to an Existing Application
 
