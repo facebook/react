@@ -113,7 +113,7 @@ function render2() {
 
 There are several different ways to specify props in JSX.
 
-1. JavaScript Expressions
+### JavaScript Expressions
 
 You can pass any JavaScript expression as a prop, by surrounding it with `{}`. For example, in this JSX:
 
@@ -137,7 +137,7 @@ function NumberDescriber(props) {
 }
 ```
 
-2. String Literals
+### String Literals
 
 You can pass a string literal as a prop. These two JSX expressions are equivalent:
 
@@ -157,7 +157,7 @@ When you pass a string literal, its value is HTML-unescaped. So these two JSX ex
 
 This behavior is usually not relevant. It's useful for `children`, but not for most props. It's only mentioned here for completeness.
 
-3. Props Default to `true`
+### Props Default to "True"
 
 If you pass no value for a prop, it defaults to `true`. These two JSX expressions are equivalent:
 
@@ -169,7 +169,7 @@ If you pass no value for a prop, it defaults to `true`. These two JSX expression
 
 In general, we don't recommend using this. It's more consistent to just use the second form and explicitly pass `true`. This behavior is just there so that it matches the behavior of HTML.
 
-4. Spread Attributes
+### Spread Attributes
 
 If you already have `props` as an object, and you want to pass it in JSX, you can use `...` as a "spread" operator to pass the whole props object. These two render functions are equivalent:
 
@@ -190,7 +190,7 @@ Spread attributes can be useful when you are building generic containers. Howeve
 
 In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: `props.children`. There are several different ways to pass children:
 
-1. String Literals
+### String Literals
 
 You can put a string between the opening and closing tags and `props.children` will just be that string. This is useful for many of the built-in HTML elements. For example:
 
@@ -204,7 +204,7 @@ This is valid JSX, and `props.children` in `MyComponent` will simply be the stri
 <div>This is valid HTML &amp; JSX at the same time.</div>
 ```
 
-2. JSX Children
+### JSX Children
 
 You can provide more JSX as the children. This is useful for displaying nested components:
 
@@ -231,7 +231,7 @@ A React component can't return multiple JSX elements, but a single JSX element c
 
 When you pass JSX as the children, `props.children` does not actually let you access the child component from the parent. Instead, it lets you access the return value of `React.createElement` calls using the `React.Children` helper library. Generally, accessing children in this way is only useful to return in a render function, rather than modifying or altering the children.
 
-3. JavaScript Expressions
+### JavaScript Expressions
 
 You can pass any JavaScript expression as children, by enclosing it within `{}`. For example, these expressions are equivalent:
 
