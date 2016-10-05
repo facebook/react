@@ -4,7 +4,7 @@ title: React Without JSX
 permalink: docs/react-without-jsx.html
 ---
 
-JSX is not a requirement for using React. Using React without JSX is especially convenient when you don't want to set up transpilation in your build environment.
+JSX is not a requirement for using React. Using React without JSX is especially convenient when you don't want to set up compilation in your build environment.
 
 Each JSX element is just syntactic sugar for calling `React.createElement(component, props, children)`. So, anything you can do with JSX can also be done with just plain JavaScript.
 
@@ -34,7 +34,7 @@ ReactDOM.render(React.createElement(Hello, {toWhat: 'World'}, null),
                 document.getElementById('root'));
 ```
 
-If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel transpiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
+If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel compiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
 
 The component can either be provided as a string, or as a subclass of `React.Component`, or a plain function for stateless components.
 

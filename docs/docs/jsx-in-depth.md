@@ -10,7 +10,7 @@ Fundamentally, JSX just provides syntactic sugar for the `React.createElement(co
 <MyComponent prop1={'one'} prop2={'two'}>stuff</MyComponent>
 ```
 
-transpiles into:
+compiles into:
 
 ```js
 React.createElement(MyComponent, {prop1: 'one', prop2: 'two'}, 'stuff')
@@ -22,21 +22,21 @@ You can also use the self-closing form of the tag if there are no children. So:
 <div className={'blorp'} />
 ```
 
-transpiles into:
+compiles into:
 
 ```js
 React.createElement('div', {className: 'blorp'}, null)
 ```
 
-If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel transpiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
+If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel compiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
 
 ## Specifying The React Element Type
 
 The first part of a JSX tag determines the type of the React element.
 
-Capitalized types indicate that the JSX tag is referring to a React component. These tags get transpiled into a direct reference to the named variable, so if you use the JSX `<Foo />` expression, `Foo` must be in scope.
+Capitalized types indicate that the JSX tag is referring to a React component. These tags get compiled into a direct reference to the named variable, so if you use the JSX `<Foo />` expression, `Foo` must be in scope.
 
-Since JSX transpiles into calls to `React.createElement`, the `React` library must also always be in scope from your JSX code.
+Since JSX compiles into calls to `React.createElement`, the `React` library must also always be in scope from your JSX code.
 
 For example, both of the imports are necessary in this code, even though 'React' and 'MyComponent' are not directly referenced from JavaScript:
 
