@@ -11,7 +11,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 
 ## Trying Out React
 
-If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/o9gspf3e/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
+If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/cnguj5va/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
 
 If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
@@ -41,8 +41,8 @@ npm install --save react react-dom
 and import it from your code with something like:
 
 ```js
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 class App extends React.Component {
   render() {
