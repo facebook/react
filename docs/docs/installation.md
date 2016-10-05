@@ -13,7 +13,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 
 If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/cnguj5va/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
 
-If you prefer to use your own text editor, you can also download [this HTML file](/react/downloads/single-file-example.html), edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
+If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
 ## Creating a Single Page Application
 
