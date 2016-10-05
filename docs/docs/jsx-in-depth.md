@@ -81,7 +81,7 @@ function hello(props) {
 
 export default function HelloWorld() {
   // This code attempts to create an HTML <hello> tag and fails
-  return <hello {toWhat='World'} />
+  return <hello toWhat="World" />
 }
 ```
 
