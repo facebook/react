@@ -9,12 +9,12 @@ next: rendering-elements.html
 Consider this variable declaration:
 
 ```js
-let element = <h1>Hello, world!</h1>;
+const element = <h1>Hello, world!</h1>;
 ```
 
 This funny tag syntax is neither a string nor HTML.
 
-It is called JSX, and it is a syntax extension to JavaScript. We recommend using it with React to describe what the UI should look like. JSX may remind you of a template language, but it comes with a full power of JavaScript.
+It is called JSX, and it is a syntax extension to JavaScript. We recommend using it with React to describe what the UI should look like. JSX may remind you of a template language, but it comes with the full power of JavaScript.
 
 >**Note:**
 >
@@ -26,9 +26,9 @@ It is called JSX, and it is a syntax extension to JavaScript. We recommend using
 
 ### Embedding Expressions in JSX
 
-JSX comes with a full power of JavaScript.
+JSX comes with the full power of JavaScript.
 
-You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in the curly braces.
+You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in curly braces.
 
 For example, `2 + 2`, `user.name`, and `formatName(user)` are all valid expressions:
 
@@ -37,12 +37,12 @@ function formatName(user) {
   return user.firstName + ' ' + user.lastName;
 }
 
-let user = {
+const user = {
   firstName: 'Harper',
   lastName: 'Perez'
 };
 
-let element = (
+const element = (
   <h1>
     Hello, {formatName(user)}!
   </h1>
@@ -78,13 +78,13 @@ function getGreeting(user) {
 You may use quotes to specify string literals as attributes:
 
 ```js
-let element = <div tabIndex="0"></div>;
+const element = <div tabIndex="0"></div>;
 ```
 
-You may also use the curly braces to embed a JavaScript expression in an attribute:
+You may also use curly braces to embed a JavaScript expression in an attribute:
 
 ```js
-let element = <img src={user.avatarUrl}></img>;
+const element = <img src={user.avatarUrl}></img>;
 ```
 
 ### Specifying Children with JSX
@@ -92,13 +92,13 @@ let element = <img src={user.avatarUrl}></img>;
 If a tag is empty, you may close it immediately with `/>`, like in XML:
 
 ```js
-let element = <img src={user.avatarUrl} />;
+const element = <img src={user.avatarUrl} />;
 ```
 
 JSX tags may contain children:
 
 ```js
-let element = (
+const element = (
   <div>
     <h1>Hello!</h1>
     <h2>Good to see you here.</h2>
@@ -119,7 +119,7 @@ Babel compiles JSX down to `React.createElement()` calls.
 These two examples are identical:
 
 ```js
-let element = (
+const element = (
   <h1 className="greeting">
     Hello, world!
   </h1>
@@ -127,7 +127,7 @@ let element = (
 ```
 
 ```js
-let element = React.createElement(
+const element = React.createElement(
   'h1',
   {className: 'greeting'},
   'Hello, world!'
@@ -140,7 +140,7 @@ We will get to what "React elements" are in the next section. For now, you can t
 
 ```js
 // Note: this structure is simplified
-let element = {
+const element = {
   type: 'h1',
   props: {
     className: 'greeting',
@@ -158,7 +158,7 @@ React later reads these objects and uses them to construct the DOM and keep it u
 >```js
 // JSX compilation error:
 // "Adjacent JSX elements must be wrapped in an enclosing tag"
-let element = (
+const element = (
   <h1>Hello!</h1>
   <h2>Good to see you here.</h2>
 );
@@ -167,7 +167,7 @@ let element = (
 >We can fix it by adding a root tag to the JSX expression:
 >
 >```js{2,5}
-let element = (
+const element = (
   <div>
     <h1>Hello!</h1>
     <h2>Good to see you here.</h2>
@@ -182,12 +182,12 @@ It is important to stress that JSX produces objects rather than string literals.
 This is why it is safe to embed user input in it:
 
 ```js
-let title = response.potentiallyMaliciousInput;
+const title = response.potentiallyMaliciousInput;
 // This is safe:
-let element = <h1>{title}</h1>;
+const element = <h1>{title}</h1>;
 ```
 
-React will escape any values embedded in JSX before rendering them.
+React DOM by default escapes any values embedded in JSX before rendering them.
 
 ### Learn More About JSX
 
