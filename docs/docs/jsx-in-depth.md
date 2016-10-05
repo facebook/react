@@ -206,22 +206,23 @@ This is valid JSX, and `props.children` in `MyComponent` will simply be the stri
 <div>This is valid HTML &amp; JSX at the same time.</div>
 ```
 
-JSX removes whitespace at the beginning and ending of a line. It also removes blank lines. So these all render to the same thing:
+JSX removes whitespace at the beginning and ending of a line. It also removes blank lines. New lines adjacent to tags are removed; new lines that occur in the middle of string literals are condensed into a single space. So these all render to the same thing:
 
 ```js
-<div>Hello</div>
+<div>Hello World</div>
 
-<div>Hello
+<div>
+  Hello World
 </div>
 
 <div>
   Hello
+  World
 </div>
 
 <div>
 
-  Hello
-
+  Hello World
 </div>
 ```
 
