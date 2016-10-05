@@ -16,14 +16,6 @@ This funny tag syntax is neither a string nor HTML.
 
 It is called JSX, and it is a syntax extension to JavaScript. We recommend using it with React to describe what the UI should look like. JSX may remind you of a template language, but it comes with the full power of JavaScript.
 
->**Note:**
->
->Many people get turned off by JSX the first time they see it. One might think it violates separation of concerns but we believe [otherwise](https://www.youtube.com/watch?v=x7cQ3mrcKaY).
->
->We encourage you to [give it five minutes](https://signalvnoise.com/posts/3124-give-it-five-minutes). Facebook and many other companies successfully use it in production both for simple and complex apps.
->
->Also note that JSX is optional, and you can [use React without JSX](/react/docs/react-without-jsx.html).
-
 ### Embedding Expressions in JSX
 
 JSX comes with the full power of JavaScript.
@@ -49,13 +41,9 @@ const element = (
 );
 ```
 
-**[Try it on Codepen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)**
+[Try it on Codepen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
 
-Note that we wrapped JSX in parens and split it over multiple lines for readability.
-
->**Caveat:**
->
->You can't use `if` or `for` statements *inside* of JSX because they are not [expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions).
+We wrapped JSX in parentheses and split it over multiple lines for readability. This also helps avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
 
 ### JSX is an Expression Too
 
@@ -108,9 +96,21 @@ const element = (
 
 >**Caveat:**
 >
->Since JSX is closer to JavaScript than HTML, React DOM uses `camelCase` property names instead of HTML attribute names.
+>Since JSX is closer to JavaScript than HTML, React DOM uses `camelCase` property naming convention instead of HTML attribute names.
 >
 >For example, `class` becomes [`className`](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) in JSX, and `tabindex` becomes [`tabIndex`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/tabIndex).
+
+### JSX Prevents Injection Attacks
+
+It is safe to embed user input in JSX:
+
+```js
+const title = response.potentiallyMaliciousInput;
+// This is safe:
+const element = <h1>{title}</h1>;
+```
+
+By default, React DOM escapes any values embedded in JSX before rendering them.
 
 ### JSX Represents Objects
 
@@ -134,8 +134,6 @@ const element = React.createElement(
 );
 ```
 
-We will get to what "React elements" are in the next section. For now, you can think of them as descriptions of what you want to see on the screen.
-
 `React.createElement()` performs a few checks to help you write bug-free code but essentially it creates an object like this:
 
 ```js
@@ -149,58 +147,10 @@ const element = {
 };
 ```
 
-React later reads these objects and uses them to construct the DOM and keep it up to date.
+These objects are called "React elements". You can think of them as descriptions of what you want to see on the screen. React reads these objects and uses them to construct the DOM and keep it up to date.
 
->**Caveat:**
+We will explore rendering React elements to the DOM in the next section.
+
+>**Tip:**
 >
->Every tag becomes a function call so you can't leave two tags without a parent.
->
->```js
-// JSX compilation error:
-// "Adjacent JSX elements must be wrapped in an enclosing tag"
-function getGreeting() {
-  return (
-    <h1>Hello!</h1>
-    <h2>Good to see you here.</h2>
-  );
-}
-```
->
->We can fix it by adding a root tag to the JSX expression:
->
->```js{3,6}
-function getGreeting() {
-  return (
-    <div>
-      <h1>Hello!</h1>
-      <h2>Good to see you here.</h2>
-    </div>
-  );
-}
-```
-
-### JSX Prevents Injection Attacks
-
-It is important to stress that JSX produces objects rather than string literals.
-
-This is why it is safe to embed user input in it:
-
-```js
-const title = response.potentiallyMaliciousInput;
-// This is safe:
-const element = <h1>{title}</h1>;
-```
-
-React DOM by default escapes any values embedded in JSX before rendering them.
-
-### Learn More About JSX
-
-This is enough JSX knowledge to get you started.
-
-You can learn more about it from these two advanced guides:
-
-* [JSX in Depth](/react/docs/jsx-in-depth.html).
-
-* [React without JSX](/react/docs/react-without-jsx.html).
-
-We recommend searching for a "Babel" syntax scheme for your editor of choice so that both ES6 and JSX code is properly highlighted.
+>We recommend searching for a "Babel" syntax scheme for your editor of choice so that both ES6 and JSX code is properly highlighted.

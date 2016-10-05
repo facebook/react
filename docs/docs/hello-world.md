@@ -14,7 +14,7 @@ const container = document.getElementById('root');
 ReactDOM.render(element, container);
 ```
 
-**[Try it on Codepen.](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010)**
+[Try it on Codepen.](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010)
 
 It renders a header saying "Hello World" on the page.
 
