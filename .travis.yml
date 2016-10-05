@@ -23,7 +23,11 @@ before_install:
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
-      if [ "$TRAVIS_BRANCH" = "$REACT_WEBSITE_BRANCH" ] && [ "$TRAVIS_PULL_REQUEST" = false ]; then
+      if [ "$TRAVIS_PULL_REQUEST" = false ]; then
+        if [ "$TRAVIS_BRANCH" != new-docs ]; then
+          echo "This code should only run on the new-docs branch. Please revert it."
+          exit 1
+        fi
         set -e
 
         GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
@@ -42,7 +46,7 @@ script:
         if ! git diff-index --quiet HEAD --; then
           git add -A .
           git commit -m "Rebuild website"
-          git push origin gh-pages
+          git push -f https://reactjs-bot@github.com/reactjs-bot/react.git gh-pages
         fi
         popd
       fi
