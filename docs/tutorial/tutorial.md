@@ -193,15 +193,47 @@ _handleClick(i) {
 }
 ```
 
-We call `.slice()` to copy the `squares` array instead of mutating the existing array – this will come in handy later and we encourage treating your data structures as immutable throughout your app because it makes components easier to debug and easier to refactor.
+We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important. 
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 
-Square no longer keeps its own state; it receives its value from its parent (Board) and informs its parent when it's clicked. We call components like this **controlled components**.
+Square no longer keeps its own state; it receives its value from its parent `Board` and informs its parent when it's clicked. We call components like this **controlled components**.
+
+## Why Immutability Is Important
+
+In the previous code example, I suggest using the `.slice()` operator to copy the `squares` array prior to making changges and to prevent mutating the existing array. Let's talk about what this means and why it an important concept to learn.
+
+There are generally two ways for changing data. The first, and most common method in past, has been to *mutate* the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.
+
+#### Data change with mutation
+```javascript
+var player = {score:  1}
+player.score = 2 // same object mutated {score: 2}
+```
+
+#### Data change without mutation
+```javascript
+var player = {score: 1}
+player = {...player, score: 2} // new object not mutated {score: 2}
+```
+
+The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.
+
+#### Tracking Changes
+
+Determining if a mutated object has changed is complex because changes are made directly to the object. This then requires comparing the current object to a previous copy, traversing the entire object tree, and comparing each variable and value. This process can become increasingly complex.
+
+Determining how a immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That's it.
+
+### Determining When To Re-render in React
+
+The biggest benefit of immutability in React comes when you build simple _pure components_. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.
+
+To learn how you can build *pure components* take a look at [shouldComponentUpdate()](https://facebook.github.io/react/docs/update.html). Also, take a look at the [immutability.js](https://facebook.github.io/immutable-js/) library to strictly enforce immutable data.
 
 ## Functional Components
 
-You can delete the `constructor` from `Square`; we won't need it any more. In fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
+Back to our project, you can now delete the `constructor` from `Square`; we won't need it any more. In fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
 
 ```javascript
 function Square(props) {
