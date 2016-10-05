@@ -44,8 +44,8 @@ For example, both of the imports are necessary in this code, even though 'React'
 import React from 'react';
 import MyComponent from './MyComponent';
 
-export default function() {
-  return <MyComponent />;
+export default function MyRedComponent() {
+  return <MyComponent color="red" />;
 }
 ```
 
@@ -62,7 +62,7 @@ var MyComponents = {
   }
 }
 
-export default function() {
+export default function BlueDatePicker() {
   return <MyComponents.DatePicker color={'blue'} />;
 }
 ```
@@ -79,7 +79,7 @@ function hello(props) {
   return <div>Hello {props.toWhat}</div>;
 }
 
-export default function() {
+export default function HelloWorld() {
   // This code attempts to create an HTML <hello> tag and fails
   return <hello {toWhat='World'} />
 }
