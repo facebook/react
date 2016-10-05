@@ -7,13 +7,13 @@ permalink: docs/jsx-in-depth.html
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, children)` function. The JSX code:
 
 ```js
-<MyComponent prop1={'one'} prop2={'two'}>stuff</MyComponent>
+<MyComponent prop1="one" prop2={2}>stuff</MyComponent>
 ```
 
 compiles into:
 
 ```js
-React.createElement(MyComponent, {prop1: 'one', prop2: 'two'}, 'stuff')
+React.createElement(MyComponent, {prop1: 'one', prop2: 2}, 'stuff')
 ```
 
 You can also use the self-closing form of the tag if there are no children. So:
