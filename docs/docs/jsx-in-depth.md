@@ -32,7 +32,7 @@ If you want to test out how some specific JSX is converted into JavaScript, you 
 
 ## HTML Tags and React Components
 
-The first part of a JSX tag determines the type of the JSX element.
+The first part of a JSX tag determines the type of the React element.
 
 Capitalized types indicate that the JSX tag is referring to a React component. These tags get transpiled into a direct reference to the named variable, so if you use the JSX `<Foo />` expression, `Foo` must be in scope.
 
@@ -91,7 +91,7 @@ export default function() {
 }
 ```
 
-You cannot use a general expression as the JSX element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. For example, if you have a `findComponent()` function that returns a component, and you want to render one:
+You cannot use a general expression as the React element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. For example, if you have a `findComponent()` function that returns a component, and you want to render one:
 
 ```js
 import React from 'react';
@@ -227,7 +227,7 @@ You can mix together different types of children, so you can use string literals
 </div>
 ```
 
-A React component can't return multiple JSX elements, but a single JSX element can have multiple children, so if you want a component to render multiple things you can wrap it in a `div` like this.
+A React component can't return multiple React elements, but a single JSX expression can have multiple children, so if you want a component to render multiple things you can wrap it in a `div` like this.
 
 When you pass JSX as the children, `props.children` does not actually let you access the child component from the parent. Instead, it lets you access the return value of `React.createElement` calls using the `React.Children` helper library. Generally, accessing children in this way is only useful to return in a render function, rather than modifying or altering the children.
 
