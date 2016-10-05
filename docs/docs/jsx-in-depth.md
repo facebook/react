@@ -307,7 +307,7 @@ function Repeat(props) {
 }
 ```
 
-This usage is not common, but it works if you want to stretch what JSX is capable of.
+Children passed to a custom component can be anything, as long as that component transforms them into something React can understand before rendering. This usage is not common, but it works if you want to stretch what JSX is capable of.
 
 `false`, `null`, 'undefined', and 'true' are valid children. They simply don't render. These JSX expressions will all render to the same thing:
 
