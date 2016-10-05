@@ -67,7 +67,9 @@ export default function BlueDatePicker() {
 }
 ```
 
-If the element type starts with a lowercase letter, React will try to create a React element that maps directly to an HTML tag, rather than creating an element based on a custom component. In general, name your components starting with capital letters, and this will be fine. If you do have a component that starts with a lowercase letter, assign it to a capitalized variable before using it in JSX.
+When an element type starts with a lowercase letter, it refers to a built-in component like `<div>` or `<span>` and results in a string `'div'` or `'span'` passed to `React.createElement`. Types that start with a capital letter like `<Foo />` compile to `React.createElement(Foo)` and correspond to a component defined or imported in your JavaScript file.
+
+We recommend naming components with a capital letter. If you do have a component that starts with a lowercase letter, assign it to a capitalized variable before using it in JSX.
 
 For example, this code will not run as expected:
 
