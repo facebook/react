@@ -62,7 +62,7 @@ var MyComponents = {
   }
 }
 
-export default function BlueDatePicker() {
+function BlueDatePicker() {
   return <MyComponents.DatePicker color={'blue'} />;
 }
 ```
@@ -81,7 +81,7 @@ function hello(props) {
   return <div>Hello {props.toWhat}</div>;
 }
 
-export default function HelloWorld() {
+function HelloWorld() {
   // This code attempts to create an HTML <hello> tag and fails
   return <hello toWhat="World" />;
 }
