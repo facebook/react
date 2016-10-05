@@ -41,8 +41,8 @@ npm install --save react react-dom
 and import it from your code with something like:
 
 ```js
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 class App extends React.Component {
   render() {
