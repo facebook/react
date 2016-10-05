@@ -21,6 +21,12 @@ defaults:
   values:
     sectionid: blog
 - scope:
+    path: tutorial
+    type: pages
+  values:
+    layout: tutorial
+    sectionid: tutorial
+- scope:
     path: docs
     type: pages
   values:

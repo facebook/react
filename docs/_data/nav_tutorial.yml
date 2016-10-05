@@ -1,0 +1,52 @@
+- title: Tutorial
+  items:
+    - id: tutorial
+      title: Overview
+      subitems:
+        - id: what-were-building 
+          title: What We're Building
+          href: /react/tutorial/tutorial.html#what-were-building
+        - id: what-is-react
+          title: What is React?
+          href: /react/tutorial/tutorial.html#what-is-react
+        - id: getting-started
+          title: Getting Started
+          href: /react/tutorial/tutorial.html#getting-started
+        - id: passing-data-through-props
+          title: Passing Data Through Props
+          href: /react/tutorial/tutorial.html#passing-data-through-props
+        - id: an-interactive-component
+          title: An Interactive Component
+          href: /react/tutorial/tutorial.html#an-interactive-component
+        - id: developer-tools 
+          title: Developer Tools
+          href: /react/tutorial/tutorial.html#developer-tools
+    - id: lifting-state-up
+      title: Lifting State Up
+      href: /react/tutorial/tutorial.html#lifting-state-up
+      subitems:
+        - id: functional-components 
+          title: Functional Components
+          href: /react/tutorial/tutorial.html#functional-components
+        - id: taking-turns
+          title: Taking Turns
+          href: /react/tutorial/tutorial.html#taking-turns
+        - id: declaring-a-winner
+          title: Declaring a Winner
+          href: /react/tutorial/tutorial.html#declaring-a-winner
+    - id: storing-a-history
+      title: Storing A History
+      href: /react/tutorial/tutorial.html#storing-a-history
+      subitems:
+        - id: showing-the-moves
+          title: Showing the Moves
+          href: /react/tutorial/tutorial.html#showing-the-moves
+        - id: keys
+          title: Keys
+          href: /react/tutorial/tutorial.html#keys
+        - id: implementing-time-travel 
+          title: Implementing Time Travel
+          href: /react/tutorial/tutorial.html#implementing-time-travel
+        - id: wrapping-up
+          title: Wrapping Up
+          href: /react/tutorial/tutorial.html#wrapping-up
