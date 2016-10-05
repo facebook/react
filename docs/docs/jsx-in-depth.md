@@ -51,27 +51,19 @@ export default function() {
 
 If you don't use a JavaScript bundler and added React as a script tag, it is already in scope as a React global.
 
-You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if you have a `Settings` module that exports a `Settings.DatePicker` component, you can invoke it directly from JSX with:
+You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if `MyComponents.DatePicker` is a component, you can invoke it directly from JSX with:
 
 ```js
 import React from 'react';
-import Settings from './settings';
 
-export default function() {
-  return <Settings.DatePicker barColor={'blue'} />;
+var MyComponents = {
+  DatePicker: function(props) {
+    return <div>imagine a {props.color} datepicker here</div>;
+  }
 }
-```
-
-You can do the same thing by assigning `DatePicker` to its own variable:
-
-```js
-import React from 'react';
-import Settings from './settings';
-
-var DatePicker = Settings.DatePicker;
 
 export default function() {
-  return <DatePicker barColor={'blue'} />;
+  return <MyComponents.DatePicker color={'blue'} />;
 }
 ```
 
