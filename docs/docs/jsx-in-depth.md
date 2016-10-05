@@ -309,7 +309,7 @@ function Repeat(props) {
 
 This usage is not common, but it works if you want to stretch what JSX is capable of.
 
-`false` or `null` are valid children. They simply don't render. These JSX expressions will all render to the same thing:
+`false`, `null`, 'undefined', and 'true' are valid children. They simply don't render. These JSX expressions will all render to the same thing:
 
 ```js
 <div />
@@ -319,4 +319,12 @@ This usage is not common, but it works if you want to stretch what JSX is capabl
 <div>{false}</div>
 
 <div>{null}</div>
+
+<div>{true}</div>
+```
+
+This can be useful to conditionally render React elements. This JSX only renders a `<Header />` if `showHeader` is true:
+
+```js
+<div>{showHeader && <Header />}<Content /></div>
 ```
