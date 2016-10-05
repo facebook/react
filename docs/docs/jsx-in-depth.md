@@ -157,7 +157,7 @@ When you pass a string literal, its value is HTML-unescaped. So these two JSX ex
 <MyComponent message={"<3"} />
 ```
 
-This behavior is usually not relevant. It's useful for `children`, but not for most props. It's only mentioned here for completeness.
+This behavior is usually not relevant. It's useful for `children`, to make JSX behave similarly to HTML, but not for most props. It's only mentioned here for completeness.
 
 ### Props Default to "True"
 
