@@ -169,7 +169,7 @@ If you pass no value for a prop, it defaults to `true`. These two JSX expression
 <MyTextBox autocomplete={true} />
 ```
 
-In general, we don't recommend using this. It's more consistent to just use the second form and explicitly pass `true`. This behavior is just there so that it matches the behavior of HTML.
+In general, we don't recommend using this because it can be confused with the ES6 object shorthand `{foo}` which is short for {foo: foo} rather than `{foo: true}`. This behavior is just there so that it matches the behavior of HTML.
 
 ### Spread Attributes
 
