@@ -49,6 +49,8 @@ export default function() {
 }
 ```
 
+If you don't use a JavaScript bundler and added React as a script tag, it is already in scope as a React global.
+
 You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if you have a `Settings` module that exports a `Settings.DatePicker` component, you can invoke it directly from JSX with:
 
 ```js
