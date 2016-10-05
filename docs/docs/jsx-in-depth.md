@@ -7,25 +7,25 @@ permalink: docs/jsx-in-depth.html
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:
 
 ```js
-<MyComponent prop1="one" prop2={2}>stuff</MyComponent>
+<MyButton color="blue" shadowSize={2}>Click Me</MyButton>
 ```
 
 compiles into:
 
 ```js
-React.createElement(MyComponent, {prop1: 'one', prop2: 2}, 'stuff')
+React.createElement(MyButton, {color: "blue", shadowSize: 2}, 'Click Me')
 ```
 
 You can also use the self-closing form of the tag if there are no children. So:
 
 ```js
-<div className={'blorp'} />
+<div className="sidebar" />
 ```
 
 compiles into:
 
 ```js
-React.createElement('div', {className: 'blorp'}, null)
+React.createElement('div', {className: 'sidebar'}, null)
 ```
 
 If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel compiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
@@ -38,14 +38,14 @@ Capitalized types indicate that the JSX tag is referring to a React component. T
 
 Since JSX compiles into calls to `React.createElement`, the `React` library must also always be in scope from your JSX code.
 
-For example, both of the imports are necessary in this code, even though 'React' and 'MyComponent' are not directly referenced from JavaScript:
+For example, both of the imports are necessary in this code, even though 'React' and 'CustomButton' are not directly referenced from JavaScript:
 
 ```js
 import React from 'react';
-import MyComponent from './MyComponent';
+import CustomButton from './CustomButton';
 
-export default function MyRedComponent() {
-  return <MyComponent color="red" />;
+function WarningButton() {
+  return <CustomButton color="red" />;
 }
 ```
 
