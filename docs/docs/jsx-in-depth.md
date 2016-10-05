@@ -87,19 +87,24 @@ export default function HelloWorld() {
 }
 ```
 
-You cannot use a general expression as the React element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. For example, if you have a `findComponent()` function that returns a component, and you want to render one:
+You cannot use a general expression as the React element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. This often comes up when you want to render a different component based on a prop:
 
 ```js
 import React from 'react';
-import findComponent from './findComponent';
+import { PhotoStory, VideoStory } from './stories';
 
-function render1() {
+const components = {
+  photo: <PhotoStory />,
+  video: <VideoStory />,
+};
+
+function Story1(props) {
   // Not valid JSX
-  return <findComponent() />;
+  return <components[props.story] />;
 }
 
-function render2() {
-  var MyComponent = findComponent();
+function render2(props) {
+  var MyComponent = components[props.story];
 
   // Valid JSX
   return <MyComponent />;
