@@ -28,7 +28,7 @@ transpiles into:
 React.createElement('div', {className: 'blorp'}, null)
 ```
 
-If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel transpiler](http://tinyurl.com/j26hzbz).
+If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel transpiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
 
 ## Specifying The React Element Type
 

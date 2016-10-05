@@ -34,7 +34,7 @@ ReactDOM.render(React.createElement(Hello, {toWhat: 'World'}, null),
                 document.getElementById('root'));
 ```
 
-If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel transpiler](http://tinyurl.com/j26hzbz).
+If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel transpiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
 
 The component can either be provided as a string, or as a subclass of `React.Component`, or a plain function for stateless components.
 
