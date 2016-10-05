@@ -4,4 +4,238 @@ title: JSX In Depth
 permalink: docs/jsx-in-depth.html
 ---
 
-Fundamentally, JSX is syntactic sugar for the `React.createElement(component, props, children)` function. 
+Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, children)` function. The JSX code:
+
+```js
+<MyComponent prop1={'one'} prop2={'two'}>stuff</MyComponent>
+```
+
+transpiles into:
+
+```js
+React.createElement(MyComponent, {prop1: 'one', prop2: 'two'}, 'stuff')
+```
+
+You can also use the self-closing form of the tag if there are no children. So:
+
+```js
+<div id={'blorp'} />
+```
+
+transpiles into:
+
+```js
+React.createElement('div', {id: 'blorp'}, null)
+```
+
+If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel transpiler](http://tinyurl.com/j26hzbz).
+
+## HTML Tags and React Components
+
+The first part of a JSX tag determines the type of the JSX element.
+
+Capitalized types indicate that the JSX tag is referring to a React component. These tags get transpiled into a direct reference to the named variable, so if you use the JSX `<Foo />` expression, `Foo` must be in scope.
+
+Since JSX transpiles into calls to `React.createElement`, the `React` library must also always be in scope from your JSX code.
+
+For example, both of the imports are necessary in this code, even though 'React' and 'MyComponent' are not directly referenced from JavaScript:
+
+```js
+import React from 'react';
+import MyComponent from './MyComponent';
+
+export default function() {
+  return <MyComponent />;
+}
+```
+
+You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if you have a `Settings` module that exports a `Settings.DatePicker` component, you can invoke it directly from JSX with:
+
+```js
+import React from 'react';
+import Settings from './settings';
+
+export default function() {
+  return <Settings.DatePicker barColor={'blue'} />;
+}
+```
+
+You can do the same thing by assigning `DatePicker` to its own variable:
+
+```js
+import React from 'react';
+import Settings from './settings';
+
+var DatePicker = Settings.DatePicker;
+
+export default function() {
+  return <DatePicker barColor={'blue'} />;
+}
+```
+
+If the element type starts with a lowercase letter, React will create a HTML element. In general, name your components starting with capital letters, and this will be fine. If you do have a component that starts with a lowercase letter, assign it to a capitalized variable before using it in JSX.
+
+For example, this code will not run as expected:
+
+```js
+import React from 'react';
+
+function hello(props) {
+  // This use of <div> is legitimate because div is a valid HTML tag
+  return <div>Hello {props.toWhat}</div>;
+}
+
+export default function() {
+  // This code attempts to create an HTML <hello> tag and fails
+  return <hello {toWhat='World'} />
+}
+```
+
+You cannot use a general expression as the JSX element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. For example, if you have a `findComponent()` function that returns a component, and you want to render one:
+
+```js
+import React from 'react';
+import findComponent from './findComponent';
+
+function render1() {
+  // Not valid JSX
+  return <findComponent() />;
+}
+
+var MyComponent = findComponent();
+function render2() {
+  // Valid JSX
+  return <MyComponent />;
+}
+```
+
+## Props in JSX
+
+There are several different ways to specify props in JSX.
+
+1. JavaScript Expressions
+
+You can pass any JavaScript expression as a prop, by surrounding it with `{}`. For example, in this JSX:
+
+```js
+<MyComponent foo={1 + 2 + 3 + 4} />
+```
+
+For `MyComponent`, The value of `this.props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
+
+2. String Literals
+
+You can pass a string literal as a prop. These two JSX expressions are equivalent:
+
+```js
+<MyComponent message="hello world" />
+
+<MyComponent message={"hello world"} />
+```
+
+When you pass a string literal, its value is HTML-unescaped. So these two JSX expressions are equivalent:
+
+```js
+<MyComponent message="&lt;3" />
+
+<MyComponent message={"<3"} />
+```
+
+This behavior is usually not relevant. It's useful for `children`, but not for most props. It's only mentioned here for completeness.
+
+3. Props Default to `true`
+
+If you pass no value for a prop, it defaults to `true`. These two JSX expressions are equivalent:
+
+```js
+<MyTextBox autocomplete />
+
+<MyTextBox autocomplete={true} />
+```
+
+In general, we don't recommend using this. It's more consistent to just use the second form and explicitly pass `true`. This behavior is just there so that it matches the behavior of HTML.
+
+4. Spread Attributes
+
+If you already have `props` as an object, and you want to pass it in JSX, you can use `...` as a "spread" operator to pass the whole props object. These two render functions are equivalent:
+
+```js
+function render1() {
+  var props = {left: 'ben', right: 'hector'};
+  return <MyComponent {...props} />;
+}
+
+function render2() {
+  return <MyComponent left="ben" right="hector" />;
+}
+```
+
+Spread attributes can be useful when you are building generic containers. However, they can also make your code messy by making it easy to pass a lot of irrelevant props to components that don't care about them. We recommend that you use this syntax sparingly.
+
+## Children in JSX
+
+In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: `this.props.children`. There are several different ways to pass children:
+
+1. String Literals
+
+You can put a string between the opening and closing tags and `this.props.children` will just be that string. This is useful for many of the built-in HTML elements. For example:
+
+```js
+<MyComponent>Hello world!</MyComponent>
+```
+
+This is valid JSX, and `this.props.children` in `MyComponent` will simply be the string `"Hello world!"`. HTML is unescaped, so you can generally write JSX just like you would write HTML in this way:
+
+```html
+<div>This is valid HTML &amp; JSX at the same time.</div>
+```
+
+2. JSX Children
+
+You can provide more JSX as the children. This is useful for displaying nested components:
+
+```js
+<MyContainer>
+  <MyFirstComponent />
+  <MySecondComponent />
+</MyContainer>
+```
+
+You can mix together different types of children, so you can use string literals together with JSX children. This is another way in which JSX is like HTML, so that this is both valid JSX and valid HTML:
+
+```html
+<div>
+  Here is a list:
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </ul>
+</div>
+```html
+
+3. JavaScript Expressions
+
+You can pass any JavaScript expression as children, by enclosing it within `{}`. For example, these expressions are equivalent:
+
+```js
+<MyComponent>foo</MyComponent>
+
+<MyComponent>{"foo"}</MyComponent>
+```
+
+This is often useful for rendering a list of JSX expressions of arbitrary length. For example, this renders an HTML list:
+
+```js
+function renderItem(message) {
+  return <li>{message}</li>;
+}
+
+function renderTodoList() {
+  var todos = ['finish doc', 'submit pr', 'nag dan to review'];
+  return (
+    <ul>
+      {todos.map(renderItem)}
+    </ul>
+  );
+}
+```

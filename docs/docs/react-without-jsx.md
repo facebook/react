@@ -34,6 +34,8 @@ ReactDOM.render(React.createElement(Hello, {toWhat: 'World'}, null),
                 document.getElementById('root'));
 ```
 
+If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel transpiler](http://tinyurl.com/j26hzbz).
+
 The component can either be provided as a string, or as a subclass of `React.Component`, or a plain function for stateless components.
 
 If you get tired of typing `React.createElement` so much, one common pattern is to assign a shorthand:
