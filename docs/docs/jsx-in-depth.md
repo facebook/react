@@ -19,13 +19,13 @@ React.createElement(MyComponent, {prop1: 'one', prop2: 'two'}, 'stuff')
 You can also use the self-closing form of the tag if there are no children. So:
 
 ```js
-<div id={'blorp'} />
+<div className={'blorp'} />
 ```
 
 transpiles into:
 
 ```js
-React.createElement('div', {id: 'blorp'}, null)
+React.createElement('div', {className: 'blorp'}, null)
 ```
 
 If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel transpiler](http://tinyurl.com/j26hzbz).
