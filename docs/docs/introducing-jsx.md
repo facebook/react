@@ -89,7 +89,7 @@ const element = <img src={user.avatarUrl}></img>;
 
 ### Specifying Children with JSX
 
-If a tag is empty, you may close it immediately with `/>`, like in XML:
+If a tag is empty, you may close it immediately with `/>`, like XML:
 
 ```js
 const element = <img src={user.avatarUrl} />;
@@ -108,9 +108,9 @@ const element = (
 
 >**Caveat:**
 >
->Since JSX is closer to JavaScript than HTML, it uses property names as defined in the DOM specification rather than HTML attribute names.
+>Since JSX is closer to JavaScript than HTML, React DOM uses `camelCase` property names instead of HTML attribute names.
 >
->For example, `class` becomes [`className`](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) in JSX, and `tabindex` becomes [`tabIndex`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/tabIndex). The convention is to use `camelCase` attribute names, just like properties in JavaScript.
+>For example, `class` becomes [`className`](https://developer.mozilla.org/en-US/docs/Web/API/Element/className) in JSX, and `tabindex` becomes [`tabIndex`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/tabIndex).
 
 ### JSX Represents Objects
 
@@ -158,21 +158,25 @@ React later reads these objects and uses them to construct the DOM and keep it u
 >```js
 // JSX compilation error:
 // "Adjacent JSX elements must be wrapped in an enclosing tag"
-const element = (
-  <h1>Hello!</h1>
-  <h2>Good to see you here.</h2>
-);
+function getGreeting() {
+  return (
+    <h1>Hello!</h1>
+    <h2>Good to see you here.</h2>
+  );
+}
 ```
 >
 >We can fix it by adding a root tag to the JSX expression:
 >
->```js{2,5}
-const element = (
-  <div>
-    <h1>Hello!</h1>
-    <h2>Good to see you here.</h2>
-  </div>
-);
+>```js{3,6}
+function getGreeting() {
+  return (
+    <div>
+      <h1>Hello!</h1>
+      <h2>Good to see you here.</h2>
+    </div>
+  );
+}
 ```
 
 ### JSX Prevents Injection Attacks

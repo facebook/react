@@ -55,6 +55,8 @@ ReactDOM.render(<App />, document.getElementById('root'));
 
 This code renders into an HTML element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file. When you use React in this way, you should be transpiling your JavaScript using `babel` with the `es2015` and `react` presets.
 
+If you use Bower, React is available via the `react` package.
+
 ### Enabling ES6 and JSX
 
 We recommend using React with Babel to let you use ES6 and JSX in your JavaScript code. ES6 is a set of modern JavaScript features that make development easier, and JSX is an extension to the JavaScript language that works nicely with React. The [Babel setup instructions](https://babeljs.io/docs/setup/) explain how to configure Babel in many different build environments. Make sure you install `babel-preset-react` and `babel-preset-es2015` and enable them in your `.babelrc`, and you're good to go.
@@ -64,18 +66,8 @@ We recommend using React with Babel to let you use ES6 and JSX in your JavaScrip
 If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide UMD distributions in `dist` folders, which are hosted on a CDN:
 
 ```html
-<script src="https://unpkg.com/react@latest/dist/react.js"></script>
-<script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+<script src="https://unpkg.com/react@15/dist/react.js"></script>
+<script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
 ```
 
-To load a specific version of `react` and `react-dom`, replace `latest` with the version number.
-
-### Using Bower
-
-If you use Bower, React is available via the `react` package:
-
-```bash
-bower install --save react
-```
-
-We recommend [using npm](#using-npm) instead of Bower in new projects.
+To load a specific version of `react` and `react-dom`, replace `15` with the version number.

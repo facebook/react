@@ -18,10 +18,4 @@ ReactDOM.render(element, container);
 
 It renders a header saying "Hello World" on the page.
 
-There are a few things to unpack here:
-
-* What is this XML-like syntax?
-* What is a React element?
-* What does `ReactDOM.render(element, container)` do?
-
-We will address them one by one in the following sections.
+The next few sections will gradually introduce you to using React. We will examine the building blocks of React apps: elements and components. Once you master them, you can create complex apps from small reusable pieces.
