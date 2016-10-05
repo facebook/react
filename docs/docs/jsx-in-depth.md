@@ -4,7 +4,7 @@ title: JSX In Depth
 permalink: docs/jsx-in-depth.html
 ---
 
-Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, children)` function. The JSX code:
+Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:
 
 ```js
 <MyComponent prop1="one" prop2={2}>stuff</MyComponent>
