@@ -224,8 +224,6 @@ You can mix together different types of children, so you can use string literals
 
 A React component can't return multiple React elements, but a single JSX expression can have multiple children, so if you want a component to render multiple things you can wrap it in a `div` like this.
 
-When you pass JSX as the children, `props.children` does not actually let you access the child component from the parent. Instead, it lets you access the return value of `React.createElement` calls using the `React.Children` helper library. Generally, accessing children in this way is only useful to return in a render function, rather than modifying or altering the children.
-
 ### JavaScript Expressions
 
 You can pass any JavaScript expression as children, by enclosing it within `{}`. For example, these expressions are equivalent:
@@ -240,7 +238,7 @@ This is often useful for rendering a list of JSX expressions of arbitrary length
 
 ```js
 function renderItem(message) {
-  return <li>{message}</li>;
+  return <li key={message}>{message}</li>;
 }
 
 function renderTodoList() {
