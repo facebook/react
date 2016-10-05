@@ -30,7 +30,7 @@ React.createElement('div', {className: 'blorp'}, null)
 
 If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel transpiler](http://tinyurl.com/j26hzbz).
 
-## HTML Tags and React Components
+## Specifying The React Element Type
 
 The first part of a JSX tag determines the type of the React element.
 
