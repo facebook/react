@@ -181,7 +181,7 @@ Notice how we're mixing HTML tags and components we've built. HTML components ar
 
 ### Using props
 
-Let's create the `Comment` component, which will depend on data passed in from its parent, `CommentList`. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props, we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
+Let's create the `Comment` component, which will depend on data passed in from our `CommentList` component. Data passed in from the `CommentList` component is available as a 'property' on our `Comment` component. These 'properties' are accessed through `this.props`. Using props, we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
 
 ```javascript
 // tutorial4.js
