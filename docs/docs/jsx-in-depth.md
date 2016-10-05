@@ -228,7 +228,7 @@ JSX removes whitespace at the beginning and ending of a line. It also removes bl
 
 ### JSX Children
 
-You can provide more JSX as the children. This is useful for displaying nested components:
+You can provide more JSX elements as the children. This is useful for displaying nested components:
 
 ```js
 <MyContainer>
