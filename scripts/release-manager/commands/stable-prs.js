@@ -178,11 +178,8 @@ module.exports = function(vorpal, app) {
               });
           });
         })
-        .then(({successful, skipped, didAbort}) => {
-          console.log(successful.length, skipped.length, didAbort);
-        })
         // Update the milestone on successful PRs
-        // // TODO: maybe handle didAbort and git reset --hard to a rev we read when we start the process?
+        // TODO: maybe handle didAbort and git reset --hard to a rev we read when we start the process?
         .then(({successful, aborted, didAbort}) => {
           if (didAbort) {
             return undefined;
