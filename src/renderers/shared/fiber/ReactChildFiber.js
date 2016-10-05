@@ -183,6 +183,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
   }
 
+  function placeSingleChild(newFiber : Fiber) {
+    // This is simpler for the single child case. We only need to do a
+    // placement for inserting new children.
+    if (shouldTrackSideEffects && !newFiber.alternate) {
+      newFiber.effectTag = Placement;
+    }
+    return newFiber;
+  }
+
   function updateTextNode(
     returnFiber : Fiber,
     current : ?Fiber,
@@ -738,39 +747,39 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // fragment nodes. Recursion happens at the normal flow.
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      return reconcileSingleTextNode(
+      return placeSingleChild(reconcileSingleTextNode(
         returnFiber,
         currentFirstChild,
         '' + newChild,
         priority
-      );
+      ));
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          return reconcileSingleElement(
+          return placeSingleChild(reconcileSingleElement(
             returnFiber,
             currentFirstChild,
             newChild,
             priority
-          );
+          ));
 
         case REACT_COROUTINE_TYPE:
-          return reconcileSingleCoroutine(
+          return placeSingleChild(reconcileSingleCoroutine(
             returnFiber,
             currentFirstChild,
             newChild,
             priority
-          );
+          ));
 
         case REACT_YIELD_TYPE:
-          return reconcileSingleYield(
+          return placeSingleChild(reconcileSingleYield(
             returnFiber,
             currentFirstChild,
             newChild,
             priority
-          );
+          ));
       }
 
       if (isArray(newChild)) {

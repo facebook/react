@@ -142,8 +142,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       case HostComponent:
         let newProps = workInProgress.pendingProps;
-        const child = workInProgress.child;
-        const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
@@ -156,7 +154,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             newProps = oldProps;
           }
           const instance : I = workInProgress.stateNode;
-          if (prepareUpdate(instance, oldProps, newProps, children)) {
+          if (prepareUpdate(instance, oldProps, newProps)) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
           }
@@ -171,6 +169,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               return null;
             }
           }
+          const child = workInProgress.child;
+          const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
           const instance = createInstance(workInProgress.type, newProps, children);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;

@@ -32,8 +32,10 @@ var {
 
 var {
   NoEffect,
+  Placement,
   Update,
   PlacementAndUpdate,
+  Deletion,
 } = require('ReactTypeOfSideEffect');
 
 var timeHeuristicForUnitOfWork = 1;
@@ -52,7 +54,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const { beginWork } = ReactFiberBeginWork(config, getScheduler);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitWork } = ReactFiberCommitWork(config);
+  const { commitInsertion, commitDeletion, commitWork } = ReactFiberCommitWork(config);
 
   const scheduleAnimationCallback = config.scheduleAnimationCallback;
   const scheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -109,7 +111,24 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function commitAllWork(finishedWork : Fiber) {
     // Commit all the side-effects within a tree.
     // TODO: Error handling.
+
+    // First, we'll perform all the host insertion and deletion effects.
     let effectfulFiber = finishedWork.firstEffect;
+    while (effectfulFiber) {
+      switch (effectfulFiber.effectTag) {
+        case Placement:
+        case PlacementAndUpdate:
+          commitInsertion(effectfulFiber);
+          break;
+        case Deletion:
+          commitDeletion(effectfulFiber);
+          break;
+      }
+      effectfulFiber = effectfulFiber.nextEffect;
+    }
+
+    // Next, we'll perform all other effects.
+    effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
       const current = effectfulFiber.alternate;
       if (effectfulFiber.effectTag === Update ||

@@ -81,16 +81,12 @@ var NoopRenderer = ReactFiberReconciler({
     return inst;
   },
 
-  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance | TextInstance>) : boolean {
+  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props) : boolean {
     return true;
   },
 
-  commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance | TextInstance>) : void {
-    instance.children = flattenChildren(children);
+  commitUpdate(instance : Instance, oldProps : Props, newProps : Props) : void {
     instance.prop = newProps.prop;
-  },
-
-  deleteInstance(instance : Instance) : void {
   },
 
   createTextInstance(text : string) : TextInstance {
@@ -102,6 +98,34 @@ var NoopRenderer = ReactFiberReconciler({
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
     textInstance.text = newText;
+  },
+
+  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    const index = parentInstance.children.indexOf(child);
+    if (index !== -1) {
+      parentInstance.children.splice(index, 1);
+    }
+    parentInstance.children.push(child);
+  },
+
+  insertBefore(parentInstance : Instance, child : Instance | TextInstance, beforeChild : Instance | TextInstance) : void {
+    const index = parentInstance.children.indexOf(child);
+    if (index !== -1) {
+      parentInstance.children.splice(index, 1);
+    }
+    const beforeIndex = parentInstance.children.indexOf(beforeChild);
+    if (beforeIndex === -1) {
+      throw new Error('This child does not exist.');
+    }
+    parentInstance.children.splice(beforeIndex, 0, child);
+  },
+
+  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    const index = parentInstance.children.indexOf(child);
+    if (index === -1) {
+      throw new Error('This child does not exist.');
+    }
+    parentInstance.children.splice(index, 1);
   },
 
   scheduleAnimationCallback(callback) {

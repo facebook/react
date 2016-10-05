@@ -46,6 +46,7 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
 var DOMRenderer = ReactFiberReconciler({
 
   updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
+    // TODO: Containers should update similarly to other parents.
     container.innerHTML = '';
     recursivelyAppendChildren(container, children);
   },
@@ -63,23 +64,16 @@ var DOMRenderer = ReactFiberReconciler({
   prepareUpdate(
     domElement : Instance,
     oldProps : Props,
-    newProps : Props,
-    children : HostChildren<Instance | TextInstance>
+    newProps : Props
   ) : boolean {
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance | TextInstance>) : void {
-    domElement.innerHTML = '';
-    recursivelyAppendChildren(domElement, children);
+  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
     if (typeof newProps.children === 'string' ||
         typeof newProps.children === 'number') {
       domElement.textContent = newProps.children;
     }
-  },
-
-  deleteInstance(instance : Instance) : void {
-    // Noop
   },
 
   createTextInstance(text : string) : TextInstance {
@@ -88,6 +82,18 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
     textInstance.nodeValue = newText;
+  },
+
+  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.appendChild(child);
+  },
+
+  insertBefore(parentInstance : Instance, child : Instance | TextInstance, beforeChild : Instance | TextInstance) : void {
+    parentInstance.insertBefore(child, beforeChild);
+  },
+
+  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.removeChild(child);
   },
 
   scheduleAnimationCallback: window.requestAnimationFrame,
