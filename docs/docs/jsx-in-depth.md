@@ -264,15 +264,15 @@ You can pass any JavaScript expression as children, by enclosing it within `{}`.
 This is often useful for rendering a list of JSX expressions of arbitrary length. For example, this renders an HTML list:
 
 ```js
-function renderItem(message) {
-  return <li key={message}>{message}</li>;
+function Item(props) {
+  return <li>{props.message}</li>;
 }
 
 function renderTodoList() {
   var todos = ['finish doc', 'submit pr', 'nag dan to review'];
   return (
     <ul>
-      {todos.map(renderItem)}
+      {todos.map((message) => <Item key={message} message={message} />)}
     </ul>
   );
 }
