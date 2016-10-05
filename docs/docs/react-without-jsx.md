@@ -23,7 +23,7 @@ ReactDOM.render(
 );
 ```
 
-can also be written without JSX:
+can be compiled to this code that does not use JSX:
 
 ```js
 class Hello extends React.Component {
