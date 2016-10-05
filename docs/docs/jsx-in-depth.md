@@ -199,6 +199,25 @@ This is valid JSX, and `props.children` in `MyComponent` will simply be the stri
 <div>This is valid HTML &amp; JSX at the same time.</div>
 ```
 
+JSX removes whitespace at the beginning and ending of a line. It also removes blank lines. So these all render to the same thing:
+
+```js
+<div>Hello</div>
+
+<div>Hello
+</div>
+
+<div>
+  Hello
+</div>
+
+<div>
+
+  Hello
+
+</div>
+```
+
 ### JSX Children
 
 You can provide more JSX as the children. This is useful for displaying nested components:
