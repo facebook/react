@@ -124,9 +124,9 @@ For `MyComponent`, The value of `props.foo` will be `10` because the expression 
 function NumberDescriber(props) {
   var description;
   if (props.number % 2 == 0) {
-    word = 'even';
+    description = 'even';
   } else {
-    word = 'odd';
+    description = 'odd';
   }
   return <div>{props.number} is an {description} number</div>;
 }
