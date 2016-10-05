@@ -5,5 +5,9 @@
       title: Installation
     - id: hello-world
       title: Hello World
+    - id: introducing-jsx
+      title: Introducing JSX
+    - id: rendering-elements
+      title: Rendering Elements
 - title: Advanced Guides
 - title: Reference

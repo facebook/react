@@ -77,3 +77,5 @@ If you use Bower, React is available via the `react` package:
 ```bash
 bower install --save react
 ```
+
+We recommend [using npm](#using-npm) instead of Bower in new projects.
