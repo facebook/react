@@ -290,8 +290,8 @@ function Repeat(props) {
 
 function ListOfTenThings() {
   return (
-    <Repeat>
-      {(index) => <div>This is item {index} in the list</div>}
+    <Repeat numTimes={10}>
+      {(index) => <div key={index}>This is item {index} in the list</div>}
     </Repeat>
   );
 }
