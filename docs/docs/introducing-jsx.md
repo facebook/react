@@ -18,8 +18,6 @@ It is called JSX, and it is a syntax extension to JavaScript. We recommend using
 
 ### Embedding Expressions in JSX
 
-JSX comes with the full power of JavaScript.
-
 You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in curly braces.
 
 For example, `2 + 2`, `user.name`, and `formatName(user)` are all valid expressions:
