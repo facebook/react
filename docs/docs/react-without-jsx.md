@@ -17,8 +17,10 @@ class Hello extends React.Component {
   }
 }
 
-ReactDOM.render(<Hello toWhat={'World'} />,
-                document.getElementById('root'));
+ReactDOM.render(
+  <Hello toWhat="World" />,
+  document.getElementById('root')
+);
 ```
 
 can also be written without JSX:
