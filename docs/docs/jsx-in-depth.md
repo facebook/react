@@ -123,6 +123,20 @@ You can pass any JavaScript expression as a prop, by surrounding it with `{}`. F
 
 For `MyComponent`, The value of `props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
 
+`if` statements and `for` loops are not expressions in JavaScript, so they can't be used in JSX directly. Instead, you can put these in the surrounding code. For example:
+
+```js
+function NumberDescriber(props) {
+  var description;
+  if (props.number % 2 == 0) {
+    word = 'even';
+  } else {
+    word = 'odd';
+  }
+  return <div>{props.number} is an {description} number</div>;
+}
+```
+
 2. String Literals
 
 You can pass a string literal as a prop. These two JSX expressions are equivalent:
@@ -211,7 +225,11 @@ You can mix together different types of children, so you can use string literals
     <li>Item 2</li>
   </ul>
 </div>
-```html
+```
+
+A React component can't return multiple JSX elements, but a single JSX element can have multiple children, so if you want a component to render multiple things you can wrap it in a `div` like this.
+
+When you pass JSX as the children, `props.children` does not actually let you access the child component from the parent. Instead, it lets you access the return value of `React.createElement` calls using the `React.Children` helper library. Generally, accessing children in this way is only useful to return in a render function, rather than modifying or altering the children.
 
 3. JavaScript Expressions
 
@@ -265,3 +283,18 @@ function ListOfTenThings() {
     </Repeat>
   );
 }
+```
+
+This usage is not common, but it works if you want to stretch what JSX is capable of.
+
+`false` or `null` are valid children. They simply don't render. These JSX expressions will all render to the same thing:
+
+```js
+<div />
+
+<div></div>
+
+<div>{false}</div>
+
+<div>{null}</div>
+```
