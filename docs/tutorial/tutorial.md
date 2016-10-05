@@ -10,7 +10,7 @@ permalink: /tutorial/tutorial.html
 
 Today, we're going to build an interactive tic-tac-toe game. We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before.
 
-If you like, you can check out the final result here: <a href="http://s.codepen.io/spicyj/debug/qNOZOP" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/debug/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
 
 ## What is React?
 
@@ -56,7 +56,7 @@ The `ShoppingList` component only renders built-in DOM components, but you can c
 
 ## Getting Started
 
-Start with this example: <a href="http://codepen.io/spicyj/pen/PzNape?editors=0010" target="_blank">Starter Code</a>.
+Start with this example: <a href="https://codepen.io/ericnakagawa/pen/vXpjwZ?editors=0010" target="_blank">Starter Code</a>.
 
 It contains the shell of what we're building today. We've provided the styles so you only need to worry about the JavaScript.
 
@@ -72,7 +72,7 @@ The Square component renders a single `<div>`, the Board renders 9 squares, and 
 
 ## Passing Data Through Props
 
-Just to get our feet wet, let's try passing some data from the Board component to the Square component. In Board's `_renderSquare` method, change the code to return `<Square value={i} />` then change Square's render method to show that value by replacing `{/* TODO */}` with `{this.props.value}`.
+Just to get our feet wet, let's try passing some data from the Board component to the Square component. In Board's `renderSquare` method, change the code to return `<Square value={i} />` then change Square's render method to show that value by replacing `{/* TODO */}` with `{this.props.value}`.
 
 Before:
 
@@ -166,15 +166,15 @@ We'll fill it in later so that a board looks something like
 Pass the value of each square down:
 
 ```javascript
-_renderSquare(i) {
+renderSquare(i) {
   return <Square value={this.state.squares[i]} />;
 }
 ```
 
-And change Square to use `this.props.value` again. Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `_renderSquare` again so that it reads:
+And change Square to use `this.props.value` again. Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
 
 ```javascript
-return <Square value={this.state.squares[i]} onClick={() => this._handleClick(i)} />;
+return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
 ```
 
 Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's do that by changing `render` in Square to have:
@@ -183,10 +183,10 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 <button className="square" onClick={() => this.props.onClick()}>
 ```
 
-This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `_handleClick` yet. Add it to the Board class:
+This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
 
 ```javascript
-_handleClick(i) {
+handleClick(i) {
   const squares = this.state.squares.slice();
   squares[i] = 'X';
   this.setState({squares: squares});
@@ -249,10 +249,10 @@ You'll need to change `this.props` to `props` both times it appears. Many compon
 
 ## Taking Turns
 
-An obvious defect in our game is that only X can play. Let's fix that. Add an `xIsNext: true` key to the initial state of Board, then update `_handleClick` to use that state:
+An obvious defect in our game is that only X can play. Let's fix that. Add an `xIsNext: true` key to the initial state of Board, then update `handleClick` to use that state:
 
 ```javascript
-_handleClick(i) {
+handleClick(i) {
   const squares = this.state.squares.slice();
   const xIsNext = this.state.xIsNext;
   squares[i] = xIsNext ? 'X' : 'O';
@@ -282,10 +282,10 @@ render() {
 }
 ```
 
-You can now change `_handleClick` to return early and ignore the click if someone has already won the game or if a square is already filled:
+You can now change `handleClick` to return early and ignore the click if someone has already won the game or if a square is already filled:
 
 ```javascript
-_handleClick(i) {
+handleClick(i) {
   const squares = this.state.squares.slice();
   if (calculateWinner(squares) || squares[i]) {
     return;
@@ -365,7 +365,7 @@ if (winner) {
 <div className="game-board">
   <Board
     squares={current.squares}
-    onClick={() => this._handleClick(i)}
+    onClick={() => this.handleClick(i)}
   />
 </div>
 <div className="game-info">
@@ -374,10 +374,10 @@ if (winner) {
 </div>
 ```
 
-Its `_handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
+Its `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
 
 ```javascript
-_handleClick(i) {
+handleClick(i) {
   var history = this.state.history;
   var current = history[history.length - 1];
   const squares = current.squares.slice();
@@ -397,7 +397,7 @@ _handleClick(i) {
 }
 ```
 
-This was a significant amount of refactoring, but the game should again be playable. At this point, Board only needs `_renderStep` and `render`; the state initialization and click handler should both live in Game.
+This was a significant amount of refactoring, but the game should again be playable. At this point, Board only needs `renderStep` and `render`; the state initialization and click handler should both live in Game.
 
 ## Showing the Moves
 
@@ -410,7 +410,7 @@ const moves = history.map((step, i) => {
     'Game start';
   return (
     <li>
-      <a href="#" onClick={() => this._jumpTo(i)}>{desc}</a>
+      <a href="#" onClick={() => this.jumpTo(i)}>{desc}</a>
     </li>
   );
 });
@@ -466,23 +466,23 @@ Component keys don't need to be globally unique, only unique relative to the imm
 
 For our move list, we already have a unique ID for each step: the time that it happened. Add the key as `<li key={step.when}>` and the key warning should disappear.
 
-Clicking any of the move links throws an error because `_jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `_jumpTo` update that state:
+Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state:
 
 ```javascript
-_jumpTo(i) {
+jumpTo(i) {
   this.setState({
     stepNumber: i,
   });
 }
 ```
 
-Then update `stepNumber` when a new move is made by adding `stepNumber: history.length` to the state update in `_handleClick`. Now you can modify `render` to read from that step in the history:
+Then update `stepNumber` when a new move is made by adding `stepNumber: history.length` to the state update in `handleClick`. Now you can modify `render` to read from that step in the history:
 
 ```javascript
 const current = history[this.state.stepNumber];
 ```
 
-If you click any move link now, the board should immediately update to show what the game looked like at that time. You may also want to update `_handleClick` to be aware of `stepNumber` when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It's easiest to `.slice()` off the extra elements from `history` at the very top of `_handleClick`.)
+If you click any move link now, the board should immediately update to show what the game looked like at that time. You may also want to update `handleClick` to be aware of `stepNumber` when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It's easiest to `.slice()` off the extra elements from `history` at the very top of `handleClick`.)
 
 ## Wrapping Up
 
