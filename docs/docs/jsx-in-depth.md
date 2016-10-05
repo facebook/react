@@ -121,7 +121,7 @@ You can pass any JavaScript expression as a prop, by surrounding it with `{}`. F
 <MyComponent foo={1 + 2 + 3 + 4} />
 ```
 
-For `MyComponent`, The value of `this.props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
+For `MyComponent`, The value of `props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
 
 2. String Literals
 
@@ -174,17 +174,17 @@ Spread attributes can be useful when you are building generic containers. Howeve
 
 ## Children in JSX
 
-In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: `this.props.children`. There are several different ways to pass children:
+In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: `props.children`. There are several different ways to pass children:
 
 1. String Literals
 
-You can put a string between the opening and closing tags and `this.props.children` will just be that string. This is useful for many of the built-in HTML elements. For example:
+You can put a string between the opening and closing tags and `props.children` will just be that string. This is useful for many of the built-in HTML elements. For example:
 
 ```js
 <MyComponent>Hello world!</MyComponent>
 ```
 
-This is valid JSX, and `this.props.children` in `MyComponent` will simply be the string `"Hello world!"`. HTML is unescaped, so you can generally write JSX just like you would write HTML in this way:
+This is valid JSX, and `props.children` in `MyComponent` will simply be the string `"Hello world!"`. HTML is unescaped, so you can generally write JSX just like you would write HTML in this way:
 
 ```html
 <div>This is valid HTML &amp; JSX at the same time.</div>
@@ -239,3 +239,29 @@ function renderTodoList() {
   );
 }
 ```
+
+JavaScript expressions can be mixed with other types of children. This is often useful in lieu of string templates:
+
+```js
+function Hello(props) {
+  return <div>Hello {props.addressee}!</div>;
+}
+```
+
+Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, `props.children` works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as `props.children`:
+
+```js
+// Repeats a component numTimes
+function Repeat(props) {
+  // The numbers 0 .. (numTimes - 1)
+  var range = [...Array(props.numTimes).keys()];
+  return <div>{range.map(props.children)}</div>
+}
+
+function ListOfTenThings() {
+  return (
+    <Repeat>
+      {(index) => <div>This is item {index} in the list</div>}
+    </Repeat>
+  );
+}
