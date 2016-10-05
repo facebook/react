@@ -50,6 +50,9 @@ var {
   addCallbackToQueue,
   mergeUpdateQueue,
 } = require('ReactFiberUpdateQueue');
+var {
+  Placement,
+} = require('ReactTypeOfSideEffect');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, getScheduler : () => Scheduler) {
@@ -299,6 +302,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
       // Reconcile the children and stash them for later work.
       reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
       workInProgress.child = current ? current.child : null;
+
+      if (!current) {
+        // If this doesn't have a current we won't track it for placement
+        // effects. However, when we come back around to this we have already
+        // inserted the parent which means that we'll infact need to make this a
+        // placement.
+        // TODO: There has to be a better solution to this problem.
+        let child = workInProgress.progressedChild;
+        while (child) {
+          child.effectTag = Placement;
+          child = child.sibling;
+        }
+      }
+
       // Abort and don't process children yet.
       return null;
     } else {

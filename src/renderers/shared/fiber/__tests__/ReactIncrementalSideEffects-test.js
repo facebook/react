@@ -71,7 +71,11 @@ describe('ReactIncrementalSideEffects', () => {
           {props.text === 'World' ? [
             <Bar key="a" text={props.text} />,
             <div key="b" />,
+          ] : props.text === 'Hi' ? [
+            <div key="b" />,
+            <Bar key="a" text={props.text} />,
           ] : null}
+          <span prop="test" />
         </div>
       );
     }
@@ -79,13 +83,19 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="Hello" />);
     ReactNoop.flush();
     expect(ReactNoop.root.children).toEqual([
-      div(span()),
+      div(span(), span('test')),
     ]);
 
     ReactNoop.render(<Foo text="World" />);
     ReactNoop.flush();
     expect(ReactNoop.root.children).toEqual([
-      div(span(), span(), div()),
+      div(span(), span(), div(), span('test')),
+    ]);
+
+    ReactNoop.render(<Foo text="Hi" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span(), div(), span(), span('test')),
     ]);
 
   });
