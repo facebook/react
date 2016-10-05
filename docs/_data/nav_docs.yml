@@ -6,4 +6,9 @@
     - id: hello-world
       title: Hello World
 - title: Advanced Guides
+  items:
+    - id: jsx-in-depth
+      title: JSX In Depth
+    - id: react-without-jsx
+      title: React Without JSX
 - title: Reference
