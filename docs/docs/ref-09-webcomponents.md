@@ -6,7 +6,11 @@ prev: reconciliation.html
 next: glossary.html
 ---
 
-Trying to compare and contrast React with WebComponents inevitably results in specious conclusions, because the two libraries are built to solve different problems.  WebComponents provide strong encapsulation for reusable components, while React provides a declarative library that keeps the DOM in sync with your data.  The two goals are complementary; engineers can mix-and-match the technologies.  As a developer, you are free to use React in your WebComponents, or to use WebComponents in React, or both.
+Trying to compare and contrast React with WebComponents inevitably results in specious conclusions, because the two
+libraries are built to solve different problems. WebComponents provide strong encapsulation for reusable components,
+while React provides a declarative library that keeps the DOM in sync with your data. The two goals are complementary;
+engineers can mix-and-match the technologies. As a developer, you are free to use React in your WebComponents, or to
+use WebComponents in React, or both.
 
 ## Using Web Components in React
 
@@ -26,9 +30,13 @@ class HelloMessage extends React.Component{
 > they should work, but to access the imperative APIs of a web component, you will need to attach a ref to the
 > component and interact with the DOM node directly.  If you are using third-party web components, the
 > recommended solution is to write a React component that behaves as a wrapper for your web component.
-> 
+>
 > At this time, events emitted by a web component may not properly propagate through a React render tree.
 > You will need to manually attach event handlers to handle these events within your React components.
+>
+> React treats all properties on web components as attributes and will set them as-is. This means that the
+> property `className` will be set as attribute `classname` on your web component. If you want to set the `class`
+> attribute on your web component it's safe to use the `class` property.
 
 
 ## Using React in your Web Components
