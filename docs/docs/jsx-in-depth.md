@@ -96,8 +96,9 @@ function render1() {
   return <findComponent() />;
 }
 
-var MyComponent = findComponent();
 function render2() {
+  var MyComponent = findComponent();
+
   // Valid JSX
   return <MyComponent />;
 }
