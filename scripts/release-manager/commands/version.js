@@ -19,7 +19,7 @@ const git = require('./utils/git');
 //    - packages/react-addons/package.json (version, peerDependencies.react)
 //    - packages/react-dom/package.json (version, peerDependencies.react)
 //    - packages/react-native-renderer/package.json (version, peerDependencies.react)
-//    - packages/react-native-renderer/package.json (version, peerDependencies.react)
+//    - packages/react-test-renderer/package.json (version, peerDependencies.react)
 //    - src/ReactVersion.js (module.exports)
 // 4. Commit?
 
@@ -112,7 +112,7 @@ module.exports = function(vorpal, app) {
           },
           {
             file: 'packages/react-native-renderer/package.json',
-            fields: ['version', 'dependencies.react'],
+            fields: ['version', 'peerDependencies.react'],
           },
           {
             file: 'packages/react-test-renderer/package.json',
