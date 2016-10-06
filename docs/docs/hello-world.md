@@ -6,6 +6,13 @@ prev: installation.html
 next: introducing-jsx.html
 ---
 
+The next sections assume you are following along [using CodePen or an HTML file](/react/docs/installation.html#trying-out-react). If you use [Create React App](/react/docs/installation.html#creating-a-single-page-application) or [npm](/react/docs/installation.html#using-npm), you will need to import `react` and `react-dom`:
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+```
+
 The smallest React example looks like this:
 
 ```js
