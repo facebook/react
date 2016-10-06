@@ -24,7 +24,7 @@ Let's say there is a `<div>` somewhere in your HTML file:
 <div id="root"></div>
 ```
 
-We call this a "container" DOM node because it serves as an "entry point" for a React app. Everything inside it will be managed by React DOM.
+We call this a "container" DOM node because the React app is contained by it. Everything inside it will be managed by React DOM.
 
 Applications built with just React usually have a single container node. If you are integrating React into an existing app, you may have as many isolated container nodes as you like.
 
@@ -44,7 +44,7 @@ It displays "Hello World" on the page.
 
 React elements are [immutable](https://en.wikipedia.org/wiki/Immutable_object). Once you create an element, you can't change it.
 
-However, you can tell React DOM to render a new element instead.
+When we want the UI to update, we create a new element, and pass it to ReactDOM.render(). It updates the DOM to match the newly passed element.
 
 Consider this ticking clock example:
 
@@ -66,11 +66,9 @@ setInterval(tick, 1000);
 
 [Try it on Codepen.](http://codepen.io/gaearon/pen/gwoJZk?editors=0010)
 
-When we want the UI to update, we create a new element, and pass it to `ReactDOM.render()`. It updates the DOM to match the newly passed element.
-
 ## React Only Updates What's Necessary
 
-React DOM compares the element tree to the previous one, and only applies the minimal DOM updates necessary to bring the DOM to the desired state.
+React DOM compares the element and its children to the previous one, and only applies the minimal DOM updates necessary to bring the DOM to the desired state.
 
 You can verify by inspecting the [last example](http://codepen.io/gaearon/pen/gwoJZk?editors=0010) with the browser tools:
 
@@ -78,4 +76,4 @@ You can verify by inspecting the [last example](http://codepen.io/gaearon/pen/gw
 
 Even though we create an element describing the whole UI tree on every tick, only the text node whose contents has changed gets updated by React DOM.
 
-This diffing algorithm makes React efficient, but the real win is that thinking about what the UI should look like at any given moment rather than how it changes over time eliminates a whole class of bugs.
+In our experience, thinking about how the UI should look at any given moment rather than how to change it over time eliminates a whole class of bugs.
