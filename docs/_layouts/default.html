@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>{{ page.title }} | React</title>
-  <meta name="viewport" content="width=device-width">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta property="og:title" content="{{ page.title }} | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react{{ page.url }}">
@@ -49,19 +49,21 @@
           <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
           React
         </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/installation.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' or page.sectionid == 'contributing' %} class="active"{% endif %}>Docs</a></li>
-          <li><a href="/react/community/support.html"{% if page.sectionid == 'community' %} class="active"{% endif %}>Community</a></li>
-          <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
+        <div class="nav-lists">
+          <ul class="nav-site nav-site-internal">
+            <li><a href="/react/docs/installation.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' or page.sectionid == 'contributing' %} class="active"{% endif %}>Docs</a></li>
+            <li><a href="/react/community/support.html"{% if page.sectionid == 'community' %} class="active"{% endif %}>Community</a></li>
+            <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
+            <li class="nav-site-search">
+              <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+            </li>
+          </ul>
 
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
+          <ul class="nav-site nav-site-external">
+            <li><a href="https://github.com/facebook/react">GitHub</a></li>
+            <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -84,14 +86,16 @@
 
     {{ content }}
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;{{ site.time | date: '%Y' }} Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+    <footer class="footer">
+      <div class="wrap">
+        <div class="footer-info">
+          A Facebook &amp; Instagram collaboration.<br>
+          <a href="/react/acknowledgements.html">Acknowledgements</a>
+        </div>
+        <div class="footer-copy">
+          &copy; 2013&ndash;{{ site.time | date: '%Y' }} Facebook Inc.<br>
+          Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        </div>
       </div>
     </footer>
   </div>
