@@ -11,6 +11,8 @@ var dist = dest + 'dist/';
 var distFiles = [
   'react.js',
   'react.min.js',
+  'react-slim.js',
+  'react-slim.min.js',
   'react-with-addons.js',
   'react-with-addons.min.js',
 ];

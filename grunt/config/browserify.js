@@ -122,6 +122,38 @@ var basic = {
   after: [derequire, simpleBannerify],
 };
 
+var slim = {
+  entries: [
+    './build/node_modules/react/lib/ReactSlimUMDEntry.js',
+  ],
+  outfile: './build/react-slim.js',
+  debug: false,
+  standalone: 'ReactSlim',
+  // Apply as global transform so that we also envify fbjs and any other deps
+  globalTransforms: [envifyDev],
+  plugins: [collapser],
+  after: [derequire, simpleBannerify],
+};
+
+var slimMin = {
+  entries: [
+    './build/node_modules/react/lib/ReactSlimUMDEntry.js',
+  ],
+  outfile: './build/react-slim.min.js',
+  debug: false,
+  standalone: 'ReactSlim',
+  // Envify twice. The first ensures that when we uglifyify, we have the right
+  // conditions to exclude requires. The global transform runs on deps.
+  transforms: [envifyProd, uglifyify],
+  globalTransforms: [envifyProd],
+  plugins: [collapser],
+  // No need to derequire because the minifier will mangle
+  // the "require" calls.
+
+  after: [minify, bannerify],
+};
+
+
 var min = {
   entries: [
     './build/node_modules/react/lib/ReactUMDEntry.js',
@@ -270,6 +302,8 @@ var domFiberMin = {
 
 module.exports = {
   basic: basic,
+  slim: slim,
+  slimMin: slimMin,
   min: min,
   addons: addons,
   addonsMin: addonsMin,

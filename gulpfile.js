@@ -45,6 +45,23 @@ var paths = {
     ],
     lib: 'build/node_modules/react/lib',
   },
+  reactSlim: {
+    src: [
+      'src/umd/ReactSlimUMDEntry.js',
+      'src/umd/shims/**/*.js',
+
+      'src/isomorphic/**/*.js',
+      'src/addons/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+      '!src/shared/vendor/**/*.js',
+      '!src/**/__benchmarks__/**/*.js',
+      '!src/**/__tests__/**/*.js',
+      '!src/**/__mocks__/**/*.js',
+    ],
+    lib: 'build/node_modules/react/lib',
+  },
   reactDOM: {
     src: [
       'src/umd/ReactDOMUMDEntry.js',
@@ -113,6 +130,7 @@ var moduleMapReact = Object.assign(
 var rendererSharedState = {
   // Alias
   React: 'react/lib/React',
+  ReactSlim: 'react/lib/ReactSlim',
   // Shared state
   ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
   ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
@@ -205,6 +223,12 @@ gulp.task('react:modules', function() {
       .pipe(gulp.dest(paths.react.lib)),
 
     gulp
+      .src(paths.reactSlim.src)
+      .pipe(babel(babelOptsReact))
+      .pipe(flatten())
+      .pipe(gulp.dest(paths.reactSlim.lib)),
+
+    gulp
       .src(paths.reactDOM.src)
       .pipe(babel(babelOptsReactDOM))
       .pipe(flatten())
@@ -227,6 +251,7 @@ gulp.task('react:modules', function() {
 gulp.task('react:extract-errors', function() {
   return merge(
     gulp.src(paths.react.src).pipe(extractErrors(errorCodeOpts)),
+    gulp.src(paths.reactSlim.src).pipe(extractErrors(errorCodeOpts)),
     gulp.src(paths.reactDOM.src).pipe(extractErrors(errorCodeOpts)),
     gulp.src(paths.reactNative.src).pipe(extractErrors(errorCodeOpts)),
     gulp.src(paths.reactTestRenderer.src).pipe(extractErrors(errorCodeOpts))

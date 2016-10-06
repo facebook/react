@@ -104,6 +104,14 @@ module.exports = function(grunt) {
     'version-check',
     'browserify:basic',
   ]);
+  grunt.registerTask('build:slim', [
+    'build-modules',
+    'browserify:slim',
+  ]);
+  grunt.registerTask('build:slim-min', [
+    'build-modules',
+    'browserify:slimMin',
+  ]);
   grunt.registerTask('build:addons', [
     'build-modules',
     'browserify:addons',
@@ -168,8 +176,10 @@ module.exports = function(grunt) {
     'version-check',
     'browserify:basic',
     'browserify:addons',
+    'browserify:slim',
     'browserify:min',
     'browserify:addonsMin',
+    'browserify:slimMin',
     'browserify:dom',
     'browserify:domMin',
     'browserify:domServer',
