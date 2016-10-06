@@ -6,7 +6,7 @@ prev: rendering-elements.html
 next: state-and-lifecycle.html
 ---
 
-Components let you split the UI into independent reusable pieces, and think about each piece separately as if it existed in the isolation.
+Components let you split the UI into independent, reusable pieces, and think about each piece in isolation.
 
 Conceptually, components are like JavaScript functions. They accept arbitrary inputs (called "props") and return React elements describing what should appear on the screen.
 
@@ -52,7 +52,7 @@ const element = <Welcome name="Sara" />;
 
 When React sees an element representing a user-defined component, it passes JSX attributes to this component as a single object. We call this object "props".
 
-For example, this code renders "Hello Sara" on the page:
+For example, this code renders "Hello, Sara" on the page:
 
 ```js{1,5}
 function Welcome(props) {
@@ -104,7 +104,7 @@ ReactDOM.render(<App />, container);
 
 [Try it on Codepen.](http://codepen.io/gaearon/pen/KgQKPr?editors=0010)
 
-Typically new React apps have a single `App` component as a root. However when you integrate an existing app with React, you might start bottom-up with a small component like `Button` and gradually convert more views to React components.
+Typically, new React apps have a single `App` component as a root. However, if you integrate it into an existing app, you might start bottom-up with a small component like `Button` and gradually work your way to the top of the view hierarchy.
 
 >**Caveat:**
 >
@@ -243,6 +243,6 @@ function withdraw(account, amount) {
 
 React is pretty flexible but it has a single strict rule:
 
-**All React components must act as pure functions with respect to their props.**
+**All React components must act like pure functions with respect to their props.**
 
 Of course, application UIs dynamic and change over time. In the [next section](/react/docs/state-and-lifecycle.html), we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.

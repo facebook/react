@@ -447,11 +447,38 @@ A component may have multiple state variables, and they can be updated with `set
 }
 ```
 
-## Rendering a Stateful Component
+## The Data Flows Down
 
-There is no difference between rendering a stateful and a stateless component. This is why state is called local or encapsulated. It is not accessible to any other component other than the one that owns and sets it.
+Neither parent nor child components can know if a certain component is stateful or stateless, and they shouldn't care whether it is defined as a function or a class.
 
-The only way child components can know about the state is when the state owner passes it down to them as props, just like `Clock` passes `this.state.date` to the `<h2>`.
+This is why state is often called local or encapsulated. It is not accessible to any other component other than the one that owns and sets it.
+
+A component may choose to pass its state down as props to its child components. In fact, passing `this.state` down is the only useful thing you could do with it:
+
+```js
+<h2>It is {this.state.date.toLocaleTimeString()}.</h2>
+```
+
+You could pass it to a user-defined component too:
+
+```js
+<FormattedDate date={this.state.date} />
+```
+
+
+The `FormattedDate` component would receive the `date` in its props and wouldn't know whether it came from the `Clock`'s state, the props, or was typed by hand:
+
+```js
+function FormattedDate(props) {
+  return <h2>It is {props.date.toLocaleTimeString()}.</h2>;
+}
+```
+
+[Try it on Codepen.](http://codepen.io/gaearon/pen/zKRqNB?editors=0010)
+
+This is commonly called a "top-down" or "unidirectional" data flow. Any state is always owned by some specific component, and any data or UI derived from that state can only affect components "below" them in the tree.
+
+If you imagine a component tree as a waterfall of props, each component's state is like an additional water source that joins it at an arbitrary point but also flows down.
 
 To show that all components are truly isolated, we can create an `App` component that renders three `<Clock>`s:
 
@@ -470,7 +497,7 @@ const container = document.getElementById('root');
 ReactDOM.render(<App />, container);
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/vXdLQm?editors=0010)
+[Try it on Codepen.](http://codepen.io/gaearon/pen/vXdGmd?editors=0010)
 
 Each of the `Clock`s will set up its own interval and update independently.
 
