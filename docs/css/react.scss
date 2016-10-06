@@ -19,7 +19,28 @@ $columnGutter: 40px;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
 $navHeight: 50px;
 
+// Breakpoints
+$bp-large: 960px;
+$bp-medium: 640px;
+$bp-small: 480px;
 
+@mixin bp-small {
+  @media (max-width: $bp-small) {
+    @content;
+  }
+}
+
+@mixin bp-medium {
+  @media (max-width: $bp-medium) {
+    @content;
+  }
+}
+
+@mixin bp-large {
+  @media (max-width: $bp-large) {
+    @content;
+  }
+}
 
 // basic reset
 * {
@@ -46,15 +67,20 @@ html {
 
 .container {
   padding-top: $navHeight;
-  min-width: $contentWidth + (2 * $contentPadding);
+  width: 100%;
 }
 
 .wrap {
-  width: $contentWidth + (2 * $contentPadding);
+  max-width: $contentWidth + (2 * $contentPadding);
   margin-left: auto;
   margin-right: auto;
   padding-left: 20px;
   padding-right: 20px;
+
+  @include bp-large {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }
 
 .skinnyWrap {
@@ -110,21 +136,19 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   z-index: 100;
 
+  @include bp-large {
+    height: auto;
+  }
+
   a {
     color: $lightColor;
     text-decoration: none;
   }
 
-  .nav-site-internal {
-    margin: 0 0 0 20px;
-  }
-
-  .nav-site-external {
-    float: right;
-    margin: 0;
-  }
-
   .nav-site {
+    display: inline-flex;
+    flex: 1;
+
     li {
       margin: 0;
     }
@@ -136,16 +160,80 @@ h1, h2, h3, h4, h5, h6 {
       display: inline-block;
       height: $navHeight;
       color: #ddd;
+      white-space: nowrap;
+
+      @include bp-large {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 5px;
+        line-height: inherit;
+      }
 
       &:hover {
         color: #fff;
       }
 
       &.active {
+        position: relative;
         color: $lightTextColor;
-        border-bottom: 3px solid $primary;
         background: #333;
+
+        &:after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          border-bottom: 3px solid $primary;
+        }
+
+        @include bp-large {
+          background: inherit;
+        }
       }
+    }
+
+    .nav-site-item {
+      &--hidden-sm {
+        @include bp-large {
+          display: none;
+        }
+      }
+    }
+
+    .nav-site-search {
+      @include bp-large {
+        position: absolute;
+        z-index: 1;
+        right: 0;
+        top: 0;
+        margin: 0 10px;
+
+        &:focus {
+          width: 170px;
+        }
+      }
+    }
+  }
+
+  .nav-site-internal {
+    margin: 0 0 0 20px;
+
+    @include bp-large {
+      margin: 0;
+    }
+  }
+
+  .nav-site-external {
+    float: right;
+    margin: 0;
+
+    @include bp-large {
+      position: absolute;
+      top: 0;
+      right: 55px;
+      float: none;
     }
   }
 
@@ -155,11 +243,20 @@ h1, h2, h3, h4, h5, h6 {
     line-height: $navHeight;
     height: $navHeight;
     display: inline-block;
+
+    @include bp-large {
+      font-size: 20px;
+    }
   }
 
   .nav-logo {
     vertical-align: middle;
     display: inline-block;
+
+    @include bp-large {
+      height: 30px;
+      width: auto;
+    }
   }
 
   ul {
@@ -172,10 +269,35 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+.nav-lists {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(100% - 120px);
+
+  @include bp-large {
+    display: flex;
+    width: calc(100% + 20px);
+    margin: 0 -10px;
+    font-size: 0.9em;
+
+    li {
+      display: flex;
+      flex: 1 0 auto;
+      align-items: center;
+
+      a {
+        flex: 1;
+        text-align: center;
+        line-height: 1.2;
+      }
+    }
+  }
+}
+
 // Hero!
 
 .hero {
-  height: 300px;
+  min-height: 300px;
   // background: $darkColor url(../img/header.png) no-repeat center;
   background: $darkColor;
   padding-top: 50px;
@@ -200,8 +322,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .buttons-unit {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-top: 60px;
   text-align: center;
+  font-size: 1em;
 
   a {
     color: $blueColor;
@@ -214,6 +340,11 @@ h1, h2, h3, h4, h5, h6 {
 
     &:active {
       background: darken($primary, 5%);
+    }
+
+    @include bp-large {
+      margin: 5px;
+      font-size: 1em;
     }
   }
 }
@@ -232,6 +363,10 @@ h1, h2, h3, h4, h5, h6 {
   // position: fixed;
   float: left;
   width: 210px;
+
+  @include bp-medium {
+    width: 100%;
+  }
 
   ul {
     list-style: none;
@@ -292,6 +427,25 @@ h1, h2, h3, h4, h5, h6 {
       padding-bottom: 0;
       border-bottom: 0;
     }
+
+    > ul {
+      @include bp-medium {
+        columns: 2
+      }
+
+      @include bp-small {
+        columns: 1;
+      }
+
+      li {
+        margin: 0;
+
+        a {
+          padding: 0;
+          line-height: 2;
+        }
+      }
+    }
   }
 
 }
@@ -311,7 +465,8 @@ h1, h2, h3, h4, h5, h6 {
 .home-divider {
   border-top-color: #bbb;
   margin: 0 auto;
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .skinny-row {
@@ -336,6 +491,11 @@ h1, h2, h3, h4, h5, h6 {
   float: left;
   margin-left: 40px;
   width: $columnWidth;
+
+  @include bp-large {
+    margin: 0;
+    width: 100%;
+  }
 
   h3 {
     color: $darkColor;
@@ -506,8 +666,8 @@ section.black content {
   blockquote {
       padding: 15px 30px 15px 15px;
       margin: 20px 0;
-      background-color: rgba(204, 122, 111, 0.09999999999999998);
-      border-left: 5px solid rgba(191, 87, 73, 0.19999999999999996);
+      background-color: rgba(248, 245, 236, 0.5);
+      border-left: 5px solid rgba(191, 87, 73, 0.2);
     h4 {
       margin-top: 0;
     }
@@ -608,7 +768,17 @@ figure {
 
 .inner-content {
   float: right;
-  width: $skinnyContentWidth;
+  width: 100%;
+  max-width: $skinnyContentWidth;
+
+  @include bp-large {
+    width: calc(100% - 240px);
+    max-width: 100%;
+  }
+
+  @include bp-medium {
+    width: 100%;
+  }
 }
 
 .nosidebar .inner-content {
@@ -627,6 +797,11 @@ h1 {
   font-weight: normal;
   line-height: 20px;
   margin-top: 17px;
+
+  @include bp-medium {
+    float: left;
+    width: 100%;
+  }
 }
 
 /* Blog */
@@ -702,7 +877,8 @@ p a code {
   border-radius: 0 3px 3px 3px;
   float: left;
   overflow: hidden;
-  width: $twoColumnWidth;
+  width: 100%;
+  max-width: $twoColumnWidth;
 }
 
 .playgroundPreview {
@@ -806,9 +982,9 @@ p a code {
   text-decoration: none !important;
 }
 
-@media screen and (max-width: 960px) {
+@include bp-large {
   .nav-main {
-    position: static;
+    position: relative;
   }
   .container {
     padding-top: 0;
@@ -821,6 +997,7 @@ p a code {
 
 .post img {
   max-width: 100%;
+  height: auto;
 }
 
 .pagination {
@@ -860,12 +1037,6 @@ div[data-twttr-id] iframe {
 
 /* Algolia Doc Search */
 
-@media screen and (max-width: 960px) {
-  #algolia-doc-search {
-    display: none;
-  }
-}
-
 input#algolia-doc-search {
   background: transparent url('/react/img/search.png') no-repeat 10px center;
   background-size: 16px 16px;
@@ -886,10 +1057,21 @@ input#algolia-doc-search {
   width: 170px;
 
   transition: width .2s ease;
-}
 
-input#algolia-doc-search:focus {
-  width: 240px;
+  &:focus {
+    width: 240px;
+  }
+
+  @include bp-large {
+    background-color: transparent;
+    width: 0;
+    cursor: pointer;
+
+    &:focus {
+      width: 200px;
+      background-color: #333;
+    }
+  }
 }
 
 .algolia-autocomplete .aa-dropdown-menu {
@@ -924,4 +1106,34 @@ input#algolia-doc-search:focus {
 
 .aa-cursor .algolia-docsearch-suggestion {
   background: #f1f3f5;
+}
+
+.footer {
+  @include bp-medium {
+    text-align: center;
+  }
+}
+
+.footer-info {
+  float: left;
+
+  @include bp-medium {
+    float: none;
+  }
+}
+
+.footer-copy {
+  float: right;
+
+  @include bp-medium {
+    float: none;
+  }
+}
+
+.fb_iframe_widget {
+  max-width: 100%;
+
+  * {
+    max-width: 100%;
+  }
 }
