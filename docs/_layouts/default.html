@@ -85,19 +85,46 @@
     {% endif %}
 
     {{ content }}
-
-    <footer class="footer">
-      <div class="wrap">
-        <div class="footer-info">
-          A Facebook &amp; Instagram collaboration.<br>
+    <footer class="nav-footer">
+      <section class="sitemap">
+        <a href="/react/" class="nav-home">
+        </a>
+        <div>
+          <h5><a href="/react/docs/">Docs</a></h5>
+          <a href="/react/docs/installation.html">Getting Started</a>
+          <a href="/react/docs/tutorial.html">Tutorial</a>
+          <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+          <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+        </div>
+        <div>
+          <h5><a href="/react/support.html">Community</a></h5>
+          <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+          <a href="https://discuss.reactjs.org/" target="_blank">Forum</a>
+          <a href="irc://chat.freenode.net/reactjs" target="_blank">Chat</a>
+          <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+          <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+        </div>
+        <div>
+          <h5><a href="/react/support.html">Resources</a></h5>
+          <a href="/react/community/conferences.html">Conferences</a>
+          <a href="/react/community/videos.html">Videos</a>
+          <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+        </div>
+        <div>
+          <h5>More</h5>
+          <a href="/react/blog/">Blog</a>
+          <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+          <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
           <a href="/react/acknowledgements.html">Acknowledgements</a>
         </div>
-        <div class="footer-copy">
-          &copy; 2013&ndash;{{ site.time | date: '%Y' }} Facebook Inc.<br>
-          Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-        </div>
-      </div>
-    </footer>
+      </section>
+      <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+        <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+      </a>
+      <section class="copyright">
+        Copyright © {{ site.time | date: '%Y' }} Facebook Inc.
+      </section>
+
   </div>
   <div id="fb-root"></div>
 
