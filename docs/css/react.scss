@@ -1206,26 +1206,3 @@ footer .copyright {
   color: rgba(255, 255, 255, 0.4);
   text-align: center;
 }
-
-// mobile friendly changes after this
-.delete-footer {
-  @include bp-medium {
-    text-align: center;
-  }
-}
-
-.delete-footer-info {
-  float: left;
-
-  @include bp-medium {
-    float: none;
-  }
-}
-
-.delete-footer-copy {
-  float: right;
-
-  @include bp-medium {
-    float: none;
-  }
-}
