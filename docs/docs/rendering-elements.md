@@ -3,6 +3,7 @@ id: rendering-elements
 title: Rendering Elements
 permalink: docs/rendering-elements.html
 prev: introducing-jsx.html
+next: components-and-props.html
 ---
 
 Elements are the smallest building blocks of React apps.
