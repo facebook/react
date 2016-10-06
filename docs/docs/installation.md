@@ -11,7 +11,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 
 ## Trying Out React
 
-If you're just interested in playing around with React, you can use JSFiddle. Try starting from [this Hello World example code](https://jsfiddle.net/cnguj5va/). You don't need to install anything; you can just modify the code and click "Run" to see if it works.
+If you're just interested in playing around with React, you can use CodePen. Try starting from [this Hello World example code](http://codepen.io/hramos/pen/LRZBEJ?editors=1010). You don't need to install anything; you can just modify the code and see if it works.
 
 If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
@@ -32,7 +32,7 @@ Create React App doesn't handle backend logic or databases; it just creates a fr
 
 ### Using npm
 
-We recommend using React from npm with a bundler like [browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you use npm for client package management, you can install React with:
+We recommend using React from npm with a bundler like [Browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you use npm for client package management, you can install React with:
 
 ```bash
 npm install --save react react-dom
