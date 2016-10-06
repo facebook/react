@@ -9,12 +9,12 @@
       title: Introducing JSX
     - id: rendering-elements
       title: Rendering Elements
-    - id: the-component-lifecycle
-      title: The Component Lifecycle
 - title: Advanced Guides
   items:
     - id: jsx-in-depth
       title: JSX In Depth
     - id: react-without-jsx
       title: React Without JSX
+    - id: the-component-lifecycle
+      title: The Component Lifecycle
 - title: Reference
