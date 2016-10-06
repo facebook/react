@@ -251,39 +251,28 @@ You'll need to change `this.props` to `props` both times it appears. Many compon
 
 An obvious defect in our game is that only X can play. Let's fix that.
 
-We start our game with 'X' moving first. By scanning through the board we can determine whether 'X' or 'O' are next.
-
-Let's add a helper function `xIsNext` to the `Game` class. The function works by looping through the squares array and counting the number of Xs and Os. If the number of Xs and Os are equal, then 'X' is next, otherwise 'O' is next.
+Let's default the first move to be by 'X'. Modify our starting state in our `Game` constructor.
 
 ```javascript
-xIsNext(squares) {
-  let x = 0;
-  let o = 0;
-
-  let xNext = false;
-
-  for(let square of squares) {
-    switch (square) {
-      case 'X': x++; break;
-      case 'O': o++; break;
-      default: break;
-    }
+class Board extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      ...
+      xIsNext: true,
+    };
   }
-
-  if (x == o) xNext = true;
-
-  return xNext;
-}
 ```
 
-Now we update our `handleClick` function to call `xIsNext` and provide it our copy of `squares`.
+Each time we move we shall toggle `xIsNext` by flipping the boolean value and saving the state. Now update our `handleClick` function to flip the value of `xIsNext`.
 
 ```javascript
 handleClick(i) {
   const squares = this.state.squares.slice();
-  squares[i] = this.xIsNext(squares) ? 'X' : 'O';
+  squares[i] = this.state.xIsNext ? 'X' : 'O';
   this.setState({
     squares: squares,
+    xIsNext: !this.state.xIsNext,
   });
 }
 ```
@@ -301,7 +290,7 @@ render() {
   if (winner) {
     status = 'Winner: ' + winner;
   } else {
-    status = 'Next player: ' + (this.xIsNext(current.squares) ? 'X' : 'O');
+    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
   }
   ...
 }
@@ -352,15 +341,16 @@ class Game extends React.Component {
     this.state = {
       history: [{
         squares: Array(9).fill(null),
-        moveNext: 0,
+        moveNumber: 0,
       }],
+      xIsNext: true
     };
   }
   ...
 }
 ```
 
-Then change `Board` so that it takes `squares` via props and has its own `onClick` prop specified by `Game`, like the transformation we made for `Square` and `Board` earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
+Then remove the constructor and change `Board` so that it takes `squares` via props and has its own `onClick` prop specified by `Game`, like the transformation we made for `Square` and `Board` earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
 
 ```javascript
 return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />;
@@ -377,7 +367,7 @@ let status;
 if (winner) {
   status = 'Winner: ' + winner;
 } else {
-  status = 'Next player: ' + (this.xIsNext(current.squares) ? 'X' : 'O');
+  status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
 }
 ...
 <div className="game-board">
@@ -402,11 +392,11 @@ handleClick(i) {
   if (calculateWinner(squares) || squares[i]) {
     return;
   }
-  squares[i] = this.xIsNext(current.squares) ? 'X' : 'O';
+  squares[i] = this.state.xIsNext(current.squares) ? 'X' : 'O';
   this.setState({
     history: history.concat([{
       squares: squares,
-      moveNext: history.length,
+      moveNumber: history.length,
     }]),
   });
 }
@@ -420,8 +410,8 @@ Let's show the previous moves made in the game so far. We learned earlier that R
 
 ```javascript
 const moves = history.map((step, i) => {
-  const desc = step.move ?
-    'Move #' + step.move :
+  const desc = step.moveNumber ?
+    'Move #' + step.moveNumber :
     'Game start';
   return (
     <li>
@@ -487,6 +477,7 @@ Clicking any of the move links throws an error because `jumpTo` is undefined. Le
 jumpTo(i) {
   this.setState({
     stepNumber: i,
+    xIsNext: ((i - 1) % 2) ? true : false,
   });
 }
 ```
