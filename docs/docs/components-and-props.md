@@ -3,6 +3,7 @@ id: components-and-props
 title: Components and Props
 permalink: docs/components-and-props.html
 prev: rendering-elements.html
+next: state-and-lifecycle.html
 ---
 
 Components let you split the UI into independent reusable pieces, and think about each piece separately as if it existed in the isolation.
@@ -33,7 +34,7 @@ class Welcome extends React.Component {
 
 The above two components are equivalent from React's point of view.
 
-Classes have some additional features that we will discuss in the next sections. Until then, we will use functional components for their conciseness.
+Classes have some additional features that we will discuss in the [next sections](/react/docs/state-and-lifecycle.html). Until then, we will use functional components for their conciseness.
 
 ## Rendering a Component
 
@@ -244,4 +245,4 @@ React is pretty flexible but it has a single strict rule:
 
 **All React components must act as pure functions with respect to their props.**
 
-Of course, application UIs dynamic and change over time. In the next section, we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.
+Of course, application UIs dynamic and change over time. In the [next section](/react/docs/state-and-lifecycle.html), we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.

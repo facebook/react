@@ -44,7 +44,7 @@ It displays "Hello World" on the page.
 
 React elements are [immutable](https://en.wikipedia.org/wiki/Immutable_object). Once you create an element, you can't change it.
 
-When we want the UI to update, we create a new element, and pass it to ReactDOM.render(). It updates the DOM to match the newly passed element.
+When we want the UI to update, we create a new element, and pass it to `ReactDOM.render()`. It updates the DOM to match the newly passed element.
 
 Consider this ticking clock example:
 
@@ -65,6 +65,8 @@ setInterval(tick, 1000);
 ```
 
 [Try it on Codepen.](http://codepen.io/gaearon/pen/gwoJZk?editors=0010)
+
+It calls `ReactDOM.render()` every second from a [`setInterval()`](https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setInterval) callback.
 
 ## React Only Updates What's Necessary
 
