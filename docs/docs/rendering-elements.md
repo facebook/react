@@ -5,7 +5,7 @@ permalink: docs/rendering-elements.html
 prev: introducing-jsx.html
 ---
 
-Elements are the smallest building block of React apps.
+Elements are the smallest building blocks of React apps.
 
 An element describes what you want to see on the screen:
 
