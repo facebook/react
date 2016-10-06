@@ -471,13 +471,15 @@ Component keys don't need to be globally unique, only unique relative to the imm
 
 For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as `<li key={step.move}>` and the key warning should disappear.
 
-Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state:
+Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state.
+
+We also want to update `xIsNext`. We set `xIsNext` to true if the index of the move number is an even number.
 
 ```javascript
 jumpTo(i) {
   this.setState({
     stepNumber: i,
-    xIsNext: ((i - 1) % 2) ? true : false,
+    xIsNext: (i % 2) ? false : true,
   });
 }
 ```
