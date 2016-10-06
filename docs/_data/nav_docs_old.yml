@@ -24,8 +24,6 @@
   items:
   - id: tutorial
     title: Tutorial
-  - id: thinking-in-react
-    title: Thinking in React
 - title: Old Guides
   items:
   - id: why-react
