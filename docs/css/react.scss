@@ -1064,7 +1064,7 @@ div[data-twttr-id] iframe {
 
 #twitter-widget-0 {
   @include bp-large {
-    display: none !important; // Need !important because they inline displau on the iframe.
+    display: none !important; // Need !important because they inline display on the iframe.
   }
 }
 
