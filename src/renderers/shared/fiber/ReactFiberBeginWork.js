@@ -441,14 +441,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        if (workInProgress.child) {
-          return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child,
-            priorityLevel
-          );
-        }
-        return null;
+        return workInProgress.child;
       case HostComponent:
         if (workInProgress.stateNode && config.beginUpdate) {
           config.beginUpdate(workInProgress.stateNode);
@@ -466,35 +459,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
         updateCoroutineComponent(current, workInProgress);
         // This doesn't take arbitrary time so we could synchronously just begin
         // eagerly do the work of workInProgress.child as an optimization.
-        if (workInProgress.child) {
-          return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child,
-            priorityLevel
-          );
-        }
         return workInProgress.child;
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        if (workInProgress.sibling) {
-          return beginWork(
-            workInProgress.sibling.alternate,
-            workInProgress.sibling,
-            priorityLevel
-          );
-        }
         return null;
       case Fragment:
         updateFragment(current, workInProgress);
-        if (workInProgress.child) {
-          return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child,
-            priorityLevel
-          );
-        }
-        return null;
+        return workInProgress.child;
       default:
         throw new Error('Unknown unit of work tag');
     }
