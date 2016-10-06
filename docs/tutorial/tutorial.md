@@ -319,12 +319,10 @@ Let's plan to store an object like this in state:
 ```javascript
 history = [
   {
-    squares: [null x 9],
-    moveNumber: 0, /* Game start */
+    squares: [null x 9]
   },
   {
-    squares: [... x 9],
-    moveNumber: 1, /* First move */
+    squares: [... x 9]
   },
   ...
 ]
@@ -340,8 +338,7 @@ class Game extends React.Component {
     super();
     this.state = {
       history: [{
-        squares: Array(9).fill(null),
-        moveNumber: 0,
+        squares: Array(9).fill(null)
       }],
       xIsNext: true
     };
@@ -395,9 +392,9 @@ handleClick(i) {
   squares[i] = this.state.xIsNext(current.squares) ? 'X' : 'O';
   this.setState({
     history: history.concat([{
-      squares: squares,
-      moveNumber: history.length,
+      squares: squares
     }]),
+    xIsNext: !this.state.xIsNext,
   });
 }
 ```
@@ -409,13 +406,13 @@ At this point, Board only needs `renderStep` and `render`; the state initializat
 Let's show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let's do that in the `render` method of Game:
 
 ```javascript
-const moves = history.map((step, i) => {
-  const desc = step.moveNumber ?
-    'Move #' + step.moveNumber :
+const moves = history.map((step, move) => {
+  const desc = move ?
+    'Move #' + move :
     'Game start';
   return (
-    <li>
-      <a href="#" onClick={() => this.jumpTo(i)}>{desc}</a>
+    <li key={move}>
+      <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
     </li>
   );
 });
@@ -469,17 +466,17 @@ Component keys don't need to be globally unique, only unique relative to the imm
 
 ## Implementing Time Travel
 
-For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as `<li key={step.move}>` and the key warning should disappear.
+For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as `<li key={move}>` and the key warning should disappear.
 
 Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state.
 
 We also want to update `xIsNext`. We set `xIsNext` to true if the index of the move number is an even number.
 
 ```javascript
-jumpTo(i) {
+jumpTo(step) {
   this.setState({
-    stepNumber: i,
-    xIsNext: (i % 2) ? false : true,
+    stepNumber: step,
+    xIsNext: (step % 2) ? false : true,
   });
 }
 ```
