@@ -66,83 +66,17 @@ We [mentioned before](/react/docs/components-and-props.html#functional-and-class
 
 ## Converting a Function to a Class
 
-You can convert a functional component like `Clock` to a class in five steps.
+You can convert a functional component like `Clock` to a class in five steps:
 
-1) Create an [ES2015 class](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes) with the same name that extends `React.Component`:
+1. Create an [ES2015 class](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes) with the same name that extends `React.Component`.
 
-```js{1-3}
-class Clock extends React.Component {
+2. Add a single empty method to it called `render()`.
 
-}
+3. Move the body of the function into the `render()` method.
 
-function Clock(props) {
-  return (
-    <div>
-      <h1>Hello, world!</h1>
-      <h2>It is {props.date.toLocaleTimeString()}.</h2>
-    </div>
-  );
-}
-```
+4. Replace `props` with `this.props` in the `render()` body.
 
-2) Add a single empty method to it called `render()`:
-
-```js{2-4}
-class Clock extends React.Component {
-  render() {
-
-  }
-}
-
-function Clock(props) {
-  return (
-    <div>
-      <h1>Hello, world!</h1>
-      <h2>It is {props.date.toLocaleTimeString()}.</h2>
-    </div>
-  );
-}
-```
-
-3) Move the body of the function into the `render()` method:
-
-```js{3-8}
-class Clock extends React.Component {
-  render() {
-    return (
-      <div>
-        <h1>Hello, world!</h1>
-        <h2>It is {props.date.toLocaleTimeString()}.</h2>
-      </div>
-    );
-  }
-}
-
-function Clock(props) {
-
-}
-```
-
-4) Replace `props` with `this.props` in the `render()` body:
-
-```js{6}
-class Clock extends React.Component {
-  render() {
-    return (
-      <div>
-        <h1>Hello, world!</h1>
-        <h2>It is {this.props.date.toLocaleTimeString()}.</h2>
-      </div>
-    );
-  }
-}
-
-function Clock(props) {
-
-}
-```
-
-5) Delete the empty function declaration:
+5. Delete the remaining empty function declaration.
 
 ```js
 class Clock extends React.Component {
