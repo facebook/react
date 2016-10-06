@@ -5,5 +5,16 @@
       title: Installation
     - id: hello-world
       title: Hello World
+    - id: introducing-jsx
+      title: Introducing JSX
+    - id: rendering-elements
+      title: Rendering Elements
+    - id: thinking-in-react
+      title: Thinking In React
 - title: Advanced Guides
+  items:
+    - id: jsx-in-depth
+      title: JSX In Depth
+    - id: react-without-jsx
+      title: React Without JSX
 - title: Reference
