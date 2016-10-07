@@ -143,6 +143,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       effectfulFiber.nextEffect = null;
       effectfulFiber = next;
     }
+
+    // Finally if the root itself had an effect, we perform that since it is not
+    // part of the effect list.
+    if (finishedWork.effectTag !== NoEffect) {
+      const current = finishedWork.alternate;
+      commitWork(current, finishedWork);
+    }
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
@@ -179,20 +186,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       workInProgress.pendingProps = null;
       workInProgress.updateQueue = null;
 
-      // If this fiber had side-effects, we append it to the end of its own
-      // effect list.
-      if (workInProgress.effectTag !== NoEffect) {
-        // Schedule a side-effect on this fiber, AFTER the children's
-        // side-effects. We can perform certain side-effects earlier if
-        // needed, by doing multiple passes over the effect list.
-        if (workInProgress.lastEffect) {
-          workInProgress.lastEffect.nextEffect = workInProgress;
-        } else {
-          workInProgress.firstEffect = workInProgress;
-        }
-        workInProgress.lastEffect = workInProgress;
-      }
-
       const returnFiber = workInProgress.return;
 
       if (returnFiber) {
@@ -207,6 +200,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
           }
           returnFiber.lastEffect = workInProgress.lastEffect;
+        }
+
+        // If this fiber had side-effects, we append it AFTER the children's
+        // side-effects. We can perform certain side-effects earlier if
+        // needed, by doing multiple passes over the effect list. We don't want
+        // to schedule our own side-effect on our own list because if end up
+        // reusing children we'll schedule this effect onto itself since we're
+        // at the end.
+        if (workInProgress.effectTag !== NoEffect) {
+          if (returnFiber.lastEffect) {
+            returnFiber.lastEffect.nextEffect = workInProgress;
+          } else {
+            returnFiber.firstEffect = workInProgress;
+          }
+          returnFiber.lastEffect = workInProgress;
         }
       }
 

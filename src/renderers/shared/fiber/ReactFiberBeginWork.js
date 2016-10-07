@@ -403,9 +403,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
 
   function bailoutOnLowPriority(current, workInProgress) {
     if (current) {
+      // TODO: If I have started work on this node, mark it as finished, then
+      // return do other work, come back and hit this node... we killed that
+      // work. It is now in an inconsistent state. We probably need to check
+      // progressedChild or something.
       workInProgress.child = current.child;
       workInProgress.memoizedProps = current.memoizedProps;
       workInProgress.output = current.output;
+      workInProgress.firstEffect = null;
+      workInProgress.lastEffect = null;
     }
     return null;
   }
@@ -415,6 +421,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
     }
+
+    // If we don't bail out, we're going be recomputing our children so we need
+    // to drop our effect list.
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
 
     if (workInProgress.progressedPriority === priorityLevel) {
       // If we have progressed work on this priority level already, we can
