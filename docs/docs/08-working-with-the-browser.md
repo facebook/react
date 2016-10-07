@@ -32,7 +32,7 @@ React provides lifecycle methods that you can specify to hook into this process.
 
 ### Mounting
 
-* `getInitialState(): object` is invoked before a component is mounted. Stateful components should implement this and return the initial state data.
+* `getInitialState()` is invoked before a component is mounted. Stateful components should implement this and return the initial state data.
 * `componentWillMount()` is invoked immediately before mounting occurs.
 * `componentDidMount()` is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.
 
