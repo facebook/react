@@ -175,6 +175,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;
+          if (workInProgress.ref) {
+            // If there is a ref on a host node we need to schedule a callback
+            markUpdate(workInProgress);
+          }
         }
         workInProgress.memoizedProps = newProps;
         return null;

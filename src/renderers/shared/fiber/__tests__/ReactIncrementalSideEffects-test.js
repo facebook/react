@@ -637,6 +637,72 @@ describe('ReactIncrementalSideEffects', () => {
 
   });
 
+  it('invokes ref callbacks after insertion/update/unmount', () => {
+
+    var classInstance = null;
+
+    var ops = [];
+
+    class ClassComponent extends React.Component {
+      render() {
+        classInstance = this;
+        return <span />;
+      }
+    }
+
+    function FunctionalComponent(props) {
+      return <span />;
+    }
+
+    function Foo(props) {
+      return (
+        props.show ?
+        <div>
+          <ClassComponent ref={n => ops.push(n)} />
+          <FunctionalComponent ref={n => ops.push(n)} />
+          <div ref={n => ops.push(n)} />
+        </div> :
+        null
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      classInstance,
+      // no call for functional components
+      div(),
+    ]);
+
+    ops = [];
+
+    // Refs that switch function instances get reinvoked
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // TODO: All detach should happen first. Currently they're interleaved.
+      // detach
+      null,
+      // reattach
+      classInstance,
+      // detach
+      null,
+      // reattach
+      div(),
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // unmount
+      null,
+      null,
+    ]);
+
+  });
+
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 

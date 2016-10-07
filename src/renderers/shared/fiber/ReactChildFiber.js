@@ -221,11 +221,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (current == null || current.type !== element.type) {
       // Insert
       const created = createFiberFromElement(element, priority);
+      created.ref = element.ref;
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
+      existing.ref = element.ref;
       existing.pendingProps = element.props;
       existing.return = returnFiber;
       return existing;
@@ -317,6 +319,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           const created = createFiberFromElement(newChild, priority);
+          created.ref = newChild.ref;
           created.return = returnFiber;
           return created;
         }
@@ -643,6 +646,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
+          existing.ref = element.ref;
           existing.pendingProps = element.props;
           existing.return = returnFiber;
           return existing;
@@ -657,6 +661,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     const created = createFiberFromElement(element, priority);
+    created.ref = element.ref;
     created.return = returnFiber;
     return created;
   }
