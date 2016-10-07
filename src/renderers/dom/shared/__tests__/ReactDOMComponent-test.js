@@ -806,6 +806,8 @@ describe('ReactDOMComponent', () => {
           'A component is using shady dom. Using shady dom with React can ' +
           'cause things to break subtly.'
         );
+        mountComponent({is: 'custom-shady-div2'});
+        expect(console.error.calls.count()).toBe(1);
       } finally {
         document.createElement = defaultCreateElement;
       }
