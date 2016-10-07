@@ -366,8 +366,9 @@ h1, h2, h3, h4, h5, h6 {
 
   @include bp-medium {
     width: 100%;
+    padding-bottom: 40px;
   }
-
+   
   ul {
     list-style: none;
     margin: 0;
@@ -1058,6 +1059,12 @@ div[data-twttr-id] iframe {
 
   * {
     max-width: 100%;
+  }
+}
+
+#twitter-widget-0 {
+  @include bp-large {
+    display: none !important; // Need !important because they inline display on the iframe.
   }
 }
 
