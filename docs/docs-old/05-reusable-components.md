@@ -6,6 +6,8 @@ prev: multiple-components.html
 next: transferring-props.html
 ---
 
+NOTE: the only thing we haven't covered in the new docs, in here, is PropTypes. Once that's covered, delete this doc
+
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc.) into reusable components with well-defined interfaces. That way, the next time you need to build some UI, you can write much less code. This means faster development time, fewer bugs, and fewer bytes down the wire.
 
 ## Prop Validation

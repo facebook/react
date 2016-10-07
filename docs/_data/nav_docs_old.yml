@@ -22,10 +22,6 @@
     title: React (Virtual) DOM Terminology
 - title: Old Guides
   items:
-  - id: why-react
-    title: Why React?
-  - id: multiple-components
-    title: Multiple Components
   - id: reusable-components
     title: Reusable Components
   - id: transferring-props
