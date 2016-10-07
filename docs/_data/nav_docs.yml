@@ -8,6 +8,10 @@
       title: Introducing JSX
     - id: rendering-elements
       title: Rendering Elements
+    - id: components-and-props
+      title: Components and Props
+    - id: state-and-lifecycle
+      title: State and Lifecycle
     - id: thinking-in-react
       title: Thinking In React
 - title: Advanced Guides
