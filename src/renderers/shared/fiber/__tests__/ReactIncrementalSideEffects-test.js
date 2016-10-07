@@ -557,7 +557,87 @@ describe('ReactIncrementalSideEffects', () => {
 
   });
 
-  // TODO: Test that unmounts and deletions happen in the expected way for
-  // aborted and resumed render life-cycles.
+  it('calls componentDidMount/Update after insertion/update', () => {
+
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentDidMount() {
+        ops.push('mount:' + this.props.name);
+      }
+      componentDidUpdate() {
+        ops.push('update:' + this.props.name);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    class Wrapper extends React.Component {
+      componentDidMount() {
+        ops.push('mount:wrapper-' + this.props.name);
+      }
+      componentDidUpdate() {
+        ops.push('update:wrapper-' + this.props.name);
+      }
+      render() {
+        return <Bar name={this.props.name} />;
+      }
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          <Bar key="a" name="A" />
+          <Wrapper key="b" name="B" />
+          <div key="cd">
+            <Bar name="C" />
+            <Wrapper name="D" />
+          </div>
+          {[
+            <Bar key="e" name="E" />,
+            <Bar key="f" name="F" />,
+          ]}
+          <div>
+            <Bar key="g" name="G" />
+          </div>
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'mount:A',
+      'mount:B',
+      'mount:wrapper-B',
+      'mount:C',
+      'mount:D',
+      'mount:wrapper-D',
+      'mount:E',
+      'mount:F',
+      'mount:G',
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'update:A',
+      'update:B',
+      'update:wrapper-B',
+      'update:C',
+      'update:D',
+      'update:wrapper-D',
+      'update:E',
+      'update:F',
+      'update:G',
+    ]);
+
+  });
+
+  // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
+  // expected way for aborted and resumed render life-cycles.
 
 });
