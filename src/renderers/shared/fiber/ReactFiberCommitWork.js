@@ -132,8 +132,36 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
+  function commitNestedUnmounts(root : Fiber) {
+    // While we're inside a removed host node we don't want to call
+    // removeChild on the inner nodes because they're removed by the top
+    // call anyway. We also want to call componentWillUnmount on all
+    // composites before this host node is removed from the tree. Therefore
+    // we do an inner loop while we're still inside the host node.
+    let node : Fiber = root;
+    while (true) {
+      commitUnmount(node);
+      if (node.child) {
+        // TODO: Coroutines need to visit the stateNode.
+        node = node.child;
+        continue;
+      }
+      if (node === root) {
+        return;
+      }
+      while (!node.sibling) {
+        if (!node.return || node.return === root) {
+          return;
+        }
+        node = node.return;
+      }
+      node = node.sibling;
+    }
+  }
+
   function commitDeletion(current : Fiber) : void {
     // Recursively delete all host nodes from the parent.
+    // TODO: Error handling.
     const parent = getHostParent(current);
     if (!parent) {
       return;
@@ -146,11 +174,17 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     let node : Fiber = current;
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
+        commitNestedUnmounts(node);
+        // After all the children have unmounted, it is now safe to remove the
+        // node from the tree.
         removeChild(parent, node.stateNode);
-      } else if (node.child) {
-        // TODO: Coroutines need to visit the stateNode.
-        node = node.child;
-        continue;
+      } else {
+        commitUnmount(node);
+        if (node.child) {
+          // TODO: Coroutines need to visit the stateNode.
+          node = node.child;
+          continue;
+        }
       }
       if (node === current) {
         return;
@@ -162,6 +196,17 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         node = node.return;
       }
       node = node.sibling;
+    }
+  }
+
+  function commitUnmount(current : Fiber) : void {
+    switch (current.tag) {
+      case ClassComponent: {
+        const instance = current.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          instance.componentWillUnmount();
+        }
+      }
     }
   }
 

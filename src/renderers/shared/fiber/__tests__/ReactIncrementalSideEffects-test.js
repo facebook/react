@@ -132,6 +132,38 @@ describe('ReactIncrementalSideEffects', () => {
 
   });
 
+  it('can deletes children either components, host or text', function() {
+
+    function Bar(props) {
+      return <span prop={props.children} />;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.show ? [
+            <div key="a" />,
+            <Bar key="b">Hello</Bar>,
+            'World',
+          ] : []}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(div(), span('Hello'), 'World'),
+    ]);
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(),
+    ]);
+
+  });
+
   it('does not update child nodes if a flush is aborted', () => {
 
     function Bar(props) {
@@ -459,4 +491,73 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   // TODO: Test that callbacks are not lost if an update is preempted.
+
+  it('calls componentWillUnmount after a deletion, even if nested', () => {
+
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentWillUnmount() {
+        ops.push(this.props.name);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    class Wrapper extends React.Component {
+      componentWillUnmount() {
+        ops.push('Wrapper');
+      }
+      render() {
+        return <Bar name={this.props.name} />;
+      }
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.show ? [
+            <Bar key="a" name="A" />,
+            <Wrapper key="b" name="B" />,
+            <div key="cd">
+              <Bar name="C" />
+              <Wrapper name="D" />,
+            </div>,
+            [
+              <Bar key="e" name="E" />,
+              <Bar key="f" name="F" />,
+            ],
+          ] : []}
+          <div>
+            {props.show ? <Bar key="g" name="G" /> : null}
+          </div>
+          <Bar name="this should not unmount" />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([]);
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'A',
+      'Wrapper',
+      'B',
+      'C',
+      'Wrapper',
+      'D',
+      'E',
+      'F',
+      'G',
+    ]);
+
+  });
+
+  // TODO: Test that unmounts and deletions happen in the expected way for
+  // aborted and resumed render life-cycles.
+
 });
