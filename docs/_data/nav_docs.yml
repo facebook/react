@@ -14,6 +14,8 @@
       title: State and Lifecycle
     - id: handling-events
       title: Handling Events
+    - id: composition-vs-inheritance
+      title: Composition vs Inheritance
     - id: thinking-in-react
       title: Thinking In React
 - title: Advanced Guides
