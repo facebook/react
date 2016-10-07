@@ -12,6 +12,8 @@
       title: Components and Props
     - id: state-and-lifecycle
       title: State and Lifecycle
+    - id: handling-events
+      title: Handling Events
     - id: thinking-in-react
       title: Thinking In React
 - title: Advanced Guides
