@@ -632,12 +632,20 @@ ReactDOMComponent.Mixin = {
           this._currentElement.type
         );
       }
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
+      if (__DEV__ && isCustomComponentTag) {
+        warning(
+          !el.shadyRoot,
+          'A component is using shady dom. Using shady dom with React can ' +
+          'cause things to break subtly.'
+        );
+      }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
       if (!this._hostParent) {
         DOMPropertyOperations.setAttributeForRoot(el);
       }
-      this._updateDOMProperties(null, props, transaction);
+      this._updateDOMProperties(null, props, transaction, isCustomComponentTag);
       var lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
@@ -902,7 +910,8 @@ ReactDOMComponent.Mixin = {
     }
 
     assertValidProps(this, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction);
+    var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
+    this._updateDOMProperties(lastProps, nextProps, transaction, isCustomComponentTag);
     this._updateDOMChildren(
       lastProps,
       nextProps,
@@ -944,7 +953,12 @@ ReactDOMComponent.Mixin = {
    * @param {object} nextProps
    * @param {?DOMElement} node
    */
-  _updateDOMProperties: function(lastProps, nextProps, transaction) {
+  _updateDOMProperties: function(
+    lastProps,
+    nextProps,
+    transaction,
+    isCustomComponentTag
+  ) {
     var propKey;
     var styleName;
     var styleUpdates;
@@ -1034,7 +1048,7 @@ ReactDOMComponent.Mixin = {
         } else if (lastProp) {
           deleteListener(this, propKey);
         }
-      } else if (isCustomComponent(this._tag, nextProps)) {
+      } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
