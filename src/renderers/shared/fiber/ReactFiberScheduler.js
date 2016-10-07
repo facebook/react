@@ -116,6 +116,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     let effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
       switch (effectfulFiber.effectTag) {
+        // TODO: Should we commit host updates here? Otherwise update to parent
+        // host components are not visible in life-cycles. Such as when you read
+        // layout information.
         case Placement:
         case PlacementAndUpdate:
           commitInsertion(effectfulFiber);

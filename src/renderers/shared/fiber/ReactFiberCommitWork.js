@@ -213,6 +213,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
+        const instance = finishedWork.stateNode;
+        if (!current) {
+          if (typeof instance.componentDidMount === 'function') {
+            instance.componentDidMount();
+          }
+        } else {
+          if (typeof instance.componentDidUpdate === 'function') {
+            const prevProps = current.memoizedProps;
+            // TODO: This is the new state. We don't currently have the previous
+            // state anymore.
+            const prevState = instance.state || null;
+            instance.componentDidUpdate(prevProps, prevState);
+          }
+        }
         // Clear updates from current fiber. This must go before the callbacks
         // are reset, in case an update is triggered from inside a callback. Is
         // this safe? Relies on the assumption that work is only committed if
@@ -223,9 +237,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (finishedWork.callbackList) {
           const { callbackList } = finishedWork;
           finishedWork.callbackList = null;
-          callCallbacks(callbackList, finishedWork.stateNode);
+          callCallbacks(callbackList, instance);
         }
-        // TODO: Fire componentDidMount/componentDidUpdate, update refs
+        // TODO: Fire update refs
         return;
       }
       case HostContainer: {
