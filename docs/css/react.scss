@@ -366,8 +366,9 @@ h1, h2, h3, h4, h5, h6 {
 
   @include bp-medium {
     width: 100%;
+    padding-bottom: 40px;
   }
-
+   
   ul {
     list-style: none;
     margin: 0;
@@ -804,6 +805,41 @@ h1 {
   }
 }
 
+/**
+ * Community
+ */
+
+.communityContent {
+  @include clearfix;
+
+  h3 {
+    margin-top: 30px;
+  }
+
+  padding-top: 20px;
+
+  blockquote {
+    padding: 5px 15px;
+    margin: 20px 0;
+    background-color: #f8f5ec;
+    border-left: 5px solid #f7ebc6;
+  }
+
+  th {
+    padding-right: 6px;
+    text-align: right;
+    vertical-align: top;
+    font-weight: normal;
+    @include code-typography;
+  }
+
+  td {
+    vertical-align: top;
+    text-align: left;
+  }
+}
+
+
 /* Blog */
 
 .post-list-item + .post-list-item {
@@ -1023,6 +1059,12 @@ div[data-twttr-id] iframe {
 
   * {
     max-width: 100%;
+  }
+}
+
+#twitter-widget-0 {
+  @include bp-large {
+    display: none !important; // Need !important because they inline display on the iframe.
   }
 }
 

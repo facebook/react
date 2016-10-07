@@ -1,9 +1,11 @@
 ---
 layout: default
-sectionid: community
+sectionid: tutorial
 ---
 
-<section class="content wrap communityContent">
+<section class="content wrap documentationContent">
+  {% include nav_tutorial.html %}
+
   <div class="inner-content">
     <a class="edit-page-link"
     href="https://github.com/facebook/react/tree/master/docs/{{ page.path }}"
@@ -17,13 +19,11 @@ sectionid: community
 
     <div class="docs-prevnext">
       {% if page.prev %}
-        <a class="docs-prev" href="/react/community/{{ page.prev }}">&larr; Prev</a>
+        <a class="docs-prev" href="/react/tutorial/{{ page.prev }}">&larr; Prev</a>
       {% endif %}
       {% if page.next %}
-        <a class="docs-next" href="/react/community/{{ page.next }}">Next &rarr;</a>
+        <a class="docs-next" href="/react/tutorial/{{ page.next }}">Next &rarr;</a>
       {% endif %}
     </div>
   </div>
-
-  {% include nav_community.html %}
 </section>
