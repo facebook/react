@@ -1,5 +1,4 @@
-- title: Tutorial
-- title: Basic Guides
+- title: Quick Start
   items:
     - id: installation
       title: Installation
@@ -9,6 +8,10 @@
       title: Introducing JSX
     - id: rendering-elements
       title: Rendering Elements
+    - id: components-and-props
+      title: Components and Props
+    - id: state-and-lifecycle
+      title: State and Lifecycle
     - id: handling-events
       title: Handling Events
     - id: thinking-in-react
