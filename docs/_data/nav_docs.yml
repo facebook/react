@@ -18,3 +18,6 @@
     - id: react-without-jsx
       title: React Without JSX
 - title: Reference
+  items:
+    - id: react-component
+      title: React.Component
