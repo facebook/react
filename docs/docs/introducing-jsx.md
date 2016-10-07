@@ -16,6 +16,8 @@ This funny tag syntax is neither a string nor HTML.
 
 It is called JSX, and it is a syntax extension to JavaScript. We recommend using it with React to describe what the UI should look like. JSX may remind you of a template language, but it comes with the full power of JavaScript.
 
+JSX produces React "elements". We will explore rendering them to the DOM in the [next section](/react/docs/rendering-elements.html). Below, you can find the basics of the JSX necessary to get you started.
+
 ### Embedding Expressions in JSX
 
 You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in curly braces.
@@ -36,6 +38,11 @@ const element = (
   <h1>
     Hello, {formatName(user)}!
   </h1>
+);
+
+ReactDOM.render(
+  element,
+  document.getElementById('root')
 );
 ```
 

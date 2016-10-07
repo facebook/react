@@ -22,7 +22,7 @@ function Welcome(props) {
 
 This function is a valid React component because it accepts a single "props" object argument with data and returns a React element. We call such components "functional" because they are literally JavaScript functions.
 
-You can also use an [ES2015 class](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes) to define a component:
+You can also use an [ES6 class](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes) to define a component:
 
 ```js
 class Welcome extends React.Component {
@@ -60,22 +60,26 @@ function Welcome(props) {
 }
 
 const element = <Welcome name="Sara" />;
-const container = document.getElementById('root');
-ReactDOM.render(element, container);
+ReactDOM.render(
+  element,
+  document.getElementById('root')
+);
 ```
 
 [Try it on Codepen.](http://codepen.io/gaearon/pen/YGYmEG?editors=0010)
 
 Let's recap what happens in this example:
 
-1. We call `ReactDOM.render(<Welcome name="Sara" />, container)`.
-3. React calls the `Welcome` component with `{name: 'Sara'}` as the props.
-4. Our `Welcome` component returns `<h1>Hello, Sara</h1>` element as the result.
-5. React DOM efficiently updates the DOM to match `<h1>Hello, Sara</h1>`.
+1. We call `ReactDOM.render()` with the `<Welcome name="Sara" />` element.
+2. React calls the `Welcome` component with `{name: 'Sara'}` as the props.
+3. Our `Welcome` component returns a `<h1>Hello, Sara</h1>` element as the result.
+4. React DOM efficiently updates the DOM to match `<h1>Hello, Sara</h1>`.
 
 >**Caveat:**
 >
->Always start component names with a capital letter. For example, `<div />` element represents a DOM tag, but `<Welcome />` represents a component. Also make sure your components are in scope when you are using them.
+>Always start component names with a capital letter.
+>
+>For example, `<div />` represents a DOM tag, but `<Welcome />` represents a component and requires `Welcome` to be in scope.
 
 ## Composing Components
 
@@ -98,13 +102,15 @@ function App() {
   );
 }
 
-const container = document.getElementById('root');
-ReactDOM.render(<App />, container);
+ReactDOM.render(
+  <App />,
+  document.getElementById('root')
+);
 ```
 
 [Try it on Codepen.](http://codepen.io/gaearon/pen/KgQKPr?editors=0010)
 
-Typically, new React apps have a single `App` component as a root. However, if you integrate it into an existing app, you might start bottom-up with a small component like `Button` and gradually work your way to the top of the view hierarchy.
+Typically, new React apps have a single `App` component at the very top. However, if you integrate React into an existing app, you might start bottom-up with a small component like `Button` and gradually work your way to the top of the view hierarchy.
 
 >**Caveat:**
 >
@@ -157,7 +163,9 @@ function Avatar(props) {
 }
 ```
 
-The `Avatar` doesn't need to know that it is being rendered inside a `Comment`. This is why we called its prop more generically: `user` rather than `author`. We recommend naming props from the component's own point of view rather than the context in which it is being used.
+The `Avatar` doesn't need to know that it is being rendered inside a `Comment`. This is why we have given its prop a more generic name: `user` rather than `author`.
+
+We recommend naming props from the component's own point of view rather than the context in which it is being used.
 
 We can now simplify `Comment` a tiny bit:
 
@@ -217,13 +225,11 @@ function Comment(props) {
 
 [Try it on Codepen.](http://codepen.io/gaearon/pen/rrJNJY?editors=0010)
 
-Extracting components might seem like grunt work at first, but having a palette of reusable components pays off in larger apps. A good rule of thumb is that if you can come up with a short name (a `Button`, a `Panel`, an `Avatar`, a `FeedStory`) for a part of your app's UI, it is a good candidate to be a reusable component.
+Extracting components might seem like grunt work at first, but having a palette of reusable components pays off in larger apps. A good rule of thumb is that if a part of your UI is used several times (`Button`, `Panel`, `Avatar`), or is complex enough on its own (`App`, `FeedStory`, `Comment`), it is a good candidate to be a reusable component.
 
 ## Props are Read-Only
 
-Whether you declare a component [as a function or a class](#functional-and-class-components), it must never modify its own props.
-
-Consider this `sum` function:
+Whether you declare a component [as a function or a class](#functional-and-class-components), it must never modify its own props. Consider this `sum` function:
 
 ```js
 function sum(a, b) {
@@ -245,4 +251,4 @@ React is pretty flexible but it has a single strict rule:
 
 **All React components must act like pure functions with respect to their props.**
 
-Of course, application UIs dynamic and change over time. In the [next section](/react/docs/state-and-lifecycle.html), we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.
+Of course, application UIs are dynamic and change over time. In the [next section](/react/docs/state-and-lifecycle.html), we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.
