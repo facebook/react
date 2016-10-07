@@ -40,6 +40,29 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const insertBefore = config.insertBefore;
   const removeChild = config.removeChild;
 
+  function detachRef(current : Fiber) {
+    const ref = current.ref;
+    if (ref) {
+      ref(null);
+    }
+  }
+
+  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
+    const ref = finishedWork.ref;
+    if (current) {
+      const currentRef = current.ref;
+      if (currentRef && currentRef !== ref) {
+        // TODO: This needs to be done in a separate pass before any other refs
+        // gets resolved. Otherwise we might invoke them in the wrong order
+        // when the same ref switches between two components.
+        currentRef(null);
+      }
+    }
+    if (ref) {
+      ref(instance);
+    }
+  }
+
   function getHostParent(fiber : Fiber) : ?I {
     let parent = fiber.return;
     while (parent) {
@@ -163,9 +186,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Recursively delete all host nodes from the parent.
     // TODO: Error handling.
     const parent = getHostParent(current);
-    if (!parent) {
-      return;
-    }
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
     // TODO: Call componentWillUnmount on all classes as needed. Recurse down
@@ -177,7 +197,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         commitNestedUnmounts(node);
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
-        removeChild(parent, node.stateNode);
+        if (parent) {
+          removeChild(parent, node.stateNode);
+        }
       } else {
         commitUnmount(node);
         if (node.child) {
@@ -202,10 +224,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function commitUnmount(current : Fiber) : void {
     switch (current.tag) {
       case ClassComponent: {
+        detachRef(current);
         const instance = current.stateNode;
         if (typeof instance.componentWillUnmount === 'function') {
           instance.componentWillUnmount();
         }
+        return;
+      }
+      case HostComponent: {
+        detachRef(current);
+        return;
       }
     }
   }
@@ -239,7 +267,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           finishedWork.callbackList = null;
           callCallbacks(callbackList, instance);
         }
-        // TODO: Fire update refs
+        attachRef(current, finishedWork, instance);
         return;
       }
       case HostContainer: {
@@ -251,14 +279,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return;
       }
       case HostComponent: {
-        if (finishedWork.stateNode == null || !current) {
-          throw new Error('This should only be done during updates.');
-        }
-        // Commit the work prepared earlier.
-        const newProps = finishedWork.memoizedProps;
-        const oldProps = current.memoizedProps;
         const instance : I = finishedWork.stateNode;
-        commitUpdate(instance, oldProps, newProps);
+        if (instance != null && current) {
+          // Commit the work prepared earlier.
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current.memoizedProps;
+          commitUpdate(instance, oldProps, newProps);
+        }
+        attachRef(current, finishedWork, instance);
         return;
       }
       case HostText: {
