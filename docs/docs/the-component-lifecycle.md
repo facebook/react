@@ -199,14 +199,3 @@ var Counter = React.createClass({
 ```
 
 If you use ES6, you can [define the initial state in the constructor](/react/docs/reusable-components.html#setting-the-initial-state).
-
-
-* * *
-
-> Editor's Note, please remove
->
-> There are many places where this is documented!
->
-> Reference: https://facebook.github.io/react/docs/component-specs.html
-> Old guide:  https://facebook.github.io/react/docs/working-with-the-browser.html
-> Tips: https://facebook.github.io/react/tips/initial-ajax.html
