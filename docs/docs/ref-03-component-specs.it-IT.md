@@ -12,7 +12,7 @@ Quando crei una classe di componente invocando `React.createClass()`, devi forni
 
 > Nota:
 >
-> È anche possibile usare pure classi JavaScript come classi di componente. Queste classi possono implementare la maggior parte degli stessi metodi, sebbene vi siano delle differenze. Per maggiori informazioni su queste differenze, leggi la nostra documentazione sulle [classi ES6](/react/docs/reusable-components.html#es6-classes).
+> È anche possibile usare pure classi JavaScript come classi di componente. Queste classi possono implementare la maggior parte degli stessi metodi, sebbene vi siano delle differenze. Per maggiori informazioni su queste differenze, leggi la nostra documentazione sulle [classi ES6](/react/docs/reusable-components.html#es6-classes-and-react.createclass).
 
 ### render
 
