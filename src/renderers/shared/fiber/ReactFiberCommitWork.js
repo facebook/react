@@ -47,18 +47,18 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
-    const ref = finishedWork.ref;
+  function detachRefIfNeeded(current : ?Fiber, finishedWork : Fiber) {
     if (current) {
       const currentRef = current.ref;
-      if (currentRef && currentRef !== ref) {
-        // TODO: This needs to be done in a separate pass before any other refs
-        // gets resolved. Otherwise we might invoke them in the wrong order
-        // when the same ref switches between two components.
+      if (currentRef && currentRef !== finishedWork.ref) {
         currentRef(null);
       }
     }
-    if (ref) {
+  }
+
+  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
+    const ref = finishedWork.ref;
+    if (ref && (!current || current.ref !== ref)) {
       ref(instance);
     }
   }
@@ -241,6 +241,46 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
+        detachRefIfNeeded(current, finishedWork);
+        return;
+      }
+      case HostContainer: {
+        // TODO: Attach children to root container.
+        const children = finishedWork.output;
+        const root : FiberRoot = finishedWork.stateNode;
+        const containerInfo : C = root.containerInfo;
+        updateContainer(containerInfo, children);
+        return;
+      }
+      case HostComponent: {
+        const instance : I = finishedWork.stateNode;
+        if (instance != null && current) {
+          // Commit the work prepared earlier.
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current.memoizedProps;
+          commitUpdate(instance, oldProps, newProps);
+        }
+        detachRefIfNeeded(current, finishedWork);
+        return;
+      }
+      case HostText: {
+        if (finishedWork.stateNode == null || !current) {
+          throw new Error('This should only be done during updates.');
+        }
+        const textInstance : TI = finishedWork.stateNode;
+        const newText : string = finishedWork.memoizedProps;
+        const oldText : string = current.memoizedProps;
+        commitTextUpdate(textInstance, oldText, newText);
+        return;
+      }
+      default:
+        throw new Error('This unit of work tag should not have side-effects.');
+    }
+  }
+
+  function commitLifeCycles(current : ?Fiber, finishedWork : Fiber) : void {
+    switch (finishedWork.tag) {
+      case ClassComponent: {
         const instance = finishedWork.stateNode;
         if (!current) {
           if (typeof instance.componentDidMount === 'function') {
@@ -270,33 +310,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         attachRef(current, finishedWork, instance);
         return;
       }
-      case HostContainer: {
-        // TODO: Attach children to root container.
-        const children = finishedWork.output;
-        const root : FiberRoot = finishedWork.stateNode;
-        const containerInfo : C = root.containerInfo;
-        updateContainer(containerInfo, children);
-        return;
-      }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
-        if (instance != null && current) {
-          // Commit the work prepared earlier.
-          const newProps = finishedWork.memoizedProps;
-          const oldProps = current.memoizedProps;
-          commitUpdate(instance, oldProps, newProps);
-        }
         attachRef(current, finishedWork, instance);
         return;
       }
       case HostText: {
-        if (finishedWork.stateNode == null || !current) {
-          throw new Error('This should only be done during updates.');
-        }
-        const textInstance : TI = finishedWork.stateNode;
-        const newText : string = finishedWork.memoizedProps;
-        const oldText : string = current.memoizedProps;
-        commitTextUpdate(textInstance, oldText, newText);
+        // We have no life-cycles associated with text.
         return;
       }
       default:
@@ -308,6 +328,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     commitInsertion,
     commitDeletion,
     commitWork,
+    commitLifeCycles,
   };
 
 };
