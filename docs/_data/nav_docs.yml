@@ -9,6 +9,8 @@
       title: Introducing JSX
     - id: rendering-elements
       title: Rendering Elements
+    - id: handling-events
+      title: Handling Events
     - id: thinking-in-react
       title: Thinking In React
 - title: Advanced Guides
