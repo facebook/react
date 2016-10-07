@@ -24,8 +24,6 @@
   items:
   - id: reusable-components
     title: Reusable Components
-  - id: transferring-props
-    title: Transferring Props
   - id: forms
     title: Forms
   - id: working-with-the-browser
