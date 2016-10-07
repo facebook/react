@@ -148,10 +148,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       clone.sibling = null;
       return clone;
     } else {
-      if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority > priority) {
-        fiber.pendingWorkPriority = priority;
-      }
+      // We override the pending priority even if it is higher, because if
+      // we're reconciling at a lower priority that means that this was
+      // down-prioritized.
+      fiber.pendingWorkPriority = priority;
       fiber.effectTag = NoWork;
       fiber.index = 0;
       fiber.sibling = null;
