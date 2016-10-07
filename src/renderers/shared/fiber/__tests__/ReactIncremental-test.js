@@ -417,6 +417,24 @@ describe('ReactIncremental', () => {
     // after them which is not correct.
     ReactNoop.flush();
     expect(ops).toEqual(['Bar', 'Middle', 'Bar']);
+
+    ops = [];
+
+    // Let us try this again without fully finishing the first time. This will
+    // create a hanging subtree that is reconciling at the normal priority.
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flushDeferredPri(40);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // This update will create a tree that aborts that work and down-prioritizes
+    // it. If the priority levels aren't down-prioritized correctly this may
+    // abort rendering of the down-prioritized content.
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
   it('can reuse work done after being preempted', () => {
