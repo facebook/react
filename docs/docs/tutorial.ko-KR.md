@@ -83,7 +83,7 @@ var CommentBox = React.createClass({
   render: function() {
     return (
       <div className="commentBox">
-        Hello, world! I am a CommentBox.
+        안녕! 난 댓글 상자야.
       </div>
     );
   }
@@ -106,7 +106,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
   render: function() {
     return (
       React.createElement('div', {className: "commentBox"},
-        "Hello, world! I am a CommentBox."
+        "안녕! 난 댓글 상자야."
       )
     );
   }
