@@ -62,15 +62,12 @@ Object.assign(
       return new NoopInternalComponent(element);
     },
     _replaceNodeWithMarkup: function() {},
-    _renderValidatedComponent:
-      ReactCompositeComponent
-        ._renderValidatedComponentWithoutOwnerOrContext,
   }
 );
 
 function _batchedRender(renderer, element, context) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
-  renderer._render(element, transaction, context);
+  transaction.perform(renderer._render, renderer, element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 }
 
@@ -109,11 +106,39 @@ class ReactShallowRenderer {
     return this.getRenderOutput();
   }
   getRenderOutput() {
-    return (
-      (this._instance && this._instance._renderedComponent &&
-      this._instance._renderedComponent._renderedOutput)
-      || null
+    const renderedElement = (
+      this._instance && this._instance._renderedComponent &&
+      this._instance._renderedComponent._renderedOutput
     );
+    return renderedElement ? this._getShallowElement(renderedElement) : null;
+  }
+  _getShallowElement(element) {
+    if (typeof element !== 'object') {
+      return element;
+    }
+    return Object.keys(element).reduce((current, key) => {
+      if (key === 'props') {
+        return Object.assign(current, {
+          props: Object.keys(element.props).reduce((props, propKey) => {
+            if (propKey === 'children') {
+              return Object.assign(props, {
+                [propKey]: Array.isArray(element.props.children)
+                  ? element.props.children.map(c => this._getShallowElement(c))
+                  : this._getShallowElement(element.props.children),
+              });
+            } else {
+              return this._getShallowElementProps(props, propKey, element.props[propKey]);
+            }
+          }, {}),
+        });
+      }
+      return this._getShallowElementProps(current, key, element[key]);
+    }, {});
+  }
+  _getShallowElementProps(element, prop, value) {
+    return Object.assign(element, {
+      [prop]: prop === '_owner' ? null : value,
+    });
   }
   unmount() {
     if (this._instance) {
