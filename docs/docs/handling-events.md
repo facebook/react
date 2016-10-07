@@ -24,7 +24,9 @@ is slightly different in React:
 Another difference is that you cannot return `false` to prevent default behavior in React. You must call `preventDefault` explicitly. For example, with plain HTML to prevent the default link behavior this works:
 
 ```html
-<a href="#" onclick="console.log('the link was clicked'); return false">click me</a>
+<a href="#" onclick="console.log('the link was clicked'); return false">
+  click me
+</a>
 ```
 
 In React, this would instead be:
