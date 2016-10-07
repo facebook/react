@@ -288,7 +288,7 @@ var Comment = React.createClass({
 
 이는 의도적으로 생(raw) HTML을 넣기 힘들게 하려고 만든 특별한 API지만 remarkable를 사용하기 위해 이 백도어를 활용합시다.
 
-**잊지 마세요:** 이 기능은 remarkable가 안전한 것으로 믿고 사용하는 것입니다.
+**잊지 마세요:** 당신은 remarkable이 안전할 거라고 믿고 사용하는 것입니다. 이 경우에, remarkable은 자동으로 HTML 마크업과 위험할 수 있는 링크들을 없애줍니다.
 
 ### 데이터 모델 연결하기
 
