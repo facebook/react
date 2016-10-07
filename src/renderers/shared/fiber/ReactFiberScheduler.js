@@ -54,7 +54,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const { beginWork } = ReactFiberBeginWork(config, getScheduler);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitInsertion, commitDeletion, commitWork } = ReactFiberCommitWork(config);
+  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
+    ReactFiberCommitWork(config);
 
   const scheduleAnimationCallback = config.scheduleAnimationCallback;
   const scheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -112,31 +113,43 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Commit all the side-effects within a tree.
     // TODO: Error handling.
 
-    // First, we'll perform all the host insertion and deletion effects.
+    // First, we'll perform all the host insertions, updates, deletions and
+    // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
       switch (effectfulFiber.effectTag) {
-        // TODO: Should we commit host updates here? Otherwise update to parent
-        // host components are not visible in life-cycles. Such as when you read
-        // layout information.
-        case Placement:
-        case PlacementAndUpdate:
+        case Placement: {
           commitInsertion(effectfulFiber);
           break;
-        case Deletion:
+        }
+        case PlacementAndUpdate: {
+          commitInsertion(effectfulFiber);
+          const current = effectfulFiber.alternate;
+          commitWork(current, effectfulFiber);
+          break;
+        }
+        case Update: {
+          const current = effectfulFiber.alternate;
+          commitWork(current, effectfulFiber);
+          break;
+        }
+        case Deletion: {
           commitDeletion(effectfulFiber);
           break;
+        }
       }
       effectfulFiber = effectfulFiber.nextEffect;
     }
 
-    // Next, we'll perform all other effects.
+    // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
+    // happens as a separate pass so that all effects in the entire tree have
+    // already been invoked.
     effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
-      const current = effectfulFiber.alternate;
       if (effectfulFiber.effectTag === Update ||
           effectfulFiber.effectTag === PlacementAndUpdate) {
-        commitWork(current, effectfulFiber);
+        const current = effectfulFiber.alternate;
+        commitLifeCycles(current, effectfulFiber);
       }
       const next = effectfulFiber.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.

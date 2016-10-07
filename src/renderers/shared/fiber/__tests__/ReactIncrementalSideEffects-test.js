@@ -680,14 +680,11 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo show={true} />);
     ReactNoop.flush();
     expect(ops).toEqual([
-      // TODO: All detach should happen first. Currently they're interleaved.
-      // detach
+      // detach all refs that switched handlers first.
       null,
-      // reattach
+      null,
+      // reattach as a separate phase
       classInstance,
-      // detach
-      null,
-      // reattach
       div(),
     ]);
 
