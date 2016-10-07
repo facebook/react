@@ -221,8 +221,9 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // extra memory if needed.
   let alt = fiber.alternate;
   if (alt) {
-    // Whenever we clone, we do so to get a new work in progress.
-    // This ensures that we've reset these in the new tree.
+    // If we clone, then we do so from the "current" state. The current state
+    // can't have any side-effects that are still valid so we reset just to be
+    // sure.
     alt.effectTag = NoEffect;
     alt.nextEffect = null;
     alt.firstEffect = null;
