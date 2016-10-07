@@ -60,7 +60,7 @@ However, it misses a crucial requirement: the fact that the `Clock` sets up a ti
 
 Ideally we want to write this once and have the `Clock` update itself:
 
-```js
+```js{2}
 ReactDOM.render(
   <Clock />,
   document.getElementById('root')
@@ -104,7 +104,7 @@ class Clock extends React.Component {
 
 `Clock` is now defined as a class rather than a function.
 
-This lets is use additional features such as local state and lifecycle hooks.
+This lets us use additional features such as local state and lifecycle hooks.
 
 ## Adding Local State to a Class
 
@@ -313,7 +313,7 @@ There are three things you should know about `setState()`.
 
 ### Do Not Modify State Directly
 
-For example, this will not work:
+For example, this will not re-render a component:
 
 ```js
 // Wrong
