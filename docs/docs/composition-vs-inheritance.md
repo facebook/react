@@ -2,7 +2,7 @@
 id: composition-vs-inheritance
 title: Composition vs Inheritance
 permalink: docs/composition-vs-inheritance.html
-prev: state-and-lifecycle.html
+prev: lifting-state-up.html
 ---
 
 React has a powerful composition model, and we recommend using composition instead of inheritance to reuse code between components.
