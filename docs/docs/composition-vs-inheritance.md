@@ -104,7 +104,7 @@ function WelcomeDialog(props) {
 }
 ```
 
-Class components also use composition in React:
+Composition works equally well for components defined as classes:
 
 ```js{10,27-31}
 function Dialog(props) {
@@ -158,4 +158,4 @@ At Facebook, we use React in thousands of components, and we haven't found any u
 
 Props and composition give you all the flexibility you need to customize a component's look and behavior in an explicit and safe way. Remember that components may accept arbitrary props, including primitive values, React elements, or functions.
 
-If you want to reuse some common functionality between components that is not related to the UI, we suggest extracting it into a plain JavaScript module, and importing and using that module from the components.
+If you want to reuse non-UI functionality between components, we suggest extracting it into a separate JavaScript module. The components may import it and use that function, object, or a class, without extending it.
