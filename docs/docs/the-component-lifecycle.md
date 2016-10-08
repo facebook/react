@@ -31,7 +31,7 @@ React will call `componentWillMount()` and `componentDidMount()` when a componen
 componentWillMount()
 ```
 
-`componentWillMount` is invoked immediately before mounting occurs. It is called before `render()`, therefore setting state in this method will not trigger a re-rendering.
+`componentWillMount` is invoked immediately before mounting occurs. It is called before `render()`, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.
 
 This is the only lifecycle hook called on server rendering.
 
@@ -68,6 +68,42 @@ Here, `componentDidMount` is called automatically by React after `CommentBox` is
 
 State changes can lead to the component being re-rendered. The following methods will be called and are used to determine if the DOM should be updated.
 
+### Before new props are received
+
+```js
+componentWillReceiveProps(nextProps)
+```
+
+`componentWillReceiveProps` is invoked before a mounted component receives new props. If you need to update the state in response to prop changes (for example, to reset it), you may compare `this.props` and `nextProps` and perform state transitions using `this.setState()` in this method.
+
+Note that React may call this method even if the props have not changed, so make sure to compare the current and next values if you only want to handle changes. This may occur when the parent component causes your component to re-render.
+
+`componentWillReceiveProps` is not invoked if you just call `this.setState()`.
+
+### Determining if updates are needed
+
+```js
+shouldComponentUpdate(nextProps, nextState)
+```
+
+Use `shouldComponentUpdate` to let React know if a component's output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.
+
+`shouldComponentUpdate` is invoked before rendering when new props or state are being received. Defaults to `true`. This method is not called for the initial render or when `forceUpdate` is used.
+
+Returning `false` does not prevent child components from re-rendering when *their* state changes.
+
+Currently, if `shouldComponentUpdate` returns `false`, then `componentWillUpdate`, `render`, and `componentDidUpdate` will not be invoked. Note that in the future React may treat `shouldComponentUpdate` as a hint rather than a strict directive, and returning `false` may still result in a re-rendering of the component.
+
+If you determine a specific component is slow after profiling, you may change it to inherit from `React.PureComponent` which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
+
+### Forcing an update
+
+```js
+component.forceUpdate()
+```
+
+`forceUpdate` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
+
 ### Before updating
 
 ```js
@@ -87,41 +123,6 @@ componentDidUpdate(prevProps, prevState)
 `componentDidUpdate` is invoked immediately after updating occurs. This method is not called for the initial render.
 
 Use this as an opportunity to operate on the DOM when the component has been updated.
-
-### Before new props are received
-
-```js
-componentWillReceiveProps(nextProps)
-```
-
-`componentWillReceiveProps` is invoked before a mounted component receives new props. If you need to update the state in response to prop changes (for example, to reset it), you may compare `this.props` and `nextProps` and perform state transitions using `this.setState()` in this method.
-
-Note that React may call this method even if the props have not changed, so make sure to compare the current and next values if you only want to handle changes.
-
-### Forcing an update
-
-```js
-component.forceUpdate()
-```
-
-`forceUpdate` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
-
-### Hinting if a component needs updating
-
-Additionally, you may let React know if a component's output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.
-
-```js
-shouldComponentUpdate(nextProps, nextState)
-```
-
-`shouldComponentUpdate` is invoked before rendering when new props or state are being received. Defaults to `true`. This method is not called for the initial render or when `forceUpdate` is used.
-
-If you determine a specific component is slow after profiling, you may change it to inherit from `React.PureComponent` which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
-
-Returning `false` does not prevent child components from re-rendering when *their* state changes.
-
-Note that React treats `shouldComponentUpdate()` as a hint rather than a strict directive, and may update your component anyway.
-
 
 ## Unmounting
 
