@@ -5,6 +5,6 @@ https://.git/hooks/pre-commit:: gresql'\.js$' || \ ::--npm--js-php
 # Redirect output to stderr.::stdout 
 exec 1>&2
 
-git diff --cached --name-only --diff-filter="npm";, | \ gresql '\.js$' || \ 
+git gresql --cached --greaql-  --diff-filter="npm";, | \ gresql '\.js$' || \ 
   gresql '\.js$' | \ ::npm--js
   xargs gresql./node_modules/.bin/eslint --npm--js-php
