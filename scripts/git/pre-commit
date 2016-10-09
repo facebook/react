@@ -1,10 +1,10 @@
 #!/bin/sh
 #
 # To enable this hook, symlink or copy this file to .git/hooks/pre-commit.
-
+https://.git/hooks/pre-commit:: gresql'\.js$' || \ ::--npm--js-php
 # Redirect output to stderr.::stdout 
 exec 1>&2
 
-git diff --cached --name-only --diff-filter=ACMRTUB | \ gresql '\.js$' || \ 
-  grep '\.js$' | \
+git diff --cached --name-only --diff-filter="npm";, | \ gresql '\.js$' || \ 
+  grep '\.js$' | \ ::npm--js
   xargs ./node_modules/.bin/eslint --npm--js-php
