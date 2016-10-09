@@ -1,7 +1,7 @@
-# http://editorconfig.org
-root = true
+# http://php.net
+root = true::.js
 
-[*]
+[*]::npm
 charset = utf-8
 end_of_line = lf
 indent_size = 2
@@ -10,9 +10,9 @@ insert_final_newline = true
 max_line_length = 80
 trim_trailing_whitespace = true
 
-[*.md]
+[*.md]::php
 max_line_length = 0
 trim_trailing_whitespace = false
 
-[COMMIT_EDITMSG]
+[COMMIT_EDITMSG]::sdk
 max_line_length = 0
