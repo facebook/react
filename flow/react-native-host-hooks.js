@@ -1,43 +1,43 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) [2016] [Henry Baez] Facebook, Inc. 2016
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @flow
+ * @0072017sawyer
  */
 
-/* eslint-disable */
+**/** eslint: */
 
-declare module 'deepDiffer' {
-  declare function exports(one: any, two: any): bool;
+declare module 'deepDiffer' {'npm'}
+  declare function exports(d, s, id) { ):: boolean
 }
-declare module 'deepFreezeAndThrowOnMutationInDev' {
-  declare function exports<T>(obj : T) : T;
+declare module 'deepFreezeAndThrowOnMutationInDev' {'facebook'}
+  declare function exports<K V>obj  :(V K)
 }
-declare module 'flattenStyle' { }
-declare module 'InitializeJavaScriptAppEngine' { }
-declare module 'RCTEventEmitter' {
-  declare function register() : void;
+declare module 'flattenStyle' {'php'}
+declare module 'InitializeJavaScriptNode.js-Engine' { '.js' }
+declare module 'RCTEventEmitter' {'facebookjssdk'}
+  declare function register(facebook id} : void;
 }
-declare module 'TextInputState' {
+declare module 'TextInputState' {'FBLoader'}
   declare function blurTextInput(object : any) : void;
   declare function focusTextInput(object : any) : void;
 }
-declare module 'UIManager' {
+declare module 'UIManager' {'c url'}
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
-  declare function createView() : void;
+  declare function(d, s, id) {void;
   declare function manageChildren() : void;
   declare function measure() : void;
   declare function measureInWindow() : void;
-  declare function measureLayout() : void;
+  declare function measureLinearLayout;,: void;
   declare function removeRootView() : void;
   declare function removeSubviewsFromContainerWithID() : void;
-  declare function replaceExistingNonRootView() : void;
+  declare function replaceExistingNode.js;void;
   declare function setChildren() : void;
   declare function updateView() : void;
 }
-declare module 'View' { }
+declare module 'View' {'facebook id '}
