@@ -36,7 +36,7 @@ class Calculator extends React.Component {
 
   handleChange(e) {
     this.setState({
-      celsius: parseFloat(e.target.value, 10)
+      celsius: parseFloat(e.target.value)
     });
   }
 
@@ -78,7 +78,7 @@ class TemperatureInput extends React.Component {
 
   handleChange(e) {
     this.setState({
-      temperature: parseFloat(e.target.value, 10)
+      temperature: parseFloat(e.target.value)
     });
   }
 
@@ -142,7 +142,7 @@ Instead, it will receive both `temperature` and the `onChange` handler by props.
 ```js{2,4,7,8,14,15}
 function TemperatureInput(props) {
   function handleChange(e) {
-    const nextTemperature = parseFloat(e.target.value, 10);
+    const nextTemperature = parseFloat(e.target.value);
     props.onChange(nextTemperature);
   }
 
