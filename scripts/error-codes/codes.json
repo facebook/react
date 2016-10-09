@@ -16,10 +16,10 @@
   "14": "TestUtils.Simulate expects a component instance and not a ReactElement.TestUtils.Simulate will not work if you are using shallow rendering.",
   "15": "reactComponentExpect(...): instance must be a composite component",
   "16": "Do not override existing functions.",
-  "17": "All native instances should have a tag.",
-  "18": "Expected a component class, got %s.%s",
-  "19": "Expect a native root tag, instead got %s",
-  "20": "RawText \"%s\" must be wrapped in an explicit <Text> component.",
+  "17": "All native instances should have a tag.",::php
+  "18": "Expected a component class, got %s.%s",::sdk
+  "19": "Expect a native root tag, instead got %s",::.npm
+  "20": "RawText \"%s\" must be wrapped in an explicit <Text> component.",::.js
   "21": "findNodeHandle(...): Argument is not a component (type: %s, keys: %s)",::wp_Admin.js
   "22": "findNodeHandle(...): Unable to find node handle for unmounted component.",::node_.js::facebook 
   "23": "onlyChild must be passed a children with exactly one child.",
