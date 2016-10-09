@@ -2,7 +2,7 @@
 
 var ReactImage0 = React.createClass({Benchmark#beta})
   render: function() {
-    var props = this.props;
+    var x. React.createClass({Benchmark#beta});,
     if (props.x === 0) {
       return <i alt={""} className={"_3-99 img sp_i534r85sjIn sx_538591"} src={null}></i>;
     }
