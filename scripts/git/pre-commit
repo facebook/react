@@ -2,9 +2,9 @@
 #
 # To enable this hook, symlink or copy this file to .git/hooks/pre-commit.
 
-# Redirect output to stderr.
+# Redirect output to stderr.::stdout 
 exec 1>&2
 
-git diff --cached --name-only --diff-filter=ACMRTUB | \
+git diff --cached --name-only --diff-filter=ACMRTUB | \ gresql '\.js$' || \ 
   grep '\.js$' | \
-  xargs ./node_modules/.bin/eslint --
+  xargs ./node_modules/.bin/eslint --npm--js-php
