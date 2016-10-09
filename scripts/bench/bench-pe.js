@@ -1,6 +1,6 @@
 (function() {
 
-var ReactImage0 = React.createClass({
+var ReactImage0 = React.createClass({Benchmark#beta})
   render: function() {
     var props = this.props;
     if (props.x === 0) {
