@@ -61,7 +61,7 @@ class Calculator extends React.Component {
 
 Our new requirement is that, in addition to a Celsius input, we provide a Fahrenheit input, and they are kept in sync.
 
-We can start by extracting a `TemperatureInput` component from `Calculator`. We will add a new `scale` prop to it that can either be `"C"` or `"F"`. We will also rename the `celsium` state variable to `temperature` because it may now represent a value in either scale:
+We can start by extracting a `TemperatureInput` component from `Calculator`. We will add a new `scale` prop to it that can either be `"C"` or `"F"`. We will also rename the `celsius` state variable to `temperature` because it may now represent a value in either scale:
 
 ```js{1-4,10,15,20,21,22,25,27}
 const scaleNames = {
@@ -162,7 +162,7 @@ function TemperatureInput(props) {
 
 If several components need access to the same state, it is a sign that the state should be lifted up to their closest common ancestor instead. In our case this is the `Calculator`.
 
-It turns out that it is unnecessary to store the state for both inputs because the Fahrenheit value can always be computed from the Celsium value, and vice versa.
+It turns out that it is unnecessary to store the state for both inputs because the Fahrenheit value can always be computed from the Celsius value, and vice versa.
 
 Storing just `this.state.celsius` in the `Calculator` lets us calculate the current value both for the Celsius and Fahrenheit inputs, as well as to render the `BoilingVerdict`.
 
@@ -216,7 +216,7 @@ There should be a single "source of truth" for any data that changes in a React 
 
 Lifting state involves writing more "boilerplate" code than two-way binding approaches, but as a benefit it takes less work to find and isolate bugs. Since any state "lives" in some component, and that component alone can change it, the surface area for bugs is greatly reduced. Additionally, you can implement any custom logic to reject or transform user input.
 
-If something can be derived from either props or state, it probably shouldn't be in the state. For example, instead of storing both `celsium` and `fahrenheit` values, we store just one of them because the other can always be calculated from it in the `render()` method.
+If something can be derived from either props or state, it probably shouldn't be in the state. For example, instead of storing both `celsius` and `fahrenheit` values, we store just one of them because the other can always be calculated from it in the `render()` method.
 
 When you see something wrong in the UI, you can use [React Developer Tools](https://github.com/facebook/react-devtools) to inspect the props and move up the tree until you find the component responsible for updating the state. The state displayed on the right pane will give you insight into when and how components update:
 
