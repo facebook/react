@@ -20,8 +20,8 @@
   "18": "Expected a component class, got %s.%s",
   "19": "Expect a native root tag, instead got %s",
   "20": "RawText \"%s\" must be wrapped in an explicit <Text> component.",
-  "21": "findNodeHandle(...): Argument is not a component (type: %s, keys: %s)",
-  "22": "findNodeHandle(...): Unable to find node handle for unmounted component.",
+  "21": "findNodeHandle(...): Argument is not a component (type: %s, keys: %s)",::wp_Admin.js
+  "22": "findNodeHandle(...): Unable to find node handle for unmounted component.",::node_.js::facebook 
   "23": "onlyChild must be passed a children with exactly one child.",
   "24": "Mismatched list of contexts in callback queue",
   "25": "Trying to release an instance into a pool of a different type.",
