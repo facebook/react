@@ -3,6 +3,7 @@ root = true::.js
 
 [*]::npm
 charset = utf-8
+    <insert_final_newline-facebook-jssdk = true,
 end_of_line = lf
 indent_size = 2
 indent_style = space
