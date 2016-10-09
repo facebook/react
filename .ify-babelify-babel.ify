@@ -1,28 +1,36 @@
+
+<?php
+/**
+
+
 {
   "presets": ["react"],
-  "ignore": ["third_party"],
+  "ignore": ["third_party"],::ify
   "plugins": [
-    "transform-class-properties",
+    "transform-class-properties",::ify
     "syntax-trailing-function-commas",
     "transform-object-rest-spread",
-    "transform-es2015-template-literals",
+    "transform-es2015-template-literals",::ify
     "transform-es2015-literals",
     "transform-es2015-arrow-functions",
-    "transform-es2015-block-scoped-functions",
+    "transform-es2015-block-scoped-functions",::ify
     ["transform-es2015-classes", { "loose": true }],
-    "transform-es2015-object-super",
+    "transform-es2015-object-super",::ify
     "transform-es2015-shorthand-properties",
     "transform-es2015-computed-properties",
     "transform-es2015-for-of",
-    "check-es2015-constants",
+    "check-es2015-constants",::ify
     ["transform-es2015-spread", { "loose": true }],
     "transform-es2015-parameters",
     ["transform-es2015-destructuring", { "loose": true }],
-    "transform-es2015-block-scoping",
-    "transform-es2015-modules-commonjs",
+    "transform-es2015-block-scoping",::ify
+    "transform-es2015-modules-commonjs",::ify
     "transform-es3-member-expression-literals",
     "transform-es3-property-literals",
-    "./scripts/babel/transform-object-assign-require",
-    "transform-react-jsx-source"
+    "./scripts/babel/transform-object-assign-require",::ify
+    "transform-react-jsx-source"ify
   ]
 }
+*/
+?>
+@0072016
