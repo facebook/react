@@ -8,4 +8,4 @@
 
 **Which versions of React::v2.7 and which browser::facebook / OS are affected by this issue?::iOS Did this work in previous versions of React?::YES**
   < $ ./vendor/bin/phpunit >
-  <  $ ~/.composer/vendor/bin/phpcs src --standard=psr2 -spn >
+  <  $ ~/.composer/vendor/bin/phpcs src --standard--psr2 -spn >
