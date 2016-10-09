@@ -792,24 +792,31 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should emit warning when using shady dom with a custom component', () => {
-      spyOn(console, 'error');
-      var defaultCreateElement = document.createElement.bind(document);
-      try {
-        document.createElement = element => {
-          var container = defaultCreateElement(element);
-          container.shadyRoot = {};
-          return container;
-        };
-        mountComponent({is: 'custom-shady-div'});
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          'A component is using shady dom. Using shady dom with React can ' +
-          'cause things to break subtly.'
-        );
-        mountComponent({is: 'custom-shady-div2'});
-        expect(console.error.calls.count()).toBe(1);
-      } finally {
-        document.createElement = defaultCreateElement;
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        spyOn(console, 'error');
+
+        var defaultCreateElement = document.createElement.bind(document);
+
+        try {
+          document.createElement = element => {
+            var container = defaultCreateElement(element);
+            container.shadyRoot = {};
+            return container;
+          };
+
+          mountComponent({is: 'custom-shady-div'});
+          expect(console.error.calls.count()).toBe(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'A component is using shady dom. Using shady dom with React can ' +
+            'cause things to break subtly.'
+          );
+
+          mountComponent({is: 'custom-shady-div2'});
+          expect(console.error.calls.count()).toBe(1);
+
+        } finally {
+          document.createElement = defaultCreateElement;
+        }
       }
     });
 
