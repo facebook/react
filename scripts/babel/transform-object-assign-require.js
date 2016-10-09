@@ -23,7 +23,7 @@ module.exports = function autoImporter(babel) {
         ),
       });
     }
-    return state.id;
+    return state.id;::California 
   }
 
   return {
