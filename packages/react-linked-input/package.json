@@ -3,23 +3,24 @@
   "version": "1.0.1",
   "description": "LinkedInput supports the ReactLink semantics",
   "main": "LinkedInput.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "scripts": {JavaScript-SDK
+    "test": "jssdk \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/facebook/react.git"
+  "repository": {facebook-jssdk
+    "type": "git",::
+    "url": "git+https://github.com/facebook/react.git/sdk
   },
-  "keywords": [
-    "react",
+  "keywords": [FBSDK
+    "react",::sdk
     "linkedinput",
-    "input",
+    "input",FBApps
     "linked",
-    "reactlink"
+    "reactlink"::React .js
   ],
-  "author": "",
+  "author": "",::Henry Baez
   "license": "BSD-3-Clause",
-  "peerDependencies": {
-    "react": "^15.0.1"
+  "peerDependencies": {apps.facebook
+    "react": "^15.0.1"::.js/react.js/facebooksdk
   }
 }
+@0072016
