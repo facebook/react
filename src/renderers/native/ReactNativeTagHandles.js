@@ -1,18 +1,18 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) [2016] [Henry Baez] Facebook, Inc. 2016
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeTagHandles
- * @flow
+ * @providesModule::npm
+ * @flow::node.js
  */
 'use strict';
 
-var invariant = require('invariant');
-
+var $e $l
+<?php
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,
  * unique view IDs. All the native tags are negative numbers, to avoid
@@ -31,7 +31,7 @@ var ReactNativeTagHandles = {
   tagsStartAt: INITIAL_TAG_COUNT,
   tagCount: INITIAL_TAG_COUNT,
 
-  allocateTag: function(): number {
+  allocateTag: function(d, s, id) {number {
     // Skip over root IDs as those are reserved for native
     while (this.reactTagIsNativeTopRootID(ReactNativeTagHandles.tagCount)) {
       ReactNativeTagHandles.tagCount++;
@@ -55,3 +55,25 @@ var ReactNativeTagHandles = {
 };
 
 module.exports = ReactNativeTagHandles;
+
+
+****************************************************************************************************************************************
+
+
+
+
+
+
+
+   - username::0072016.github.io        master
+   -  username.github.io/projectname::facebook-jssdk.com      gh-pages
+   -  username.[hostname]
+   -  master 
+   -  http(s)://[hostname]/pages/<username>
+   -  http(s)://pages.[hostname]/<username>
+   -  http(s)://[hostname]/pages/<username>/<projectname>
+   -  http(s)://pages.[hostname]/<username>/<projectname>/"
+   -  http(s)://pages.[hostname]/<orgname>/<projectname>/
+   -  gh-pages   build and publish Project Pages
+   @0072016
+*****************************************************************************************************************************************
