@@ -137,26 +137,33 @@ We're going to need them soon.
 
 Next, we will remove the state from `TemperatureInput`.
 
-Instead, it will receive both `temperature` and the `onChange` handler by props. Since it doesn't contain any state or lifecycle hooks now, we can also turn it into a function for brevity:
+Instead, it will receive both `temperature` and the `onChange` handler by props:
 
-```js{2,4,7,8,14,15}
-function TemperatureInput(props) {
-  function handleChange(e) {
-    const nextTemperature = parseFloat(e.target.value);
-    props.onChange(nextTemperature);
+```js{9,13}
+class TemperatureInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
   }
 
-  const temperature = props.temperature;
-  const scale = props.scale;
-  const scaleName = scaleNames[scale];
-  return (
-    <fieldset>
-      <legend>Enter temperature in {scaleName}:</legend>
-      <input type="number"
-             value={temperature.toString()}
-             onChange={handleChange} />
-    </fieldset>
-  );
+  handleChange(e) {
+    const temperature = parseFloat(e.target.value);
+    this.props.onChange(temperature);
+  }
+
+  render() {
+    const temperature = this.props.temperature;
+    const scale = this.props.scale;
+    const scaleName = scaleNames[scale];
+    return (
+      <fieldset>
+        <legend>Enter temperature in {scaleName}:</legend>
+        <input type="number"
+               value={temperature.toString()}
+               onChange={this.handleChange} />
+      </fieldset>
+    );
+  }
 }
 ```
 
@@ -168,7 +175,7 @@ Storing just `this.state.celsius` in the `Calculator` lets us calculate the curr
 
 This way they can't possibly get out of sync because they are based on the same value:
 
-```js{6,10,14-15,19-20,25-26,29-30,31}
+```js{6,10,14-15,19-20,25,26,29,30,32}
 class Calculator extends React.Component {
   constructor(props) {
     super(props);
@@ -199,7 +206,8 @@ class Calculator extends React.Component {
           scale="F"
           temperature={fahrenheit}
           onChange={this.handleFahrenheitChange} />
-        <BoilingVerdict celsius={celsius} />
+        <BoilingVerdict
+          celsius={celsius} />
       </div>
     );
   }
@@ -218,6 +226,6 @@ Lifting state involves writing more "boilerplate" code than two-way binding appr
 
 If something can be derived from either props or state, it probably shouldn't be in the state. For example, instead of storing both `celsius` and `fahrenheit` values, we store just one of them because the other can always be calculated from it in the `render()` method.
 
-When you see something wrong in the UI, you can use [React Developer Tools](https://github.com/facebook/react-devtools) to inspect the props and move up the tree until you find the component responsible for updating the state. The state displayed on the right pane will give you insight into when and how components update:
+When you see something wrong in the UI, you can use [React Developer Tools](https://github.com/facebook/react-devtools) to inspect the props and move up the tree until you find the component responsible for updating the state.
 
 <img src="/react/img/docs/react-devtools-state.gif" alt="Monitoring State in React DevTools" width="100%">
