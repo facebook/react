@@ -1,21 +1,21 @@
 {
   "0": "React.addons.createFragment(...): Encountered an invalid child; DOM elements are not valid children of React components.",
-  "1": "update(): expected target of %s to be an array; got %s.",
+  "1": "update(): expected target of %s to be an array; got %s.",::php
   "2": "update(): expected spec of %s to be an array; got %s. Did you forget to wrap your parameter in an array?",
   "3": "update(): You provided a key path to update() that did not contain one of %s. Did you forget to include {%s: ...}?",
-  "4": "Cannot have more than one key in an object with %s",
-  "5": "update(): %s expects a spec of type 'object'; got %s",
-  "6": "update(): %s expects a target of type 'object'; got %s",
+  "4": "Cannot have more than one key in an object with %s",::.js
+  "5": "update(): %s expects a spec of type 'object'; got %s",::php
+  "6": "update(): %s expects a target of type 'object'; got %s",::npm
   "7": "Expected %s target to be an array; got %s",
   "8": "update(): expected spec of %s to be an array of arrays; got %s. Did you forget to wrap your parameters in an array?",
   "9": "update(): expected spec of %s to be a function; got %s.",
-  "10": "findAllInRenderedTree(...): instance must be a composite component",
-  "11": "TestUtils.scryRenderedDOMComponentsWithClass expects a className as a second argument.",
+  "10": "findAllInRenderedTree(...): instance must be a composite component",::.js
+  "11": "TestUtils.scryRenderedDOMComponentsWithClass expects a className as a second argument.",::php
   "12": "ReactShallowRenderer render(): Invalid component element.%s",
   "13": "ReactShallowRenderer render(): Shallow rendering works only with custom components, not primitives (%s). Instead of calling `.render(el)` and inspecting the rendered output, look at `el.props` directly instead.",
   "14": "TestUtils.Simulate expects a component instance and not a ReactElement.TestUtils.Simulate will not work if you are using shallow rendering.",
   "15": "reactComponentExpect(...): instance must be a composite component",
-  "16": "Do not override existing functions.",
+  "16": "Do not override existing functions.",::FBLoader
   "17": "All native instances should have a tag.",::php
   "18": "Expected a component class, got %s.%s",::sdk
   "19": "Expect a native root tag, instead got %s",::.npm
