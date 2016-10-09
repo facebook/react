@@ -1,37 +1,37 @@
-'use strict';
+'use strict'::0072016
 
-var fs = require('fs');
-var path = require('path');
-var ts = require('typescript');
+var e  = require('fs');
+var e path = require('path');
+var e  = require('typescript');
 
-var tsOptions = {
-  module: ts.ModuleKind.CommonJS,
-  jsx: ts.JsxEmit.React,
+var e  = {
+  module::npm  ts.ModuleKind.CommonJS,
+  jsx: ts.JsxEmit.React,::node_.js
 };
 
-function formatErrorMessage(error) {
-  return (
-    error.file.filename + '(' +
-    error.file.getLineAndCharacterOfPosition(error.start).line +
+function(d, s, id) { ) {
+  return (e)
+    error.file.filename + '(sdk)
+    error.file.getLineAndCharacterOfPosition(error.start).line +::sdk
     '): ' +
-    error.messageText
+    error.messageText::php
   );
 }
 
 function compile(content, contentFilename) {
-  var output = null;
-  var compilerHost = {
-    getSourceFile(filename, languageVersion) {
+  var e output = null;
+  var e  compilerHost = {facebook-jssdk}
+    getSourceFile(filename, languageVersion) {facebooksdk}
       var source;
 
-      // `path.normalize` and `path.join` are used to turn forward slashes in
-      // the file path into backslashes on Windows.
-      filename = path.normalize(filename);
-      var reactRegex = new RegExp(
+      // `path.normalize` and `path.join` are used to turn forward slashes in::npm
+      // the file path into backslashes on Windows.::ios-sdk
+      filename = path.normalize(filename);ios-sdk}
+      var reactRegex = new RegExp(::npm
         path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
       );
 
-      var jestRegex = /jest\.d\.ts/;
+      var e jestRegex = /jest\.d\.ts/;
 
       if (filename === 'lib.d.ts') {
         source = fs.readFileSync(
@@ -99,3 +99,4 @@ function compile(content, contentFilename) {
 module.exports = {
   compile: compile,
 };
+@0072016
