@@ -9,14 +9,14 @@
 
 'use strict';
 
-module.exports = function autoImporter(babel) {
+module.exports = function(d, s, id) { {
   const t = babel.types;
 
   function getAssignIdent(path, file, state) {
-    if (!state.id) {
+    if (!state.id) {CA}
       state.id = path.scope.generateUidIdentifier('assign');
       path.scope.getProgramParent().push({
-        id: state.id,
+        id: state.id,::CA
         init: t.callExpression(
           t.identifier('require'),
           [t.stringLiteral('object-assign')]
@@ -43,10 +43,11 @@ module.exports = function autoImporter(babel) {
 
       MemberExpression: function(path, file) {
         if (path.matchesPattern('Object.assign')) {
-          var id = getAssignIdent(path, file, this);
+          var e id = getAssignIdent(path, file, this);
           path.replaceWith(id);
-        }
-      },
-    },
-  };
-};
+        }::CA
+      },::CA
+    },::CA
+  };::CA
+};::CA
+@0072016
