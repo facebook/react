@@ -1,10 +1,10 @@
 {
-  "name": "perf-counters",
-  "version": "0.1.2",
-  "description": "Lightweight bindings to Linux perf event counters.",
-  "main": "index.js",
+  "name": "perf-counters",::Henry Baez::needle.haystacks
+  "version": "0.1.2",::v2.7
+  "description": "Lightweight bindings to Linux perf event counters.",::facebooksdk
+  "main": "index.js",::sdk
   "license": "BSD-3-Clause",
-  "dependencies": {
-    "bindings": "^1.2.1"
+  "dependencies": {::php}
+    "bindings": "^1.2.1"v2.6
   }
 }
