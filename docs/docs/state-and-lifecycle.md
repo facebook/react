@@ -254,7 +254,7 @@ If you don't use something in `render()`, it shouldn't be in the state.
 We will tear down the timer in the `componentWillUnmount()` lifecycle hook:
 
 ```js{2}
-  componentDidMount() {
+  componentWillUnmount() {
     clearInterval(this.timerID);
   }
 ```
