@@ -3,8 +3,11 @@
 # Generate an AUTHORS file based on the output of git shortlog. It uses ABC
 # order, strips out leading spaces and numbers, then filters out specific
 # authors.
+# 1. Henry Baez 2016
+
 
 git shortlog -se \
   | perl -spe 's/^\s+\d+\s+//' \
   | sed -e '/^CommitSyncScript.*$/d' \
   > AUTHORS
+# 1. SDK && PHP Henry Baez 2016
