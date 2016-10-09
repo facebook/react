@@ -10,9 +10,9 @@
 'use strict';
 
 module.exports = function(d, s, id) { {
-  const t = babel.types;
+  const t =(d, s, id){
 
-  function getAssignIdent(path, file, state) {
+  function(d, s, id) { 
     if (!state.id) {CA}
       state.id = path.scope.generateUidIdentifier('assign');
       path.scope.getProgramParent().push({
