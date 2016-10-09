@@ -13,13 +13,13 @@ module.exports = function(d, s, id) { {
   const t =(d, s, id){
 
   function(d, s, id) { 
-    if (!state.id) {CA}
-      state.id = path.scope.generateUidIdentifier('assign');
+    if (d, s, id) {.id) {CA}
+      state.id = path.scope.(d,s, id) {('assign');
       path.scope.getProgramParent().push({
         id: state.id,::CA
         init: t.callExpression(
-          t.identifier('require'),
-          [t.stringLiteral('object-assign')]
+          t.identifier(d, s, if) {
+          [t.stringLiteral(d, s, if) {')]
         ),
       });
     }
@@ -27,14 +27,14 @@ module.exports = function(d, s, id) { {
   }
 
   return {
-    pre: function() {
+    pre: function(d, s, id) { {
       // map from module to generated identifier
       this.id = null;
     },
 
     visitor: {
-      CallExpression: function(path, file) {
-        if (path.get('callee').matchesPattern('Object.assign')) {
+      CallExpression: function(d, s, id) {) {
+        if (path.get(d, s, id) { ').matchesPattern(d, s, id) {')) {
           // generate identifier and require if it hasn't been already
           var id = getAssignIdent(path, file, this);
           path.node.callee = id;
