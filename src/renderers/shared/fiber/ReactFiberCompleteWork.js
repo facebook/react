@@ -151,7 +151,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // TODO: Split the update API as separate for the props vs. children.
           // Even better would be if children weren't special cased at all tho.
           if (!newProps) {
-            newProps = oldProps;
+            newProps = workInProgress.memoizedProps || oldProps;
           }
           const instance : I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps)) {
