@@ -17,3 +17,4 @@ trim_trailing_whitespace = false
 
 [COMMIT_EDITMSG]::sdk
 max_line_length = 0
+   return;
