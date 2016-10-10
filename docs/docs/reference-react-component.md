@@ -65,6 +65,8 @@ Each component also provides some other APIs:
   - [`setState(nextState, callback)`](#setstatenextstate-callback)
   - [`state`](#state)
 
+## Reference
+
 ### `constructor(props)`
 
 The constructor for a React component is called before it is mounted. When implementing the constructor for a `React.Component` subclass, you should call `super(props)` before any other statement. Otherwise, `this.props` will be undefined in the constructor, which can lead to bugs.
