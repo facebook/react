@@ -6,7 +6,6 @@ category: Reference
 permalink: docs/react-component.html
 ---
 
-
 [Components](/react/docs/components-and-props.html) let you split the UI into independent, reusable pieces, and think about each piece in isolation.
 
 ## Overview
@@ -23,64 +22,50 @@ class Greeting extends React.Component {
 }
 ```
 
-If you don't use ES6 yet, you may use the `React.createClass` helper instead:
-
-```javascript
-var Greeting = React.createClass({
-  render: function() {
-    return <h1>Hello, {this.props.name}</h1>;
-  }
-});
-```
-
-The `React.Component` reference assumes the use of ES6. The API for `React.createClass` components is similar with a few exceptions. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
+If you don't use ES6 yet, you may use the `React.createClass` helper instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
 
 ### The Component Lifecycle
 
-Components have three main parts of their lifecycle:
-
-* Mounting: A component is being inserted into the DOM.
-* Updating: A component is being re-rendered to determine if the DOM should be updated.
-* Unmounting: A component is being removed from the DOM.
-
-React provides lifecycle methods that you can specify to hook into this process. Methods prefixed with **`will`** are called right before something happens, and methods prefixed with **`did`** are called right after something happens.
+Each component has several "lifecycle methods" that you can override to run code at particular times in the process. Methods prefixed with **`will`** are called right before something happens, and methods prefixed with **`did`** are called right after something happens.
 
 #### Mounting
 
-React will call [`componentWillMount()`](#componentwillmount) and [`componentDidMount()`](#componentdidmount) when a component is being inserted into the DOM.
+These methods are called when an instance of a component is being created and inserted into the DOM:
+
+- [`constructor(props)`](#constructor)
+- [`componentWillMount()`](#componentwillmount)
+- [`render()`](#render)
+- [`componentDidMount()`](#componentdidmount)
 
 #### Updating
 
-Changes to props or state can lead to the component being re-rendered. A re-rendering is not to be misinterpreted as an [expensive DOM change](/react/docs/rendering-elements.html#react-only-updates-whats-necessary).
+An update can be caused by changes to props or state. These methods are called when a component is being re-rendered:
 
- - [`componentWillReceiveProps()`](#componentwillreceivepropsnextprops) is invoked before a mounted component receives new props and can be used to update state in response to prop changes.
- - The default behavior is for a component to re-render when its state changes. Take a look at [`shouldComponentUpdate(nextProps, nextState)`](#shouldcomponentupdatenextprops-nextstate) if you need to change the default behavior.
- - [`componentWillUpdate(nextProps, nextState)`](#componentwillupdatenextprops-nextstate) can be used for preparation before an update occurs.
- - [`componentDidUpdate(prevProps, prevState)`](#componentdidupdateprevprops-prevstate) is invoked after an update and can be used to operate on the DOM after the component has been updated or to fetch new data in response to prop changes.
+- [`componentWillReceiveProps(nextProps)`](#componentwillreceivepropsnextprops)
+- [`shouldComponentUpdate(nextProps, nextState)`](#shouldcomponentupdatenextprops-nextstate)
+- [`componentWillUpdate(nextProps, nextState)`](#componentwillupdatenextprops-nextstate)
+- [`render()`](#render)
+- [`componentDidUpdate(prevProps, prevState)`](#componentdidupdateprevprops-prevstate) is invoked after an update and can be used to operate on the DOM after the component has been updated or to fetch new data in response to prop changes.
+
 
 #### Unmounting
 
-[`componentWillUnmount()`](#componentwillunmount) can be used to perform any cleanup, as it is invoked immediately before a component is unmounted and destroyed.
+This methods is called when a component is being removed from the DOM:
 
-## Reference
+- [`componentWillUnmount()`](#componentwillunmount)
 
-  - [`constructor(props)`](#constructor)
-  - [`componentDidMount()`](#componentdidmount)
-  - [`componentDidUpdate(prevProps, prevState)`](#componentdidupdateprevprops-prevstate)
-  - [`componentWillMount()`](#componentwillmount)
-  - [`componentWillReceiveProps(nextProps)`](#componentwillreceivepropsnextprops)
-  - [`componentWillUnmount()`](#componentwillunmount)
-  - [`componentWillUpdate(nextProps, nextState)`](#componentwillupdatenextprops-nextstate)
+
+#### Other APIs
+
+Each component also provides some other APIs:
+
   - [`defaultProps`](#defaultprops)
   - [`displayName`](#displayName)
   - [`forceUpdate(callback)`](#forceupdatecallback)
   - [`props`](#props)
   - [`propTypes`](#proptypes)
-  - [`render()`](#render)
   - [`setState(nextState, callback)`](#setstatenextstate-callback)
-  - [`shouldComponentUpdate(nextProps, nextState)`](#shouldcomponentupdatenextprops-nextstate)
   - [`state`](#state)
-
 
 ### `constructor(props)`
 
