@@ -53,7 +53,7 @@ This method is called when a component is being removed from the DOM:
 
 - [`componentWillUnmount()`](#componentwillunmount)
 
-#### Other APIs
+### Other APIs
 
 Each component also provides some other APIs:
 
