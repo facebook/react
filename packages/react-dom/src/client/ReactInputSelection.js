@@ -15,7 +15,7 @@ var ReactDOMSelection = require('./ReactDOMSelection');
 var {ELEMENT_NODE} = require('../shared/HTMLNodeType');
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return node.ownerDocument && containsNode(node.ownerDocument.documentElement, node);
 }
 
 function getFocusedElement() {
@@ -30,6 +30,62 @@ function getFocusedElement() {
     focusedElem = getActiveElement(win.document);
   }
   return focusedElem;
+}
+
+function getElementsWithSelections(acc, win) {
+  acc = acc || [];
+  win = win || window;
+  var doc;
+  try {
+    doc = win.document;
+  } catch (e) {
+    return acc;
+  }
+  var element = null;
+  if (win.getSelection) {
+    var selection = win.getSelection();
+    var startNode = selection.anchorNode;
+    var endNode = selection.focusNode;
+    var startOffset = selection.anchorOffset;
+    var endOffset = selection.focusOffset;
+    if (startNode && startNode.childNodes.length) {
+      if (startNode.childNodes[startOffset] === endNode.childNodes[endOffset]) {
+        element = startNode.childNodes[startOffset];
+      }
+    } else {
+      element = startNode;
+    }
+  } else if (doc.selection) {
+    var range = doc.selection.createRange();
+    element = range.parentElement();
+  }
+  if (ReactInputSelection.hasSelectionCapabilities(element)) {
+    acc = acc.concat(element);
+  }
+  return Array.prototype.reduce.call(win.frames, getElementsWithSelections, acc);
+}
+
+function focusNodePreservingScroll(element) {
+  // Focusing a node can change the scroll position, which is undesirable
+  const ancestors = [];
+  let ancestor = element;
+  while ((ancestor = ancestor.parentNode)) {
+    if (ancestor.nodeType === ELEMENT_NODE) {
+      ancestors.push({
+        element: ancestor,
+        left: ancestor.scrollLeft,
+        top: ancestor.scrollTop,
+      });
+    }
+  }
+
+  focusNode(element);
+
+  for (let i = 0; i < ancestors.length; i++) {
+    const info = ancestors[i];
+    info.element.scrollLeft = info.left;
+    info.element.scrollTop = info.top;
+  }
 }
 
 /**
@@ -50,12 +106,17 @@ var ReactInputSelection = {
   },
 
   getSelectionInformation: function() {
-    var focusedElem = getFocusedElement();
+    var focusedElement = getFocusedElement();
     return {
-      focusedElem: focusedElem,
-      selectionRange: ReactInputSelection.hasSelectionCapabilities(focusedElem)
-        ? ReactInputSelection.getSelection(focusedElem)
-        : null,
+      focusedElement: focusedElement,
+      activeElements: getElementsWithSelections().map(function(element) {
+        return {
+          element: element,
+          selectionRange: ReactInputSelection.hasSelectionCapabilities(element)
+            ? ReactInputSelection.getSelection(element)
+            : null,
+        };
+      }),
     };
   },
 
@@ -65,34 +126,25 @@ var ReactInputSelection = {
    * nodes and place them back in, resulting in focus being lost.
    */
   restoreSelection: function(priorSelectionInformation) {
-    var curFocusedElem = getFocusedElement();
-    var priorFocusedElem = priorSelectionInformation.focusedElem;
-    var priorSelectionRange = priorSelectionInformation.selectionRange;
-    if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-      if (ReactInputSelection.hasSelectionCapabilities(priorFocusedElem)) {
-        ReactInputSelection.setSelection(priorFocusedElem, priorSelectionRange);
-      }
-
-      // Focusing a node can change the scroll position, which is undesirable
-      const ancestors = [];
-      let ancestor = priorFocusedElem;
-      while ((ancestor = ancestor.parentNode)) {
-        if (ancestor.nodeType === ELEMENT_NODE) {
-          ancestors.push({
-            element: ancestor,
-            left: ancestor.scrollLeft,
-            top: ancestor.scrollTop,
-          });
+    priorSelectionInformation.activeElements.forEach(function(activeElement) {
+      var element = activeElement.element;
+      if (isInDocument(element) &&
+          getActiveElement(element.ownerDocument) !== element) {
+        if (ReactInputSelection.hasSelectionCapabilities(element)) {
+          ReactInputSelection.setSelection(
+            element,
+            activeElement.selectionRange
+          );
+          focusNodePreservingScroll(element);
         }
       }
+    });
 
-      focusNode(priorFocusedElem);
-
-      for (let i = 0; i < ancestors.length; i++) {
-        const info = ancestors[i];
-        info.element.scrollLeft = info.left;
-        info.element.scrollTop = info.top;
-      }
+    var curFocusedElement = getFocusedElement();
+    var priorFocusedElement = priorSelectionInformation.focusedElement;
+    if (curFocusedElement !== priorFocusedElement &&
+        isInDocument(priorFocusedElement)) {
+      focusNodePreservingScroll(priorFocusedElement);
     }
   },
 

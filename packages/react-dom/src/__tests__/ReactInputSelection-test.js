@@ -149,8 +149,9 @@ describe('ReactInputSelection', () => {
       input.selectionStart = 1;
       input.selectionEnd = 10;
       var selectionInfo = ReactInputSelection.getSelectionInformation();
-      expect(selectionInfo.focusedElem).toBe(input);
-      expect(selectionInfo.selectionRange).toEqual({start: 1, end: 10});
+      expect(selectionInfo.focusedElement).toBe(input);
+      expect(selectionInfo.activeElements[0].element).toBe(input);
+      expect(selectionInfo.activeElements[0].selectionRange).toEqual({start: 1, end: 10});
       expect(document.activeElement).toBe(input);
       input.setSelectionRange(0, 0);
       document.body.removeChild(input);
