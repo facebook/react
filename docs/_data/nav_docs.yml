@@ -23,3 +23,10 @@
     - id: react-without-jsx
       title: React Without JSX
 - title: Reference
+  items:
+    - id: reference-react
+      title: React
+    - id: reference-react-dom
+      title: ReactDOM
+    - id: reference-react-dom-server
+      title: ReactDOMServer
