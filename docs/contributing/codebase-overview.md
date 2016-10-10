@@ -4,7 +4,7 @@ title: Codebase Overview
 layout: contributing
 permalink: contributing/codebase-overview.html
 prev: how-to-contribute.html
-next: design-principles.html
+next: implementation-notes.html
 ---
 
 This section will give you an overview of the React codebase organization, its conventions, and the implementation.
@@ -48,7 +48,7 @@ React itself was extracted from Facebook codebase and uses Haste for historical 
 
 When we compile React for npm, a script copies all the modules into [a single flat directory called `lib`](https://unpkg.com/react@15/lib/) and prepends all `require()` paths with `./`. This way Node, Browserify, Webpack, and other tools can understand React build output without being aware of Haste.
 
-**If you're reading React source on GitHub and want to quickly jump to any file, press "t".**
+**If you're reading React source on GitHub and want to jump to a file, press "t".**
 
 This is a GitHub shortcut for searching the current repo for fuzzy filename matches. Start typing the name of the file you are looking for, and it will show up as the first match.
 
@@ -77,6 +77,22 @@ There are a few other top-level folders but they are mostly used for the tooling
 We don't have a top-level directory for unit tests. Instead, we put them into a directories called `__tests__` relative to the files that they test.
 
 For example, a test for [`setInnerHTML.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js) is located in [`__tests__/setInnerHTML-test.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/__tests__/setInnerHTML-test.js) right next to it.
+
+### Shared Code
+
+Even though Haste allows to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
+
+For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder ot below.
+
+However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
+
+There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case we hoist it up to a folder called `shared` inside their closest common ancestor folder.
+
+For example, code shared between [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) and [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) lives in [`src/renderers/dom/shared`](https://github.com/facebook/react/tree/master/src/renderers/dom/shared).
+
+By the same logic, if [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) needs to share a utility with something in [`src/renderers/native`](https://github.com/facebook/react/tree/master/src/renderers/native), this utility would be in [`src/renderers/shared`](https://github.com/facebook/react/tree/master/src/renderers/shared).
+
+This convention is not enforced but we check for it during a pull request review.
 
 ### Warnings and Invariants
 
@@ -140,6 +156,136 @@ if (__DEV__) {
   // This code will only run in development.
 }
 ```
+
+### JSDoc
+
+Some of the internal and public methods are annotated with [JSDoc annotations](http://usejsdoc.org/):
+
+```js
+/**
+  * Updates this component by updating the text content.
+  *
+  * @param {ReactText} nextText The next text content
+  * @param {ReactReconcileTransaction} transaction
+  * @internal
+  */
+receiveComponent: function(nextText, transaction) {
+  // ...
+},
+```
+
+We try to keep existing annotations up-to-date but we don't enforce them. We don't use JSDoc in the newly written code, and instead use Flow to document and enforce types.
+
+### Flow
+
+We recently started introducing [Flow](https://flowtype.org/) checks to the codebase. Files marked with the `@flow` annotation in the license header comment are being typechecked.
+
+We accept pull requests [adding Flow annotations to existing code](https://github.com/facebook/react/pull/7600/files). Flow annotations look like this:
+
+```js
+ReactRef.detachRefs = function(
+  instance: ReactInstance,
+  element: ReactElement | string | number | null | false,
+): void {
+  // ...
+}
+```
+
+When possible, new code should use Flow annotations.  
+You can run `npm run flow` locally to check your code with Flow.
+
+### Classes and Mixins
+
+React was originally written in ES5. We have since enabled ES2015 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
+
+In particular, you might see the following pattern quite often:
+
+```js
+// Constructor
+function ReactDOMComponent(element) {
+  this._currentElement = element;
+}
+
+// Methods
+ReactDOMComponent.Mixin = {
+  mountComponent: function() {
+    // ...
+  }
+};
+
+// Put methods on the prototype
+Object.assign(
+  ReactDOMComponent.prototype,
+  ReactDOMComponent.Mixin
+);
+
+module.exports = ReactDOMComponent;
+```
+
+The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
+
+Equivalent code in ES2015 would like this:
+
+```js
+class ReactDOMComponent {
+  constructor(element) {
+    this._currentElement = element;
+  }
+
+  mountComponent() {
+    // ...
+  }
+}
+
+module.exports = ReactDOMComponent;
+```
+
+Sometimes we [convert old code to ES2015 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
+
+### Dynamic Injection
+
+React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to React to let React Native override some behaviors.
+
+You may see modules declaring their dynamic dependencies like this:
+
+```js
+// Dynamically injected
+var textComponentClass = null;
+
+// Relies on dynamically injected value
+function createInstanceForText(text) {
+  return new textComponentClass(text);
+}
+
+var ReactHostComponent = {
+  createInstanceForText,
+
+  // Provides an opportunity for dynamic injection
+  injection: {
+    injectTextComponentClass: function(componentClass) {
+      textComponentClass = componentClass;
+    },
+  },
+};
+
+module.exports = ReactHostComponent;
+```
+
+The `injection` field is not handled specially in any way. But by convention, it means that this module wants to have some (presumably platform-specific) dependencies injected into it at runtime.
+
+In React DOM, [`ReactDefaultInjection`](https://github.com/facebook/react/blob/4f345e021a6bd9105f09f3aee6d8762eaa9db3ec/src/renderers/dom/shared/ReactDefaultInjection.js) injects a DOM-specific implementation:
+
+```js
+ReactHostComponent.injection.injectTextComponentClass(ReactDOMTextComponent);
+```
+
+In React Native, [`ReactNativeDefaultInjection`](https://github.com/facebook/react/blob/4f345e021a6bd9105f09f3aee6d8762eaa9db3ec/src/renderers/native/ReactNativeDefaultInjection.js) injects its own implementation:
+
+```js
+ReactHostComponent.injection.injectTextComponentClass(ReactNativeTextComponent);
+```
+
+There are multiple injection points in the codebase. In the future, we intend to get rid of the dynamic injection mechanism and wire up all the pieces statically during the build.
 
 ### Multiple Packages
 
@@ -227,6 +373,10 @@ During an update, the stack reconciler "drills down" through composite component
 
 It is important to understand that the stack reconciler always processes the component tree synchronously in a single pass. While individual tree branches may [bail out of reconciliation](/react/docs/advanced-performance.html#avoiding-reconciling-the-dom), the stack reconciler can't pause, and so it is suboptimal when the updates are deep and the available CPU time is limited.
 
+#### Learn More
+
+**The [next section](/react/contributing/implementation-notes.html) describes the current implementation in more details.**
+
 ### Fiber Reconciler
 
 The "fiber" reconciler is a new effort aiming to resolve the problems inherent in the stack reconciler and fix a few long-standing issues.
@@ -259,4 +409,4 @@ Additionally, we provide a standalone build called `react-with-addons.js` which 
 
 ### What Next?
 
-Learn the [design principles](/react/contributing/design-principles.html) guiding development of React in the next section.
+Read the [next section](/react/contributing/implementation-notes.html) to learn about the current implementation of reconciler in more detail.
