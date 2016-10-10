@@ -82,7 +82,7 @@ For example, a test for [`setInnerHTML.js`](https://github.com/facebook/react/bl
 
 Even though Haste allows to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
 
-For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder ot below.
+For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder or below.
 
 However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
 
