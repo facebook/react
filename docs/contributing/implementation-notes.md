@@ -23,7 +23,7 @@ Both this document and his talk are simplifications of the real codebase so you 
 
 The reconciler itself doesn't have a public API. [Renderers](/react/contributing/codebase-overview.html#stack-renderers) like React DOM and React Native use it to efficiently update the user interface according to the React components written by the user.
 
-#### Mounting as a Recursive Process
+### Mounting as a Recursive Process
 
 Let's consider the first time you mount a component:
 
@@ -109,7 +109,7 @@ Let's recap a few key ideas in the example above:
 * User-defined components (e.g. `App`) can be classes or functions but they all "render to" elements.
 * "Mounting" is a recursive process that creates a DOM or Native tree given the top-level React element (e.g. `<App />`).
 
-#### Mounting Host Elements
+### Mounting Host Elements
 
 This process would be useless if we didn't render something to the screen as a result.
 
@@ -227,7 +227,7 @@ rootEl.appendChild(node);
 
 This is working but still far from how the reconciler is really implemented. The key missing ingredient is support for updates.
 
-#### Introducing Internal Instances
+### Introducing Internal Instances
 
 The key feature of React is that you can re-render everything, and it won't recreate the DOM or reset the state:
 
@@ -428,7 +428,7 @@ var rootEl = document.getElementById('root');
 mountTree(<App />, rootEl);
 ```
 
-#### Unmounting
+### Unmounting
 
 Now that we have internal instances that hold onto their children and the DOM nodes, we can implement unmounting. For a composite component, unmounting calls a lifecycle hook and recurses.
 
@@ -512,7 +512,7 @@ function mountTree(element, containerNode) {
 
 Now, running `unmountTree()`, or running `mountTree()` repeatedly, removes the old tree and runs the `componentWillUnmount()` lifecycle hook on components.
 
-#### Updating
+### Updating
 
 In the previous section, we implemented unmounting. However React wouldn't be very useful if each prop change unmounted and mounted the whole tree. The goal of the reconciler is to reuse existing instances where possible to preserve the DOM and the state:
 
@@ -531,7 +531,7 @@ class CompositeComponent {
   // ...
 
   receive(nextElement) {
-
+    // ...
   }
 }
 
@@ -539,7 +539,7 @@ class DOMComponent {
   // ...
 
   receive(nextElement) {
-
+    // ...
   }
 }
 ```
@@ -548,7 +548,7 @@ Its job is to do whatever is necessary to bring the component (and any of its ch
 
 This is the part that is often described as "virtual DOM diffing" although what really happens is that we walk the internal tree recursively and let each internal instance receive an update.
 
-#### Updating Composite Components
+### Updating Composite Components
 
 When a composite component receives a new element, we run the `componentWillUpdate()` lifecycle hook.
 
@@ -807,7 +807,7 @@ As the last step, we execute the DOM operations. Again, the real reconciler code
 
 And that is it for updating host components.
 
-#### Top-Level Updates
+### Top-Level Updates
 
 Now that both `CompositeComponent` and `DOMComponent` implement the `receive(nextElement)` method, we can change the top-level `mountTree()` function to use it when the element `type` is the same as it was the last time:
 
