@@ -13,7 +13,7 @@ In this section, we will consider a few problems where developers new to React o
 
 Some components don't know their children ahead of time. This is especially common for components like `Sidebar` or `Dialog` that represent generic "boxes".
 
-We recommend that such components include a prop called `children` in their output:
+We recommend that such components use the special `children` prop to pass children elements directly into their output:
 
 ```js{4}
 function FancyBorder(props) {

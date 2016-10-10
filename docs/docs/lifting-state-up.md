@@ -6,7 +6,7 @@ prev: state-and-lifecycle.html
 next: composition-vs-inheritance.html
 ---
 
-Often, several components need to reflect the same changing data. We recommend to lift the shared state up to their closest common ancestor. Let's see how this works in action.
+Often, several components need to reflect the same changing data. We recommend lifting the shared state up to their closest common ancestor. Let's see how this works in action.
 
 In this section, we will create a temperature calculator that calculates whether the water would boil at a given temperature.
 
@@ -24,7 +24,7 @@ function BoilingVerdict(props) {
 
 Next, we will create a component called `Calculator`. It renders an `<input>` that lets you enter the temperature, and keeps its value in `this.state.celsius`.
 
-Additionally it renders the `BoilingVerdict` for the current input value.
+Additionally, it renders the `BoilingVerdict` for the current input value.
 
 ```js{5,10,15,19-22}
 class Calculator extends React.Component {
