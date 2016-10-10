@@ -12,7 +12,6 @@
 
 var React = require('React');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
@@ -33,7 +32,9 @@ var pendingTransactions = 0;
  */
 function renderToStringImpl(element, makeStaticMarkup) {
   var transaction;
+  var previousBatchingStrategy;
   try {
+    previousBatchingStrategy = ReactUpdates.injection.getBatchingStrategy();
     ReactUpdates.injection.injectBatchingStrategy(ReactServerBatchingStrategy);
 
     transaction = ReactServerRenderingTransaction.getPooled(makeStaticMarkup);
@@ -67,7 +68,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
     // currently share these stateful modules.
     if (!pendingTransactions) {
       ReactUpdates.injection.injectBatchingStrategy(
-        ReactDefaultBatchingStrategy
+        previousBatchingStrategy
       );
     }
   }
