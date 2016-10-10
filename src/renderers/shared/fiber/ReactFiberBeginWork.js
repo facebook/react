@@ -402,17 +402,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
-    if (current) {
-      // TODO: If I have started work on this node, mark it as finished, then
-      // return do other work, come back and hit this node... we killed that
-      // work. It is now in an inconsistent state. We probably need to check
-      // progressedChild or something.
-      workInProgress.child = current.child;
-      workInProgress.memoizedProps = current.memoizedProps;
-      workInProgress.output = current.output;
-      workInProgress.firstEffect = null;
-      workInProgress.lastEffect = null;
-    }
+    // TODO: What if this is currently in progress?
+    // How can that happen? How is this not being cloned?
     return null;
   }
 
