@@ -636,7 +636,7 @@ ReactDOMComponent.Mixin = {
       var isCustomComponentTag = isCustomComponent(this._tag, props);
       if (__DEV__ && isCustomComponentTag && !didWarnShadyDom && el.shadyRoot) {
         warning(
-          didWarnShadyDom,
+          false,
           'A component is using shady dom. Using shady dom with React can ' +
           'cause things to break subtly.'
         );
