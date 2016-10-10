@@ -80,7 +80,8 @@ The core team is monitoring for pull requests. We will review your pull request 
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
-6. If you haven't already, complete the CLA.
+6. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
+7. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
@@ -104,6 +105,7 @@ Then, you can run several commands:
 * `npm test` runs the complete test suite.
 * `npm test -- --watch` runs an interactive test watcher.
 * `npm test <pattern>` runs tests with matching filenames.
+* `npm run flow` runs the [Flow](https://flowtype.org/) typechecks.
 * `npm run build` creates a `build` folder with all the packages.
 
 We recommend running `npm test` (or its variations above) to make sure you don't introduce any regressions as you work on your change. However it can be handy to try your build of React in a real project.
@@ -142,16 +144,18 @@ However, there are still some styles that the linter cannot pick up. If you are 
 * Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
-### License
+### Introductory Video
 
-By contributing to React, you agree that your contributions will be licensed under its BSD license.
+You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
 
 ### Meeting Notes
 
 React team meets once a week to discuss the development of React, future plans, and priorities. You can find the meeting notes in a [dedicated repository](https://github.com/reactjs/core-notes/).
 
+### License
+
+By contributing to React, you agree that your contributions will be licensed under its BSD license.
+
 ### What Next?
 
-You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
-
-Read the next sections to learn more about [understanding the codebase](/react/contributing/codebase-overview.html), and the [design principles](/react/contributing/design-principles.html) guiding the development of React.
+Read the [next section](/react/contributing/codebase-overview.html) to learn how the codebase is organized.
