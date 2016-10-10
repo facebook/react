@@ -197,13 +197,34 @@ describe('BeforeInputEventPlugin', function() {
     verifyEvents(events, ExpectedResult());
   }
 
-  it('extract onBeforeInput from native textinput events', function() {
+  it('extracts onBeforeInput from native textinput events', function() {
     TestEditableReactComponent(
       simulateWebkit, Scenario_Composition, Expected_Webkit);
   });
 
-  it('extract onBeforeInput from fallback objects', function() {
+  it('extracts onBeforeInput from fallback objects', function() {
     TestEditableReactComponent(
       simulateIE11, Scenario_Composition, Expected_IE11);
   });
+
+
+  var buggyIEScenario = [
+    {run: accumulateEvents, arg: ['keydown', {keyCode: 229}]},
+    {run: setElementText, arg: ['。']},
+    {run: accumulateEvents, arg: ['keyup', {keyCode: 190}]},
+  ];
+
+  var buggyIEScenarioExpectations = () => [
+    {type: null}, {type: null}, // keyDown of 229
+    {type: null}, // keyUp of 190
+    {type: ModuleCache.SyntheticInputEvent, data: {data: '。'}},
+  ];
+
+  // In some cases, such as when entering full-width Chinese punctuation on IE with Sogou Wubi,
+  // the composition event is missing. In this case, we still expect a proper input event.
+  it('extracts onBeforeInput from buggy IE interaction without composition events', function() {
+    TestEditableReactComponent(
+      simulateIE11, buggyIEScenario, buggyIEScenarioExpectations);
+  });
+
 });
