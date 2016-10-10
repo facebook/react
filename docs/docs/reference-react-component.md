@@ -204,7 +204,7 @@ The `render()` method is required.
 
 When called, it should examine `this.props` and `this.state` and return a single React element. This element can be either a representation of a native DOM component, such as `<div />`, or another composite component that you've defined yourself.
 
-You can also return `null` or `false` to indicate that you don't want anything rendered. React will just render a comment tag. When returning `null` or `false`, `ReactDOM.findDOMNode(this)` will return `null`
+You can also return `null` or `false` to indicate that you don't want anything rendered. When returning `null` or `false`, `ReactDOM.findDOMNode(this)` will return `null`
 
 The `render()` function should be pure, meaning that it does not modify component state, it returns the same result each time it's invoked, and it does not directly interact with the browser. If you need to interact with the browser, perform your work in `componentDidMount()` or the other lifecycle methods instead. Keeping `render()` pure makes components easier to think about.
 
@@ -213,13 +213,6 @@ The `render()` function should be pure, meaning that it does not modify componen
 > `render()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdatenextprops-nextstate) returns false.
 
 ### `setState(nextState, callback)`
-
-```javascript
-void setState(
-  function|object nextState,
-  [function callback]
-)
-```
 
 Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
 
@@ -245,7 +238,7 @@ The second parameter is an optional callback function that will be executed once
 
 There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
 
-`setState()` will always trigger a re-render unless `shouldComponentUpdate()` returns `false` If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
+`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false` If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
 
 ### `shouldComponentUpdate(nextProps, nextState)`
 
@@ -261,7 +254,7 @@ If you determine a specific component is slow after profiling, you may change it
 
 ### `state`
 
-The state contains data specific to this component that may change over time. The state should be a plain JavaScript object, with the keys defined according to the `React.Component` subclass. There are no special state keys with behavior defined by the core `React.Component` class itself.
+The state contains data specific to this component that may change over time. The state is user-defined, and it should be a plain JavaScript object.
 
 See [State and Lifecycle](/react/docs/state-and-lifecycle.html) for more information about the state.
 
