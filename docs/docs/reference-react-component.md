@@ -47,13 +47,11 @@ An update can be caused by changes to props or state. These methods are called w
 - [`render()`](#render)
 - [`componentDidUpdate(prevProps, prevState)`](#componentdidupdateprevprops-prevstate) is invoked after an update and can be used to operate on the DOM after the component has been updated or to fetch new data in response to prop changes.
 
-
 #### Unmounting
 
-This methods is called when a component is being removed from the DOM:
+This method is called when a component is being removed from the DOM:
 
 - [`componentWillUnmount()`](#componentwillunmount)
-
 
 #### Other APIs
 
