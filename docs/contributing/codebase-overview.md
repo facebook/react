@@ -196,7 +196,7 @@ You can run `npm run flow` locally to check your code with Flow.
 
 ### Classes and Mixins
 
-React was originally written in ES5. We have since enabled ES2015 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
+React was originally written in ES5. We have since enabled ES6 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
 
 In particular, you might see the following pattern quite often:
 
@@ -224,7 +224,7 @@ module.exports = ReactDOMComponent;
 
 The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
 
-Equivalent code in ES2015 would like this:
+Equivalent code in ES6 would like this:
 
 ```js
 class ReactDOMComponent {
@@ -240,7 +240,7 @@ class ReactDOMComponent {
 module.exports = ReactDOMComponent;
 ```
 
-Sometimes we [convert old code to ES2015 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
+Sometimes we [convert old code to ES6 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
 
 ### Dynamic Injection
 
