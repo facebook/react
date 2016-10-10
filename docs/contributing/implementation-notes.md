@@ -260,7 +260,6 @@ function instantiateComponent(element) {
 
 First, let's consider the implementation of `CompositeComponent`:
 
-
 ```js
 class CompositeComponent {
   constructor(element) {
