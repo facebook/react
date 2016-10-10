@@ -423,6 +423,10 @@
           </li>
         
           <li>
+            <a href="/react/contributing/implementation-notes.html">Implementation Notes</a>
+          </li>
+        
+          <li>
             <a href="/react/contributing/design-principles.html">Design Principles</a>
           </li>
         
@@ -470,7 +474,7 @@
 
 <p>When we compile React for npm, a script copies all the modules into <a href="https://unpkg.com/react@15/lib/">a single flat directory called <code>lib</code></a> and prepends all <code>require()</code> paths with <code>./</code>. This way Node, Browserify, Webpack, and other tools can understand React build output without being aware of Haste.</p>
 
-<p><strong>If you&#39;re reading React source on GitHub and want to quickly jump to any file, press &quot;t&quot;.</strong></p>
+<p><strong>If you&#39;re reading React source on GitHub and want to jump to a file, press &quot;t&quot;.</strong></p>
 
 <p>This is a GitHub shortcut for searching the current repo for fuzzy filename matches. Start typing the name of the file you are looking for, and it will show up as the first match.</p>
 <h3><a class="anchor" name="external-dependencies"></a>External Dependencies <a class="hash-link" href="#external-dependencies">#</a></h3>
@@ -495,6 +499,20 @@
 <p>We don&#39;t have a top-level directory for unit tests. Instead, we put them into a directories called <code>__tests__</code> relative to the files that they test.</p>
 
 <p>For example, a test for <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js"><code>setInnerHTML.js</code></a> is located in <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/__tests__/setInnerHTML-test.js"><code>__tests__/setInnerHTML-test.js</code></a> right next to it.</p>
+<h3><a class="anchor" name="shared-code"></a>Shared Code <a class="hash-link" href="#shared-code">#</a></h3>
+<p>Even though Haste allows to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.</p>
+
+<p>For example, files inside <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> may import other files in the same folder ot below.</p>
+
+<p>However they can&#39;t import modules from <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/server"><code>src/renderers/dom/server</code></a> because it is not a child directory of <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a>.</p>
+
+<p>There is an exception to this rule. Sometimes we <em>do</em> need to share functionality between two groups of modules. In this case we hoist it up to a folder called <code>shared</code> inside their closest common ancestor folder.</p>
+
+<p>For example, code shared between <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> and <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/server"><code>src/renderers/dom/server</code></a> lives in <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/shared"><code>src/renderers/dom/shared</code></a>.</p>
+
+<p>By the same logic, if <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> needs to share a utility with something in <a href="https://github.com/facebook/react/tree/master/src/renderers/native"><code>src/renderers/native</code></a>, this utility would be in <a href="https://github.com/facebook/react/tree/master/src/renderers/shared"><code>src/renderers/shared</code></a>.</p>
+
+<p>This convention is not enforced but we check for it during a pull request review.</p>
 <h3><a class="anchor" name="warnings-and-invariants"></a>Warnings and Invariants <a class="hash-link" href="#warnings-and-invariants">#</a></h3>
 <p>React codebase uses the <code>warning</code> module to display warnings:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">warning</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;warning&#39;</span><span class="p">);</span>
@@ -542,7 +560,108 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">if</span> <span class="p">(</span><span class="nx">__DEV__</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// This code will only run in development.</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="multiple-packages"></a>Multiple Packages <a class="hash-link" href="#multiple-packages">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="jsdoc"></a> JSDoc <a class="hash-link" href="#jsdoc">#</a></h3>
+<p>Some of the internal and public methods are annotated with <a href="http://usejsdoc.org/">JSDoc annotations</a>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/**</span>
+<span class="cm">  * Updates this component by updating the text content.</span>
+<span class="cm">  *</span>
+<span class="cm">  * @param {ReactText} nextText The next text content</span>
+<span class="cm">  * @param {ReactReconcileTransaction} transaction</span>
+<span class="cm">  * @internal</span>
+<span class="cm">  */</span>
+<span class="nx">receiveComponent</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextText</span><span class="p">,</span> <span class="nx">transaction</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">},</span>
+</code></pre></div>
+<p>We try to keep existing annotations up-to-date but we don&#39;t enforce them. We don&#39;t use JSDoc in the newly written code, and instead use Flow to document and enforce types.</p>
+<h3><a class="anchor" name="flow"></a>Flow <a class="hash-link" href="#flow">#</a></h3>
+<p>We recently started introducing <a href="https://flowtype.org/">Flow</a> checks to the codebase. Files marked with the <code>@flow</code> annotation in the license header comment are being typechecked.</p>
+
+<p>We accept pull requests <a href="https://github.com/facebook/react/pull/7600/files">adding Flow annotations to existing code</a>. Flow annotations look like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactRef</span><span class="p">.</span><span class="nx">detachRefs</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span>
+  <span class="nx">instance</span><span class="o">:</span> <span class="nx">ReactInstance</span><span class="p">,</span>
+  <span class="nx">element</span><span class="o">:</span> <span class="nx">ReactElement</span> <span class="o">|</span> <span class="nx">string</span> <span class="o">|</span> <span class="nx">number</span> <span class="o">|</span> <span class="kc">null</span> <span class="o">|</span> <span class="kc">false</span><span class="p">,</span>
+<span class="p">)</span><span class="o">:</span> <span class="k">void</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When possible, new code should use Flow annotations.<br>
+You can run <code>npm run flow</code> locally to check your code with Flow.</p>
+<h3><a class="anchor" name="classes-and-mixins"></a>Classes and Mixins <a class="hash-link" href="#classes-and-mixins">#</a></h3>
+<p>React was originally written in ES5. We have since enabled ES2015 features with <a href="http://babeljs.io/">Babel</a>, including classes. However most of React code is still written in ES5.</p>
+
+<p>In particular, you might see the following pattern quite often:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Constructor</span>
+<span class="kd">function</span> <span class="nx">ReactDOMComponent</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">_currentElement</span> <span class="o">=</span> <span class="nx">element</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// Methods</span>
+<span class="nx">ReactDOMComponent</span><span class="p">.</span><span class="nx">Mixin</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">mountComponent</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// Put methods on the prototype</span>
+<span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span>
+  <span class="nx">ReactDOMComponent</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span>
+  <span class="nx">ReactDOMComponent</span><span class="p">.</span><span class="nx">Mixin</span>
+<span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ReactDOMComponent</span><span class="p">;</span>
+</code></pre></div>
+<p>The <code>Mixin</code> in this code has no relation to React <code>mixins</code> feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.</p>
+
+<p>Equivalent code in ES2015 would like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactDOMComponent</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_currentElement</span> <span class="o">=</span> <span class="nx">element</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">mountComponent</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ReactDOMComponent</span><span class="p">;</span>
+</code></pre></div>
+<p>Sometimes we <a href="https://github.com/facebook/react/pull/7647/files">convert old code to ES2015 classes</a>. However this is not very important to us because there is an <a href="#fiber-reconciler">ongoing effort</a> to replace the React reconciler implementation with a less object-oriented approach which wouldn&#39;t use classes at all.</p>
+<h3><a class="anchor" name="dynamic-injection"></a>Dynamic Injection <a class="hash-link" href="#dynamic-injection">#</a></h3>
+<p>React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to React to let React Native override some behaviors.</p>
+
+<p>You may see modules declaring their dynamic dependencies like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Dynamically injected</span>
+<span class="kd">var</span> <span class="nx">textComponentClass</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+<span class="c1">// Relies on dynamically injected value</span>
+<span class="kd">function</span> <span class="nx">createInstanceForText</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="nx">textComponentClass</span><span class="p">(</span><span class="nx">text</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">ReactHostComponent</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">createInstanceForText</span><span class="p">,</span>
+
+  <span class="c1">// Provides an opportunity for dynamic injection</span>
+  <span class="nx">injection</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">injectTextComponentClass</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">componentClass</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">textComponentClass</span> <span class="o">=</span> <span class="nx">componentClass</span><span class="p">;</span>
+    <span class="p">},</span>
+  <span class="p">},</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ReactHostComponent</span><span class="p">;</span>
+</code></pre></div>
+<p>The <code>injection</code> field is not handled specially in any way. But by convention, it means that this module wants to have some (presumably platform-specific) dependencies injected into it at runtime.</p>
+
+<p>In React DOM, <a href="https://github.com/facebook/react/blob/4f345e021a6bd9105f09f3aee6d8762eaa9db3ec/src/renderers/dom/shared/ReactDefaultInjection.js"><code>ReactDefaultInjection</code></a> injects a DOM-specific implementation:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactHostComponent</span><span class="p">.</span><span class="nx">injection</span><span class="p">.</span><span class="nx">injectTextComponentClass</span><span class="p">(</span><span class="nx">ReactDOMTextComponent</span><span class="p">);</span>
+</code></pre></div>
+<p>In React Native, <a href="https://github.com/facebook/react/blob/4f345e021a6bd9105f09f3aee6d8762eaa9db3ec/src/renderers/native/ReactNativeDefaultInjection.js"><code>ReactNativeDefaultInjection</code></a> injects its own implementation:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactHostComponent</span><span class="p">.</span><span class="nx">injection</span><span class="p">.</span><span class="nx">injectTextComponentClass</span><span class="p">(</span><span class="nx">ReactNativeTextComponent</span><span class="p">);</span>
+</code></pre></div>
+<p>There are multiple injection points in the codebase. In the future, we intend to get rid of the dynamic injection mechanism and wire up all the pieces statically during the build.</p>
+<h3><a class="anchor" name="multiple-packages"></a>Multiple Packages <a class="hash-link" href="#multiple-packages">#</a></h3>
 <p>React is a <a href="http://danluu.com/monorepo/">monorepo</a>. Its repository contains multiple separate packages so that their changes can be coordinated together, and documentation and issues live in one place.</p>
 
 <p>The npm metadata such as <code>package.json</code> files is located in the <a href="https://github.com/facebook/react/tree/master/packages"><code>packages</code></a> top-level folder. However there is almost no real code in it.</p>
@@ -620,6 +739,8 @@
 <p>During an update, the stack reconciler &quot;drills down&quot; through composite components, runs their <code>render()</code> methods, and decides whether to update or replace their single child instance. It executes platform-specific code as it passes through the host components like <code>&lt;div&gt;</code> and <code>&lt;View&gt;</code>. Host components may have multiple children which are also processed recursively.</p>
 
 <p>It is important to understand that the stack reconciler always processes the component tree synchronously in a single pass. While individual tree branches may <a href="/react/docs/advanced-performance.html#avoiding-reconciling-the-dom">bail out of reconciliation</a>, the stack reconciler can&#39;t pause, and so it is suboptimal when the updates are deep and the available CPU time is limited.</p>
+<h4><a class="anchor" name="learn-more"></a> Learn More <a class="hash-link" href="#learn-more">#</a></h4>
+<p><strong>The <a href="/react/contributing/implementation-notes.html">next section</a> describes the current implementation in more details.</strong></p>
 <h3><a class="anchor" name="fiber-reconciler"></a>Fiber Reconciler <a class="hash-link" href="#fiber-reconciler">#</a></h3>
 <p>The &quot;fiber&quot; reconciler is a new effort aiming to resolve the problems inherent in the stack reconciler and fix a few long-standing issues.</p>
 
@@ -647,7 +768,7 @@
 
 <p>Additionally, we provide a standalone build called <code>react-with-addons.js</code> which includes React core <em>and</em> all add-ons exposed on the <code>addons</code> field of the <code>React</code> global object.</p>
 <h3><a class="anchor" name="what-next"></a>What Next? <a class="hash-link" href="#what-next">#</a></h3>
-<p>Learn the <a href="/react/contributing/design-principles.html">design principles</a> guiding development of React in the next section.</p>
+<p>Read the <a href="/react/contributing/implementation-notes.html">next section</a> to learn about the current implementation of reconciler in more detail.</p>
 
 
     <div class="docs-prevnext">
@@ -655,7 +776,7 @@
         <a class="docs-prev" href="/react/contributing/how-to-contribute.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/contributing/design-principles.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/contributing/implementation-notes.html">Next &rarr;</a>
       
     </div>
   </div>
