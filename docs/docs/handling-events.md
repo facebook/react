@@ -29,15 +29,14 @@ Another difference is that you cannot return `false` to prevent default behavior
 </a>
 ```
 
-In React, this would instead be:
+In React, this could instead be:
 
 ```js
-function handleClick(e) {
-  console.log('the link was clicked');
-  e.preventDefault();
-}
-
 function CustomLink() {
+  const handleClick = (e) => {
+    console.log('the link was clicked');
+    e.preventDefault();
+  };
   return <a href="#" onClick={handleClick}>click me</a>;
 }
 ```
