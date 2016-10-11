@@ -33,7 +33,7 @@ In React, this could instead be:
 
 ```js
 function ActionLink() {
-  const handleClick = (e) => {
+  function handleClick(e) {
     console.log('the link was clicked');
     e.preventDefault();
   };
@@ -77,7 +77,7 @@ class Toggle extends React.Component {
 
 You have to be careful about the meaning of `this` in JSX callbacks. In JavaScript, class methods are not [bound](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_objects/Function/bind) by default. If you forget to bind `this.toggle` and pass it to `onClick`, `this` will be `undefined` when the function is actually called.
 
-This is not React-specific behavior; it is a part of [how functions work in JavaScript](https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/). Generally, if you refer to a method without `()` after it, such as `onClick={this.toggle}`, you should bind that method.
+This is not React-specific behavior; it is a part of [how functions work in JavaScript](https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/). Generally, if you refer to a method without `()` after it, such as `onClick={this.handleClick}`, you should bind that method.
 
 If calling `bind` annoys you, there are two ways you can get around this. If you are using the experimental [property initializer syntax](https://babeljs.io/docs/plugins/transform-class-properties/), you can use property initializers to correctly bind callbacks:
 
