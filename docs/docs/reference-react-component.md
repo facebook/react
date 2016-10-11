@@ -234,11 +234,11 @@ Here is the simple object usage:
 this.setState({mykey: 'my new value'});
 ```
 
-It's also possible to pass a function with the signature `function(state, props) => newState`. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state:
+It's also possible to pass a function with the signature `function(state, props) => newState`. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state by `props.step`:
 
 ```javascript
-this.setState((prevState, currentProps) => {
-  return {myInteger: prevState.myInteger + 1};
+this.setState((prevState, props) => {
+  return {myInteger: prevState.myInteger + props.step};
 });
 ```
 
