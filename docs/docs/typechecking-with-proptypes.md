@@ -20,7 +20,7 @@ Greeting.propTypes = {
 };
 ```
 
-`React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. In this example, we're using `React.PropTypes.string`. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. For performance reasons, `PropTypes` is only checked in development mode.
+`React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. In this example, we're using `React.PropTypes.string`. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. For performance reasons, `propTypes` is only checked in development mode.
 
 ### React.PropTypes
 
