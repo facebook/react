@@ -32,7 +32,7 @@ Another difference is that you cannot return `false` to prevent default behavior
 In React, this could instead be:
 
 ```js
-function CustomLink() {
+function ActionLink() {
   const handleClick = (e) => {
     console.log('the link was clicked');
     e.preventDefault();
