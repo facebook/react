@@ -253,6 +253,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;
+  alt.memoizedState = fiber.memoizedState;
   alt.output = fiber.output;
 
   return alt;
