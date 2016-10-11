@@ -1,9 +1,10 @@
 ---
-id: reference-react-dom
+id: react-dom
 title: ReactDOM
-permalink: docs/reference-react-dom.html
-next: reference-react-dom-server.html
-redirect_from: "/docs/reference.html"
+layout: docs
+category: Reference
+permalink: docs/react-dom.html
+
 ---
 
 The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.

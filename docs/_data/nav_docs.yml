@@ -26,11 +26,12 @@
       title: React Without JSX
 - title: Reference
   items:
-    - id: reference-react
+    - id: react-api
       title: React
-    - id: react-component
-      title: React.Component
-    - id: reference-react-dom
+      subitems:
+      - id: react-component
+        title: React.Component
+    - id: react-dom
       title: ReactDOM
-    - id: reference-react-dom-server
+    - id: react-dom-server
       title: ReactDOMServer

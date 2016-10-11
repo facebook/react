@@ -1,9 +1,9 @@
 ---
-id: reference-react
+id: react-api
 title: React Top-Level API
 layout: docs
 category: Reference
-permalink: docs/reference-react.html
+permalink: docs/react-api.html
 redirect_from: "/docs/reference.html"
 ---
 
@@ -30,7 +30,7 @@ class Greeting extends React.Component {
 }
 ```
 
-`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/reference-react-component.html) for a list of methods related to the base `React.Component` class.
+`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods related to the base `React.Component` class.
 
 ### `createClass()`
 

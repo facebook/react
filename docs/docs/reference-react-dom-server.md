@@ -1,9 +1,9 @@
 ---
-id: reference-react-dom-server
+id: react-dom-server
 title: ReactDOMServer
-permalink: docs/reference-react-dom-server.html
-next: reference-react-dom-server.html
-redirect_from: "/docs/reference.html"
+layout: docs
+category: Reference
+permalink: docs/react-dom-server.html
 ---
 
 The `react-dom/server` package allows you to render your components on the server.
@@ -21,7 +21,7 @@ ReactDOMServer.renderToString(element)
 
 Render a React element to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
 
-If you call [`ReactDOM.render()`](/react/docs/reference-react-dom.html#render) on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
+If you call [`ReactDOM.render()`](/react/docs/react-dom.html#render) on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
 
 ### `renderToStaticMarkup()`
 
