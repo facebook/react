@@ -192,13 +192,11 @@ The `displayName` string is used in debugging messages. JSX sets this value auto
 
 ### `forceUpdate(callback)`
 
-`forceUpdate()` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`
+By default, when your component's state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`.
 
-By default, when your component's state or props change, your component will re-render. However, if these change implicitly (eg: data deep within an object changes without changing the object itself) or if your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`
+Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This will trigger the normal lifecycle methods for child components, including the `shouldComponentUpdate()` method of each child. React will still only update the DOM if the markup changes.
 
-Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()` This will trigger the normal lifecycle methods for child components, including the `shouldComponentUpdate()` method of each child. React will still only update the DOM if the markup changes.
-
-Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()` This makes your component "pure" and your application much simpler and more efficient.
+Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`.
 
 ### `props`
 
@@ -208,7 +206,7 @@ In particular, `this.props.children` is a special prop, typically defined by the
 
 ### `propTypes`
 
-`propTypes` can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in `React.PropTypes` In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, `propTypes` checks are skipped for efficiency.
+`propTypes` can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in `React.PropTypes`. In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, `propTypes` checks are skipped for efficiency.
 
 For example, this code ensures that the `color` prop is a string:
 
