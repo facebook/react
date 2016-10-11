@@ -248,7 +248,7 @@ The second parameter is an optional callback function that will be executed once
 
 There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
 
-`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false` If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
+`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
 
 ### `state`
 
