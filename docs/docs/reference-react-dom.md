@@ -24,21 +24,17 @@ ReactDOM.render(
 )
 ```
 
-Render a ReactElement into the DOM in the supplied `container` and return a [reference](/react/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/react/docs/reusable-components.html#stateless-functions)).
+Render a React element into the DOM in the supplied `container` and return a [reference](/react/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/react/docs/components-and-props.html#functional-and-class-components).
 
-If the ReactElement was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
+If the React element was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React element.
 
 If the optional callback is provided, it will be executed after the component is rendered or updated.
 
 > Note:
 >
-> `ReactDOM.render()` controls the contents of the container node you pass in. Any existing DOM elements
-> inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient
-> updates.
+> `ReactDOM.render()` controls the contents of the container node you pass in. Any existing DOM elements inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient updates.
 >
-> `ReactDOM.render()` does not modify the container node (only modifies the children of the container). In
-> the future, it may be possible to insert a component to an existing DOM node without overwriting
-> the existing children.
+> `ReactDOM.render()` does not modify the container node (only modifies the children of the container). It may be possible to insert a component to an existing DOM node without overwriting the existing children.
 >
 > `ReactDOM.render()` currently returns a reference to the root `ReactComponent` instance. However, using this return value is legacy
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
@@ -67,4 +63,4 @@ If this component has been mounted into the DOM, this returns the corresponding 
 >
 > `findDOMNode` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `findDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
 >
-> `findDOMNode` cannot be used on stateless components.
+> `findDOMNode` cannot be used on functional components.

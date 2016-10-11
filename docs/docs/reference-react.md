@@ -29,7 +29,7 @@ class Greeting extends React.Component {
 }
 ```
 
-`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/reference-react-component.html) for a list of methods are provided by the base `React.Component` class.
+`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/reference-react-component.html) for a list of methods related to the base `React.Component` class.
 
 ### `createClass()`
 
@@ -45,18 +45,16 @@ If you don't use ES6 yet, you may use the `React.createClass` helper instead to 
 React.createElement(
   type,
   [props],
-  [children ...]
+  [...children]
 )
 ```
 
 Create and return a new React element of the given type. The type argument can be either an
 html tag name string (eg. 'div', 'span', etc), or a React class (created via `React.createClass`).
 
-Code written with JSX will be converted to use `React.createElement`. You will not typically call `React.createElement` directly if you are using JSX.
+Code written with JSX will be converted to use `React.createElement`. You will not typically invoke `React.createElement` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
 
 Convenience wrappers around `React.createElement` for DOM components are provided by `React.DOM`. For example, `React.DOM.a(...)` is a convenience wrapper for `React.createElement('a', ...)`.
-
-See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
 
 ### `cloneElement()`
 
@@ -64,7 +62,7 @@ See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
 React.cloneElement(
   element,
   [props],
-  [children ...]
+  [...children]
 )
 ```
 
@@ -86,7 +84,9 @@ This API was introduced as a replacement of the deprecated `React.addons.cloneWi
 React.createFactory(type)
 ```
 
-Return a function that produces React elements of a given type. Like [`React.createElement`](#createElement), the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a `ReactClass`.
+Return a function that produces React elements of a given type. Like [`React.createElement`](#createElement), the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a React class.
+
+You will not typically invoke `React.createFactory` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
 
 ### `isValidElement()`
 
@@ -98,7 +98,7 @@ Verifies the object is a React element. Returns `true` or `false`.
 
 ### `PropTypes`
 
-`React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components. For more information about `propTypes`, see [Typechecking with PropTypes](TODO PLACEHOLDER).
+`React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components. For more information about `propTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
 
 ### `Children`
 
