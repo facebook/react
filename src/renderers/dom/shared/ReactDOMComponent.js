@@ -636,7 +636,7 @@ ReactDOMComponent.Mixin = {
       var isCustomComponentTag = isCustomComponent(this._tag, props);
       if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
         var owner = this._currentElement._owner;
-        var name = owner.getName() || 'A component';
+        var name = owner && owner.getName() || 'A component';
         warning(
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
