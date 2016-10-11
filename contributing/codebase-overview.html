@@ -496,17 +496,17 @@
 
 <p>There are a few other top-level folders but they are mostly used for the tooling and you likely won&#39;t ever encounter them when contributing.</p>
 <h3><a class="anchor" name="colocated-tests"></a>Colocated Tests <a class="hash-link" href="#colocated-tests">#</a></h3>
-<p>We don&#39;t have a top-level directory for unit tests. Instead, we put them into a directories called <code>__tests__</code> relative to the files that they test.</p>
+<p>We don&#39;t have a top-level directory for unit tests. Instead, we put them into a directory called <code>__tests__</code> relative to the files that they test.</p>
 
 <p>For example, a test for <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js"><code>setInnerHTML.js</code></a> is located in <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/__tests__/setInnerHTML-test.js"><code>__tests__/setInnerHTML-test.js</code></a> right next to it.</p>
 <h3><a class="anchor" name="shared-code"></a>Shared Code <a class="hash-link" href="#shared-code">#</a></h3>
-<p>Even though Haste allows to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.</p>
+<p>Even though Haste allows us to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.</p>
 
-<p>For example, files inside <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> may import other files in the same folder ot below.</p>
+<p>For example, files inside <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> may import other files in the same folder or any folder below.</p>
 
 <p>However they can&#39;t import modules from <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/server"><code>src/renderers/dom/server</code></a> because it is not a child directory of <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a>.</p>
 
-<p>There is an exception to this rule. Sometimes we <em>do</em> need to share functionality between two groups of modules. In this case we hoist it up to a folder called <code>shared</code> inside their closest common ancestor folder.</p>
+<p>There is an exception to this rule. Sometimes we <em>do</em> need to share functionality between two groups of modules. In this case we hoist the shared module up to a folder called <code>shared</code> inside the closest common ancestor folder of the modules that need to rely on it.</p>
 
 <p>For example, code shared between <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> and <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/server"><code>src/renderers/dom/server</code></a> lives in <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/shared"><code>src/renderers/dom/shared</code></a>.</p>
 
@@ -514,7 +514,7 @@
 
 <p>This convention is not enforced but we check for it during a pull request review.</p>
 <h3><a class="anchor" name="warnings-and-invariants"></a>Warnings and Invariants <a class="hash-link" href="#warnings-and-invariants">#</a></h3>
-<p>React codebase uses the <code>warning</code> module to display warnings:</p>
+<p>The React codebase uses the <code>warning</code> module to display warnings:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">warning</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;warning&#39;</span><span class="p">);</span>
 
 <span class="nx">warning</span><span class="p">(</span>
@@ -628,7 +628,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 </code></pre></div>
 <p>Sometimes we <a href="https://github.com/facebook/react/pull/7647/files">convert old code to ES2015 classes</a>. However this is not very important to us because there is an <a href="#fiber-reconciler">ongoing effort</a> to replace the React reconciler implementation with a less object-oriented approach which wouldn&#39;t use classes at all.</p>
 <h3><a class="anchor" name="dynamic-injection"></a>Dynamic Injection <a class="hash-link" href="#dynamic-injection">#</a></h3>
-<p>React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to React to let React Native override some behaviors.</p>
+<p>React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to let React Native override some behaviors.</p>
 
 <p>You may see modules declaring their dynamic dependencies like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Dynamically injected</span>
