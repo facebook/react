@@ -38,6 +38,10 @@ var {
   Deletion,
 } = require('ReactTypeOfSideEffect');
 
+var {
+  HostContainer,
+} = require('ReactTypeOfWork');
+
 var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
@@ -399,14 +403,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           fiber.alternate.pendingWorkPriority = priorityLevel;
         }
       }
-      // Duck type root
-      if (fiber.stateNode && fiber.stateNode.containerInfo) {
-        const root : FiberRoot = (fiber.stateNode : any);
-        scheduleDeferredWork(root, priorityLevel);
-        return;
-      }
       if (!fiber.return) {
-        throw new Error('No root!');
+        if (fiber.tag === HostContainer) {
+          const root : FiberRoot = (fiber.stateNode : any);
+          scheduleDeferredWork(root, priorityLevel);
+          return;
+        } else {
+          throw new Error('Invalid root');
+        }
       }
       fiber = fiber.return;
     }
