@@ -220,6 +220,8 @@ CustomButton.propTypes = {
 };
 ```
 
+We recommend using [Flow](https://flowtype.org/) when possible, to get compile-time typechecking instead of runtime typechecking.
+
 ### `setState(nextState, callback)`
 
 Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
