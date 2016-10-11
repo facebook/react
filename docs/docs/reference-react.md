@@ -6,7 +6,7 @@ next: reference-react-dom.html
 redirect_from: "/docs/reference.html"
 ---
 
-`React` is the entry point to the React library. If you're using one of the prebuilt packages it's available as a global; if you're using CommonJS modules you can `require()` it.
+`React` is the entry point to the React library.
 
 ## Reference
 
