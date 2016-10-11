@@ -9,8 +9,6 @@ redirect_from: "/docs/reference.html"
 
 `React` is the entry point to the React library.
 
-## Reference
-
  - [`React.Component`](#react.component)
  - [`createClass()`](#createclass)
  - [`createElement()`](#createlement)
@@ -19,6 +17,8 @@ redirect_from: "/docs/reference.html"
  - [`isValidElement()`](#isvalidelement)
  - [`PropTypes`](#proptypes)
  - [`Children`](#children)
+
+## Reference
 
 ### `React.Component`
 
