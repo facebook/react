@@ -805,11 +805,11 @@ describe('ReactDOMComponent', () => {
           };
           var ShadyComponent = React.createClass({
             render() {
-              return <div { ...this.props }></div>;
+              return <polymer-component />;
             }
           });
-          var container = document.createElement('div');
-          ReactDOM.render(<ShadyComponent is="custom-shady-div" />, container);
+          var node = document.createElement('div');
+          ReactDOM.render(<ShadyComponent />, node);
           expect(console.error.calls.count()).toBe(1);
           expect(console.error.calls.argsFor(0)[0]).toContain(
             'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
