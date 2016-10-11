@@ -635,10 +635,13 @@ ReactDOMComponent.Mixin = {
       }
       var isCustomComponentTag = isCustomComponent(this._tag, props);
       if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+        var owner = this._currentElement._owner;
+        var name = owner.getName() || 'A component';
         warning(
           false,
-          'A component is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.'
+          '%s is using shady DOM. Using shady DOM with React can ' +
+          'cause things to break subtly.',
+          name
         );
         didWarnShadyDOM = true;
       }
