@@ -20,22 +20,10 @@
     title: Web Components
   - id: glossary
     title: React (Virtual) DOM Terminology
-- title: Old Quick Start
-  items:
-  - id: tutorial
-    title: Tutorial
 - title: Old Guides
   items:
-  - id: why-react
-    title: Why React?
-  - id: interactivity-and-dynamic-uis
-    title: Interactivity and Dynamic UIs
-  - id: multiple-components
-    title: Multiple Components
   - id: reusable-components
     title: Reusable Components
-  - id: transferring-props
-    title: Transferring Props
   - id: forms
     title: Forms
   - id: working-with-the-browser

@@ -20,12 +20,16 @@
   items:
     - id: jsx-in-depth
       title: JSX In Depth
+    - id: react-without-es6
+      title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
 - title: Reference
   items:
     - id: reference-react
       title: React
+    - id: react-component
+      title: React.Component
     - id: reference-react-dom
       title: ReactDOM
     - id: reference-react-dom-server

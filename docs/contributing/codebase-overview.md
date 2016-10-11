@@ -74,19 +74,19 @@ There are a few other top-level folders but they are mostly used for the tooling
 
 ### Colocated Tests
 
-We don't have a top-level directory for unit tests. Instead, we put them into a directories called `__tests__` relative to the files that they test.
+We don't have a top-level directory for unit tests. Instead, we put them into a directory called `__tests__` relative to the files that they test.
 
 For example, a test for [`setInnerHTML.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js) is located in [`__tests__/setInnerHTML-test.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/__tests__/setInnerHTML-test.js) right next to it.
 
 ### Shared Code
 
-Even though Haste allows to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
+Even though Haste allows us to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
 
-For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder ot below.
+For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder or any folder below.
 
 However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
 
-There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case we hoist it up to a folder called `shared` inside their closest common ancestor folder.
+There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case we hoist the shared module up to a folder called `shared` inside the closest common ancestor folder of the modules that need to rely on it.
 
 For example, code shared between [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) and [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) lives in [`src/renderers/dom/shared`](https://github.com/facebook/react/tree/master/src/renderers/dom/shared).
 
@@ -96,7 +96,7 @@ This convention is not enforced but we check for it during a pull request review
 
 ### Warnings and Invariants
 
-React codebase uses the `warning` module to display warnings:
+The React codebase uses the `warning` module to display warnings:
 
 ```js
 var warning = require('warning');
@@ -196,7 +196,7 @@ You can run `npm run flow` locally to check your code with Flow.
 
 ### Classes and Mixins
 
-React was originally written in ES5. We have since enabled ES2015 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
+React was originally written in ES5. We have since enabled ES6 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
 
 In particular, you might see the following pattern quite often:
 
@@ -224,7 +224,7 @@ module.exports = ReactDOMComponent;
 
 The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
 
-Equivalent code in ES2015 would like this:
+Equivalent code in ES6 would like this:
 
 ```js
 class ReactDOMComponent {
@@ -240,11 +240,11 @@ class ReactDOMComponent {
 module.exports = ReactDOMComponent;
 ```
 
-Sometimes we [convert old code to ES2015 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
+Sometimes we [convert old code to ES6 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
 
 ### Dynamic Injection
 
-React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to React to let React Native override some behaviors.
+React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to let React Native override some behaviors.
 
 You may see modules declaring their dynamic dependencies like this:
 

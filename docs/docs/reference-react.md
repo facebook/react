@@ -1,8 +1,9 @@
 ---
 id: reference-react
 title: React Top-Level API
+layout: docs
+category: Reference
 permalink: docs/reference-react.html
-next: reference-react-dom.html
 redirect_from: "/docs/reference.html"
 ---
 
