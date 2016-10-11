@@ -289,9 +289,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         } else {
           if (typeof instance.componentDidUpdate === 'function') {
             const prevProps = current.memoizedProps;
-            // TODO: This is the new state. We don't currently have the previous
-            // state anymore.
-            const prevState = instance.state || null;
+            const prevState = current.memoizedState;
             instance.componentDidUpdate(prevProps, prevState);
           }
         }
