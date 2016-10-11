@@ -74,19 +74,19 @@ There are a few other top-level folders but they are mostly used for the tooling
 
 ### Colocated Tests
 
-We don't have a top-level directory for unit tests. Instead, we put them into a directories called `__tests__` relative to the files that they test.
+We don't have a top-level directory for unit tests. Instead, we put them into a directory called `__tests__` relative to the files that they test.
 
 For example, a test for [`setInnerHTML.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js) is located in [`__tests__/setInnerHTML-test.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/__tests__/setInnerHTML-test.js) right next to it.
 
 ### Shared Code
 
-Even though Haste allows to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
+Even though Haste allows us to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
 
-For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder or below.
+For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder or any folder below.
 
 However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
 
-There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case we hoist it up to a folder called `shared` inside their closest common ancestor folder.
+There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case we hoist the shared module up to a folder called `shared` inside the closest common ancestor folder of the modules that need to rely on it.
 
 For example, code shared between [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) and [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) lives in [`src/renderers/dom/shared`](https://github.com/facebook/react/tree/master/src/renderers/dom/shared).
 
@@ -96,7 +96,7 @@ This convention is not enforced but we check for it during a pull request review
 
 ### Warnings and Invariants
 
-React codebase uses the `warning` module to display warnings:
+The React codebase uses the `warning` module to display warnings:
 
 ```js
 var warning = require('warning');
@@ -244,7 +244,7 @@ Sometimes we [convert old code to ES2015 classes](https://github.com/facebook/re
 
 ### Dynamic Injection
 
-React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to React to let React Native override some behaviors.
+React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to let React Native override some behaviors.
 
 You may see modules declaring their dynamic dependencies like this:
 
