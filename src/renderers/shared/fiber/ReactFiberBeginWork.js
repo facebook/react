@@ -14,11 +14,8 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
-import type { Scheduler } from 'ReactFiberScheduler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var {
   mountChildFibersInPlace,
@@ -26,7 +23,6 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-var { LowPriority } = require('ReactPriorityLevel');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -45,17 +41,18 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  createUpdateQueue,
-  addToQueue,
-  addCallbackToQueue,
   mergeUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var {
   Placement,
 } = require('ReactTypeOfSideEffect');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, getScheduler : () => Scheduler) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
+
+  const {
+    mount,
+  } = ReactFiberClassComponent(scheduleUpdate);
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -158,72 +155,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
     return workInProgress.child;
   }
 
-  function scheduleUpdate(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel): void {
-    const { scheduleDeferredWork } = getScheduler();
-    fiber.updateQueue = updateQueue;
-    // Schedule update on the alternate as well, since we don't know which tree
-    // is current.
-    if (fiber.alternate) {
-      fiber.alternate.updateQueue = updateQueue;
-    }
-    while (true) {
-      if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority >= priorityLevel) {
-        fiber.pendingWorkPriority = priorityLevel;
-      }
-      if (fiber.alternate) {
-        if (fiber.alternate.pendingWorkPriority === NoWork ||
-            fiber.alternate.pendingWorkPriority >= priorityLevel) {
-          fiber.alternate.pendingWorkPriority = priorityLevel;
-        }
-      }
-      // Duck type root
-      if (fiber.stateNode && fiber.stateNode.containerInfo) {
-        const root : FiberRoot = (fiber.stateNode : any);
-        scheduleDeferredWork(root, priorityLevel);
-        return;
-      }
-      if (!fiber.return) {
-        throw new Error('No root!');
-      }
-      fiber = fiber.return;
-    }
-  }
-
-  // Class component state updater
-  const updater = {
-    enqueueSetState(instance, partialState) {
-      const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue ?
-        addToQueue(fiber.updateQueue, partialState) :
-        createUpdateQueue(partialState);
-      scheduleUpdate(fiber, updateQueue, LowPriority);
-    },
-    enqueueReplaceState(instance, state) {
-      const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
-      scheduleUpdate(fiber, updateQueue, LowPriority);
-    },
-    enqueueForceUpdate(instance) {
-      const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
-      updateQueue.isForced = true;
-      scheduleUpdate(fiber, updateQueue, LowPriority);
-    },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      fiber.updateQueue = updateQueue;
-      if (fiber.alternate) {
-        fiber.alternate.updateQueue = updateQueue;
-      }
-    },
-  };
-
   function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
     // A class component update is the result of either new props or new state.
     // Account for the possibly of missing pending props by falling back to the
@@ -243,15 +174,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, g
     if (!instance) {
       var ctor = workInProgress.type;
       workInProgress.stateNode = instance = new ctor(props);
+      mount(workInProgress, instance);
       state = instance.state || null;
-      // The initial state must be added to the update queue in case
-      // setState is called before the initial render.
-      if (state !== null) {
-        workInProgress.updateQueue = createUpdateQueue(state);
-      }
-      // The instance needs access to the fiber so that it can schedule updates
-      ReactInstanceMap.set(instance, workInProgress);
-      instance.updater = updater;
     } else if (typeof instance.shouldComponentUpdate === 'function' &&
                !(updateQueue && updateQueue.isForced)) {
       if (workInProgress.memoizedProps !== null) {

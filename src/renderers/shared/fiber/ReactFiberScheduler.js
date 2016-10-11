@@ -40,19 +40,11 @@ var {
 
 var timeHeuristicForUnitOfWork = 1;
 
-export type Scheduler = {
-  scheduleDeferredWork: (root : FiberRoot, priority : PriorityLevel) => void
-};
-
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Use a closure to circumvent the circular dependency between the scheduler
   // and ReactFiberBeginWork. Don't know if there's a better way to do this.
-  let scheduler;
-  function getScheduler(): Scheduler {
-    return scheduler;
-  }
 
-  const { beginWork } = ReactFiberBeginWork(config, getScheduler);
+  const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
   const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
     ReactFiberCommitWork(config);
@@ -395,6 +387,31 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     scheduleAnimationWork(root, defaultPriority);
   }
 
+  function scheduleUpdate(fiber: Fiber, priorityLevel : PriorityLevel): void {
+    while (true) {
+      if (fiber.pendingWorkPriority === NoWork ||
+          fiber.pendingWorkPriority >= priorityLevel) {
+        fiber.pendingWorkPriority = priorityLevel;
+      }
+      if (fiber.alternate) {
+        if (fiber.alternate.pendingWorkPriority === NoWork ||
+            fiber.alternate.pendingWorkPriority >= priorityLevel) {
+          fiber.alternate.pendingWorkPriority = priorityLevel;
+        }
+      }
+      // Duck type root
+      if (fiber.stateNode && fiber.stateNode.containerInfo) {
+        const root : FiberRoot = (fiber.stateNode : any);
+        scheduleDeferredWork(root, priorityLevel);
+        return;
+      }
+      if (!fiber.return) {
+        throw new Error('No root!');
+      }
+      fiber = fiber.return;
+    }
+  }
+
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
     const previousDefaultPriority = defaultPriority;
     defaultPriority = priorityLevel;
@@ -405,10 +422,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  scheduler = {
+  return {
     scheduleWork: scheduleWork,
     scheduleDeferredWork: scheduleDeferredWork,
     performWithPriority: performWithPriority,
   };
-  return scheduler;
 };
