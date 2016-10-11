@@ -272,6 +272,10 @@ var ReactUpdatesInjection = {
     );
     batchingStrategy = _batchingStrategy;
   },
+
+  getBatchingStrategy: function() {
+    return batchingStrategy;
+  },
 };
 
 var ReactUpdates = {
