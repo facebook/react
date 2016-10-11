@@ -1,15 +1,13 @@
 ---
-id: reference-react
+id: react-api
 title: React Top-Level API
 layout: docs
 category: Reference
-permalink: docs/reference-react.html
+permalink: docs/react-api.html
 redirect_from: "/docs/reference.html"
 ---
 
 `React` is the entry point to the React library.
-
-## Reference
 
  - [`React.Component`](#react.component)
  - [`createClass()`](#createclass)
@@ -19,6 +17,8 @@ redirect_from: "/docs/reference.html"
  - [`isValidElement()`](#isvalidelement)
  - [`PropTypes`](#proptypes)
  - [`Children`](#children)
+
+## Reference
 
 ### `React.Component`
 
@@ -30,7 +30,7 @@ class Greeting extends React.Component {
 }
 ```
 
-`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/reference-react-component.html) for a list of methods related to the base `React.Component` class.
+`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods related to the base `React.Component` class.
 
 ### `createClass()`
 
@@ -99,7 +99,43 @@ Verifies the object is a React element. Returns `true` or `false`.
 
 ### `PropTypes`
 
-`React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components. For more information about `propTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
+`React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components.
+
+  - `React.PropTypes.array`
+  - `React.PropTypes.bool`
+  - `React.PropTypes.func`
+  - `React.PropTypes.number`
+  - `React.PropTypes.object`
+  - `React.PropTypes.string`
+  - `React.PropTypes.symbol`
+  - `React.PropTypes.node` - Anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types
+  - `React.PropTypes.element` - A React element
+  - `React.PropTypes.instanceOf(class)` - You can also declare that a prop is an instance of a class. This uses JavaScript's `instanceof` operator.
+  - `React.PropTypes.oneOf(array)` - You can ensure that your prop is limited to specific values by treating it as an enum.
+  - `React.PropTypes.oneOfType(array)` - An object that could be one of many types
+  - `React.PropTypes.arrayOf(propType)` - An array of a certain type
+  - `React.PropTypes.objectOf(propType)` - An object with property values of a certain type
+  - `React.PropTypes.any` - A value of any data type
+  - `React.PropTypes.shape(object)` - An object taking on a particular shape
+
+```javascript
+MyComponent.propTypes = {
+  optionalObjectWithShape: React.PropTypes.shape({
+    color: React.PropTypes.string,
+    fontSize: React.PropTypes.number
+  }),
+}
+```
+
+These validators consider the prop as optional by default. You can chain any of the above with `isRequired` to make sure a warning is shown if the prop isn't provided:
+
+```javascript{2}
+MyComponent.propTypes = {
+  requiredFunc: React.PropTypes.func.isRequired,
+}
+```
+
+For more information about `propTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
 
 ### `Children`
 
