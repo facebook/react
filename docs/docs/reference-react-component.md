@@ -85,7 +85,7 @@ The `render()` function should be pure, meaning that it does not modify componen
 
 The constructor for a React component is called before it is mounted. When implementing the constructor for a `React.Component` subclass, you should call `super(props)` before any other statement. Otherwise, `this.props` will be undefined in the constructor, which can lead to bugs.
 
-The constructor is the right place to initialize state.
+The constructor is the right place to initialize state. If you don't initialize state and you don't bind methods, you don't need to implement a constructor for your React component.
 
 It's okay to initialize state based on props if you know what you're doing. Here's an example of a valid `React.Component` subclass constructor:
 
@@ -220,7 +220,7 @@ CustomButton.propTypes = {
 };
 ```
 
-We recommend using [Flow](https://flowtype.org/) when possible, to get compile-time typechecking instead of runtime typechecking.
+We recommend using [Flow](https://flowtype.org/) when possible, to get compile-time typechecking instead of runtime typechecking. [Flow has built-in support for React](https://flowtype.org/docs/react.html) so it's easy to run static analysis on a React app.
 
 ### `setState(nextState, callback)`
 
