@@ -40,7 +40,7 @@ var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
-var didWarnShadyDom = false;
+var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
 var deleteListener = EventPluginHub.deleteListener;
@@ -634,13 +634,13 @@ ReactDOMComponent.Mixin = {
         );
       }
       var isCustomComponentTag = isCustomComponent(this._tag, props);
-      if (__DEV__ && isCustomComponentTag && !didWarnShadyDom && el.shadyRoot) {
+      if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
         warning(
           false,
-          'A component is using shady dom. Using shady dom with React can ' +
+          'A component is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.'
         );
-        didWarnShadyDom = true;
+        didWarnShadyDOM = true;
       }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;

@@ -807,7 +807,7 @@ describe('ReactDOMComponent', () => {
           mountComponent({is: 'custom-shady-div'});
           expect(console.error.calls.count()).toBe(1);
           expect(console.error.calls.argsFor(0)[0]).toContain(
-            'A component is using shady dom. Using shady dom with React can ' +
+            'A component is using shady DOM. Using shady DOM with React can ' +
             'cause things to break subtly.'
           );
 
