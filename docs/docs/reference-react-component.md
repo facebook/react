@@ -73,7 +73,7 @@ The `render()` method is required.
 
 When called, it should examine `this.props` and `this.state` and return a single React element. This element can be either a representation of a native DOM component, such as `<div />`, or another composite component that you've defined yourself.
 
-You can also return `null` or `false` to indicate that you don't want anything rendered. When returning `null` or `false`, `ReactDOM.findDOMNode(this)` will return `null`
+You can also return `null` or `false` to indicate that you don't want anything rendered. When returning `null` or `false`, `ReactDOM.findDOMNode(this)` will return `null`.
 
 The `render()` function should be pure, meaning that it does not modify component state, it returns the same result each time it's invoked, and it does not directly interact with the browser. If you need to interact with the browser, perform your work in `componentDidMount()` or the other lifecycle methods instead. Keeping `render()` pure makes components easier to think about.
 
@@ -234,7 +234,7 @@ Here is the simple object usage:
 this.setState({mykey: 'my new value'});
 ```
 
-It's also possible to pass a function with the signature `function(state, props) => newState` This can be useful in some cases when you want to enqueue an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state:
+It's also possible to pass a function with the signature `function(state, props) => newState`. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state:
 
 ```javascript
 this.setState((prevState, currentProps) => {
