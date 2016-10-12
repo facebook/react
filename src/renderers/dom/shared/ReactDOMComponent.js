@@ -607,6 +607,7 @@ ReactDOMComponent.Mixin = {
     }
 
     var mountImage;
+    var type = this._currentElement.type;
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
@@ -615,21 +616,20 @@ ReactDOMComponent.Mixin = {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
           var div = ownerDocument.createElement('div');
-          var type = this._currentElement.type;
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
         } else if (props.is) {
-          el = ownerDocument.createElement(this._currentElement.type, props.is);
+          el = ownerDocument.createElement(type, props.is);
         } else {
           // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
           // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-          el = ownerDocument.createElement(this._currentElement.type);
+          el = ownerDocument.createElement(type);
         }
       } else {
         el = ownerDocument.createElementNS(
           namespaceURI,
-          this._currentElement.type
+          type
         );
       }
       ReactDOMComponentTree.precacheNode(this, el);
@@ -647,8 +647,7 @@ ReactDOMComponent.Mixin = {
       if (!tagContent && omittedCloseTags[this._tag]) {
         mountImage = tagOpen + '/>';
       } else {
-        mountImage =
-          tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
+        mountImage = tagOpen + '>' + tagContent + '</' + type + '>';
       }
     }
 
