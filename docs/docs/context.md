@@ -1,25 +1,23 @@
 ---
 id: context
 title: Context
-permalink: docs-old/context.html
-prev: advanced-performance.html
+permalink: docs/context.html
 ---
 
-One of React's biggest strengths is that it's easy to track the flow of data through your React components. When you look at a component, you can easily see exactly which props are being passed in which makes your apps easy to reason about.
+With React, it's easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.
 
-Occasionally, you want to pass data through the component tree without having to pass the props down manually at every level. React's "context" feature lets you do this.
+In some cases, you want to pass data through the component tree without having to pass the props down manually at every level. There are several popular libraries that help you do this, like [Redux](https://github.com/reactjs/redux) and [MobX](https://github.com/mobxjs/mobx).
+You can also do this directly in React with the powerful "context" API.
 
 > Note:
 >
-> Context is an advanced and experimental feature. The API is likely to change in future releases.
->
-> Most applications will never need to use context. Especially if you are just getting started with React, you likely do not want to use context. Using context will make your code harder to understand because it makes the data flow less clear. It is similar to using global variables to pass state through your application.
+> Context is an advanced and experimental feature. If you are not an experienced React developer, you do not want to use context. If you are getting annoyed by passing props down manually through many levels of a tree, first try using [Redux](https://github.com/reactjs/redux) or [MobX](https://github.com/mobxjs/mobx).
 >
 > **If you have to use context, use it sparingly.**
 >
 > Regardless of whether you're building an application or a library, try to isolate your use of context to a small area and avoid using the context API directly when possible so that it's easier to upgrade when the API changes.
 
-## Passing info automatically through a tree
+## Passing Data Through A Tree
 
 Suppose you have a structure like:
 
@@ -55,7 +53,7 @@ class MessageList extends React.Component {
 }
 ```
 
-In this example, we manually thread through a `color` prop in order to style the `Button` and `Message` components appropriately. Theming is a good example of when you might want an entire subtree to have access to some piece of information (a color). Using context, we can pass this through the tree automatically:
+In this example, we manually thread through a `color` prop in order to style the `Button` and `Message` components appropriately. Using context, we can pass this through the tree automatically:
 
 ```javascript{4,11-13,19,26-28,38-40}
 class Button extends React.Component {
@@ -104,29 +102,35 @@ By adding `childContextTypes` and `getChildContext` to `MessageList` (the contex
 
 If `contextTypes` is not defined, then `context` will be an empty object.
 
-## Parent-child coupling
+## Parent-Child Coupling
 
-Context can also let you build an API such as:
-
-```javascript
-<Menu>
-  <MenuItem>aubergine</MenuItem>
-  <MenuItem>butternut squash</MenuItem>
-  <MenuItem>clementine</MenuItem>
-</Menu>
-```
-
-By passing down the relevant info in the `Menu` component, each `MenuItem` can communicate back to the containing `Menu` component.
-
-**Before you build components with this API, consider if there are cleaner alternatives.** We're fond of simply passing the items as an array in cases like this:
+Context can also let you build an API where parents and children communicate. For example, one library that works this way is [React Router V4](https://react-router.now.sh/basic):
 
 ```javascript
-<Menu items={['aubergine', 'butternut squash', 'clementine']} />
+const BasicExample = () => (
+  <Router>
+    <div>
+      <ul>
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/about">About</Link></li>
+        <li><Link to="/topics">Topics</Link></li>
+      </ul>
+
+      <hr/>
+
+      <Match exactly pattern="/" component={Home} />
+      <Match pattern="/about" component={About} />
+      <Match pattern="/topics" component={Topics} />
+    </div>
+  </Router>
+)
 ```
 
-Recall that you can also pass entire React components in props if you'd like to.
+By passing down some information from the `Router` component, each `Link` and `Match` can communicate back to the containing `Router`.
 
-## Referencing context in lifecycle methods
+Before you build components with an API similar to this, consider if there are cleaner alternatives. For example, you can pass entire React component as props if you'd like to.
+
+## Referencing Context in Lifecycle Methods
 
 If `contextTypes` is defined within a component, the following lifecycle methods will receive an additional parameter, the `context` object:
 
@@ -148,9 +152,9 @@ void componentDidUpdate(
 )
 ```
 
-## Referencing context in stateless functional components
+## Referencing Context in Stateless Functional Components
 
-Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows the `Button` component above written as a stateless functional component.
+Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows a `Button` component written as a stateless functional component.
 
 ```javascript
 const Button = ({children}, context) =>
@@ -161,7 +165,7 @@ const Button = ({children}, context) =>
 Button.contextTypes = {color: React.PropTypes.string};
 ```
 
-## Updating context
+## Updating Context
 
 The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
 
@@ -198,14 +202,6 @@ MediaQuery.childContextTypes = {
 };
 ```
 
-## When not to use context
-
-Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to "save typing" and using it instead of passing explicit props.
-
-The best use cases for context are for implicitly passing down the logged-in user, the current language, or theme information. All of these might otherwise be true globals, but context lets you scope them to a single React subtree.
-
-Do not use context to pass your model data through components. Threading your data through the tree explicitly is much easier to understand. Using context makes your components more coupled and less reusable, because they behave differently depending on where they're rendered.
-
-## Known limitations
+## Known Limitations
 
 If a context value provided by a component changes, descendants that use that value won't update if an intermediate parent returns `false` from `shouldComponentUpdate`. See issue [#2517](https://github.com/facebook/react/issues/2517) for more details.
