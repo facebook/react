@@ -1,16 +1,21 @@
 ---
 id: reference-react-dom
 title: ReactDOM
+layout: docs
+category: Reference
 permalink: docs/reference-react-dom.html
-next: reference-react-dom-server.html
-redirect_from: "/docs/reference.html"
 ---
 
 The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
 
+If you use React as a script tag, these top-level APIs are available on the `ReactDOM` global. If you use ES6 with npm, you can write `import ReactDOM from 'react-dom'`. If you use ES5 with npm, you can write `var ReactDOM = require('react-dom')`.
+
+
  - [`render()`](#render)
- - [`unmountComponentAtNode()`](#unmountComponentAtNode)
- - [`findDOMNode()`](#findDOMNode)
+ - [`unmountComponentAtNode()`](#unmountcomponentatnode)
+ - [`findDOMNode()`](#finddomnode)
+
+* * *
 
 ## Reference
 
@@ -40,6 +45,7 @@ If the optional callback is provided, it will be executed after the component is
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
 > [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
 
+* * *
 
 ### `unmountComponentAtNode()`
 
@@ -49,8 +55,9 @@ ReactDOM.unmountComponentAtNode(container)
 
 Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
 
+* * *
 
-### `findDOMNode(component)`
+### `findDOMNode()`
 
 ```javascript
 ReactDOM.findDOMNode(component)
