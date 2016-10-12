@@ -4,10 +4,17 @@ title: ReactDOM
 layout: docs
 category: Reference
 permalink: docs/react-dom.html
-
 ---
 
+If you use React as a script tag, these top-level APIs are available on the `ReactDOM` global. If you use ES6 with npm, you can write `import ReactDOM from 'react-dom'`. If you use ES5 with npm, you can write `var ReactDOM = require('react-dom')`.
+
+## Overview
+
 The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
+
+- [`render()`](#render)
+- [`unmountComponentAtNode()`](#unmountcomponentatnode)
+- [`findDOMNode()`](#finddomnode)
 
 ### Browser Support
 
@@ -17,9 +24,7 @@ React supports most popular browsers, including Internet Explorer 9 and above.
 >
 > We don't support older browsers that don't support ES5 methods, but you may find that your apps do work in older browsers if polyfills such as [es5-shim and es5-sham](https://github.com/es-shims/es5-shim) are included in the page. You're on your own if you choose to take this path.
 
- - [`render()`](#render)
- - [`unmountComponentAtNode()`](#unmountComponentAtNode)
- - [`findDOMNode()`](#findDOMNode)
+* * *
 
 ## Reference
 
@@ -49,6 +54,7 @@ If the optional callback is provided, it will be executed after the component is
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
 > [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
 
+* * *
 
 ### `unmountComponentAtNode()`
 
@@ -58,8 +64,9 @@ ReactDOM.unmountComponentAtNode(container)
 
 Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
 
+* * *
 
-### `findDOMNode(component)`
+### `findDOMNode()`
 
 ```javascript
 ReactDOM.findDOMNode(component)

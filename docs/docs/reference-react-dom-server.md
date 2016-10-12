@@ -6,10 +6,16 @@ category: Reference
 permalink: docs/react-dom-server.html
 ---
 
-The `react-dom/server` package allows you to render your components on the server.
+If you use React as a script tag, these top-level APIs are available on the `ReactDOMServer` global. If you use ES6 with npm, you can write `import ReactDOMServer from 'react-dom/server'`. If you use ES5 with npm, you can write `var ReactDOMServer = require('react-dom/server')`.
 
- - [`renderToString()`](#renderToString)
- - [`renderToStaticMarkup()`](#renderToStaticMarkup)
+## Overview
+
+The `ReactDOMServer` class allows you to render your components on the server.
+
+ - [`renderToString()`](#rendertostring)
+ - [`renderToStaticMarkup()`](#rendertostaticmarkup)
+
+* * *
 
 ## Reference
 
@@ -22,6 +28,8 @@ ReactDOMServer.renderToString(element)
 Render a React element to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
 
 If you call [`ReactDOM.render()`](/react/docs/react-dom.html#render) on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
+
+* * *
 
 ### `renderToStaticMarkup()`
 
