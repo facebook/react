@@ -41,6 +41,33 @@ StatelessComponent.prototype.render = function() {
   return element;
 };
 
+function getTypeof(element) {
+  if (element === null) {
+    return 'null';
+  }
+  if (Array.isArray(element)) {
+    return 'array';
+  }
+  return typeof element;
+}
+
+function warnIfInvalidElement(Component, element) {
+  if (__DEV__) {
+    warning(
+      element === null || element === false || React.isValidElement(element),
+      '%s(...): A valid React element (or null) must be returned, ' +
+      'but you returned %s.',
+      Component.displayName || Component.name || 'Component',
+      getTypeof(element)
+    );
+    warning(
+      !Component.childContextTypes,
+      '%s(...): childContextTypes cannot be defined on a functional component.',
+      Component.displayName || Component.name || 'Component'
+    );
+  }
+}
+
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
@@ -194,10 +221,13 @@ var ReactCompositeComponent = {
         );
       }
       invariant(
-        inst === null || inst === false || React.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned. You may have ' +
-          'returned undefined, an array or some other invalid object.',
+        inst === null ||
+        inst === false ||
+        React.isValidElement(inst),
+        '%s(...): A valid React element (or null) must be returned, ' +
+        'but you returned %s.',
         Component.displayName || Component.name || 'Component',
+        getTypeof(renderedElement)
       );
       inst = new StatelessComponent(Component);
       this._compositeType = ReactCompositeComponentTypes.StatelessFunctional;
@@ -1261,12 +1291,12 @@ var ReactCompositeComponent = {
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
-      renderedElement === null ||
-        renderedElement === false ||
-        React.isValidElement(renderedElement),
-      '%s.render(): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
+      renderedElement === null || renderedElement === false ||
+      React.isValidElement(renderedElement),
+      '%s.render(): A valid React element (or null) must be returned, ' +
+      'but you returned %s.',
       this.getName() || 'ReactCompositeComponent',
+      getTypeof(renderedElement)
     );
 
     return renderedElement;

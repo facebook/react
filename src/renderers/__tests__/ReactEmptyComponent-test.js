@@ -79,8 +79,8 @@ describe('ReactEmptyComponent', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrowError(
-      'Component.render(): A valid React element (or null) must be returned. You may ' +
-        'have returned undefined, an array or some other invalid object.',
+      'Component.render(): A valid React element (or null) must be returned, ' +
+      'but you returned undefined.'
     );
   });
 
