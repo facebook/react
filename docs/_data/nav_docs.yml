@@ -41,3 +41,5 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
+    - id: pure-render-mixin
+      title: PureRenderMixin
