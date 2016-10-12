@@ -445,16 +445,10 @@ describe('ReactErrorBoundaries', () => {
       'BrokenUnmount is attempting to unmount',
       'Box renderError',
     ]);
+
+    log.length = 0;
     ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
-      'Box render',
-      'Box componentDidMount',
-      'Box render',
-      'BrokenUnmount is attempting to unmount',
-      'error handled',
-      'BrokenUnmount is attempting to unmount',
-      'BrokenUnmount is attempting to unmount',
-      'Box renderError',
       'Box componentWillUnmount',
     ]);
   });
