@@ -320,15 +320,20 @@ describe('ReactErrorBoundaries', () => {
       render() {
         if (this.state.errorMessage != null) {
           log.push('ErrorBoundary renderError');
-          return <div>Caught an error: {this.state.errorMessage}</div>;
+          return (
+            <ErrorMessage
+              message={this.state.errorMessage}
+              ref={inst => {
+                log.push('ErrorBoundary ref to ErrorMessage is set to ' + inst);
+              }} />
+          );
         }
         log.push('ErrorBoundary render');
-        var ref = function(x) {
-          log.push('ErrorBoundary ref to Normal is set to ' + x);
-        };
         return (
           <div>
-            <Normal ref={ref} />
+            <Normal ref={inst => {
+              log.push('ErrorBoundary ref to Normal is set to ' + inst);
+            }} />
             {this.props.renderBrokenChild ? <BrokenRender /> : <div />}
           </div>
         );
@@ -342,6 +347,19 @@ describe('ReactErrorBoundaries', () => {
       }
       componentWillUnmount() {
         log.push('ErrorBoundary componentWillUnmount');
+      }
+    }
+
+    class ErrorMessage extends React.Component {
+      componentWillMount() {
+        log.push('ErrorMessage componentWillMount');
+      }
+      componentDidMount() {
+        log.push('ErrorMessage componentDidMount');
+      }
+      render() {
+        log.push('ErrorMessage render');
+        return <div>Caught an error: {this.props.message}</div>;
       }
     }
 
@@ -393,6 +411,10 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary ref to Normal is set to null',
       'Normal componentWillUnmount',
       'ErrorBoundary renderError',
+      'ErrorMessage componentWillMount',
+      'ErrorMessage render',
+      'ErrorMessage componentDidMount',
+      'ErrorBoundary ref to ErrorMessage is set to [object Object]',
     ]);
   });
 
