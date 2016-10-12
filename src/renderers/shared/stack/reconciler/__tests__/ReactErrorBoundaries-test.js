@@ -443,7 +443,6 @@ describe('ReactErrorBoundaries', () => {
       'error handled',
       'BrokenUnmount is attempting to unmount',
       'BrokenUnmount is attempting to unmount',
-      'BrokenUnmount is attempting to unmount',
       'Box renderError',
     ]);
     ReactDOM.unmountComponentAtNode(container);
@@ -453,7 +452,6 @@ describe('ReactErrorBoundaries', () => {
       'Box render',
       'BrokenUnmount is attempting to unmount',
       'error handled',
-      'BrokenUnmount is attempting to unmount',
       'BrokenUnmount is attempting to unmount',
       'BrokenUnmount is attempting to unmount',
       'Box renderError',
