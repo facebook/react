@@ -303,7 +303,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('catches errors on update', function() {
+  it('catches errors on update', () => {
     var log = [];
 
     class Box extends React.Component {
@@ -386,7 +386,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('catches componentWillUnmount errors on update', function() {
+  it('catches componentWillUnmount errors on update', () => {
     var log = [];
 
     class ErrorBoundary extends React.Component {
@@ -453,7 +453,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('catches componentWillUnmount errors nested children', function() {
+  it('catches componentWillUnmount errors nested children', () => {
     class ErrorBoundary extends React.Component {
       constructor(props) {
         super(props);
@@ -498,7 +498,7 @@ describe('ReactErrorBoundaries', () => {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('doesn\'t get into inconsistent state during removals', function() {
+  it('doesn\'t get into inconsistent state during removals', () => {
     class ErrorBoundary extends React.Component {
       constructor(props) {
         super(props);
@@ -534,13 +534,20 @@ describe('ReactErrorBoundaries', () => {
     }
 
     var container = document.createElement('div');
-    ReactDOM.render(<ErrorBoundary><InnocentComponent /><GuiltyComponent /><InnocentComponent /></ErrorBoundary>, container);
+    ReactDOM.render(
+      <ErrorBoundary>
+        <InnocentComponent />
+        <GuiltyComponent />
+        <InnocentComponent />
+      </ErrorBoundary>,
+      container
+    );
     ReactDOM.render(<ErrorBoundary />, container);
     expect(container.textContent).toBe('Error: I am now a sad component :(');
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('doesn\'t get into inconsistent state during additions', function() {
+  it('doesn\'t get into inconsistent state during additions', () => {
     class ErrorBoundary extends React.Component {
       constructor(props) {
         super(props);
@@ -574,13 +581,19 @@ describe('ReactErrorBoundaries', () => {
 
     var container = document.createElement('div');
     ReactDOM.render(<ErrorBoundary />, container);
-    ReactDOM.render(<ErrorBoundary><InnocentComponent /><GuiltyComponent /><InnocentComponent /></ErrorBoundary>, container);
+    ReactDOM.render(
+      <ErrorBoundary>
+        <InnocentComponent />
+        <GuiltyComponent />
+        <InnocentComponent />
+      </ErrorBoundary>,
+      container
+    );
     expect(container.textContent).toBe('Error: I am now a sad component :(');
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('doesn\'t get into inconsistent state during reorders', function() {
-
+  it('doesn\'t get into inconsistent state during reorders', () => {
     function generateElements() {
       var elements = [];
       for (var i = 0; i < 100; i++) {
@@ -636,9 +649,19 @@ describe('ReactErrorBoundaries', () => {
     var fail = false;
 
     var container = document.createElement('div');
-    ReactDOM.render(<ErrorBoundary>{generateElements()}</ErrorBoundary>, container);
+    ReactDOM.render(
+      <ErrorBoundary>
+        {generateElements()}
+      </ErrorBoundary>,
+      container
+    );
     fail = true;
-    ReactDOM.render(<ErrorBoundary>{generateElements()}</ErrorBoundary>, container);
+    ReactDOM.render(
+      <ErrorBoundary>
+        {generateElements()}
+      </ErrorBoundary>,
+      container
+    );
 
     expect(container.textContent).toBe('Error: I am now a sad component :(');
     ReactDOM.unmountComponentAtNode(container);
