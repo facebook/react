@@ -42,7 +42,9 @@
     - id: react-dom-server
       title: ReactDOMServer
     - id: addons
-      title: Addons
+      title: Add-Ons
       subitems:
         - id: test-utils
           title: Test Utilities
+        - id: pure-render-mixin
+          title: PureRenderMixin
