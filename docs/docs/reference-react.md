@@ -87,7 +87,15 @@ See the [React.Component API Reference](/react/docs/react-component.html) for a 
 
 ### `React.PureComponent`
 
-`React.PureComponent` is exactly like [`React.Component`](#react.component) but implements [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate) with a shallow prop and state comparison. It is equivalent to a class with [`PureRenderMixin`](/react/docs/pure-render-mixin.html).
+`React.PureComponent` is exactly like [`React.Component`](#react.component) but implements [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate) with a shallow prop and state comparison.
+
+If your React component's `render()` function renders the same result given the same props and state, you can use `React.PureComponent` for a performance boost in some cases.
+
+> Note
+
+> `React.PureComponent`'s `shouldComponentUpdate()` only shallowly compares the objects. If these contain complex data structures, it may produce false-negatives for deeper differences. Only mix into components which have simple props and state, or use [`forceUpdate()`](/react/docs/react-component.html#forceupdate) when you know deep data structures have changed. Or, consider using [immutable objects](https://facebook.github.io/immutable-js/) to facilitate fast comparisons of nested data.
+>
+> Furthermore, `React.PureComponent`'s `shouldComponentUpdate()` skips updates for the whole component subtree. Make sure all the children components are also "pure".
 
 * * *
 
