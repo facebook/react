@@ -1,13 +1,10 @@
 ---
 id: reconciliation
 title: Reconciliation
-permalink: docs-old/reconciliation.html
-prev: special-non-dom-attributes.html
-next: webcomponents.html
+permalink: docs/reconciliation.html
 ---
 
-React's key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.
-
+React's key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but it is also an interesting challenge to make it tractable. This article explains how React uses heuristics to turn an O(n<sup>3</sup>) problem into an O(n) problem.
 
 ## Motivation
 
@@ -20,13 +17,11 @@ Since an optimal algorithm is not tractable, we implement a non-optimal O(n) alg
 1. Two components of the same class will generate similar trees and two components of different classes will generate different trees.
 2. It is possible to provide a unique key for elements that is stable across different renders.
 
-In practice, these assumptions are ridiculously fast for almost all practical use cases.
-
+In practice, these assumptions are valid for almost all practical use cases.
 
 ## Pair-wise diff
 
 In order to do a tree diff, we first need to be able to diff two nodes. There are three different cases being handled.
-
 
 ### Different Node Types
 
@@ -52,7 +47,6 @@ It is very unlikely that a `<Header>` element is going to generate a DOM that is
 
 As a corollary, if there is a `<Header>` element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.
 
-
 ### DOM Nodes
 
 When comparing two DOM nodes, we look at the attributes of both and can decide which of them changed in linear time.
@@ -73,21 +67,19 @@ renderB: <div style={{'{{'}}fontWeight: 'bold'}} />
 
 After the attributes have been updated, we recurse on all the children.
 
-
 ### Custom Components
 
 We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
 
 The previous component is now operational. Its `render()` method is called and the diff algorithm restarts with the new result and the previous result.
 
-
 ## List-wise diff
 
 ### Problematic Case
 
-In order to do children reconciliation, React adopts a very naive approach. It goes over both lists of children at the same time and generates a mutation whenever there's a difference.
+In order to do children reconciliation, React adopts a naive approach. It goes over both lists of children at the same time and generates a mutation whenever there's a difference.
 
-For example if you add an element at the end:
+For example, if you add an element at the end:
 
 ```xml
 renderA: <div><span>first</span></div>
@@ -107,8 +99,7 @@ There are many algorithms that attempt to find the minimum sets of operations to
 
 ### Keys
 
-In order to solve this seemingly intractable issue, an optional attribute has been introduced. You can provide for each child a key that is going to be used to do the matching. If you specify a key, React is now able to find insertion, deletion, substitution and moves in O(n) using a hash table.
-
+In order to solve this issue, React supports an optional `key` attribute. You can provide for each child a key that is going to be used to do the matching. If you specify a key, React is now able to find insertion, deletion, substitution and moves in O(n) using a hash table.
 
 ```xml
 renderA: <div><span key="first">first</span></div>
@@ -118,16 +109,14 @@ renderB: <div><span key="second">second</span><span key="first">first</span></di
 
 In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. Remember that the key only has to be unique among its siblings, not globally unique.
 
-
 ## Trade-offs
 
 It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action; the end result would be the same. We are regularly refining the heuristics in order to make common use cases faster.
 
 In the current implementation, you can express the fact that a sub-tree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.
 
-Because we rely on two heuristics, if the assumptions behind them are not met, performance will suffer.
+Because React relies on heuristics, if the assumptions behind them are not met, performance will suffer.
 
 1. The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
 2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many nodes to be unnecessarily re-created, which can cause performance degradation and lost state in child components.
-
