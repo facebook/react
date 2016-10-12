@@ -1,9 +1,9 @@
 ---
 id: reference-react-dom-server
 title: ReactDOMServer
+layout: docs
+category: Reference
 permalink: docs/reference-react-dom-server.html
-next: reference-react-dom-server.html
-redirect_from: "/docs/reference.html"
 ---
 
 The `react-dom/server` package allows you to render your components on the server.
