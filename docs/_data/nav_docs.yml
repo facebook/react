@@ -41,3 +41,8 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
+    - id: addons
+      title: Addons
+      subitems:
+        - id: test-utils
+          title: Test Utilities

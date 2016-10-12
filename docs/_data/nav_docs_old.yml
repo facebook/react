@@ -41,8 +41,6 @@
       title: Animation
     - id: two-way-binding-helpers
       title: Two-Way Binding Helpers
-    - id: test-utils
-      title: Test Utilities
     - id: clone-with-props
       title: Cloning Elements
     - id: create-fragment
