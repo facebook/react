@@ -806,7 +806,7 @@ describe('ReactDOMComponent', () => {
           var ShadyComponent = React.createClass({
             render() {
               return <polymer-component />;
-            }
+            },
           });
           var node = document.createElement('div');
           ReactDOM.render(<ShadyComponent />, node);
