@@ -16,7 +16,7 @@ Additionally, React implements a full synthetic event system such that all event
 
 Most of the time you should stay within React's "faked browser" world since it's more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.
 
-## Refs and findDOMNode()
+## Refs
 
 To interact with the browser, you'll need a reference to a DOM node. You can attach a `ref` to any element, which allows you to reference the **backing instance** of the component.  This is useful if you need to invoke imperative functions on the component, or want to access the underlying DOM nodes.  To learn more about refs, including ways to use them effectively, see our [refs to components](/react/docs/more-about-refs.html) documentation.
 
