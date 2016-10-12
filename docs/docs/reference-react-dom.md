@@ -18,7 +18,7 @@ The `react-dom` package provides DOM-specific methods that can be used at the to
 
 ### Browser Support
 
-React supports most popular browsers, including Internet Explorer 9 and above.
+React supports all popular browsers, including Internet Explorer 9 and above.
 
 > Note
 >

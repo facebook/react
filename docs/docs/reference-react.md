@@ -69,8 +69,6 @@ Validators treat props as optional by default. You can use `isRequired` to make 
 
 ## Reference
 
-## Reference
-
 ### `React.Component`
 
 `React.Component` is the base class for React components when they are defined using [ES6 classes](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes).
@@ -83,7 +81,7 @@ class Greeting extends React.Component {
 }
 ```
 
-`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods and properties related to the base `React.Component` class.
+See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods and properties related to the base `React.Component` class.
 
 * * *
 
