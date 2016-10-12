@@ -7,18 +7,39 @@ permalink: docs/react-api.html
 redirect_from: "/docs/reference.html"
 ---
 
-`React` is the entry point to the React library.
+`React` is the entry point to the React library. If you use React as a script tag, these top-level APIs are available on the `React` global. If you use ES6 with npm, you can write `import React from 'react'`. If you use ES5 with npm, you can write `var React = require('react')`.
 
 ## Overview
 
 ### Components
 
-React components let you split the UI into independent, reusable pieces, and think about each piece in isolation. React components can be defined by subclassing `React.Component`.
+React components let you split the UI into independent, reusable pieces, and think about each piece in isolation. React components can be defined by subclassing `React.Component` or `React.PureComponent`.
 
  - [`React.Component`](#react.component)
+ - [`React.PureComponent`](#react.purecomponent)
+
+If you don't use ES6 classes, you may use this helper instead.
+
  - [`createClass()`](#react.createclass)
 
-#### Typechecking with PropTypes
+### Creating React Elements
+
+We recommend [using JSX](/react/docs/introducing-jsx.html) to describe what your UI should look like. Each JSX element is just syntactic sugar for calling [`React.createElement()`](#createelement). You will not typically invoke the following methods directly if you are using JSX.
+
+- [`createElement()`](#createelement)
+- [`createFactory()`](#createfactory)
+
+See [Using React without JSX](/react/docs/react-without-jsx.html) for more information.
+
+### Transforming Elements
+
+`React` also provides some other APIs:
+
+- [`cloneElement()`](#cloneelement)
+- [`isValidElement()`](#isvalidelement)
+- [`React.Children`](#react.children)
+
+### Typechecking with PropTypes
 
 You can use `React.PropTypes` to run typechecking on the props for a component.
 
@@ -44,26 +65,13 @@ Validators treat props as optional by default. You can use `isRequired` to make 
 
  - [`isRequired`](#isrequired)
 
-### Creating React Elements
-
-We recommend [using JSX](/react/docs/introducing-jsx.html) to describe what your UI should look like. Each JSX element is just syntactic sugar for calling [`React.createElement()`](#createelement). You will not typically invoke the following methods directly if you are using JSX.
-
- - [`createElement()`](#createelement)
- - [`createFactory()`](#createfactory)
-
-See [Using React without JSX](/react/docs/react-without-jsx.html) for more information.
-
-### Other APIs
-
-React also provides some other APIs:
-
- - [`cloneElement()`](#cloneelement)
- - [`isValidElement()`](#isvalidelement)
- - [`React.Children`](#react.children)
+* * *
 
 ## Reference
 
 ### `React.Component`
+
+`React.Component` is the base class for React components when they are defined using [ES6 classes](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes).
 
 ```javascript
 class Greeting extends React.Component {
@@ -73,7 +81,13 @@ class Greeting extends React.Component {
 }
 ```
 
-`React.Component` is the base class for React components when they are defined using [ES6 classes](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes). See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods related to the base `React.Component` class.
+See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods and properties related to the base `React.Component` class.
+
+* * *
+
+### `React.PureComponent`
+
+`React.PureComponent` is exactly like [`React.Component`](#react.component) but implements [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate) with a shallow prop and state comparison. It is equivalent to a class with [`PureRenderMixin`](/react/docs/pure-render-mixin.html).
 
 * * *
 
@@ -94,199 +108,6 @@ var Greeting = React.createClass({
 ```
 
 See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
-
-* * *
-
-### `React.PropTypes`
-
-`React.PropTypes` exports a range of validators that can be used with a component's `propTypes` object to validate props being passed to your components.
-
-For more information about `PropTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
-
-#### `React.PropTypes.array`
-
-```javascript
-React.PropTypes.array
-```
-
-Validates that a prop is a JavaScript array primitive.
-
-#### `React.PropTypes.bool`
-
-```javascript
-React.PropTypes.bool
-```
-
-Validates that a prop is a JavaScript bool primitive.
-
-#### `React.PropTypes.func`
-
-```javascript
-React.PropTypes.func
-```
-
-Validates that a prop is a JavaScript function.
-
-#### `React.PropTypes.number`
-
-```javascript
-React.PropTypes.number
-```
-
-Validates that a prop is a JavaScript number primitive.
-
-#### `React.PropTypes.object`
-
-```javascript
-React.PropTypes.object
-```
-
-Validates that a prop is a JavaScript object.
-
-#### `React.PropTypes.string`
-
-```javascript
-React.PropTypes.string
-```
-
-Validates that a prop is a JavaScript string primitive.
-
-#### `React.PropTypes.symbol`
-
-```javascript
-React.PropTypes.symbol
-```
-
-Validates that a prop is a JavaScript symbol.
-
-#### `React.PropTypes.node`
-
-```javascript
-React.PropTypes.node
-```
-
-Validates that a props is anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types.
-
-#### `React.PropTypes.element`
-
-```javascript
-React.PropTypes.element
-```
-
-Validates that a props is a React element.
-
-#### `React.PropTypes.instanceOf()`
-
-```javascript
-React.PropTypes.instanceOf(class)
-```
-
-Validates that a prop is an instance of a class. This uses JavaScript's `instanceof` operator.
-
-#### `React.PropTypes.oneOf()`
-
-```javascript
-React.PropTypes.oneOf(arrayOfValues)
-```
-
-Validates that a prop is limited to specific values by treating it as an enum.
-
-```javascript
-MyComponent.propTypes = {
-  optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
-}
-```
-
-#### `React.PropTypes.oneOfType()`
-
-```javascript
-React.PropTypes.oneOfType(arrayOfPropTypes)
-```
-
-Validates that a props is an object that could be one of many types.
-
-```javascript
-MyComponent.propTypes = {
-  optionalUnion: React.PropTypes.oneOfType([
-    React.PropTypes.string,
-    React.PropTypes.number,
-    React.PropTypes.instanceOf(Message)
-  ]),
-}
-```
-
-#### `React.PropTypes.arrayOf()`
-
-```javascript
-React.PropTypes.arrayOf(propType)
-```
-
-Validates that a props is an an array of a certain type.
-
-```javascript
-MyComponent.propTypes = {
-  optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
-}
-```
-
-#### `React.PropTypes.objectOf()`
-
-```javascript
-React.PropTypes.objectOf(propType)
-```
-
-Validates that a props is an object with property values of a certain type.
-
-```javascript
-MyComponent.propTypes = {
-  optionalObjectOf: React.PropTypes.objectOf(React.PropTypes.number),
-}
-```
-
-#### `React.PropTypes.shape()`
-
-```javascript
-React.PropTypes.shape(object)
-```
-
-Validates that a prop is an object taking on a particular shape.
-
-```javascript
-MyComponent.propTypes = {
-  optionalObjectWithShape: React.PropTypes.shape({
-    color: React.PropTypes.string,
-    fontSize: React.PropTypes.number
-  }),
-}
-```
-
-#### `React.PropTypes.any`
-
-```javascript
-React.PropTypes.any
-```
-
-Validates that a prop has a value of any data type. Usually followed by `isRequired`.
-
-```javascript
-MyComponent.propTypes = {
-  requiredAny: React.PropTypes.any.isRequired,
-}
-```
-
-### `isRequired`
-
-```javascript
-propType.isRequired
-```
-
-You can chain any of the above validators with `isRequired` to make sure a warning is shown if the prop is not provided.
-
-```javascript
-MyComponent.propTypes = {
-  requiredFunc: React.PropTypes.func.isRequired,
-}
-```
 
 * * *
 
@@ -365,7 +186,7 @@ Verifies the object is a React element. Returns `true` or `false`.
 React.Children.map(children, function[(thisArg)])
 ```
 
-Invoke a function on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a keyed fragment or array it will be traversed: the function will never be passed the container objects. If children is `null` or `undefined`, returns `null` or `undefined` rather than an array.
+Invokes a function on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a keyed fragment or array it will be traversed: the function will never be passed the container objects. If children is `null` or `undefined`, returns `null` or `undefined` rather than an array.
 
 #### `React.Children.forEach`
 
@@ -381,7 +202,7 @@ Like [`React.Children.map()`](#react.children.map) but does not return an array.
 Children.count(children)
 ```
 
-Return the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.
+Returns the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.
 
 #### `React.Children.only`
 
@@ -389,7 +210,7 @@ Return the total number of components in `children`, equal to the number of time
 React.Children.only(children)
 ```
 
-Return the only child in `children`. Throws otherwise.
+Returns the only child in `children`. Throws otherwise.
 
 #### `React.Children.toArray`
 
@@ -397,8 +218,201 @@ Return the only child in `children`. Throws otherwise.
 React.Children.toArray(children)
 ```
 
-Return the `children` opaque data structure as a flat array with keys assigned to each child. Useful if you want to manipulate collections of children in your render methods, especially if you want to reorder or slice `this.props.children` before passing it down.
+Returns the `children` opaque data structure as a flat array with keys assigned to each child. Useful if you want to manipulate collections of children in your render methods, especially if you want to reorder or slice `this.props.children` before passing it down.
 
 > Note:
 >
 > `React.Children.toArray()` changes keys to preserve the semantics of nested arrays when flattening lists of children. That is, `toArray` prefixes each key in the returned array so that each element's key is scoped to the input array containing it.
+
+* * *
+
+### `React.PropTypes`
+
+`React.PropTypes` exports a range of validators that can be used with a component's `propTypes` object to validate props being passed to your components.
+
+For more information about `PropTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
+
+#### `React.PropTypes.array`
+
+```javascript
+React.PropTypes.array
+```
+
+Validates that a prop is a JavaScript array primitive.
+
+#### `React.PropTypes.bool`
+
+```javascript
+React.PropTypes.bool
+```
+
+Validates that a prop is a JavaScript bool primitive.
+
+#### `React.PropTypes.func`
+
+```javascript
+React.PropTypes.func
+```
+
+Validates that a prop is a JavaScript function.
+
+#### `React.PropTypes.number`
+
+```javascript
+React.PropTypes.number
+```
+
+Validates that a prop is a JavaScript number primitive.
+
+#### `React.PropTypes.object`
+
+```javascript
+React.PropTypes.object
+```
+
+Validates that a prop is a JavaScript object.
+
+#### `React.PropTypes.string`
+
+```javascript
+React.PropTypes.string
+```
+
+Validates that a prop is a JavaScript string primitive.
+
+#### `React.PropTypes.symbol`
+
+```javascript
+React.PropTypes.symbol
+```
+
+Validates that a prop is a JavaScript symbol.
+
+#### `React.PropTypes.node`
+
+```javascript
+React.PropTypes.node
+```
+
+Validates that a prop is anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types.
+
+#### `React.PropTypes.element`
+
+```javascript
+React.PropTypes.element
+```
+
+Validates that a prop is a React element.
+
+#### `React.PropTypes.instanceOf()`
+
+```javascript
+React.PropTypes.instanceOf(class)
+```
+
+Validates that a prop is an instance of a class. This uses JavaScript's `instanceof` operator.
+
+#### `React.PropTypes.oneOf()`
+
+```javascript
+React.PropTypes.oneOf(arrayOfValues)
+```
+
+Validates that a prop is limited to specific values by treating it as an enum.
+
+```javascript
+MyComponent.propTypes = {
+  optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
+}
+```
+
+#### `React.PropTypes.oneOfType()`
+
+```javascript
+React.PropTypes.oneOfType(arrayOfPropTypes)
+```
+
+Validates that a prop is an object that could be one of many types.
+
+```javascript
+MyComponent.propTypes = {
+  optionalUnion: React.PropTypes.oneOfType([
+    React.PropTypes.string,
+    React.PropTypes.number,
+    React.PropTypes.instanceOf(Message)
+  ]),
+}
+```
+
+#### `React.PropTypes.arrayOf()`
+
+```javascript
+React.PropTypes.arrayOf(propType)
+```
+
+Validates that a prop is an an array of a certain type.
+
+```javascript
+MyComponent.propTypes = {
+  optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
+}
+```
+
+#### `React.PropTypes.objectOf()`
+
+```javascript
+React.PropTypes.objectOf(propType)
+```
+
+Validates that a prop is an object with property values of a certain type.
+
+```javascript
+MyComponent.propTypes = {
+  optionalObjectOf: React.PropTypes.objectOf(React.PropTypes.number),
+}
+```
+
+#### `React.PropTypes.shape()`
+
+```javascript
+React.PropTypes.shape(object)
+```
+
+Validates that a prop is an object taking on a particular shape.
+
+```javascript
+MyComponent.propTypes = {
+  optionalObjectWithShape: React.PropTypes.shape({
+    color: React.PropTypes.string,
+    fontSize: React.PropTypes.number
+  }),
+}
+```
+
+#### `React.PropTypes.any`
+
+```javascript
+React.PropTypes.any
+```
+
+Validates that a prop has a value of any data type. Usually followed by `isRequired`.
+
+```javascript
+MyComponent.propTypes = {
+  requiredAny: React.PropTypes.any.isRequired,
+}
+```
+
+### `isRequired`
+
+```javascript
+propType.isRequired
+```
+
+You can chain any of the above validators with `isRequired` to make sure a warning is shown if the prop is not provided.
+
+```javascript
+MyComponent.propTypes = {
+  requiredFunc: React.PropTypes.func.isRequired,
+}
+```

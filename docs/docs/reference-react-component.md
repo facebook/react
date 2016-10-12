@@ -57,13 +57,21 @@ This method is called when a component is being removed from the DOM:
 
 Each component also provides some other APIs:
 
+  - [`setState()`](#setstate)
+  - [`forceUpdate()`](#forceupdate)
+
+### Class Properties
+
   - [`defaultProps`](#defaultprops)
   - [`displayName`](#displayName)
-  - [`forceUpdate()`](#forceupdate)
-  - [`props`](#props)
   - [`propTypes`](#proptypes)
-  - [`setState()`](#setstate)
+
+### Instance Properties
+
+  - [`props`](#props)
   - [`state`](#state)
+
+* * *
 
 ## Reference
 
@@ -162,9 +170,9 @@ Use `shouldComponentUpdate()` to let React know if a component's output is not a
 
 Returning `false` does not prevent child components from re-rendering when *their* state changes.
 
-Currently, if `shouldComponentUpdate()` returns `false`, then `componentWillUpdate()`, `render()`, and `componentDidUpdate()` will not be invoked. Note that in the future React may treat `shouldComponentUpdate()` as a hint rather than a strict directive, and returning `false` may still result in a re-rendering of the component.
+Currently, if `shouldComponentUpdate()` returns `false`, then [`componentWillUpdate()`](#componentwillupdate), [`render()`](#render), and [`componentDidUpdate()`](#componentdidupdate) will not be invoked. Note that in the future React may treat `shouldComponentUpdate()` as a hint rather than a strict directive, and returning `false` may still result in a re-rendering of the component.
 
-If you determine a specific component is slow after profiling, you may change it to inherit from `React.PureComponent` which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
+If you determine a specific component is slow after profiling, you may change it to inherit from [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
 
 * * *
 
@@ -210,6 +218,56 @@ componentWillUnmount()
 
 * * *
 
+### `setState()`
+
+```javascript
+setState(nextState, callback)
+```
+
+Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
+
+The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.
+
+Here is the simple object usage:
+
+```javascript
+this.setState({mykey: 'my new value'});
+```
+
+It's also possible to pass a function with the signature `function(state, props) => newState`. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state by `props.step`:
+
+```javascript
+this.setState((prevState, props) => {
+  return {myInteger: prevState.myInteger + props.step};
+});
+```
+
+The second parameter is an optional callback function that will be executed once `setState` is completed and the component is re-rendered. Generally we recommend using `componentDidUpdate()` for such logic instead.
+
+`setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the existing value.
+
+There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
+
+`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
+
+* * *
+
+### `forceUpdate()`
+
+```javascript
+component.forceUpdate(callback)
+```
+
+By default, when your component's state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`.
+
+Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This will trigger the normal lifecycle methods for child components, including the `shouldComponentUpdate()` method of each child. React will still only update the DOM if the markup changes.
+
+Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`.
+
+* * *
+
+## Class Properties
+
 ### `defaultProps`
 
 `defaultProps` can be defined as a property on the component class itself, to set the default props for the class. This is used for undefined props, but not for null props. For example:
@@ -248,31 +306,9 @@ The `displayName` string is used in debugging messages. JSX sets this value auto
 
 * * *
 
-### `forceUpdate()`
-
-```javascript
-component.forceUpdate(callback)
-```
-
-By default, when your component's state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`.
-
-Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This will trigger the normal lifecycle methods for child components, including the `shouldComponentUpdate()` method of each child. React will still only update the DOM if the markup changes.
-
-Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`.
-
-* * *
-
-### `props`
-
-`this.props` contains the props that were defined by the caller of this component. See [Components and Props](/react/docs/components-and-props.html) for an introduction to props.
-
-In particular, `this.props.children` is a special prop, typically defined by the child tags in the JSX expression rather than in the tag itself.
-
-* * *
-
 ### `propTypes`
 
-`propTypes` can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in `React.PropTypes`. In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, `propTypes` checks are skipped for efficiency.
+`propTypes` can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in [`React.PropTypes`](/react/docs/react-api.html#react.proptypes). In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, `propTypes` checks are skipped for efficiency.
 
 For example, this code ensures that the `color` prop is a string:
 
@@ -290,39 +326,13 @@ We recommend using [Flow](https://flowtype.org/) when possible, to get compile-t
 
 * * *
 
-### `setState()`
+## Instance Properties
 
-```javascript
-setState(nextState, callback)
-```
+### `props`
 
-Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
+`this.props` contains the props that were defined by the caller of this component. See [Components and Props](/react/docs/components-and-props.html) for an introduction to props.
 
-The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.
-
-Here is the simple object usage:
-
-```javascript
-this.setState({mykey: 'my new value'});
-```
-
-It's also possible to pass a function with the signature `function(state, props) => newState`. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state by `props.step`:
-
-```javascript
-this.setState((prevState, props) => {
-  return {myInteger: prevState.myInteger + props.step};
-});
-```
-
-The second parameter is an optional callback function that will be executed once `setState` is completed and the component is re-rendered. Generally we recommend using `componentDidUpdate()` for such logic instead.
-
-`setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the existing value.
-
-There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
-
-`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
-
-* * *
+In particular, `this.props.children` is a special prop, typically defined by the child tags in the JSX expression rather than in the tag itself.
 
 ### `state`
 

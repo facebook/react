@@ -6,10 +6,12 @@ category: Reference
 permalink: docs/reference-react-dom-server.html
 ---
 
-The `react-dom/server` package allows you to render your components on the server.
+The `react-dom/server` package allows you to render your components on the server. If you use React as a script tag, these top-level APIs are available on the `ReactDOMServer` global. If you use ES6 with npm, you can write `import ReactDOMServer from 'react-dom/server'`. If you use ES5 with npm, you can write `var ReactDOMServer = require('react-dom/server')`.
 
  - [`renderToString()`](#rendertostring)
  - [`renderToStaticMarkup()`](#rendertostaticmarkup)
+
+* * *
 
 ## Reference
 
