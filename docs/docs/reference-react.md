@@ -13,27 +13,42 @@ redirect_from: "/docs/reference.html"
 
 ### Components
 
-React components let you split the UI into independent, reusable pieces, and think about each piece in isolation.
+React components let you split the UI into independent, reusable pieces, and think about each piece in isolation. React components can be defined by subclassing `React.Component`.
 
  - [`React.Component`](#react.component)
+ - [`createClass()`](#react.createclass)
 
-### Props
+#### Typechecking with PropTypes
 
- - [`PropTypes`](#proptypes)
+You can use `React.PropTypes` to run typechecking on the props for a component.
 
-### React Without ES6
+ - [`React.PropTypes`](#react.proptypes)
+ - [`React.PropTypes.array`](#react.proptypes.array)
+ - [`React.PropTypes.bool`](#react.proptypes.bool)
+ - [`React.PropTypes.func`](#react.proptypes.func)
+ - [`React.PropTypes.number`](#react.proptypes.number)
+ - [`React.PropTypes.object`](#react.proptypes.object)
+ - [`React.PropTypes.string`](#react.proptypes.string)
+ - [`React.PropTypes.symbol`](#react.proptypes.symbol)
+ - [`React.PropTypes.node`](#react.proptypes.node)
+ - [`React.PropTypes.element`](#react.proptypes.element)
+ - [`React.PropTypes.instanceOf()`](#react.proptypes.instanceOf)
+ - [`React.PropTypes.oneOf()`](#react.proptypes.oneOf)
+ - [`React.PropTypes.oneOfType()`](#react.proptypes.oneOfType)
+ - [`React.PropTypes.arrayOf()`](#react.proptypes.arrayOf)
+ - [`React.PropTypes.objectOf()`](#react.proptypes.objectOf)
+ - [`React.PropTypes.shape()`](#react.proptypes.shape)
+ - [`React.PropTypes.any`](#react.proptypes.any)
 
-If you're not using ES6, you may use the [`React.createClass()`](#createclass) helper to create a component class.
+Validators treat props as optional by default. You can use `isRequired` to make sure a warning is shown if the prop is not provided.
 
- - [`createClass()`](#createclass)
-
-See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
+ - [`isRequired`](#isrequired)
 
 ### Creating React Elements
 
 We recommend [using JSX](/react/docs/introducing-jsx.html) to describe what your UI should look like. Each JSX element is just syntactic sugar for calling [`React.createElement()`](#createelement). You will not typically invoke the following methods directly if you are using JSX.
 
- - [`createElement()`](#createlement)
+ - [`createElement()`](#createelement)
  - [`createFactory()`](#createfactory)
 
 See [Using React without JSX](/react/docs/react-without-jsx.html) for more information.
@@ -44,7 +59,7 @@ React also provides some other APIs:
 
  - [`cloneElement()`](#cloneelement)
  - [`isValidElement()`](#isvalidelement)
- - [`Children`](#children)
+ - [`React.Children`](#react.children)
 
 ## Reference
 
@@ -68,7 +83,7 @@ class Greeting extends React.Component {
 React.createClass(specification)
 ```
 
-If you don't use ES6 yet, you may use the `React.createClass` helper instead to create a component class.
+If you don't use ES6 yet, you may use the `React.createClass()` helper instead to create a component class.
 
 ```javascript
 var Greeting = React.createClass({
@@ -78,78 +93,13 @@ var Greeting = React.createClass({
 });
 ```
 
-* * *
-
-### `createElement()`
-
-```javascript
-React.createElement(
-  type,
-  [props],
-  [...children]
-)
-```
-
-Create and return a new React element of the given type. The type argument can be either an
-html tag name string (eg. 'div', 'span', etc), or a React class (created via `React.createClass`).
-
-Code written with JSX will be converted to use `React.createElement`. You will not typically invoke `React.createElement` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
-
-Convenience wrappers around `React.createElement` for DOM components are provided by `React.DOM`. For example, `React.DOM.a(...)` is a convenience wrapper for `React.createElement('a', ...)`.
+See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
 
 * * *
 
-### `cloneElement()`
-
-```
-React.cloneElement(
-  element,
-  [props],
-  [...children]
-)
-```
-
-Clone and return a new React element using `element` as the starting point. The resulting element will have the original element's props with the new props merged in shallowly. New children will replace existing children. `key` and `ref` from the original element will be preserved.
-
-`React.cloneElement` is almost equivalent to:
-
-```js
-<element.type {...element.props} {...props}>{children}</element.type>
-```
-
-However, it also preserves `ref`s. This means that if you get a child with a `ref` on it, you won't accidentally steal it from your ancestor. You will get the same `ref` attached to your new element.
-
-This API was introduced as a replacement of the deprecated `React.addons.cloneWithProps`.
-
-* * *
-
-### `createFactory()`
-
-```javascript
-React.createFactory(type)
-```
-
-Return a function that produces React elements of a given type. Like [`React.createElement`](#createElement), the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a React class.
-
-You will not typically invoke `React.createFactory` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
-
-* * *
-
-### `isValidElement()`
-
-```javascript
-React.isValidElement(object)
-```
-
-Verifies the object is a React element. Returns `true` or `false`.
-
-* * *
-
-### `PropTypes`
+### `React.PropTypes`
 
 `React.PropTypes` exports a range of validators that can be used with a component's `propTypes` object to validate props being passed to your components.
-
-Validators treat props as optional by default. You can use [`isRequired`](#isrequired) to make sure a warning is shown if the prop is not provided.
 
 For more information about `PropTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
 
@@ -169,7 +119,7 @@ React.PropTypes.bool
 
 Validates that a prop is a JavaScript bool primitive.
 
-### `React.PropTypes.func`
+#### `React.PropTypes.func`
 
 ```javascript
 React.PropTypes.func
@@ -177,7 +127,7 @@ React.PropTypes.func
 
 Validates that a prop is a JavaScript function.
 
-### `React.PropTypes.number`
+#### `React.PropTypes.number`
 
 ```javascript
 React.PropTypes.number
@@ -185,7 +135,7 @@ React.PropTypes.number
 
 Validates that a prop is a JavaScript number primitive.
 
-### `React.PropTypes.object`
+#### `React.PropTypes.object`
 
 ```javascript
 React.PropTypes.object
@@ -193,7 +143,7 @@ React.PropTypes.object
 
 Validates that a prop is a JavaScript object.
 
-### `React.PropTypes.string`
+#### `React.PropTypes.string`
 
 ```javascript
 React.PropTypes.string
@@ -201,7 +151,7 @@ React.PropTypes.string
 
 Validates that a prop is a JavaScript string primitive.
 
-### `React.PropTypes.symbol`
+#### `React.PropTypes.symbol`
 
 ```javascript
 React.PropTypes.symbol
@@ -209,7 +159,7 @@ React.PropTypes.symbol
 
 Validates that a prop is a JavaScript symbol.
 
-### `React.PropTypes.node`
+#### `React.PropTypes.node`
 
 ```javascript
 React.PropTypes.node
@@ -217,7 +167,7 @@ React.PropTypes.node
 
 Validates that a props is anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types.
 
-### `React.PropTypes.element`
+#### `React.PropTypes.element`
 
 ```javascript
 React.PropTypes.element
@@ -225,7 +175,7 @@ React.PropTypes.element
 
 Validates that a props is a React element.
 
-### `React.PropTypes.instanceOf()`
+#### `React.PropTypes.instanceOf()`
 
 ```javascript
 React.PropTypes.instanceOf(class)
@@ -233,7 +183,7 @@ React.PropTypes.instanceOf(class)
 
 Validates that a prop is an instance of a class. This uses JavaScript's `instanceof` operator.
 
-### `React.PropTypes.oneOf()`
+#### `React.PropTypes.oneOf()`
 
 ```javascript
 React.PropTypes.oneOf(arrayOfValues)
@@ -247,7 +197,7 @@ MyComponent.propTypes = {
 }
 ```
 
-### `React.PropTypes.oneOfType()`
+#### `React.PropTypes.oneOfType()`
 
 ```javascript
 React.PropTypes.oneOfType(arrayOfPropTypes)
@@ -265,7 +215,7 @@ MyComponent.propTypes = {
 }
 ```
 
-### `React.PropTypes.arrayOf()`
+#### `React.PropTypes.arrayOf()`
 
 ```javascript
 React.PropTypes.arrayOf(propType)
@@ -279,7 +229,7 @@ MyComponent.propTypes = {
 }
 ```
 
-### `React.PropTypes.objectOf()`
+#### `React.PropTypes.objectOf()`
 
 ```javascript
 React.PropTypes.objectOf(propType)
@@ -293,7 +243,7 @@ MyComponent.propTypes = {
 }
 ```
 
-### `React.PropTypes.shape()`
+#### `React.PropTypes.shape()`
 
 ```javascript
 React.PropTypes.shape(object)
@@ -310,7 +260,7 @@ MyComponent.propTypes = {
 }
 ```
 
-### `React.PropTypes.any`
+#### `React.PropTypes.any`
 
 ```javascript
 React.PropTypes.any
@@ -340,11 +290,76 @@ MyComponent.propTypes = {
 
 * * *
 
-### `Children`
+### `createElement()`
+
+```javascript
+React.createElement(
+  type,
+  [props],
+  [...children]
+)
+```
+
+Create and return a new React element of the given type. The type argument can be either an
+html tag name string (eg. 'div', 'span', etc), or a React class (created via `React.createClass()`).
+
+Code written with JSX will be converted to use `React.createElement()`. You will not typically invoke `React.createElement()` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
+
+Convenience wrappers around `React.createElement()` for DOM components are provided by `React.DOM`. For example, `React.DOM.a(...)` is a convenience wrapper for `React.createElement('a', ...)`.
+
+* * *
+
+### `cloneElement()`
+
+```
+React.cloneElement(
+  element,
+  [props],
+  [...children]
+)
+```
+
+Clone and return a new React element using `element` as the starting point. The resulting element will have the original element's props with the new props merged in shallowly. New children will replace existing children. `key` and `ref` from the original element will be preserved.
+
+`cloneElement()` is almost equivalent to:
+
+```js
+<element.type {...element.props} {...props}>{children}</element.type>
+```
+
+However, it also preserves `ref`s. This means that if you get a child with a `ref` on it, you won't accidentally steal it from your ancestor. You will get the same `ref` attached to your new element.
+
+This API was introduced as a replacement of the deprecated `React.addons.cloneWithProps()`.
+
+* * *
+
+### `createFactory()`
+
+```javascript
+React.createFactory(type)
+```
+
+Return a function that produces React elements of a given type. Like [`React.createElement()`](#createElement), the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a React class.
+
+You will not typically invoke `React.createFactory()` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
+
+* * *
+
+### `isValidElement()`
+
+```javascript
+React.isValidElement(object)
+```
+
+Verifies the object is a React element. Returns `true` or `false`.
+
+* * *
+
+### `React.Children`
 
 `React.Children` provides utilities for dealing with the `this.props.children` opaque data structure.
 
-#### `Children.map`
+#### `React.Children.map`
 
 ```javascript
 React.Children.map(children, function[(thisArg)])
@@ -352,15 +367,15 @@ React.Children.map(children, function[(thisArg)])
 
 Invoke a function on every immediate child contained within `children` with `this` set to `thisArg`. If `children` is a keyed fragment or array it will be traversed: the function will never be passed the container objects. If children is `null` or `undefined`, returns `null` or `undefined` rather than an array.
 
-#### `Children.forEach`
+#### `React.Children.forEach`
 
 ```javascript
 React.Children.forEach(children, function[(thisArg)])
 ```
 
-Like `React.Children.map()` but does not return an array.
+Like [`React.Children.map()`](#react.children.map) but does not return an array.
 
-#### `Children.count`
+#### `React.Children.count`
 
 ```javascript
 Children.count(children)
@@ -368,7 +383,7 @@ Children.count(children)
 
 Return the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.
 
-#### `Children.only`
+#### `React.Children.only`
 
 ```javascript
 React.Children.only(children)
@@ -376,7 +391,7 @@ React.Children.only(children)
 
 Return the only child in `children`. Throws otherwise.
 
-#### `Children.toArray`
+#### `React.Children.toArray`
 
 ```javascript
 React.Children.toArray(children)
