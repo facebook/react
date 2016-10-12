@@ -37,7 +37,7 @@
       subitems:
         - id: react-component
           title: React.Component
-    - id: reference-react-dom
+    - id: react-dom
       title: ReactDOM
-    - id: reference-react-dom-server
+    - id: react-dom-server
       title: ReactDOMServer
