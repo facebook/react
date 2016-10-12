@@ -9,8 +9,8 @@ redirect_from: "/docs/reference.html"
 The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
 
  - [`render()`](#render)
- - [`unmountComponentAtNode()`](#unmountComponentAtNode)
- - [`findDOMNode()`](#findDOMNode)
+ - [`unmountComponentAtNode()`](#unmountcomponentatnode)
+ - [`findDOMNode()`](#finddomnode)
 
 ## Reference
 

@@ -8,8 +8,8 @@ redirect_from: "/docs/reference.html"
 
 The `react-dom/server` package allows you to render your components on the server.
 
- - [`renderToString()`](#renderToString)
- - [`renderToStaticMarkup()`](#renderToStaticMarkup)
+ - [`renderToString()`](#rendertostring)
+ - [`renderToStaticMarkup()`](#rendertostaticmarkup)
 
 ## Reference
 
