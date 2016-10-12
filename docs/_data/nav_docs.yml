@@ -26,6 +26,8 @@
       title: JSX In Depth
     - id: typechecking-with-proptypes
       title: Typechecking With PropTypes
+    - id: optimizing-performance
+      title: Optimizing Performance
     - id: react-without-es6
       title: React Without ES6
     - id: react-without-jsx

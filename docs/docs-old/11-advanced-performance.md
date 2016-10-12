@@ -6,38 +6,9 @@ prev: shallow-compare.html
 next: context.html
 ---
 
-One of the first questions people ask when considering React for a project is whether their application will be as fast and responsive as an equivalent non-React version. The idea of re-rendering an entire subtree of components in response to every state change makes people wonder whether this process negatively impacts performance. React uses several clever techniques to minimize the number of costly DOM operations required to update the UI.
 
-## Use the production build
 
-If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the [minified production build](/react/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
-
-## Avoiding reconciling the DOM
-
-React makes use of a *virtual DOM*, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component's props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will React [reconcile](/react/docs/reconciliation.html) the DOM, applying as few mutations as possible.
-
-On top of this, React provides a component lifecycle function, `shouldComponentUpdate`, which is triggered before the re-rendering process starts (virtual DOM comparison and possible eventual DOM reconciliation), giving the developer the ability to short circuit this process. The default implementation of this function returns `true`, leaving React to perform the update:
-
-```javascript
-shouldComponentUpdate: function(nextProps, nextState) {
-  return true;
-}
-```
-
-Keep in mind that React will invoke this function pretty often, so the implementation has to be fast.
-
-Say you have a messaging application with several chat threads. Suppose only one of the threads has changed. If we implement `shouldComponentUpdate` on the `ChatThread` component, React can skip the rendering step for the other threads:
-
-```javascript
-shouldComponentUpdate: function(nextProps, nextState) {
-  // TODO: return whether or not current chat thread is
-  // different to former one.
-}
-```
-
-So, in summary, React avoids carrying out expensive DOM operations required to reconcile subtrees of the DOM by allowing the user to short circuit the process using `shouldComponentUpdate`, and, for those which should update, by comparing virtual DOMs.
-
-## shouldComponentUpdate in action
+## shouldComponentUpdate In Action
 
 Here's a subtree of components. For each one is indicated what `shouldComponentUpdate` returned and whether or not the virtual DOMs were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
 
