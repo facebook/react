@@ -1,19 +1,28 @@
 ---
-id: reference-react-dom
+id: react-dom
 title: ReactDOM
 layout: docs
 category: Reference
-permalink: docs/reference-react-dom.html
+permalink: docs/react-dom.html
 ---
-
-The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
 
 If you use React as a script tag, these top-level APIs are available on the `ReactDOM` global. If you use ES6 with npm, you can write `import ReactDOM from 'react-dom'`. If you use ES5 with npm, you can write `var ReactDOM = require('react-dom')`.
 
+## Overview
 
- - [`render()`](#render)
- - [`unmountComponentAtNode()`](#unmountcomponentatnode)
- - [`findDOMNode()`](#finddomnode)
+The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
+
+- [`render()`](#render)
+- [`unmountComponentAtNode()`](#unmountcomponentatnode)
+- [`findDOMNode()`](#finddomnode)
+
+### Browser Support
+
+React supports all popular browsers, including Internet Explorer 9 and above.
+
+> Note
+>
+> We don't support older browsers that don't support ES5 methods, but you may find that your apps do work in older browsers if polyfills such as [es5-shim and es5-sham](https://github.com/es-shims/es5-shim) are included in the page. You're on your own if you choose to take this path.
 
 * * *
 
