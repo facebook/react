@@ -1024,8 +1024,7 @@ var ReactCompositeComponent = {
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._processChildContext(context),
-        safely
+        this._processChildContext(context)
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
