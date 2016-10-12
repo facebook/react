@@ -26,8 +26,8 @@
       title: JSX In Depth
     - id: typechecking-with-proptypes
       title: Typechecking With PropTypes
-    - id: ref-callbacks-and-the-dom
-      title: Ref Callbacks and the DOM
+    - id: refs-and-the-dom
+      title: Refs and the DOM
     - id: react-without-es6
       title: React Without ES6
     - id: react-without-jsx
