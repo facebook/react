@@ -9,13 +9,41 @@ redirect_from: "/docs/reference.html"
 
 `React` is the entry point to the React library.
 
+## Overview
+
+### Components
+
+React components let you split the UI into independent, reusable pieces, and think about each piece in isolation.
+
  - [`React.Component`](#react.component)
- - [`createClass()`](#createclass)
- - [`createElement()`](#createlement)
- - [`cloneElement()`](#cloneelement)
- - [`createFactory()`](#createfactory)
- - [`isValidElement()`](#isvalidelement)
+
+### Props
+
  - [`PropTypes`](#proptypes)
+
+### React Without ES6
+
+If you're not using ES6, you may use the [`React.createClass()`](#createclass) helper to create a component class.
+
+ - [`createClass()`](#createclass)
+
+See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
+
+### Creating React Elements
+
+We recommend [using JSX](/react/docs/introducing-jsx.html) to describe what your UI should look like. Each JSX element is just syntactic sugar for calling [`React.createElement()`](#createelement). You will not typically invoke the following methods directly if you are using JSX.
+
+ - [`createElement()`](#createlement)
+ - [`createFactory()`](#createfactory)
+
+See [Using React without JSX](/react/docs/react-without-jsx.html) for more information.
+
+### Other APIs
+
+React also provides some other APIs:
+
+ - [`cloneElement()`](#cloneelement)
+ - [`isValidElement()`](#isvalidelement)
  - [`Children`](#children)
 
 ## Reference
@@ -30,7 +58,9 @@ class Greeting extends React.Component {
 }
 ```
 
-`React.Component` is the base class for React components when they are defined using ES6 classes. See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods related to the base `React.Component` class.
+`React.Component` is the base class for React components when they are defined using [ES6 classes](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes). See the [React.Component API Reference](/react/docs/react-component.html) for a list of methods related to the base `React.Component` class.
+
+* * *
 
 ### `createClass()`
 
@@ -38,7 +68,17 @@ class Greeting extends React.Component {
 React.createClass(specification)
 ```
 
-If you don't use ES6 yet, you may use the `React.createClass` helper instead to create a component class. See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
+If you don't use ES6 yet, you may use the `React.createClass` helper instead to create a component class.
+
+```javascript
+var Greeting = React.createClass({
+  render: function() {
+    return <h1>Hello, {this.props.name}</h1>;
+  }
+});
+```
+
+* * *
 
 ### `createElement()`
 
@@ -56,6 +96,8 @@ html tag name string (eg. 'div', 'span', etc), or a React class (created via `Re
 Code written with JSX will be converted to use `React.createElement`. You will not typically invoke `React.createElement` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
 
 Convenience wrappers around `React.createElement` for DOM components are provided by `React.DOM`. For example, `React.DOM.a(...)` is a convenience wrapper for `React.createElement('a', ...)`.
+
+* * *
 
 ### `cloneElement()`
 
@@ -79,6 +121,8 @@ However, it also preserves `ref`s. This means that if you get a child with a `re
 
 This API was introduced as a replacement of the deprecated `React.addons.cloneWithProps`.
 
+* * *
+
 ### `createFactory()`
 
 ```javascript
@@ -89,6 +133,8 @@ Return a function that produces React elements of a given type. Like [`React.cre
 
 You will not typically invoke `React.createFactory` directly if you are using JSX. See [React Without JSX](/react/docs/react-without-jsx.html) to learn more.
 
+* * *
+
 ### `isValidElement()`
 
 ```javascript
@@ -97,26 +143,163 @@ React.isValidElement(object)
 
 Verifies the object is a React element. Returns `true` or `false`.
 
+* * *
+
 ### `PropTypes`
 
-`React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components.
+`React.PropTypes` exports a range of validators that can be used with a component's `propTypes` object to validate props being passed to your components.
 
-  - `React.PropTypes.array`
-  - `React.PropTypes.bool`
-  - `React.PropTypes.func`
-  - `React.PropTypes.number`
-  - `React.PropTypes.object`
-  - `React.PropTypes.string`
-  - `React.PropTypes.symbol`
-  - `React.PropTypes.node` - Anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types
-  - `React.PropTypes.element` - A React element
-  - `React.PropTypes.instanceOf(class)` - You can also declare that a prop is an instance of a class. This uses JavaScript's `instanceof` operator.
-  - `React.PropTypes.oneOf(array)` - You can ensure that your prop is limited to specific values by treating it as an enum.
-  - `React.PropTypes.oneOfType(array)` - An object that could be one of many types
-  - `React.PropTypes.arrayOf(propType)` - An array of a certain type
-  - `React.PropTypes.objectOf(propType)` - An object with property values of a certain type
-  - `React.PropTypes.any` - A value of any data type
-  - `React.PropTypes.shape(object)` - An object taking on a particular shape
+Validators treat props as optional by default. You can use [`isRequired`](#isrequired) to make sure a warning is shown if the prop is not provided.
+
+For more information about `PropTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
+
+#### `React.PropTypes.array`
+
+```javascript
+React.PropTypes.array
+```
+
+Validates that a prop is a JavaScript array primitive.
+
+#### `React.PropTypes.bool`
+
+```javascript
+React.PropTypes.bool
+```
+
+Validates that a prop is a JavaScript bool primitive.
+
+### `React.PropTypes.func`
+
+```javascript
+React.PropTypes.func
+```
+
+Validates that a prop is a JavaScript function.
+
+### `React.PropTypes.number`
+
+```javascript
+React.PropTypes.number
+```
+
+Validates that a prop is a JavaScript number primitive.
+
+### `React.PropTypes.object`
+
+```javascript
+React.PropTypes.object
+```
+
+Validates that a prop is a JavaScript object.
+
+### `React.PropTypes.string`
+
+```javascript
+React.PropTypes.string
+```
+
+Validates that a prop is a JavaScript string primitive.
+
+### `React.PropTypes.symbol`
+
+```javascript
+React.PropTypes.symbol
+```
+
+Validates that a prop is a JavaScript symbol.
+
+### `React.PropTypes.node`
+
+```javascript
+React.PropTypes.node
+```
+
+Validates that a props is anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types.
+
+### `React.PropTypes.element`
+
+```javascript
+React.PropTypes.element
+```
+
+Validates that a props is a React element.
+
+### `React.PropTypes.instanceOf()`
+
+```javascript
+React.PropTypes.instanceOf(class)
+```
+
+Validates that a prop is an instance of a class. This uses JavaScript's `instanceof` operator.
+
+### `React.PropTypes.oneOf()`
+
+```javascript
+React.PropTypes.oneOf(arrayOfValues)
+```
+
+Validates that a prop is limited to specific values by treating it as an enum.
+
+```javascript
+MyComponent.propTypes = {
+  optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
+}
+```
+
+### `React.PropTypes.oneOfType()`
+
+```javascript
+React.PropTypes.oneOfType(arrayOfPropTypes)
+```
+
+Validates that a props is an object that could be one of many types.
+
+```javascript
+MyComponent.propTypes = {
+  optionalUnion: React.PropTypes.oneOfType([
+    React.PropTypes.string,
+    React.PropTypes.number,
+    React.PropTypes.instanceOf(Message)
+  ]),
+}
+```
+
+### `React.PropTypes.arrayOf()`
+
+```javascript
+React.PropTypes.arrayOf(propType)
+```
+
+Validates that a props is an an array of a certain type.
+
+```javascript
+MyComponent.propTypes = {
+  optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
+}
+```
+
+### `React.PropTypes.objectOf()`
+
+```javascript
+React.PropTypes.objectOf(propType)
+```
+
+Validates that a props is an object with property values of a certain type.
+
+```javascript
+MyComponent.propTypes = {
+  optionalObjectOf: React.PropTypes.objectOf(React.PropTypes.number),
+}
+```
+
+### `React.PropTypes.shape()`
+
+```javascript
+React.PropTypes.shape(object)
+```
+
+Validates that a prop is an object taking on a particular shape.
 
 ```javascript
 MyComponent.propTypes = {
@@ -127,15 +310,35 @@ MyComponent.propTypes = {
 }
 ```
 
-These validators consider the prop as optional by default. You can chain any of the above with `isRequired` to make sure a warning is shown if the prop isn't provided:
+### `React.PropTypes.any`
 
-```javascript{2}
+```javascript
+React.PropTypes.any
+```
+
+Validates that a prop has a value of any data type. Usually followed by `isRequired`.
+
+```javascript
+MyComponent.propTypes = {
+  requiredAny: React.PropTypes.any.isRequired,
+}
+```
+
+### `isRequired`
+
+```javascript
+propType.isRequired
+```
+
+You can chain any of the above validators with `isRequired` to make sure a warning is shown if the prop is not provided.
+
+```javascript
 MyComponent.propTypes = {
   requiredFunc: React.PropTypes.func.isRequired,
 }
 ```
 
-For more information about `propTypes`, see [Typechecking with PropTypes](/react/docs/typechecking-with-proptypes.html).
+* * *
 
 ### `Children`
 

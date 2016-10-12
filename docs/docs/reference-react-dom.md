@@ -40,6 +40,7 @@ If the optional callback is provided, it will be executed after the component is
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
 > [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
 
+* * *
 
 ### `unmountComponentAtNode()`
 
@@ -49,8 +50,9 @@ ReactDOM.unmountComponentAtNode(container)
 
 Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
 
+* * *
 
-### `findDOMNode(component)`
+### `findDOMNode()`
 
 ```javascript
 ReactDOM.findDOMNode(component)

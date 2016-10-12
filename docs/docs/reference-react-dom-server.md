@@ -23,6 +23,8 @@ Render a React element to its initial HTML. This should only be used on the serv
 
 If you call [`ReactDOM.render()`](/react/docs/reference-react-dom.html#render) on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
 
+* * *
+
 ### `renderToStaticMarkup()`
 
 ```javascript

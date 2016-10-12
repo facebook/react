@@ -22,7 +22,7 @@ class Greeting extends React.Component {
 }
 ```
 
-If you don't use ES6 yet, you may use the `React.createClass` helper instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
+If you don't use ES6 yet, you may use the [`React.createClass`](/react/docs/react-api.html#createclass) helper instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
 
 ### The Component Lifecycle
 
@@ -32,7 +32,7 @@ Each component has several "lifecycle methods" that you can override to run code
 
 These methods are called when an instance of a component is being created and inserted into the DOM:
 
-- [`constructor(props)`](#constructor)
+- [`constructor()`](#constructor)
 - [`componentWillMount()`](#componentwillmount)
 - [`render()`](#render)
 - [`componentDidMount()`](#componentdidmount)
@@ -41,11 +41,11 @@ These methods are called when an instance of a component is being created and in
 
 An update can be caused by changes to props or state. These methods are called when a component is being re-rendered:
 
-- [`componentWillReceiveProps(nextProps)`](#componentwillreceivepropsnextprops)
-- [`shouldComponentUpdate(nextProps, nextState)`](#shouldcomponentupdatenextprops-nextstate)
-- [`componentWillUpdate(nextProps, nextState)`](#componentwillupdatenextprops-nextstate)
+- [`componentWillReceiveProps()`](#componentwillreceiveprops)
+- [`shouldComponentUpdate()`](#shouldcomponentupdate)
+- [`componentWillUpdate()`](#componentwillupdate)
 - [`render()`](#render)
-- [`componentDidUpdate(prevProps, prevState)`](#componentdidupdateprevprops-prevstate) is invoked after an update and can be used to operate on the DOM after the component has been updated or to fetch new data in response to prop changes.
+- [`componentDidUpdate()`](#componentdidupdate)
 
 #### Unmounting
 
@@ -59,15 +59,19 @@ Each component also provides some other APIs:
 
   - [`defaultProps`](#defaultprops)
   - [`displayName`](#displayName)
-  - [`forceUpdate(callback)`](#forceupdatecallback)
+  - [`forceUpdate()`](#forceupdate)
   - [`props`](#props)
   - [`propTypes`](#proptypes)
-  - [`setState(nextState, callback)`](#setstatenextstate-callback)
+  - [`setState()`](#setstate)
   - [`state`](#state)
 
 ## Reference
 
 ### `render()`
+
+```javascript
+render()
+```
 
 The `render()` method is required.
 
@@ -79,9 +83,15 @@ The `render()` function should be pure, meaning that it does not modify componen
 
 > Note
 >
-> `render()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdatenextprops-nextstate) returns false.
+> `render()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdate) returns false.
 
-### `constructor(props)`
+* * *
+
+### `constructor()`
+
+```javascript
+constructor(props)
+```
 
 The constructor for a React component is called before it is mounted. When implementing the constructor for a `React.Component` subclass, you should call `super(props)` before any other statement. Otherwise, `this.props` will be undefined in the constructor, which can lead to bugs.
 
@@ -100,19 +110,37 @@ constructor(props) {
 
 Beware of this pattern, as it effectively "forks" the props and can lead to bugs. Instead of syncing props to state, you often want to [lift the state up](/react/docs/lifting-state-up.html).
 
-If you "fork" props by using them for state, you might also want to implement [`componentWillReceiveProps(nextProps)`](#componentwillreceivepropsnextprops) to keep the state up-to-date with them. But lifting state up is often easier and less bug-prone.
+If you "fork" props by using them for state, you might also want to implement [`componentWillReceiveProps(nextProps)`](#componentwillreceiveprops) to keep the state up-to-date with them. But lifting state up is often easier and less bug-prone.
+
+* * *
 
 ### `componentWillMount()`
+
+```javascript
+componentWillMount()
+```
 
 `componentWillMount()` is invoked immediately before mounting occurs. It is called before `render()`, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.
 
 This is the only lifecycle hook called on server rendering. Generally, we recommend using the `constructor()` instead.
 
+* * *
+
 ### `componentDidMount()`
+
+```javascript
+componentDidMount()
+```
 
 `componentDidMount()` is invoked immediately after a component is mounted. Initialization that requires DOM nodes should go here. If you need to load data from a remote endpoint, this is a good place to instantiate the network request. Setting state in this method will trigger a re-rendering.
 
-### `componentWillReceiveProps(nextProps)`
+* * *
+
+### `componentWillReceiveProps()`
+
+```javascript
+componentWillReceiveProps(nextProps)
+```
 
 `componentWillReceiveProps()` is invoked before a mounted component receives new props. If you need to update the state in response to prop changes (for example, to reset it), you may compare `this.props` and `nextProps` and perform state transitions using `this.setState()` in this method.
 
@@ -120,7 +148,13 @@ Note that React may call this method even if the props have not changed, so make
 
 `componentWillReceiveProps()` is not invoked if you just call `this.setState()`
 
-### `shouldComponentUpdate(nextProps, nextState)`
+* * *
+
+### `shouldComponentUpdate()`
+
+```javascript
+shouldComponentUpdate(nextProps, nextState)
+```
 
 Use `shouldComponentUpdate()` to let React know if a component's output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.
 
@@ -132,7 +166,13 @@ Currently, if `shouldComponentUpdate()` returns `false`, then `componentWillUpda
 
 If you determine a specific component is slow after profiling, you may change it to inherit from `React.PureComponent` which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
 
-### `componentWillUpdate(nextProps, nextState)`
+* * *
+
+### `componentWillUpdate()`
+
+```javascript
+componentWillUpdate(nextProps, nextState)
+```
 
 `componentWillUpdate()` is invoked immediately before rendering when new props or state are being received. Use this as an opportunity to perform preparation before an update occurs. This method is not called for the initial render.
 
@@ -140,9 +180,15 @@ Note that you cannot call `this.setState()` here. If you need to update state in
 
 > Note
 >
-> `componentWillUpdate()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdatenextprops-nextstate) returns false.
+> `componentWillUpdate()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdate) returns false.
 
-### `componentDidUpdate(prevProps, prevState)`
+* * *
+
+### `componentDidUpdate()`
+
+```javascript
+componentDidUpdate(prevProps, prevState)
+```
 
 `componentDidUpdate()` is invoked immediately after updating occurs. This method is not called for the initial render.
 
@@ -150,11 +196,19 @@ Use this as an opportunity to operate on the DOM when the component has been upd
 
 > Note
 >
-> `componentDidUpdate()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdatenextprops-nextstate) returns false.
+> `componentDidUpdate()` will not be invoked if [`shouldComponentUpdate()`](#shouldcomponentupdate) returns false.
+
+* * *
 
 ### `componentWillUnmount()`
 
+```javascript
+componentWillUnmount()
+```
+
 `componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in `componentDidMount`
+
+* * *
 
 ### `defaultProps`
 
@@ -186,11 +240,19 @@ If `props.color` is set to null, it will remain null:
   }
 ```
 
+* * *
+
 ### `displayName`
 
 The `displayName` string is used in debugging messages. JSX sets this value automatically; see [JSX in Depth](/react/docs/jsx-in-depth.html).
 
-### `forceUpdate(callback)`
+* * *
+
+### `forceUpdate()`
+
+```javascript
+component.forceUpdate(callback)
+```
 
 By default, when your component's state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`.
 
@@ -198,11 +260,15 @@ Calling `forceUpdate()` will cause `render()` to be called on the component, ski
 
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`.
 
+* * *
+
 ### `props`
 
 `this.props` contains the props that were defined by the caller of this component. See [Components and Props](/react/docs/components-and-props.html) for an introduction to props.
 
 In particular, `this.props.children` is a special prop, typically defined by the child tags in the JSX expression rather than in the tag itself.
+
+* * *
 
 ### `propTypes`
 
@@ -222,7 +288,13 @@ CustomButton.propTypes = {
 
 We recommend using [Flow](https://flowtype.org/) when possible, to get compile-time typechecking instead of runtime typechecking. [Flow has built-in support for React](https://flowtype.org/docs/react.html) so it's easy to run static analysis on a React app.
 
-### `setState(nextState, callback)`
+* * *
+
+### `setState()`
+
+```javascript
+setState(nextState, callback)
+```
 
 Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
 
@@ -249,6 +321,8 @@ The second parameter is an optional callback function that will be executed once
 There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
 
 `setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
+
+* * *
 
 ### `state`
 
