@@ -24,11 +24,6 @@
   items:
   - id: forms
     title: Forms
-  - id: working-with-the-browser
-    title: Working With the Browser
-    subitems:
-    - id: more-about-refs
-      title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
     subitems:
