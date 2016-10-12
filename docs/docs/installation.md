@@ -50,7 +50,7 @@ ReactDOM.render(
 );
 ```
 
-This code renders into an HTML element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file. When you use React in this way, you should be transpiling your JavaScript using Babel with the `es2015` and `react` presets.
+This code renders into an HTML element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file. When you use React in this way, you should be transpiling your JavaScript using Babel with the `es2015` and `react` presets. To use React in production mode, set the environment variable `NODE_ENV` to `"production"`.
 
 If you use Bower, React is available via the `react` package.
 
@@ -68,3 +68,10 @@ If you don't want to use npm to manage client packages, the `react` and `react-d
 ```
 
 To load a specific version of `react` and `react-dom`, replace `15` with the version number.
+
+Minified production versions of React are available at:
+
+```html
+<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+```
