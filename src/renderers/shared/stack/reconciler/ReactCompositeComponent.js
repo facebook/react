@@ -41,12 +41,12 @@ StatelessComponent.prototype.render = function() {
   return element;
 };
 
-function getTypeof(element) {
+function getElementTypeForWarning(element) {
   if (element === null) {
     return 'null';
   }
   if (Array.isArray(element)) {
-    return 'array';
+    return 'an array';
   }
   return typeof element;
 }
@@ -58,7 +58,7 @@ function warnIfInvalidElement(Component, element) {
       '%s(...): A valid React element (or null) must be returned, ' +
       'but you returned %s.',
       Component.displayName || Component.name || 'Component',
-      getTypeof(element)
+      getElementTypeForWarning(element)
     );
     warning(
       !Component.childContextTypes,
@@ -227,7 +227,7 @@ var ReactCompositeComponent = {
         '%s(...): A valid React element (or null) must be returned, ' +
         'but you returned %s.',
         Component.displayName || Component.name || 'Component',
-        getTypeof(renderedElement)
+        getElementTypeForWarning(renderedElement)
       );
       inst = new StatelessComponent(Component);
       this._compositeType = ReactCompositeComponentTypes.StatelessFunctional;
@@ -1296,7 +1296,7 @@ var ReactCompositeComponent = {
       '%s.render(): A valid React element (or null) must be returned, ' +
       'but you returned %s.',
       this.getName() || 'ReactCompositeComponent',
-      getTypeof(renderedElement)
+      getElementTypeForWarning(renderedElement)
     );
 
     return renderedElement;
