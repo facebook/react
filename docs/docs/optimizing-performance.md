@@ -8,11 +8,29 @@ Internally, React uses several clever techniques to minimize the number of costl
 
 ## Use The Production Build
 
-If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the [minified production build](/react/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build:
 
-## Avoid Reconciling the DOM
+* For Create React App, you need to run `npm run build` and follow the instructions.
+* For single-file builds, we offer production-ready `.min.js` versions.
+* For Browserify, you need to run it with `NODE_ENV=production`.
+* For Webpack, you need to add this to plugins in your production config:
 
-React makes use of a "virtual DOM", which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component's props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. When they are not equal, React will update the DOM, which can be a slow operation.
+```js
+new webpack.DefinePlugin({
+  'process.env': {
+    NODE_ENV: JSON.stringify('production')
+  }
+}),
+new webpack.optimize.UglifyJsPlugin()
+```
+
+The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+
+## Avoid Reconciliation
+
+React builds and maintains an internal representation of the rendered UI. It includes the React elements you return from your components. This representation lets React avoid creating DOM nodes and accessing existing ones beyond necessity, as that can be slower than operations on JavaScript objects. Sometimes it is referred to as "virtual DOM", but it works the same way on React Native.
+
+When a component's props or state change, React decides whether an actual DOM update is necessary by comparing the newly returned element with the previously rendered one. When they are not equal, React will update the DOM.
 
 In some cases, your component can speed all of this up by overriding the lifecycle function `shouldComponentUpdate`, which is triggered before the re-rendering process starts. The default implementation of this function returns `true`, leaving React to perform the update:
 
@@ -22,23 +40,63 @@ shouldComponentUpdate(nextProps, nextState) {
 }
 ```
 
-If you know that in some situations your component doesn't need to update, you can return `false` from `shouldComponentUpdate` instead, to skip the slow DOM update. For example, if the only way your component ever changes is when the `state.count` variable changes, you could write:
+If you know that in some situations your component doesn't need to update, you can return `false` from `shouldComponentUpdate` instead, to skip the whole rendering process, including calling `render()` on this component and below. For example, if the only way your component ever changes is when the `props.color` or the `state.count` variable changes, you could have `shouldComponentUpdate` check that:
 
 ```javascript
-shouldComponentUpdate(nextProps, nextState) {
-  return this.state.count !== nextState.count;
+class CounterButton extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: 1};
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.props.color !== nextProps.color) {
+      return true;
+    }
+    if (this.state.count !== nextState.count) {
+      return true;
+    }
+    return false;
+  }
+
+  render() {
+    <button
+      color={this.props.color}
+      onClick={() => this.setState(state => {count: state.count + 1})}>
+      Count: {this.state.count}
+    </button>
+  }
 }
 ```
 
-Keep in mind that React will invoke this function pretty often, so the implementation has to be fast.
+In this code, `shouldComponentUpdate` is just doing a shallow comparison between the old props and state, and the new props and state. If there is no difference, the component doesn't update. This pattern is common enough that React provides a helper to use this logic - just inherit from `React.PureComponent`. This code is a simpler way to achieve the same thing:
+
+```js
+class CounterButton extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {count: 1};
+  }
+
+  render() {
+    <button
+      color={this.props.color}
+      onClick={() => this.setState(state => {count: state.count + 1})}>
+      Count: {this.state.count}
+    </button>
+  }
+}
+```
+
+Most of the time, you can use `React.PureComponent` instead of writing your own `shouldComponentUpdate`. It only does a shallow comparison, so you can't use it when the rendering function uses deep properties of the props or state. For example, if your render function refers to `this.props.foo.bar` or `this.state.qux.quux`, you should not use `React.PureComponent`.
 
 ## shouldComponentUpdate In Action
 
-Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the virtual DOMs were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
+Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the rendered DOM elements were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
 
 <figure><img src="/react/img/docs/should-component-update.png" /></figure>
 
-Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not generate a new virtual DOM for C2, and React didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
+Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not attempt to render C2, and thus didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
 
 For C1 and C3, `shouldComponentUpdate` returned `true`, so React had to go down to the leaves and check them. For C6 `shouldComponentUpdate` returned `true`, and since the virtual DOMs weren't equivalent React had to reconcile the DOM.
 
