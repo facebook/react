@@ -143,7 +143,7 @@ The `react-dom` package provides DOM-specific methods that can be used at the to
 ### ReactDOM.render
 
 ```javascript
-render(
+void render(
   ReactElement element,
   DOMElement container,
   [function callback]
