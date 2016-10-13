@@ -343,7 +343,14 @@ var ReactCompositeComponent = {
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context,
+        false /* skipLifecyle */
+      );
     }
 
     if (inst.componentDidMount) {
@@ -434,7 +441,14 @@ var ReactCompositeComponent = {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context,
+        false /* skipLifecyle */
+      );
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
@@ -448,12 +462,27 @@ var ReactCompositeComponent = {
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context,
+        // We have already called componentWillMount() before retrying:
+        true /* skipLifecyle */
+      );
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
+  performInitialMount: function(
+    renderedElement,
+    hostParent,
+    hostContainerInfo,
+    transaction,
+    context,
+    skipLifecyle
+  ) {
     var inst = this._instance;
 
     var debugID = 0;
@@ -461,20 +490,22 @@ var ReactCompositeComponent = {
       debugID = this._debugID;
     }
 
-    if (inst.componentWillMount) {
-      if (__DEV__) {
-        measureLifeCyclePerf(
-          () => inst.componentWillMount(),
-          debugID,
-          'componentWillMount'
-        );
-      } else {
-        inst.componentWillMount();
-      }
-      // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingStateQueue` without triggering a re-render.
-      if (this._pendingStateQueue) {
-        inst.state = this._processPendingState(inst.props, inst.context);
+    if (!skipLifecyle) {
+      if (inst.componentWillMount) {
+        if (__DEV__) {
+          measureLifeCyclePerf(
+            () => inst.componentWillMount(),
+            debugID,
+            'componentWillMount'
+          );
+        } else {
+          inst.componentWillMount();
+        }
+        // When mounting, calls to `setState` by `componentWillMount` will set
+        // `this._pendingStateQueue` without triggering a re-render.
+        if (this._pendingStateQueue) {
+          inst.state = this._processPendingState(inst.props, inst.context);
+        }
       }
     }
 

@@ -84,8 +84,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
-      // FIXME: we should not be callling componentWillMount() twice
-      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -152,8 +150,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenConstructor constructor [!]',
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
-      // FIXME: we should not be callling componentWillMount() twice
-      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -221,8 +217,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillMount componentWillMount [!]',
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
-      // FIXME: we should not be callling componentWillMount() twice
-      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -392,8 +386,6 @@ describe('ReactErrorBoundaries', () => {
       // The first error boundary catches the error
       // However, it doesn't adjust its state so next render also fails
       'UncatchingErrorBoundary unstable_handleError',
-      // FIXME: we should not be callling componentWillMount() twice
-      'UncatchingErrorBoundary componentWillMount',
       'UncatchingErrorBoundary render',
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
@@ -403,8 +395,6 @@ describe('ReactErrorBoundaries', () => {
       // Clean up the broken tree
       'UncatchingErrorBoundary componentWillUnmount',
       // Render the error
-      // FIXME: we should not be callling componentWillMount() twice
-      'ParentErrorBoundary componentWillMount',
       'ParentErrorBoundary render error',
       'ParentErrorBoundary componentDidMount',
     ]);
