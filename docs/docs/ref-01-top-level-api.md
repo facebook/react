@@ -28,6 +28,8 @@ ReactClass createClass(object specification)
 
 Create a component class, given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
 
+A React component name must start with an upper-case character. For more information see [HTML Tags vs. React Components](/react/docs/jsx-in-depth.html#html-tags-vs.-react-components).
+
 For more information about the specification object, see [Component Specs and Lifecycle](/react/docs/component-specs.html).
 
 
