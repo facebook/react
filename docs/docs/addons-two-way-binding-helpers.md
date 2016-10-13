@@ -1,16 +1,16 @@
 ---
 id: two-way-binding-helpers
 title: Two-Way Binding Helpers
-permalink: docs-old/two-way-binding-helpers.html
-prev: animation.html
-next: test-utils.html
+layout: docs
+category: Add-Ons
+permalink: docs/two-way-binding-helpers.html
 ---
 
-`ReactLink` is an easy way to express two-way binding with React.
-
-> Note:
+> Note: ReactLink is deprecated.
 >
-> ReactLink is deprecated as of React v15. The recommendation is to explicitly set the value and change handler, instead of using ReactLink.
+> The recommendation is to explicitly set the value and change handler, instead of using `ReactLink`.
+
+`ReactLink` is an easy way to express two-way binding with React.
 
 In React, data flows one way: from owner to child. This is because data only flows one direction in [the Von Neumann model of computing](https://en.wikipedia.org/wiki/Von_Neumann_architecture). You can think of it as "one-way data binding."
 

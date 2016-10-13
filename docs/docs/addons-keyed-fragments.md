@@ -1,9 +1,9 @@
 ---
 id: create-fragment
 title: Keyed Fragments
-permalink: docs-old/create-fragment.html
-prev: clone-with-props.html
-next: update.html
+layout: docs
+category: Add-Ons
+permalink: docs/create-fragment.html
 ---
 
 In most cases, you can use the `key` prop to specify keys on the elements you're returning from `render`. However, this breaks down in one situation: if you have two sets of children that you need to reorder, there's no way to put a key on each set without adding a wrapper element.
@@ -52,4 +52,4 @@ function Swapper(props) {
 
 The keys of the passed object (that is, `left` and `right`) are used as keys for the entire set of children, and the order of the object's keys is used to determine the order of the rendered children. With this change, the two sets of children will be properly reordered in the DOM without unmounting.
 
-The return value of `createFragment` should be treated as an opaque object; you can use the `React.Children` helpers to loop through a fragment but should not access it directly. Note also that we're relying on the JavaScript engine preserving object enumeration order here, which is not guaranteed by the spec but is implemented by all major browsers and VMs for objects with non-numeric keys.
+The return value of `createFragment` should be treated as an opaque object; you can use the [`React.Children`](/react/docs/react-api.html#react.children) helpers to loop through a fragment but should not access it directly. Note also that we're relying on the JavaScript engine preserving object enumeration order here, which is not guaranteed by the spec but is implemented by all major browsers and VMs for objects with non-numeric keys.

@@ -1,16 +1,16 @@
 ---
 id: update
 title: Immutability Helpers
-permalink: docs-old/update.html
-prev: create-fragment.html
-next: pure-render-mixin.html
+layout: docs
+category: Add-Ons
+permalink: docs/update.html
 ---
 
-React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it's easy to implement a fast `shouldComponentUpdate()` method to significantly speed up your app.
+React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it's easy to implement a fast [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate) method to significantly speed up your app.
 
 Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like [Clojure](http://clojure.org/). However, we've provided a simple immutability helper, `update()`, that makes dealing with this type of data much easier, *without* fundamentally changing how your data is represented. You can also take a look at Facebook's [Immutable-js](https://facebook.github.io/immutable-js/docs/) and the [Advanced Performance](/react/docs/advanced-performance.html) section for more detail on Immutable-js.
 
-## The main idea
+## The Main Idea
 
 If you mutate data like this:
 
@@ -94,7 +94,7 @@ var newObj = update(obj, {b: {$apply: function(x) {return x * 2;}}});
 var newObj2 = update(obj, {b: {$set: obj.b * 2}});
 ```
 
-### (Shallow) merge
+### (Shallow) Merge
 
 ```js
 var obj = {a: 5, b: 3};

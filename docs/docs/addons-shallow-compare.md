@@ -1,9 +1,9 @@
 ---
 id: shallow-compare
 title: Shallow Compare
-permalink: docs-old/shallow-compare.html
-prev: perf.html
-next: advanced-performance.html
+permalink: docs/shallow-compare.html
+layout: docs
+category: Reference
 ---
 
 `shallowCompare` is a helper function to achieve the same functionality as `PureRenderMixin` while using ES6 classes with React.
