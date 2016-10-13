@@ -55,6 +55,6 @@ _Mounted_ composite components also support the following method:
 
 ## Browser Support
 
-React supports most popular browsers, including Internet Explorer 9 and above.
+React supports most popular browsers, including Internet Explorer 9 and above. After [React v15.0](https://facebook.github.io/react/blog/2016/04/07/react-v15.html), we've decided [not to actively support Internet Explorer 8](https://facebook.github.io/react/blog/2016/01/12/discontinuing-ie8-support.html) with any new fixes, as it is running fine in its current form.
 
 (We don't support older browsers that don't support ES5 methods, but you may find that your apps do work in older browsers if polyfills such as [es5-shim and es5-sham](https://github.com/es-shims/es5-shim) are included in the page. You're on your own if you choose to take this path.)
