@@ -16,12 +16,30 @@
       title: State and Lifecycle
     - id: handling-events
       title: Handling Events
+    - id: lifting-state-up
+      title: Lifting State Up
+    - id: composition-vs-inheritance
+      title: Composition vs Inheritance
     - id: thinking-in-react
       title: Thinking In React
 - title: Advanced Guides
   items:
     - id: jsx-in-depth
       title: JSX In Depth
+    - id: typechecking-with-proptypes
+      title: Typechecking With PropTypes
+    - id: react-without-es6
+      title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
 - title: Reference
+  items:
+    - id: react-api
+      title: React
+      subitems:
+        - id: react-component
+          title: React.Component
+    - id: react-dom
+      title: ReactDOM
+    - id: react-dom-server
+      title: ReactDOMServer
