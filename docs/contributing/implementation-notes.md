@@ -623,10 +623,10 @@ Instead, we have to unmount the existing internal instance and mount the new one
     // Unmount the old child and mount a new child
     prevRenderedComponent.unmount();
     var nextRenderedComponent = instantiateComponent(nextRenderedElement);
-    var nextNode = renderedComponent.mount();
+    var nextNode = nextRenderedComponent.mount();
 
     // Replace the reference to the child
-    this.renderedComponent = renderedComponent;
+    this.renderedComponent = nextRenderedComponent;
 
     // Replace the old node with the new one
     // Note: this is renderer-specific code and
