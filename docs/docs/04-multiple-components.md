@@ -107,7 +107,7 @@ In most cases, this can be sidestepped by hiding elements instead of destroying 
 
 ### Dynamic Children
 
-The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a `key`:
+The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a non-numeric `key`:
 
 ```javascript
   render() {
