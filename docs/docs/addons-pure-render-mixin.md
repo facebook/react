@@ -1,6 +1,6 @@
 ---
 id: pure-render-mixin
-title: PureRenderMixin (Deprecated)
+title: PureRenderMixin (Legacy)
 layout: docs
 category: Add-Ons
 permalink: docs/pure-render-mixin.html
@@ -8,9 +8,9 @@ prev: clone-with-props.html
 next: two-way-binding-helpers.html
 ---
 
-> Note: PureRenderMixin is deprecated.
+> Note:
 >
-> The `PureRenderMixin` mixin predates `React.PureComponent`. This reference doc is provided for legacy purposes, and you should consider using [`React.PureComponent`](/react/docs/component-api.html#react.purecomponent) instead.
+> 'react-addons-pure-render-mixin' is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
 
 **Importing**
 

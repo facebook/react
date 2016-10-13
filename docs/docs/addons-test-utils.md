@@ -23,14 +23,21 @@ var ReactTestUtils = require('react-addons-test-utils') // ES5
 >
 > Airbnb has released a testing utility called Enzyme, which makes it easy to assert, manipulate, and traverse your React Components' output. If you're deciding on a unit testing utility to use together with Jest, or any other test runner, it's worth checking out: [http://airbnb.io/enzyme/](http://airbnb.io/enzyme/)
 
-### Simulating Events
+### Shallow Rendering
 
-`Simulate` is possibly the single most useful utility in `ReactTestUtils`. It allows you to simulate an event dispatch on a DOM node.
+Shallow rendering lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
 
- - [`Simulate`](#simulate)
+  - [`createRenderer()`](#createrenderer)
+  - [`render()`](#render)
+  - [`getRenderOutput()`](#getrenderoutput)
+
+Shallow testing currently has some limitations, namely not supporting refs.
+
+We also recommend checking out Enzyme's [Shallow Rendering API](http://airbnb.io/enzyme/docs/api/shallow.html).
 
 ### Other APIs
 
+ - [`Simulate`](#simulate)
  - [`renderIntoDocument()`](#renderintodocument)
  - [`mockComponent()`](#mockcomponent)
  - [`isElement()`](#iselement)
@@ -46,19 +53,60 @@ var ReactTestUtils = require('react-addons-test-utils') // ES5
  - [`scryRenderedComponentsWithType()`](#scryrenderedcomponentswithtype)
  - [`findRenderedComponentWithType()`](#findrenderedcomponentwithtype)
 
-### Shallow Rendering (Experimental)
-
-Shallow rendering is an experimental feature that lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
-
-  - [`createRenderer()`](#createrenderer)
-  - [`render()`](#render)
-  - [`getRenderOutput()`](#getrenderoutput)
-
-Shallow testing currently has some limitations, namely not supporting refs. We're releasing this feature early and would appreciate the React community's feedback on how it should evolve.
-
 * * *
 
 ## Reference
+
+### `createRenderer()`
+
+```javascript
+createRenderer()
+```
+
+Call this in your tests to create a shallow renderer. You can think of this as a "place" to render the component you're testing, where it can respond to events and update itself.
+
+* * *
+
+### `render()`
+
+```javascript
+shallowRenderer.render(
+  element
+)
+```
+
+Similar to [`ReactDOM.render`](/react/docs/react-dom.html#render).
+
+* * *
+
+### `getRenderOutput()`
+
+```javascript
+shallowRenderer.getRenderOutput()
+```
+
+After [`render()`](#render) has been called, returns shallowly rendered output. You can then begin to assert facts about the output. For example, if your component's render method returns:
+
+```javascript
+<div>
+  <span className="heading">Title</span>
+  <Subcomponent foo="bar" />
+</div>
+```
+
+Then you can assert:
+
+```javascript
+var renderer = ReactTestUtils.createRenderer();
+result = renderer.getRenderOutput();
+expect(result.type).toBe('div');
+expect(result.props.children).toEqual([
+  <span className="heading">Title</span>,
+  <Subcomponent foo="bar" />
+]);
+```
+
+* * *
 
 ### `Simulate`
 
@@ -268,56 +316,3 @@ findRenderedComponentWithType(
 ```
 
 Same as [`scryRenderedComponentsWithType()`](#scryrenderedcomponentswithtype) but expects there to be one result and returns that one result, or throws exception if there is any other number of matches besides one.
-
-* * *
-
-## Shallow Rendering (Experimental)
-
-### `createRenderer()`
-
-```javascript
-ReactShallowRenderer createRenderer()
-```
-
-Call this in your tests to create a shallow renderer. You can think of this as a "place" to render the component you're testing, where it can respond to events and update itself.
-
-* * *
-
-### `render()`
-
-```javascript
-shallowRenderer.render(
-  ReactElement element
-)
-```
-
-Similar to `ReactDOM.render`.
-
-* * *
-
-### `getRenderOutput()`
-
-```javascript
-ReactElement shallowRenderer.getRenderOutput()
-```
-
-After [`render()`](#render) has been called, returns shallowly rendered output. You can then begin to assert facts about the output. For example, if your component's render method returns:
-
-```javascript
-<div>
-  <span className="heading">Title</span>
-  <Subcomponent foo="bar" />
-</div>
-```
-
-Then you can assert:
-
-```javascript
-var renderer = ReactTestUtils.createRenderer();
-result = renderer.getRenderOutput();
-expect(result.type).toBe('div');
-expect(result.props.children).toEqual([
-  <span className="heading">Title</span>,
-  <Subcomponent foo="bar" />
-]);
-```

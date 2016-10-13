@@ -39,8 +39,6 @@
           title: Test Utilities
         - id: create-fragment
           title: Keyed Fragments
-        - id: update
-          title: Immutability Helpers
         - id: perf
           title: Performance Tools
         - id: shallow-compare
@@ -48,9 +46,11 @@
         - id: clone-with-props
           title: Cloning Elements
         - id: pure-render-mixin
-          title: Pure Render Components
+          title: PureRenderMixin
         - id: two-way-binding-helpers
           title: Two-way Binding Helpers
+        - id: update
+          title: Immutability Helpers
 - title: Reference
   items:
     - id: react-api

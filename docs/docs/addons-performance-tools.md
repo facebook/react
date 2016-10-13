@@ -4,7 +4,7 @@ title: Performance Tools
 permalink: docs/perf.html
 layout: docs
 category: Add-Ons
-prev: two-way-binding-helpers.html
+prev: create-fragment.html
 next: shallow-compare.html
 ---
 

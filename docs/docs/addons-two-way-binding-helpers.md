@@ -1,15 +1,16 @@
 ---
 id: two-way-binding-helpers
-title: ReactLink (Deprecated)
+title: Two-way Binding Helpers (Legacy)
 layout: docs
 category: Add-Ons
 permalink: docs/two-way-binding-helpers.html
 prev: pure-render-mixin.html
+next: update.html
 ---
 
-> Note: ReactLink is deprecated.
+> Note:
 >
-> The recommendation is to explicitly set the value and change handler, instead of using `ReactLink`.
+> 'react-addons-linked-state-mixin' is a legacy add-on. The recommendation is to explicitly set the value and change handler, instead of using `LinkedStateMixin`.
 
 **Importing**
 
