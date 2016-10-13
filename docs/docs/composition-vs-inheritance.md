@@ -83,7 +83,7 @@ React elements like `<Contacts />` and `<Chat />` are just objects, so you can p
 
 Sometimes we think about components as being "special cases" of other components. For example, we might say that a `WelcomeDialog` is a special case of `Dialog`.
 
-In React, this is also achieved by composition, where a more "specific" component renders a more "generic" one, and configures it with props:
+In React, this is also achieved by composition, where a more "specific" component renders a more "generic" one and configures it with props:
 
 ```js{5,8,16-18}
 function Dialog(props) {

@@ -128,7 +128,7 @@ function toFahrenheit(celsius) {
 }
 ```
 
-These two functions convert numbers. We will write another function that takes a string `value` and a converter function as arguments, and returns a string. We will use it to calculate the value of one input based on the other input.
+These two functions convert numbers. We will write another function that takes a string `value` and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.
 
 It returns an empty string on an invalid `value`, and it keeps the output rounded to the third decimal place:
 
@@ -175,7 +175,7 @@ class TemperatureInput extends React.Component {
 }
 ```
 
-If several components need access to the same state, it is a sign that the state should be lifted up to their closest common ancestor instead. In our case this is the `Calculator`. We will store the current `value` and `scale` in its state.
+If several components need access to the same state, it is a sign that the state should be lifted up to their closest common ancestor instead. In our case, this is the `Calculator`. We will store the current `value` and `scale` in its state.
 
 We could have stored the value of both inputs but it turns out to be unnecessary. It is enough to store the value of the most recently changed input, and the scale that it represents. We can then infer the value of the other input based on the current `value` and `scale` alone.
 
@@ -230,7 +230,7 @@ Now, no matter which input you edit, `this.state.value` and `this.state.scale` i
 
 There should be a single "source of truth" for any data that changes in a React application. Usually, the state is first added to the component that needs it for rendering. Then, if other components also need it, you can lift it up to their closest common ancestor. Instead of trying to sync the state between different components, you should rely on the [top-down data flow](/react/docs/state-and-lifecycle.html#the-data-flows-down).
 
-Lifting state involves writing more "boilerplate" code than two-way binding approaches, but as a benefit it takes less work to find and isolate bugs. Since any state "lives" in some component, and that component alone can change it, the surface area for bugs is greatly reduced. Additionally, you can implement any custom logic to reject or transform user input.
+Lifting state involves writing more "boilerplate" code than two-way binding approaches, but as a benefit, it takes less work to find and isolate bugs. Since any state "lives" in some component and that component alone can change it, the surface area for bugs is greatly reduced. Additionally, you can implement any custom logic to reject or transform user input.
 
 If something can be derived from either props or state, it probably shouldn't be in the state. For example, instead of storing both `celsiusValue` and `fahrenheitValue`, we store just the last edited `value` and its `scale`. The value of the other input can always be calculated from them in the `render()` method. This lets us clear or apply rounding to the other field without losing any precision in the user input.
 
