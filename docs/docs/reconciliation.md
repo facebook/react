@@ -8,29 +8,29 @@ React provides a declarative API so that you don't have to worry about exactly w
 
 ## Motivation
 
-Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The [state of the art algorithms](http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf) have a complexity in the order of O(n<sup>3</sup>) where n is the number of nodes in the tree.
+Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The [state of the art algorithms](http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf) have a complexity in the order of O(n<sup>3</sup>) where n is the number of elements in the tree.
 
-This means that displaying 1000 nodes would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instructions per second. So even with the most performant implementation, we wouldn't be able to compute that diff in less than a second.
+This means that displaying 1000 elements would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instructions per second. So even with the most performant implementation, we wouldn't be able to compute that diff in less than a second.
 
 Since an optimal algorithm is not tractable, we implement a non-optimal O(n) algorithm using heuristics based on two assumptions:
 
-1. Two components of the same class will generate similar trees and two components of different classes will generate different trees.
+1. Two components of the same type will generate similar trees and two components of different types will generate different trees.
 2. It is possible to provide a unique key for elements that is stable across different renders.
 
 In practice, these assumptions are valid for almost all practical use cases.
 
 ## Pair-wise diff
 
-In order to do a tree diff, we first need to be able to diff two nodes. There are three different cases being handled.
+In order to do a tree diff, we first need to be able to diff two elements. There are three different cases being handled.
 
-### Different Node Types
+### Different Element Types
 
-If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one.
+If the element type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one.
 
 ```xml
 renderA: <div />
 renderB: <span />
-=> [removeNode <div />], [insertNode <span />]
+=> [removeElement <div />], [insertElement <span />]
 ```
 
 The same logic is used for custom components. If they are not of the same type, React is not going to even try at matching what they render. It is just going to remove the first one from the DOM and insert the second one.
@@ -38,7 +38,7 @@ The same logic is used for custom components. If they are not of the same type, 
 ```xml
 renderA: <Header />
 renderB: <Content />
-=> [removeNode <Header />], [insertNode <Content />]
+=> [removeElement <Header />], [insertElement <Content />]
 ```
 
 Having this high level knowledge is a very important aspect of why React's diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.
@@ -47,9 +47,9 @@ It is very unlikely that a `<Header>` element is going to generate a DOM that is
 
 As a corollary, if there is a `<Header>` element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.
 
-### DOM Nodes
+### DOM Elements
 
-When comparing two DOM nodes, we look at the attributes of both and can decide which of them changed in linear time.
+When comparing two DOM elements, we look at the attributes of both and can decide which of them changed in linear time.
 
 ```xml
 renderA: <div id="before" />
@@ -84,18 +84,18 @@ For example, if you add an element at the end:
 ```xml
 renderA: <div><span>first</span></div>
 renderB: <div><span>first</span><span>second</span></div>
-=> [insertNode <span>second</span>]
+=> [insertElement <span>second</span>]
 ```
 
-Inserting an element at the beginning is problematic. React is going to see that both nodes are spans and therefore run into a mutation mode.
+Inserting an element at the beginning is problematic. React is going to see that both elements are spans and therefore run into a mutation mode.
 
 ```xml
 renderA: <div><span>first</span></div>
 renderB: <div><span>second</span><span>first</span></div>
-=> [replaceAttribute textContent 'second'], [insertNode <span>first</span>]
+=> [replaceAttribute textContent 'second'], [insertElement <span>first</span>]
 ```
 
-There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when a node has moved into another position and algorithms to do that have much worse complexity.
+There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when an element has moved into another position and algorithms to do that have much worse complexity.
 
 ### Keys
 
@@ -104,7 +104,7 @@ In order to solve this issue, React supports an optional `key` attribute. You ca
 ```xml
 renderA: <div><span key="first">first</span></div>
 renderB: <div><span key="second">second</span><span key="first">first</span></div>
-=> [insertNode <span>second</span>]
+=> [insertElement <span>second</span>]
 ```
 
 In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. Remember that the key only has to be unique among its siblings, not globally unique.
@@ -119,4 +119,4 @@ Because React relies on heuristics, if the assumptions behind them are not met, 
 
 1. The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
-2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many nodes to be unnecessarily re-created, which can cause performance degradation and lost state in child components.
+2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many elements to be unnecessarily re-created, which can cause performance degradation and lost state in child components.
