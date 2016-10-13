@@ -160,6 +160,10 @@ ReactDOM.render(
 
 The `defaultProps` will be used to ensure that `this.props.name` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
+> NOTE
+>
+> `this.props` is not available inside `getDefaultProps` because it gets called before there even is a `this`.
+
 ## Transferring Props: A Shortcut
 
 A common type of React component is one that extends a basic HTML element in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element. To save typing, you can use the JSX _spread_ syntax to achieve this:
