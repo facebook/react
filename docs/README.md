@@ -26,7 +26,7 @@ $ npm install
 
 ### Instructions
 
-The site requires React, so first make sure you've built the project (via `grunt`).
+The site requires React, so first make sure you've built the project (via [`grunt`](http://gruntjs.com/getting-started)).
 
 Use Jekyll to serve the website locally (by default, at `http://localhost:4000`):
 
