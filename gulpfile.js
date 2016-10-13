@@ -16,6 +16,7 @@ var del = require('del');
 var merge = require('merge-stream');
 
 var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
+var stripProvidesModule = require('fbjs-scripts/gulp/strip-provides-module');
 var extractErrors = require('./scripts/error-codes/gulp-extract-errors');
 var devExpressionWithCodes = require('./scripts/error-codes/dev-expression-with-codes');
 
@@ -201,23 +202,27 @@ gulp.task('react:modules', function() {
     gulp
       .src(paths.react.src)
       .pipe(babel(babelOptsReact))
+      .pipe(stripProvidesModule())
       .pipe(flatten())
       .pipe(gulp.dest(paths.react.lib)),
 
     gulp
       .src(paths.reactDOM.src)
       .pipe(babel(babelOptsReactDOM))
+      .pipe(stripProvidesModule())
       .pipe(flatten())
       .pipe(gulp.dest(paths.reactDOM.lib)),
 
     gulp
       .src(paths.reactNative.src)
       .pipe(babel(babelOptsReactNative))
+      .pipe(stripProvidesModule())
       .pipe(flatten())
       .pipe(gulp.dest(paths.reactNative.lib)),
 
     gulp
       .src(paths.reactTestRenderer.src)
+      .pipe(stripProvidesModule())
       .pipe(babel(babelOptsReactTestRenderer))
       .pipe(flatten())
       .pipe(gulp.dest(paths.reactTestRenderer.lib))
