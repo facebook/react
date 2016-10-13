@@ -10,6 +10,8 @@
       title: Rendering Elements
     - id: components-and-props
       title: Components and Props
+    - id: loops-conditional-rendering
+      title: Loops & Conditional Rendering
     - id: state-and-lifecycle
       title: State and Lifecycle
     - id: handling-events
