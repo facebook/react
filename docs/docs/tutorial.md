@@ -708,7 +708,7 @@ var CommentBox = React.createClass({
   },
   componentDidMount: function() {
     this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+    setInterval(this.loadCommentsFromServer.bind(this), this.props.pollInterval);
   },
   render: function() {
     return (
@@ -769,7 +769,7 @@ var CommentBox = React.createClass({
   },
   componentDidMount: function() {
     this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+    setInterval(this.loadCommentsFromServer.bind(this), this.props.pollInterval);
   },
   render: function() {
     return (
