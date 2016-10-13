@@ -36,4 +36,38 @@ ReactDOM.render(
 
 Notice the use of `bind(this, arg1, arg2, ...)`: we're simply passing more arguments to `handleClick`. This is not a new React concept; it's just JavaScript.
 
-For communication between two components that don't have a parent-child relationship, you can set up your own global event system. Subscribe to events in `componentDidMount()`, unsubscribe in `componentWillUnmount()`, and call `setState()` when you receive an event. [Flux](https://facebook.github.io/flux/) pattern is one of the possible ways to arrange this.
+For communication between two components that don't have a parent-child relationship, you can set up your own global event system (Note this is not specific to React but just using vanilla JavaScript). Subscribe to events in `componentDidMount()`, unsubscribe in `componentWillUnmount()`, and call `setState()` when you receive an event. [Flux](https://facebook.github.io/flux/) pattern is one of the possible ways to arrange this.
+
+Here goes a sample global event system:
+
+```js
+var CustomEvents = (function() {
+  var _map = {};
+
+  return {
+    subscribe: function(name, cb) {
+      _map[name] || (_map[name] = []);
+      _map[name].push(cb);
+    },
+
+    notify: function(name, data) {
+      if (!_map[name]) {
+        return;
+      }
+
+      // if you want canceling or anything else, add it in to this cb loop
+      _map[name].forEach(function(cb) {
+        cb(data);
+      });
+    }
+  }
+})();
+
+// in <MyComponent>
+CustomEvents.subscribe('foo', function(data) {
+  console.log('foo', data);
+});
+
+// in <SomeOtherComponent>
+CustomEvents.notify('foo', {bar: 7});
+```
