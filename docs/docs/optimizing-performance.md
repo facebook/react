@@ -90,6 +90,8 @@ class CounterButton extends React.PureComponent {
 
 Most of the time, you can use `React.PureComponent` instead of writing your own `shouldComponentUpdate`. It only does a shallow comparison, so you can't use it when the rendering function uses deep properties of the props or state. For example, if your render function refers to `this.props.foo.bar` or `this.state.qux.quux`, you should not use `React.PureComponent`.
 
+If you create functions or child components in your `render` function, `PureComponent` will never short-circuit rendering, since those functions or child components will always be different. You can often avoid this by creating these once during component creation rather than on every render.
+
 ## shouldComponentUpdate In Action
 
 Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the rendered DOM elements were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
