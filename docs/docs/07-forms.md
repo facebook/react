@@ -61,7 +61,7 @@ class MyForm extends React.Component {
       <input
         type="text"
         value={this.state.value}
-        onChange={this.handleChange}
+        onChange={(e) => this.handleChange(e)}
       />
     );
   }
