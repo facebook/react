@@ -98,29 +98,44 @@ Here's a subtree of components. For each one, `SCU` indicates what `shouldCompon
 
 Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not attempt to render C2, and thus didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
 
-For C1 and C3, `shouldComponentUpdate` returned `true`, so React had to go down to the leaves and check them. For C6 `shouldComponentUpdate` returned `true`, and since the virtual DOMs weren't equivalent React had to reconcile the DOM.
+For C1 and C3, `shouldComponentUpdate` returned `true`, so React had to go down to the leaves and check them. For C6 `shouldComponentUpdate` returned `true`, and since the rendered DOM elements weren't equivalent React had to update the DOM.
 
-The last interesting case is C8. For this node, React had to compute the virtual DOM, but since it was equal to the old one, it didn't have to reconcile its DOM.
+The last interesting case is C8. React had to render this component, but since the DOM elements it returned were equal to the previously rendered ones, it didn't have to update the DOM.
 
-Note that React only had to do DOM mutations for C6, which was inevitable. For C8, it bailed out by comparing the virtual DOMs, and for C2's subtree and C7, it didn't even have to compute the virtual DOM as we bailed out on `shouldComponentUpdate`.
+Note that React only had to do DOM mutations for C6, which was inevitable. For C8, it bailed out by comparing the rendered DOM elements, and for C2's subtree and C7, it didn't even have to compare the elements as we bailed out on `shouldComponentUpdate`, and `render` was not called.
 
-## shouldComponentUpdate Examples
+## Tricky Examples
 
-Let's say that you have a component that just renders a string value. We could implement `shouldComponentUpdate` as follows:
+Let's say that you have a component that just renders the string passed in `props.value`. We could implement this with `React.PureComponent`:
 
 ```javascript
-class StringComponent extends React.Component {
+class StringComponent extends React.PureComponent {
   render() {
     return <div>{this.props.value}</div>;
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    return this.props.value !== nextProps.value;
   }
 }
 ```
 
-If your components use more complex data structures, this might not be so simple. For example, let's say your component renders a comma-separated list of words:
+If your components use more complex data structures, this might not be so simple. For example, let's say your component renders a comma-separated list of words. This code does *not* work correctly:
+
+```javascript
+class ListOfWords extends React.PureComponent {
+  render() {
+    return <div>{this.props.words.join(',')}</div>;
+  }
+}
+```
+
+The problem is that `PureComponent` will do a shallow comparison between the old and new values of `this.props.words`. If your application has a sequence of events like:
+
+1. `let words = ['alpha', 'beta', 'gamma'];`
+2. Render `<ListOfWords words={words} />`
+3. `words.push('delta')`
+4. Re-render `<ListOfWords words={words} />`
+
+The `PureComponent` logic will actually prevent the rerender during step 4. This happens because the old and new values of `words` are the same list. `PureComponent` just does a shallow comparison, so it mistakenly thinks that nothing has changed in step 4.
+
+One way to solve this is by writing a more complicated `shouldComponentUpdate` function:
 
 ```javascript
 class ListOfWords extends React.Component {
@@ -129,7 +144,7 @@ class ListOfWords extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    // We have to do an expensive deep equality check
+    // We have to do a possibly-expensive deep equality check
     if (props.words.length !== nextProps.words.length) {
       return true;
     }
@@ -145,9 +160,42 @@ class ListOfWords extends React.Component {
 
 Since the `ListOfWords` component relies on data deep within the props, we have to to a deep comparison to implement `shouldComponentUpdate`. This may not improve performance at all. The fundamental problem is that we want to quickly check for equality of large data structures, without doing an expensive iteration to compare them.
 
-## The Power Of Immutable Data
+## The Power Of Not Mutating Data
 
-[Immutable.js](https://github.com/facebook/immutable-js) solves this problem. It provides immutable, persistent collections that work via structural sharing:
+If you never mutate data structures, you can use shallow comparisons and get the same result as a deep comparison. In this case, the code `words.push('delta')` is mutating the `words` array. Instead of using `push`, you can update without mutating by using `concat` or the ES6 spread operator:
+
+```js
+// The mutable way. This breaks React.PureComponent
+words.push('delta');
+
+// Update words without mutating. This works with React.PureComponent
+words = words.concat(['delta']);
+
+// Update words without mutating, with slightly nicer syntax
+words = [...words, 'delta'];
+```
+
+There is a JavaScript proposal to add the [object spread operator](http://redux.js.org/docs/recipes/UsingObjectSpreadOperator.html) to make it easier to update objects without mutation as well. If you're using Create React App, this syntax is available by default.
+
+```js
+let colormap = {
+  leftBorder: 'red',
+  rightBorder: 'blue',
+};
+
+// The mutable way. This breaks React.PureComponent
+colormap.rightBorder = 'green';
+
+// Update colormap without mutating. This works with React.PureComponent
+colormap = {
+  ...colormap,
+  rightBorder: 'green',
+};
+```
+
+## Using Immutable Data Structures
+
+[Immutable.js](https://github.com/facebook/immutable-js) is another way to solve this problem. It provides immutable, persistent collections that work via structural sharing:
 
 * *Immutable*: once created, a collection cannot be altered at another point in time.
 * *Persistent*: new collections can be created from a previous collection and a mutation such as set. The original collection is still valid after the new collection is created.
@@ -172,5 +220,7 @@ x === y; // false
 ```
 
 In this case, since a new reference is returned when mutating `x`, we can safely assume that `x` has changed.
+
+Two other libraries that can help use immutable data are [seamless-immutable](https://github.com/rtfeldman/seamless-immutable) and [immutability-helper](https://github.com/kolodny/immutability-helper).
 
 Immutable data structures provide you with a cheap way to track changes on objects, which is all we need to implement `shouldComponentUpdate`. This can often provide you with a nice performance boost.
