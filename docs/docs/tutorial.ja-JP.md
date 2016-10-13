@@ -545,7 +545,7 @@ React イベントハンドラのアタッチはコンポーネントにキャ�
 
 フォームを対話型にしましょう。ユーザーがフォームを送信すると、それをクリアする必要があります。サーバに要求を送信すると、コメントのリストを更新します。開始するとフォームの送信イベントでクリアするか試しましょう。
 
-```javascript{12-21,24}
+```javascript{12-21,24,38}
 // tutorial17.js
 var CommentForm = React.createClass({
   getInitialState: function() {
