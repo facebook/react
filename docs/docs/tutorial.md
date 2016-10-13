@@ -341,7 +341,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 ```javascript{3}
 // tutorial11.js
 ReactDOM.render(
-  <CommentBox url="/api/comments" />,
+  <CommentBox url="/api/comments.json" />,
   document.getElementById('content')
 );
 ```
