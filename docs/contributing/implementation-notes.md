@@ -404,7 +404,7 @@ The host internal instances need to store:
 * The DOM node.
 * All the child internal instances. Each of them can be either a `DOMComponent` or a `CompositeComponent`.
 
-If you're struggling to imagine what how an internal instance tree is structured in more complex applications, [React DevTools](https://github.com/facebook/react-devtools) can give you a close approximation, as it highlights host instances with grey, and composite instances with purple:
+If you're struggling to imagine how an internal instance tree is structured in more complex applications, [React DevTools](https://github.com/facebook/react-devtools) can give you a close approximation, as it highlights host instances with grey, and composite instances with purple:
 
  <img src="/react/img/docs/implementation-notes-tree.png" width="500" style="max-width: 100%" alt="React DevTools tree" />
 
