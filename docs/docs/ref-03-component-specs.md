@@ -127,6 +127,8 @@ void componentDidMount()
 
 Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, you can access any refs to your children (e.g., to access the underlying DOM representation). The `componentDidMount()` method of child components is invoked before that of parent components.
 
+This does not mean that the DOM representation is part of the actual DOM yet. The DOM representation is not added to the actual DOM until all render methods are complete, which allows React to batch DOM updates to reduce reflows and increase browser performance.
+
 If you want to integrate with other JavaScript frameworks, set timers using `setTimeout` or `setInterval`, or send AJAX requests, perform those operations in this method.
 
 
