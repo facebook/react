@@ -42,7 +42,7 @@ function WelcomeDialog() {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/ozqNOV?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/ozqNOV?editors=0010)
 
 Anything inside the `<FancyBorder>` JSX tag gets passed into the `FancyBorder` component as a `children` prop. Since `FancyBorder` renders `{props.children}` inside a `<div>`, the passed elements appear in the final output.
 
@@ -75,7 +75,7 @@ function App() {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/gwZOJp?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/gwZOJp?editors=0010)
 
 React elements like `<Contacts />` and `<Chat />` are just objects, so you can pass them as props like any other data.
 
@@ -108,7 +108,7 @@ function WelcomeDialog() {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/kkEaOZ?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/kkEaOZ?editors=0010)
 
 Composition works equally well for components defined as classes:
 
@@ -158,7 +158,7 @@ class SignUpDialog extends React.Component {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/gwZbYa?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/gwZbYa?editors=0010)
 
 ## So What About Inheritance?
 

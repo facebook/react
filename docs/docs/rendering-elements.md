@@ -42,7 +42,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/rrpgNB?editors=1010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/rrpgNB?editors=1010)
 
 It displays "Hello World" on the page.
 
@@ -71,7 +71,7 @@ function tick() {
 setInterval(tick, 1000);
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/gwoJZk?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/gwoJZk?editors=0010)
 
 It calls `ReactDOM.render()` every second from a [`setInterval()`](https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setInterval) callback.
 

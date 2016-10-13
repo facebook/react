@@ -28,7 +28,7 @@ function tick() {
 setInterval(tick, 1000);
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/gwoJZk?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/gwoJZk?editors=0010)
 
 In this section, we will learn how to make the `Clock` component truly reusable and encapsulated. It will set up its own timer and update itself every second.
 
@@ -54,7 +54,7 @@ function tick() {
 setInterval(tick, 1000);
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/dpdoYR?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/dpdoYR?editors=0010)
 
 However, it misses a crucial requirement: the fact that the `Clock` sets up a timer and updates the UI every second should be an implementation detail of the `Clock`.
 
@@ -100,7 +100,7 @@ class Clock extends React.Component {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/zKRGpo?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/zKRGpo?editors=0010)
 
 `Clock` is now defined as a class rather than a function.
 
@@ -192,7 +192,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/KgQpJd?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/KgQpJd?editors=0010)
 
 Next, we'll make the `Clock` set up its own timer and update itself every second.
 
@@ -303,7 +303,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/amqdNA?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/amqdNA?editors=0010)
 
 Now the clock ticks every second.
 
@@ -424,7 +424,7 @@ function FormattedDate(props) {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/zKRqNB?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/zKRqNB?editors=0010)
 
 This is commonly called a "top-down" or "unidirectional" data flow. Any state is always owned by some specific component, and any data or UI derived from that state can only affect components "below" them in the tree.
 
@@ -449,7 +449,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/vXdGmd?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/vXdGmd?editors=0010)
 
 Each `Clock` sets up its own timer and updates independently.
 
