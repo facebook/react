@@ -33,7 +33,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Hello React!</title>
