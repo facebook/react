@@ -11,11 +11,11 @@ next:
 
 ### A Basic List
 
-To render an array or collection of objects into a list use the ES6 `map()`.
+To render an array or collection of objects into a list using the ES5 `map()` function.
 
 ```javascript
 render() {
-  let persons = ['Ben', 'Chris', 'Dan', 'Paul', 'Tom'];
+  const persons = ['Ben', 'Chris', 'Dan', 'Paul', 'Tom'];
   return (
     <div>
       <ul>
@@ -29,7 +29,7 @@ render() {
   );
 }
 ```
-> Using a fat arrow function (`() => {}`) will automatically bind `this` to the function.
+> Using a arrow function (`() => {}`) will automatically bind `this` to the function.
 
 ### A Basic List Using Keyed Components
 
@@ -45,7 +45,7 @@ class Person extends Component {
 }
 class Persons extends Component {
   render() {
-    let persons = [
+    const persons = [
       {name: 'Ben', color: 'red'},
       {name: 'Chris', color: 'green'},
       {name: 'Dan', color: 'blue'},
@@ -79,17 +79,17 @@ Given the HTML below:
 
 ```html
 <ul>
-  <li>John</li> /* key: "John" */
-  <li>Fred</li> /* key: "Fred" */
+  <li>Ben</li> /* key: "Ben" */
+  <li>Chris</li> /* key: "Chris" */
 </ul>
 ```
 
-In the event that the element containing "Fred" needs to be removed, React will hide the element instead of removing the object entirely like so:
+In the event that the element containing "Chris" needs to be removed, React will hide the element instead of removing the object entirely like so:
 
 ```html
 <ul>
-  <li>John</li> /* key: "John" */
-  <li style={display: 'none'}>Fred</li> /* key: "Fred" */
+  <li>Ben</li> /* key: "Ben" */
+  <li style={display: 'none'}>Chris</li> /* key: "Chris" */
 </ul>
 ```
 
@@ -99,17 +99,17 @@ Given the html below:
 
 ```html
 <ul>
-  <li>John</li> /* key: "John" */
-  <li>Fred</li> /* key: "Fred" */
+  <li>Ben</li> /* key: "Ben" */
+  <li>Chris</li> /* key: "Chris" */
 </ul>
 ```
 
-In the event that the element "John" needs to be removed, React will swap the text and hide the second element like so:
+In the event that the element "Ben" needs to be removed, React will swap the text and hide the second element like so:
 
 ```html
 <ul>
-  <li>Fred</li> /* key: "Fred" */
-  <li style={display: 'none'}>Fred</li> /* key: removed */
+  <li>Chris</li> /* key: "Chris" */
+  <li style={display: 'none'}>Chris</li> /* key: removed */
 </ul>
 ```
 
@@ -150,7 +150,7 @@ LoginControl extends Component {
 
 In some cases, you will not want a component to render. To prevent components from rendering, return `null` or `false` from the `render()` function.
 
-In the example below, a `<WarningBanner />` component will not be rendered within a `<Header /> component.
+In the example below, a `<WarningBanner />` component will not be rendered within a `<Header />` component.
 
 ```javascript
 class WarningBanner extends Component {
@@ -192,7 +192,7 @@ class Person extends Component {
 }
 class Persons extends Component {
   render() {
-    let persons = [];
+    const persons = [];
     persons.push(<Person name="Ben" />)
     persons.push(<Person name="Chris" />)
     persons.push(<Person name="Dan" />)
