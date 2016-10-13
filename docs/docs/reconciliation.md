@@ -4,7 +4,7 @@ title: Reconciliation
 permalink: docs/reconciliation.html
 ---
 
-React's key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but it is also an interesting challenge to make it tractable. This article explains how React uses heuristics to turn an O(n<sup>3</sup>) problem into an O(n) problem.
+React provides a declarative API so that you don't have to worry about exactly what changes on every update. This makes writing applications a lot easier but it might not be obvious how this is implemented within React. This article explains the choices we made in React's "diffing" algorithm so that component updates are predictable while being fast enough for high-performance apps.
 
 ## Motivation
 
