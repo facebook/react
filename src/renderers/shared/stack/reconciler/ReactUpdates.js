@@ -241,7 +241,7 @@ function enqueueUpdate(component) {
 function asap(callback, context) {
   invariant(
     batchingStrategy.isBatchingUpdates,
-    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
+    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where ' +
     'updates are not being batched.'
   );
   asapCallbackQueue.enqueue(callback, context);
