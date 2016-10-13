@@ -36,7 +36,7 @@ React offre metodi del ciclo di vita che puoi specificare per inserirti in quest
 
 ### Montaggio
 
-* `getInitialState(): object` è invocato prima che un componente viene montato. Componenti dotati di stato dovrebbero implementare questo metodo e restituire lo stato iniziale.
+* `getInitialState()` è invocato prima che un componente viene montato. Componenti dotati di stato dovrebbero implementare questo metodo e restituire lo stato iniziale.
 * `componentWillMount()` è invocato immediatamente prima che si effettui il montaggio.
 * `componentDidMount()` è invocato immediatamente dopo che il montaggio è avvenuto. L'inizializzazione che richiede l'esistenza di nodi DOM dovrebbe avvenire in questo metodo.
 
