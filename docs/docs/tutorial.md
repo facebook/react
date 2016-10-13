@@ -693,6 +693,7 @@ var CommentBox = React.createClass({
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      contentType: 'application/json',
       type: 'POST',
       data: comment,
       success: function(data) {
@@ -733,6 +734,7 @@ var CommentBox = React.createClass({
     $.ajax({
       url: this.props.url,
       dataType: 'json',
+      contentType: 'application/json',
       cache: false,
       success: function(data) {
         this.setState({data: data});
