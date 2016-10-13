@@ -325,7 +325,7 @@ var CommentList = React.createClass({
     });
     return (
       <div className="commentList">
-        {commentNodes}
+        {this.commentNodes()}
       </div>
     );
   }
