@@ -6,18 +6,22 @@ permalink: docs/context.html
 
 With React, it's easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.
 
-In some cases, you want to pass data through the component tree without having to pass the props down manually at every level. There are several popular libraries that help you do this, like [Redux](https://github.com/reactjs/redux) and [MobX](https://github.com/mobxjs/mobx).
-You can also do this directly in React with the powerful "context" API.
+In some cases, you want to pass data through the component tree without having to pass the props down manually at every level.
+You can do this directly in React with the powerful "context" API.
 
-> Note:
->
-> Context is an advanced and experimental feature. If you are not an experienced React developer, you do not want to use context. If you are getting annoyed by passing props down manually through many levels of a tree, first try using [Redux](https://github.com/reactjs/redux) or [MobX](https://github.com/mobxjs/mobx).
->
-> **If you have to use context, use it sparingly.**
->
-> Regardless of whether you're building an application or a library, try to isolate your use of context to a small area and avoid using the context API directly when possible so that it's easier to upgrade when the API changes.
+## Why Not To Use Context
 
-## Passing Data Through A Tree
+The vast majority of applications do not need to use context.
+
+If you want your application to be stable, don't use context. It is an experimental API and it is likely to break in future releases of React.
+
+If you aren't familiar with state management libraries like [Redux](https://github.com/reactjs/redux) or [MobX](https://github.com/mobxjs/mobx), don't use context. For many practical applications, these libraries and their React bindings are a good choice for managing state that is relevant to many components. It is far more likely that Redux is the right solution to your problem, than that context is the right solution.
+
+If you aren't an experienced React developer, don't use context. There is usually a better way to implement functionality just using props and state.
+
+If you insist on using context despite these warnings, try to isolate your use of context to a small area and avoid using the context API directly when possible so that it's easier to upgrade when the API changes.
+
+## How To Use Context
 
 Suppose you have a structure like:
 
@@ -167,6 +171,10 @@ Button.contextTypes = {color: React.PropTypes.string};
 
 ## Updating Context
 
+Don't do it.
+
+React has an API to update context, but it is fundamentally broken and you should not use it.
+
 The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
 
 ```javascript
@@ -202,6 +210,4 @@ MediaQuery.childContextTypes = {
 };
 ```
 
-## Known Limitations
-
-If a context value provided by a component changes, descendants that use that value won't update if an intermediate parent returns `false` from `shouldComponentUpdate`. See issue [#2517](https://github.com/facebook/react/issues/2517) for more details.
+The problem is, if a context value provided by a component changes, descendants that use that value won't update if an intermediate parent returns `false` from `shouldComponentUpdate`. This is totally out of control of the components using context, so there's basically no way to reliably update context. [This blog post](https://medium.com/@mweststrate/how-to-safely-use-react-context-b7e343eff076) has a good explanation of why this is a problem and how you might get around it.
