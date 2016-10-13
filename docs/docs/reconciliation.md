@@ -69,7 +69,7 @@ After the attributes have been updated, we recurse on all the children.
 
 ### Custom Components
 
-We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
+The last case is comparing two custom components of the same type. Since components are stateful, we must keep the old instance around. React takes all the attributes from the new component and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
 
 The previous component is now operational. Its `render()` method is called and the diff algorithm restarts with the new result and the previous result.
 
