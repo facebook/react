@@ -25,4 +25,4 @@ React hinterfragt eine ganze Reihe konventioneller Standpunkte. Auf den ersten B
 
 ## Erfahre mehr
 
-Erfahre mehr über unsere Motivation zur Entwicklung von React in [diesem Blogeintrag](/react/blog/2013/06/05/why-react.html).
+Erfahre mehr über unsere Motivation zur Entwicklung von React in [diesem Blogeintrag](https://facebook.github.io/react/docs/why-react.html).
