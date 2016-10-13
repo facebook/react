@@ -195,6 +195,16 @@ If this component has been mounted into the DOM, this returns the corresponding 
 >
 > `findDOMNode()` cannot be used on stateless components.
 
+### ReactDOM.unstable_batchedUpdates
+
+```javascript
+unstable_batchedUpdates([function callback], a, b, c, d, e)
+```
+
+This **unstable** helper calls the provided function in a context within which calls to `setState` and friends are batched such that components aren't updated unnecessarily. If provided, the arguments `a`, `b`, `c`, `d` and `e` are passed to the callback.
+
+An example of where you might want to use this is in your dispatcher if you are using [Flux](https://facebook.github.io/flux/), to avoid extra rerenders after multiple Flux stores emit changes.
+
 ## ReactDOMServer
 
 The `react-dom/server` package allows you to render your components on the server.
