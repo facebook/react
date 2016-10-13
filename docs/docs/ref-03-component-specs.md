@@ -221,3 +221,7 @@ void componentWillUnmount()
 Invoked immediately before a component is unmounted from the DOM.
 
 Perform any necessary cleanup in this method, such as invalidating timers or cleaning up any DOM elements that were created in `componentDidMount`.
+
+> Note:
+>
+> You *cannot* use `this.setState()` in this method.
