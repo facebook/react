@@ -7,7 +7,7 @@ prev: children-undefined.html
 next: dangerously-set-inner-html.html
 ---
 
-You don't have to go full React. The component [lifecycle events](/react/docs/component-specs.html#lifecycle-methods), especially `componentDidMount` and `componentDidUpdate`, are good places to put your other libraries' logic.
+You don't have to go full React. The component [lifecycle events](https://facebook.github.io/react/docs/component-specs.html#lifecycle-methods), especially `componentDidMount` and `componentDidUpdate`, are good places to put your other libraries' logic.
 
 ```js
 var App = React.createClass({
@@ -36,4 +36,4 @@ var App = React.createClass({
 ReactDOM.render(<App />, mountNode);
 ```
 
-You can attach your own [event listeners](/react/tips/dom-event-listeners.html) and even [event streams](https://baconjs.github.io) this way.
+You can attach your own [event listeners](/blob/master/docs/tips/11-dom-event-listeners.md) and even [event streams](https://baconjs.github.io) this way.

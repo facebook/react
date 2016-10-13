@@ -9,7 +9,7 @@ next: initial-ajax.html
 
 > Note:
 >
-> This entry shows how to attach DOM events not provided by React ([check here for more info](/react/docs/events.html)). This is good for integrations with other libraries such as jQuery.
+> This entry shows how to attach DOM events not provided by React ([check here for more info](https://facebook.github.io/react/docs/events.html)). This is good for integrations with other libraries such as jQuery.
 
 Try to resize the window:
 
@@ -41,4 +41,4 @@ ReactDOM.render(<Box />, mountNode);
 
 `componentDidMount` is called after the component is mounted and has a DOM representation. This is often a place where you would attach generic DOM events.
 
-Notice that the event callback is bound to the react component and not the original element. React automatically binds methods to the current component instance for you through a process of [autobinding](/react/docs/interactivity-and-dynamic-uis.html#under-the-hood-autobinding-and-event-delegation).
+Notice that the event callback is bound to the react component and not the original element. React automatically binds methods to the current component instance for you through a process of [autobinding](https://facebook.github.io/react/docs/interactivity-and-dynamic-uis.html#under-the-hood-autobinding-and-event-delegation).

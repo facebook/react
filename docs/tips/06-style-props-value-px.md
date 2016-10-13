@@ -14,7 +14,7 @@ var divStyle = {height: 10}; // rendered as "height:10px"
 ReactDOM.render(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
-See [Inline Styles](/react/tips/inline-styles.html) for more info.
+See [Inline Styles](/react/blob/master/docs/tips/02-inline-styles.md) for more info.
 
 Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of properties that won't get the automatic "px" suffix:
 
