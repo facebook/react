@@ -52,9 +52,9 @@ As a corollary, if there is a `<Header>` element at the same position in two con
 When comparing two DOM elements, we look at the attributes of both and can decide which of them changed in linear time.
 
 ```xml
-renderA: <div id="before" />
-renderB: <div id="after" />
-=> [replaceAttribute id "after"]
+renderA: <div className="before" />
+renderB: <div className="after" />
+=> [replaceAttribute className "after"]
 ```
 
 Instead of treating style as an opaque string, a key-value object is used instead. This lets us update only the properties that changed.
