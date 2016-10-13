@@ -50,7 +50,7 @@ However, it's **not** an anti-pattern if you make it clear that the prop is only
 ```js
 var Counter = React.createClass({
   getInitialState: function() {
-    // naming it initialX clearly indicates that the only purpose
+    // naming it initialCount clearly indicates that the only purpose
     // of the passed down prop is to initialize something internally
     return {count: this.props.initialCount};
   },
