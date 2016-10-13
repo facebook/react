@@ -4,7 +4,18 @@ title: Keyed Fragments
 layout: docs
 category: Add-Ons
 permalink: docs/create-fragment.html
+prev: test-utils.html
+next: perf.html
 ---
+
+**Importing**
+
+```javascript
+import createFragment from 'react-addons-create-fragment' // ES6
+var createFragment = require('react-addons-create-fragment') // ES5
+```
+
+## Overview
 
 In most cases, you can use the `key` prop to specify keys on the elements you're returning from `render`. However, this breaks down in one situation: if you have two sets of children that you need to reorder, there's no way to put a key on each set without adding a wrapper element.
 

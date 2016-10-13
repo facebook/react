@@ -4,9 +4,16 @@ title: Test Utilities
 layout: docs
 category: Reference
 permalink: docs/test-utils.html
+prev: animation.html
+next: create-fragment.html
 ---
 
-`ReactTestUtils` is provided by the `'react-addons-test-utils'` package. If you use ES6 with npm, you can write `import ReactTestUtils from 'react-addons-test-utils'`. If you use ES5 with npm, you can write `var ReactTestUtils = require('react-addons-test-utils')`.
+**Importing**
+
+```javascript
+import ReactTestUtils from 'react-addons-test-utils' // ES6
+var ReactTestUtils = require('react-addons-test-utils') // ES5
+```
 
 ## Overview
 

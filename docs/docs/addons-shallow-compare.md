@@ -4,7 +4,18 @@ title: Shallow Compare
 permalink: docs/shallow-compare.html
 layout: docs
 category: Reference
+prev: perf.html
+next: clone-with-props.html
 ---
+
+**Importing**
+
+```javascript
+import shallowCompare from 'react-addons-shallow-compare' // ES6
+var shallowCompare = require('react-addons-shallow-compare') // ES5
+```
+
+## Overview
 
 `shallowCompare` is a helper function to achieve the same functionality as `PureRenderMixin` while using ES6 classes with React.
 
@@ -13,7 +24,6 @@ If your React component's render function is "pure" (in other words, it renders 
 Example:
 
 ```js
-var shallowCompare = require('react-addons-shallow-compare');
 export class SampleComponent extends React.Component {
   shouldComponentUpdate(nextProps, nextState) {
     return shallowCompare(this, nextProps, nextState);

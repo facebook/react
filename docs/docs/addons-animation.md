@@ -4,26 +4,24 @@ title: Animation Add-Ons
 layout: docs
 category: Add-Ons
 permalink: docs/animation.html
+prev: addons.html
+next: test-utils.html
 ---
 
 The [`ReactTransitionGroup`](#reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.
 
 ## High-level API: ReactCSSTransitionGroup
 
-`ReactCSSTransitionGroup` is provided by the `'react-addons-css-transition-group'` package. If you use ES6 with npm, you can write `import ReactCSSTransitionGroup from 'react-addons-css-transition-group'`. If you use ES5 with npm, you can write `var ReactCSSTransitionGroup = require('react-addons-css-transition-group')`.
-
-### Overview
-
 `ReactCSSTransitionGroup` is a high-level API based on [`ReactTransitionGroup`](#low-level-api-reacttransitiongroup) and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It's inspired by the excellent [ng-animate](http://www.nganimate.org/) library.
 
+**Importing**
 
-### Getting Started
+```javascript
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group' // ES6
+var ReactCSSTransitionGroup = require('react-addons-css-transition-group') // ES5
+```
 
-`ReactCSSTransitionGroup` is the interface to `ReactTransitions`. This is a simple element that wraps all of the components you are interested in animating. Here's an example where we fade list items in and out.
-
-```javascript{33-38}
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
-
+```javascript{31-36}
 class TodoList extends React.Component {
   constructor(props) {
     super(props);
@@ -219,9 +217,12 @@ You can disable animating `enter` or `leave` animations if you want. For example
 
 ## Low-level API: ReactTransitionGroup
 
-`ReactTransitionGroup` is provided by the `'react-addons-transition-group'` package. If you use ES6 with npm, you can write `import ReactTransitionGroup from 'react-addons-transition-group'`. If you use ES5 with npm, you can write `var ReactTransitionGroup = require('react-addons-transition-group')`.
+**Importing**
 
-### Overview
+```javascript
+import ReactTransitionGroup from 'react-addons-transition-group' // ES6
+var ReactTransitionGroup = require('react-addons-transition-group') // ES5
+```
 
 `ReactTransitionGroup` is the basis for animations. When children are declaratively added or removed from it (as in the [example above](#getting-started)), special lifecycle hooks are called on them.
 

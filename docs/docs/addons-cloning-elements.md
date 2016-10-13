@@ -1,14 +1,23 @@
 ---
 id: clone-with-props
-title: Cloning React Elements
+title: cloneWithProps (Deprecated)
 layout: docs
 category: Add-Ons
 permalink: docs/clone-with-props.html
+prev: shallow-compare.html
+next: pure-render-mixin.html
 ---
 
 > Note: cloneWithProps is deprecated.
 >
 > Use [React.cloneElement](/react/docs/react-api.html#react.cloneelement) instead.
+
+**Importing**
+
+```javascript
+import cloneWithProps from 'react-addons-clone-with-props' // ES6
+var cloneWithProps = require('react-addons-clone-with-props') // ES5
+```
 
 In rare situations, you may want to create a copy of a React element with different props from those of the original element. One example is cloning the elements passed into `this.props.children` and rendering them with different props:
 

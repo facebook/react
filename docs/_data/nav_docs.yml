@@ -30,17 +30,6 @@
       title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
-- title: Reference
-  items:
-    - id: react-api
-      title: React
-      subitems:
-        - id: react-component
-          title: React.Component
-    - id: react-dom
-      title: ReactDOM
-    - id: react-dom-server
-      title: ReactDOMServer
     - id: addons
       title: Add-Ons
       subitems:
@@ -59,6 +48,17 @@
         - id: clone-with-props
           title: Cloning Elements
         - id: pure-render-mixin
-          title: PureRenderMixin
+          title: Pure Render Components
         - id: two-way-binding-helpers
-          title: Two-Way Binding Helpers
+          title: Two-way Binding Helpers
+- title: Reference
+  items:
+    - id: react-api
+      title: React
+      subitems:
+        - id: react-component
+          title: React.Component
+    - id: react-dom
+      title: ReactDOM
+    - id: react-dom-server
+      title: ReactDOMServer

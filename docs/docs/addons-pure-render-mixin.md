@@ -1,21 +1,31 @@
 ---
 id: pure-render-mixin
-title: PureRenderMixin
+title: PureRenderMixin (Deprecated)
 layout: docs
 category: Add-Ons
 permalink: docs/pure-render-mixin.html
+prev: clone-with-props.html
+next: two-way-binding-helpers.html
 ---
 
 > Note: PureRenderMixin is deprecated.
 >
 > The `PureRenderMixin` mixin predates `React.PureComponent`. This reference doc is provided for legacy purposes, and you should consider using [`React.PureComponent`](/react/docs/component-api.html#react.purecomponent) instead.
 
+**Importing**
+
+```javascript
+import PureRenderMixin from 'react-addons-pure-render-mixin' // ES6
+var PureRenderMixin = require('react-addons-pure-render-mixin') // ES5
+```
+
+## Overview
+
 If your React component's render function renders the same result given the same props and state, you can use this mixin for a performance boost in some cases.
 
 Example:
 
 ```js
-var PureRenderMixin = require('react-addons-pure-render-mixin');
 React.createClass({
   mixins: [PureRenderMixin],
 

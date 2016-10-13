@@ -4,11 +4,21 @@ title: Performance Tools
 permalink: docs/perf.html
 layout: docs
 category: Add-Ons
+prev: two-way-binding-helpers.html
+next: shallow-compare.html
 ---
 
-React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a [shouldComponentUpdate()](/react/docs/react-component.html#shouldcomponentupdate) hook where you can add optimization hints to React's diff algorithm.
+**Importing**
 
-## Perf
+```javascript
+import Perf from 'react-addons-perf' // ES6
+var Perf = require('react-addons-perf') // ES5
+```
+
+
+## Overview
+
+React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a [shouldComponentUpdate()](/react/docs/react-component.html#shouldcomponentupdate) hook where you can add optimization hints to React's diff algorithm.
 
 In addition to giving you an overview of your app's overall performance, `Perf` is a profiling tool that tells you exactly where you need to put these hooks.
 
@@ -24,8 +34,6 @@ If you're benchmarking or seeing performance problems in your React apps, make s
 However, the perf tools described on this page only work when using the development build of React. Therefore, the profiler only serves to indicate the _relatively_ expensive parts of your app.
 
 ### Using Perf
-
-If you use ES6 with npm, you can write `import Perf from 'react-addons-perf'`. If you use ES5 with npm, you can write `var Perf = require('react-addons-perf')`.
 
 The `Perf` object can be used with React in development mode only. You should not include this bundle when building your app for production.
 

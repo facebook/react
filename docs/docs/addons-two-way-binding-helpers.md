@@ -1,14 +1,24 @@
 ---
 id: two-way-binding-helpers
-title: Two-Way Binding Helpers
+title: ReactLink (Deprecated)
 layout: docs
 category: Add-Ons
 permalink: docs/two-way-binding-helpers.html
+prev: pure-render-mixin.html
 ---
 
 > Note: ReactLink is deprecated.
 >
 > The recommendation is to explicitly set the value and change handler, instead of using `ReactLink`.
+
+**Importing**
+
+```javascript
+import LinkedStateMixin from 'react-addons-linked-state-mixin' // ES6
+var LinkedStateMixin = require('react-addons-linked-state-mixin') // ES5
+```
+
+## Overview
 
 `ReactLink` is an easy way to express two-way binding with React.
 
@@ -46,8 +56,6 @@ var NoLink = React.createClass({
 This works really well and it's very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let's use `ReactLink` to save us some typing:
 
 ```javascript{4,9}
-var LinkedStateMixin = require('react-addons-linked-state-mixin');
-
 var WithLink = React.createClass({
   mixins: [LinkedStateMixin],
   getInitialState: function() {
