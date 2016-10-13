@@ -203,7 +203,7 @@ API는 `getInitialState`를 제외하고 `React.createClass`와 유사합니다.
 ```javascript
 export class Counter extends React.Component {
   constructor(props) {
-    super(props);
+    super(arguments);
     this.state = {count: props.initialCount};
   }
   tick() {

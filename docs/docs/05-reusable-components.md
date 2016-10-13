@@ -312,7 +312,7 @@ In ES6 classes, you can define the initial state by assigning `this.state` in th
 ```javascript
 class Counter extends React.Component {
   constructor(props) {
-    super(props);
+    super(arguments);
     this.state = {count: props.initialCount};
   }
   // ...
