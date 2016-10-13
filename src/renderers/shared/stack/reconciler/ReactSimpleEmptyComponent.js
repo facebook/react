@@ -40,8 +40,12 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
   getHostNode: function() {
     return ReactReconciler.getHostNode(this._renderedComponent);
   },
-  unmountComponent: function() {
-    ReactReconciler.unmountComponent(this._renderedComponent);
+  unmountComponent: function(safely, skipLifecycle) {
+    ReactReconciler.unmountComponent(
+      this._renderedComponent,
+      safely,
+      skipLifecycle
+    );
     this._renderedComponent = null;
   },
 });

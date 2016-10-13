@@ -392,8 +392,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // This time, the error propagates to the higher boundary
       'ParentErrorBoundary unstable_handleError',
-      // Clean up the broken tree
-      'UncatchingErrorBoundary componentWillUnmount',
       // Render the error
       'ParentErrorBoundary render error',
       'ParentErrorBoundary componentDidMount',
@@ -499,8 +497,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenErrorBoundary render error [!]',
       // The error propagates to the higher boundary
       'ParentErrorBoundary unstable_handleError',
-      // Clean up the broken tree
-      'BrokenErrorBoundary componentWillUnmount',
       // Render the error
       'ParentErrorBoundary render error',
       'ParentErrorBoundary componentDidMount',
@@ -669,12 +665,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Error boundary catches the error
       'ErrorBoundary unstable_handleError',
-      // Try to clean up already mounted children
-      // even if their siblings throw during cleanup
-      // FIXME: why are we doing this? They never got componentDidMount():
-      'Normal componentWillUnmount',
-      'BrokenUnmount componentWillUnmount [!]',
-      'Normal componentWillUnmount',
       // Render the error message
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
@@ -822,7 +812,6 @@ describe('ReactErrorBoundaries', () => {
       'Normal render',
       'BrokenRender render [!]',
       'ErrorBoundary ref to Normal is set to null',
-      'Normal componentWillUnmount',
       'ErrorBoundary renderError',
       'ErrorBoundary componentDidMount',
       'ErrorBoundary componentWillUnmount',
@@ -930,6 +919,131 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary ref to Normal is set to null',
       'Normal componentWillUnmount',
+      'ErrorBoundary renderError',
+      'ErrorMessage componentWillMount',
+      'ErrorMessage render',
+      'ErrorMessage componentDidMount',
+      'ErrorBoundary ref to ErrorMessage is set to [object Object]',
+    ]);
+  });
+
+  it('skips hook for not-yet-mounted child if sibling throws in update', () => {
+    var log = [];
+
+    class ErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {errorMessage: null};
+      }
+      render() {
+        if (this.state.errorMessage != null) {
+          log.push('ErrorBoundary renderError');
+          return (
+            <ErrorMessage
+              message={this.state.errorMessage}
+              ref={inst => {
+                log.push('ErrorBoundary ref to ErrorMessage is set to ' + inst);
+              }} />
+          );
+        }
+        log.push('ErrorBoundary render');
+        return (
+          <div>
+            <Normal ref={inst => {
+              log.push('ErrorBoundary ref to Normal is set to ' + inst);
+            }} />
+            {this.props.renderBrokenChild && <Normal2 />}
+            {this.props.renderBrokenChild ? <BrokenRender /> : <div />}
+          </div>
+        );
+      }
+      unstable_handleError(e) {
+        log.push('ErrorBoundary unstable_handleError');
+        this.setState({errorMessage: e.message});
+      }
+      componentDidMount() {
+        log.push('ErrorBoundary componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('ErrorBoundary componentWillUnmount');
+      }
+    }
+
+    class ErrorMessage extends React.Component {
+      componentWillMount() {
+        log.push('ErrorMessage componentWillMount');
+      }
+      componentDidMount() {
+        log.push('ErrorMessage componentDidMount');
+      }
+      render() {
+        log.push('ErrorMessage render');
+        return <div>Caught an error: {this.props.message}</div>;
+      }
+    }
+
+    class Normal extends React.Component {
+      render() {
+        log.push('Normal render');
+        return <div>What is love?</div>;
+      }
+      componentDidMount() {
+        log.push('Normal componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Normal componentWillUnmount');
+      }
+    }
+
+    class Normal2 extends React.Component {
+      render() {
+        log.push('Normal2 render');
+        return <div>What is love?</div>;
+      }
+      componentDidMount() {
+        log.push('Normal2 componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('Normal2 componentWillUnmount');
+      }
+    }
+
+    class BrokenRender extends React.Component {
+      render() {
+        log.push('BrokenRender render [!]');
+        throw new Error('Please, do not render me.');
+      }
+      componentDidMount() {
+        log.push('BrokenRender componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('BrokenRender componentWillUnmount');
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<ErrorBoundary renderBrokenChild={false} />, container);
+    expect(log).toEqual([
+      'ErrorBoundary render',
+      'Normal render',
+      'Normal componentDidMount',
+      'ErrorBoundary ref to Normal is set to [object Object]',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.render(<ErrorBoundary renderBrokenChild={true} />, container);
+    expect(container.textContent).toBe('Caught an error: Please, do not render me.');
+    expect(log).toEqual([
+      'ErrorBoundary render',
+      'ErrorBoundary ref to Normal is set to null',
+      'Normal render',
+      'Normal2 render',
+      'BrokenRender render [!]',
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary ref to Normal is set to null',
+      'Normal componentWillUnmount',
+      // Normal2 doesn't get componentWillUnmount() since it never fully mounted
       'ErrorBoundary renderError',
       'ErrorMessage componentWillMount',
       'ErrorMessage render',
