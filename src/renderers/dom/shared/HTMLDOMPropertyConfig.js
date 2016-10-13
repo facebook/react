@@ -14,6 +14,7 @@
 var DOMProperty = require('DOMProperty');
 
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
+var NO_MARKUP = DOMProperty.injection.NO_MARKUP;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
 var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
 var HAS_POSITIVE_NUMERIC_VALUE =
@@ -25,6 +26,24 @@ var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
     new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$')
   ),
+
+  Order: {
+    input: [
+      // Make sure we set .type before any other form properties (setting .value
+      // before .type means .value is lost in IE11 and below)
+      'type',
+      // Make sure we set .step before .value (setting .value before .step
+      // means .value is rounded on mount: based upon step precision)
+      'step',
+      // Fix bug in range inputs initial render
+      // https://github.com/facebook/react/issues/7170
+      'min',
+      'max',
+      'value',
+      'checked',
+    ],
+  },
+
   Properties: {
     /**
      * Standard Properties
@@ -36,8 +55,6 @@ var HTMLDOMPropertyConfig = {
     allowFullScreen: HAS_BOOLEAN_VALUE,
     allowTransparency: 0,
     alt: 0,
-    // specifies target context for links with `preload` type
-    as: 0,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: 0,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
@@ -49,6 +66,7 @@ var HTMLDOMPropertyConfig = {
     charSet: 0,
     challenge: 0,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    defaultChecked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE | NO_MARKUP,
     cite: 0,
     classID: 0,
     className: 0,
@@ -117,7 +135,6 @@ var HTMLDOMPropertyConfig = {
     optimum: 0,
     pattern: 0,
     placeholder: 0,
-    playsInline: HAS_BOOLEAN_VALUE,
     poster: 0,
     preload: 0,
     profile: 0,
@@ -155,7 +172,8 @@ var HTMLDOMPropertyConfig = {
     // Setting .type throws on non-<input> tags
     type: 0,
     useMap: 0,
-    value: 0,
+    value: MUST_USE_PROPERTY,
+    defaultValue: MUST_USE_PROPERTY | NO_MARKUP,
     width: 0,
     wmode: 0,
     wrap: 0,
@@ -210,6 +228,60 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: 'http-equiv',
   },
   DOMPropertyNames: {
+  },
+  DOMMutationMethods: {
+    value: function(node, next) {
+      if (next == null) {
+        node.removeAttribute('value');
+      } else {
+        node.setAttribute('value', '' + next);
+      }
+
+      if (next == null) {
+        next = '';
+      } else if (next === 0) {
+        // Since we use loose type checking below, zero is
+        // falsy, so we need to manually cover it
+        next = '0';
+      }
+
+      if (node.value != next) { // eslint-disable-line eqeqeq
+        // Set value directly cause it has already been modified
+        node.value = next;
+      }
+    },
+
+    defaultValue: function(node, next) {
+      // If a value is present, intentially re-assign it to detatch it
+      // from defaultValue. Values derived from server-rendered markup
+      // will not had a prior changes to assign value as a property.
+      //
+      // Make an exception for multi-selects
+      if (!node.multiple && node.value !== '') {
+        node.value = node.value;
+      }
+
+      node.defaultValue = next;
+    },
+
+    // Chrome ~50 does not properly detatch defaultChecked, this mutation method
+    // is a work around to mitigate a bug where setting defaultChecked changes
+    // the value of checked, even after detachment:
+    // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
+    defaultChecked: function(node, next) {
+      // The property priority list mandates that `checked` be assigned
+      // before `defaultChecked`. Additionally, ReactDOMInput ensures that
+      // `checked` assigns `defaultChecked` if it is not otherwise specified.
+      // This means that we can always force checked to be the original without
+      // any influence from `defaultChecked`.
+      var checked = node.checked;
+      node.defaultChecked = next;
+
+      // No need to touch the DOM again if the property is the same
+      if (checked !== next) {
+        node.checked = next;
+      }
+    },
   },
 };
 

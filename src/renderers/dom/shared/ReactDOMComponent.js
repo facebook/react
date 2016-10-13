@@ -237,11 +237,6 @@ function putListener() {
   );
 }
 
-function inputPostMount() {
-  var inst = this;
-  ReactDOMInput.postMountWrapper(inst);
-}
-
 function textareaPostMount() {
   var inst = this;
   ReactDOMTextarea.postMountWrapper(inst);
@@ -666,10 +661,6 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
-        transaction.getReactMountReady().enqueue(
-          inputPostMount,
-          this
-        );
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,
@@ -964,6 +955,8 @@ ReactDOMComponent.Mixin = {
     isCustomComponentTag
   ) {
     var propKey;
+    var nextProp;
+    var lastProp;
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
@@ -1001,9 +994,34 @@ ReactDOMComponent.Mixin = {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
+
+    var ordered = DOMProperty.order[this._tag];
+    if (ordered != null) {
+      for (var i = 0, len = ordered.length; i < len; i++) {
+        propKey = ordered[i];
+
+        if (nextProps.hasOwnProperty(propKey)) {
+          lastProp = lastProps ? lastProps[propKey] : undefined;
+          nextProp = nextProps[propKey];
+
+          if (lastProp !== nextProp) {
+            DOMPropertyOperations.setValueForProperty(
+              getNode(this),
+              propKey,
+              nextProp
+            );
+          }
+        }
+      }
+    }
+
     for (propKey in nextProps) {
-      var nextProp = nextProps[propKey];
-      var lastProp =
+      if (ordered != null && ordered.indexOf(propKey) >= 0) {
+        continue;
+      }
+
+      nextProp = nextProps[propKey];
+      lastProp =
         propKey === STYLE ? this._previousStyleCopy :
         lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||

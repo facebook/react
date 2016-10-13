@@ -260,7 +260,7 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.hasAttribute('data-foo')).toBe(false);
     });
 
-    it('should use mutation method where applicable', () => {
+    it('should use mutation method where applicable', function() {
       var foobarSetter = jest.fn();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
@@ -381,6 +381,19 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.value).toBe('');
     });
 
+    it('should always assign the value attribute for non-inputs', function() {
+      var stubNode = document.createElement('progress');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
+      spyOn(stubNode, 'setAttribute');
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '30');
+
+      expect(stubNode.setAttribute.calls.count()).toBe(2);
+    });
+
     it('should not leave all options selected when deleting multiple', () => {
       stubNode = document.createElement('select');
       ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
@@ -399,6 +412,27 @@ describe('DOMPropertyOperations', () => {
         stubNode.options[0].selected &&
         stubNode.options[1].selected
       ).toBe(false);
+    });
+
+    it('should not update numeric values when the input.value is loosely the same', function() {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'type', 'number');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+
+      Object.defineProperty(stubNode, 'value', {
+        get() {
+          return this._value;
+        },
+        set(value) {
+          if (value == this._value) { // eslint-disable-line eqeqeq
+            throw new Error('Should not have overriden value ' + this._value + ' with ' + value);
+          }
+
+          this._value = value;
+        },
+      });
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 3e1);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '3e1');
     });
   });
 

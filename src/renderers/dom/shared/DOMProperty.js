@@ -23,6 +23,7 @@ var DOMPropertyInjection = {
    * specifies how the associated DOM property should be accessed or rendered.
    */
   MUST_USE_PROPERTY: 0x1,
+  NO_MARKUP: 0x2,
   HAS_BOOLEAN_VALUE: 0x4,
   HAS_NUMERIC_VALUE: 0x8,
   HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
@@ -70,6 +71,9 @@ var DOMPropertyInjection = {
       );
     }
 
+    // Some tags must assign properties in a specific order. Assign that here:
+    Object.assign(DOMProperty.order, domPropertyConfig.Order);
+
     for (var propName in Properties) {
       invariant(
         !DOMProperty.properties.hasOwnProperty(propName),
@@ -90,6 +94,7 @@ var DOMPropertyInjection = {
         mutationMethod: null,
 
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
+        noMarkup: checkMask(propConfig, Injection.NO_MARKUP),
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
         hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
         hasPositiveNumericValue:
@@ -175,6 +180,8 @@ var DOMProperty = {
    *   initial render.
    * mustUseProperty:
    *   Whether the property must be accessed and mutated as an object property.
+   * noMarkup:
+   *   Whether the property will generate HTML when rendered to a string.
    * hasBooleanValue:
    *   Whether the property should be removed when set to a falsey value.
    * hasNumericValue:
@@ -189,6 +196,12 @@ var DOMProperty = {
    *   strictly equal to true; present with a value otherwise.
    */
   properties: {},
+
+  /**
+   * Some elements need specific attribute insertion order. This property
+   * stores that configuration.
+   */
+  order: {},
 
   /**
    * Mapping from lowercase property names to the properly cased version, used

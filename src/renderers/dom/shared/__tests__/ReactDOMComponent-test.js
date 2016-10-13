@@ -502,31 +502,31 @@ describe('ReactDOMComponent', () => {
 
     it('should not incur unnecessary DOM mutations for string properties', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<div value="" />, container);
+      ReactDOM.render(<div itemProp="" />, container);
 
       var node = container.firstChild;
 
       var nodeValueSetter = jest.genMockFn();
 
       var oldSetAttribute = node.setAttribute.bind(node);
-      node.setAttribute = function(key, value) {
-        oldSetAttribute(key, value);
-        nodeValueSetter(key, value);
+      node.setAttribute = function(key, itemProp) {
+        oldSetAttribute(key, itemProp);
+        nodeValueSetter(key, itemProp);
       };
 
-      ReactDOM.render(<div value="foo" />, container);
+      ReactDOM.render(<div itemProp="foo" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
-      ReactDOM.render(<div value="foo" />, container);
+      ReactDOM.render(<div itemProp="foo" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
-      ReactDOM.render(<div value={null} />, container);
+      ReactDOM.render(<div itemProp={null} />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
-      ReactDOM.render(<div value="" />, container);
+      ReactDOM.render(<div itemProp="" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(2);
 
       ReactDOM.render(<div />, container);
@@ -615,6 +615,83 @@ describe('ReactDOMComponent', () => {
       );
 
       expect(container.textContent).toBe('BADC');
+    });
+
+    describe('DOM mutations for value property', function() {
+      var container, node, nodeValueSetter;
+
+      beforeEach(function() {
+        container = document.createElement('div');
+        ReactDOM.render(<div value="" />, container);
+        nodeValueSetter = jest.genMockFn();
+        node = container.firstChild;
+
+        var value = null;
+        Object.defineProperty(node, 'value', {
+          get() {
+            return value;
+          },
+          set(next) {
+            value = next;
+            nodeValueSetter(value);
+          },
+        });
+      });
+
+      it('should assign new properties', function() {
+        ReactDOM.render(<div value="foo" />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(1);
+      });
+
+      it('should not assign if nothing has changed', function() {
+        ReactDOM.render(<div value="foo" />, container);
+        ReactDOM.render(<div value="foo" />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(1);
+      });
+
+      it('should remove if the property is undefined', function() {
+        ReactDOM.render(<div value="foo" />, container);
+        ReactDOM.render(<div />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(2);
+      });
+
+      it('should remove if the property is null', function() {
+        ReactDOM.render(<div value="foo" />, container);
+        ReactDOM.render(<div value={null} />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(2);
+      });
+
+      it('should not reassign null from undefined', function() {
+        ReactDOM.render(<div />, container);
+        ReactDOM.render(<div value={null} />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(1);
+      });
+
+      it('should not reassign an empty string from null', function() {
+        ReactDOM.render(<div value={null} />, container);
+        ReactDOM.render(<div value="" />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(1);
+      });
+
+      it('should not reassign an undefined from an empty string', function() {
+        ReactDOM.render(<div />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(1);
+      });
+
+      it('should reassign zero from an empty string', function() {
+        ReactDOM.render(<div value={0} />, container);
+
+        expect(nodeValueSetter.mock.calls.length).toBe(1);
+
+        // extra check here to verify the correct value was set
+        expect(node.value).toEqual('0');
+      });
+
+      it('should reassign an empty string from zero', function() {
+        ReactDOM.render(<div value={0} />, container);
+        ReactDOM.render(<div value="" />, container);
+        expect(nodeValueSetter.mock.calls.length).toBe(2);
+      });
     });
   });
 
