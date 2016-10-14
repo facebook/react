@@ -16,7 +16,7 @@ When the `ref` attribute is used on a HTML element, the `ref` callback receives 
 class CustomTextInput extends React.Component {
   constructor(props) {
     super(props);
-    this.handleClick = this.handleClick.bind(this);
+    this.focus = this.focus.bind(this);
   }
 
   focus() {
@@ -33,7 +33,7 @@ class CustomTextInput extends React.Component {
         <input
           type="button"
           value="Focus the text input"
-          onClick={this.handleClick}
+          onClick={this.focus}
         />
       </div>
     );
