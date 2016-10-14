@@ -36,6 +36,25 @@
       title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
+    - id: addons
+      title: Add-Ons
+      subitems:
+        - id: perf
+          title: Performance Tools
+        - id: test-utils
+          title: Test Utilities
+        - id: animation
+          title: Animation
+        - id: create-fragment
+          title: Keyed Fragments
+        - id: update
+          title: Immutability Helpers
+        - id: pure-render-mixin
+          title: PureRenderMixin
+        - id: shallow-compare
+          title: Shallow Compare
+        - id: two-way-binding-helpers
+          title: Two-way Binding Helpers
 - title: Reference
   items:
     - id: react-api
@@ -47,8 +66,3 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
-      id: addons
-      title: Addons
-      subitems:
-        - id: pure-render-mixin
-          title: PureRenderMixin

@@ -1,16 +1,29 @@
 ---
 id: update
 title: Immutability Helpers
-permalink: docs-old/update.html
-prev: create-fragment.html
-next: pure-render-mixin.html
+permalink: docs/update.html
+layout: docs
+category: Add-Ons
 ---
 
-React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it's easy to implement a fast `shouldComponentUpdate()` method to significantly speed up your app.
+> Note:
+> `update` is a legacy add-on. Use [kolodny/immutability-helper](https://github.com/kolodny/immutability-helper) instead.
+
+**Importing**
+
+```javascript
+import update from 'react-addons-update'; // ES6
+var update = require('react-addons-update'); // ES5 with npm
+var update = React.addons.update; // ES5 with react-with-addons.js
+```
+
+## Overview
+
+React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it's easy to implement a fast [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate) method to significantly speed up your app.
 
 Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like [Clojure](http://clojure.org/). However, we've provided a simple immutability helper, `update()`, that makes dealing with this type of data much easier, *without* fundamentally changing how your data is represented. You can also take a look at Facebook's [Immutable-js](https://facebook.github.io/immutable-js/docs/) and the [Advanced Performance](/react/docs/advanced-performance.html) section for more detail on Immutable-js.
 
-## The main idea
+### The Main Idea
 
 If you mutate data like this:
 
@@ -41,10 +54,12 @@ var newData = extend(myData, {
 
 While this is fairly performant (since it only makes a shallow copy of `log n` objects and reuses the rest), it's a big pain to write. Look at all the repetition! This is not only annoying, but also provides a large surface area for bugs.
 
+## `update()`
+
 `update()` provides simple syntactic sugar around this pattern to make writing this code easier. This code becomes:
 
 ```js
-var update = require('react-addons-update');
+import update from 'react-addons-update';
 
 var newData = update(myData, {
   x: {y: {z: {$set: 7}}},
@@ -56,7 +71,7 @@ While the syntax takes a little getting used to (though it's inspired by [MongoD
 
 The `$`-prefixed keys are called *commands*. The data structure they are "mutating" is called the *target*.
 
-## Available commands
+## Available Commands
 
   * `{$push: array}` `push()` all the items in `array` on the target.
   * `{$unshift: array}` `unshift()` all the items in `array` on the target.
@@ -94,7 +109,7 @@ var newObj = update(obj, {b: {$apply: function(x) {return x * 2;}}});
 var newObj2 = update(obj, {b: {$set: obj.b * 2}});
 ```
 
-### (Shallow) merge
+### (Shallow) Merge
 
 ```js
 var obj = {a: 5, b: 3};

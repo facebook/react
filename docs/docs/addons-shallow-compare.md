@@ -1,19 +1,31 @@
 ---
 id: shallow-compare
 title: Shallow Compare
-permalink: docs-old/shallow-compare.html
-prev: perf.html
-next: advanced-performance.html
+permalink: docs/shallow-compare.html
+layout: docs
+category: Reference
 ---
 
-`shallowCompare` is a helper function to achieve the same functionality as `PureRenderMixin` while using ES6 classes with React.
+> Note:
+> `shallowCompare` is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
+
+**Importing**
+
+```javascript
+import shallowCompare from 'react-addons-shallow-compare' // ES6
+var shallowCompare = require('react-addons-shallow-compare') // ES5 with npm
+var shallowCompare = React.addons.shallowCompare; // ES5 with react-with-addons.js
+```
+
+## Overview
+
+Before [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) was introduced, `shallowCompare` was commonly used to achieve the same functionality as [`PureRenderMixin`](pure-render-mixin.html) while using ES6 classes with React.
 
 If your React component's render function is "pure" (in other words, it renders the same result given the same props and state), you can use this helper function for a performance boost in some cases.
 
 Example:
 
 ```js
-var shallowCompare = require('react-addons-shallow-compare');
 export class SampleComponent extends React.Component {
   shouldComponentUpdate(nextProps, nextState) {
     return shallowCompare(this, nextProps, nextState);
