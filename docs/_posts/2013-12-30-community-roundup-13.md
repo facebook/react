@@ -10,7 +10,7 @@ Happy holidays! This blog post is a little-late Christmas present for all the Re
 
 [Pete Hunt](http://www.petehunt.net/) wrote three demos showing that React can be used to run 60fps native-like experiences on mobile web. A frosted glass effect, an image gallery with 3d animations and an infinite scroll view.
 
-<figure><iframe src="//player.vimeo.com/video/79659941" width="220" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
+<figure><iframe src="//player.vimeo.com/video/79659941" width="100%" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
 
 [Try out the demos!](https://petehunt.github.io/react-touch/)
 
@@ -19,7 +19,7 @@ Happy holidays! This blog post is a little-late Christmas present for all the Re
 
 [Stoyan Stefanov](http://www.phpied.com/) talked at Joe Dev On Tech about React. He goes over all the features of the library and ends with a concrete example.
 
-<figure><iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## JSX: E4X The Good Parts
@@ -115,4 +115,3 @@ var MyComponent = React.createClass({
 ## Random Tweet
 
 <center><blockquote class="twitter-tweet" lang="en"><p>I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.</p>&mdash; Eric Florenzano (@ericflo) <a href="https://twitter.com/ericflo/statuses/413842834974732288">December 20, 2013</a></blockquote></center>
-
