@@ -1,12 +1,16 @@
 ---
 id: pure-render-mixin
 title: PureRenderMixin
-permalink: docs-old/pure-render-mixin.html
-prev: update.html
-next: perf.html
+layout: docs
+category: Reference
+permalink: docs/pure-render-mixin.html
 ---
 
-If your React component's render function is "pure" (in other words, it renders the same result given the same props and state), you can use this mixin for a performance boost in some cases.
+> Note
+
+> The `PureRenderMixin` mixin predates `React.PureComponent`. This reference doc is provided for legacy purposes, and you should consider using [`React.PureComponent`](/react/docs/component-api.html#react.purecomponent) instead.
+
+If your React component's render function renders the same result given the same props and state, you can use this mixin for a performance boost in some cases.
 
 Example:
 

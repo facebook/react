@@ -43,3 +43,8 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
+      id: addons
+      title: Addons
+      subitems:
+        - id: pure-render-mixin
+          title: PureRenderMixin
