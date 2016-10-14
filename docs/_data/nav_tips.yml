@@ -6,9 +6,5 @@
     title: Shorthand for Specifying Pixel Values in style props
   - id: controlled-input-null-value
     title: Value of null for Controlled Input
-  - id: expose-component-functions
-    title: Expose Component Functions
-  - id: use-react-with-other-libraries
-    title: Use React with Other Libraries
   - id: dangerously-set-inner-html
     title: Dangerously Set innerHTML
