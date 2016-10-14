@@ -16,15 +16,8 @@
     title: React (Virtual) DOM Terminology
 - title: Old Guides
   items:
-  - id: reusable-components
-    title: Reusable Components
   - id: forms
     title: Forms
-  - id: working-with-the-browser
-    title: Working With the Browser
-    subitems:
-    - id: more-about-refs
-      title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
     subitems:
