@@ -333,6 +333,23 @@ var ReactCompositeComponent = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    if (inst.componentWillMount) {
+      if (__DEV__) {
+        measureLifeCyclePerf(
+          () => inst.componentWillMount(),
+          this._debugID,
+          'componentWillMount'
+        );
+      } else {
+        inst.componentWillMount();
+      }
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingStateQueue` without triggering a re-render.
+      if (this._pendingStateQueue) {
+        inst.state = this._processPendingState(inst.props, inst.context);
+      }
+    }
+
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
@@ -348,8 +365,7 @@ var ReactCompositeComponent = {
         hostParent,
         hostContainerInfo,
         transaction,
-        context,
-        false /* skipLifecyle */
+        context
       );
     }
 
@@ -446,8 +462,7 @@ var ReactCompositeComponent = {
         hostParent,
         hostContainerInfo,
         transaction,
-        context,
-        false /* skipLifecyle */
+        context
       );
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
@@ -471,9 +486,7 @@ var ReactCompositeComponent = {
         hostParent,
         hostContainerInfo,
         transaction,
-        context,
-        // We have already called componentWillMount() before retrying:
-        true /* skipLifecyle */
+        context
       );
     }
     return markup;
@@ -484,35 +497,8 @@ var ReactCompositeComponent = {
     hostParent,
     hostContainerInfo,
     transaction,
-    context,
-    skipLifecyle
+    context
   ) {
-    var inst = this._instance;
-
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
-    if (!skipLifecyle) {
-      if (inst.componentWillMount) {
-        if (__DEV__) {
-          measureLifeCyclePerf(
-            () => inst.componentWillMount(),
-            debugID,
-            'componentWillMount'
-          );
-        } else {
-          inst.componentWillMount();
-        }
-        // When mounting, calls to `setState` by `componentWillMount` will set
-        // `this._pendingStateQueue` without triggering a re-render.
-        if (this._pendingStateQueue) {
-          inst.state = this._processPendingState(inst.props, inst.context);
-        }
-      }
-    }
-
     // If not a stateless component, we now render
     if (renderedElement === undefined) {
       renderedElement = this._renderValidatedComponent();
@@ -525,6 +511,11 @@ var ReactCompositeComponent = {
       nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
     );
     this._renderedComponent = child;
+
+    var debugID = 0;
+    if (__DEV__) {
+      debugID = this._debugID;
+    }
 
     var markup = ReactReconciler.mountComponent(
       child,
