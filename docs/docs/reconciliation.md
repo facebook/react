@@ -8,7 +8,7 @@ React provides a declarative API so that you don't have to worry about exactly w
 
 ## Motivation
 
-When you use React, at a single point in time you can think of the `render()` function as creating a tree of React elements. On the next state or props update, that `render()` function will return a different tree of React elements. The React framework then needs to figure out a way to efficiently convert the first tree into the second tree.
+When you use React, at a single point in time you can think of the `render()` function as creating a tree of React elements. On the next state or props update, that `render()` function will return a different tree of React elements. React then needs to figure out a way to efficiently convert the first tree into the second tree.
 
 There are some generic solutions to this algorithmic problem of generating the minimum number of operations to transform one tree into another. However, the [state of the art algorithms](http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf) have a complexity in the order of O(n<sup>3</sup>) where n is the number of elements in the tree.
 
@@ -21,11 +21,31 @@ In practice, these assumptions are valid for almost all practical use cases.
 
 ## The Diffing Algorithm
 
-When diffing two trees, React first compares the types of the two root elements. If the root elements have different types, React just throws away the first tree and builds the second tree from scratch. When the root elements have the same type, React first converts the root element, and then recurses. The specifics are different depending on whether the elements are DOM elements or component elements.
+When diffing two trees, React first compares the the two root elements. The behavior is different depending on the types of the root elements.
 
-### DOM Elements
+### Elements Of Different Types
 
-When comparing two React DOM elements, React looks at the attributes of both, keeps the same underlying DOM element, and only updates the changed attributes. For example:
+Whenever the root elements have different types, React will tear down the old tree and build the new tree from scratch.
+
+When tearing down a tree, old DOM elements are destroyed. Component instances receive `componentWillUnmount()`. When building up a new tree, new DOM elements are inserted into the DOM. Component instances receive `componentWillMount()` and then `componentDidMount()`. Any state associated with the old tree is lost.
+
+Any componts below the root will also get unmounted and have their state destroyed. For example, when diffing:
+
+```xml
+<div>
+  <Counter />
+</div>
+
+<span>
+  <Counter />
+</span>
+```
+
+This will destroy the old `Counter` and remount a new one.
+
+### DOM Elements Of The Same Type
+
+When comparing two React DOM elements of the same type, React looks at the attributes of both, keeps the same underlying DOM element, and only updates the changed attributes. For example:
 
 ```xml
 <div className="before" title="stuff" />
@@ -47,9 +67,9 @@ When converting between these two elements, React knows to only modify the `colo
 
 After handling the DOM element, React then recurses on the children.
 
-### Custom Components
+### Component Elements Of The Same Type
 
-When a component updates, the instance stays the same, so that state is maintained across renders. React takes all the attributes from the new component element and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
+When a component updates, the instance stays the same, so that state is maintained across renders. React takes all the attributes from the new component element and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the underlying instance.
 
 Next, the `render()` method is called and the diff algorithm recurses on the previous result and the new result.
 
@@ -60,55 +80,59 @@ By default, when recursing on the children of a DOM element, React just iterates
 For example, when adding an element at the end of the children, converting between these two trees works well:
 
 ```xml
-<div>
-  <span>first</span>
-  <span>second</span>
-</div>
+<ul>
+  <li>first</li>
+  <li>second</li>
+</ul>
 
-<div>
-  <span>first</span>
-  <span>second</span>
-  <span>third</span>
-</div>
+<ul>
+  <li>first</li>
+  <li>second</li>
+  <li>third</li>
+</ul>
 ```
 
-React will match the two `<span>first</span>` trees, match the two `<span>second</span>` trees, and then insert the `<span>third</span>` tree.
+React will match the two `<li>first</li>` trees, match the two `<li>second</li>` trees, and then insert the `<li>third</li>` tree.
 
 Inserting an element at the beginning has worse performance. For example, converting between these two trees works poorly:
 
 ```xml
-<div>
-  <span>Duke</span>
-  <span>Villanova</span>
-</div>
+<ul>
+  <li>Duke</li>
+  <li>Villanova</li>
+</ul>
 
-<div>
-  <span>Connecticut</span>
-  <span>Duke</span>
-  <span>Villanova</span>
-</div>
+<ul>
+  <li>Connecticut</li>
+  <li>Duke</li>
+  <li>Villanova</li>
+</ul>
 ```
 
-React will mutate every child instead of realizing it can keep the `<span>Duke</span>` and `<span>Villanova</span>` subtrees intact. This inefficiency can be a problem.
+React will mutate every child instead of realizing it can keep the `<li>Duke</li>` and `<li>Villanova</li>` subtrees intact. This inefficiency can be a problem.
 
 ### Keys
 
-In order to solve this issue, React supports an optional `key` attribute. When children have keys, React uses the key to match children in the original tree with children in the subsequent tree. For example, adding a `key` to our inefficient example above can make the tree conversion efficient:
+In order to solve this issue, React supports a `key` attribute. When children have keys, React uses the key to match children in the original tree with children in the subsequent tree. For example, adding a `key` to our inefficient example above can make the tree conversion efficient:
 
 ```xml
-<div>
-  <span key={2015}>Duke</span>
-  <span key={2016}>Villanova</span>
-</div>
+<ul>
+  <li key={'2015'}>Duke</li>
+  <li key={'2016'}>Villanova</li>
+</ul>
 
-<div>
-  <span key={2014}>Connecticut</span>
-  <span key={2015}>Duke</span>
-  <span key={2016}>Villanova</span>
-</div>
+<ul>
+  <li key={'2014'}>Connecticut</li>
+  <li key={'2015'}>Duke</li>
+  <li key={'2016'}>Villanova</li>
+</ul>
 ```
 
-In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. The key only has to be unique among its siblings, not globally unique.
+Now React knows that the element with key `'2014'` is the new one, and the elements with the keys `'2015'` and `'2016'` have just moved.
+
+In practice, finding a key is usually not hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. The key only has to be unique among its siblings, not globally unique.
+
+As a last resort, you can pass item's index in the array as a key. This can work well if the items are never reordered, but reorders will be slow.
 
 ## Tradeoffs
 
@@ -118,6 +142,6 @@ In the current implementation, you can express the fact that a subtree has been 
 
 Because React relies on heuristics, if the assumptions behind them are not met, performance will suffer.
 
-1. The algorithm will not try to match sub-trees of different component classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
+1. The algorithm will not try to match subtrees of different component classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
-2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many elements to be unnecessarily recreated, which can cause performance degradation and lost state in child components.
+2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by `Math.random()`) will cause many elements to be unnecessarily recreated, which can cause performance degradation and lost state in child components.
