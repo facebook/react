@@ -12,8 +12,6 @@
     title: Reconciliation
   - id: webcomponents
     title: Web Components
-  - id: glossary
-    title: React (Virtual) DOM Terminology
 - title: Old Guides
   items:
   - id: forms
