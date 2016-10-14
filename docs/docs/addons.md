@@ -31,8 +31,8 @@ The add-ons below are considered legacy and their use is discouraged.
 If using npm, you can install the add-ons individually from npm (e.g. `npm install react-addons-test-utils`) and import them:
 
 ```javascript
-import Perf from 'react-addons-perf' // ES6
-var Perf = require('react-addons-perf') // ES5 with npm
+import Perf from 'react-addons-perf'; // ES6
+var Perf = require('react-addons-perf'); // ES5 with npm
 ```
 
 When using a CDN, you can use `react-with-addons.js` instead of `react.js`:
