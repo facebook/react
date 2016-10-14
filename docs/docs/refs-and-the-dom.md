@@ -8,7 +8,7 @@ In the typical React dataflow, `props` are the only way that parent components i
 
 ## The ref Callback Attribute
 
-React supports a special attribute that you can attach to any component. The `ref` attribute takes a callback function, and the callback will be executed immediately after the component is mounted.
+React supports a special attribute that you can attach to any component. The `ref` attribute takes a callback function, and the callback will be executed immediately after the component is mounted or unmounted.
 
 When the `ref` attribute is used on a HTML element, the `ref` callback receives the underlying DOM element as its argument. For example, this code uses the `ref` callback to store a reference to a DOM node:
 
@@ -19,11 +19,9 @@ class CustomTextInput extends React.Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  handleClick() {
+  focus() {
     // Explicitly focus the text input using the raw DOM API
-    if (this.textInput !== null) {
-      this.textInput.focus();
-    }
+    this.textInput.focus();
   }
 
   render() {
@@ -43,19 +41,47 @@ class CustomTextInput extends React.Component {
 }
 ```
 
+React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts.
+
 Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. If you are currently using `this.refs.myRefName` to access refs, we recommend using this pattern instead.
 
 When the `ref` attribute is used on a custom component, the `ref` callback receives the mounted instance of the component as its argument. For example, if we wanted to wrap the `CustomTextInput` above to simulate it being clicked immediately after mounting:
 
 ```javascript
-class AutoclickedCustomTextInput extends React.Component {
+class AutoFocusTextInput extends React.Component {
+  componentDidMount() {
+    this.textInput.focus();
+  }
+
   render() {
-    return <CustomTextInput ref={(input) => input.handleClick()} />;
+    return <CustomTextInput ref={(input) => this.textInput = input} />;
   }
 }
 ```
 
-You may not use the `ref` attribute on stateless functional components, since there is no backing instance.
+You may not use the `ref` attribute on functional components because they don't have instances. You can, however, use the `ref` attribute inside the `render` function of a functional component:
+
+```javascript
+function CustomTextInput(props) {
+  // textInput must be declared here so the ref callback can refer to it
+  let textInput;
+
+  function handleClick() {
+    textInput.focus();
+  }
+
+  return (
+    <div>
+      <input type="text" ref={(input) => textInput = input} />
+      <input
+        type="button"
+        value="Focus the text input"
+        onClick={handleClick}
+      />
+    </div>
+  );  
+}
+```
 
 ### Don't Overuse Refs
 
