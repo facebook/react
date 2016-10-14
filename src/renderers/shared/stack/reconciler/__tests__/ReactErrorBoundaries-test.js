@@ -616,6 +616,7 @@ describe('ReactErrorBoundaries', () => {
       <ErrorBoundary>
         <Normal />
         <BrokenRender />
+        <Normal />
       </ErrorBoundary>,
       container
     );
@@ -681,43 +682,6 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('rolls back mounting composite siblings if one of them throws', () => {
-    class ErrorBoundary extends React.Component {
-      constructor() {
-        super();
-        this.state = {error: null};
-      }
-      render() {
-        if (this.state.error) {
-          return <div>Caught an error: {this.state.error.message}.</div>;
-        }
-        return <div>{this.props.children}</div>;
-      }
-      unstable_handleError(error) {
-        this.setState({error});
-      }
-    }
-
-    function BrokenRender() {
-      throw new Error('Hello');
-    }
-
-    function Normal() {
-      return <div />;
-    }
-
-    var container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenRender />
-        <Normal />
-      </ErrorBoundary>,
-      container
-    );
-    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    ReactDOM.unmountComponentAtNode(container);
-  });
-
   it('resets refs to composite siblings if one of them throws', () => {
     var log = [];
 
@@ -725,6 +689,7 @@ describe('ReactErrorBoundaries', () => {
       constructor(props) {
         super(props);
         this.state = {error: null};
+        log.push('ErrorBoundary constructor');
       }
       render() {
         if (this.state.error) {
@@ -745,6 +710,9 @@ describe('ReactErrorBoundaries', () => {
       unstable_handleError(error) {
         this.setState({error});
       }
+      componentWillMount() {
+        log.push('ErrorBoundary componentWillMount');
+      }
       componentDidMount() {
         log.push('ErrorBoundary componentDidMount');
       }
@@ -754,9 +722,16 @@ describe('ReactErrorBoundaries', () => {
     }
 
     class Normal extends React.Component {
+      constructor(props) {
+        super(props);
+        log.push('Normal constructor');
+      }
       render() {
         log.push('Normal render');
         return <div>What is love?</div>;
+      }
+      componentWillMount() {
+        log.push('Normal componentWillMount');
       }
       componentDidMount() {
         log.push('Normal componentDidMount');
@@ -767,9 +742,16 @@ describe('ReactErrorBoundaries', () => {
     }
 
     class BrokenRender extends React.Component {
+      constructor(props) {
+        super(props);
+        log.push('BrokenRender constructor');
+      }
       render() {
         log.push('BrokenRender render [!]');
         throw new Error('Hello');
+      }
+      componentWillMount() {
+        log.push('BrokenRender componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenRender componentDidMount');
@@ -784,8 +766,14 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).toBe('Caught an error: Hello.');
     ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render',
+      'Normal constructor',
+      'Normal componentWillMount',
       'Normal render',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       'ErrorBoundary ref to Normal is set to null',
       'ErrorBoundary renderError',
