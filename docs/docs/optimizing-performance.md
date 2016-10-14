@@ -28,7 +28,7 @@ The development build includes extra warnings that are helpful when building you
 
 ## Avoid Reconciliation
 
-React builds and maintains an internal representation of the rendered UI. It includes the React elements you return from your components. This representation lets React avoid creating DOM nodes and accessing existing ones beyond necessity, as that can be slower than operations on JavaScript objects. Sometimes it is referred to as "virtual DOM", but it works the same way on React Native.
+React builds and maintains an internal representation of the rendered UI. It includes the React elements you return from your components. This representation lets React avoid creating DOM nodes and accessing existing ones beyond necessity, as that can be slower than operations on JavaScript objects. Sometimes it is referred to as a "virtual DOM", but it works the same way on React Native.
 
 When a component's props or state change, React decides whether an actual DOM update is necessary by comparing the newly returned element with the previously rendered one. When they are not equal, React will update the DOM.
 
@@ -69,7 +69,7 @@ class CounterButton extends React.Component {
 }
 ```
 
-In this code, `shouldComponentUpdate` is just doing a shallow comparison between the old props and state, and the new props and state. If there is no difference, the component doesn't update. This pattern is common enough that React provides a helper to use this logic - just inherit from `React.PureComponent`. This code is a simpler way to achieve the same thing:
+In this code, `shouldComponentUpdate` is just checking if there is any change in `props.color` or `state.count`. If those values don't change, the component doesn't update. If your component got more complex, you could use a similar pattern of doing a "shallow comparison" between all the fields of `props` and `state` to determine if the component should update. This pattern is common enough that React provides a helper to use this logic - just inherit from `React.PureComponent`. So this code is a simpler way to achieve the same thing:
 
 ```js
 class CounterButton extends React.PureComponent {
