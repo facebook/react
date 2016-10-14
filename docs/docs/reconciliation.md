@@ -4,119 +4,120 @@ title: Reconciliation
 permalink: docs/reconciliation.html
 ---
 
-React provides a declarative API so that you don't have to worry about exactly what changes on every update. This makes writing applications a lot easier but it might not be obvious how this is implemented within React. This article explains the choices we made in React's "diffing" algorithm so that component updates are predictable while being fast enough for high-performance apps.
+React provides a declarative API so that you don't have to worry about exactly what changes on every update. This makes writing applications a lot easier, but it might not be obvious how this is implemented within React. This article explains the choices we made in React's "diffing" algorithm so that component updates are predictable while being fast enough for high-performance apps.
 
 ## Motivation
 
-Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The [state of the art algorithms](http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf) have a complexity in the order of O(n<sup>3</sup>) where n is the number of elements in the tree.
+When you use React, at a single point in time you can think of the `render()` function as creating a tree of React elements. On the next state or props update, that `render()` function will return a different tree of React elements. The React framework then needs to figure out a way to efficiently convert the first tree into the second tree.
 
-This means that displaying 1000 elements would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instructions per second. So even with the most performant implementation, we wouldn't be able to compute that diff in less than a second.
+There are some generic solutions to this algorithmic problem of generating the minimum number of operations to transform one tree into another. However, the [state of the art algorithms](http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf) have a complexity in the order of O(n<sup>3</sup>) where n is the number of elements in the tree.
 
-Since an optimal algorithm is not tractable, we implement a non-optimal O(n) algorithm using heuristics based on two assumptions:
+If we used this in React, displaying 1000 elements would require in the order of one billion comparisons. This is far too expensive. Instead, React implements a heuristic O(n) algorithm based on two assumptions:
 
-1. Two components of the same type will generate similar trees and two components of different types will generate different trees.
-2. It is possible to provide a unique key for elements that is stable across different renders.
+1. Two elements of different types can be treated as totally different trees.
+2. The developer can hint at which child elements may be stable across different renders with a `key` prop.
 
 In practice, these assumptions are valid for almost all practical use cases.
 
-## Pair-wise diff
+## The Diffing Algorithm
 
-In order to do a tree diff, we first need to be able to diff two elements. There are three different cases being handled.
-
-### Different Element Types
-
-If the element type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one.
-
-```xml
-renderA: <div />
-renderB: <span />
-=> [removeElement <div />], [insertElement <span />]
-```
-
-The same logic is used for custom components. If they are not of the same type, React is not going to even try at matching what they render. It is just going to remove the first one from the DOM and insert the second one.
-
-```xml
-renderA: <Header />
-renderB: <Content />
-=> [removeElement <Header />], [insertElement <Content />]
-```
-
-Having this high level knowledge is a very important aspect of why React's diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.
-
-It is very unlikely that a `<Header>` element is going to generate a DOM that is going to look like what a `<Content>` would generate. Instead of spending time trying to match those two structures, React just re-builds the tree from scratch.
-
-As a corollary, if there is a `<Header>` element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.
+When diffing two trees, React first compares the types of the two root elements. If the root elements have different types, React just throws away the first tree and builds the second tree from scratch. When the root elements have the same type, React first converts the root element, and then recurses. The specifics are different depending on whether the elements are DOM elements or component elements.
 
 ### DOM Elements
 
-When comparing two DOM elements, we look at the attributes of both and can decide which of them changed in linear time.
+When comparing two React DOM elements, React looks at the attributes of both, keeps the same underlying DOM element, and only updates the changed attributes. For example:
 
 ```xml
-renderA: <div className="before" />
-renderB: <div className="after" />
-=> [replaceAttribute className "after"]
+<div className="before" title="stuff" />
+
+<div className="after" title="stuff" />
 ```
 
-Instead of treating style as an opaque string, a key-value object is used instead. This lets us update only the properties that changed.
+When converting between these two elements, React knows to only modify the `className`.
+
+When updating `style`, React also knows to update only the properties that changed. For example:
 
 ```xml
-renderA: <div style={{'{{'}}color: 'red'}} />
-renderB: <div style={{'{{'}}fontWeight: 'bold'}} />
-=> [removeStyle color], [addStyle font-weight 'bold']
+<div style={{'{{'}}color: 'red', fontWeight: 'bold'}} />
+
+<div style={{'{{'}}color: 'green', fontWeight: 'bold'}} />
 ```
 
-After the attributes have been updated, we recurse on all the children.
+When converting between these two elements, React knows to only modify the `color` style, not the `fontWeight`.
+
+After handling the DOM element, React then recurses on the children.
 
 ### Custom Components
 
-The last case is comparing two custom components of the same type. Since components are stateful, we must keep the old instance around. React takes all the attributes from the new component and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
+When a component updates, the instance stays the same, so that state is maintained across renders. React takes all the attributes from the new component element and calls `componentWillReceiveProps()` and `componentWillUpdate()` on the previous one.
 
-The previous component is now operational. Its `render()` method is called and the diff algorithm restarts with the new result and the previous result.
+Next, the `render()` method is called and the diff algorithm recurses on the previous result and the new result.
 
-## List-wise diff
+### Recursing On Children
 
-### Problematic Case
+By default, when recursing on the children of a DOM element, React just iterates over both lists of children at the same time and generates a mutation whenever there's a difference.
 
-In order to do children reconciliation, React adopts a naive approach. It goes over both lists of children at the same time and generates a mutation whenever there's a difference.
-
-For example, if you add an element at the end:
+For example, when adding an element at the end of the children, converting between these two trees works well:
 
 ```xml
-renderA: <div><span>first</span></div>
-renderB: <div><span>first</span><span>second</span></div>
-=> [insertElement <span>second</span>]
+<div>
+  <span>first</span>
+  <span>second</span>
+</div>
+
+<div>
+  <span>first</span>
+  <span>second</span>
+  <span>third</span>
+</div>
 ```
 
-Inserting an element at the beginning is problematic. React is going to see that both elements are spans and therefore run into a mutation mode.
+React will match the two `<span>first</span>` trees, match the two `<span>second</span>` trees, and then insert the `<span>third</span>` tree.
+
+Inserting an element at the beginning has worse performance. For example, converting between these two trees works poorly:
 
 ```xml
-renderA: <div><span>first</span></div>
-renderB: <div><span>second</span><span>first</span></div>
-=> [replaceAttribute textContent 'second'], [insertElement <span>first</span>]
+<div>
+  <span>Duke</span>
+  <span>Villanova</span>
+</div>
+
+<div>
+  <span>Connecticut</span>
+  <span>Duke</span>
+  <span>Villanova</span>
+</div>
 ```
 
-There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when an element has moved into another position and algorithms to do that have much worse complexity.
+React will mutate every child instead of realizing it can keep the `<span>Duke</span>` and `<span>Villanova</span>` subtrees intact. This inefficiency can be a problem.
 
 ### Keys
 
-In order to solve this issue, React supports an optional `key` attribute. You can provide for each child a key that is going to be used to do the matching. If you specify a key, React is now able to find insertion, deletion, substitution and moves in O(n) using a hash table.
+In order to solve this issue, React supports an optional `key` attribute. When children have keys, React uses the key to match children in the original tree with children in the subsequent tree. For example, adding a `key` to our inefficient example above can make the tree conversion efficient:
 
 ```xml
-renderA: <div><span key="first">first</span></div>
-renderB: <div><span key="second">second</span><span key="first">first</span></div>
-=> [insertElement <span>second</span>]
+<div>
+  <span key={2015}>Duke</span>
+  <span key={2016}>Villanova</span>
+</div>
+
+<div>
+  <span key={2014}>Connecticut</span>
+  <span key={2015}>Duke</span>
+  <span key={2016}>Villanova</span>
+</div>
 ```
 
-In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. Remember that the key only has to be unique among its siblings, not globally unique.
+In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. The key only has to be unique among its siblings, not globally unique.
 
-## Trade-offs
+## Tradeoffs
 
-It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action; the end result would be the same. We are regularly refining the heuristics in order to make common use cases faster.
+It is important to remember that the reconciliation algorithm is an implementation detail. React could rerender the whole app on every action; the end result would be the same. We are regularly refining the heuristics in order to make common use cases faster.
 
-In the current implementation, you can express the fact that a sub-tree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.
+In the current implementation, you can express the fact that a subtree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will rerender that full subtree.
 
 Because React relies on heuristics, if the assumptions behind them are not met, performance will suffer.
 
-1. The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
+1. The algorithm will not try to match sub-trees of different component classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
-2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many elements to be unnecessarily re-created, which can cause performance degradation and lost state in child components.
+2. Keys should be stable, predictable, and unique. Unstable keys (like those produced by Math.random()) will cause many elements to be unnecessarily recreated, which can cause performance degradation and lost state in child components.
