@@ -4,8 +4,7 @@ title: Test Utilities
 permalink: docs/test-utils.html
 layout: docs
 category: Reference
-prev: shallow-compare.html
-next: perf.html
+prev: perf.html
 ---
 
 **Importing**
@@ -48,9 +47,11 @@ Shallow rendering lets you render a component "one level deep" and assert facts 
  - [`shallowRenderer.render()`](#shallowrenderer.render)
  - [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput)
 
-Call [`createRenderer()`](#createrenderer) in your tests to create a shallow renderer. You can think of this as a "place" to render the component you're testing, where it can respond to events and update itself.
+Call [`createRenderer()`](#createrenderer) in your tests to create a shallow renderer. You can think of this as a "place" to render the component you're testing, and from which you can extract the component's output.
 
-[`shadowRenderer.render()`](#shallowrenderer.render) is similar to [`ReactDOM.render()`](/react/docs/react-dom.html#render). After `shaowRenderer.render()` has been called, you can use [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput) to get the shallowly rendered output.
+[`shadowRenderer.render()`](#shallowrenderer.render) is similar to [`ReactDOM.render()`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. This means you can test components in isolated from how their children are implemented.
+
+After `shadowRenderer.render()` has been called, you can use [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput) to get the shallowly rendered output.
 
 You can then begin to assert facts about the output. For example, if your component's render method returns:
 
@@ -312,7 +313,7 @@ shallowRenderer.render(
 )
 ```
 
-Similar to [`ReactDOM.render`](/react/docs/react-dom.html#render). Shallowly renders a component. See [Shallow Rendering](#shallow-rendering).
+Similar to [`ReactDOM.render`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. See [Shallow Rendering](#shallow-rendering).
 
 * * *
 

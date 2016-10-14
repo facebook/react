@@ -7,7 +7,6 @@ permalink: docs/addons.html
 The React add-ons are a collection of useful utility modules for building React apps. **These should be considered experimental** and tend to change more often than the core.
 
 - [`TransitionGroup` and `CSSTransitionGroup`](animation.html), for dealing with animations and transitions that are usually not simple to implement, such as before a component's removal.
-- [`shallowCompare`](shallow-compare.html), a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.
 - [`createFragment`](create-fragment.html), to create a set of externally-keyed children.
 
 The add-ons below are in the development (unminified) version of React only:
@@ -20,6 +19,7 @@ The add-ons below are in the development (unminified) version of React only:
 The add-ons below are considered legacy and their use is discouraged.
 
 - [`PureRenderMixin`](pure-render-mixin.html). Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
+- [`shallowCompare`](shallow-compare.html), a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.
 - [`update`](update.html). Use [`kolodny/immutability-helper`](https://github.com/kolodny/immutability-helper) instead.
 
 ### Deprecated Add-ons
@@ -31,8 +31,8 @@ The add-ons below are considered legacy and their use is discouraged.
 If using npm, you can install the add-ons individually from npm (e.g. `npm install react-addons-test-utils`) and import them:
 
 ```javascript
-import React from 'react/addons'; // ES6
-var React = require('react/addons'); // ES5 with npm
+import Perf from 'react-addons-perf' // ES6
+var Perf = require('react-addons-perf') // ES5 with npm
 ```
 
 When using a CDN, you can use `react-with-addons.js` instead of `react.js`:

@@ -5,7 +5,7 @@ permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
 prev: animation.html
-next: shallow-compare.html
+next: perf.html
 ---
 
 **Importing**

@@ -4,7 +4,8 @@ title: Performance Tools
 permalink: docs/perf.html
 layout: docs
 category: Add-Ons
-prev: test-utils.html
+prev: create-fragment.html
+next: test-utils.html
 ---
 
 **Importing**
