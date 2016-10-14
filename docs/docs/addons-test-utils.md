@@ -312,7 +312,7 @@ shallowRenderer.render(
 )
 ```
 
-Similar to [`ReactDOM.render`](/react/docs/react-dom.html#render).
+Similar to [`ReactDOM.render`](/react/docs/react-dom.html#render). Shallowly renders a component. See [Shallow Rendering](#shallow-rendering).
 
 * * *
 
