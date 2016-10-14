@@ -55,7 +55,7 @@ Rafał Cieślak ([@Ravicious](https://twitter.com/Ravicious)) wrote a [React ver
 
 Emanuele shared this awesome demo video with us:
 
-<iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/jYcpaemt90M" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/jYcpaemt90M" frameborder="0" allowfullscreen></iframe>
 
 
 
