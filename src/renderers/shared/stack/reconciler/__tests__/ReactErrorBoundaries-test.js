@@ -367,7 +367,7 @@ describe('ReactErrorBoundaries', () => {
         log.push('ErrorBoundary constructor');
       }
       render() {
-        if (this.state.error) {
+        if (this.state.error && !this.props.forceRetry) {
           log.push('ErrorBoundary render error');
           return this.props.renderError(this.state.error, this.props);
         }
@@ -1278,6 +1278,54 @@ describe('ReactErrorBoundaries', () => {
     ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
       'ErrorBoundary componentWillUnmount',
+    ]);
+  });
+
+  it('can recover from error state', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+
+    ReactDOM.render(
+      <ErrorBoundary>
+        <Normal />
+      </ErrorBoundary>,
+      container
+    );
+    // Error boundary doesn't retry by itself:
+    expect(container.textContent).toBe('Caught an error: Hello.');
+
+    // Force the success path:
+    log.length = 0;
+    ReactDOM.render(
+      <ErrorBoundary forceRetry>
+        <Normal />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.textContent).not.toContain('Caught an error');
+    expect(log).toEqual([
+      'ErrorBoundary componentWillReceiveProps',
+      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary render success',
+      // Mount children:
+      'Normal constructor',
+      'Normal componentWillMount',
+      'Normal render',
+      // Finalize updates:
+      'Normal componentDidMount',
+      'ErrorBoundary componentDidUpdate',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+      'Normal componentWillUnmount',
     ]);
   });
 
