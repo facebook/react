@@ -152,19 +152,49 @@ The simplest way to avoid this problem is to avoid mutating values that you are 
 
 ```javascript
 handleClick() {
-  const newWords = this.state.words.concat(['marklar']);
-  this.setState({words: newWords});
+  this.setState(prevState => ({
+    words: prevState.words.concat(['marklar'])
+  }));
 }
 ```
 
-There is a JavaScript proposal to add [object spread properties](https://github.com/sebmarkbage/ecmascript-rest-spread) to make it easier to update objects without mutation as well. If you're using Create React App, this syntax is available by default.
+ES6 supports a [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator) for arrays which can make this easier. If you're using Create React App, this syntax is available by default.
 
 ```js
 handleClick() {
-  const newWords = [...this.state.words, 'marklar'];
-  this.setState({words: newWords});
+  this.setState(prevState => ({
+    words: [...prevState.words, 'marklar'],
+  }));
 };
 ```
+
+You can also rewrite code that mutates objects to avoid mutation, in a similar way. For example, let's say we have an object named `colormap` and we want to write a function that changes `colormap.right` to be `'blue'`. We could write:
+
+```js
+function updateColorMap(colormap) {
+  colormap.right = 'blue';
+}
+```
+
+To write this without mutating the original object, we can use [Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) method:
+
+```js
+function updateColorMap(colormap) {
+  return Object.assign({}, colormap, {right: 'blue'});
+}
+```
+
+`updateColorMap` now returns a new object, rather than mutating the old one. `Object.assign` is in ES6 and requires a polyfill.
+
+There is a JavaScript proposal to add [object spread properties](https://github.com/sebmarkbage/ecmascript-rest-spread) to make it easier to update objects without mutation as well:
+
+```js
+function updateColorMap(colormap) {
+  return {...colormap, right: 'blue'};
+}
+```
+
+If you're using Create React App, both `Object.assign` and the object spread syntax are available by default.
 
 ## Using Immutable Data Structures
 
