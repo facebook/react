@@ -15,7 +15,6 @@ var React;
 var ReactDOM;
 
 describe('ReactErrorBoundaries', () => {
-
   var log;
 
   var BrokenConstructor;
@@ -25,6 +24,7 @@ describe('ReactErrorBoundaries', () => {
   var BrokenErrorBoundary;
   var BrokenRender;
   var ErrorBoundary;
+  var ErrorMessage;
   var NoopErrorBoundary;
   var Normal;
 
@@ -222,7 +222,7 @@ describe('ReactErrorBoundaries', () => {
       render() {
         if (this.state.error) {
           log.push('ErrorBoundary render error');
-          return this.props.renderError(this.state.error);
+          return this.props.renderError(this.state.error, this.props);
         }
         log.push('ErrorBoundary render success');
         return <div>{this.props.children}</div>;
@@ -241,11 +241,34 @@ describe('ReactErrorBoundaries', () => {
         log.push('ErrorBoundary componentWillUnmount');
       }
     };
-
     ErrorBoundary.defaultProps = {
-      renderError(error) {
-        return <div>Caught an error: {error.message}.</div>;
+      renderError(error, props) {
+        return (
+          <div ref={props.errorMessageRef}>
+            Caught an error: {error.message}.
+          </div>
+        );
       },
+    };
+
+    ErrorMessage = class ErrorMessage extends React.Component {
+      constructor(props) {
+        super(props);
+        log.push('ErrorMessage constructor');
+      }
+      componentWillMount() {
+        log.push('ErrorMessage componentWillMount');
+      }
+      componentDidMount() {
+        log.push('ErrorMessage componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('ErrorMessage componentWillUnmount');
+      }
+      render() {
+        log.push('ErrorMessage render');
+        return <div>Caught an error: {this.props.message}.</div>;
+      }
     };
   });
 
@@ -313,6 +336,39 @@ describe('ReactErrorBoundaries', () => {
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
+      'ErrorBoundary componentDidMount',
+    ]);
+  });
+
+  it('mounts the error message if mounting fails', () => {
+    function renderError(error) {
+      return (
+        <ErrorMessage message={error.message} />
+      );
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary renderError={renderError}>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Handle the error:
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary render error',
+      // Mount the error message:
+      'ErrorMessage constructor',
+      'ErrorMessage componentWillMount',
+      'ErrorMessage render',
+      'ErrorMessage componentDidMount',
       'ErrorBoundary componentDidMount',
     ]);
   });
@@ -461,6 +517,48 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
+  it('resets refs if mounting aborts', () => {
+    function childRef(x) {
+      log.push('Child ref is set to ' + x);
+    };
+    function errorMessageRef(x) {
+      log.push('Error message ref is set to ' + x);
+    };
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary errorMessageRef={errorMessageRef}>
+        <div ref={childRef} />
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Handle error:
+      'ErrorBoundary unstable_handleError',
+      // Ref to child should not get set:
+      'Child ref is set to null',
+      'ErrorBoundary render error',
+      // Ref to error message should get set:
+      'Error message ref is set to [object HTMLDivElement]',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+      'Error message ref is set to null',
+    ]);
+  });
+
   it('successfully mounts if no error occurs', () => {
     var container = document.createElement('div');
     ReactDOM.render(
@@ -478,77 +576,11 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  it('resets refs to composite siblings if one of them throws', () => {
-    function ref(x) {
-      log.push('Normal ref is set to ' + x);
-    };
-
+  it('catches if child throws in render during update', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
-        <Normal ref={ref} />
-        <BrokenRender />
-      </ErrorBoundary>,
-      container
-    );
-    expect(container.textContent).toBe('Caught an error: Hello.');
-    ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      'ErrorBoundary constructor',
-      'ErrorBoundary componentWillMount',
-      'ErrorBoundary render success',
-      'Normal constructor',
-      'Normal componentWillMount',
-      'Normal render',
-      'BrokenRender constructor',
-      'BrokenRender componentWillMount',
-      'BrokenRender render [!]',
-      'ErrorBoundary unstable_handleError',
-      'Normal ref is set to null',
-      'ErrorBoundary render error',
-      'ErrorBoundary componentDidMount',
-      'ErrorBoundary componentWillUnmount',
-    ]);
-  });
-
-  it('catches if child throws in render during update', () => {
-    class ErrorMessage extends React.Component {
-      constructor(props) {
-        super(props);
-        log.push('ErrorMessage constructor');
-      }
-      componentWillMount() {
-        log.push('ErrorMessage componentWillMount');
-      }
-      componentDidMount() {
-        log.push('ErrorMessage componentDidMount');
-      }
-      componentWillUnmount() {
-        log.push('ErrorMessage componentWillUnmount');
-      }
-      render() {
-        log.push('ErrorMessage render');
-        return <div>Caught an error: {this.props.message}.</div>;
-      }
-    }
-
-    function renderError(error) {
-      return (
-        <ErrorMessage
-          message={error.message}
-          ref={inst => {
-            log.push('ErrorMessage ref is set to ' + inst);
-          }} />
-      );
-    }
-
-    var container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary renderError={renderError}>
-        <Normal
-          ref={inst => {
-            log.push('Normal ref is set to ' + inst);
-          }} />
+        <Normal />
       </ErrorBoundary>,
       container
     );
@@ -560,22 +592,14 @@ describe('ReactErrorBoundaries', () => {
       'Normal componentWillMount',
       'Normal render',
       'Normal componentDidMount',
-      'Normal ref is set to [object Object]',
       'ErrorBoundary componentDidMount',
     ]);
 
     log.length = 0;
     ReactDOM.render(
-      <ErrorBoundary renderError={renderError}>
-        <Normal
-          ref={inst => {
-            log.push('Normal ref is set to ' + inst);
-          }} />
-        <Normal
-          logName="Normal2"
-          ref={inst => {
-            log.push('Normal ref is set to ' + inst);
-          }} />
+      <ErrorBoundary>
+        <Normal />
+        <Normal logName="Normal2" />
         <BrokenRender />
       </ErrorBoundary>,
       container
@@ -583,7 +607,6 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).toBe('Caught an error: Hello.');
     expect(log).toEqual([
       'ErrorBoundary render success',
-      'Normal ref is set to null',
       'Normal render',
       // Normal2 will attempt to mount:
       'Normal2 constructor',
@@ -595,15 +618,67 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       'ErrorBoundary unstable_handleError',
       // Unmount the previously mounted components:
-      'Normal ref is set to null',
       'Normal componentWillUnmount',
       // Normal2 does not get lifefycle because it was never mounted
+      'ErrorBoundary render error'
+    ]);
+  });
+
+  it('keeps refs up-to-date during updates', () => {
+    function child1Ref(x) {
+      log.push('Child1 ref is set to ' + x);
+    };
+    function child2Ref(x) {
+      log.push('Child2 ref is set to ' + x);
+    };
+    function errorMessageRef(x) {
+      log.push('Error message ref is set to ' + x);
+    };
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary errorMessageRef={errorMessageRef}>
+        <div ref={child1Ref} />
+      </ErrorBoundary>,
+      container
+    );
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'Child1 ref is set to [object HTMLDivElement]',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.render(
+      <ErrorBoundary errorMessageRef={errorMessageRef}>
+        <div ref={child1Ref} />
+        <div ref={child2Ref} />
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'ErrorBoundary render success',
+      // BrokenRender will abort rendering:
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      'ErrorBoundary unstable_handleError',
+      // Unmount the previously mounted components:
+      'Child1 ref is set to null',
       'ErrorBoundary render error',
-      'ErrorMessage constructor',
-      'ErrorMessage componentWillMount',
-      'ErrorMessage render',
-      'ErrorMessage componentDidMount',
-      'ErrorMessage ref is set to [object Object]',
+      'Error message ref is set to [object HTMLDivElement]',
+      // Child2 ref is never set because its mounting aborted
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+      'Error message ref is set to null',
     ]);
   });
 
@@ -735,6 +810,27 @@ describe('ReactErrorBoundaries', () => {
     expect(log).toEqual([
       'ErrorBoundary componentWillUnmount',
     ]);
+  });
+
+  it('can update multiple times in error state', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.textContent).toBe('Caught an error: Hello.');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.textContent).toBe('Caught an error: Hello.');
+    ReactDOM.render(<div>Other screen</div>, container);
+    expect(container.textContent).toBe('Other screen');
+    ReactDOM.unmountComponentAtNode(container);
   });
 
   it('doesn\'t get into inconsistent state during removals', () => {
