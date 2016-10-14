@@ -15,7 +15,7 @@ The vast majority of applications do not need to use context.
 
 If you want your application to be stable, don't use context. It is an experimental API and it is likely to break in future releases of React.
 
-If you aren't familiar with state management libraries like [Redux](https://github.com/reactjs/redux) or [MobX](https://github.com/mobxjs/mobx), don't use context. For many practical applications, these libraries and their React bindings are a good choice for managing a state that is relevant to many components. It is far more likely that Redux is the right solution to your problem than that context is the right solution.
+If you aren't familiar with state management libraries like [Redux](https://github.com/reactjs/redux) or [MobX](https://github.com/mobxjs/mobx), don't use context. For many practical applications, these libraries and their React bindings are a good choice for managing state that is relevant to many components. It is far more likely that Redux is the right solution to your problem than that context is the right solution.
 
 If you aren't an experienced React developer, don't use context. There is usually a better way to implement functionality just using props and state.
 
