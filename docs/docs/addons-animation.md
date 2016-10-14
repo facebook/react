@@ -1,11 +1,11 @@
 ---
 id: animation
 title: Animation Add-Ons
+permalink: docs/animation.html
 layout: docs
 category: Add-Ons
-permalink: docs/animation.html
 prev: addons.html
-next: test-utils.html
+next: create-fragment.html
 ---
 
 The [`ReactTransitionGroup`](#reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.
@@ -18,7 +18,8 @@ The [`ReactTransitionGroup`](#reacttransitiongroup) add-on component is a low-le
 
 ```javascript
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group' // ES6
-var ReactCSSTransitionGroup = require('react-addons-css-transition-group') // ES5
+var ReactCSSTransitionGroup = require('react-addons-css-transition-group') // ES5 with npm
+var ReactTransitionGroup = React.addons.TransitionGroup; // ES5 with react-with-addons.js
 ```
 
 ```javascript{31-36}

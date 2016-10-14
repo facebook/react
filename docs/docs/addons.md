@@ -15,30 +15,30 @@ The add-ons below are in the development (unminified) version of React only:
 - [`ReactTestUtils`](test-utils.html), simple helpers for writing test cases.
 - [`Perf`](perf.html), a performance profiling tool for finding optimization opportunities.
 
-To get the add-ons, install them individually from npm (e.g., `npm install react-addons-test-utils`) or use React with Add-Ons.
+### Legacy Add-ons
+
+The add-ons below are considered legacy and their use is discouraged.
+
+- [`PureRenderMixin`](pure-render-mixin.html). Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
+- [`update`](update.html). Use [`kolodny/immutability-helper`](https://github.com/kolodny/immutability-helper) instead.
+
+### Deprecated Add-ons
+
+[`LinkedStateMixin`](two-way-binding-helpers.html) has been deprecated.
 
 ## Using React with Add-ons
 
-Use `react-with-addons.js` instead of `react.js` when using a CDN:
+If using npm, you can install the add-ons individually from npm (e.g. `npm install react-addons-test-utils`) and import them:
+
+```javascript
+import React from 'react/addons'; // ES6
+var React = require('react/addons'); // ES5 with npm
+```
+
+When using a CDN, you can use `react-with-addons.js` instead of `react.js`:
 
 ```html
 <script src="https://unpkg.com/react@15/dist/react-with-addons.js"></script>
 ```
 
-If using npm, you can import the 'react/addons' package instead:
-
-```javascript
-import React from 'react/addons'; // ES6
-var React = require('react/addons'); // ES5
-```
-
-The add-ons will be available via `React.addons`.
-
-## Legacy Add-ons
-
-The add-ons below are considered legacy and their use is discouraged.
-
-- [`cloneWithProps`](clone-with-props.html)
-- [`PureRenderMixin`](pure-render-mixin.html)
-- [`LinkedStateMixin`](two-way-binding-helpers.html)
-- [`update`](update.html)
+The add-ons will be available via the `React.addons` global (e.g. `React.addons.TestUtils`).

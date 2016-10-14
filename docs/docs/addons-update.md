@@ -1,21 +1,20 @@
 ---
 id: update
-title: Immutability Helpers (Legacy)
+title: Immutability Helpers
+permalink: docs/update.html
 layout: docs
 category: Add-Ons
-permalink: docs/update.html
-prev: two-way-binding-helpers.html
 ---
 
 > Note:
->
-> 'react-addons-update' is a legacy add-on. Use ['kolodny/immutability-helper'](https://github.com/kolodny/immutability-helper) instead.
+> `update` is a legacy add-on. Use [`kolodny/immutability-helper`](https://github.com/kolodny/immutability-helper) instead.
 
 **Importing**
 
 ```javascript
 import update from 'react-addons-update'; // ES6
-var update = require('react-addons-update'); // ES5
+var update = require('react-addons-update'); // ES5 with npm
+var update = React.addons.update; // ES5 with react-with-addons.js
 ```
 
 ## Overview

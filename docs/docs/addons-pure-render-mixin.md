@@ -1,22 +1,20 @@
 ---
 id: pure-render-mixin
-title: PureRenderMixin (Legacy)
+title: PureRenderMixin
+permalink: docs/pure-render-mixin.html
 layout: docs
 category: Add-Ons
-permalink: docs/pure-render-mixin.html
-prev: clone-with-props.html
-next: two-way-binding-helpers.html
 ---
 
 > Note:
->
-> 'react-addons-pure-render-mixin' is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
+> `PureRenderMixin` is considered legacy. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
 
 **Importing**
 
 ```javascript
 import PureRenderMixin from 'react-addons-pure-render-mixin' // ES6
-var PureRenderMixin = require('react-addons-pure-render-mixin') // ES5
+var PureRenderMixin = require('react-addons-pure-render-mixin') // ES5 with npm
+var PureRenderMixin = React.addons.PureRenderMixin; // ES5 with react-with-addons.js
 ```
 
 ## Overview

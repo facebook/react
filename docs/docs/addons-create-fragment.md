@@ -1,18 +1,19 @@
 ---
 id: create-fragment
 title: Keyed Fragments
+permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
-permalink: docs/create-fragment.html
-prev: test-utils.html
-next: perf.html
+prev: animation.html
+next: shallow-compare.html
 ---
 
 **Importing**
 
 ```javascript
 import createFragment from 'react-addons-create-fragment' // ES6
-var createFragment = require('react-addons-create-fragment') // ES5
+var createFragment = require('react-addons-create-fragment') // ES5 with npm
+var createFragment = React.addons.createFragment; // ES5 with react-with-addons.js
 ```
 
 ## Overview

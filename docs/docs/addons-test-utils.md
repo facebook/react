@@ -1,18 +1,19 @@
 ---
 id: test-utils
 title: Test Utilities
+permalink: docs/test-utils.html
 layout: docs
 category: Reference
-permalink: docs/test-utils.html
-prev: animation.html
-next: create-fragment.html
+prev: shallow-compare.html
+next: perf.html
 ---
 
 **Importing**
 
 ```javascript
 import ReactTestUtils from 'react-addons-test-utils' // ES6
-var ReactTestUtils = require('react-addons-test-utils') // ES5
+var ReactTestUtils = require('react-addons-test-utils') // ES5 with npm
+var ReactTestUtils = React.addons.TestUtils; // ES5 with react-with-addons.js
 ```
 
 ## Overview
@@ -211,7 +212,7 @@ Returns `true` if `instance` is a DOM component (such as a `<div>` or `<span>`).
 isCompositeComponent(instance)
 ```
 
-Returns `true` if `instance` is a composite component (a `React.Component` subclass or a component created with `React.createClass()`).
+Returns `true` if `instance` is a user-defined component, such as a class or a function.
 
 * * *
 
@@ -224,7 +225,7 @@ isCompositeComponentWithType(
 )
 ```
 
-Returns `true` if `instance` is a composite component (a `React.Component` subclass or a component created with `React.createClass()`) whose type is of a React `componentClass`.
+Returns `true` if `instance` is a component whose type is of a React `componentClass`.
 
 * * *
 

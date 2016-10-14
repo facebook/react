@@ -35,22 +35,20 @@
       subitems:
         - id: animation
           title: Animation
-        - id: test-utils
-          title: Test Utilities
         - id: create-fragment
           title: Keyed Fragments
-        - id: perf
-          title: Performance Tools
         - id: shallow-compare
           title: Shallow Compare
-        - id: clone-with-props
-          title: Cloning Elements
+        - id: test-utils
+          title: Test Utilities
+        - id: perf
+          title: Performance Tools
         - id: pure-render-mixin
           title: PureRenderMixin
-        - id: two-way-binding-helpers
-          title: Two-way Binding Helpers
         - id: update
           title: Immutability Helpers
+        - id: two-way-binding-helpers
+          title: Two-way Binding Helpers
 - title: Reference
   items:
     - id: react-api

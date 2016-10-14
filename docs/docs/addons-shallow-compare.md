@@ -4,15 +4,16 @@ title: Shallow Compare
 permalink: docs/shallow-compare.html
 layout: docs
 category: Reference
-prev: perf.html
-next: clone-with-props.html
+prev: create-fragment.html
+next: test-utils.html
 ---
 
 **Importing**
 
 ```javascript
 import shallowCompare from 'react-addons-shallow-compare' // ES6
-var shallowCompare = require('react-addons-shallow-compare') // ES5
+var shallowCompare = require('react-addons-shallow-compare') // ES5 with npm
+var shallowCompare = React.addons.shallowCompare; // ES5 with react-with-addons.js
 ```
 
 ## Overview
