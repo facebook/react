@@ -738,7 +738,6 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-
   it('propagates errors inside boundary while rendering error state', () => {
     var container = document.createElement('div');
     ReactDOM.render(
