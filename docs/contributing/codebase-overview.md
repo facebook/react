@@ -38,7 +38,7 @@ var setInnerHTML = require('setInnerHTML');
 
 Haste was originally developed for giant apps like Facebook. It's easy to move files to different folders and import them without worrying about relative paths. The fuzzy file search in any editor always takes you to the correct place thanks to globally unique names.
 
-React itself was extracted from Facebook codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However, this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.
+React itself was extracted from the Facebook codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However, this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.
 
 **Haste will make more sense to you if you remember a few rules:**
 
