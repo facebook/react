@@ -4,7 +4,7 @@ title: Refs and the DOM
 permalink: docs/refs-and-the-dom.html
 ---
 
-In the typical React dataflow, `props` are the only way that parent components interact with their children. To modify a child, you re-render it with new `props`. However, there are a few cases where you need to imperatively modify a child outside of the typical dataflow. The child to be modified could be an instance of a React component, or it could be a DOM element. For both of these cases, React provides an escape hatch.
+In the typical React dataflow, [props](/react/docs/components-and-props.html) are the only way that parent components interact with their children. To modify a child, you re-render it with new props. However, there are a few cases where you need to imperatively modify a child outside of the typical dataflow. The child to be modified could be an instance of a React component, or it could be a DOM element. For both of these cases, React provides an escape hatch.
 
 ## The ref Callback Attribute
 
