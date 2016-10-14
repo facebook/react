@@ -36,6 +36,8 @@
       title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
+    - id: the-component-lifecycle
+      title: The Component Lifecycle
 - title: Reference
   items:
     - id: react-api
