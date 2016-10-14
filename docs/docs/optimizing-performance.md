@@ -40,7 +40,25 @@ shouldComponentUpdate(nextProps, nextState) {
 }
 ```
 
-If you know that in some situations your component doesn't need to update, you can return `false` from `shouldComponentUpdate` instead, to skip the whole rendering process, including calling `render()` on this component and below. For example, if the only way your component ever changes is when the `props.color` or the `state.count` variable changes, you could have `shouldComponentUpdate` check that:
+If you know that in some situations your component doesn't need to update, you can return `false` from `shouldComponentUpdate` instead, to skip the whole rendering process, including calling `render()` on this component and below.
+
+## shouldComponentUpdate In Action
+
+Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the rendered React elements were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
+
+<figure><img src="/react/img/docs/should-component-update.png" /></figure>
+
+Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not attempt to render C2, and thus didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
+
+For C1 and C3, `shouldComponentUpdate` returned `true`, so React had to go down to the leaves and check them. For C6 `shouldComponentUpdate` returned `true`, and since the rendered elements weren't equivalent React had to update the DOM.
+
+The last interesting case is C8. React had to render this component, but since the React elements it returned were equal to the previously rendered ones, it didn't have to update the DOM.
+
+Note that React only had to do DOM mutations for C6, which was inevitable. For C8, it bailed out by comparing the rendered React elements, and for C2's subtree and C7, it didn't even have to compare the elements as we bailed out on `shouldComponentUpdate`, and `render` was not called.
+
+## Examples
+
+If the only way your component ever changes is when the `props.color` or the `state.count` variable changes, you could have `shouldComponentUpdate` check that:
 
 ```javascript
 class CounterButton extends React.Component {
@@ -88,37 +106,9 @@ class CounterButton extends React.PureComponent {
 }
 ```
 
-Most of the time, you can use `React.PureComponent` instead of writing your own `shouldComponentUpdate`. It only does a shallow comparison, so you can't use it when the rendering function uses deep properties of the props or state. For example, if your render function refers to `this.props.foo.bar` or `this.state.qux.quux`, you should not use `React.PureComponent`.
+Most of the time, you can use `React.PureComponent` instead of writing your own `shouldComponentUpdate`. It only does a shallow comparison, so you can't use it if the props or state may have been mutated in a way that a shallow comparison would miss.
 
-If you create functions or child components in your `render` function, `PureComponent` will never short-circuit rendering, since those functions or child components will always be different. You can often avoid this by creating these once during component creation rather than on every render.
-
-## shouldComponentUpdate In Action
-
-Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the rendered DOM elements were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
-
-<figure><img src="/react/img/docs/should-component-update.png" /></figure>
-
-Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not attempt to render C2, and thus didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
-
-For C1 and C3, `shouldComponentUpdate` returned `true`, so React had to go down to the leaves and check them. For C6 `shouldComponentUpdate` returned `true`, and since the rendered DOM elements weren't equivalent React had to update the DOM.
-
-The last interesting case is C8. React had to render this component, but since the DOM elements it returned were equal to the previously rendered ones, it didn't have to update the DOM.
-
-Note that React only had to do DOM mutations for C6, which was inevitable. For C8, it bailed out by comparing the rendered DOM elements, and for C2's subtree and C7, it didn't even have to compare the elements as we bailed out on `shouldComponentUpdate`, and `render` was not called.
-
-## Tricky Examples
-
-Let's say that you have a component that just renders the string passed in `props.value`. We could implement this with `React.PureComponent`:
-
-```javascript
-class StringComponent extends React.PureComponent {
-  render() {
-    return <div>{this.props.value}</div>;
-  }
-}
-```
-
-If your components use more complex data structures, this might not be so simple. For example, let's say your component renders a comma-separated list of words. This code does *not* work correctly:
+This can be a problem with more complex data structures. For example, let's say you want a `ListOfWords` component to render a comma-separated list of words, with a parent `WordAdder` component that lets you click a button to add a word to the list. This code does *not* work correctly:
 
 ```javascript
 class ListOfWords extends React.PureComponent {
@@ -126,72 +116,53 @@ class ListOfWords extends React.PureComponent {
     return <div>{this.props.words.join(',')}</div>;
   }
 }
-```
 
-The problem is that `PureComponent` will do a shallow comparison between the old and new values of `this.props.words`. If your application has a sequence of events like:
-
-1. `let words = ['alpha', 'beta', 'gamma'];`
-2. Render `<ListOfWords words={words} />`
-3. `words.push('delta')`
-4. Re-render `<ListOfWords words={words} />`
-
-The `PureComponent` logic will actually prevent the rerender during step 4. This happens because the old and new values of `words` are the same list. `PureComponent` just does a shallow comparison, so it mistakenly thinks that nothing has changed in step 4.
-
-One way to solve this is by writing a more complicated `shouldComponentUpdate` function:
-
-```javascript
-class ListOfWords extends React.Component {
-  render() {
-    return <div>{this.props.words.join(',')}</div>;
+class WordAdder extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      words: ['marklar']
+    };
+    this.handleClick = this.handleClick.bind(this);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    // We have to do a possibly-expensive deep equality check
-    if (props.words.length !== nextProps.words.length) {
-      return true;
-    }
-    for (let i = 0; i < props.words.length; i++) {
-      if (props.words[i] !== nextProps.words[i]) {
-        return true;
-      }
-    }
-    return false;
+  handleClick() {
+    // This section is bad style and causes a bug
+    const words = this.state.words;
+    words.push('marklar');
+    this.setState({words: words});
+  }
+
+  render() {
+    return (
+      <div>
+        <button onClick={this.handleClick} />
+        <ListOfWords words={this.state.words} />
+      </div>
+    );
   }
 }
 ```
 
-Since the `ListOfWords` component relies on data deep within the props, we have to to a deep comparison to implement `shouldComponentUpdate`. This may not improve performance at all. The fundamental problem is that we want to quickly check for equality of large data structures, without doing an expensive iteration to compare them.
+The problem is that `PureComponent` will do a simple comparison between the old and new values of `this.props.words`. Since this code mutates the `words` array in the `handleClick` method of `WordAdder`, the old and new values of `this.props.words` will compare as equal, even though the actual words in the array have changed. The `ListOfWords` will thus not update even though it has new words that shoud be rendered.
 
 ## The Power Of Not Mutating Data
 
-If you never mutate data structures, you can use shallow comparisons and get the same result as a deep comparison. In this case, the code `words.push('delta')` is mutating the `words` array. Instead of using `push`, you can update without mutating by using `concat` or the ES6 spread operator:
+The simplest way to avoid this problem is to avoid mutating values that you are using as props or state. For example, the `handleClick` method above could be rewritten using `concat` as:
 
-```js
-// The mutable way. This breaks React.PureComponent
-words.push('delta');
-
-// Update words without mutating. This works with React.PureComponent
-words = words.concat(['delta']);
-
-// Update words without mutating, with slightly nicer syntax
-words = [...words, 'delta'];
+```javascript
+handleClick() {
+  const newWords = this.state.words.concat(['marklar']);
+  this.setState({words: newWords});
+}
 ```
 
-There is a JavaScript proposal to add the [object spread operator](http://redux.js.org/docs/recipes/UsingObjectSpreadOperator.html) to make it easier to update objects without mutation as well. If you're using Create React App, this syntax is available by default.
+There is a JavaScript proposal to add [object spread properties](https://github.com/sebmarkbage/ecmascript-rest-spread) to make it easier to update objects without mutation as well. If you're using Create React App, this syntax is available by default.
 
 ```js
-let colormap = {
-  leftBorder: 'red',
-  rightBorder: 'blue',
-};
-
-// The mutable way. This breaks React.PureComponent
-colormap.rightBorder = 'green';
-
-// Update colormap without mutating. This works with React.PureComponent
-colormap = {
-  ...colormap,
-  rightBorder: 'green',
+handleClick() {
+  const newWords = [...this.state.words, 'marklar'];
+  this.setState({words: newWords});
 };
 ```
 
