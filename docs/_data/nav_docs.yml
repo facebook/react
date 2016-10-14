@@ -33,20 +33,20 @@
     - id: addons
       title: Add-Ons
       subitems:
-        - id: animation
-          title: Animation
-        - id: create-fragment
-          title: Keyed Fragments
-        - id: shallow-compare
-          title: Shallow Compare
-        - id: test-utils
-          title: Test Utilities
         - id: perf
           title: Performance Tools
-        - id: pure-render-mixin
-          title: PureRenderMixin
+        - id: test-utils
+          title: Test Utilities
+        - id: animation
+          title: Animation
+        - id: shallow-compare
+          title: Shallow Compare
+        - id: create-fragment
+          title: Keyed Fragments
         - id: update
           title: Immutability Helpers
+        - id: pure-render-mixin
+          title: PureRenderMixin
         - id: two-way-binding-helpers
           title: Two-way Binding Helpers
 - title: Reference
