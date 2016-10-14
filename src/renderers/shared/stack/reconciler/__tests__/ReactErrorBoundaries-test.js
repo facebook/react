@@ -37,7 +37,7 @@ describe('ReactErrorBoundaries', () => {
 
     log = [];
 
-    BrokenConstructor = class BrokenConstructor extends React.Component {
+    BrokenConstructor = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenConstructor constructor [!]');
@@ -67,7 +67,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenComponentWillMount = class BrokenComponentWillMount extends React.Component {
+    BrokenComponentWillMount = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenComponentWillMount constructor');
@@ -97,7 +97,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenComponentDidMount = class BrokenComponentDidMount extends React.Component {
+    BrokenComponentDidMount = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenComponentDidMount constructor');
@@ -127,7 +127,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenComponentWillReceiveProps = class BrokenComponentWillReceiveProps extends React.Component {
+    BrokenComponentWillReceiveProps = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenComponentWillReceiveProps constructor');
@@ -157,7 +157,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenComponentWillUpdate = class BrokenComponentWillUpdate extends React.Component {
+    BrokenComponentWillUpdate = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenComponentWillUpdate constructor');
@@ -187,7 +187,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenComponentDidUpdate = class BrokenComponentDidUpdate extends React.Component {
+    BrokenComponentDidUpdate = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenComponentDidUpdate constructor');
@@ -217,7 +217,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenComponentWillUnmount = class BrokenComponentWillUnmount extends React.Component {
+    BrokenComponentWillUnmount = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenComponentWillUnmount constructor');
@@ -247,7 +247,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenErrorBoundary = class BrokenErrorBoundary extends React.Component {
+    BrokenErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
         this.state = {error: null};
@@ -276,7 +276,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    BrokenRender = class BrokenRender extends React.Component {
+    BrokenRender = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('BrokenRender constructor');
@@ -305,7 +305,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    NoopErrorBoundary = class NoopErrorBoundary extends React.Component {
+    NoopErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('NoopErrorBoundary constructor');
@@ -328,7 +328,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    Normal = class Normal extends React.Component {
+    Normal = class extends React.Component {
       static defaultProps = {
         logName: 'Normal',
       };
@@ -360,7 +360,7 @@ describe('ReactErrorBoundaries', () => {
       }
     };
 
-    ErrorBoundary = class ErrorBoundary extends React.Component {
+    ErrorBoundary = class extends React.Component {
       constructor() {
         super();
         this.state = {error: null};
@@ -407,7 +407,7 @@ describe('ReactErrorBoundaries', () => {
       },
     };
 
-    ErrorMessage = class ErrorMessage extends React.Component {
+    ErrorMessage = class extends React.Component {
       constructor(props) {
         super(props);
         log.push('ErrorMessage constructor');
@@ -764,7 +764,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary unstable_handleError',
       // Render the error message
       'ErrorBoundary render error',
-      'ErrorBoundary componentDidMount'
+      'ErrorBoundary componentDidMount',
     ]);
 
     log.length = 0;
@@ -777,10 +777,10 @@ describe('ReactErrorBoundaries', () => {
   it('resets refs if mounting aborts', () => {
     function childRef(x) {
       log.push('Child ref is set to ' + x);
-    };
+    }
     function errorMessageRef(x) {
       log.push('Error message ref is set to ' + x);
-    };
+    }
 
     var container = document.createElement('div');
     ReactDOM.render(
@@ -1075,13 +1075,13 @@ describe('ReactErrorBoundaries', () => {
   it('keeps refs up-to-date during updates', () => {
     function child1Ref(x) {
       log.push('Child1 ref is set to ' + x);
-    };
+    }
     function child2Ref(x) {
       log.push('Child2 ref is set to ' + x);
-    };
+    }
     function errorMessageRef(x) {
       log.push('Error message ref is set to ' + x);
-    };
+    }
 
     var container = document.createElement('div');
     ReactDOM.render(
@@ -1227,10 +1227,6 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('recovers from nested componentWillUnmount errors on update', () => {
-    function ParentOfBrokenComponentWillUnmount() {
-      return <BrokenComponentWillUnmount />;
-    }
-
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
@@ -1302,7 +1298,7 @@ describe('ReactErrorBoundaries', () => {
     // Force the success path:
     log.length = 0;
     ReactDOM.render(
-      <ErrorBoundary forceRetry>
+      <ErrorBoundary forceRetry={true}>
         <Normal />
       </ErrorBoundary>,
       container
