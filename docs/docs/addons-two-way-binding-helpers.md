@@ -9,7 +9,7 @@ next: update.html
 ---
 
 > Note:
-> `ReactLink` is deprecated as of React v15. The recommendation is to explicitly set the value and change handler, instead of using `ReactLink`.
+> `LinkedStateMixin` is deprecated as of React v15. The recommendation is to explicitly set the value and change handler, instead of using `LinkedStateMixin`.
 
 **Importing**
 
