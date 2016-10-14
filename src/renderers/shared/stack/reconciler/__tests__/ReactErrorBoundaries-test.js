@@ -295,6 +295,12 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('renders an error state if child throws in constructor', () => {
@@ -315,6 +321,12 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
     ]);
   });
 
@@ -337,6 +349,12 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
     ]);
   });
 
@@ -371,6 +389,13 @@ describe('ReactErrorBoundaries', () => {
       'ErrorMessage componentDidMount',
       'ErrorBoundary componentDidMount',
     ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+      'ErrorMessage componentWillUnmount',
+    ]);
   });
 
   // Known limitation because componentDidMount() does not occur on the stack.
@@ -398,6 +423,13 @@ describe('ReactErrorBoundaries', () => {
       // 'ErrorBoundary unstable_handleError',
       // 'ErrorBoundary render error',
       // 'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+      'BrokenComponentDidMount componentWillUnmount',
     ]);
   });
 
@@ -435,6 +467,12 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('propagates errors inside boundary itself on mounting', () => {
@@ -468,6 +506,12 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('does not register event handlers for unmounted children', () => {
@@ -482,6 +526,12 @@ describe('ReactErrorBoundaries', () => {
       container
     );
     expect(EventPluginHub.putListener).not.toBeCalled();
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('does not call componentWillUnmount when aborting initial mount', () => {
@@ -495,7 +545,6 @@ describe('ReactErrorBoundaries', () => {
       container
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
@@ -512,8 +561,13 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary unstable_handleError',
       // Render the error message
       'ErrorBoundary render error',
-      'ErrorBoundary componentDidMount',
-      'ErrorBoundary componentWillUnmount'
+      'ErrorBoundary componentDidMount'
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
     ]);
   });
 
@@ -574,6 +628,12 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render success',
       'ErrorBoundary componentDidMount',
     ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('catches if child throws in render during update', () => {
@@ -621,6 +681,12 @@ describe('ReactErrorBoundaries', () => {
       'Normal componentWillUnmount',
       // Normal2 does not get lifefycle because it was never mounted
       'ErrorBoundary render error'
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
     ]);
   });
 
@@ -821,6 +887,7 @@ describe('ReactErrorBoundaries', () => {
       container
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
+
     ReactDOM.render(
       <ErrorBoundary>
         <BrokenRender />
@@ -828,8 +895,10 @@ describe('ReactErrorBoundaries', () => {
       container
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
+
     ReactDOM.render(<div>Other screen</div>, container);
     expect(container.textContent).toBe('Other screen');
+
     ReactDOM.unmountComponentAtNode(container);
   });
 
@@ -843,9 +912,15 @@ describe('ReactErrorBoundaries', () => {
       </ErrorBoundary>,
       container
     );
+
     ReactDOM.render(<ErrorBoundary />, container);
     expect(container.textContent).toBe('Caught an error: Hello.');
+
+    log.length = 0;
     ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('doesn\'t get into inconsistent state during additions', () => {
@@ -860,7 +935,12 @@ describe('ReactErrorBoundaries', () => {
       container
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
+
+    log.length = 0;
     ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 
   it('doesn\'t get into inconsistent state during reorders', () => {
@@ -909,6 +989,11 @@ describe('ReactErrorBoundaries', () => {
       container
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
+
+    log.length = 0;
     ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
   });
 });
