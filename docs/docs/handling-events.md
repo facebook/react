@@ -73,7 +73,7 @@ class Toggle extends React.Component {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/lacker/pen/ORQBzB?editors=1010)
+[Try it on CodePen.](http://codepen.io/lacker/pen/ORQBzB?editors=1010)
 
 You have to be careful about the meaning of `this` in JSX callbacks. In JavaScript, class methods are not [bound](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_objects/Function/bind) by default. If you forget to bind `this.toggle` and pass it to `onClick`, `this` will be `undefined` when the function is actually called.
 

@@ -16,15 +16,8 @@
     title: React (Virtual) DOM Terminology
 - title: Old Guides
   items:
-  - id: reusable-components
-    title: Reusable Components
   - id: forms
     title: Forms
-  - id: working-with-the-browser
-    title: Working With the Browser
-    subitems:
-    - id: more-about-refs
-      title: Refs to Components
   - id: tooling-integration
     title: Tooling Integration
     subitems:
@@ -49,11 +42,7 @@
       title: Keyed Fragments
     - id: update
       title: Immutability Helpers
-    - id: pure-render-mixin
-      title: PureRenderMixin
     - id: perf
       title: Performance Tools
     - id: shallow-compare
       title: Shallow Compare
-  - id: context
-    title: Context

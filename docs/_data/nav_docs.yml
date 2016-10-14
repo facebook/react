@@ -26,8 +26,12 @@
       title: JSX In Depth
     - id: typechecking-with-proptypes
       title: Typechecking With PropTypes
+    - id: refs-and-the-dom
+      title: Refs and the DOM
     - id: optimizing-performance
       title: Optimizing Performance
+    - id: context
+      title: Context
     - id: react-without-es6
       title: React Without ES6
     - id: react-without-jsx
@@ -43,3 +47,8 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
+      id: addons
+      title: Addons
+      subitems:
+        - id: pure-render-mixin
+          title: PureRenderMixin
