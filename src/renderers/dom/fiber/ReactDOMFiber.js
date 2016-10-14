@@ -51,7 +51,7 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.children === 'string') {
+    if (typeof props.children === 'string' || typeof props.children === 'number') {
       domElement.textContent = props.children;
     }
     return domElement;
@@ -69,7 +69,7 @@ var DOMRenderer = ReactFiberReconciler({
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
     domElement.innerHTML = '';
     recursivelyAppendChildren(domElement, children);
-    if (typeof newProps.children === 'string') {
+    if (typeof newProps.children === 'string' || typeof newProps.children === 'number') {
       domElement.textContent = newProps.children;
     }
   },
