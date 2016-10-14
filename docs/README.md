@@ -8,14 +8,12 @@ If you are working on the site, you will want to install and run a local copy of
 
 ### Dependencies
 
-In order to use Jekyll, you will need to have Ruby.
+In order to use Jekyll, you will need to have Ruby installed. macOS comes pre-installed with Ruby, but you may need to update RubyGems (via `gem update --system`).
+Otherwise, [RVM](https://rvm.io/) and [rbenv](https://github.com/sstephenson/rbenv) are popular ways to install Ruby.
 
  - [Ruby](http://www.ruby-lang.org/) (version >= 1.8.7)
  - [RubyGems](http://rubygems.org/) (version >= 1.3.7)
  - [Bundler](http://gembundler.com/)
-
-macOS comes pre-installed with Ruby, but you may need to update RubyGems (via `gem update --system`).
-Otherwise, [RVM](https://rvm.io/) and [rbenv](https://github.com/sstephenson/rbenv) are popular ways to install Ruby.
 
 The version of the Pygment syntax highlighter used by Jekyll requires Python 2.7.x (not 3.x). macOS comes pre-installed with Python 2.7, but you may need to install it on other OSs.
 
