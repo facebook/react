@@ -28,6 +28,8 @@
       title: Typechecking With PropTypes
     - id: refs-and-the-dom
       title: Refs and the DOM
+    - id: optimizing-performance
+      title: Optimizing Performance
     - id: context
       title: Context
     - id: react-without-es6
