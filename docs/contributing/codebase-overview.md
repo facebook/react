@@ -149,7 +149,7 @@ You can use `__DEV__` pseudo-global variable in the codebase to guard developmen
 
 It is inlined during the compile step, and turns into `process.env.NODE_ENV !== 'production'` checks in the CommonJS builds.
 
-For standalone builds, it becomes `true` in the unminified build and gets completely stripped out with the `if` blocks it guards in the minified build.
+For standalone builds, it becomes `true` in the unminified build, and gets completely stripped out with the `if` blocks it guards in the minified build.
 
 ```js
 if (__DEV__) {
