@@ -25,6 +25,18 @@ class HelloMessage extends React.Component {
 > Events emitted by a Web Component may not properly propagate through a React render tree.
 > You will need to manually attach event handlers to handle these events within your React components.
 
+One common confusion is that Web Components use "class" instead of "className".
+
+```javascript
+function BrickFlipbox() {
+  return (
+    <brick-flipbox class="demo" ref="foo">
+      <div>front</div>
+      <div>back</div>
+    </brick-flipbox>
+  );
+}
+```
 
 ## Using React in your Web Components
 
