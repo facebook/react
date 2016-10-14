@@ -28,6 +28,8 @@
       title: Typechecking With PropTypes
     - id: refs-and-the-dom
       title: Refs and the DOM
+    - id: context
+      title: Context
     - id: react-without-es6
       title: React Without ES6
     - id: react-without-jsx
