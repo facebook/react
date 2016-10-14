@@ -50,6 +50,15 @@ describe('ReactErrorBoundaries', () => {
       componentDidMount() {
         log.push('BrokenConstructor componentDidMount');
       }
+      componentWillReceiveProps() {
+        log.push('BrokenConstructor componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('BrokenConstructor componentWillUpdate');
+      }
+      componentDidUpdate() {
+        log.push('BrokenConstructor componentDidUpdate');
+      }
       componentWillUnmount() {
         log.push('BrokenConstructor componentWillUnmount');
       }
@@ -60,16 +69,25 @@ describe('ReactErrorBoundaries', () => {
         super(props);
         log.push('BrokenComponentWillMount constructor');
       }
-      componentWillMount() {
-        log.push('BrokenComponentWillMount componentWillMount [!]');
-        throw new Error('Hello');
-      }
       render() {
         log.push('BrokenComponentWillMount render');
         return <div />;
       }
+      componentWillMount() {
+        log.push('BrokenComponentWillMount componentWillMount [!]');
+        throw new Error('Hello');
+      }
       componentDidMount() {
         log.push('BrokenComponentWillMount componentDidMount');
+      }
+      componentWillReceiveProps() {
+        log.push('BrokenComponentWillMount componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('BrokenComponentWillMount componentWillUpdate');
+      }
+      componentDidUpdate() {
+        log.push('BrokenComponentWillMount componentDidUpdate');
       }
       componentWillUnmount() {
         log.push('BrokenComponentWillMount componentWillUnmount');
@@ -81,15 +99,24 @@ describe('ReactErrorBoundaries', () => {
         super(props);
         log.push('BrokenComponentWillUnmount constructor');
       }
-      componentWillMount() {
-        log.push('BrokenComponentWillUnmount componentWillMount');
-      }
       render() {
         log.push('BrokenComponentWillUnmount render');
         return <div />;
       }
+      componentWillMount() {
+        log.push('BrokenComponentWillUnmount componentWillMount');
+      }
       componentDidMount() {
         log.push('BrokenComponentWillUnmount componentDidMount');
+      }
+      componentWillReceiveProps() {
+        log.push('BrokenComponentWillUnmount componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('BrokenComponentWillUnmount componentWillUpdate');
+      }
+      componentDidUpdate() {
+        log.push('BrokenComponentWillUnmount componentDidUpdate');
       }
       componentWillUnmount() {
         log.push('BrokenComponentWillUnmount componentWillUnmount [!]');
@@ -102,16 +129,25 @@ describe('ReactErrorBoundaries', () => {
         super(props);
         log.push('BrokenComponentDidMount constructor');
       }
-      componentWillMount() {
-        log.push('BrokenComponentDidMount componentWillMount');
-      }
       render() {
         log.push('BrokenComponentDidMount render');
         return <div />;
       }
+      componentWillMount() {
+        log.push('BrokenComponentDidMount componentWillMount');
+      }
       componentDidMount() {
         log.push('BrokenComponentDidMount componentDidMount [!]');
         throw new Error('Hello');
+      }
+      componentWillReceiveProps() {
+        log.push('BrokenComponentDidMount componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('BrokenComponentDidMount componentWillUpdate');
+      }
+      componentDidUpdate() {
+        log.push('BrokenComponentDidMount componentDidUpdate');
       }
       componentWillUnmount() {
         log.push('BrokenComponentDidMount componentWillUnmount');
@@ -162,6 +198,15 @@ describe('ReactErrorBoundaries', () => {
       componentDidMount() {
         log.push('BrokenRender componentDidMount');
       }
+      componentWillReceiveProps() {
+        log.push('BrokenRender componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('BrokenRender componentWillUpdate');
+      }
+      componentDidUpdate() {
+        log.push('BrokenRender componentDidUpdate');
+      }
       componentWillUnmount() {
         log.push('BrokenRender componentWillUnmount');
       }
@@ -208,6 +253,15 @@ describe('ReactErrorBoundaries', () => {
       componentDidMount() {
         log.push(`${this.props.logName} componentDidMount`);
       }
+      componentWillReceiveProps() {
+        log.push(`${this.props.logName} componentWillReceiveProps`);
+      }
+      componentWillUpdate() {
+        log.push(`${this.props.logName} componentWillUpdate`);
+      }
+      componentDidUpdate() {
+        log.push(`${this.props.logName} componentDidUpdate`);
+      }
       componentWillUnmount() {
         log.push(`${this.props.logName} componentWillUnmount`);
       }
@@ -236,6 +290,15 @@ describe('ReactErrorBoundaries', () => {
       }
       componentDidMount() {
         log.push('ErrorBoundary componentDidMount');
+      }
+      componentWillReceiveProps() {
+        log.push('ErrorBoundary componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('ErrorBoundary componentWillUpdate');
+      }
+      componentDidUpdate() {
+        log.push('ErrorBoundary componentDidUpdate');
       }
       componentWillUnmount() {
         log.push('ErrorBoundary componentWillUnmount');
@@ -597,7 +660,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Handle error:
       'ErrorBoundary unstable_handleError',
-      // Ref to child should not get set:
+      // Child ref wasn't (and won't be) set but there's no harm in clearing:
       'Child ref is set to null',
       'ErrorBoundary render error',
       // Ref to error message should get set:
@@ -666,7 +729,11 @@ describe('ReactErrorBoundaries', () => {
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
     expect(log).toEqual([
+      'ErrorBoundary componentWillReceiveProps',
+      'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
+      'Normal componentWillReceiveProps',
+      'Normal componentWillUpdate',
       'Normal render',
       // Normal2 will attempt to mount:
       'Normal2 constructor',
@@ -680,7 +747,8 @@ describe('ReactErrorBoundaries', () => {
       // Unmount the previously mounted components:
       'Normal componentWillUnmount',
       // Normal2 does not get lifefycle because it was never mounted
-      'ErrorBoundary render error'
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidUpdate',
     ]);
 
     log.length = 0;
@@ -727,6 +795,8 @@ describe('ReactErrorBoundaries', () => {
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
     expect(log).toEqual([
+      'ErrorBoundary componentWillReceiveProps',
+      'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
       // BrokenRender will abort rendering:
       'BrokenRender constructor',
@@ -738,6 +808,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render error',
       'Error message ref is set to [object HTMLDivElement]',
       // Child2 ref is never set because its mounting aborted
+      'ErrorBoundary componentDidUpdate',
     ]);
 
     log.length = 0;
@@ -789,9 +860,15 @@ describe('ReactErrorBoundaries', () => {
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
     expect(log).toEqual([
+      'ErrorBoundary componentWillReceiveProps',
+      'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
       // Update existing children:
+      'BrokenComponentWillUnmount componentWillReceiveProps',
+      'BrokenComponentWillUnmount componentWillUpdate',
       'BrokenComponentWillUnmount render',
+      'BrokenComponentWillUnmount componentWillReceiveProps',
+      'BrokenComponentWillUnmount componentWillUpdate',
       'BrokenComponentWillUnmount render',
       // Unmounting throws:
       'BrokenComponentWillUnmount componentWillUnmount [!]',
@@ -799,7 +876,10 @@ describe('ReactErrorBoundaries', () => {
       // Attempt to unmount previous children:
       'BrokenComponentWillUnmount componentWillUnmount [!]',
       'BrokenComponentWillUnmount componentWillUnmount [!]',
+      // Render error:
       'ErrorBoundary render error',
+      'ErrorBoundary componentDidUpdate',
+      // Children don't get componentDidUpdate() since update was aborted
     ]);
 
     log.length = 0;
@@ -857,9 +937,15 @@ describe('ReactErrorBoundaries', () => {
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
     expect(log).toEqual([
+      'ErrorBoundary componentWillReceiveProps',
+      'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
       // Update existing children:
+      'Normal componentWillReceiveProps',
+      'Normal componentWillUpdate',
       'Normal render',
+      'BrokenComponentWillUnmount componentWillReceiveProps',
+      'BrokenComponentWillUnmount componentWillUpdate',
       'BrokenComponentWillUnmount render',
       // Unmounting throws:
       'BrokenComponentWillUnmount componentWillUnmount [!]',
@@ -869,6 +955,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillUnmount componentWillUnmount [!]',
       // Render error:
       'ErrorBoundary render error',
+      'ErrorBoundary componentDidUpdate',
     ]);
 
     log.length = 0;
