@@ -130,7 +130,7 @@ This follows the concept of "separation of concerns" by allowing each component 
 
 Given the current state of your application you can assign elements as the value of variables, then only render the needed element.
 
-In the example below we have a stateful component named `<LoginControl />`. We use a boolean value `this.state.loggedIn` to track if the user is logged in. If logged in, we want to render `<LogoutButton />`. If logged out, we want to render `<LoginButton />`. Depending on the value of `this.state.loggedIn`, we use `loginButton` to hold the element.
+In the example below we have a stateful component named `<LoginControl />`. We use a boolean value `this.state.loggedIn` to track if the user is logged in. If logged in, we want to render `<LogoutButton />`. If logged out, we want to render `<LoginButton />`. Depending on the value of `this.state.loggedIn`, we use `loginButton` to store the element to be rendered.
 
 The highlighted lines below show where `loginControlButton` is created and set to a default value of "`<LoginButton />`", then where it conditionally gets changed depending on current state, and finally where `{loginControlButton}` is rendered.
 
