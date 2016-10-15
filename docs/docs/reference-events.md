@@ -1,12 +1,14 @@
 ---
 id: events
-title: Event System
-permalink: docs-old/events.html
-prev: tags-and-attributes.html
-next: dom-differences.html
+title: SyntheticEvent
+permalink: docs/events.html
+layout: docs
+category: Reference
 ---
 
-## SyntheticEvent
+This reference guide documents the `SyntheticEvent` wrapper that forms part of React's Event System. See the [Handling Events](/react/docs/handling-events.html) guide to learn more.
+
+## Overview
 
 Your event handlers will be passed instances of `SyntheticEvent`, a cross-browser wrapper around the browser's native event. It has the same interface as the browser's native event, including `stopPropagation()` and `preventDefault()`, except the events work identically across all browsers.
 
@@ -33,7 +35,7 @@ string type
 >
 > As of v0.14, returning `false` from an event handler will no longer stop event propagation. Instead, `e.stopPropagation()` or `e.preventDefault()` should be triggered manually, as appropriate.
 
-## Event pooling
+### Event pooling
 
 The `SyntheticEvent` is pooled. This means that the `SyntheticEvent` object will be reused and all properties will be nullified after the event callback has been invoked.
 This is for performance reasons.
@@ -68,6 +70,24 @@ React normalizes events so that they have consistent properties across different
 
 The event handlers below are triggered by an event in the bubbling phase. To register an event handler for the capture phase, append `Capture` to the event name; for example, instead of using `onClick`, you would use `onClickCapture` to handle the click event in the capture phase.
 
+- [Clipboard Events](#clipboard-events)
+- [Composition Events](#composition-events)
+- [Keyboard Events](#keyboard-events)
+- [Focus Events](#focus-events)
+- [Form Events](#form-events)
+- [Mouse Events](#mouse-events)
+- [Selection Events](#selection-events)
+- [Touch Events](#touch-events)
+- [UI Events](#ui-events)
+- [Wheel Events](#wheel-events)
+- [Media Events](#media-events)
+- [Image Events](#image-events)
+- [Animation Events](#animation-events)
+- [Transition Events](#transition-events)
+
+* * *
+
+## Reference
 
 ### Clipboard Events
 
@@ -83,6 +103,7 @@ Properties:
 DOMDataTransfer clipboardData
 ```
 
+* * *
 
 ### Composition Events
 
@@ -99,6 +120,7 @@ string data
 
 ```
 
+* * *
 
 ### Keyboard Events
 
@@ -125,6 +147,7 @@ boolean shiftKey
 number which
 ```
 
+* * *
 
 ### Focus Events
 
@@ -134,14 +157,15 @@ Event names:
 onFocus onBlur
 ```
 
+These focus events work on all elements in the React DOM, not just form elements.
+
 Properties:
 
 ```javascript
 DOMEventTarget relatedTarget
 ```
 
-These focus events work on all elements in the React DOM, not just form elements.
-
+* * *
 
 ### Form Events
 
@@ -153,6 +177,7 @@ onChange onInput onSubmit
 
 For more information about the onChange event, see [Forms](/react/docs/forms.html).
 
+* * *
 
 ### Mouse Events
 
@@ -185,6 +210,7 @@ number screenY
 boolean shiftKey
 ```
 
+* * *
 
 ### Selection Events
 
@@ -194,6 +220,7 @@ Event names:
 onSelect
 ```
 
+* * *
 
 ### Touch Events
 
@@ -216,6 +243,7 @@ DOMTouchList targetTouches
 DOMTouchList touches
 ```
 
+* * *
 
 ### UI Events
 
@@ -232,6 +260,7 @@ number detail
 DOMAbstractView view
 ```
 
+* * *
 
 ### Wheel Events
 
@@ -250,6 +279,7 @@ number deltaY
 number deltaZ
 ```
 
+* * *
 
 ### Media Events
 
@@ -262,6 +292,7 @@ onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend
 onTimeUpdate onVolumeChange onWaiting
 ```
 
+* * *
 
 ### Image Events
 
@@ -271,6 +302,7 @@ Event names:
 onLoad onError
 ```
 
+* * *
 
 ### Animation Events
 
@@ -288,6 +320,7 @@ string pseudoElement
 float elapsedTime
 ```
 
+* * *
 
 ### Transition Events
 
@@ -304,3 +337,4 @@ string propertyName
 string pseudoElement
 float elapsedTime
 ```
+
