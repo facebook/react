@@ -1155,7 +1155,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function(safely) {
+  unmountComponent: function(safely, skipLifecycle) {
     switch (this._tag) {
       case 'audio':
       case 'form':
@@ -1197,7 +1197,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    this.unmountChildren(safely);
+    this.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
     this._rootNodeID = 0;
