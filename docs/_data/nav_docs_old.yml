@@ -2,8 +2,6 @@
   items:
   - id: tags-and-attributes
     title: Supported Tags and Attributes
-  - id: events
-    title: Event System
   - id: dom-differences
     title: DOM Differences
   - id: special-non-dom-attributes
