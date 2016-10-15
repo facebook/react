@@ -21,6 +21,8 @@ In React, transforming arrays into lists of elements is nearly identical.
 
 ### Basic List
 
+A component must return only a single item. If you are returning multiple elements, wrap them in `<div></div>`.
+
 Here we take our list of `numbers` and generate a collection of `<li>` elements. We are using the plain Javascript `map()` function. Learn more about it <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map">here</a>.
 
 ```javascript
@@ -38,14 +40,14 @@ class Numbers extends React.Component {
 }
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/wzxEmv/?editors=0011">Try it out on JSFiddle.</a>
+<a target="_blank" href="https://codepen.io/ericnakagawa/pen/wzxEmv/?editors=0011">Try it out on Codepen.</a>
 
 If you run this code, you'll be given a warning that you should provide a key for list items. Keys are important and you should include them when creating lists of elements.
 
 Let's refactor this code to replace our `<li>` element with a [functional component]() and provide it a `key` and fix the missing key issue. 
 
 ```javascript
-function Number (props) {
+function Number(props) {
   return <li>{props.value}</li>  
 }
 function Numbers(props) {
@@ -60,7 +62,7 @@ function Numbers(props) {
 }
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/gwjdzN?editors=0011">Try it out on JSFiddle.</a>
+<a target="_blank" href="https://codepen.io/ericnakagawa/pen/gwjdzN?editors=0011">Try it out on Codepen.</a>
 
 
 ### Keys
@@ -133,23 +135,23 @@ In the example below we determine which button to display to a potential user. W
 The highlighted lines below show where `loginControlButton` is created, set to a default value of `<LoginButton />`, then where it conditionally gets changed depending on current state, and finally where `{loginControlButton}` is rendered.
 
 ```javascript{21,23,27}
-function LogoutButton (props) {
+function LogoutButton(props) {
   return <button onClick={props.click}>Logout</button>
 }
-function LoginButton (props) {
+function LoginButton(props) {
   return <button onClick={props.click}>Login</button>
 }
 class LoginControl extends React.Component {
-  constructor (props) {
-    super (props);
+  constructor(props) {
+    super(props);
     this.state = {loggedIn: true}
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
   }
-  login () {
+  login() {
     this.setState({loggedIn: true,});
   }
-  logout () {
+  logout() {
     this.setState({loggedIn: false});
   }
   render() {
@@ -167,7 +169,7 @@ class LoginControl extends React.Component {
 
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/Egpdrz?editors=0010">Try it out on JSFiddle.</a>
+<a target="_blank" href="https://codepen.io/ericnakagawa/pen/Egpdrz?editors=0010">Try it out on Codepen.</a>
 
 
 ### Prevent Component Rendering
@@ -179,7 +181,7 @@ In the example below, a `<Page />` component renders a child `<WarningBanner />`
 The highlighted lines below show where the variable `warningBanner` is set to a default value of null and then where it is rendered in `return()`.
 
 ```javascript{17,23}
-function WarningBanner (props) {
+function WarningBanner(props) {
   return <div className="warning">Warning!</div>
 }
 class Page extends React.Component {
@@ -209,9 +211,7 @@ class Page extends React.Component {
 }
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/ozragV?editors=0011#0">Try it out on JSFiddle.</a>
-
-When using prevening controls from being rendered a component must return only a single item. If you are returning multiple components, wrap them in `<div></div>`.
+<a target="_blank" href="https://codepen.io/ericnakagawa/pen/ozragV?editors=0011#0">Try it out on Codepen.</a>
 
 ### Rendering Multiple Components Using {}
 
@@ -222,13 +222,13 @@ In the example below we take an array of data `numbers`. Next, we add multiple `
 Then, in the `render()` function we render the entire `numbers` array by wrapping in curly braces `{numbers}`.
 
 ```javascript
-function Number (props) {
+function Number(props) {
   return (
     <li>{this.props.number}</li>
   );
 }
 
-function Number (props) {
+function Number(props) {
   let numbers = [];
   numbers.push(<Number value="1" />)
   numbers.push(<Number value="2" />)

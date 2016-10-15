@@ -10,14 +10,14 @@
       title: Rendering Elements
     - id: components-and-props
       title: Components and Props
-    - id: lists-conditional-rendering
-      title: Lists & Conditional Rendering
-    - id: forms
-      title: Forms
     - id: state-and-lifecycle
       title: State and Lifecycle
+    - id: lists-conditional-rendering
+      title: Lists & Conditional Rendering
     - id: handling-events
       title: Handling Events
+    - id: forms
+      title: Forms
     - id: lifting-state-up
       title: Lifting State Up
     - id: composition-vs-inheritance
