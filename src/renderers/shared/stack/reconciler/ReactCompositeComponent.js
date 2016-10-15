@@ -55,8 +55,8 @@ function warnIfInvalidElement(Component, element) {
   if (__DEV__) {
     warning(
       element === null || element === false || React.isValidElement(element),
-      '%s(...): A valid React element (or null) must be returned, ' +
-      'but you returned %s.',
+      '%s(...) must return a valid React element (or null). ' +
+      'You returned %s.',
       Component.displayName || Component.name || 'Component',
       getElementTypeForWarning(element)
     );
@@ -224,8 +224,8 @@ var ReactCompositeComponent = {
         inst === null ||
         inst === false ||
         React.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned, ' +
-        'but you returned %s.',
+        '%s(...) must return a valid React element (or null). ' +
+        'You returned %s.',
         Component.displayName || Component.name || 'Component',
         getElementTypeForWarning(renderedElement)
       );
@@ -1293,8 +1293,8 @@ var ReactCompositeComponent = {
       // TODO: An `isValidNode` function would probably be more appropriate
       renderedElement === null || renderedElement === false ||
       React.isValidElement(renderedElement),
-      '%s.render(): A valid React element (or null) must be returned, ' +
-      'but you returned %s.',
+      '%s.render() must return a valid React element (or null). ' +
+      'You returned %s.',
       this.getName() || 'ReactCompositeComponent',
       getElementTypeForWarning(renderedElement)
     );
