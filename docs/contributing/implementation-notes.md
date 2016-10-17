@@ -631,7 +631,7 @@ Instead, we have to unmount the existing internal instance and mount the new one
     // Replace the old node with the new one
     // Note: this is renderer-specific code and
     // ideally should live outside of CompositeComponent:
-    prevNode.parentNode.replaceChild(prevNode, nextNode);
+    prevNode.parentNode.replaceChild(nextNode, prevNode);
   }
 }
 ```
