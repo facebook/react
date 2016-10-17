@@ -404,7 +404,7 @@ The host internal instances need to store:
 * The DOM node.
 * All the child internal instances. Each of them can be either a `DOMComponent` or a `CompositeComponent`.
 
-If you're struggling to imagine what how an internal instance tree is structured in more complex applications, [React DevTools](https://github.com/facebook/react-devtools) can give you a close approximation, as it highlights host instances with grey, and composite instances with purple:
+If you're struggling to imagine how an internal instance tree is structured in more complex applications, [React DevTools](https://github.com/facebook/react-devtools) can give you a close approximation, as it highlights host instances with grey, and composite instances with purple:
 
  <img src="/react/img/docs/implementation-notes-tree.png" width="500" alt="React DevTools tree" />
 
@@ -623,10 +623,10 @@ Instead, we have to unmount the existing internal instance and mount the new one
     // Unmount the old child and mount a new child
     prevRenderedComponent.unmount();
     var nextRenderedComponent = instantiateComponent(nextRenderedElement);
-    var nextNode = renderedComponent.mount();
+    var nextNode = nextRenderedComponent.mount();
 
     // Replace the reference to the child
-    this.renderedComponent = renderedComponent;
+    this.renderedComponent = nextRenderedComponent;
 
     // Replace the old node with the new one
     // Note: this is renderer-specific code and

@@ -55,10 +55,10 @@ ReactNativeBaseComponent.Mixin = {
     return this;
   },
 
-  unmountComponent: function() {
+  unmountComponent: function(safely, skipLifecycle) {
     ReactNativeComponentTree.uncacheNode(this);
     deleteAllListeners(this);
-    this.unmountChildren();
+    this.unmountChildren(safely, skipLifecycle);
     this._rootNodeID = 0;
   },
 

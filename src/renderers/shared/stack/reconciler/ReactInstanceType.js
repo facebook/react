@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright 2016-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @flow
  * @providesModule ReactInstanceType
+ * @flow
  */
 
 'use strict';

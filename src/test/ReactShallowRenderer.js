@@ -117,7 +117,11 @@ class ReactShallowRenderer {
   }
   unmount() {
     if (this._instance) {
-      ReactReconciler.unmountComponent(this._instance, false);
+      ReactReconciler.unmountComponent(
+        this._instance,
+        false, /* safely */
+        false /* skipLifecycle */
+      );
     }
   }
   _render(element, transaction, context) {
