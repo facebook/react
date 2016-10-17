@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactTestEmptyComponent
+ * @preventMunge
  * @flow
  */
 
@@ -14,7 +15,7 @@
 
 class ReactTestEmptyComponent {
   _currentElement: null;
-  
+
   constructor() {
     this._currentElement = null;
   }
