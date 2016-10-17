@@ -16,7 +16,7 @@ There are a number of attributes that work differently between React and HTML:
 
 ### checked
 
-The `checked` attribute is supported by `<input>` components of type `checkbox` or `radio`. You can use it to set whether the component is checked. This is useful for building controlled components.
+The `checked` attribute is supported by `<input>` components of type `checkbox` or `radio`. You can use it to set whether the component is checked. This is useful for building controlled components. `defaultChecked` is the uncontrolled equivalent, which sets whether the component is checked when it is first mounted.
 
 ### className
 
@@ -40,17 +40,9 @@ function MyComponent() {
 
 Since `for` is a reserved word in JavaScript, React elements use `htmlFor` instead.
 
-### key
-
-`key` in React doesn't correspond to anything in HTML. It's an optional unique identifier for components in lists. Assigning it a key that persists makes sure the component stays. You can read more [here](/react/docs/reconciliation.html).
-
 ### onChange
 
 The `onChange` event behaves as you would expect it to: whenever a form field is changed, this event is fired. We intentionally do not use the existing browser behavior because `onChange` is a misnomer for its behavior and React relies on this event to handle user input in real time.
-
-### ref
-
-`ref` in React doesn't correspond to anything in HTML. It's a way for React components to access DOM elements or child components outside the normal dataflow. You can read more [here](/react/docs/refs-and-the-dom.html).
 
 ### selected
 
@@ -77,11 +69,11 @@ Style keys are camelCased in order to be consistent with accessing the propertie
 
 ### suppressContentEditableWarning
 
-This is used to suppress the warning when using `contentEditable` and `children`.
+Normally, there is a warning when an element with children is also marked as `contentEditable`, because it won't work. This attribute suppresses that warning. Don't use this unless you are building a library like [Draft.js](https://facebook.github.io/draft-js/) that manages `contentEditable` manually.
 
 ### value
 
-The `value` attribute is supported by `<input>` and `<textarea>` components. You can use it to set the value of the component. This is useful for building controlled components.
+The `value` attribute is supported by `<input>` and `<textarea>` components. You can use it to set the value of the component. This is useful for building controlled components. `defaultValue` is the uncontrolled equivalent, which sets the value of the component when it is first mounted.
 
 ## All Supported HTML Elements
 
