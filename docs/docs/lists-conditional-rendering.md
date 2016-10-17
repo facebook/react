@@ -8,58 +8,59 @@ next:
 
 ## Lists
 
-First, let's talk about transforming lists in Javascript.
+First, let's review how you transform lists in Javascript.
 
-Given the code below, we use the `map()` function to take an array of `numbers`, double their values, and then output them to a new array `doubled`.
+Given the code below, we use the `map()` function to take an array of `numbers`, double their values, and then assigned the new array to the variable `doubled`.
 
 ```javascript
 const numbers = [1, 2, 3, 4, 5];
-numbers.map((number) => number * 2); // outputs: [2, 4, 6, 8 10]
+const doubled = numbers.map((number) => number * 2); // array: [2, 4, 6, 8, 10]
 ```
 
-In React, transforming arrays into lists of elements is nearly identical.
+In React, transforming arrays into lists of [elements](/react/docs/rendering-elements.html) is nearly identical.
 
-### Basic List
+### Rendering Multiple Components
 
-A component must return only a single item. If you are returning multiple elements, wrap them in `<div></div>`.
+You can build collections of elements and include them in [JSX](/react/docs/introducing-jsx.html) using curly braces `{}`, similar to embedding values with Javascript.
 
-Here we take our list of `numbers` and generate a collection of `<li>` elements. We are using the plain Javascript `map()` function. Learn more about it [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
+Below, we loop through the `numbers` array using the Javascript [`map()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map) function. We return an `<li>` element for each item. Finally, we assign the resulting array of items to `listItems`. In `ReactDOM.render()` we render the entire `{listItems}` array inside a `<ul>` element.
 
 ```javascript
-class Numbers extends React.Component {
-  render() {
-    const numbers = [1, 2, 3, 4, 5];
-    return (
-      <div>
-        <ul>
-          {numbers.map((number) => <li>{number}</li>)}
-        </ul>
-      </div>
-    );
-  }
-}
+const numbers = [1, 2, 3, 4, 5];
+const listItems = numbers.map((item) => <li>{item}</li>);
+ReactDOM.render(<ul>{listItems}</ul>, document.getElementById('root'));
 ```
 
 [Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/wzxEmv/?editors=0011)
 
-If you run this code, you'll be given a warning that you should provide a key for list items. Keys are important and you should include them when creating lists of elements.
+### Basic List Component
 
-Let's refactor this code to replace our `<li>` element with a [functional component]() and provide it a `key` and fix the missing key issue. 
+We can refactor the previous example into a [functional component](http://localhost:4000/react/docs/components-and-props.html) that accepts an array of `numbers` and outputs an unordered list of elements.
 
 ```javascript
-function Number(props) {
-  return <li>{props.value}</li>  
+function NumberList(props) {
+  const numbers = props.numbers
+  const listItems = numbers.map((item) => <li>{item}</li>);
+  return <ul>{listItems}</ul>
 }
-function Numbers(props) {
-  const numbers = [1, 2, 3, 4, 5];
-  return (
-    <div>
-      <ul>
-        {numbers.map((number, index) => <Number key={index} value={number} />)}
-      </ul>
-    </div>
-  );
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(<NumberList numbers={numbers} />, document.getElementById('root'));
+```
+
+When you run this code, you'll be given a warning that a key should be provided for list items. Keys should be included when creating lists of elements.
+
+Let's assign a `key` to our list items inside `numbers.map()` and fix the missing key issue.
+
+```javascript{11}
+function NumberList(props) {
+  const numbers = props.numbers
+  const listItems = numbers.map((item) => <li key={"item-" + item}>{item}</li>);
+  return <ul>{listItems}</ul>
 }
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(<NumberList numbers={numbers} />, document.getElementById('root'));
 ```
 
 [Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/gwjdzN?editors=0011)
@@ -67,106 +68,92 @@ function Numbers(props) {
 
 ### Keys
 
-In the previous example we provide the index of an item in our array as our `key`. It is important to always provide keys to your lists of elements.
+Keys are important for helping React know if items have changed, are added, or removed.
 
-* For lists that are unlikely or won't change, using an item index is fine.
-* For lists that may change, it is important to use a unique key. A string representing identity of the data item can also work.
+Use keys that represent the identity of the item. If you don't have a way to uniquely identify each item consider using a string representation of the item. _You will be warned if you don't include keys._
 
-* Keys should be unique amongst siblings. This means that the keys used with groups of related elements in a list should be unique .
-* You will be warned when you don't include keys.
+Supply keys to elements inside a `map()` function and not directly to an HTML element. Keys used within groups should be unique to each other. Keys cannot be accessed as a `prop`.
 
-#### Performance
+**Example: Incorrect key usage:** _Should not assign a `key` in this manner._
 
-In React, the absence of keys on an element can impact your application performance.
+```javascript{2}
+function Number(props) {
+  return <li key={"item-" + props.value}>{props.value}</li>;
+}
 
-When a `key` is provided, React chooses the most performant method for updating the rendered objects.
+function NumberList(props) {
+  const numbers = props.numbers
+  return <ul>{numbers.map((item) => <Number value={item} />}</ul>
+}
 
-#### Example 1
-
-Given the HTML below:
-
-```html
-<ul>
-  <li>1</li> /* key: "1" */
-  <li>2</li> /* key: "2" */
-</ul>
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(<NumberList numbers={numbers} />, document.getElementById('root'));
 ```
 
-In the event that the element containing "2" needs to be removed, React will hide the element instead of removing the object entirely like so:
+**Example: Correct key usage:** _Assigns `key` inside `map()` function._
 
-```html
-<ul>
-  <li>1</li> /* key: "1" */
-  <li style={display: 'none'}>2</li> /* key: "2" */
-</ul>
+```javascript{7}
+function Number(props) {
+  return <li>{props.value}</li>;
+}
+
+function NumberList(props) {
+  const numbers = props.numbers
+  return <ul>{numbers.map((item) => <Number key={"item-" + props.value} value={item} />)}</ul>
+}
+
+const numbers = [1, 2, 3, 4, 5];
+ReactDOM.render(<NumberList numbers={numbers} />, document.getElementById('root'));
 ```
 
-#### Example 2
-
-Given the html below:
-
-```html
-<ul>
-  <li>1</li> /* key: "1" */
-  <li>2</li> /* key: "2" */
-</ul>
-```
-
-In the event that the element "1" needs to be removed, React will swap the text and hide the second element like so:
-
-```html
-<ul>
-  <li>2</li> /* key: "2" */
-</ul>
-```
+[Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/Egpdrz?editors=0010)
 
 ## Conditional Rendering
 
-With React you can render distinct components depending on the value of your data. This means no longer needing to manually modify the CSS classes of HTML elements. Instead, you create distinct components that encapsulate behavior you need. Then, render only the specific component you need depending on the state of your application.
-
-This follows the concept of "separation of concerns" by allowing each component to manage how it should be rendered.
+You can create distinct components that encapsulate behavior you need. Then, you can render only the specific component you need, depending on the state of your application.
 
 ### Element Variables
 
-Given the current state of your application you can assign elements as the value of variables, then only render the needed element.
+You can use variables to store elements. This can help you render the specific element you need based on the state of your application.
 
-In the example below we have a stateful component named `<LoginControl />`. We use a boolean value `this.state.loggedIn` to track if the user is logged in. If logged in, we want to render `<LogoutButton />`. If logged out, we want to render `<LoginButton />`. Depending on the value of `this.state.loggedIn`, we use `loginButton` to store the element to be rendered.
+In the example below, we want to display a login or logout button. In `render()` we check `state.loggedIn` and assign to `button` either `<LoginButton />` or `<LogoutButton />`. We then render the element.
 
-The highlighted lines below show where `loginControlButton` is created and set to a default value of "`<LoginButton />`", then where it conditionally gets changed depending on current state, and finally where `{loginControlButton}` is rendered.
-
-```javascript{21,23,27}
+```javascript{23,25,29}
 function LogoutButton(props) {
-  return <button onClick={props.click}>Logout</button>
+  return <button onClick={props.onClick}>Logout</button>
 }
+
 function LoginButton(props) {
-  return <button onClick={props.click}>Login</button>
+  return <button onClick={props.onClick}>Login</button>
 }
+
 class LoginControl extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {loggedIn: true}
+    this.state = {loggedIn: true};
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
   }
   login() {
-    this.setState({loggedIn: true,});
+    this.setState({loggedIn: true});
   }
   logout() {
     this.setState({loggedIn: false});
   }
   render() {
-    var loginControlButton = <LoginButton click={this.login} />;
+    let button = <LoginButton onClick={this.login} />;
     if (this.state.loggedIn) {
-      loginControlButton = <LogoutButton click={this.logout} />;
+      button = <LogoutButton onClick={this.logout} />;
     }
     return (
       <div>
-        {loginControlButton}
+        {button}
       </div>
     );
   }
 }
 
+ReactDOM.render(<LoginControl />, document.getElementById('root'));
 ```
 
 [Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/Egpdrz?editors=0010)
@@ -174,76 +161,45 @@ class LoginControl extends React.Component {
 
 ### Prevent Component Rendering
 
-In some cases, you will not want a component to render. To prevent components from rendering, return `null` or `false` from the `render()` function.
+To prevent components from rendering, return `null` or `false` from the `render()` function.
 
-In the example below, a `<Page />` component renders a child `<WarningBanner />` element and a button. The button calls `this.toggleWarning` to switch the value of `this.state.showWarning`. If the `this.state.showWarning` is false, then nothing will be rendered.
+In the example below, the `<WarningBanner/>` is rendered depending on the value of the prop `warn`. If the value of the prop is false, then the component does not render.
 
-The highlighted lines below show where the variable `warningBanner` is set to a default value of null and then where it is rendered in `return()`.
+The highlighted lines below show where the component `<WarningBanner />` returns null and the component isn't rendered.
 
-```javascript{17,23}
+```javascript{2}
 function WarningBanner(props) {
+  if(!props.warn) return null;
   return <div className="warning">Warning!</div>
 }
+
 class Page extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {showWarning: true, toggleText: "hide"}
+    this.state = {showWarning: true}
     this.toggleWarning = this.toggleWarning.bind(this);
   }
   toggleWarning() {
-    this.setState({
-      showWarning: !this.state.showWarning,
-      toggleText: !this.state.showWarning?"hide":"show"
-    });
+    this.setState(prevState => ({
+      showWarning: !prevState.showWarning
+    }));
   }
   render() {
-    let warningBanner = null;
-    if (this.state.showWarning) {
-      warningBanner = <WarningBanner />;
-    }
     return (
       <div>
-        {warningBanner}
-        <button onClick={this.toggleWarning}>{this.state.toggleText}</button>
+        <WarningBanner warn={this.state.showWarning} />
+        <button onClick={this.toggleWarning}>
+          {!this.state.showWarning?"show":"hide"}
+        </button>
       </div>
     );
   }
 }
+
+ReactDOM.render(<Page />, document.getElementById('root'));
 ```
 
 [Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/ozragV?editors=0011#0)
-
-### Rendering Multiple Components Using {}
-
-You can build collections of components and include them in (/react/docs/introducing-jsx.html">JSX</a> with curly braces `{}` just as you would embed values with Javascript.
-
-In the example below we take an array of data `numbers`. Next, we add multiple `<Number />` components to the array.
-
-Then, in the `render()` function we render the entire `numbers` array by wrapping in curly braces `{numbers}`.
-
-```javascript
-function Number(props) {
-  return (
-    <li>{this.props.number}</li>
-  );
-}
-
-function Number(props) {
-  let numbers = [];
-  numbers.push(<Number value="1" />)
-  numbers.push(<Number value="2" />)
-  numbers.push(<Number value="3" />)
-  numbers.push(<Number value="4" />)
-  numbers.push(<Number value="5" />)
-  return (
-    <div>
-      <ul>
-        {numbers}
-      </ul>
-    </div>
-  );
-}
-```
 
 ### Inline If-Else With Ternary Operators
 
@@ -256,7 +212,7 @@ render() {
   var loggedIn = false;
   return (
     <div>
-      The user is <strong>{(loggedIn)?'currently':'not'}</strong> logged in.
+      The user is <strong>{loggedIn?'currently':'not'}</strong> logged in.
     </div>
   );
 }
