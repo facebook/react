@@ -23,7 +23,7 @@ In React, transforming arrays into lists of elements is nearly identical.
 
 A component must return only a single item. If you are returning multiple elements, wrap them in `<div></div>`.
 
-Here we take our list of `numbers` and generate a collection of `<li>` elements. We are using the plain Javascript `map()` function. Learn more about it <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map">here</a>.
+Here we take our list of `numbers` and generate a collection of `<li>` elements. We are using the plain Javascript `map()` function. Learn more about it [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
 
 ```javascript
 class Numbers extends React.Component {
@@ -40,7 +40,7 @@ class Numbers extends React.Component {
 }
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/wzxEmv/?editors=0011">Try it out on Codepen.</a>
+[Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/wzxEmv/?editors=0011)
 
 If you run this code, you'll be given a warning that you should provide a key for list items. Keys are important and you should include them when creating lists of elements.
 
@@ -62,7 +62,7 @@ function Numbers(props) {
 }
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/gwjdzN?editors=0011">Try it out on Codepen.</a>
+[Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/gwjdzN?editors=0011)
 
 
 ### Keys
@@ -169,7 +169,7 @@ class LoginControl extends React.Component {
 
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/Egpdrz?editors=0010">Try it out on Codepen.</a>
+[Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/Egpdrz?editors=0010)
 
 
 ### Prevent Component Rendering
@@ -211,11 +211,11 @@ class Page extends React.Component {
 }
 ```
 
-<a target="_blank" href="https://codepen.io/ericnakagawa/pen/ozragV?editors=0011#0">Try it out on Codepen.</a>
+[Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/ozragV?editors=0011#0)
 
 ### Rendering Multiple Components Using {}
 
-You can build collections of components and include them in <a target="_blank" href="/react/docs/introducing-jsx.html">JSX</a> with curly braces `{}` just as you would embed values with Javascript.
+You can build collections of components and include them in (/react/docs/introducing-jsx.html">JSX</a> with curly braces `{}` just as you would embed values with Javascript.
 
 In the example below we take an array of data `numbers`. Next, we add multiple `<Number />` components to the array.
 
