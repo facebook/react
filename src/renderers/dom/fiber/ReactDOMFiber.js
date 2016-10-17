@@ -15,7 +15,18 @@
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
+var {
+  properties: DOMProperties,
+  isCustomAttribute,
+} = require('DOMProperty');
+
+var {
+  deleteValueForProperty,
+  setValueForProperty,
+} = require('DOMPropertyOperations');
 
 var warning = require('warning');
 
@@ -25,6 +36,11 @@ type Container = Element;
 type Props = { };
 type Instance = Element;
 type TextInstance = Text;
+
+// TODO: this brings a lot of non-Fiber code into the Fiber bundle.
+// However, without it tests that use both ReactDOM (Fiber) and
+// ReactDOMServer (non-Fiber) in the same file break due to "double injection".
+ReactDefaultInjection.inject();
 
 function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
   if (!child) {
@@ -43,6 +59,55 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
   }
 }
 
+function removeMissingPrevDOMProperties(
+  domElement: Element,
+  oldProps: Props,
+  newProps: Props,
+) {
+  for (const propKey in oldProps) {
+    if (newProps.hasOwnProperty(propKey) ||
+        !oldProps.hasOwnProperty(propKey) ||
+        oldProps[propKey] == null) {
+      continue;
+    }
+    // TODO: unregister events, remove styles, handle custom components
+    if (DOMProperties[propKey] || isCustomAttribute(propKey)) {
+      deleteValueForProperty(domElement, propKey, 0);
+    }
+  }
+}
+
+function applyNextDOMProperties(
+  domElement: Element,
+  oldProps: Props | null,
+  newProps: Props,
+) {
+  // TODO: associate DOM nodes with components for ReactPerf
+  const debugID = 1;
+  for (const propKey in newProps) {
+    const newProp = newProps[propKey];
+    const oldProp = oldProps != null ? oldProps[propKey] : undefined;
+
+    if (!newProps.hasOwnProperty(propKey) ||
+        newProp === oldProp ||
+        newProp == null && oldProp == null) {
+      continue;
+    }
+
+    // TODO: register events, add styles, handle custom components
+    if (DOMProperties[propKey] || isCustomAttribute(propKey)) {
+      // If we're updating to null or undefined, we should remove the property
+      // from the DOM node instead of inadvertently setting to a string. This
+      // brings us in line with the same behavior we have on initial render.
+      if (newProp != null) {
+        setValueForProperty(domElement, propKey, newProp, debugID);
+      } else {
+        deleteValueForProperty(domElement, propKey, debugID);
+      }
+    }
+  }
+}
+
 var DOMRenderer = ReactFiberReconciler({
 
   updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
@@ -53,6 +118,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
+    applyNextDOMProperties(domElement, null, props);
     recursivelyAppendChildren(domElement, children);
     if (typeof props.children === 'string' ||
         typeof props.children === 'number') {
@@ -70,6 +136,8 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
+    removeMissingPrevDOMProperties(domElement, oldProps, newProps);
+    applyNextDOMProperties(domElement, oldProps, newProps);
     if (typeof newProps.children === 'string' ||
         typeof newProps.children === 'number') {
       domElement.textContent = newProps.children;

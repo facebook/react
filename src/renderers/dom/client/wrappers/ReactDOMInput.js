@@ -191,15 +191,22 @@ var ReactDOMInput = {
 
     // TODO: Shouldn't this be getChecked(props)?
     var checked = props.checked;
+    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+
+    var debugID = 0;
+    if (__DEV__) {
+      debugID = inst._debugID;
+    }
+
     if (checked != null) {
       DOMPropertyOperations.setValueForProperty(
-        ReactDOMComponentTree.getNodeFromInstance(inst),
+        node,
         'checked',
-        checked || false
+        checked || false,
+        debugID
       );
     }
 
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = LinkedValueUtils.getValue(props);
     if (value != null) {
 

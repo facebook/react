@@ -26,6 +26,10 @@ describe('ReactES6Class', () => {
   var renderedName = null;
 
   beforeEach(() => {
+    // TODO: Fiber doesn't currently handle errors well
+    // so one test failure brings the other tests down.
+    jest.resetModuleRegistry();
+
     React = require('React');
     ReactDOM = require('ReactDOM');
     container = document.createElement('div');

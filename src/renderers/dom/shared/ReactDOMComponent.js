@@ -963,6 +963,10 @@ ReactDOMComponent.Mixin = {
     transaction,
     isCustomComponentTag
   ) {
+    var debugID = 0;
+    if (__DEV__) {
+      debugID = this._debugID;
+    }
     var propKey;
     var styleName;
     var styleUpdates;
@@ -992,13 +996,14 @@ ReactDOMComponent.Mixin = {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
             getNode(this),
-            propKey
+            propKey,
+            debugID
           );
         }
       } else if (
           DOMProperty.properties[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
+        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey, debugID);
       }
     }
     for (propKey in nextProps) {
@@ -1057,7 +1062,8 @@ ReactDOMComponent.Mixin = {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
-            nextProp
+            nextProp,
+            debugID
           );
         }
       } else if (
@@ -1068,9 +1074,9 @@ ReactDOMComponent.Mixin = {
         // from the DOM node instead of inadvertently setting to a string. This
         // brings us in line with the same behavior we have on initial render.
         if (nextProp != null) {
-          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
+          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp, debugID);
         } else {
-          DOMPropertyOperations.deleteValueForProperty(node, propKey);
+          DOMPropertyOperations.deleteValueForProperty(node, propKey, debugID);
         }
       }
     }

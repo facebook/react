@@ -12,7 +12,6 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
@@ -130,7 +129,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    * @param {*} value
    */
-  setValueForProperty: function(node, name, value) {
+  setValueForProperty: function(node, name, value, debugID) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -138,7 +137,7 @@ var DOMPropertyOperations = {
       if (mutationMethod) {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(propertyInfo, value)) {
-        this.deleteValueForProperty(node, name);
+        this.deleteValueForProperty(node, name, debugID);
         return;
       } else if (propertyInfo.mustUseProperty) {
         // Contrary to `setAttribute`, object properties are properly
@@ -159,7 +158,7 @@ var DOMPropertyOperations = {
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
-      DOMPropertyOperations.setValueForAttribute(node, name, value);
+      DOMPropertyOperations.setValueForAttribute(node, name, value, debugID);
       return;
     }
 
@@ -167,14 +166,14 @@ var DOMPropertyOperations = {
       var payload = {};
       payload[name] = value;
       ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        instanceID: debugID,
         type: 'update attribute',
         payload: payload,
       });
     }
   },
 
-  setValueForAttribute: function(node, name, value) {
+  setValueForAttribute: function(node, name, value, debugID) {
     if (!isAttributeNameSafe(name)) {
       return;
     }
@@ -188,7 +187,7 @@ var DOMPropertyOperations = {
       var payload = {};
       payload[name] = value;
       ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        instanceID: debugID,
         type: 'update attribute',
         payload: payload,
       });
@@ -201,11 +200,11 @@ var DOMPropertyOperations = {
    * @param {DOMElement} node
    * @param {string} name
    */
-  deleteValueForAttribute: function(node, name) {
+  deleteValueForAttribute: function(node, name, debugID) {
     node.removeAttribute(name);
     if (__DEV__) {
       ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        instanceID: debugID,
         type: 'remove attribute',
         payload: name,
       });
@@ -218,7 +217,7 @@ var DOMPropertyOperations = {
    * @param {DOMElement} node
    * @param {string} name
    */
-  deleteValueForProperty: function(node, name) {
+  deleteValueForProperty: function(node, name, debugID) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -241,7 +240,7 @@ var DOMPropertyOperations = {
 
     if (__DEV__) {
       ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
+        instanceID: debugID,
         type: 'remove attribute',
         payload: name,
       });
