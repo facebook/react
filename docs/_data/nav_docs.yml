@@ -36,6 +36,8 @@
       title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
+    - id: render-callbacks
+      title: Render Callbacks
     - id: addons
       title: Add-Ons
       subitems:

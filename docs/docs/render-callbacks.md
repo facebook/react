@@ -1,5 +1,5 @@
 ---
-id: render-callbakcs
+id: render-callbacks
 title: Render Callbacks
 permalink: docs/render-callbacks.html
 ---
