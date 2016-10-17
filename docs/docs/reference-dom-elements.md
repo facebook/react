@@ -20,7 +20,7 @@ The `checked` attribute is supported by `<input>` components of type `checkbox` 
 
 ### className
 
-Since `class` is a reserved word in JavaScript, React elements use `className` instead.
+Most React elements use `className` instead of `class`. Web Components still use `class`.
 
 ### dangerouslySetInnerHTML
 
