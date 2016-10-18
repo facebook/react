@@ -6,6 +6,31 @@ prev: thinking-in-react.html
 next: videos.html
 ---
 
+## Upcoming Conferences
+
+### Reactive 2016
+October 26-28 in Bratislava, Slovakia
+
+[Website](https://reactiveconf.com/)
+
+### ReactEurope 2017
+May 18th & 19th in Paris, France
+
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
+
+### Chain React 2017
+Summer 2017, Portland, Oregon USA
+
+[Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
+
+### React Native EU 2017
+Fall 2017, Poland
+
+[Website](http://react-native.eu/)
+
+
+## Past Conferences
+
 ### React.js Conf 2015
 January 28 & 29 in Facebook HQ, CA
 
@@ -52,8 +77,3 @@ September 15 in Tel Aviv, Israel
 October 13 in Amsterdam, The Netherlands
 
 [Website](http://reactnl.org/)
-
-### Reactive 2016
-October 26-28 in Bratislava, Slovakia
-
-[Website](https://reactiveconf.com/)
