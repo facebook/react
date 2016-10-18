@@ -26,7 +26,7 @@ If you use React with Web Components (which is uncommon), use the `class` attrib
 
 ### dangerouslySetInnerHTML
 
-`dangerouslySetInnerHTML` is React's replacement for using `innerHTML` in the browser DOM. In general, setting HTML from code is risky because it's easy to inadvertently expose your users to a [cross-site scripting (XSS)](https://en.wikipedia.org/wiki/Cross-site_scripting) attack. So, you can set HTML directly from React, but you have to type out `dangerouslySetInnerHTML` and pass an object with a `__html` key,to remind yourself that it's dangerous. For example:
+`dangerouslySetInnerHTML` is React's replacement for using `innerHTML` in the browser DOM. In general, setting HTML from code is risky because it's easy to inadvertently expose your users to a [cross-site scripting (XSS)](https://en.wikipedia.org/wiki/Cross-site_scripting) attack. So, you can set HTML directly from React, but you have to type out `dangerouslySetInnerHTML` and pass an object with a `__html` key, to remind yourself that it's dangerous. For example:
 
 ```js
 function createMarkup() {
@@ -56,14 +56,25 @@ The `style` attribute accepts a JavaScript object with camelCased properties rat
 
 ```js
 const divStyle = {
-  color: 'white',
+  color: 'blue',
   backgroundImage: 'url(' + imgUrl + ')',
-  WebkitTransition: 'all', // note the capital 'W' here
-  msTransition: 'all' // 'ms' is the only lowercase vendor prefix
 };
 
 function HelloWorldComponent() {
   return <div style={divStyle}>Hello World!</div>;
+}
+```
+
+Note that styles are not autoprefixed. To support older browsers, you need to supply corresponding style properties:
+
+```js
+const divStyle = {
+  WebkitTransition: 'all', // note the capital 'W' here
+  msTransition: 'all' // 'ms' is the only lowercase vendor prefix
+};
+
+function ComponentWithTransition() {
+  return <div style={divStyle}>This should work cross-browser</div>;
 }
 ```
 
