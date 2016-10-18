@@ -32,10 +32,14 @@
       title: Optimizing Performance
     - id: context
       title: Context
+    - id: reconciliation
+      title: Reconciliation
     - id: react-without-es6
       title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
+    - id: web-components
+      title: Web Components
     - id: addons
       title: Add-Ons
       subitems:
