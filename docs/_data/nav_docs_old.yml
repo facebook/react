@@ -1,31 +1,10 @@
 - title: Old Reference
   items:
-  - id: tags-and-attributes
-    title: Supported Tags and Attributes
-  - id: dom-differences
-    title: DOM Differences
-  - id: special-non-dom-attributes
-    title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
   - id: webcomponents
     title: Web Components
-  - id: glossary
-    title: React (Virtual) DOM Terminology
 - title: Old Guides
   items:
   - id: forms
     title: Forms
-  - id: tooling-integration
-    title: Tooling Integration
-    subitems:
-    - id: language-tooling
-      title: Language Tooling
-    - id: package-management
-      title: Package Management
-    - id: environments
-      title: Server-side Environments
-  - id: advanced-performance
-    title: Advanced Performance
-  - id: context
-    title: Context

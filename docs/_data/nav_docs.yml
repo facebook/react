@@ -66,5 +66,7 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
+    - id: dom-elements
+      title: DOM Elements
     - id: events
       title: SyntheticEvent
