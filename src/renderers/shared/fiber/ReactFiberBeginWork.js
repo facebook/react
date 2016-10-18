@@ -369,7 +369,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
         // next one immediately.
         return workInProgress.child;
       case HostComponent:
-        if (workInProgress.stateNode && config.beginUpdate) {
+        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);
