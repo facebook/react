@@ -109,6 +109,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Commit all the side-effects within a tree.
     // TODO: Error handling.
 
+    console.log('-- Commit at', nextPriorityLevel, '--');
+    require('ReactNoop').dumpTree();
+
     // First, we'll perform all the host insertions, updates, deletions and
     // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
@@ -407,6 +410,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (fiber.tag === HostContainer) {
           const root : FiberRoot = (fiber.stateNode : any);
           scheduleDeferredWork(root, priorityLevel);
+          console.log('-- setState at', priorityLevel, '--');
+          require('ReactNoop').dumpTree();
           return;
         } else {
           throw new Error('Invalid root');

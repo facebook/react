@@ -230,8 +230,8 @@ var ReactNoop = {
         updateQueue.partialState,
         updateQueue.callback ? 'with callback' : ''
       );
-      var next;
-      while (next = updateQueue.next) {
+      var next = updateQueue;
+      while (next = next.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,
