@@ -80,6 +80,10 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
     // The instance needs access to the fiber so that it can schedule updates
     ReactInstanceMap.set(instance, workInProgress);
     instance.updater = updater;
+
+    if (typeof instance.componentWillMount === 'function') {
+      instance.componentWillMount();
+    }
   }
 
   return {
