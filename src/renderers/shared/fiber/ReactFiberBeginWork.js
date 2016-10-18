@@ -309,6 +309,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
 
+    if (workInProgress.tag === HostComponent &&
+        workInProgress.memoizedProps.hidden &&
+        workInProgress.pendingWorkPriority !== OffscreenPriority) {
+      // This subtree still has work, but it should be deprioritized so we need
+      // to bail out and not do any work yet.
+      // TODO: It would be better if this tree got its correct priority set
+      // during scheduleUpdate instead because otherwise we'll start a higher
+      // priority reconciliation first before we can get down here. However,
+      // that is a bit tricky since workInProgress and current can have
+      // different "hidden" settings.
+      let child = workInProgress.progressedChild;
+      while (child) {
+        // To ensure that this subtree gets its priority reset, the children
+        // need to be reset.
+        child.pendingWorkPriority = OffscreenPriority;
+        child = child.sibling;
+      }
+      return null;
+    }
+
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
     // Fiber's priority and its children yet - we don't know without doing lots
