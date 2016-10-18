@@ -211,7 +211,7 @@ var ReactDOMInput = {
         //
         // https://github.com/facebook/react/issues/7253
         if (node.defaultValue !== '' + props.defaultValue) {
-          node.defaultValue = !!props.defaultValue;
+          node.defaultValue = '' + props.defaultValue;
         }
       }
       if (props.checked == null && props.defaultChecked != null) {
