@@ -32,18 +32,20 @@ var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
 
 const TERMINAL_TAG = 99;
+const TEXT_TAG = 98;
 
-type Container = { rootID: number, children: Array<Instance> };
+type Container = { rootID: number, children: Array<Instance | TextInstance> };
 type Props = { prop: any };
-type Instance = { tag: 99, type: string, id: number, children: Array<Instance>, prop: any };
+type Instance = { tag: 99, type: string, id: number, children: Array<Instance | TextInstance>, prop: any };
+type TextInstance = { tag: 98, text: string };
 
 var instanceCounter = 0;
 
-function recursivelyAppendChildren(flatArray : Array<Instance>, child : HostChildren<Instance>) {
+function recursivelyAppendChildren(flatArray : Array<Instance | TextInstance>, child : HostChildren<Instance | TextInstance>) {
   if (!child) {
     return;
   }
-  if (child.tag === TERMINAL_TAG) {
+  if (child.tag === TERMINAL_TAG || child.tag === TEXT_TAG) {
     flatArray.push(child);
   } else {
     let node = child;
@@ -53,7 +55,7 @@ function recursivelyAppendChildren(flatArray : Array<Instance>, child : HostChil
   }
 }
 
-function flattenChildren(children : HostChildren<Instance>) {
+function flattenChildren(children : HostChildren<Instance | TextInstance>) {
   const flatArray = [];
   recursivelyAppendChildren(flatArray, children);
   return flatArray;
@@ -61,11 +63,11 @@ function flattenChildren(children : HostChildren<Instance>) {
 
 var NoopRenderer = ReactFiberReconciler({
 
-  updateContainer(containerInfo : Container, children : HostChildren<Instance>) : void {
+  updateContainer(containerInfo : Container, children : HostChildren<Instance | TextInstance>) : void {
     containerInfo.children = flattenChildren(children);
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
+  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const inst = {
       tag: TERMINAL_TAG,
       id: instanceCounter++,
@@ -79,16 +81,51 @@ var NoopRenderer = ReactFiberReconciler({
     return inst;
   },
 
-  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : boolean {
+  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props) : boolean {
     return true;
   },
 
-  commitUpdate(instance : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
-    instance.children = flattenChildren(children);
+  commitUpdate(instance : Instance, oldProps : Props, newProps : Props) : void {
     instance.prop = newProps.prop;
   },
 
-  deleteInstance(instance : Instance) : void {
+  createTextInstance(text : string) : TextInstance {
+    var inst = { tag: TEXT_TAG, text : text };
+    // Hide from unit tests
+    Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
+    return inst;
+  },
+
+  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
+    textInstance.text = newText;
+  },
+
+  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    const index = parentInstance.children.indexOf(child);
+    if (index !== -1) {
+      parentInstance.children.splice(index, 1);
+    }
+    parentInstance.children.push(child);
+  },
+
+  insertBefore(parentInstance : Instance, child : Instance | TextInstance, beforeChild : Instance | TextInstance) : void {
+    const index = parentInstance.children.indexOf(child);
+    if (index !== -1) {
+      parentInstance.children.splice(index, 1);
+    }
+    const beforeIndex = parentInstance.children.indexOf(beforeChild);
+    if (beforeIndex === -1) {
+      throw new Error('This child does not exist.');
+    }
+    parentInstance.children.splice(beforeIndex, 0, child);
+  },
+
+  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    const index = parentInstance.children.indexOf(child);
+    if (index === -1) {
+      throw new Error('This child does not exist.');
+    }
+    parentInstance.children.splice(index, 1);
   },
 
   scheduleAnimationCallback(callback) {
@@ -166,11 +203,15 @@ var ReactNoop = {
       bufferedLog.push(...args, '\n');
     }
 
-    function logHostInstances(children: Array<Instance>, depth) {
+    function logHostInstances(children: Array<Instance | TextInstance>, depth) {
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
-        log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
-        logHostInstances(child.children, depth + 1);
+        if (child.tag === TEXT_TAG) {
+          log('  '.repeat(depth) + '- ' + child.text);
+        } else {
+          log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
+          logHostInstances(child.children, depth + 1);
+        }
       }
     }
     function logContainer(container : Container, depth) {

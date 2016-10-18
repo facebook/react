@@ -30,23 +30,28 @@ var {
   SynchronousPriority,
 } = require('ReactPriorityLevel');
 
+var {
+  NoEffect,
+  Placement,
+  Update,
+  PlacementAndUpdate,
+  Deletion,
+} = require('ReactTypeOfSideEffect');
+
+var {
+  HostContainer,
+} = require('ReactTypeOfWork');
+
 var timeHeuristicForUnitOfWork = 1;
 
-export type Scheduler = {
-  scheduleDeferredWork: (root : FiberRoot, priority : PriorityLevel) => void
-};
-
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Use a closure to circumvent the circular dependency between the scheduler
   // and ReactFiberBeginWork. Don't know if there's a better way to do this.
-  let scheduler;
-  function getScheduler(): Scheduler {
-    return scheduler;
-  }
 
-  const { beginWork } = ReactFiberBeginWork(config, getScheduler);
+  const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitWork } = ReactFiberCommitWork(config);
+  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
+    ReactFiberCommitWork(config);
 
   const scheduleAnimationCallback = config.scheduleAnimationCallback;
   const scheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -103,10 +108,45 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   function commitAllWork(finishedWork : Fiber) {
     // Commit all the side-effects within a tree.
     // TODO: Error handling.
+
+    // First, we'll perform all the host insertions, updates, deletions and
+    // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
-      const current = effectfulFiber.alternate;
-      commitWork(current, effectfulFiber);
+      switch (effectfulFiber.effectTag) {
+        case Placement: {
+          commitInsertion(effectfulFiber);
+          break;
+        }
+        case PlacementAndUpdate: {
+          commitInsertion(effectfulFiber);
+          const current = effectfulFiber.alternate;
+          commitWork(current, effectfulFiber);
+          break;
+        }
+        case Update: {
+          const current = effectfulFiber.alternate;
+          commitWork(current, effectfulFiber);
+          break;
+        }
+        case Deletion: {
+          commitDeletion(effectfulFiber);
+          break;
+        }
+      }
+      effectfulFiber = effectfulFiber.nextEffect;
+    }
+
+    // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
+    // happens as a separate pass so that all effects in the entire tree have
+    // already been invoked.
+    effectfulFiber = finishedWork.firstEffect;
+    while (effectfulFiber) {
+      if (effectfulFiber.effectTag === Update ||
+          effectfulFiber.effectTag === PlacementAndUpdate) {
+        const current = effectfulFiber.alternate;
+        commitLifeCycles(current, effectfulFiber);
+      }
       const next = effectfulFiber.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.
       // I'm not actually sure this matters because we can't reset firstEffect
@@ -114,6 +154,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       // ones. So we have to clean everything as we reuse nodes anyway.
       effectfulFiber.nextEffect = null;
       effectfulFiber = next;
+    }
+
+    // Finally if the root itself had an effect, we perform that since it is not
+    // part of the effect list.
+    if (finishedWork.effectTag !== NoEffect) {
+      const current = finishedWork.alternate;
+      commitWork(current, finishedWork);
     }
   }
 
@@ -154,9 +201,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       const returnFiber = workInProgress.return;
 
       if (returnFiber) {
-        // Ensure that the first and last effect of the parent corresponds
-        // to the children's first and last effect. This probably relies on
-        // children completing in order.
+        // Append all the effects of the subtree and this fiber onto the effect
+        // list of the parent. The completion order of the children affects the
+        // side-effect order.
         if (!returnFiber.firstEffect) {
           returnFiber.firstEffect = workInProgress.firstEffect;
         }
@@ -165,6 +212,21 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
             returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
           }
           returnFiber.lastEffect = workInProgress.lastEffect;
+        }
+
+        // If this fiber had side-effects, we append it AFTER the children's
+        // side-effects. We can perform certain side-effects earlier if
+        // needed, by doing multiple passes over the effect list. We don't want
+        // to schedule our own side-effect on our own list because if end up
+        // reusing children we'll schedule this effect onto itself since we're
+        // at the end.
+        if (workInProgress.effectTag !== NoEffect) {
+          if (returnFiber.lastEffect) {
+            returnFiber.lastEffect.nextEffect = workInProgress;
+          } else {
+            returnFiber.firstEffect = workInProgress;
+          }
+          returnFiber.lastEffect = workInProgress;
         }
       }
 
@@ -329,6 +391,31 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     scheduleAnimationWork(root, defaultPriority);
   }
 
+  function scheduleUpdate(fiber: Fiber, priorityLevel : PriorityLevel): void {
+    while (true) {
+      if (fiber.pendingWorkPriority === NoWork ||
+          fiber.pendingWorkPriority >= priorityLevel) {
+        fiber.pendingWorkPriority = priorityLevel;
+      }
+      if (fiber.alternate) {
+        if (fiber.alternate.pendingWorkPriority === NoWork ||
+            fiber.alternate.pendingWorkPriority >= priorityLevel) {
+          fiber.alternate.pendingWorkPriority = priorityLevel;
+        }
+      }
+      if (!fiber.return) {
+        if (fiber.tag === HostContainer) {
+          const root : FiberRoot = (fiber.stateNode : any);
+          scheduleDeferredWork(root, priorityLevel);
+          return;
+        } else {
+          throw new Error('Invalid root');
+        }
+      }
+      fiber = fiber.return;
+    }
+  }
+
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
     const previousDefaultPriority = defaultPriority;
     defaultPriority = priorityLevel;
@@ -339,10 +426,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  scheduler = {
+  return {
     scheduleWork: scheduleWork,
     scheduleDeferredWork: scheduleDeferredWork,
     performWithPriority: performWithPriority,
   };
-  return scheduler;
 };

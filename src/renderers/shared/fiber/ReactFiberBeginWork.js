@@ -14,18 +14,15 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
-import type { Scheduler } from 'ReactFiberScheduler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var {
+  mountChildFibersInPlace,
   reconcileChildFibers,
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-var { LowPriority } = require('ReactPriorityLevel');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -33,23 +30,29 @@ var {
   ClassComponent,
   HostContainer,
   HostComponent,
+  HostText,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
 var {
   NoWork,
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  createUpdateQueue,
-  addToQueue,
-  addCallbackToQueue,
   mergeUpdateQueue,
 } = require('ReactFiberUpdateQueue');
-var ReactInstanceMap = require('ReactInstanceMap');
+var {
+  Placement,
+} = require('ReactTypeOfSideEffect');
+var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getScheduler : () => Scheduler) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
+
+  const {
+    mount,
+  } = ReactFiberClassComponent(scheduleUpdate);
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -63,6 +66,18 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     }
   }
 
+  function clearDeletions(workInProgress) {
+    workInProgress.progressedFirstDeletion =
+      workInProgress.progressedLastDeletion =
+        null;
+  }
+
+  function transferDeletions(workInProgress) {
+    // Any deletions get added first into the effect list.
+    workInProgress.firstEffect = workInProgress.progressedFirstDeletion;
+    workInProgress.lastEffect = workInProgress.progressedLastDeletion;
+  }
+
   function reconcileChildren(current, workInProgress, nextChildren) {
     const priorityLevel = workInProgress.pendingWorkPriority;
     reconcileChildrenAtPriority(current, workInProgress, nextChildren, priorityLevel);
@@ -72,29 +87,53 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     // At this point any memoization is no longer valid since we'll have changed
     // the children.
     workInProgress.memoizedProps = null;
-    if (current && current.child === workInProgress.child) {
+    if (!current) {
+      // If this is a fresh new component that hasn't been rendered yet, we
+      // won't update its child set by applying minimal side-effects. Instead,
+      // we will add them all to the child before it gets rendered. That means
+      // we can optimize this reconciliation pass by not tracking side-effects.
+      workInProgress.child = mountChildFibersInPlace(
+        workInProgress,
+        workInProgress.child,
+        nextChildren,
+        priorityLevel
+      );
+    } else if (current.child === workInProgress.child) {
       // If the current child is the same as the work in progress, it means that
       // we haven't yet started any work on these children. Therefore, we use
       // the clone algorithm to create a copy of all the current children.
+
+      // If we had any progressed work already, that is invalid at this point so
+      // let's throw it out.
+      clearDeletions(workInProgress);
+
       workInProgress.child = reconcileChildFibers(
         workInProgress,
         workInProgress.child,
         nextChildren,
         priorityLevel
       );
+
+      transferDeletions(workInProgress);
     } else {
-      // If, on the other hand, we don't have a current fiber or if it is
-      // already using a clone, that means we've already begun some work on this
-      // tree and we can continue where we left off by reconciling against the
-      // existing children.
+      // If, on the other hand, it is already using a clone, that means we've
+      // already begun some work on this tree and we can continue where we left
+      // off by reconciling against the existing children.
       workInProgress.child = reconcileChildFibersInPlace(
         workInProgress,
         workInProgress.child,
         nextChildren,
         priorityLevel
       );
+
+      transferDeletions(workInProgress);
     }
     markChildAsProgressed(current, workInProgress, priorityLevel);
+  }
+
+  function updateFragment(current, workInProgress) {
+    var nextChildren = workInProgress.pendingProps;
+    reconcileChildren(current, workInProgress, nextChildren);
   }
 
   function updateFunctionalComponent(current, workInProgress) {
@@ -116,72 +155,6 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     return workInProgress.child;
   }
 
-  function scheduleUpdate(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel): void {
-    const { scheduleDeferredWork } = getScheduler();
-    fiber.updateQueue = updateQueue;
-    // Schedule update on the alternate as well, since we don't know which tree
-    // is current.
-    if (fiber.alternate) {
-      fiber.alternate.updateQueue = updateQueue;
-    }
-    while (true) {
-      if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority >= priorityLevel) {
-        fiber.pendingWorkPriority = priorityLevel;
-      }
-      if (fiber.alternate) {
-        if (fiber.alternate.pendingWorkPriority === NoWork ||
-            fiber.alternate.pendingWorkPriority >= priorityLevel) {
-          fiber.alternate.pendingWorkPriority = priorityLevel;
-        }
-      }
-      // Duck type root
-      if (fiber.stateNode && fiber.stateNode.containerInfo) {
-        const root : FiberRoot = (fiber.stateNode : any);
-        scheduleDeferredWork(root, priorityLevel);
-        return;
-      }
-      if (!fiber.return) {
-        throw new Error('No root!');
-      }
-      fiber = fiber.return;
-    }
-  }
-
-  // Class component state updater
-  const updater = {
-    enqueueSetState(instance, partialState) {
-      const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue ?
-        addToQueue(fiber.updateQueue, partialState) :
-        createUpdateQueue(partialState);
-      scheduleUpdate(fiber, updateQueue, LowPriority);
-    },
-    enqueueReplaceState(instance, state) {
-      const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
-      scheduleUpdate(fiber, updateQueue, LowPriority);
-    },
-    enqueueForceUpdate(instance) {
-      const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
-      updateQueue.isForced = true;
-      scheduleUpdate(fiber, updateQueue, LowPriority);
-    },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      fiber.updateQueue = updateQueue;
-      if (fiber.alternate) {
-        fiber.alternate.updateQueue = updateQueue;
-      }
-    },
-  };
-
   function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
     // A class component update is the result of either new props or new state.
     // Account for the possibly of missing pending props by falling back to the
@@ -201,15 +174,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     if (!instance) {
       var ctor = workInProgress.type;
       workInProgress.stateNode = instance = new ctor(props);
+      mount(workInProgress, instance);
       state = instance.state || null;
-      // The initial state must be added to the update queue in case
-      // setState is called before the initial render.
-      if (state !== null) {
-        workInProgress.updateQueue = createUpdateQueue(state);
-      }
-      // The instance needs access to the fiber so that it can schedule updates
-      ReactInstanceMap.set(instance, workInProgress);
-      instance.updater = updater;
     } else if (typeof instance.shouldComponentUpdate === 'function' &&
                !(updateQueue && updateQueue.isForced)) {
       if (workInProgress.memoizedProps !== null) {
@@ -233,7 +199,14 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
   }
 
   function updateHostComponent(current, workInProgress) {
-    const nextChildren = workInProgress.pendingProps.children;
+    let nextChildren = workInProgress.pendingProps.children;
+    if (typeof nextChildren === 'string' || typeof nextChildren === 'number') {
+      // We special case a direct text child of a host node. This is a common
+      // case. We won't handle it as a reified child. We will instead handle
+      // this in the host environment that also have access to this prop. That
+      // avoids allocating another HostText fiber and traversing it.
+      nextChildren = null;
+    }
     if (workInProgress.pendingProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
@@ -253,6 +226,20 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
       // Reconcile the children and stash them for later work.
       reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
       workInProgress.child = current ? current.child : null;
+
+      if (!current) {
+        // If this doesn't have a current we won't track it for placement
+        // effects. However, when we come back around to this we have already
+        // inserted the parent which means that we'll infact need to make this a
+        // placement.
+        // TODO: There has to be a better solution to this problem.
+        let child = workInProgress.progressedChild;
+        while (child) {
+          child.effectTag = Placement;
+          child = child.sibling;
+        }
+      }
+
       // Abort and don't process children yet.
       return null;
     } else {
@@ -327,17 +314,20 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
     //   return null;
     // }
 
+    if (current && workInProgress.child === current.child) {
+      // If we had any progressed work already, that is invalid at this point so
+      // let's throw it out.
+      clearDeletions(workInProgress);
+    }
+
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
     return workInProgress.child;
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
-    if (current) {
-      workInProgress.child = current.child;
-      workInProgress.memoizedProps = current.memoizedProps;
-      workInProgress.output = current.output;
-    }
+    // TODO: What if this is currently in progress?
+    // How can that happen? How is this not being cloned?
     return null;
   }
 
@@ -346,6 +336,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
     }
+
+    // If we don't bail out, we're going be recomputing our children so we need
+    // to drop our effect list.
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
 
     if (workInProgress.progressedPriority === priorityLevel) {
       // If we have progressed work on this priority level already, we can
@@ -372,19 +367,16 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        if (workInProgress.child) {
-          return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child,
-            priorityLevel
-          );
-        }
-        return null;
+        return workInProgress.child;
       case HostComponent:
         if (workInProgress.stateNode && config.beginUpdate) {
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);
+      case HostText:
+        // Nothing to do here. This is terminal. We'll do the completion step
+        // immediately after.
+        return null;
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;
@@ -393,25 +385,14 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         updateCoroutineComponent(current, workInProgress);
         // This doesn't take arbitrary time so we could synchronously just begin
         // eagerly do the work of workInProgress.child as an optimization.
-        if (workInProgress.child) {
-          return beginWork(
-            workInProgress.child.alternate,
-            workInProgress.child,
-            priorityLevel
-          );
-        }
         return workInProgress.child;
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        if (workInProgress.sibling) {
-          return beginWork(
-            workInProgress.sibling.alternate,
-            workInProgress.sibling,
-            priorityLevel
-          );
-        }
         return null;
+      case Fragment:
+        updateFragment(current, workInProgress);
+        return workInProgress.child;
       default:
         throw new Error('Unknown unit of work tag');
     }
