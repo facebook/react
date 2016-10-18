@@ -3,6 +3,7 @@ id: thinking-in-react
 title: Thinking in React
 permalink: docs/thinking-in-react.html
 redirect_from: 'blog/2013/11/05/thinking-in-react.html'
+prev: composition-vs-inheritance.html
 ---
 
 React is, in our opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.

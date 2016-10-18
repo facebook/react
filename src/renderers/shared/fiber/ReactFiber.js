@@ -12,8 +12,10 @@
 
 'use strict';
 
+import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { TypeOfWork } from 'ReactTypeOfWork';
+import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
@@ -23,13 +25,19 @@ var {
   ClassComponent,
   HostContainer,
   HostComponent,
+  HostText,
   CoroutineComponent,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
 
 var {
   NoWork,
 } = require('ReactPriorityLevel');
+
+var {
+  NoEffect,
+} = require('ReactTypeOfSideEffect');
 
 // An Instance is shared between all versions of a component. We can easily
 // break this out into a separate object to avoid copying so much to the
@@ -68,6 +76,7 @@ export type Fiber = Instance & {
   // Singly Linked List Tree Structure.
   child: ?Fiber,
   sibling: ?Fiber,
+  index: number,
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
@@ -86,6 +95,9 @@ export type Fiber = Instance & {
   // Output is the return value of this fiber, or a linked list of return values
   // if this returns multiple values. Such as a fragment.
   output: any, // This type will be more specific once we overload the tag.
+
+  // Effect
+  effectTag: TypeOfSideEffect,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: ?Fiber,
@@ -109,6 +121,13 @@ export type Fiber = Instance & {
   // the started child set until we need to get back to working on it. It may
   // or may not be the same as the "current" child.
   progressedChild: ?Fiber,
+
+  // When we reconcile children onto progressedChild it is possible that we have
+  // to delete some child fibers. We need to keep track of this side-effects so
+  // that if we continue later on, we have to include those effects. Deletions
+  // are added in the reverse order from sibling pointers.
+  progressedFirstDeletion: ?Fiber,
+  progressedLastDeletion: ?Fiber,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -153,6 +172,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
     child: null,
     sibling: null,
+    index: 0,
 
     ref: null,
 
@@ -163,6 +183,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     callbackList: null,
     output: null,
 
+    effectTag: NoEffect,
     nextEffect: null,
     firstEffect: null,
     lastEffect: null,
@@ -170,6 +191,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     pendingWorkPriority: NoWork,
     progressedPriority: NoWork,
     progressedChild: null,
+    progressedFirstDeletion: null,
+    progressedLastDeletion: null,
 
     alternate: null,
 
@@ -198,8 +221,10 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // extra memory if needed.
   let alt = fiber.alternate;
   if (alt) {
-    // Whenever we clone, we do so to get a new work in progress.
-    // This ensures that we've reset these in the new tree.
+    // If we clone, then we do so from the "current" state. The current state
+    // can't have any side-effects that are still valid so we reset just to be
+    // sure.
+    alt.effectTag = NoEffect;
     alt.nextEffect = null;
     alt.firstEffect = null;
     alt.lastEffect = null;
@@ -218,6 +243,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.stateNode = fiber.stateNode;
   alt.child = fiber.child;
   alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
+  alt.index = fiber.index; // This should always be overridden.
   alt.ref = fiber.ref;
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
@@ -227,6 +253,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;
+  alt.memoizedState = fiber.memoizedState;
   alt.output = fiber.output;
 
   return alt;
@@ -245,6 +272,22 @@ exports.createFiberFromElement = function(element : ReactElement<*>, priorityLev
   return fiber;
 };
 
+exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) {
+  // TODO: Consider supporting keyed fragments. Technically, we accidentally
+  // support that in the existing React.
+  const fiber = createFiber(Fragment, null);
+  fiber.pendingProps = elements;
+  fiber.pendingWorkPriority = priorityLevel;
+  return fiber;
+};
+
+exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) {
+  const fiber = createFiber(HostText, null);
+  fiber.pendingProps = content;
+  fiber.pendingWorkPriority = priorityLevel;
+  return fiber;
+};
+
 function createFiberFromElementType(type : mixed, key : null | string) {
   let fiber;
   if (typeof type === 'function') {
@@ -257,6 +300,11 @@ function createFiberFromElementType(type : mixed, key : null | string) {
     fiber.type = type;
   } else if (typeof type === 'object' && type !== null) {
     // Currently assumed to be a continuation and therefore is a fiber already.
+    // TODO: The yield system is currently broken for updates in some cases.
+    // The reified yield stores a fiber, but we don't know which fiber that is;
+    // the current or a workInProgress? When the continuation gets rendered here
+    // we don't know if we can reuse that fiber or if we need to clone it.
+    // There is probably a clever way to restructure this.
     fiber = type;
   } else {
     throw new Error('Unknown component type: ' + typeof type);
@@ -279,3 +327,4 @@ exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : 
   fiber.pendingProps = {};
   return fiber;
 };
+

@@ -39,11 +39,6 @@ defaults:
     layout: docs-old
     sectionid: docs-old
 - scope:
-    path: tips
-    type: pages
-  values:
-    sectionid: docs
-- scope:
     path: contributing
     type: pages
   values:

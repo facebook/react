@@ -146,7 +146,11 @@ var ReactChildReconciler = {
       } else {
         if (prevChild) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-          ReactReconciler.unmountComponent(prevChild, false);
+          ReactReconciler.unmountComponent(
+            prevChild,
+            false, /* safely */
+            false /* skipLifecycle */
+          );
         }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement, true);
@@ -170,7 +174,11 @@ var ReactChildReconciler = {
           !(nextChildren && nextChildren.hasOwnProperty(name))) {
         prevChild = prevChildren[name];
         removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-        ReactReconciler.unmountComponent(prevChild, false);
+        ReactReconciler.unmountComponent(
+          prevChild,
+          false, /* safely */
+          false /* skipLifecycle */
+        );
       }
     }
   },
@@ -182,11 +190,11 @@ var ReactChildReconciler = {
    * @param {?object} renderedChildren Previously initialized set of children.
    * @internal
    */
-  unmountChildren: function(renderedChildren, safely) {
+  unmountChildren: function(renderedChildren, safely, skipLifecycle) {
     for (var name in renderedChildren) {
       if (renderedChildren.hasOwnProperty(name)) {
         var renderedChild = renderedChildren[name];
-        ReactReconciler.unmountComponent(renderedChild, safely);
+        ReactReconciler.unmountComponent(renderedChild, safely, skipLifecycle);
       }
     }
   },

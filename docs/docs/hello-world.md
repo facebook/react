@@ -22,7 +22,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010)
 
 It renders a header saying "Hello World" on the page.
 

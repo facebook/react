@@ -3,6 +3,7 @@ id: composition-vs-inheritance
 title: Composition vs Inheritance
 permalink: docs/composition-vs-inheritance.html
 prev: lifting-state-up.html
+next: thinking-in-react.html
 ---
 
 React has a powerful composition model, and we recommend using composition instead of inheritance to reuse code between components.
@@ -42,7 +43,7 @@ function WelcomeDialog() {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/ozqNOV?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/ozqNOV?editors=0010)
 
 Anything inside the `<FancyBorder>` JSX tag gets passed into the `FancyBorder` component as a `children` prop. Since `FancyBorder` renders `{props.children}` inside a `<div>`, the passed elements appear in the final output.
 
@@ -75,7 +76,7 @@ function App() {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/gwZOJp?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/gwZOJp?editors=0010)
 
 React elements like `<Contacts />` and `<Chat />` are just objects, so you can pass them as props like any other data.
 
@@ -83,7 +84,7 @@ React elements like `<Contacts />` and `<Chat />` are just objects, so you can p
 
 Sometimes we think about components as being "special cases" of other components. For example, we might say that a `WelcomeDialog` is a special case of `Dialog`.
 
-In React, this is also achieved by composition, where a more "specific" component renders a more "generic" one, and configures it with props:
+In React, this is also achieved by composition, where a more "specific" component renders a more "generic" one and configures it with props:
 
 ```js{5,8,16-18}
 function Dialog(props) {
@@ -108,7 +109,7 @@ function WelcomeDialog() {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/kkEaOZ?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/kkEaOZ?editors=0010)
 
 Composition works equally well for components defined as classes:
 
@@ -158,7 +159,7 @@ class SignUpDialog extends React.Component {
 }
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/gwZbYa?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/gwZbYa?editors=0010)
 
 ## So What About Inheritance?
 

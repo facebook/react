@@ -8,7 +8,7 @@ next: complementary-tools-zh-CN.html
 
 ### Rethinking best practices - JSConf.eu
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
 "在 Facebook 和 Instagram, 我们正在努力挑战React在web上能达到的极限。我的讲话会从对框架的简单介绍开始，然后深入三个有争议的话题：扔掉模板的概念并用JavaScript构建views, 当数据改变 “re-rendering” 你的整个应用，以及一个DOM和events的轻量级实现。" -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -23,7 +23,7 @@ next: complementary-tools-zh-CN.html
 
 ### Secrets of the Virtual DOM - MtnWest JS
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
 
 "在这次讲座里，我会讨论为什么我们构建了一个虚拟 DOM，它比起其他系统如何，以及它与未来浏览器技术的关系。" -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -99,14 +99,14 @@ next: complementary-tools-zh-CN.html
 
 ### Introduction to React.js - Facebook Seattle
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
 
 由 [Tom Occhino](http://tomocchino.com/) 和 [Jordan Walke](https://github.com/jordwalke)
 
 * * *
 
 ### Backbone + React + Middleman Screencast
-<iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
 Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏博展示了用 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)如何整合两者. Middleman 是在本例中使用的框架但很容易被替换成其他框架。对此可支持的template可以在[这里](https://github.com/jbhatab/middleman-backbone-react-template) 找到. -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
 
@@ -114,7 +114,7 @@ Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏�
 
 ### Developing User Interfaces With React - Super VanJS
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
 
 来自 [Steven Luscher](https://github.com/steveluscher)
 
@@ -122,7 +122,7 @@ Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏�
 
 ### Introduction to React - LAWebSpeed meetup
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
 
 来自 [Stoyan Stefanov](http://www.phpied.com/)
 
@@ -130,7 +130,7 @@ Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏�
 
 ### React, or how to make life simpler - FrontEnd Dev Conf '14
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
 **俄语** by [Alexander Solovyov](http://solovyov.net/)
 
@@ -138,19 +138,19 @@ Backbone 是一个在用React实现 REST API 接口的极好方法。这个屏�
 
 ### "Functional DOM programming" - Meteor DevShop 11
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### "Rethinking Web App Development at Facebook" - Facebook F8 Conference 2014
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### React and Flux: Building Applications with a Unidirectional Data Flow - Forward JS 2014
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 Facebook 工程师 [Bill Fisher](https://twitter.com/fisherwebdev) 和 [Jing Chen](https://twitter.com/jingc) 谈论 Flux 和 React, 以及如何使用单向数据流的程序架构清理他们的代码 .
 
@@ -158,7 +158,7 @@ Facebook 工程师 [Bill Fisher](https://twitter.com/fisherwebdev) 和 [Jing Che
 
 ### Server-Side Rendering of Isomorphic Apps at SoundCloud
 
-<iframe src="https://player.vimeo.com/video/108488724" width="650" height="365" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe src="https://player.vimeo.com/video/108488724" width="100%" height="365" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 来自 [Andres Suarez](https://github.com/zertosh) 的演练，关于 [SoundCloud](https://developers.soundcloud.com/blog/) 如何使用 React 和 Flux 在服务器端渲染.
 
@@ -168,6 +168,6 @@ Facebook 工程师 [Bill Fisher](https://twitter.com/fisherwebdev) 和 [Jing Che
 
 ### Introducing React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
 [Tom Occhino](https://twitter.com/tomocchino) 回顾了React的过去和现在，在2015年。梳理了下一步要做什么。

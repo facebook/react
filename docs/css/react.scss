@@ -7,8 +7,9 @@
 
 @mixin code-typography {
   font-family: 'source-code-pro', Menlo, Consolas, 'Courier New', monospace;
-  font-size: 13px;
   line-height: 1.5;
+  font-size: 13px;
+  -webkit-text-size-adjust: none;
 }
 
 $skinnyContentWidth: 650px;
@@ -443,7 +444,7 @@ h1, h2, h3, h4, h5, h6 {
 
         a {
           padding: 0;
-          line-height: 2;
+          line-height: 1.6;
         }
       }
     }

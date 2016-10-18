@@ -21,6 +21,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   function div(...children) {
+    children = children.map(c => typeof c === 'string' ? { text: c } : c);
     return { type: 'div', children, prop: undefined };
   }
 
@@ -53,6 +54,112 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flush();
     expect(ReactNoop.root.children).toEqual([
       div(span(), span()),
+    ]);
+
+  });
+
+  it('can update child nodes of a fragment', function() {
+
+    function Bar(props) {
+      return <span>{props.text}</span>;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          <Bar text={props.text} />
+          {props.text === 'World' ? [
+            <Bar key="a" text={props.text} />,
+            <div key="b" />,
+          ] : props.text === 'Hi' ? [
+            <div key="b" />,
+            <Bar key="a" text={props.text} />,
+          ] : null}
+          <span prop="test" />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo text="Hello" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span(), span('test')),
+    ]);
+
+    ReactNoop.render(<Foo text="World" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span(), span(), div(), span('test')),
+    ]);
+
+    ReactNoop.render(<Foo text="Hi" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span(), div(), span(), span('test')),
+    ]);
+
+  });
+
+  it('can update child nodes rendering into text nodes', function() {
+
+    function Bar(props) {
+      return props.text;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          <Bar text={props.text} />
+          {props.text === 'World' ? [
+            <Bar key="a" text={props.text} />,
+            '!',
+          ] : null}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo text="Hello" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div('Hello'),
+    ]);
+
+    ReactNoop.render(<Foo text="World" />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div('World', 'World', '!'),
+    ]);
+
+  });
+
+  it('can deletes children either components, host or text', function() {
+
+    function Bar(props) {
+      return <span prop={props.children} />;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.show ? [
+            <div key="a" />,
+            <Bar key="b">Hello</Bar>,
+            'World',
+          ] : []}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(div(), span('Hello'), 'World'),
+    ]);
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(),
     ]);
 
   });
@@ -273,7 +380,7 @@ describe('ReactIncrementalSideEffects', () => {
   it('can defer side-effects and resume them later on', function() {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
-        return this.props.idx !== nextProps;
+        return this.props.idx !== nextProps.idx;
       }
       render() {
         return <span prop={this.props.idx} />;
@@ -330,10 +437,11 @@ describe('ReactIncrementalSideEffects', () => {
         )
       ),
     ]);
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.render(<Foo tick={3} idx={1} />);
+    ReactNoop.flush();
     expect(ReactNoop.root.children).toEqual([
       div(
-        span(2),
+        span(3),
         div(
           // New numbers.
           span(1),
@@ -349,6 +457,149 @@ describe('ReactIncrementalSideEffects', () => {
     expect(innerSpanA).toBe(innerSpanB);
   });
 
+  it('can defer side-effects and reuse them later - complex', function() {
+    var ops = [];
+
+    class Bar extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        return this.props.idx !== nextProps.idx;
+      }
+      render() {
+        ops.push('Bar');
+        return <span prop={this.props.idx} />;
+      }
+    }
+    class Baz extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        return this.props.idx !== nextProps.idx;
+      }
+      render() {
+        ops.push('Baz');
+        return [<Bar idx={this.props.idx} />, <Bar idx={this.props.idx} />];
+      }
+    }
+    function Foo(props) {
+      ops.push('Foo');
+      return (
+        <div>
+          <span prop={props.tick} />
+          <div hidden={true}>
+            <Baz idx={props.idx} />
+            <Baz idx={props.idx} />
+            <Baz idx={props.idx} />
+          </div>
+        </div>
+      );
+    }
+    ReactNoop.render(<Foo tick={0} idx={0} />);
+    ReactNoop.flushDeferredPri(65);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(0),
+        div(/*the spans are down-prioritized and not rendered yet*/)
+      ),
+    ]);
+
+    expect(ops).toEqual(['Foo', 'Baz', 'Bar']);
+    ops = [];
+
+    ReactNoop.render(<Foo tick={1} idx={0} />);
+    ReactNoop.flushDeferredPri(70);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(1),
+        div(/*still not rendered yet*/)
+      ),
+    ]);
+
+    expect(ops).toEqual(['Foo', 'Baz', 'Bar']);
+    ops = [];
+
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(1),
+        div(
+          // Now we had enough time to finish the spans.
+          span(0),
+          span(0),
+          span(0),
+          span(0),
+          span(0),
+          span(0)
+        )
+      ),
+    ]);
+
+    expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar', 'Baz', 'Bar', 'Bar']);
+    ops = [];
+
+    // Now we're going to update the index but we'll only let it finish half
+    // way through.
+    ReactNoop.render(<Foo tick={2} idx={1} />);
+    ReactNoop.flushDeferredPri(95);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(2),
+        div(
+          // Still same old numbers.
+          span(0),
+          span(0),
+          span(0),
+          span(0),
+          span(0),
+          span(0)
+        )
+      ),
+    ]);
+
+    // We let it finish half way through. That means we'll have one fully
+    // completed Baz, one half-way completed Baz and one fully incomplete Baz.
+    expect(ops).toEqual(['Foo', 'Baz', 'Bar', 'Bar', 'Baz', 'Bar']);
+    ops = [];
+
+    // We'll update again, without letting the new index update yet. Only half
+    // way through.
+    ReactNoop.render(<Foo tick={3} idx={1} />);
+    ReactNoop.flushDeferredPri(50);
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(3),
+        div(
+          // Old numbers.
+          span(0),
+          span(0),
+          span(0),
+          span(0),
+          span(0),
+          span(0)
+        )
+      ),
+    ]);
+
+    expect(ops).toEqual(['Foo']);
+    ops = [];
+
+    // We should now be able to reuse some of the work we've already done
+    // and replay those side-effects.
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(
+        span(3),
+        div(
+          // New numbers.
+          span(1),
+          span(1),
+          span(1),
+          span(1),
+          span(1),
+          span(1)
+        )
+      ),
+    ]);
+
+    expect(ops).toEqual(['Baz', 'Bar', 'Baz', 'Bar', 'Bar']);
+  });
 
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
@@ -384,4 +635,216 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   // TODO: Test that callbacks are not lost if an update is preempted.
+
+  it('calls componentWillUnmount after a deletion, even if nested', () => {
+
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentWillUnmount() {
+        ops.push(this.props.name);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    class Wrapper extends React.Component {
+      componentWillUnmount() {
+        ops.push('Wrapper');
+      }
+      render() {
+        return <Bar name={this.props.name} />;
+      }
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.show ? [
+            <Bar key="a" name="A" />,
+            <Wrapper key="b" name="B" />,
+            <div key="cd">
+              <Bar name="C" />
+              <Wrapper name="D" />,
+            </div>,
+            [
+              <Bar key="e" name="E" />,
+              <Bar key="f" name="F" />,
+            ],
+          ] : []}
+          <div>
+            {props.show ? <Bar key="g" name="G" /> : null}
+          </div>
+          <Bar name="this should not unmount" />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([]);
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'A',
+      'Wrapper',
+      'B',
+      'C',
+      'Wrapper',
+      'D',
+      'E',
+      'F',
+      'G',
+    ]);
+
+  });
+
+  it('calls componentDidMount/Update after insertion/update', () => {
+
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentDidMount() {
+        ops.push('mount:' + this.props.name);
+      }
+      componentDidUpdate() {
+        ops.push('update:' + this.props.name);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    class Wrapper extends React.Component {
+      componentDidMount() {
+        ops.push('mount:wrapper-' + this.props.name);
+      }
+      componentDidUpdate() {
+        ops.push('update:wrapper-' + this.props.name);
+      }
+      render() {
+        return <Bar name={this.props.name} />;
+      }
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          <Bar key="a" name="A" />
+          <Wrapper key="b" name="B" />
+          <div key="cd">
+            <Bar name="C" />
+            <Wrapper name="D" />
+          </div>
+          {[
+            <Bar key="e" name="E" />,
+            <Bar key="f" name="F" />,
+          ]}
+          <div>
+            <Bar key="g" name="G" />
+          </div>
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'mount:A',
+      'mount:B',
+      'mount:wrapper-B',
+      'mount:C',
+      'mount:D',
+      'mount:wrapper-D',
+      'mount:E',
+      'mount:F',
+      'mount:G',
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'update:A',
+      'update:B',
+      'update:wrapper-B',
+      'update:C',
+      'update:D',
+      'update:wrapper-D',
+      'update:E',
+      'update:F',
+      'update:G',
+    ]);
+
+  });
+
+  it('invokes ref callbacks after insertion/update/unmount', () => {
+
+    var classInstance = null;
+
+    var ops = [];
+
+    class ClassComponent extends React.Component {
+      render() {
+        classInstance = this;
+        return <span />;
+      }
+    }
+
+    function FunctionalComponent(props) {
+      return <span />;
+    }
+
+    function Foo(props) {
+      return (
+        props.show ?
+        <div>
+          <ClassComponent ref={n => ops.push(n)} />
+          <FunctionalComponent ref={n => ops.push(n)} />
+          <div ref={n => ops.push(n)} />
+        </div> :
+        null
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      classInstance,
+      // no call for functional components
+      div(),
+    ]);
+
+    ops = [];
+
+    // Refs that switch function instances get reinvoked
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // detach all refs that switched handlers first.
+      null,
+      null,
+      // reattach as a separate phase
+      classInstance,
+      div(),
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // unmount
+      null,
+      null,
+    ]);
+
+  });
+
+  // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
+  // expected way for aborted and resumed render life-cycles.
+
 });

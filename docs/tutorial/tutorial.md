@@ -124,11 +124,11 @@ If you click on any square, an X should show up in it.
 
 The React Devtools extension for [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/) lets you inspect a React component tree in your browser devtools.
 
-![React Devtools](/react/img/tutorial/devtools.png)
+<img src="/react/img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%">
 
 It lets you inspect the props and state of any of the components in your tree.
 
-It doesn't work great on Codepen because of the multiple frames, but if you log in to Codepen and confirm your email (for spam prevention), you can go to Change View > Debug to open your code in a new tab, then the devtools will work. It's fine if you don't want to do this now, but it's good to know that it exists.
+It doesn't work great on CodePen because of the multiple frames, but if you log in to CodePen and confirm your email (for spam prevention), you can go to Change View > Debug to open your code in a new tab, then the devtools will work. It's fine if you don't want to do this now, but it's good to know that it exists.
 
 ## Lifting State Up
 

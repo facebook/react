@@ -13,13 +13,10 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInstanceMap = require('ReactInstanceMap');
 
 var stripEmptyValues = function(obj) {
   var ret = {};
-  var name;
-  for (name in obj) {
+  for (var name in obj) {
     if (!obj.hasOwnProperty(name)) {
       continue;
     }
@@ -30,15 +27,7 @@ var stripEmptyValues = function(obj) {
   return ret;
 };
 
-/**
- * Child key names are wrapped like '.$key:0'. We strip the extra chars out
- * here. This relies on an implementation detail of the rendering system.
- */
-var getOriginalKey = function(childName) {
-  var match = childName.match(/^\.\$([^.]+)$/);
-  expect(match).not.toBeNull();
-  return match[1];
-};
+var idCounter = 123;
 
 /**
  * Contains internal static internal state in order to test that updates to
@@ -46,15 +35,15 @@ var getOriginalKey = function(childName) {
  * reusing existing DOM/memory resources.
  */
 class StatusDisplay extends React.Component {
-  state = {internalState: Math.random()};
+  state = {internalState: idCounter++};
 
-  getStatus = () => {
+  getStatus() {
     return this.props.status;
-  };
+  }
 
-  getInternalState = () => {
+  getInternalState() {
     return this.state.internalState;
-  };
+  }
 
   componentDidMount() {
     this.props.onFlush();
@@ -67,7 +56,7 @@ class StatusDisplay extends React.Component {
   render() {
     return (
       <div>
-        {this.state.internalState}
+        {this.props.contentKey}
       </div>
     );
   }
@@ -82,39 +71,29 @@ class FriendsStatusDisplay extends React.Component {
   * Refs are not maintained in the rendered order, and neither is
   * `this._renderedChildren` (surprisingly).
   */
-  getOriginalKeys = () => {
+  getOriginalKeys() {
     var originalKeys = [];
-    // TODO: Update this to a better test that doesn't rely so much on internal
-    // implementation details.
-    var statusDisplays =
-      ReactInstanceMap.get(this)
-      ._renderedComponent
-      ._renderedChildren;
-    var name;
-    for (name in statusDisplays) {
-      var child = statusDisplays[name];
-      var isPresent = !!child;
-      if (isPresent) {
-        originalKeys[child._mountIndex] = getOriginalKey(name);
+    for (var key in this.props.usernameToStatus) {
+      if (this.props.usernameToStatus[key]) {
+        originalKeys.push(key);
       }
     }
     return originalKeys;
-  };
+  }
 
   /**
    * Retrieves the rendered children in a nice format for comparing to the input
    * `this.props.usernameToStatus`.
    */
-  getStatusDisplays = () => {
+  getStatusDisplays() {
     var res = {};
-    var i;
     var originalKeys = this.getOriginalKeys();
-    for (i = 0; i < originalKeys.length; i++) {
+    for (var i = 0; i < originalKeys.length; i++) {
       var key = originalKeys[i];
       res[key] = this.refs[key];
     }
     return res;
-  };
+  }
 
   /**
    * Verifies that by the time a child is flushed, the refs that appeared
@@ -123,10 +102,9 @@ class FriendsStatusDisplay extends React.Component {
    * but our internal layer API depends on this assumption. We need to change
    * it to be more declarative before making ref resolution indeterministic.
    */
-  verifyPreviousRefsResolved = (flushedKey) => {
-    var i;
+  verifyPreviousRefsResolved(flushedKey) {
     var originalKeys = this.getOriginalKeys();
-    for (i = 0; i < originalKeys.length; i++) {
+    for (var i = 0; i < originalKeys.length; i++) {
       var key = originalKeys[i];
       if (key === flushedKey) {
         // We are only interested in children up to the current key.
@@ -134,18 +112,18 @@ class FriendsStatusDisplay extends React.Component {
       }
       expect(this.refs[key]).toBeTruthy();
     }
-  };
+  }
 
   render() {
     var children = [];
-    var key;
-    for (key in this.props.usernameToStatus) {
+    for (var key in this.props.usernameToStatus) {
       var status = this.props.usernameToStatus[key];
       children.push(
         !status ? null :
         <StatusDisplay
           key={key}
           ref={key}
+          contentKey={key}
           onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
           status={status}
         />
@@ -223,35 +201,33 @@ function verifyStatesPreserved(lastInternalStates, statusDisplays) {
  * Verifies that the internal representation of a set of `renderedChildren`
  * accurately reflects what is in the DOM.
  */
-function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
-  var containerNode = ReactDOM.findDOMNode(parentInstance);
+function verifyDomOrderingAccurate(outerContainer, statusDisplays) {
+  var containerNode = outerContainer.firstChild;
   var statusDisplayNodes = containerNode.childNodes;
-  var i;
-  var orderedDomIDs = [];
-  for (i = 0; i < statusDisplayNodes.length; i++) {
-    var inst = ReactDOMComponentTree.getInstanceFromNode(statusDisplayNodes[i]);
-    orderedDomIDs.push(inst._rootNodeID);
+  var orderedDomKeys = [];
+  for (var i = 0; i < statusDisplayNodes.length; i++) {
+    var contentKey = statusDisplayNodes[i].textContent;
+    orderedDomKeys.push(contentKey);
   }
 
-  var orderedLogicalIDs = [];
+  var orderedLogicalKeys = [];
   var username;
   for (username in statusDisplays) {
     if (!statusDisplays.hasOwnProperty(username)) {
       continue;
     }
     var statusDisplay = statusDisplays[username];
-    orderedLogicalIDs.push(
-      ReactInstanceMap.get(statusDisplay)._renderedComponent._rootNodeID
+    orderedLogicalKeys.push(
+      statusDisplay.props.contentKey
     );
   }
-  expect(orderedDomIDs).toEqual(orderedLogicalIDs);
+  expect(orderedDomKeys).toEqual(orderedLogicalKeys);
 }
 
 /**
  * Todo: Check that internal state is preserved across transitions
  */
 function testPropsSequence(sequence) {
-  var i;
   var container = document.createElement('div');
   var parentInstance = ReactDOM.render(
     <FriendsStatusDisplay {...sequence[0]} />,
@@ -261,7 +237,7 @@ function testPropsSequence(sequence) {
   var lastInternalStates = getInternalStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
-  for (i = 1; i < sequence.length; i++) {
+  for (var i = 1; i < sequence.length; i++) {
     ReactDOM.render(
       <FriendsStatusDisplay {...sequence[i]} />,
       container
@@ -269,7 +245,7 @@ function testPropsSequence(sequence) {
     statusDisplays = parentInstance.getStatusDisplays();
     verifyStatuses(statusDisplays, sequence[i]);
     verifyStatesPreserved(lastInternalStates, statusDisplays);
-    verifyDomOrderingAccurate(parentInstance, statusDisplays);
+    verifyDomOrderingAccurate(container, statusDisplays);
 
     lastInternalStates = getInternalStateByUserName(statusDisplays);
   }

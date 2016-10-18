@@ -31,8 +31,15 @@ exports.createReifiedYield = function(yieldNode : ReactYield) : ReifiedYield {
 };
 
 exports.createUpdatedReifiedYield = function(previousYield : ReifiedYield, yieldNode : ReactYield) : ReifiedYield {
+  var fiber = previousYield.continuation;
+  if (fiber.type !== yieldNode.continuation) {
+    fiber = createFiberFromElementType(
+      yieldNode.continuation,
+      yieldNode.key
+    );
+  }
   return {
-    continuation: previousYield.continuation,
+    continuation: fiber,
     props: yieldNode.props,
   };
 };
