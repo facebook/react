@@ -14,7 +14,8 @@
 describe('DOMPropertyOperations', () => {
   var DOMPropertyOperations;
   var DOMProperty;
-  var ReactDOMComponentTree;
+
+  var debugID = 42;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -23,7 +24,6 @@ describe('DOMPropertyOperations', () => {
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
-    ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 
   describe('createMarkupForProperty', () => {
@@ -174,21 +174,18 @@ describe('DOMPropertyOperations', () => {
 
   describe('setValueForProperty', () => {
     var stubNode;
-    var stubInstance;
 
     beforeEach(() => {
       stubNode = document.createElement('div');
-      stubInstance = {_debugID: 1};
-      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
     });
 
     it('should set values as properties by default', () => {
-      DOMPropertyOperations.setValueForProperty(stubNode, 'title', 'Tip!');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'title', 'Tip!', debugID);
       expect(stubNode.title).toBe('Tip!');
     });
 
     it('should set values as attributes if necessary', () => {
-      DOMPropertyOperations.setValueForProperty(stubNode, 'role', '#');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'role', '#', debugID);
       expect(stubNode.getAttribute('role')).toBe('#');
       expect(stubNode.role).toBeUndefined();
     });
@@ -198,7 +195,8 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'xlinkHref',
-        'about:blank'
+        'about:blank',
+        debugID
       );
       expect(stubNode.setAttributeNS.calls.count()).toBe(1);
       expect(stubNode.setAttributeNS.calls.argsFor(0))
@@ -206,11 +204,11 @@ describe('DOMPropertyOperations', () => {
     });
 
     it('should set values as boolean properties', () => {
-      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', 'disabled');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', 'disabled', debugID);
       expect(stubNode.getAttribute('disabled')).toBe('');
-      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', true);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', true, debugID);
       expect(stubNode.getAttribute('disabled')).toBe('');
-      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', false);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'disabled', false, debugID);
       expect(stubNode.getAttribute('disabled')).toBe(null);
     });
 
@@ -222,15 +220,14 @@ describe('DOMPropertyOperations', () => {
           return '<html>';
         },
       };
-      DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj, debugID);
       expect(stubNode.getAttribute('role')).toBe('<html>');
     });
 
     it('should not remove empty attributes for special properties', () => {
       stubNode = document.createElement('input');
-      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
-      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '', debugID);
       // JSDOM does not behave correctly for attributes/properties
       //expect(stubNode.getAttribute('value')).toBe('');
       expect(stubNode.value).toBe('');
@@ -240,7 +237,8 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'allowFullScreen',
-        false
+        false,
+        debugID
       );
       expect(stubNode.hasAttribute('allowFullScreen')).toBe(false);
     });
@@ -249,13 +247,15 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'data-foo',
-        'bar'
+        'bar',
+        debugID
       );
       expect(stubNode.hasAttribute('data-foo')).toBe(true);
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'data-foo',
-        null
+        null,
+        debugID
       );
       expect(stubNode.hasAttribute('data-foo')).toBe(false);
     });
@@ -273,7 +273,8 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'foobar',
-        'cows say moo'
+        'cows say moo',
+        debugID
       );
 
       expect(foobarSetter.mock.calls.length).toBe(1);
@@ -285,14 +286,16 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'className',
-        'selected'
+        'selected',
+        debugID
       );
       expect(stubNode.className).toBe('selected');
 
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'className',
-        null
+        null,
+        debugID
       );
       // className should be '', not 'null' or null (which becomes 'null' in
       // some browsers)
@@ -304,14 +307,16 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'hidden',
-        true
+        true,
+        debugID
       );
       expect(stubNode.hasAttribute('hidden')).toBe(true);
 
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'hidden',
-        false
+        false,
+        debugID
       );
       expect(stubNode.hasAttribute('hidden')).toBe(false);
     });
@@ -332,14 +337,16 @@ describe('DOMPropertyOperations', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'foobar',
-        'selected'
+        'selected',
+        debugID
       );
       expect(stubNode.className).toBe('selected');
 
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'foobar',
-        null
+        null,
+        debugID
       );
       // className should be '', not 'null' or null (which becomes 'null' in
       // some browsers)
@@ -350,20 +357,17 @@ describe('DOMPropertyOperations', () => {
 
   describe('deleteValueForProperty', () => {
     var stubNode;
-    var stubInstance;
 
     beforeEach(() => {
       stubNode = document.createElement('div');
-      stubInstance = {_debugID: 1};
-      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
     });
 
     it('should remove attributes for normal properties', () => {
-      DOMPropertyOperations.setValueForProperty(stubNode, 'title', 'foo');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'title', 'foo', debugID);
       expect(stubNode.getAttribute('title')).toBe('foo');
       expect(stubNode.title).toBe('foo');
 
-      DOMPropertyOperations.deleteValueForProperty(stubNode, 'title');
+      DOMPropertyOperations.deleteValueForProperty(stubNode, 'title', debugID);
       expect(stubNode.getAttribute('title')).toBe(null);
       // JSDOM does not behave correctly for attributes/properties
       //expect(stubNode.title).toBe('');
@@ -371,11 +375,9 @@ describe('DOMPropertyOperations', () => {
 
     it('should not remove attributes for special properties', () => {
       stubNode = document.createElement('input');
-      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
-
       stubNode.setAttribute('value', 'foo');
 
-      DOMPropertyOperations.deleteValueForProperty(stubNode, 'value');
+      DOMPropertyOperations.deleteValueForProperty(stubNode, 'value', debugID);
       // JSDOM does not behave correctly for attributes/properties
       //expect(stubNode.getAttribute('value')).toBe('foo');
       expect(stubNode.value).toBe('');
@@ -383,7 +385,6 @@ describe('DOMPropertyOperations', () => {
 
     it('should not leave all options selected when deleting multiple', () => {
       stubNode = document.createElement('select');
-      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
 
       stubNode.multiple = true;
       stubNode.appendChild(document.createElement('option'));
@@ -391,7 +392,7 @@ describe('DOMPropertyOperations', () => {
       stubNode.options[0].selected = true;
       stubNode.options[1].selected = true;
 
-      DOMPropertyOperations.deleteValueForProperty(stubNode, 'multiple');
+      DOMPropertyOperations.deleteValueForProperty(stubNode, 'multiple', debugID);
       expect(stubNode.getAttribute('multiple')).toBe(null);
       expect(stubNode.multiple).toBe(false);
 
