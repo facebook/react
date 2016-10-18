@@ -791,6 +791,68 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should emit a warning once for a named custom component using shady DOM', () => {
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        spyOn(console, 'error');
+
+        var defaultCreateElement = document.createElement.bind(document);
+
+        try {
+          document.createElement = element => {
+            var container = defaultCreateElement(element);
+            container.shadyRoot = {};
+            return container;
+          };
+          var ShadyComponent = React.createClass({
+            render() {
+              return <polymer-component />;
+            },
+          });
+          var node = document.createElement('div');
+          ReactDOM.render(<ShadyComponent />, node);
+          expect(console.error.calls.count()).toBe(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
+            'cause things to break subtly.'
+          );
+          mountComponent({is: 'custom-shady-div2'});
+          expect(console.error.calls.count()).toBe(1);
+
+        } finally {
+          document.createElement = defaultCreateElement;
+        }
+      }
+    });
+
+    it('should emit a warning once for an unnamed custom component using shady DOM', () => {
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        spyOn(console, 'error');
+
+        var defaultCreateElement = document.createElement.bind(document);
+
+        try {
+          document.createElement = element => {
+            var container = defaultCreateElement(element);
+            container.shadyRoot = {};
+            return container;
+          };
+
+          mountComponent({is: 'custom-shady-div'});
+          expect(console.error.calls.count()).toBe(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'A component is using shady DOM. Using shady DOM with React can ' +
+            'cause things to break subtly.'
+          );
+
+          mountComponent({is: 'custom-shady-div2'});
+          expect(console.error.calls.count()).toBe(1);
+
+        } finally {
+          document.createElement = defaultCreateElement;
+        }
+      }
+    });
+
     it('should treat menuitem as a void element but still create the closing tag', () => {
       var container = document.createElement('div');
 

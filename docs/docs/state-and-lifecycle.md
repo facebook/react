@@ -3,6 +3,7 @@ id: state-and-lifecycle
 title: State and Lifecycle
 permalink: docs/state-and-lifecycle.html
 prev: components-and-props.html
+next: handling-events.html
 ---
 
 Consider the ticking clock example from the [one of the previous sections](/react/docs/rendering-elements.html#updating-the-rendered-element).

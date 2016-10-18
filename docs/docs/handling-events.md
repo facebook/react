@@ -2,6 +2,8 @@
 id: handling-events
 title: Handling Events
 permalink: docs/handling-events.html
+prev: state-and-lifecycle.html
+next: lifting-state-up.html
 ---
 
 Handling events with React elements is very similar to handling events on DOM elements. There are some syntactic differences:
@@ -41,7 +43,7 @@ function ActionLink() {
 }
 ```
 
-Here, `e` is a synthetic event. React defines these synthetic events according to the [W3C spec](https://www.w3.org/TR/DOM-Level-3-Events/), so you don't need to worry about cross-browser compatibility.
+Here, `e` is a synthetic event. React defines these synthetic events according to the [W3C spec](https://www.w3.org/TR/DOM-Level-3-Events/), so you don't need to worry about cross-browser compatibility. See the [`SyntheticEvent`](/react/docs/events.html) reference guide to learn more.
 
 When using React you should generally not need to call `addEventListener` to add listeners to a DOM element after it is created. Instead, just provide a listener when the element is initially rendered.
 

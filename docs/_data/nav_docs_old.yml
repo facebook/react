@@ -1,13 +1,5 @@
 - title: Old Reference
   items:
-  - id: tags-and-attributes
-    title: Supported Tags and Attributes
-  - id: events
-    title: Event System
-  - id: dom-differences
-    title: DOM Differences
-  - id: special-non-dom-attributes
-    title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
   - id: webcomponents
@@ -16,22 +8,3 @@
   items:
   - id: forms
     title: Forms
-  - id: addons
-    title: Add-Ons
-    subitems:
-    - id: animation
-      title: Animation
-    - id: two-way-binding-helpers
-      title: Two-Way Binding Helpers
-    - id: test-utils
-      title: Test Utilities
-    - id: clone-with-props
-      title: Cloning Elements
-    - id: create-fragment
-      title: Keyed Fragments
-    - id: update
-      title: Immutability Helpers
-    - id: perf
-      title: Performance Tools
-    - id: shallow-compare
-      title: Shallow Compare

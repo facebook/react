@@ -128,7 +128,8 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
     transaction.perform(function() {
       ReactReconciler.unmountComponent(
         component,
-        false
+        false, /* safely */
+        false /* skipLifecycle */
       );
     });
     ReactUpdates.ReactReconcileTransaction.release(transaction);

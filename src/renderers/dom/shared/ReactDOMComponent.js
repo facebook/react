@@ -40,6 +40,7 @@ var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
+var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
 var deleteListener = EventPluginHub.deleteListener;
@@ -607,6 +608,7 @@ ReactDOMComponent.Mixin = {
     }
 
     var mountImage;
+    var type = this._currentElement.type;
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
@@ -615,29 +617,40 @@ ReactDOMComponent.Mixin = {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
           var div = ownerDocument.createElement('div');
-          var type = this._currentElement.type;
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
         } else if (props.is) {
-          el = ownerDocument.createElement(this._currentElement.type, props.is);
+          el = ownerDocument.createElement(type, props.is);
         } else {
           // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
           // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-          el = ownerDocument.createElement(this._currentElement.type);
+          el = ownerDocument.createElement(type);
         }
       } else {
         el = ownerDocument.createElementNS(
           namespaceURI,
-          this._currentElement.type
+          type
         );
+      }
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
+      if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+        var owner = this._currentElement._owner;
+        var name = owner && owner.getName() || 'A component';
+        warning(
+          false,
+          '%s is using shady DOM. Using shady DOM with React can ' +
+          'cause things to break subtly.',
+          name
+        );
+        didWarnShadyDOM = true;
       }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
       if (!this._hostParent) {
         DOMPropertyOperations.setAttributeForRoot(el);
       }
-      this._updateDOMProperties(null, props, transaction);
+      this._updateDOMProperties(null, props, transaction, isCustomComponentTag);
       var lazyTree = DOMLazyTree(el);
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
@@ -647,8 +660,7 @@ ReactDOMComponent.Mixin = {
       if (!tagContent && omittedCloseTags[this._tag]) {
         mountImage = tagOpen + '/>';
       } else {
-        mountImage =
-          tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
+        mountImage = tagOpen + '>' + tagContent + '</' + type + '>';
       }
     }
 
@@ -902,7 +914,8 @@ ReactDOMComponent.Mixin = {
     }
 
     assertValidProps(this, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction);
+    var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
+    this._updateDOMProperties(lastProps, nextProps, transaction, isCustomComponentTag);
     this._updateDOMChildren(
       lastProps,
       nextProps,
@@ -944,7 +957,12 @@ ReactDOMComponent.Mixin = {
    * @param {object} nextProps
    * @param {?DOMElement} node
    */
-  _updateDOMProperties: function(lastProps, nextProps, transaction) {
+  _updateDOMProperties: function(
+    lastProps,
+    nextProps,
+    transaction,
+    isCustomComponentTag
+  ) {
     var propKey;
     var styleName;
     var styleUpdates;
@@ -1034,7 +1052,7 @@ ReactDOMComponent.Mixin = {
         } else if (lastProp) {
           deleteListener(this, propKey);
         }
-      } else if (isCustomComponent(this._tag, nextProps)) {
+      } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
@@ -1137,7 +1155,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    */
-  unmountComponent: function(safely) {
+  unmountComponent: function(safely, skipLifecycle) {
     switch (this._tag) {
       case 'audio':
       case 'form':
@@ -1179,7 +1197,7 @@ ReactDOMComponent.Mixin = {
         break;
     }
 
-    this.unmountChildren(safely);
+    this.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(this);
     EventPluginHub.deleteAllListeners(this);
     this._rootNodeID = 0;

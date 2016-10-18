@@ -53,91 +53,14 @@
 
   <div class="container">
 
-    <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <div class="nav-lists">
-          <ul class="nav-site nav-site-internal">
-            <li><a href="/react/docs/installation.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' or page.sectionid == 'contributing' %} class="active"{% endif %}>Docs</a></li>
-            <li><a href="/react/tutorial/tutorial.html"{% if page.sectionid == 'tutorial' %} class="active"{% endif %}>Tutorial</a></li>
-            <li><a href="/react/community/support.html"{% if page.sectionid == 'community' %} class="active"{% endif %}>Community</a></li>
-            <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
-            <li class="nav-site-search">
-              <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-            </li>
-          </ul>
-          <ul class="nav-site nav-site-external">
-            <li><a href="https://github.com/facebook/react">GitHub</a></li>
-            <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    {% if page.id == 'home' %}
-    <div class="hero">
-      <div class="wrap">
-        <div class="text"><strong>React</strong></div>
-        <div class="minitext">
-          A JavaScript library for building user interfaces
-        </div>
-
-        <div class="buttons-unit">
-          <!-- TODO: pick one call to action? -->
-          <a href="/react/docs/installation.html" class="button">Get Started</a>
-          <a href="/react/docs/tutorial.html" class="button">Take the Tutorial</a>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    {% include navigation.html %}
 
     {{ content }}
-    <footer class="nav-footer">
-      <section class="sitemap">
-        <a href="/react/" class="nav-home">
-        </a>
-        <div>
-          <h5><a href="/react/docs/">Docs</a></h5>
-          <a href="/react/docs/installation.html">Getting Started</a>
-          <a href="/react/docs/tutorial.html">Tutorial</a>
-          <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-          <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
-        </div>
-        <div>
-          <h5><a href="/react/community/support.html">Community</a></h5>
-          <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
-          <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
-          <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
-          <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
-          <a href="irc://chat.freenode.net/reactjs" target="_blank">Chat</a>
-        </div>
-        <div>
-          <h5><a href="/react/community/support.html">Resources</a></h5>
-          <a href="/react/community/conferences.html">Conferences</a>
-          <a href="/react/community/videos.html">Videos</a>
-          <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
-        </div>
-        <div>
-          <h5>More</h5>
-          <a href="/react/blog/">Blog</a>
-          <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
-          <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
-          <a href="/react/acknowledgements.html">Acknowledgements</a>
-        </div>
-      </section>
-      <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
-        <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
-      </a>
-      <section class="copyright">
-        Copyright © {{ site.time | date: '%Y' }} Facebook Inc.
-      </section>
 
+    {% include footer.html %}
   </div>
-  <div id="fb-root"></div>
 
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

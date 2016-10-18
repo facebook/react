@@ -15,6 +15,7 @@
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var warning = require('warning');
 
@@ -23,13 +24,14 @@ type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 type Container = Element;
 type Props = { };
 type Instance = Element;
+type TextInstance = Text;
 
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance>) {
+function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
   if (!child) {
     return;
   }
-  /* $FlowFixMe: Element should have this property. */
-  if (child.nodeType === 1) {
+  /* $FlowFixMe: Element and Text should have this property. */
+  if (child.nodeType === 1 || child.nodeType === 3) {
     /* $FlowFixMe: Refinement issue. I don't know how to express different. */
     parent.appendChild(child);
   } else {
@@ -43,15 +45,17 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
 
 var DOMRenderer = ReactFiberReconciler({
 
-  updateContainer(container : Container, children : HostChildren<Instance>) : void {
+  updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
+    // TODO: Containers should update similarly to other parents.
     container.innerHTML = '';
     recursivelyAppendChildren(container, children);
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
+  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.children === 'string') {
+    if (typeof props.children === 'string' ||
+        typeof props.children === 'number') {
       domElement.textContent = props.children;
     }
     return domElement;
@@ -60,22 +64,36 @@ var DOMRenderer = ReactFiberReconciler({
   prepareUpdate(
     domElement : Instance,
     oldProps : Props,
-    newProps : Props,
-    children : HostChildren<Instance>
+    newProps : Props
   ) : boolean {
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
-    domElement.innerHTML = '';
-    recursivelyAppendChildren(domElement, children);
-    if (typeof newProps.children === 'string') {
+  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
+    if (typeof newProps.children === 'string' ||
+        typeof newProps.children === 'number') {
       domElement.textContent = newProps.children;
     }
   },
 
-  deleteInstance(instance : Instance) : void {
-    // Noop
+  createTextInstance(text : string) : TextInstance {
+    return document.createTextNode(text);
+  },
+
+  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
+    textInstance.nodeValue = newText;
+  },
+
+  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.appendChild(child);
+  },
+
+  insertBefore(parentInstance : Instance, child : Instance | TextInstance, beforeChild : Instance | TextInstance) : void {
+    parentInstance.insertBefore(child, beforeChild);
+  },
+
+  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.removeChild(child);
   },
 
   scheduleAnimationCallback: window.requestAnimationFrame,
@@ -87,8 +105,9 @@ var DOMRenderer = ReactFiberReconciler({
 var warned = false;
 
 function warnAboutUnstableUse() {
+  // Ignore this warning is the feature flag is turned on. E.g. for tests.
   warning(
-    warned,
+    warned || ReactDOMFeatureFlags.useFiber,
     'You are using React DOM Fiber which is an experimental renderer. ' +
     'It is likely to have bugs, breaking changes and is unsupported.'
   );

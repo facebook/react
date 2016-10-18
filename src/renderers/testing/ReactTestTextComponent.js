@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactTestTextComponent
+ * @preventMunge
  * @flow
  */
 
@@ -16,7 +17,7 @@ import type { ReactText } from 'ReactTypes';
 
 class ReactTestTextComponent {
   _currentElement: ReactText;
-  
+
   constructor(element: ReactText) {
     this._currentElement = element;
   }

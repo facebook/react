@@ -3,7 +3,7 @@ id: design-principles
 title: Design Principles
 layout: contributing
 permalink: contributing/design-principles.html
-prev: codebase-overview.html
+prev: implementation-notes.html
 ---
 
 We wrote this document so that you have a better idea of how we decide what React does and what React doesn't do, and what our development philosophy is like. While we are excited to see community contributions, we are not likely to choose a path that violates one or more of these principles.
@@ -124,7 +124,7 @@ We do, however, provide some global configuration on the build level. For exampl
 
 ### Beyond the DOM
 
-We see the value of React in the way it allows us to write components that have less bugs and compose together well. DOM is the original rendering target for React but [React Native](http://facebook.github.io/react-native/) is just as important both to Facebook and the community.
+We see the value of React in the way it allows us to write components that have fewer bugs and compose together well. DOM is the original rendering target for React but [React Native](http://facebook.github.io/react-native/) is just as important both to Facebook and the community.
 
 Being renderer-agnostic is an important design constraint of React. It adds some overhead in the internal representations. On the other hand, any improvements to the core translate across platforms.
 
