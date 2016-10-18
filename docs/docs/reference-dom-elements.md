@@ -20,7 +20,9 @@ The `checked` attribute is supported by `<input>` components of type `checkbox` 
 
 ### className
 
-Most React elements use `className` instead of `class`. Web Components still use `class`.
+To specify a CSS class, use the `className` attribute. This applies to all regular DOM and SVG elements like `<div>`, `<a>`, and others.
+
+If you use React with Web Components (which is uncommon), use the `class` attribute instead.
 
 ### dangerouslySetInnerHTML
 
