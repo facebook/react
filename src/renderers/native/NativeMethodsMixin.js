@@ -212,7 +212,7 @@ function mountSafeCallback(
   callback: ?Function
 ): any {
   return function() {
-    if (!callback || (context.isMounted && !context.isMounted())) {
+    if (!callback || (typeof context.isMounted === 'function' && !context.isMounted())) {
       return undefined;
     }
     return callback.apply(context, arguments);

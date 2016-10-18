@@ -239,7 +239,6 @@ function resumeCurrentLifeCycleTimer() {
 
 var lastMarkTimeStamp = 0;
 var canUsePerformanceMeasure: boolean =
-// $FlowFixMe https://github.com/facebook/flow/issues/2345
   typeof performance !== 'undefined' &&
   typeof performance.mark === 'function' &&
   typeof performance.clearMarks === 'function' &&
