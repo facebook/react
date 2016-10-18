@@ -370,6 +370,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
         return workInProgress.child;
       case HostComponent:
         if (workInProgress.stateNode && config.beginUpdate) {
+          // $FlowFixMe(>=0.33.0)
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);

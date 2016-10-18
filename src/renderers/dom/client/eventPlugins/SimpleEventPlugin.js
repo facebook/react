@@ -156,7 +156,7 @@ function isInteractive(tag) {
   );
 }
 
-function shouldPreventMouseEvent(inst) {
+function shouldPreventMouseEvent(inst?: SyntheticEvent) {
   if (inst) {
     var disabled = inst._currentElement && inst._currentElement.props.disabled;
 
