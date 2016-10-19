@@ -835,4 +835,96 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
+
+  it('can call sCU while resuming a partly mounted component', () => {
+    var ops = [];
+
+    class Bar extends React.Component {
+      state = { y: 'A' };
+      shouldComponentUpdate(newProps, newState) {
+        return this.props.x !== newProps.x ||
+               this.state.y !== newState.y;
+      }
+      render() {
+        ops.push('Bar:' + this.props.x);
+        return <span prop={'' + (this.props.x === this.state.y)} />;
+      }
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return [
+        <Bar key="a" x="A" />,
+        <Bar key="b" x="B" />,
+        <Bar key="c" x="C" />,
+      ];
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual(['Foo', 'Bar:A', 'Bar:B']);
+
+    ops = [];
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flushDeferredPri(40);
+    expect(ops).toEqual(['Foo', 'Bar:B', 'Bar:C']);
+  });
+
+  it('gets new props when setting state on a partly updated component', () => {
+    var ops = [];
+    var instances = [];
+
+    class Bar extends React.Component {
+      state = { y: 'A' };
+      constructor() {
+        super();
+        instances.push(this);
+      }
+      performAction() {
+        this.setState({
+          y: 'B',
+        });
+      }
+      render() {
+        ops.push('Bar:' + this.props.x + '-' + this.props.step);
+        return <span prop={'' + (this.props.x === this.state.y)} />;
+      }
+    }
+
+    function Baz() {
+      // This component is used as a sibling to Foo so that we can fully
+      // complete Foo, without committing.
+      ops.push('Baz');
+      return <div />;
+    }
+
+    function Foo(props) {
+      ops.push('Foo');
+      return [
+        <Bar key="a" x="A" step={props.step} />,
+        <Bar key="b" x="B" step={props.step} />,
+      ];
+    }
+
+    ReactNoop.render(<div><Foo step={0} /><Baz /><Baz /></div>);
+    ReactNoop.flush();
+
+    ops = [];
+
+    // Flush part way through with new props, fully completing the first Bar.
+    // However, it doesn't commit yet.
+    ReactNoop.render(<div><Foo step={1} /><Baz /><Baz /></div>);
+    ReactNoop.flushDeferredPri(45);
+    expect(ops).toEqual(['Foo', 'Bar:A-1', 'Bar:B-1', 'Baz']);
+
+    // Make an update to the same Bar.
+    instances[0].performAction();
+
+    ops = [];
+
+    ReactNoop.flush();
+    expect(ops).toEqual(['Bar:A-1', 'Baz', 'Baz']);
+  });
+
 });

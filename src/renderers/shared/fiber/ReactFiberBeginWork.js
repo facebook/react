@@ -160,15 +160,24 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
     // Account for the possibly of missing pending props by falling back to the
     // memoized props.
     var props = workInProgress.pendingProps;
-    if (!props && current) {
-      props = current.memoizedProps;
+    if (!props) {
+      // If there isn't any new props, then we'll reuse the memoized props.
+      // This could be from already completed work.
+      props = workInProgress.memoizedProps;
+      if (!props) {
+        throw new Error('There should always be pending or memoized props.');
+      }
     }
+
     // Compute the state using the memoized state and the update queue.
     var updateQueue = workInProgress.updateQueue;
-    var previousState = current ? current.memoizedState : null;
-    var state = updateQueue ?
-      mergeUpdateQueue(updateQueue, previousState, props) :
-      previousState;
+    var previousState = workInProgress.memoizedState;
+    var state;
+    if (updateQueue) {
+      state = mergeUpdateQueue(updateQueue, previousState, props);
+    } else {
+      state = previousState;
+    }
 
     var instance = workInProgress.stateNode;
     if (!instance) {
@@ -299,6 +308,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+
+    if (workInProgress.tag === HostComponent &&
+        workInProgress.memoizedProps.hidden &&
+        workInProgress.pendingWorkPriority !== OffscreenPriority) {
+      // This subtree still has work, but it should be deprioritized so we need
+      // to bail out and not do any work yet.
+      // TODO: It would be better if this tree got its correct priority set
+      // during scheduleUpdate instead because otherwise we'll start a higher
+      // priority reconciliation first before we can get down here. However,
+      // that is a bit tricky since workInProgress and current can have
+      // different "hidden" settings.
+      let child = workInProgress.progressedChild;
+      while (child) {
+        // To ensure that this subtree gets its priority reset, the children
+        // need to be reset.
+        child.pendingWorkPriority = OffscreenPriority;
+        child = child.sibling;
+      }
+      return null;
+    }
 
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
