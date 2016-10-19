@@ -19,6 +19,8 @@ var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var warning = require('warning');
 
+type Element = HTMLElement;
+
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
@@ -43,10 +45,43 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
   }
 }
 
+var COLORS = [
+  '#1f77b4',
+  '#ff7f0e',
+  '#2ca02c',
+  '#d62728',
+  '#9467bd',
+  '#8c564b',
+  '#e377c2',
+  '#7f7f7f',
+  '#bcbd22',
+  '#17becf',
+];
+
+if (!window.requestIdleCallback) {
+  window.requestIdleCallback = function(callback) {
+    setTimeout(function() {
+      var endTime = Date.now() + 16;
+      callback({
+        timeRemaining() {
+          return endTime - Date.now();
+        },
+      });
+
+    }, 0);
+  };
+}
+
+var VISUALIZE_RECONCILIATION = false;
+
 var DOMRenderer = ReactFiberReconciler({
 
   updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
     // TODO: Containers should update similarly to other parents.
+    if (container.firstChild === children && container.lastChild === children) {
+      // Rudimentary bail out mechanism.
+      return;
+    }
     container.innerHTML = '';
     recursivelyAppendChildren(container, children);
   },
@@ -54,11 +89,22 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.children === 'string') {
-      domElement.textContent = props.children;
-    } else if (typeof props.children === 'number') {
-      domElement.textContent = props.children.toString();
+    if (typeof props.style === 'object') {
+      Object.assign(domElement.style, props.style);
     }
+    if (typeof props.onMouseEnter === 'function') {
+      domElement.addEventListener('mouseenter', props.onMouseEnter);
+    }
+    if (typeof props.onMouseLeave === 'function') {
+      domElement.addEventListener('mouseleave', props.onMouseLeave);
+    }
+    if (typeof props.children === 'string' ||
+        typeof props.children === 'number') {
+      domElement.textContent = props.children;
+      return domElement;
+    }
+    domElement.innerHTML = '';
+    recursivelyAppendChildren(domElement, children);
     return domElement;
   },
 
@@ -67,14 +113,47 @@ var DOMRenderer = ReactFiberReconciler({
     oldProps : Props,
     newProps : Props
   ) : boolean {
+    /*
+    Visualize the reconciliation
+    */
+    if (VISUALIZE_RECONCILIATION && typeof newProps.children === 'string') {
+      var c = +newProps.children;
+      if (!isNaN(c)) {
+        domElement.style.border = '3px solid ' + COLORS[c];
+
+//        domElement.style.background = COLORS[c];
+      }
+    }
     return true;
   },
 
+  beginUpdate(domElement) {
+    /*if (VISUALIZE_RECONCILIATION) {
+      var c = (Math.round(Date.now() / 50) + 2) % COLORS.length;
+      if (!isNaN(c)) {
+        domElement.style.border = '3px solid ' + COLORS[c];
+      }
+    }*/
+  },
+
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
-    if (typeof newProps.children === 'string') {
+    if (typeof newProps.style === 'object') {
+      var oldStyle = oldProps.style;
+      var newStyle = newProps.style;
+      if (oldStyle) {
+        for (var key in newStyle) {
+          if (oldStyle[key] !== newStyle[key]) {
+            domElement.style[key] = newStyle[key];
+          }
+        }
+      } else {
+        Object.assign(domElement.style, newStyle);
+      }
+    }
+    if (typeof newProps.children === 'string' ||
+        typeof newProps.children === 'number') {
       domElement.textContent = newProps.children;
-    } else if (typeof newProps.children === 'number') {
-      domElement.textContent = newProps.children.toString();
+      return;
     }
   },
 
@@ -116,12 +195,14 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
+var rootContainer = null;
+
 var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement) {
     warnAboutUnstableUse();
     if (!container._reactRootContainer) {
-      container._reactRootContainer = DOMRenderer.mountContainer(element, container);
+      container._reactRootContainer = rootContainer = DOMRenderer.mountContainer(element, container);
     } else {
       DOMRenderer.updateContainer(element, container._reactRootContainer);
     }
@@ -136,6 +217,42 @@ var ReactDOM = {
       container._reactRootContainer = null;
       DOMRenderer.unmountContainer(root);
     }
+  },
+
+  // Logs the current state of the tree.
+  dumpTree() {
+    if (!rootContainer) {
+      console.log('Nothing rendered yet.');
+      return;
+    }
+
+    function logFiber(fiber : any, depth) {
+      console.log(
+        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
+        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
+      );
+      const childInProgress = fiber.childInProgress;
+      if (childInProgress) {
+        if (childInProgress === fiber.child) {
+          console.log('  '.repeat(depth + 1) + 'ERROR: IN PROGRESS == CURRENT');
+        } else {
+          console.log('  '.repeat(depth + 1) + 'IN PROGRESS');
+          logFiber(childInProgress, depth + 1);
+          if (fiber.child) {
+            console.log('  '.repeat(depth + 1) + 'CURRENT');
+          }
+        }
+      }
+      if (fiber.child) {
+        logFiber(fiber.child, depth + 1);
+      }
+      if (fiber.sibling) {
+        logFiber(fiber.sibling, depth);
+      }
+    }
+
+    console.log('FIBERS:');
+    logFiber((rootContainer.stateNode : any).current, 0);
   },
 
 };

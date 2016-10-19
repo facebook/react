@@ -241,9 +241,26 @@ var ReactNoop = {
     }
 
     function logFiber(fiber : Fiber, depth) {
+      if (!fiber.id) {
+        if (fiber.alternate) {
+          if (fiber.alternate.id) {
+            fiber.id = fiber.alternate.id;
+          } else {
+            fiber.alternate.id = fiber.id = ++counter;
+          }
+        } else {
+          fiber.id = ++counter;
+        }
+      }
       log(
         '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
-        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
+        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']',
+        '#' + fiber.id,
+        fiber.isAlt ? 'alt' : 'prim',
+        'Effect: ' + fiber.effectTag,
+        fiber.firstEffect ? '[has child effects ' + fiber.firstEffect.id + '-' + fiber.lastEffect.id + ']' : '[no child effects]',
+        fiber.nextEffect ? '->' + fiber.nextEffect.id : '',
+        fiber.memoizedProps ? 'props: ' + (fiber.memoizedProps.idx || fiber.memoizedProps.prop) : ''
       );
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);
@@ -275,5 +292,7 @@ var ReactNoop = {
   },
 
 };
+
+var counter = 0;
 
 module.exports = ReactNoop;
