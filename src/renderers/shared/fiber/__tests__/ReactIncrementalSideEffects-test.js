@@ -650,7 +650,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ops = [];
 
-    ReactNoop.render(<Foo tick={1} idx={0} />);
+    ReactNoop.render(<Foo tick={1} idx={1} />);
     ReactNoop.flushDeferredPri(70);
     expect(ReactNoop.root.children).toEqual([
       div(
@@ -700,8 +700,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // Now we had enough time to finish the spans.
           span('X'),
-          span(0),
-          span(0),
+          span(1),
+          span(1),
         )
       ),
     ]);
