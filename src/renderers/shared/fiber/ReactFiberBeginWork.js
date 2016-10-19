@@ -160,15 +160,24 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
     // Account for the possibly of missing pending props by falling back to the
     // memoized props.
     var props = workInProgress.pendingProps;
-    if (!props && current) {
-      props = current.memoizedProps;
+    if (!props) {
+      // If there isn't any new props, then we'll reuse the memoized props.
+      // This could be from already completed work.
+      props = workInProgress.memoizedProps;
+      if (!props) {
+        throw new Error('There should always be pending or memoized props.');
+      }
     }
+
     // Compute the state using the memoized state and the update queue.
     var updateQueue = workInProgress.updateQueue;
-    var previousState = current ? current.memoizedState : null;
-    var state = updateQueue ?
-      mergeUpdateQueue(updateQueue, previousState, props) :
-      previousState;
+    var previousState = workInProgress.memoizedState;
+    var state;
+    if (updateQueue) {
+      state = mergeUpdateQueue(updateQueue, previousState, props);
+    } else {
+      state = previousState;
+    }
 
     var instance = workInProgress.stateNode;
     if (!instance) {
