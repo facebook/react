@@ -461,6 +461,20 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
+function shouldSetNodeTextContent(lazyTree, props, text) {
+  // TODO: Validate that text is allowed as a child of this node
+  var node = lazyTree.node;
+  // Avoid setting textContent on textareas when the text is empty
+  // and there is a placeholder. In IE11 setting textContent will cause
+  // the placeholder to not show within the textarea until it has been
+  // focused and blurred again.
+  // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+  if (node.type === 'textarea' && props.placeholder && text === '') {
+    return false;
+  }
+  return true;
+}
+
 var globalIdCounter = 1;
 
 /**
@@ -848,11 +862,12 @@ ReactDOMComponent.Mixin = {
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
-        // TODO: Validate that text is allowed as a child of this node
-        if (__DEV__) {
-          setAndValidateContentChildDev.call(this, contentToUse);
+        if (shouldSetNodeTextContent(lazyTree, props, contentToUse)) {
+          if (__DEV__) {
+            setAndValidateContentChildDev.call(this, contentToUse);
+          }
+          DOMLazyTree.queueText(lazyTree, contentToUse);
         }
-        DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
