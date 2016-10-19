@@ -56,7 +56,7 @@ npm i --save react
 
 ## Contributing
 
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take a part in improving React.
+The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
 
 ### [Code of Conduct](https://code.facebook.com/codeofconduct)
 
