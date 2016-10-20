@@ -2,8 +2,9 @@
 id: forms
 title: Forms
 permalink: docs/forms.html
-prev: 
-next: 
+prev:
+next:
+redirect_from: "/tips/controlled-input-null-value.html"
 ---
 
 ## Forms
@@ -37,7 +38,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -102,7 +103,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -237,7 +238,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -390,7 +391,7 @@ class Form extends React.Component {
 
   handleChange(event) {
     let val = event.target.value;
-    let checked = this.state.checked.slice(); // copy 
+    let checked = this.state.checked.slice(); // copy
     if(checked.includes(val)) {
       checked.splice(checked.indexOf(val), 1);
     } else {

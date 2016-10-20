@@ -7,6 +7,9 @@ permalink: docs/dom-elements.html
 redirect_from: "/docs/tags-and-attributes.html"
 redirect_from: "/docs/dom-differences.html"
 redirect_from: "/docs/special-non-dom-attributes.html"
+redirect_from: "/tips/inline-styles.html"
+redirect_from: "/tips/style-props-value-px.html"
+redirect_from: "/tips/dangerously-set-inner-html.html"
 ---
 
 React implements a browser-independent DOM system for performance and cross-browser compatibility. We took the opportunity to clean up a few rough edges in browser DOM implementations.

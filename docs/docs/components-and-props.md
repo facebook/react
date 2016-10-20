@@ -4,6 +4,8 @@ title: Components and Props
 permalink: docs/components-and-props.html
 redirect_from: "/docs/reusable-components.html"
 redirect_from: "/docs/transferring-props.html"
+redirect_from: "/tips/props-in-getInitialState-as-anti-pattern.html"
+redirect_from: "/tips/communicate-between-components.html"
 prev: rendering-elements.html
 next: state-and-lifecycle.html
 ---
