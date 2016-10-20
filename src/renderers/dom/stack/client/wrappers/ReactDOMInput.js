@@ -49,27 +49,24 @@ var ReactDOMInput = {
     var value = props.value;
     var checked = props.checked;
 
-    var hostProps = Object.assign(
-      {
-        // Make sure we set .type before any other properties (setting .value
-        // before .type means .value is lost in IE11 and below)
-        type: undefined,
-        // Make sure we set .step before .value (setting .value before .step
-        // means .value is rounded on mount, based upon step precision)
-        step: undefined,
-        // Make sure we set .min & .max before .value (to ensure proper order
-        // in corner cases such as min or max deriving from value, e.g. Issue #7170)
-        min: undefined,
-        max: undefined,
-      },
-      props,
-      {
-        defaultChecked: undefined,
-        defaultValue: undefined,
-        value: value != null ? value : inst._wrapperState.initialValue,
-        checked: checked != null ? checked : inst._wrapperState.initialChecked,
-      },
-    );
+    var hostProps = Object.assign({
+      // Make sure we set .type before any other properties (setting .value
+      // before .type means .value is lost in IE11 and below)
+      type: undefined,
+      // Make sure we set .step before .value (setting .value before .step
+      // means .value is rounded on mount, based upon step precision)
+      step: undefined,
+      // Make sure we set .min & .max before .value (to ensure proper order
+      // in corner cases such as min or max deriving from value, e.g. Issue #7170)
+      min: undefined,
+      max: undefined,
+    }, props, {
+      defaultChecked: undefined,
+      defaultValue: undefined,
+      value: value != null ? value : inst._wrapperState.initialValue,
+      checked: checked != null ? checked : inst._wrapperState.initialChecked,
+      onBlurCapture: inst._wrapperState.onBlur,
+    });
 
     return hostProps;
   },
@@ -128,6 +125,7 @@ var ReactDOMInput = {
         : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       listeners: null,
+      onBlur: _handleBlur.bind(inst),
     };
 
     if (__DEV__) {
@@ -279,6 +277,23 @@ var ReactDOMInput = {
     updateNamedCousins(inst, props);
   },
 };
+
+function _handleBlur(event) {
+  var props = this._currentElement.props;
+  var value = LinkedValueUtils.getValue(props);
+
+  if (value != null) {
+    DOMPropertyOperations.setValueForProperty(
+      ReactDOMComponentTree.getNodeFromInstance(this),
+      'value',
+      value
+    );
+  }
+
+  if (props.onBlur) {
+    return props.onBlur.call(undefined, event);
+  }
+}
 
 function updateNamedCousins(thisInstance, props) {
   var name = props.name;
