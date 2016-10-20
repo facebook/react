@@ -4,6 +4,7 @@ title: Installation
 permalink: docs/installation.html
 redirect_from: "docs/index.html"
 redirect_from: "downloads.html"
+redirect_from: "docs/getting-started.html"
 next: hello-world.html
 ---
 
