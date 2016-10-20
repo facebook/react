@@ -170,11 +170,15 @@ function batchedMountComponentIntoNode(
  * @internal
  * @see {ReactMount.unmountComponentAtNode}
  */
-function unmountComponentFromNode(instance, container, safely) {
+function unmountComponentFromNode(instance, container) {
   if (__DEV__) {
     ReactInstrumentation.debugTool.onBeginFlush();
   }
-  ReactReconciler.unmountComponent(instance, safely);
+  ReactReconciler.unmountComponent(
+    instance,
+    false /* safely */,
+    false /* skipLifecycle */
+  );
   if (__DEV__) {
     ReactInstrumentation.debugTool.onEndFlush();
   }
@@ -618,8 +622,7 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
       prevComponent,
-      container,
-      false
+      container
     );
     return true;
   },

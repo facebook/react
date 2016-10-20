@@ -16,8 +16,6 @@ import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
-import type { ReactNodeList } from 'ReactTypes';
-
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {
   REACT_COROUTINE_TYPE,
@@ -25,214 +23,802 @@ var {
 } = require('ReactCoroutine');
 
 var ReactFiber = require('ReactFiber');
+var ReactPriorityLevel = require('ReactPriorityLevel');
 var ReactReifiedYield = require('ReactReifiedYield');
+var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+
+var getIteratorFn = require('getIteratorFn');
 
 const {
   cloneFiber,
   createFiberFromElement,
+  createFiberFromFragment,
+  createFiberFromText,
   createFiberFromCoroutine,
   createFiberFromYield,
 } = ReactFiber;
 
 const {
   createReifiedYield,
+  createUpdatedReifiedYield,
 } = ReactReifiedYield;
 
 const isArray = Array.isArray;
 
-function ChildReconciler(shouldClone) {
+const {
+  HostText,
+  CoroutineComponent,
+  YieldComponent,
+  Fragment,
+} = ReactTypeOfWork;
 
-  function createSubsequentChild(
+const {
+  NoWork,
+} = ReactPriorityLevel;
+
+const {
+  Placement,
+  Deletion,
+} = ReactTypeOfSideEffect;
+
+// This wrapper function exists because I expect to clone the code in each path
+// to be able to optimize each path individually by branching early. This needs
+// a compiler or we can do it manually. Helpers that don't need this branching
+// live outside of this function.
+function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+
+  function deleteChild(
     returnFiber : Fiber,
-    existingChild : ?Fiber,
-    previousSibling : Fiber,
-    newChildren,
+    childToDelete : Fiber
+  ) {
+    if (!shouldTrackSideEffects) {
+      // Noop.
+      return;
+    }
+    if (!shouldClone) {
+      // When we're reconciling in place we have a work in progress copy. We
+      // actually want the current copy. If there is no current copy, then we
+      // don't need to track deletion side-effects.
+      if (!childToDelete.alternate) {
+        return;
+      }
+      childToDelete = childToDelete.alternate;
+    }
+    // Deletions are added in reversed order so we add it to the front.
+    const last = returnFiber.progressedLastDeletion;
+    if (last) {
+      last.nextEffect = childToDelete;
+      returnFiber.progressedLastDeletion = childToDelete;
+    } else {
+      returnFiber.progressedFirstDeletion =
+        returnFiber.progressedLastDeletion =
+          childToDelete;
+    }
+    childToDelete.nextEffect = null;
+    childToDelete.effectTag = Deletion;
+  }
+
+  function deleteRemainingChildren(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber
+  ) {
+    if (!shouldTrackSideEffects) {
+      // Noop.
+      return null;
+    }
+
+    // TODO: For the shouldClone case, this could be micro-optimized a bit by
+    // assuming that after the first child we've already added everything.
+    let childToDelete = currentFirstChild;
+    while (childToDelete) {
+      deleteChild(returnFiber, childToDelete);
+      childToDelete = childToDelete.sibling;
+    }
+    return null;
+  }
+
+  function mapRemainingChildren(
+    returnFiber : Fiber,
+    currentFirstChild : Fiber
+  ) : Map<string | number, Fiber> {
+    // Add the remaining children to a temporary map so that we can find them by
+    // keys quickly. Implicit (null) keys get added to this set with their index
+    // instead.
+    const existingChildren : Map<string | number, Fiber> = new Map();
+
+    let existingChild = currentFirstChild;
+    while (existingChild) {
+      if (existingChild.key !== null) {
+        existingChildren.set(existingChild.key, existingChild);
+      } else {
+        existingChildren.set(existingChild.index, existingChild);
+      }
+      existingChild = existingChild.sibling;
+    }
+    return existingChildren;
+  }
+
+  function useFiber(fiber : Fiber, priority : PriorityLevel) {
+    // We currently set sibling to null and index to 0 here because it is easy
+    // to forget to do before returning it. E.g. for the single child case.
+    if (shouldClone) {
+      const clone = cloneFiber(fiber, priority);
+      clone.index = 0;
+      clone.sibling = null;
+      return clone;
+    } else {
+      // We override the pending priority even if it is higher, because if
+      // we're reconciling at a lower priority that means that this was
+      // down-prioritized.
+      fiber.pendingWorkPriority = priority;
+      fiber.effectTag = NoWork;
+      fiber.index = 0;
+      fiber.sibling = null;
+      return fiber;
+    }
+  }
+
+  function placeChild(newFiber : Fiber, lastPlacedIndex : number, newIndex : number) {
+    newFiber.index = newIndex;
+    if (!shouldTrackSideEffects) {
+      // Noop.
+      return lastPlacedIndex;
+    }
+    const current = newFiber.alternate;
+    if (current) {
+      const oldIndex = current.index;
+      if (oldIndex < lastPlacedIndex) {
+        // This is a move.
+        newFiber.effectTag = Placement;
+        return lastPlacedIndex;
+      } else {
+        // This item can stay in place.
+        return oldIndex;
+      }
+    } else {
+      // This is an insertion.
+      newFiber.effectTag = Placement;
+      return lastPlacedIndex;
+    }
+  }
+
+  function placeSingleChild(newFiber : Fiber) {
+    // This is simpler for the single child case. We only need to do a
+    // placement for inserting new children.
+    if (shouldTrackSideEffects && !newFiber.alternate) {
+      newFiber.effectTag = Placement;
+    }
+    return newFiber;
+  }
+
+  function updateTextNode(
+    returnFiber : Fiber,
+    current : ?Fiber,
+    textContent : string,
     priority : PriorityLevel
-  ) : Fiber {
-    if (typeof newChildren !== 'object' || newChildren === null) {
-      return previousSibling;
-    }
-
-    switch (newChildren.$$typeof) {
-      case REACT_ELEMENT_TYPE: {
-        const element = (newChildren : ReactElement<any>);
-        if (existingChild &&
-            element.type === existingChild.type &&
-            element.key === existingChild.key) {
-          // TODO: This is not sufficient since previous siblings could be new.
-          // Will fix reconciliation properly later.
-          const clone = shouldClone ? cloneFiber(existingChild, priority) : existingChild;
-          if (!shouldClone) {
-            // TODO: This might be lowering the priority of nested unfinished work.
-            clone.pendingWorkPriority = priority;
-          }
-          clone.pendingProps = element.props;
-          clone.sibling = null;
-          clone.return = returnFiber;
-          previousSibling.sibling = clone;
-          return clone;
-        }
-        const child = createFiberFromElement(element, priority);
-        previousSibling.sibling = child;
-        child.return = returnFiber;
-        return child;
-      }
-
-      case REACT_COROUTINE_TYPE: {
-        const coroutine = (newChildren : ReactCoroutine);
-        const child = createFiberFromCoroutine(coroutine, priority);
-        previousSibling.sibling = child;
-        child.return = returnFiber;
-        return child;
-      }
-
-      case REACT_YIELD_TYPE: {
-        const yieldNode = (newChildren : ReactYield);
-        const reifiedYield = createReifiedYield(yieldNode);
-        const child = createFiberFromYield(yieldNode, priority);
-        child.output = reifiedYield;
-        previousSibling.sibling = child;
-        child.return = returnFiber;
-        return child;
-      }
-    }
-
-    if (isArray(newChildren)) {
-      let prev : Fiber = previousSibling;
-      let existing : ?Fiber = existingChild;
-      for (var i = 0; i < newChildren.length; i++) {
-        var nextExisting = existing && existing.sibling;
-        prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
-        if (prev && existing) {
-          // TODO: This is not correct because there could've been more
-          // than one sibling consumed but I don't want to return a tuple.
-          existing = nextExisting;
-        }
-      }
-      return prev;
+  ) {
+    if (current == null || current.tag !== HostText) {
+      // Insert
+      const created = createFiberFromText(textContent, priority);
+      created.return = returnFiber;
+      return created;
     } else {
-      // TODO: Throw for unknown children.
-      return previousSibling;
+      // Update
+      const existing = useFiber(current, priority);
+      existing.pendingProps = textContent;
+      existing.return = returnFiber;
+      return existing;
     }
   }
 
-  function createFirstChild(returnFiber, existingChild, newChildren, priority) {
-    if (typeof newChildren !== 'object' || newChildren === null) {
-      return null;
+  function updateElement(
+    returnFiber : Fiber,
+    current : ?Fiber,
+    element : ReactElement<any>,
+    priority : PriorityLevel
+  ) {
+    if (current == null || current.type !== element.type) {
+      // Insert
+      const created = createFiberFromElement(element, priority);
+      created.ref = element.ref;
+      created.return = returnFiber;
+      return created;
+    } else {
+      // Move based on index
+      const existing = useFiber(current, priority);
+      existing.ref = element.ref;
+      existing.pendingProps = element.props;
+      existing.return = returnFiber;
+      return existing;
+    }
+  }
+
+  function updateCoroutine(
+    returnFiber : Fiber,
+    current : ?Fiber,
+    coroutine : ReactCoroutine,
+    priority : PriorityLevel
+  ) {
+    // TODO: Should this also compare handler to determine whether to reuse?
+    if (current == null || current.tag !== CoroutineComponent) {
+      // Insert
+      const created = createFiberFromCoroutine(coroutine, priority);
+      created.return = returnFiber;
+      return created;
+    } else {
+      // Move based on index
+      const existing = useFiber(current, priority);
+      existing.pendingProps = coroutine;
+      existing.return = returnFiber;
+      return existing;
+    }
+  }
+
+  function updateYield(
+    returnFiber : Fiber,
+    current : ?Fiber,
+    yieldNode : ReactYield,
+    priority : PriorityLevel
+  ) {
+    // TODO: Should this also compare continuation to determine whether to reuse?
+    if (current == null || current.tag !== YieldComponent) {
+      // Insert
+      const reifiedYield = createReifiedYield(yieldNode);
+      const created = createFiberFromYield(yieldNode, priority);
+      created.output = reifiedYield;
+      created.return = returnFiber;
+      return created;
+    } else {
+      // Move based on index
+      const existing = useFiber(current, priority);
+      existing.output = createUpdatedReifiedYield(
+        current.output,
+        yieldNode
+      );
+      existing.return = returnFiber;
+      return existing;
+    }
+  }
+
+  function updateFragment(
+    returnFiber : Fiber,
+    current : ?Fiber,
+    fragment : Iterable<*>,
+    priority : PriorityLevel
+  ) {
+    if (current == null || current.tag !== Fragment) {
+      // Insert
+      const created = createFiberFromFragment(fragment, priority);
+      created.return = returnFiber;
+      return created;
+    } else {
+      // Update
+      const existing = useFiber(current, priority);
+      existing.pendingProps = fragment;
+      existing.return = returnFiber;
+      return existing;
+    }
+  }
+
+  function createChild(
+    returnFiber : Fiber,
+    newChild : any,
+    priority : PriorityLevel
+  ) : ?Fiber {
+    if (typeof newChild === 'string' || typeof newChild === 'number') {
+      // Text nodes doesn't have keys. If the previous node is implicitly keyed
+      // we can continue to replace it without aborting even if it is not a text
+      // node.
+      const created = createFiberFromText('' + newChild, priority);
+      created.return = returnFiber;
+      return created;
     }
 
-    switch (newChildren.$$typeof) {
-      case REACT_ELEMENT_TYPE: {
-        /* $FlowFixMe(>=0.31.0): This is an unsafe cast. Consider adding a type
-         *                       annotation to the `newChildren` param of this
-         *                       function.
-         */
-        const element = (newChildren : ReactElement<any>);
-        if (existingChild &&
-            element.type === existingChild.type &&
-            element.key === existingChild.key) {
-          // Get the clone of the existing fiber.
-          const clone = shouldClone ? cloneFiber(existingChild, priority) : existingChild;
-          if (!shouldClone) {
-            // TODO: This might be lowering the priority of nested unfinished work.
-            clone.pendingWorkPriority = priority;
-          }
-          clone.pendingProps = element.props;
-          clone.sibling = null;
-          clone.return = returnFiber;
-          return clone;
+    if (typeof newChild === 'object' && newChild !== null) {
+      switch (newChild.$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          const created = createFiberFromElement(newChild, priority);
+          created.ref = newChild.ref;
+          created.return = returnFiber;
+          return created;
         }
-        const child = createFiberFromElement(element, priority);
-        child.return = returnFiber;
-        return child;
+
+        case REACT_COROUTINE_TYPE: {
+          const created = createFiberFromCoroutine(newChild, priority);
+          created.return = returnFiber;
+          return created;
+        }
+
+        case REACT_YIELD_TYPE: {
+          const reifiedYield = createReifiedYield(newChild);
+          const created = createFiberFromYield(newChild, priority);
+          created.output = reifiedYield;
+          created.return = returnFiber;
+          return created;
+        }
       }
 
-      case REACT_COROUTINE_TYPE: {
-        /* $FlowFixMe(>=0.31.0): No 'handler' property found in object type
-         */
-        const coroutine = (newChildren : ReactCoroutine);
-        const child = createFiberFromCoroutine(coroutine, priority);
-        child.return = returnFiber;
-        return child;
-      }
-
-      case REACT_YIELD_TYPE: {
-        // A yield results in a fragment fiber whose output is the continuation.
-        // TODO: When there is only a single child, we can optimize this to avoid
-        // the fragment.
-        /* $FlowFixMe(>=0.31.0): No 'continuation' property found in object
-         * type
-         */
-        const yieldNode = (newChildren : ReactYield);
-        const reifiedYield = createReifiedYield(yieldNode);
-        const child = createFiberFromYield(yieldNode, priority);
-        child.output = reifiedYield;
-        child.return = returnFiber;
-        return child;
+      if (isArray(newChild) || getIteratorFn(newChild)) {
+        const created = createFiberFromFragment(newChild, priority);
+        created.return = returnFiber;
+        return created;
       }
     }
 
-    if (isArray(newChildren)) {
-      var first : ?Fiber = null;
-      var prev : ?Fiber = null;
-      var existing : ?Fiber = existingChild;
-      /* $FlowIssue(>=0.31.0) #12747709
-       *
-       * `Array.isArray` is matched syntactically for now until predicate
-       * support is complete.
-       */
-      for (var i = 0; i < newChildren.length; i++) {
-        var nextExisting = existing && existing.sibling;
-        if (prev == null) {
-          prev = createFirstChild(returnFiber, existing, newChildren[i], priority);
-          first = prev;
+    return null;
+  }
+
+  function updateSlot(
+    returnFiber : Fiber,
+    oldFiber : ?Fiber,
+    newChild : any,
+    priority : PriorityLevel
+  ) : ?Fiber {
+    // Update the fiber if the keys match, otherwise return null.
+
+    const key = oldFiber ? oldFiber.key : null;
+
+    if (typeof newChild === 'string' || typeof newChild === 'number') {
+      // Text nodes doesn't have keys. If the previous node is implicitly keyed
+      // we can continue to replace it without aborting even if it is not a text
+      // node.
+      if (key !== null) {
+        return null;
+      }
+      return updateTextNode(returnFiber, oldFiber, '' + newChild, priority);
+    }
+
+    if (typeof newChild === 'object' && newChild !== null) {
+      switch (newChild.$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          if (newChild.key === key) {
+            return updateElement(returnFiber, oldFiber, newChild, priority);
+          } else {
+            return null;
+          }
+        }
+
+        case REACT_COROUTINE_TYPE: {
+          if (newChild.key === key) {
+            return updateCoroutine(returnFiber, oldFiber, newChild, priority);
+          } else {
+            return null;
+          }
+        }
+
+        case REACT_YIELD_TYPE: {
+          if (newChild.key === key) {
+            return updateYield(returnFiber, oldFiber, newChild, priority);
+          } else {
+            return null;
+          }
+        }
+      }
+
+      if (isArray(newChild) || getIteratorFn(newChild)) {
+        // Fragments doesn't have keys so if the previous key is implicit we can
+        // update it.
+        if (key !== null) {
+          return null;
+        }
+        return updateFragment(returnFiber, oldFiber, newChild, priority);
+      }
+    }
+
+    return null;
+  }
+
+  function updateFromMap(
+    existingChildren : Map<string | number, Fiber>,
+    returnFiber : Fiber,
+    newIdx : number,
+    newChild : any,
+    priority : PriorityLevel
+  ) : ?Fiber {
+
+    if (typeof newChild === 'string' || typeof newChild === 'number') {
+      // Text nodes doesn't have keys, so we neither have to check the old nor
+      // new node for the key. If both are text nodes, they match.
+      const matchedFiber = existingChildren.get(newIdx) || null;
+      return updateTextNode(returnFiber, matchedFiber, '' + newChild, priority);
+    }
+
+    if (typeof newChild === 'object' && newChild !== null) {
+      switch (newChild.$$typeof) {
+        case REACT_ELEMENT_TYPE: {
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updateElement(returnFiber, matchedFiber, newChild, priority);
+        }
+
+        case REACT_COROUTINE_TYPE: {
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updateCoroutine(returnFiber, matchedFiber, newChild, priority);
+        }
+
+        case REACT_YIELD_TYPE: {
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updateYield(returnFiber, matchedFiber, newChild, priority);
+        }
+      }
+
+      if (isArray(newChild) || getIteratorFn(newChild)) {
+        const matchedFiber = existingChildren.get(newIdx) || null;
+        return updateFragment(returnFiber, matchedFiber, newChild, priority);
+      }
+    }
+
+    return null;
+  }
+
+  function reconcileChildrenArray(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    newChildren : Array<*>,
+    priority : PriorityLevel) {
+
+    // This algorithm can't optimize by searching from boths ends since we
+    // don't have backpointers on fibers. I'm trying to see how far we can get
+    // with that model. If it ends up not being worth the tradeoffs, we can
+    // add it later.
+
+    // Even with a two ended optimization, we'd want to optimize for the case
+    // where there are few changes and brute force the comparison instead of
+    // going for the Map. It'd like to explore hitting that path first in
+    // forward-only mode and only go for the Map once we notice that we need
+    // lots of look ahead. This doesn't handle reversal as well as two ended
+    // search but that's unusual. Besides, for the two ended optimization to
+    // work on Iterables, we'd need to copy the whole set.
+
+    // In this first iteration, we'll just live with hitting the bad case
+    // (adding everything to a Map) in for every insert/move.
+
+    let resultingFirstChild : ?Fiber = null;
+    let previousNewFiber : ?Fiber = null;
+
+    let oldFiber = currentFirstChild;
+    let lastPlacedIndex = 0;
+    let newIdx = 0;
+    let nextOldFiber = null;
+    for (; oldFiber && newIdx < newChildren.length; newIdx++) {
+      if (oldFiber) {
+        if (oldFiber.index > newIdx) {
+          nextOldFiber = oldFiber;
+          oldFiber = null;
         } else {
-          prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
-        }
-        if (prev && existing) {
-          // TODO: This is not correct because there could've been more
-          // than one sibling consumed but I don't want to return a tuple.
-          existing = nextExisting;
+          nextOldFiber = oldFiber.sibling;
         }
       }
-      return first;
-    } else {
-      // TODO: Throw for unknown children.
-      return null;
+      const newFiber = updateSlot(
+        returnFiber,
+        oldFiber,
+        newChildren[newIdx],
+        priority
+      );
+      if (!newFiber) {
+        // TODO: This breaks on empty slots like null children. That's
+        // unfortunate because it triggers the slow path all the time. We need
+        // a better way to communicate whether this was a miss or null,
+        // boolean, undefined, etc.
+        break;
+      }
+      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+      if (!previousNewFiber) {
+        // TODO: Move out of the loop. This only happens for the first run.
+        resultingFirstChild = newFiber;
+      } else {
+        // TODO: Defer siblings if we're not at the right index for this slot.
+        // I.e. if we had null values before, then we want to defer this
+        // for each null value. However, we also don't want to call updateSlot
+        // with the previous one.
+        previousNewFiber.sibling = newFiber;
+      }
+      previousNewFiber = newFiber;
+      oldFiber = nextOldFiber;
     }
+
+    if (newIdx === newChildren.length) {
+      // We've reached the end of the new children. We can delete the rest.
+      deleteRemainingChildren(returnFiber, oldFiber);
+      return resultingFirstChild;
+    }
+
+    if (!oldFiber) {
+      // If we don't have any more existing children we can choose a fast path
+      // since the rest will all be insertions.
+      for (; newIdx < newChildren.length; newIdx++) {
+        const newFiber = createChild(
+          returnFiber,
+          newChildren[newIdx],
+          priority
+        );
+        if (!newFiber) {
+          continue;
+        }
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        if (!previousNewFiber) {
+          // TODO: Move out of the loop. This only happens for the first run.
+          resultingFirstChild = newFiber;
+        } else {
+          previousNewFiber.sibling = newFiber;
+        }
+        previousNewFiber = newFiber;
+      }
+      return resultingFirstChild;
+    }
+
+    // Add all children to a key map for quick lookups.
+    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+
+    // Keep scanning and use the map to restore deleted items as moves.
+    for (; newIdx < newChildren.length; newIdx++) {
+      const newFiber = updateFromMap(
+        existingChildren,
+        returnFiber,
+        newIdx,
+        newChildren[newIdx],
+        priority
+      );
+      if (newFiber) {
+        if (shouldTrackSideEffects) {
+          if (newFiber.alternate) {
+            // The new fiber is a work in progress, but if there exists a
+            // current, that means that we reused the fiber. We need to delete
+            // it from the child list so that we don't add it to the deletion
+            // list.
+            existingChildren.delete(
+              newFiber.key === null ? newFiber.index : newFiber.key
+            );
+          }
+        }
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        if (!previousNewFiber) {
+          resultingFirstChild = newFiber;
+        } else {
+          previousNewFiber.sibling = newFiber;
+        }
+        previousNewFiber = newFiber;
+      }
+    }
+
+    if (shouldTrackSideEffects) {
+      // Any existing children that weren't consumed above were deleted. We need
+      // to add them to the deletion list.
+      existingChildren.forEach(child => deleteChild(returnFiber, child));
+    }
+
+    return resultingFirstChild;
   }
 
-  // TODO: This API won't work because we'll need to transfer the side-effects of
-  // unmounting children to the returnFiber.
+  function reconcileChildrenIterator(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    newChildren : Iterator<*>,
+    priority : PriorityLevel) {
+    // TODO: Copy everything from reconcileChildrenArray but use the iterator
+    // instead.
+    return null;
+  }
+
+  function reconcileSingleTextNode(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    textContent : string,
+    priority : PriorityLevel
+  ) {
+    // There's no need to check for keys on text nodes since we don't have a
+    // way to define them.
+    if (currentFirstChild && currentFirstChild.tag === HostText) {
+      // We already have an existing node so let's just update it and delete
+      // the rest.
+      deleteRemainingChildren(returnFiber, currentFirstChild.sibling);
+      const existing = useFiber(currentFirstChild, priority);
+      existing.pendingProps = textContent;
+      existing.return = returnFiber;
+      return existing;
+    }
+    // The existing first child is not a text node so we need to create one
+    // and delete the existing ones.
+    deleteRemainingChildren(returnFiber, currentFirstChild);
+    const created = createFiberFromText(textContent, priority);
+    created.return = returnFiber;
+    return created;
+  }
+
+  function reconcileSingleElement(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    element : ReactElement<any>,
+    priority : PriorityLevel
+  ) {
+    const key = element.key;
+    let child = currentFirstChild;
+    while (child) {
+      // TODO: If key === null and child.key === null, then this only applies to
+      // the first item in the list.
+      if (child.key === key) {
+        if (child.type === element.type) {
+          deleteRemainingChildren(returnFiber, child.sibling);
+          const existing = useFiber(child, priority);
+          existing.ref = element.ref;
+          existing.pendingProps = element.props;
+          existing.return = returnFiber;
+          return existing;
+        } else {
+          deleteRemainingChildren(returnFiber, child);
+          break;
+        }
+      } else {
+        deleteChild(returnFiber, child);
+      }
+      child = child.sibling;
+    }
+
+    const created = createFiberFromElement(element, priority);
+    created.ref = element.ref;
+    created.return = returnFiber;
+    return created;
+  }
+
+  function reconcileSingleCoroutine(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    coroutine : ReactCoroutine,
+    priority : PriorityLevel
+  ) {
+    const key = coroutine.key;
+    let child = currentFirstChild;
+    while (child) {
+      // TODO: If key === null and child.key === null, then this only applies to
+      // the first item in the list.
+      if (child.key === key) {
+        if (child.tag === CoroutineComponent) {
+          deleteRemainingChildren(returnFiber, child.sibling);
+          const existing = useFiber(child, priority);
+          existing.pendingProps = coroutine;
+          existing.return = returnFiber;
+          return existing;
+        } else {
+          deleteRemainingChildren(returnFiber, child);
+          break;
+        }
+      } else {
+        deleteChild(returnFiber, child);
+      }
+      child = child.sibling;
+    }
+
+    const created = createFiberFromCoroutine(coroutine, priority);
+    created.return = returnFiber;
+    return created;
+  }
+
+  function reconcileSingleYield(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    yieldNode : ReactYield,
+    priority : PriorityLevel
+  ) {
+    const key = yieldNode.key;
+    let child = currentFirstChild;
+    while (child) {
+      // TODO: If key === null and child.key === null, then this only applies to
+      // the first item in the list.
+      if (child.key === key) {
+        if (child.tag === YieldComponent) {
+          deleteRemainingChildren(returnFiber, child.sibling);
+          const existing = useFiber(child, priority);
+          existing.output = createUpdatedReifiedYield(
+            child.output,
+            yieldNode
+          );
+          existing.return = returnFiber;
+          return existing;
+        } else {
+          deleteRemainingChildren(returnFiber, child);
+          break;
+        }
+      } else {
+        deleteChild(returnFiber, child);
+      }
+      child = child.sibling;
+    }
+
+    const reifiedYield = createReifiedYield(yieldNode);
+    const created = createFiberFromYield(yieldNode, priority);
+    created.output = reifiedYield;
+    created.return = returnFiber;
+    return created;
+  }
+
+  // This API will tag the children with the side-effect of the reconciliation
+  // itself. They will be added to the side-effect list as we pass through the
+  // children and the parent.
   function reconcileChildFibers(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
-    newChildren : ReactNodeList,
+    newChild : any,
     priority : PriorityLevel
   ) : ?Fiber {
-    return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);
+    // This function is not recursive.
+    // If the top level item is an array, we treat it as a set of children,
+    // not as a fragment. Nested arrays on the other hand will be treated as
+    // fragment nodes. Recursion happens at the normal flow.
+
+    if (typeof newChild === 'string' || typeof newChild === 'number') {
+      return placeSingleChild(reconcileSingleTextNode(
+        returnFiber,
+        currentFirstChild,
+        '' + newChild,
+        priority
+      ));
+    }
+
+    if (typeof newChild === 'object' && newChild !== null) {
+      switch (newChild.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+          return placeSingleChild(reconcileSingleElement(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            priority
+          ));
+
+        case REACT_COROUTINE_TYPE:
+          return placeSingleChild(reconcileSingleCoroutine(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            priority
+          ));
+
+        case REACT_YIELD_TYPE:
+          return placeSingleChild(reconcileSingleYield(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            priority
+          ));
+      }
+
+      if (isArray(newChild)) {
+        return reconcileChildrenArray(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          priority
+        );
+      }
+
+      const iteratorFn = getIteratorFn(newChild);
+      if (iteratorFn) {
+        return reconcileChildrenIterator(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          priority
+        );
+      }
+    }
+
+    // Remaining cases are all treated as empty.
+    return deleteRemainingChildren(returnFiber, currentFirstChild);
   }
 
   return reconcileChildFibers;
 }
 
-exports.reconcileChildFibers = ChildReconciler(true);
+exports.reconcileChildFibers = ChildReconciler(true, true);
 
-exports.reconcileChildFibersInPlace = ChildReconciler(false);
+exports.reconcileChildFibersInPlace = ChildReconciler(false, true);
 
-
-function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fiber) {
-  workInProgress.return = returnFiber;
-  while (current.sibling) {
-    current = current.sibling;
-    workInProgress = workInProgress.sibling = cloneFiber(
-      current,
-      current.pendingWorkPriority
-    );
-    workInProgress.return = returnFiber;
-  }
-  workInProgress.sibling = null;
-}
+exports.mountChildFibersInPlace = ChildReconciler(false, false);
 
 exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
   if (!workInProgress.child) {
@@ -242,7 +828,7 @@ exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
     // We use workInProgress.child since that lets Flow know that it can't be
     // null since we validated that already. However, as the line above suggests
     // they're actually the same thing.
-    const currentChild = workInProgress.child;
+    let currentChild = workInProgress.child;
     // TODO: This used to reset the pending priority. Not sure if that is needed.
     // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
     // TODO: The below priority used to be set to NoWork which would've
@@ -250,9 +836,19 @@ exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
     // observable when the first sibling has lower priority work remaining
     // than the next sibling. At that point we should add tests that catches
     // this.
-    const newChild = cloneFiber(currentChild, currentChild.pendingWorkPriority);
+    let newChild = cloneFiber(currentChild, currentChild.pendingWorkPriority);
     workInProgress.child = newChild;
-    cloneSiblings(currentChild, newChild, workInProgress);
+
+    newChild.return = workInProgress;
+    while (currentChild.sibling) {
+      currentChild = currentChild.sibling;
+      newChild = newChild.sibling = cloneFiber(
+        currentChild,
+        currentChild.pendingWorkPriority
+      );
+      newChild.return = workInProgress;
+    }
+    newChild.sibling = null;
   }
 
   // If there is no alternate, then we don't need to clone the children.

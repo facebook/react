@@ -19,44 +19,33 @@ import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostContainer,
   HostComponent,
+  HostText,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
+var {
+  Update,
+} = ReactTypeOfSideEffect;
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const createInstance = config.createInstance;
+  const createTextInstance = config.createTextInstance;
   const prepareUpdate = config.prepareUpdate;
 
-  function markForPreEffect(workInProgress : Fiber) {
-    // Schedule a side-effect on this fiber, BEFORE the children's side-effects.
-    if (workInProgress.firstEffect) {
-      workInProgress.nextEffect = workInProgress.firstEffect;
-      workInProgress.firstEffect = workInProgress;
-    } else {
-      workInProgress.firstEffect = workInProgress;
-      workInProgress.lastEffect = workInProgress;
-    }
-  }
-
-  // TODO: It's possible this will create layout thrash issues because mutations
-  // of the DOM and life-cycles are interleaved. E.g. if a componentDidMount
-  // of a sibling reads, then the next sibling updates and reads etc.
-  function markForPostEffect(workInProgress : Fiber) {
-    // Schedule a side-effect on this fiber, AFTER the children's side-effects.
-    if (workInProgress.lastEffect) {
-      workInProgress.lastEffect.nextEffect = workInProgress;
-    } else {
-      workInProgress.firstEffect = workInProgress;
-    }
-    workInProgress.lastEffect = workInProgress;
+  function markUpdate(workInProgress : Fiber) {
+    // Tag the fiber with an update effect. This turns a Placement into
+    // an UpdateAndPlacement.
+    workInProgress.effectTag |= Update;
   }
 
   function transferOutput(child : ?Fiber, returnFiber : Fiber) {
@@ -140,7 +129,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         // Transfer update queue to callbackList field so callbacks can be
         // called during commit phase.
         workInProgress.callbackList = workInProgress.updateQueue;
-        markForPostEffect(workInProgress);
+        markUpdate(workInProgress);
         return null;
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);
@@ -149,12 +138,10 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         // all the other side-effects in the subtree. We need to schedule it
         // before so that the entire tree is up-to-date before the life-cycles
         // are invoked.
-        markForPreEffect(workInProgress);
+        markUpdate(workInProgress);
         return null;
       case HostComponent:
         let newProps = workInProgress.pendingProps;
-        const child = workInProgress.child;
-        const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
@@ -164,12 +151,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           // TODO: Split the update API as separate for the props vs. children.
           // Even better would be if children weren't special cased at all tho.
           if (!newProps) {
-            newProps = oldProps;
+            newProps = workInProgress.memoizedProps || oldProps;
           }
           const instance : I = workInProgress.stateNode;
-          if (prepareUpdate(instance, oldProps, newProps, children)) {
+          if (prepareUpdate(instance, oldProps, newProps)) {
             // This returns true if there was something to update.
-            markForPreEffect(workInProgress);
+            markUpdate(workInProgress);
           }
           // TODO: Is this actually ever going to change? Why set it every time?
           workInProgress.output = instance;
@@ -182,12 +169,40 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
               return null;
             }
           }
+          const child = workInProgress.child;
+          const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
           const instance = createInstance(workInProgress.type, newProps, children);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;
+          if (workInProgress.ref) {
+            // If there is a ref on a host node we need to schedule a callback
+            markUpdate(workInProgress);
+          }
         }
         workInProgress.memoizedProps = newProps;
+        return null;
+      case HostText:
+        let newText = workInProgress.pendingProps;
+        if (current && workInProgress.stateNode != null) {
+          // If we have an alternate, that means this is an update and we need to
+          // schedule a side-effect to do the updates.
+          markUpdate(workInProgress);
+        } else {
+          if (typeof newText !== 'string') {
+            if (workInProgress.stateNode === null) {
+              throw new Error('We must have new props for new mounts.');
+            } else {
+              // This can happen when we abort work.
+              return null;
+            }
+          }
+          const textInstance = createTextInstance(newText);
+          // TODO: This seems like unnecessary duplication.
+          workInProgress.stateNode = textInstance;
+          workInProgress.output = textInstance;
+        }
+        workInProgress.memoizedProps = newText;
         return null;
       case CoroutineComponent:
         return moveCoroutineToHandlerPhase(current, workInProgress);
@@ -198,6 +213,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return null;
       case YieldComponent:
         // Does nothing.
+        return null;
+      case Fragment:
+        transferOutput(workInProgress.child, workInProgress);
         return null;
 
       // Error cases

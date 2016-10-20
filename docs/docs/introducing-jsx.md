@@ -46,7 +46,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on Codepen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
+[Try it on CodePen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
 
 We wrapped JSX in parentheses and split it over multiple lines for readability. This also helps avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
 

@@ -19,12 +19,12 @@ For longer-form conversations about React, we've set up a [discussion forum at *
 
 In the forum there's also a category for job posts and a category for discussion of our weekly meeting notes.
 
-## IRC
+## Reactiflux Chat
 
-Many developers and users idle on Freenode.net's IRC network in **[#reactjs on freenode](irc://chat.freenode.net/reactjs)**.
+If you need an answer right away, check out the [Reactiflux Discord](https://discord.gg/0ZcbPKXt5bZjGY5n) community. There are usually a number of React experts there who can help out or point you to somewhere you might want to look.
 
-## Twitter
+## Facebook and Twitter
 
-For the latest news about React, [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the #reactjs hashtag to see what others are saying or add to the conversation.
+For the latest news about React, [like us on Facebook](https://facebook/react) and [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the [#reactjs](https://twitter.com/hashtag/reactjs) hashtag to see what others are saying or add to the conversation.
 
 <div><a class="twitter-timeline" data-dnt="true" data-chrome="nofooter noheader transparent" href="https://twitter.com/search?q=%23reactjs" data-widget-id="342522405270470656"></a></div>

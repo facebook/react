@@ -333,6 +333,23 @@ var ReactCompositeComponent = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    if (inst.componentWillMount) {
+      if (__DEV__) {
+        measureLifeCyclePerf(
+          () => inst.componentWillMount(),
+          this._debugID,
+          'componentWillMount'
+        );
+      } else {
+        inst.componentWillMount();
+      }
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingStateQueue` without triggering a re-render.
+      if (this._pendingStateQueue) {
+        inst.state = this._processPendingState(inst.props, inst.context);
+      }
+    }
+
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
@@ -343,7 +360,13 @@ var ReactCompositeComponent = {
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
     }
 
     if (inst.componentDidMount) {
@@ -434,7 +457,13 @@ var ReactCompositeComponent = {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
@@ -443,42 +472,33 @@ var ReactCompositeComponent = {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
       }
       checkpoint = transaction.checkpoint();
-
-      this._renderedComponent.unmountComponent(true);
+      this._renderedComponent.unmountComponent(
+        true, /* safely */
+        // Don't call componentWillUnmount() because they never fully mounted:
+        true /* skipLifecyle */
+      );
       transaction.rollback(checkpoint);
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
-    var inst = this._instance;
-
-    var debugID = 0;
-    if (__DEV__) {
-      debugID = this._debugID;
-    }
-
-    if (inst.componentWillMount) {
-      if (__DEV__) {
-        measureLifeCyclePerf(
-          () => inst.componentWillMount(),
-          debugID,
-          'componentWillMount'
-        );
-      } else {
-        inst.componentWillMount();
-      }
-      // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingStateQueue` without triggering a re-render.
-      if (this._pendingStateQueue) {
-        inst.state = this._processPendingState(inst.props, inst.context);
-      }
-    }
-
+  performInitialMount: function(
+    renderedElement,
+    hostParent,
+    hostContainerInfo,
+    transaction,
+    context
+  ) {
     // If not a stateless component, we now render
     if (renderedElement === undefined) {
       renderedElement = this._renderValidatedComponent();
@@ -491,6 +511,11 @@ var ReactCompositeComponent = {
       nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
     );
     this._renderedComponent = child;
+
+    var debugID = 0;
+    if (__DEV__) {
+      debugID = this._debugID;
+    }
 
     var markup = ReactReconciler.mountComponent(
       child,
@@ -521,7 +546,7 @@ var ReactCompositeComponent = {
    * @final
    * @internal
    */
-  unmountComponent: function(safely) {
+  unmountComponent: function(safely, skipLifecycle) {
     if (!this._renderedComponent) {
       return;
     }
@@ -532,8 +557,10 @@ var ReactCompositeComponent = {
       inst._calledComponentWillUnmount = true;
 
       if (safely) {
-        var name = this.getName() + '.componentWillUnmount()';
-        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+        if (!skipLifecycle) {
+          var name = this.getName() + '.componentWillUnmount()';
+          ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+        }
       } else {
         if (__DEV__) {
           measureLifeCyclePerf(
@@ -548,7 +575,11 @@ var ReactCompositeComponent = {
     }
 
     if (this._renderedComponent) {
-      ReactReconciler.unmountComponent(this._renderedComponent, safely);
+      ReactReconciler.unmountComponent(
+        this._renderedComponent,
+        safely,
+        skipLifecycle
+      );
       this._renderedNodeType = null;
       this._renderedComponent = null;
       this._instance = null;
@@ -941,7 +972,11 @@ var ReactCompositeComponent = {
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction, unmaskedContext);
+    if (inst.unstable_handleError) {
+      this._updateRenderedComponentWithErrorHandling(transaction, unmaskedContext);
+    } else {
+      this._updateRenderedComponent(transaction, unmaskedContext);
+    }
 
     if (hasComponentDidUpdate) {
       if (__DEV__) {
@@ -967,10 +1002,64 @@ var ReactCompositeComponent = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
+  _updateRenderedComponentWithErrorHandling: function(transaction, context) {
+    var checkpoint = transaction.checkpoint();
+    try {
+      this._updateRenderedComponent(transaction, context);
+    } catch (e) {
+      // Roll back to checkpoint, handle error (which may add items to the transaction),
+      // and take a new checkpoint
+      transaction.rollback(checkpoint);
+      this._instance.unstable_handleError(e);
+      if (this._pendingStateQueue) {
+        this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+      }
+      checkpoint = transaction.checkpoint();
+
+      // Gracefully update to a clean state
+      this._updateRenderedComponentWithNextElement(
+        transaction,
+        context,
+        null,
+        true /* safely */
+      );
+
+      // Try again - we've informed the component about the error, so they can render an error message this time.
+      // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
+      this._updateRenderedComponent(transaction, context);
+    }
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
   _updateRenderedComponent: function(transaction, context) {
+    var nextRenderedElement = this._renderValidatedComponent();
+    this._updateRenderedComponentWithNextElement(
+      transaction,
+      context,
+      nextRenderedElement,
+      false /* safely */
+    );
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
+  _updateRenderedComponentWithNextElement: function(
+    transaction,
+    context,
+    nextRenderedElement,
+    safely
+  ) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
-    var nextRenderedElement = this._renderValidatedComponent();
 
     var debugID = 0;
     if (__DEV__) {
@@ -986,7 +1075,11 @@ var ReactCompositeComponent = {
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(prevComponentInstance, false);
+      ReactReconciler.unmountComponent(
+        prevComponentInstance,
+        safely,
+        false /* skipLifecycle */
+      );
 
       var nodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedNodeType = nodeType;

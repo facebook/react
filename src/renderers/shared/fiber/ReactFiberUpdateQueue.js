@@ -39,7 +39,7 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
   return queue;
 };
 
-exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
+function addToQueue(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
   const node = {
     partialState,
     callback: null,
@@ -49,12 +49,14 @@ exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : Updat
   queue.tail.next = node;
   queue.tail = node;
   return queue;
-};
+}
+
+exports.addToQueue = addToQueue;
 
 exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) : UpdateQueue {
   if (queue.tail.callback) {
     // If the tail already as a callback, add an empty node to queue
-    exports.addToQueue(queue, null);
+    addToQueue(queue, null);
   }
   queue.tail.callback = callback;
   return queue;

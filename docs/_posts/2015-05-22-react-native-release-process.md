@@ -19,4 +19,4 @@ You now have three ways to get React Native. You should chose the one you want b
 
 If you want more details, I highly recommend this video that explains how Facebook mobile release process works and why it was setup this way.
 
-<iframe width="650" height="300" src="https://www.youtube.com/embed/mOyoTUETmSM" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="300" src="https://www.youtube.com/embed/mOyoTUETmSM" frameborder="0" allowfullscreen></iframe>

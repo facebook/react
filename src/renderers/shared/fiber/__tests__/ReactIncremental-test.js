@@ -56,7 +56,7 @@ describe('ReactIncremental', () => {
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
     // Do one step of work.
-    ReactNoop.flushDeferredPri(7);
+    ReactNoop.flushDeferredPri(7 + 5);
     expect(fooCalled).toBe(true);
     expect(barCalled).toBe(false);
     // Do the rest of the work.
@@ -143,7 +143,7 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo text="bar" />);
     // Flush part of the work
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -153,7 +153,7 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo text="baz" />);
 
     // Flush part of the new work
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -328,7 +328,7 @@ describe('ReactIncremental', () => {
 
     // We're now rendering an update that will bail out on updating middle.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushDeferredPri(45);
+    ReactNoop.flushDeferredPri(45 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
@@ -395,7 +395,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" />);
-    ReactNoop.flushDeferredPri(52);
+    ReactNoop.flushDeferredPri(52 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Tester', 'Bar']);
 
@@ -417,6 +417,24 @@ describe('ReactIncremental', () => {
     // after them which is not correct.
     ReactNoop.flush();
     expect(ops).toEqual(['Bar', 'Middle', 'Bar']);
+
+    ops = [];
+
+    // Let us try this again without fully finishing the first time. This will
+    // create a hanging subtree that is reconciling at the normal priority.
+    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.flushDeferredPri(40);
+
+    expect(ops).toEqual(['Foo', 'Bar']);
+
+    ops = [];
+
+    // This update will create a tree that aborts that work and down-prioritizes
+    // it. If the priority levels aren't down-prioritized correctly this may
+    // abort rendering of the down-prioritized content.
+    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
   it('can reuse work done after being preempted', () => {
@@ -467,7 +485,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushDeferredPri(55 + 25);
+    ReactNoop.flushDeferredPri(55 + 25 + 5);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -489,7 +507,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" text2="bar" step={1} />);
-    ReactNoop.flushDeferredPri(30 + 25);
+    ReactNoop.flushDeferredPri(30 + 25 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -583,7 +601,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushDeferredPri(30 + 25);
+    ReactNoop.flushDeferredPri(30 + 25 + 5);
     expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
 
     ops = [];
