@@ -135,7 +135,7 @@ MyComponent.propTypes = {
 
 ## Default Prop Values
 
-React lets you define default values for your `props` in a very declarative way:
+React lets you define default values for your `props` declaratively:
 
 ```javascript
 class Greeting extends React.Component {
