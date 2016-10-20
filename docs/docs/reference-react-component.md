@@ -4,6 +4,8 @@ title: React.Component
 layout: docs
 category: Reference
 permalink: docs/react-component.html
+redirect_from: "/docs/component-api.html"
+redirect_from: "/docs/component-specs.html"
 ---
 
 [Components](/react/docs/components-and-props.html) let you split the UI into independent, reusable pieces, and think about each piece in isolation. `React.Component` is provided by [`React`](/react/docs/react-api.html).
