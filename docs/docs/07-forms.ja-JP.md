@@ -52,7 +52,7 @@ HTMLでは、 `<textarea>` の値は子要素によってセットされます�
   },
   render: function() {
     var value = this.state.value;
-    return <input type="text" value={value} onChange={this.handleChange} />;
+    return <input type="text" value={value} onChange={this.handleChange.bind(this)} />;
   }
 ```
 

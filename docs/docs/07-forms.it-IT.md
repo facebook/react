@@ -54,7 +54,7 @@ Ciò visualizzerà un input che ha sempre il valore di `value` impostato a `Ciao
   },
   render: function() {
     var value = this.state.value;
-    return <input type="text" value={value} onChange={this.handleChange} />;
+    return <input type="text" value={value} onChange={this.handleChange.bind(this)} />;
   }
 ```
 

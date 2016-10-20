@@ -53,7 +53,7 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
   },
   render: function() {
     var value = this.state.value;
-    return <input type="text" value={value} onChange={this.handleChange} />;
+    return <input type="text" value={value} onChange={this.handleChange.bind(this)} />;
   }
 ```
 
