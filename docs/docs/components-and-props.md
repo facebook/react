@@ -2,6 +2,8 @@
 id: components-and-props
 title: Components and Props
 permalink: docs/components-and-props.html
+redirect_from: "/docs/reusable-components.html"
+redirect_from: "/docs/transferring-props.html"
 prev: rendering-elements.html
 next: state-and-lifecycle.html
 ---

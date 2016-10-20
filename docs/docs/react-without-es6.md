@@ -1,6 +1,8 @@
 ---
 id: react-without-es6
 title: React Without ES6
+redirect_from: "/docs/language-tooling.html"
+redirect_from: "/docs/environments.html"
 permalink: docs/react-without-es6.html
 ---
 

@@ -1,6 +1,8 @@
 ---
 id: refs-and-the-dom
 title: Refs and the DOM
+redirect_from: "/docs/working-with-the-browser.html"
+redirect_from: "/docs/more-about-refs.html"
 permalink: docs/refs-and-the-dom.html
 ---
 

@@ -2,6 +2,8 @@
 id: jsx-in-depth
 title: JSX In Depth
 permalink: docs/jsx-in-depth.html
+redirect_from: "/docs/jsx-spread.html"
+redirect_from: "/docs/jsx-gotchas.html"
 ---
 
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:
