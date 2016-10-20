@@ -785,4 +785,4 @@ var CommentBox = React.createClass({
 
 ### Congrats!
 
-You have just built a comment box in a few simple steps. Learn more about [why to use React](/react/docs/why-react.html), or dive into the [API reference](/react/docs/top-level-api.html) and start hacking! Good luck!
+You have just built a comment box in a few simple steps. Learn more about [why we use React](/react/docs/why-react.html), or dive into the [API reference](/react/docs/top-level-api.html) and start hacking! Good luck!
