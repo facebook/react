@@ -4,7 +4,7 @@ title: State and Lifecycle
 permalink: docs/state-and-lifecycle.html
 redirect_from: "/docs/interactivity-and-dynamic-uis.html"
 prev: components-and-props.html
-next: handling-events.html
+next: lists-conditional-rendering.html
 ---
 
 Consider the ticking clock example from the [one of the previous sections](/react/docs/rendering-elements.html#updating-the-rendered-element).

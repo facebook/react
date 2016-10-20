@@ -1,9 +1,9 @@
 ---
-id: forms
+id: lists-conditional-rendering
 title: Lists & Conditional Rendering
 permalink: docs/lists-conditional-rendering.html
-prev: 
-next: 
+prev: components-and-props.html
+next: handling-events.html
 ---
 
 ## Lists
@@ -273,4 +273,3 @@ ReactDOM.render(<Page />, document.getElementById('root'));
 ```
 
 [Try it out on Codepen.](https://codepen.io/ericnakagawa/pen/ozragV?editors=0011#0)
-

@@ -3,7 +3,7 @@ id: handling-events
 title: Handling Events
 permalink: docs/handling-events.html
 prev: state-and-lifecycle.html
-next: lifting-state-up.html
+next: forms.html
 ---
 
 Handling events with React elements is very similar to handling events on DOM elements. There are some syntactic differences:

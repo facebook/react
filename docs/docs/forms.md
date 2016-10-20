@@ -2,8 +2,8 @@
 id: forms
 title: Forms
 permalink: docs/forms.html
-prev:
-next:
+prev: state-and-lifecycle.html
+next: lifting-state-up.html
 redirect_from: "/tips/controlled-input-null-value.html"
 ---
 
