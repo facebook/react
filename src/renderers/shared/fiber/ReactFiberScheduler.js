@@ -79,14 +79,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
       nextScheduledRoot = nextScheduledRoot.nextScheduledRoot;
     }
-    // TODO: This is scanning one root at a time. It should be scanning all
-    // roots for high priority work before moving on to lower priorities.
     let root = nextScheduledRoot;
     let highestPriorityRoot = null;
     let highestPriorityLevel = NoWork;
     while (root) {
-      if (highestPriorityLevel === NoWork ||
-          highestPriorityLevel > root.current.pendingWorkPriority) {
+      if (root.current.pendingWorkPriority !== NoWork && (
+          highestPriorityLevel === NoWork ||
+          highestPriorityLevel > root.current.pendingWorkPriority)) {
         highestPriorityLevel = root.current.pendingWorkPriority;
         highestPriorityRoot = root;
       }
