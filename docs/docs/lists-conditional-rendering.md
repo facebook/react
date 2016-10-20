@@ -31,7 +31,7 @@ const listItems = numbers.map((item) =>
   <li>
     {item}
   </li>
-)
+);
 ReactDOM.render(
   <ul>{listItems}</ul>,
   document.getElementById('root')
@@ -51,8 +51,8 @@ function NumberList(props) {
     <li>
       {item}
     </li>
-  )
-  return <ul>{listItems}</ul>
+  );
+  return <ul>{listItems}</ul>;
 }
 
 const numbers = [1, 2, 3, 4, 5];
@@ -73,8 +73,8 @@ function NumberList(props) {
     <li key={"item-" + item}>
       {item}
     </li>
-  )
-  return <ul>{listItems}</ul>
+  );
+  return <ul>{listItems}</ul>;
 }
 
 const numbers = [1, 2, 3, 4, 5];
@@ -106,7 +106,7 @@ function Number(props) {
 
 function NumberList(props) {
   const numbers = props.numbers
-  return <ul>{numbers.map((item) => <Number value={item} />}</ul>
+  return <ul>{numbers.map((item) => <Number value={item} />}</ul>;
 }
 
 const numbers = [1, 2, 3, 4, 5];
@@ -126,7 +126,7 @@ function NumberList(props) {
     <ul>
     {numbers.map((item) => <Number key={"item-" + item} value={item} />)}
     </ul>
-  )
+  );
 }
 
 const numbers = [1, 2, 3, 4, 5];
@@ -142,17 +142,19 @@ ReactDOM.render(
 
 In React, you can create distinct components that encapsulate behavior you need. Then, you can render only the specific component you need, depending on the state of your application.
 
-In this example, we pass the variable `loggedIn` representing our state, together with `&&` operator, and the component we wish to render. Depending on the value of `loggedIn` the corresponding component will be rendered.
+In this example, we pass the variable `loggedIn` representing our state, together with the Javascript `&&` operator, and the component we wish to render. Depending on the value of `loggedIn` the corresponding component will be rendered. React will ignore `false` and `null` render output.
 
 ```javascript
 function UserGreeting(props) {
-  return <div>Welcome back!</div>
+  return <div>Welcome back!</div>;
 }
+
 function GuestGreeting(props) {
-  return <div>Please sign up.</div>
+  return <div>Please sign up.</div>;
 }
+
 function VisitorMessage(props) {
-  var loggedIn = true; // change this to false
+  let loggedIn = true; // change this to false
   return (
     <div>
       {loggedIn && <UserGreeting />}
@@ -175,11 +177,11 @@ In the example below, we want to display a login or logout button. In `render()`
 
 ```javascript{23,25,29}
 function LogoutButton(props) {
-  return <button onClick={props.onClick}>Logout</button>
+  return <button onClick={props.onClick}>Logout</button>;
 }
 
 function LoginButton(props) {
-  return <button onClick={props.onClick}>Login</button>
+  return <button onClick={props.onClick}>Login</button>;
 }
 
 class LoginControl extends React.Component {
@@ -221,7 +223,7 @@ In the example below, we demonstrate how to use the ternary operator to conditio
 
 ```javascript
 render() {
-  var loggedIn = false;
+  let loggedIn = false;
   return (
     <div>
       The user is <strong>{loggedIn?'currently':'not'}</strong> logged in.
@@ -241,7 +243,7 @@ The highlighted lines below show where the component `<WarningBanner />` returns
 ```javascript{2}
 function WarningBanner(props) {
   if(!props.warn) return null;
-  return <div className="warning">Warning!</div>
+  return <div className="warning">Warning!</div>;
 }
 
 class Page extends React.Component {
@@ -260,7 +262,7 @@ class Page extends React.Component {
       <div>
         <WarningBanner warn={this.state.showWarning} />
         <button onClick={this.toggleWarning}>
-          {!this.state.showWarning?"show":"hide"}
+          {!this.state.showWarning ? "show" : "hide"}
         </button>
       </div>
     );
