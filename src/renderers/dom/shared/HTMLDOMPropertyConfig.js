@@ -216,20 +216,11 @@ var HTMLDOMPropertyConfig = {
         return node.removeAttribute('value');
       }
 
-      if (node.hasAttribute('value')) {
-        if (value === 0) {
-          // Since we use loose type checking below, zero is
-          // falsy, so we need to manually cover it
-          value = '0';
-        }
-        // Use loose coercion to prevent replacement on comparisons like
-        // '3e1' == 30 in Chrome (~52).
-        if (node.value == value) { // eslint-disable-line
-          return false;
-        }
+      // Don't update number inputs inputs if they have bad input.
+      // Chrome clears bad input and drops trailing decimal places
+      if (node.type !== 'number' || node.validity.badInput === false) {
+        node.setAttribute('value', '' + value);
       }
-
-      node.setAttribute('value', '' + value);
     },
   },
 };

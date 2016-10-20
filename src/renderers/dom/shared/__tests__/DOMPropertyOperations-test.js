@@ -298,23 +298,6 @@ describe('DOMPropertyOperations', () => {
   });
 
   describe('value mutation method', function() {
-    it('should not update numeric values when the input.value is loosely the same', function() {
-      var stubNode = document.createElement('input');
-      var stubInstance = {_debugID: 1};
-      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
-
-      stubNode.setAttribute('type', 'number');
-      stubNode.setAttribute('value', '3e1');
-      // Keep in sync. The comparison occurs between setAttribute and value.
-      stubNode.value = '3e1';
-
-      spyOn(stubNode, 'setAttribute');
-
-      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
-
-      expect(stubNode.setAttribute.calls.count()).toBe(0);
-    });
-
     it('should update an empty attribute to zero', function() {
       var stubNode = document.createElement('input');
       var stubInstance = {_debugID: 1};
