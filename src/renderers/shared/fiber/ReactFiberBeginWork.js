@@ -41,9 +41,6 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  mergeUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {
   Placement,
 } = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
@@ -51,7 +48,11 @@ var ReactFiberClassComponent = require('ReactFiberClassComponent');
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
 
   const {
-    mount,
+    adoptClassInstance,
+    constructClassInstance,
+    mountClassInstance,
+    resumeMountClassInstance,
+    updateClassInstance,
   } = ReactFiberClassComponent(scheduleUpdate);
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
@@ -156,54 +157,27 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
   }
 
   function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
-    // A class component update is the result of either new props or new state.
-    // Account for the possibly of missing pending props by falling back to the
-    // memoized props.
-    var props = workInProgress.pendingProps;
-    if (!props) {
-      // If there isn't any new props, then we'll reuse the memoized props.
-      // This could be from already completed work.
-      props = workInProgress.memoizedProps;
-      if (!props) {
-        throw new Error('There should always be pending or memoized props.');
+    let shouldUpdate;
+    if (!current) {
+      if (!workInProgress.stateNode) {
+        // In the initial pass we might need to construct the instance.
+        constructClassInstance(workInProgress);
+        mountClassInstance(workInProgress);
+        shouldUpdate = true;
+      } else {
+        // In a resume, we'll already have an instance we can reuse.
+        shouldUpdate = resumeMountClassInstance(workInProgress);
       }
-    }
-
-    // Compute the state using the memoized state and the update queue.
-    var updateQueue = workInProgress.updateQueue;
-    var previousState = workInProgress.memoizedState;
-    var state;
-    if (updateQueue) {
-      state = mergeUpdateQueue(updateQueue, previousState, props);
     } else {
-      state = previousState;
+      shouldUpdate = updateClassInstance(current, workInProgress);
     }
-
-    var instance = workInProgress.stateNode;
-    if (!instance) {
-      var ctor = workInProgress.type;
-      workInProgress.stateNode = instance = new ctor(props);
-      mount(workInProgress, instance);
-      state = instance.state || null;
-    } else if (typeof instance.shouldComponentUpdate === 'function' &&
-               !(updateQueue && updateQueue.isForced)) {
-      if (workInProgress.memoizedProps !== null) {
-        // Reset the props, in case this is a ping-pong case rather than a
-        // completed update case. For the completed update case, the instance
-        // props will already be the memoizedProps.
-        instance.props = workInProgress.memoizedProps;
-        instance.state = workInProgress.memoizedState;
-        if (!instance.shouldComponentUpdate(props, state)) {
-          return bailoutOnAlreadyFinishedWork(current, workInProgress);
-        }
-      }
+    if (!shouldUpdate) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-
-    instance.props = props;
-    instance.state = state;
-    var nextChildren = instance.render();
+    // Rerender
+    const instance = workInProgress.stateNode;
+    const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
-
     return workInProgress.child;
   }
 
@@ -258,22 +232,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
   }
 
   function mountIndeterminateComponent(current, workInProgress) {
+    if (current) {
+      throw new Error('An indeterminate component should never have mounted.');
+    }
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
     var value = fn(props);
     if (typeof value === 'object' && value && typeof value.render === 'function') {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
-      if (current) {
-        current.tag = ClassComponent;
-      }
+      adoptClassInstance(workInProgress, value);
+      mountClassInstance(workInProgress);
       value = value.render();
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
-      if (current) {
-        current.tag = FunctionalComponent;
-      }
     }
     reconcileChildren(current, workInProgress, value);
     return workInProgress.child;
