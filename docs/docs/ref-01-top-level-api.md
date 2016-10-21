@@ -42,7 +42,7 @@ ReactElement createElement(
 ```
 
 Create and return a new `ReactElement` of the given type. The type argument can be either an
-html tag name string (eg. 'div', 'span', etc), or a `ReactClass` (created via `React.createClass`).
+html tag name string (eg. 'div', 'span', etc), a `ReactClass` (created via `React.createClass`) or a [Stateless Function](/react/docs/reusable-components.html#stateless-functions).
 
 
 ### React.cloneElement
