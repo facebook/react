@@ -1,9 +1,11 @@
 ---
 id: tutorial
-title: "Tutorial: Thinking In React"
+title: "Tutorial: Intro To React"
 layout: tutorial
 sectionid: tutorial
 permalink: /tutorial/tutorial.html
+redirect_from: "/docs/tutorial.html"
+redirect_from: "/docs/why-react.html"
 ---
 
 ## What We're Building
@@ -193,7 +195,7 @@ handleClick(i) {
 }
 ```
 
-We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important. 
+We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 

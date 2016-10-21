@@ -2,11 +2,10 @@
 id: forms
 title: Forms
 permalink: docs/forms.html
-prev: 
-next: 
+prev: state-and-lifecycle.html
+next: lifting-state-up.html
+redirect_from: "/tips/controlled-input-null-value.html"
 ---
-
-## Forms
 
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
 
@@ -37,7 +36,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -62,7 +61,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try it on Codepen](https://codepen.io/ericnakagawa/pen/QKkJva?editors=0010)
+[Try it on CodePen.](https://codepen.io/ericnakagawa/pen/QKkJva?editors=0010)
 
 In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
@@ -102,7 +101,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -127,7 +126,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try it on Codepen](https://codepen.io/ericnakagawa/pen/XjxyoL?editors=0010)
+[Try it on CodePen.](https://codepen.io/ericnakagawa/pen/XjxyoL?editors=0010)
 
 ###Default Values
 
@@ -237,7 +236,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -260,7 +259,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010)
+[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010)
 
 
 ### Basic Textarea
@@ -299,7 +298,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010)
+[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010)
 
 ### Basic Select
 
@@ -337,7 +336,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/pExQbL?editors=0010)
+[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/pExQbL?editors=0010)
 
 ### Basic Radio Button
 
@@ -374,7 +373,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010)
+[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010)
 
 
 ### Basic Checkbox
@@ -390,7 +389,7 @@ class Form extends React.Component {
 
   handleChange(event) {
     let val = event.target.value;
-    let checked = this.state.checked.slice(); // copy 
+    let checked = this.state.checked.slice(); // copy
     if(checked.includes(val)) {
       checked.splice(checked.indexOf(val), 1);
     } else {
@@ -418,7 +417,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try it on Codepen](https://codepen.io/ericnakagawa/pen/kkAzPO?editors=0010)
+[Try it on CodePen.](https://codepen.io/ericnakagawa/pen/kkAzPO?editors=0010)
 
 ### Form Events
 

@@ -1,6 +1,10 @@
 ---
 id: refs-and-the-dom
 title: Refs and the DOM
+redirect_from: "/docs/working-with-the-browser.html"
+redirect_from: "/docs/more-about-refs.html"
+redirect_from: "/tips/expose-component-functions.html"
+redirect_from: "/tips/children-undefined.html"
 permalink: docs/refs-and-the-dom.html
 ---
 

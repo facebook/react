@@ -4,6 +4,7 @@ title: How to Contribute
 layout: contributing
 permalink: contributing/how-to-contribute.html
 next: codebase-overview.html
+redirect_from: "/tips/introduction.html"
 ---
 
 React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://www.facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and answers some questions that you may have.
@@ -26,7 +27,7 @@ If you send a pull request, please do it against the `master` branch. We maintai
 
 React follows [semantic versioning](http://semver.org/). We release patch versions for bugfixes, minor versions for new features, and major versions for any breaking changes. When we make breaking changes, we also introduce deprecation warnings in a minor version so that our users learn about the upcoming changes and migrate their code in advance.
 
-We tag every pull request with a label marking whether the change should go in the next [patch](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-patch), [minor](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-minor), or a [major](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-major) version. We release new patch versions every few weeks, minor versions every few months, and major versions one or two times a year. 
+We tag every pull request with a label marking whether the change should go in the next [patch](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-patch), [minor](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-minor), or a [major](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-major) version. We release new patch versions every few weeks, minor versions every few months, and major versions one or two times a year.
 
 Every significant change is documented in the [changelog file](https://github.com/facebook/react/blob/master/CHANGELOG.md).
 
@@ -38,7 +39,7 @@ We are using [GitHub Issues](https://github.com/facebook/react/issues) for our p
 
 #### Reporting New Issues
 
-The best way to get your bug fixed is to provide a reduced test case. This [JSFiddle template](https://jsfiddle.net/reactjs/69z2wepo/) is a great starting point. 
+The best way to get your bug fixed is to provide a reduced test case. This [JSFiddle template](https://jsfiddle.net/reactjs/69z2wepo/) is a great starting point.
 
 #### Security Bugs
 
