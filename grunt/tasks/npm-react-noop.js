@@ -3,9 +3,9 @@
 var fs = require('fs');
 var grunt = require('grunt');
 
-var src = 'packages/react-test-renderer/';
-var dest = 'build/packages/react-test-renderer/';
-var modSrc = 'build/node_modules/react-test-renderer/lib';
+var src = 'packages/react-noop-renderer/';
+var dest = 'build/packages/react-noop-renderer/';
+var modSrc = 'build/node_modules/react-noop-renderer/lib';
 var lib = dest + 'lib/';
 
 function buildRelease() {
@@ -13,7 +13,7 @@ function buildRelease() {
     grunt.file.delete(dest);
   }
 
-  // Copy to build/packages/react-test-renderer
+  // Copy to build/packages/react-noop-renderer
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
     grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
@@ -34,14 +34,14 @@ function packRelease() {
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
-    args: ['pack', 'packages/react-test-renderer'],
+    args: ['pack', 'packages/react-noop-renderer'],
     opts: {
       cwd: 'build/',
     },
   };
   grunt.util.spawn(spawnCmd, function() {
-    var buildSrc = 'build/react-test-renderer-' + grunt.config.data.pkg.version + '.tgz';
-    var buildDest = 'build/packages/react-test-renderer.tgz';
+    var buildSrc = 'build/react-noop-renderer-' + grunt.config.data.pkg.version + '.tgz';
+    var buildDest = 'build/packages/react-noop-renderer.tgz';
     fs.rename(buildSrc, buildDest, done);
   });
 }

@@ -94,6 +94,10 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
   grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
 
+  var npmReactNoopRendererTasks = require('./grunt/tasks/npm-react-noop');
+  grunt.registerTask('npm-react-noop:release', npmReactNoopRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-noop:pack', npmReactNoopRendererTasks.packRelease);
+
   grunt.registerTask('version-check', function() {
     // Use gulp here.
     spawnGulp(['version-check'], null, this.async());
@@ -186,6 +190,8 @@ module.exports = function(grunt) {
     'npm-react-addons:pack',
     'npm-react-test:release',
     'npm-react-test:pack',
+    'npm-react-noop:release',
+    'npm-react-noop:pack',
     'compare_size',
   ]);
 
