@@ -120,11 +120,13 @@ var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement) {
     warnAboutUnstableUse();
+    let root;
     if (!container._reactRootContainer) {
-      container._reactRootContainer = DOMRenderer.mountContainer(element, container);
+      root = container._reactRootContainer = DOMRenderer.mountContainer(element, container);
     } else {
-      DOMRenderer.updateContainer(element, container._reactRootContainer);
+      DOMRenderer.updateContainer(element, root = container._reactRootContainer);
     }
+    return DOMRenderer.getPublicRootInstance(root);
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {
