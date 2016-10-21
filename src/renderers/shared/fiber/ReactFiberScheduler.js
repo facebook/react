@@ -40,6 +40,7 @@ var {
 
 var {
   HostContainer,
+  ClassComponent,
 } = require('ReactTypeOfWork');
 
 var timeHeuristicForUnitOfWork = 1;
@@ -285,7 +286,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performDeferredWork(deadline) {
+  function performDeferredWorkUnsafe(deadline) {
     if (!nextUnitOfWork) {
       nextUnitOfWork = findNextUnitOfWork();
     }
@@ -299,6 +300,23 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       } else {
         scheduleDeferredCallback(performDeferredWork);
         return;
+      }
+    }
+  }
+
+  function performDeferredWork(deadline) {
+    try {
+      performDeferredWorkUnsafe(deadline);
+    } catch (error) {
+      const failedUnitOfWork = nextUnitOfWork;
+      // Reset because it points to the error boundary:
+      nextUnitOfWork = null;
+      if (failedUnitOfWork) {
+        handleError(failedUnitOfWork, error);
+      } else {
+        // We shouldn't end up here because nextUnitOfWork
+        // should always be set while work is being performed.
+        throw error;
       }
     }
   }
@@ -334,7 +352,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performAnimationWork() {
+  function performAnimationWorkUnsafe() {
     // Always start from the root
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
@@ -348,6 +366,23 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       if (nextPriorityLevel > AnimationPriority) {
         scheduleDeferredCallback(performDeferredWork);
         return;
+      }
+    }
+  }
+
+  function performAnimationWork() {
+    try {
+      performAnimationWorkUnsafe();
+    } catch (error) {
+      const failedUnitOfWork = nextUnitOfWork;
+      // Reset because it points to the error boundary:
+      nextUnitOfWork = null;
+      if (failedUnitOfWork) {
+        handleError(failedUnitOfWork, error);
+      } else {
+        // We shouldn't end up here because nextUnitOfWork
+        // should always be set while work is being performed.
+        throw error;
       }
     }
   }
@@ -423,6 +458,60 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       fn();
     } finally {
       defaultPriority = previousDefaultPriority;
+    }
+  }
+
+  function findClosestErrorBoundary(fiber : Fiber): ?Fiber {
+    let maybeErrorBoundary = fiber.return;
+    while (maybeErrorBoundary) {
+      if (maybeErrorBoundary.tag === ClassComponent) {
+        const instance = maybeErrorBoundary.stateNode;
+        if (typeof instance.unstable_handleError === 'function') {
+          return maybeErrorBoundary;
+        }
+      }
+      maybeErrorBoundary = maybeErrorBoundary.return;
+    }
+    return null;
+  }
+
+  function handleError(failedUnitOfWork : Fiber, error : any) {
+    const errorBoundary = findClosestErrorBoundary(failedUnitOfWork);
+    if (errorBoundary) {
+      handleErrorInBoundary(errorBoundary, error);
+      return;
+    }
+    // TODO: Do we need to reset nextUnitOfWork here?
+    throw error;
+  }
+
+  function handleErrorInBoundary(errorBoundary : Fiber, error : any) {
+    // The work below failed so we need to clear it out and try to render the error state.
+    // TODO: Do we need to clear all of these fields? How do we teardown an existing tree?
+    errorBoundary.child = null;
+    errorBoundary.effectTag = NoEffect;
+    errorBoundary.nextEffect = null;
+    errorBoundary.firstEffect = null;
+    errorBoundary.lastEffect = null;
+    errorBoundary.progressedPriority = NoWork;
+    errorBoundary.progressedChild = null;
+    errorBoundary.progressedFirstDeletion = null;
+    errorBoundary.progressedLastDeletion = null;
+
+    // Error boundary implementations would usually call setState() here:
+    const instance = errorBoundary.stateNode;
+    instance.unstable_handleError(error);
+
+    try {
+      // The error path should be processed synchronously.
+      // This lets us easily propagate errors to a parent boundary.
+      let unitOfWork = errorBoundary;
+      while (unitOfWork) {
+        unitOfWork = performUnitOfWork(unitOfWork);
+      }
+    } catch (nextError) {
+      // Propagate error to the next boundary or rethrow.
+      handleError(errorBoundary, nextError);
     }
   }
 

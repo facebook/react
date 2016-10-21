@@ -184,7 +184,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
       var ctor = workInProgress.type;
       workInProgress.stateNode = instance = new ctor(props);
       mount(workInProgress, instance);
-      state = instance.state || null;
+      updateQueue = workInProgress.updateQueue;
+      if (updateQueue) {
+        state = mergeUpdateQueue(updateQueue, instance.state, props);
+      } else {
+        state = null;
+      }
     } else if (typeof instance.shouldComponentUpdate === 'function' &&
                !(updateQueue && updateQueue.isForced)) {
       if (workInProgress.memoizedProps !== null) {

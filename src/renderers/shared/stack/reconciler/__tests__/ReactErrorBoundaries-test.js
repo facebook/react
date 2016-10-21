@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 var React;
 var ReactDOM;
 
@@ -33,6 +35,9 @@ describe('ReactErrorBoundaries', () => {
   var Normal;
 
   beforeEach(() => {
+    // TODO: Fiber isn't error resilient and one test can bring down them all.
+    jest.resetModuleRegistry();
+
     ReactDOM = require('ReactDOM');
     React = require('React');
 
@@ -459,52 +464,93 @@ describe('ReactErrorBoundaries', () => {
     };
   });
 
-  // Known limitation: error boundary only "sees" errors caused by updates
-  // flowing through it. This might be easier to fix in Fiber.
-  it('currently does not catch errors originating downstream', () => {
-    var fail = false;
-    class Stateful extends React.Component {
-      state = {shouldThrow: false};
+  if (ReactDOMFeatureFlags.useFiber) {
+    // This test implements a new feature in Fiber.
+    it('catches errors originating downstream', () => {
+      var fail = false;
+      class Stateful extends React.Component {
+        state = {shouldThrow: false};
 
-      render() {
-        if (fail) {
-          log.push('Stateful render [!]');
-          throw new Error('Hello');
+        render() {
+          if (fail) {
+            log.push('Stateful render [!]');
+            throw new Error('Hello');
+          }
+          return <div />;
         }
-        return <div />;
       }
-    }
 
-    var statefulInst;
-    var container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <Stateful ref={inst => statefulInst = inst} />
-      </ErrorBoundary>,
-      container
-    );
+      var statefulInst;
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary>
+          <Stateful ref={inst => statefulInst = inst} />
+        </ErrorBoundary>,
+        container
+      );
 
-    log.length = 0;
-    expect(() => {
-      fail = true;
-      statefulInst.forceUpdate();
-    }).toThrow();
+      log.length = 0;
+      expect(() => {
+        fail = true;
+        statefulInst.forceUpdate();
+      }).not.toThrow();
 
-    expect(log).toEqual([
-      'Stateful render [!]',
-      // FIXME: uncomment when downstream errors get caught.
-      // Catch and render an error message
-      // 'ErrorBoundary unstable_handleError',
-      // 'ErrorBoundary render error',
-      // 'ErrorBoundary componentDidUpdate',
-    ]);
+      expect(log).toEqual([
+        'Stateful render [!]',
+        'ErrorBoundary unstable_handleError',
+        'ErrorBoundary render error',
+        'ErrorBoundary componentDidUpdate',
+      ]);
 
-    log.length = 0;
-    ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      'ErrorBoundary componentWillUnmount',
-    ]);
-  });
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'ErrorBoundary componentWillUnmount',
+      ]);
+    });
+  } else {
+    // Known limitation: error boundary only "sees" errors caused by updates
+    // flowing through it. This is fixed in Fiber.
+    it('currently does not catch errors originating downstream', () => {
+      var fail = false;
+      class Stateful extends React.Component {
+        state = {shouldThrow: false};
+
+        render() {
+          if (fail) {
+            log.push('Stateful render [!]');
+            throw new Error('Hello');
+          }
+          return <div />;
+        }
+      }
+
+      var statefulInst;
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary>
+          <Stateful ref={inst => statefulInst = inst} />
+        </ErrorBoundary>,
+        container
+      );
+
+      log.length = 0;
+      expect(() => {
+        fail = true;
+        statefulInst.forceUpdate();
+      }).toThrow();
+
+      expect(log).toEqual([
+        'Stateful render [!]',
+      ]);
+
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'ErrorBoundary componentWillUnmount',
+      ]);
+    });
+  }
 
   it('renders an error state if child throws in render', () => {
     var container = document.createElement('div');
@@ -860,7 +906,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Handle error:
       'ErrorBoundary unstable_handleError',
-      // Child ref wasn't (and won't be) set but there's no harm in clearing:
+      // TODO: This is unnecessary, and Fiber doesn't do it:
       'Child ref is set to null',
       'ErrorBoundary render error',
       // Ref to error message should get set:
