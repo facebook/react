@@ -4,7 +4,7 @@ title: Краткая форма значений в пикселях для а�
 layout: tips
 permalink: tips/style-props-value-px-ru-RU.html
 prev: maximum-number-of-jsx-root-nodes-ru-RU.html
-next: children-props-type.html
+next: children-props-type-ru-RU.html
 ---
 
 React автоматически добавляет "px" для значений, которые указаны в числовом виде и находятся внутри встроенного стиля атрибута `style`, например:
