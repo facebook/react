@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Test Utilities | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Test Utilities | React">
+  <title>Test Utilities - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Test Utilities - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/test-utils.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,31 +46,262 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
+  </div>
+</div>
 
-    
 
     <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/addons-test-utils.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      Test Utilities
+    </h1>
+    <div class="subHeader"></div>
+
+    <p><strong>Importing</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactTestUtils</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-test-utils&#39;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-test-utils&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
+<span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+<p><code>ReactTestUtils</code> makes it easy to test React components in the testing framework of your choice. At Facebook we use <a href="https://facebook.github.io/jest/">Jest</a> for painless JavaScript testing. Learn how to get started with Jest through the Jest website&#39;s <a href="http://facebook.github.io/jest/docs/tutorial-react.html#content">React Tutorial</a>.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Airbnb has released a testing utility called Enzyme, which makes it easy to assert, manipulate, and traverse your React Components&#39; output. If you&#39;re deciding on a unit testing utility to use together with Jest, or any other test runner, it&#39;s worth checking out: <a href="http://airbnb.io/enzyme/">http://airbnb.io/enzyme/</a></p>
+</blockquote>
+
+<ul>
+<li><a href="#simulate"><code>Simulate</code></a></li>
+<li><a href="#renderintodocument"><code>renderIntoDocument()</code></a></li>
+<li><a href="#mockcomponent"><code>mockComponent()</code></a></li>
+<li><a href="#iselement"><code>isElement()</code></a></li>
+<li><a href="#iselementoftype"><code>isElementOfType()</code></a></li>
+<li><a href="#isdomcomponent"><code>isDOMComponent()</code></a></li>
+<li><a href="#iscompositecomponent"><code>isCompositeComponent()</code></a></li>
+<li><a href="#iscompositecomponentwithtype"><code>isCompositeComponentWithType()</code></a></li>
+<li><a href="#findallinrenderedtree"><code>findAllInRenderedTree()</code></a></li>
+<li><a href="#scryrendereddomcomponentswithclass"><code>scryRenderedDOMComponentsWithClass()</code></a></li>
+<li><a href="#findrendereddomcomponentwithclass"><code>findRenderedDOMComponentWithClass()</code></a></li>
+<li><a href="#scryrendereddomcomponentswithtag"><code>scryRenderedDOMComponentsWithTag()</code></a></li>
+<li><a href="#findrendereddomcomponentwithtag"><code>findRenderedDOMComponentWithTag()</code></a></li>
+<li><a href="#scryrenderedcomponentswithtype"><code>scryRenderedComponentsWithType()</code></a></li>
+<li><a href="#findrenderedcomponentwithtype"><code>findRenderedComponentWithType()</code></a></li>
+</ul>
+<h3><a class="anchor" name="shallow-rendering"></a>Shallow Rendering <a class="hash-link" href="#shallow-rendering">#</a></h3>
+<p>Shallow rendering lets you render a component &quot;one level deep&quot; and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.</p>
+
+<ul>
+<li><a href="#createrenderer"><code>createRenderer()</code></a></li>
+<li><a href="#shallowrenderer.render"><code>shallowRenderer.render()</code></a></li>
+<li><a href="#shallowrenderer.getrenderoutput"><code>shallowRenderer.getRenderOutput()</code></a></li>
+</ul>
+
+<p>Call <a href="#createrenderer"><code>createRenderer()</code></a> in your tests to create a shallow renderer. You can think of this as a &quot;place&quot; to render the component you&#39;re testing, and from which you can extract the component&#39;s output.</p>
+
+<p><a href="#shallowrenderer.render"><code>shadowRenderer.render()</code></a> is similar to <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render()</code></a> but it doesn&#39;t require DOM and only renders a single level deep. This means you can test components in isolated from how their children are implemented.</p>
+
+<p>After <code>shadowRenderer.render()</code> has been called, you can use <a href="#shallowrenderer.getrenderoutput"><code>shallowRenderer.getRenderOutput()</code></a> to get the shallowly rendered output.</p>
+
+<p>You can then begin to assert facts about the output. For example, if your component&#39;s render method returns:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>Then you can assert:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">renderer</span> <span class="o">=</span> <span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">createRenderer</span><span class="p">();</span>
+<span class="nx">result</span> <span class="o">=</span> <span class="nx">renderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">();</span>
+<span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">type</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
+<span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">([</span>
+  <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;,</span>
+  <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>
+<span class="p">]);</span>
+</code></pre></div>
+<p>Shallow testing currently has some limitations, namely not supporting refs.</p>
+
+<p>We also recommend checking out Enzyme&#39;s <a href="http://airbnb.io/enzyme/docs/api/shallow.html">Shallow Rendering API</a>. It provides a nicer higher-level API over the same functionality.</p>
+
+<hr>
+<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="simulate"></a><code>Simulate</code> <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
+  <span class="nx">element</span><span class="p">,</span>
+  <span class="p">[</span><span class="nx">eventData</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Simulate an event dispatch on a DOM node with optional <code>eventData</code> event data.</p>
+
+<p><code>Simulate</code> has a method for <a href="/react/docs/events.html#supported-events">every event that React understands</a>.</p>
+
+<p><strong>Clicking an element</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;button ref=&quot;button&quot;&gt;...&lt;/button&gt;</span>
+<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">;</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
+</code></pre></div>
+<p><strong>Changing the value of an input field and then pressing ENTER.</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;input ref=&quot;input&quot; /&gt;</span>
+<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">;</span>
+<span class="nx">node</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;giraffe&#39;</span><span class="p">;</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
+<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">,</span> <span class="nx">keyCode</span><span class="o">:</span> <span class="mi">13</span><span class="p">,</span> <span class="nx">which</span><span class="o">:</span> <span class="mi">13</span><span class="p">});</span>
+</code></pre></div>
+<blockquote>
+<p>Note</p>
+
+<p>You will have to provide any event property that you&#39;re using in your component (e.g. keyCode, which, etc...) as React is not creating any of these for you.</p>
+</blockquote>
+
+<hr>
+<h3><a class="anchor" name="renderintodocument"></a><code>renderIntoDocument()</code> <a class="hash-link" href="#renderintodocument">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">renderIntoDocument</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
+</code></pre></div>
+<p>Render a component into a detached DOM node in the document. <strong>This function requires a DOM.</strong></p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>You will need to have <code>window</code>, <code>window.document</code> and <code>window.document.createElement</code> globally available <strong>before</strong> you import <code>React</code>. Otherwise React will think it can&#39;t access the DOM and methods like <code>setState</code> won&#39;t work.</p>
+</blockquote>
+
+<hr>
+<h3><a class="anchor" name="mockcomponent"></a><code>mockComponent()</code> <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">mockComponent</span><span class="p">(</span>
+  <span class="nx">componentClass</span><span class="p">,</span>
+  <span class="p">[</span><span class="nx">mockTagName</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Pass a mocked component module to this method to augment it with useful methods that allow it to be used as a dummy React component. Instead of rendering as usual, the component will become a simple <code>&lt;div&gt;</code> (or other tag if <code>mockTagName</code> is provided) containing any provided children.</p>
+
+<hr>
+<h3><a class="anchor" name="iselement"></a><code>isElement()</code> <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isElement</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns <code>true</code> if <code>element</code> is any React element.</p>
+
+<hr>
+<h3><a class="anchor" name="iselementoftype"></a><code>isElementOfType()</code> <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isElementOfType</span><span class="p">(</span>
+  <span class="nx">element</span><span class="p">,</span>
+  <span class="nx">componentClass</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Returns <code>true</code> if <code>element</code> is a React element whose type is of a React <code>componentClass</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="isdomcomponent"></a><code>isDOMComponent()</code> <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns <code>true</code> if <code>instance</code> is a DOM component (such as a <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code>).</p>
+
+<hr>
+<h3><a class="anchor" name="iscompositecomponent"></a><code>isCompositeComponent()</code> <a class="hash-link" href="#iscompositecomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isCompositeComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns <code>true</code> if <code>instance</code> is a user-defined component, such as a class or a function.</p>
+
+<hr>
+<h3><a class="anchor" name="iscompositecomponentwithtype"></a><code>isCompositeComponentWithType()</code> <a class="hash-link" href="#iscompositecomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isCompositeComponentWithType</span><span class="p">(</span>
+  <span class="nx">instance</span><span class="p">,</span>
+  <span class="nx">componentClass</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Returns <code>true</code> if <code>instance</code> is a component whose type is of a React <code>componentClass</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="findallinrenderedtree"></a><code>findAllInRenderedTree()</code> <a class="hash-link" href="#findallinrenderedtree">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findAllInRenderedTree</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">test</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Traverse all components in <code>tree</code> and accumulate all components where <code>test(component)</code> is <code>true</code>. This is not that useful on its own, but it&#39;s used as a primitive for other test utils.</p>
+
+<hr>
+<h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a><code>scryRenderedDOMComponentsWithClass()</code> <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">className</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Finds all DOM elements of components in the rendered tree that are DOM components with the class name matching <code>className</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="findrendereddomcomponentwithclass"></a><code>findRenderedDOMComponentWithClass()</code> <a class="hash-link" href="#findrendereddomcomponentwithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedDOMComponentWithClass</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">className</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Like <a href="#scryrendereddomcomponentswithclass"><code>scryRenderedDOMComponentsWithClass()</code></a> but expects there to be one result, and returns that one result, or throws exception if there is any other number of matches besides one.</p>
+
+<hr>
+<h3><a class="anchor" name="scryrendereddomcomponentswithtag"></a><code>scryRenderedDOMComponentsWithTag()</code> <a class="hash-link" href="#scryrendereddomcomponentswithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedDOMComponentsWithTag</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">tagName</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Finds all DOM elements of components in the rendered tree that are DOM components with the tag name matching <code>tagName</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="findrendereddomcomponentwithtag"></a><code>findRenderedDOMComponentWithTag()</code> <a class="hash-link" href="#findrendereddomcomponentwithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedDOMComponentWithTag</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">tagName</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Like <a href="#scryrendereddomcomponentswithtag"><code>scryRenderedDOMComponentsWithTag()</code></a> but expects there to be one result, and returns that one result, or throws exception if there is any other number of matches besides one.</p>
+
+<hr>
+<h3><a class="anchor" name="scryrenderedcomponentswithtype"></a><code>scryRenderedComponentsWithType()</code> <a class="hash-link" href="#scryrenderedcomponentswithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedComponentsWithType</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">componentClass</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Finds all instances of components with type equal to <code>componentClass</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="findrenderedcomponentwithtype"></a><code>findRenderedComponentWithType()</code> <a class="hash-link" href="#findrenderedcomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedComponentWithType</span><span class="p">(</span>
+  <span class="nx">tree</span><span class="p">,</span>
+  <span class="nx">componentClass</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Same as <a href="#scryrenderedcomponentswithtype"><code>scryRenderedComponentsWithType()</code></a> but expects there to be one result and returns that one result, or throws exception if there is any other number of matches besides one.</p>
+
+<hr>
+<h2><a class="anchor" name="shallow-rendering"></a>Shallow Rendering <a class="hash-link" href="#shallow-rendering">#</a></h2><h3><a class="anchor" name="createrenderer"></a><code>createRenderer()</code> <a class="hash-link" href="#createrenderer">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">createRenderer</span><span class="p">()</span>
+</code></pre></div>
+<p>Call this in your tests to create a <a href="#shallow-rendering">shallow renderer</a>.</p>
+
+<hr>
+<h3><a class="anchor" name="shallowrenderer.render"></a><code>shallowRenderer.render()</code> <a class="hash-link" href="#shallowrenderer.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="nx">element</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Similar to <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render</code></a> but it doesn&#39;t require DOM and only renders a single level deep. See <a href="#shallow-rendering">Shallow Rendering</a>.</p>
+
+<hr>
+<h3><a class="anchor" name="shallowrenderer.getrenderoutput"></a><code>shallowRenderer.getRenderOutput()</code> <a class="hash-link" href="#shallowrenderer.getrenderoutput">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
+</code></pre></div>
+<p>After <a href="#shallowrenderer.render"><code>shallowRenderer.render()</code></a> has been called, returns shallowly rendered output.</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/perf.html">&larr; Prev</a>
+      
+      
+    </div>
+  </div>
+
   <div class="nav-docs">
   <!-- Docs Nav -->
   
@@ -77,97 +310,47 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
+            <a href="/react/docs/installation.html">Installation</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
+            <a href="/react/docs/hello-world.html">Hello World</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/videos.html">Videos</a>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
             
           </li>
         
@@ -177,12 +360,86 @@
           </li>
         
           <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
             
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                    <a href="/react/docs/react-component.html">React.Component</a>
                   </li>
                 
               </ul>
@@ -190,23 +447,22 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
             
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
             
           </li>
         
@@ -216,11 +472,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
                   <li>
@@ -228,7 +480,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                    <a href="/react/docs/animation.html">Animation</a>
                   </li>
                 
                   <li>
@@ -244,164 +496,15 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
                   </li>
                 
                   <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
                   </li>
                 
               </ul>
             
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
           </li>
         
       </ul>
@@ -433,188 +536,57 @@
       </ul>
     </div>
   
+
 </div>
 
-
-  <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.4-test-utils.md" target="_blank">Edit on GitHub</a>
-    <h1>
-      Test Utilities
-    </h1>
-    <div class="subHeader"></div>
-
-    <p><code>ReactTestUtils</code> makes it easy to test React components in the testing framework of your choice. At Facebook we use <a href="https://facebook.github.io/jest/">Jest</a> for painless JavaScript testing. Learn how to get started with Jest through the Jest website&#39;s <a href="http://facebook.github.io/jest/docs/tutorial-react.html#content">React Tutorial</a>.</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">var ReactTestUtils = require(&#39;react-addons-test-utils&#39;);
-</code></pre></div>
-<blockquote>
-<p>Note:</p>
-
-<p>Airbnb has released a testing utility called Enzyme, which makes it easy to assert, manipulate, and traverse your React Components&#39; output. If you&#39;re deciding on a unit testing utility to use together with Jest, or any other test runner, it&#39;s worth checking out: <a href="http://airbnb.io/enzyme/">http://airbnb.io/enzyme/</a></p>
-</blockquote>
-<h3><a class="anchor" name="simulate"></a>Simulate <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
-  <span class="nx">DOMElement</span> <span class="nx">element</span><span class="p">,</span>
-  <span class="p">[</span><span class="nx">object</span> <span class="nx">eventData</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Simulate an event dispatch on a DOM node with optional <code>eventData</code> event data. <strong>This is possibly the single most useful utility in <code>ReactTestUtils</code>.</strong></p>
-
-<p><strong>Clicking an element</strong></p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;button ref=&quot;button&quot;&gt;...&lt;/button&gt;</span>
-<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">button</span><span class="p">;</span>
-<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
-</code></pre></div>
-<p><strong>Changing the value of an input field and then pressing ENTER.</strong></p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// &lt;input ref=&quot;input&quot; /&gt;</span>
-<span class="kd">var</span> <span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">input</span><span class="p">;</span>
-<span class="nx">node</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;giraffe&#39;</span><span class="p">;</span>
-<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">change</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
-<span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">Simulate</span><span class="p">.</span><span class="nx">keyDown</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="s2">&quot;Enter&quot;</span><span class="p">,</span> <span class="nx">keyCode</span><span class="o">:</span> <span class="mi">13</span><span class="p">,</span> <span class="nx">which</span><span class="o">:</span> <span class="mi">13</span><span class="p">});</span>
-</code></pre></div>
-<p><em>Note that you will have to provide any event property that you&#39;re using in your component (e.g. keyCode, which, etc...) as React is not creating any of these for you.</em></p>
-
-<p><code>Simulate</code> has a method for <a href="/react/docs/events.html#supported-events">every event that React understands</a>.</p>
-<h3><a class="anchor" name="renderintodocument"></a>renderIntoDocument <a class="hash-link" href="#renderintodocument">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderIntoDocument</span><span class="p">(</span>
-  <span class="nx">ReactElement</span> <span class="nx">instance</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Render a component into a detached DOM node in the document. <strong>This function requires a DOM.</strong></p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>You will need to have <code>window</code>, <code>window.document</code> and <code>window.document.createElement</code>
- globally available <strong>before</strong> you import React. Otherwise React will think it can&#39;t access the DOM and methods like <code>setState</code> won&#39;t work.</p>
-</blockquote>
-<h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span>
-  <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span>
-  <span class="p">[</span><span class="nx">string</span> <span class="nx">mockTagName</span><span class="p">]</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Pass a mocked component module to this method to augment it with useful methods that allow it to be used as a dummy React component. Instead of rendering as usual, the component will become a simple <code>&lt;div&gt;</code> (or other tag if <code>mockTagName</code> is provided) containing any provided children.</p>
-<h3><a class="anchor" name="iselement"></a>isElement <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElement</span><span class="p">(</span>
-  <span class="nx">ReactElement</span> <span class="nx">element</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Returns <code>true</code> if <code>element</code> is any ReactElement.</p>
-<h3><a class="anchor" name="iselementoftype"></a>isElementOfType <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElementOfType</span><span class="p">(</span>
-  <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="nx">componentClass</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Returns <code>true</code> if <code>element</code> is a ReactElement whose type is of a React <code>componentClass</code>.</p>
-<h3><a class="anchor" name="isdomcomponent"></a>isDOMComponent <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDOMComponent</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">instance</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Returns <code>true</code> if <code>instance</code> is a DOM component (such as a <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code>).</p>
-<h3><a class="anchor" name="iscompositecomponent"></a>isCompositeComponent <a class="hash-link" href="#iscompositecomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponent</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">instance</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Returns <code>true</code> if <code>instance</code> is a composite component (created with <code>React.createClass()</code>).</p>
-<h3><a class="anchor" name="iscompositecomponentwithtype"></a>isCompositeComponentWithType <a class="hash-link" href="#iscompositecomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isCompositeComponentWithType</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="nx">componentClass</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Returns <code>true</code> if <code>instance</code> is a composite component (created with <code>React.createClass()</code>) whose type is of a React <code>componentClass</code>.</p>
-<h3><a class="anchor" name="findallinrenderedtree"></a>findAllInRenderedTree <a class="hash-link" href="#findallinrenderedtree">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">findAllInRenderedTree</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="nx">test</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Traverse all components in <code>tree</code> and accumulate all components where <code>test(component)</code> is <code>true</code>. This is not that useful on its own, but it&#39;s used as a primitive for other test utils.</p>
-<h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a>scryRenderedDOMComponentsWithClass <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> 
-  <span class="nx">string</span> <span class="nx">className</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Finds all DOM elements of components in the rendered tree that are DOM components with the class name matching <code>className</code>.</p>
-<h3><a class="anchor" name="findrendereddomcomponentwithclass"></a>findRenderedDOMComponentWithClass <a class="hash-link" href="#findrendereddomcomponentwithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findRenderedDOMComponentWithClass</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
-  <span class="nx">string</span> <span class="nx">className</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Like <code>scryRenderedDOMComponentsWithClass()</code> but expects there to be one result, and returns that one result, or throws exception if there is any other number of matches besides one.</p>
-<h3><a class="anchor" name="scryrendereddomcomponentswithtag"></a>scryRenderedDOMComponentsWithTag <a class="hash-link" href="#scryrendereddomcomponentswithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedDOMComponentsWithTag</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
-  <span class="nx">string</span> <span class="nx">tagName</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Finds all DOM elements of components in the rendered tree that are DOM components with the tag name matching <code>tagName</code>.</p>
-<h3><a class="anchor" name="findrendereddomcomponentwithtag"></a>findRenderedDOMComponentWithTag <a class="hash-link" href="#findrendereddomcomponentwithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findRenderedDOMComponentWithTag</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
-  <span class="nx">string</span> <span class="nx">tagName</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Like <code>scryRenderedDOMComponentsWithTag()</code> but expects there to be one result, and returns that one result, or throws exception if there is any other number of matches besides one.</p>
-<h3><a class="anchor" name="scryrenderedcomponentswithtype"></a>scryRenderedComponentsWithType <a class="hash-link" href="#scryrenderedcomponentswithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">scryRenderedComponentsWithType</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span>
-  <span class="kd">function</span> <span class="nx">componentClass</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Finds all instances of components with type equal to <code>componentClass</code>.</p>
-<h3><a class="anchor" name="findrenderedcomponentwithtype"></a>findRenderedComponentWithType <a class="hash-link" href="#findrenderedcomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">findRenderedComponentWithType</span><span class="p">(</span>
-  <span class="nx">ReactComponent</span> <span class="nx">tree</span><span class="p">,</span> 
-  <span class="kd">function</span> <span class="nx">componentClass</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Same as <code>scryRenderedComponentsWithType()</code> but expects there to be one result and returns that one result, or throws exception if there is any other number of matches besides one.</p>
-<h2><a class="anchor" name="shallow-rendering"></a>Shallow rendering <a class="hash-link" href="#shallow-rendering">#</a></h2>
-<p>Shallow rendering is an experimental feature that lets you render a component &quot;one level deep&quot; and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactShallowRenderer</span> <span class="nx">createRenderer</span><span class="p">()</span>
-</code></pre></div>
-<p>Call this in your tests to create a shallow renderer. You can think of this as a &quot;place&quot; to render the component you&#39;re testing, where it can respond to events and update itself.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="nx">ReactElement</span> <span class="nx">element</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Similar to <code>ReactDOM.render</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
-</code></pre></div>
-<p>After <code>render</code> has been called, returns shallowly rendered output. You can then begin to assert facts about the output. For example, if your component&#39;s render method returns:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;</span>
-  <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>
-<span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>Then you can assert:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">renderer</span> <span class="o">=</span> <span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">createRenderer</span><span class="p">();</span>
-<span class="nx">result</span> <span class="o">=</span> <span class="nx">renderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">();</span>
-<span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">type</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
-<span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">([</span>
-  <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;,</span>
-  <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>
-<span class="p">]);</span>
-</code></pre></div>
-<p>Shallow testing currently has some limitations, namely not supporting refs. We&#39;re releasing this feature early and would appreciate the React community&#39;s feedback on how it should evolve.</p>
-
-
-    <div class="docs-prevnext">
-      
-        <a class="docs-prev" href="/react/docs/two-way-binding-helpers.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/clone-with-props.html">Next &rarr;</a>
-      
-    </div>
-  </div>
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

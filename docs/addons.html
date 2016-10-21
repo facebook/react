@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Add-ons | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Add-ons | React">
+  <title>Add-Ons - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Add-Ons - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/addons.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,31 +46,78 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
+  </div>
+</div>
 
-    
 
     <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/addons.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      Add-Ons
+    </h1>
+    <div class="subHeader"></div>
+
+    <p>The React add-ons are a collection of useful utility modules for building React apps. <strong>These should be considered experimental</strong> and tend to change more often than the core.</p>
+
+<ul>
+<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
+<li><a href="create-fragment.html"><code>createFragment</code></a>, to create a set of externally-keyed children.</li>
+</ul>
+
+<p>The add-ons below are in the development (unminified) version of React only:</p>
+
+<ul>
+<li><a href="perf.html"><code>Perf</code></a>, a performance profiling tool for finding optimization opportunities.</li>
+<li><a href="test-utils.html"><code>ReactTestUtils</code></a>, simple helpers for writing test cases.</li>
+</ul>
+<h3><a class="anchor" name="legacy-add-ons"></a>Legacy Add-ons <a class="hash-link" href="#legacy-add-ons">#</a></h3>
+<p>The add-ons below are considered legacy and their use is discouraged.</p>
+
+<ul>
+<li><a href="pure-render-mixin.html"><code>PureRenderMixin</code></a>. Use <a href="/react/docs/react-api.html#react.purecomponent"><code>React.PureComponent</code></a> instead.</li>
+<li><a href="shallow-compare.html"><code>shallowCompare</code></a>, a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.</li>
+<li><a href="update.html"><code>update</code></a>. Use <a href="https://github.com/kolodny/immutability-helper"><code>kolodny/immutability-helper</code></a> instead.</li>
+</ul>
+<h3><a class="anchor" name="deprecated-add-ons"></a>Deprecated Add-ons <a class="hash-link" href="#deprecated-add-ons">#</a></h3>
+<p><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a> has been deprecated.</p>
+<h2><a class="anchor" name="using-react-with-add-ons"></a>Using React with Add-ons <a class="hash-link" href="#using-react-with-add-ons">#</a></h2>
+<p>If using npm, you can install the add-ons individually from npm (e.g. <code>npm install react-addons-test-utils</code>) and import them:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">Perf</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-perf&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">Perf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-perf&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
+</code></pre></div>
+<p>When using a CDN, you can use <code>react-with-addons.js</code> instead of <code>react.js</code>:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react-with-addons.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>The add-ons will be available via the <code>React.addons</code> global (e.g. <code>React.addons.TestUtils</code>).</p>
+
+
+    <div class="docs-prevnext">
+      
+      
+    </div>
+  </div>
+
   <div class="nav-docs">
   <!-- Docs Nav -->
   
@@ -77,97 +126,47 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
+            <a href="/react/docs/installation.html">Installation</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
+            <a href="/react/docs/hello-world.html">Hello World</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/videos.html">Videos</a>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
             
           </li>
         
@@ -177,12 +176,86 @@
           </li>
         
           <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
             
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                    <a href="/react/docs/react-component.html">React.Component</a>
                   </li>
                 
               </ul>
@@ -190,23 +263,22 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
             
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
             
           </li>
         
@@ -216,11 +288,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
                   <li>
@@ -228,7 +296,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                    <a href="/react/docs/animation.html">Animation</a>
                   </li>
                 
                   <li>
@@ -244,164 +312,15 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
                   </li>
                 
                   <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
                   </li>
                 
               </ul>
             
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
           </li>
         
       </ul>
@@ -433,63 +352,57 @@
       </ul>
     </div>
   
+
 </div>
 
-
-  <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10-addons.md" target="_blank">Edit on GitHub</a>
-    <h1>
-      Add-ons
-    </h1>
-    <div class="subHeader"></div>
-
-    <p>The React add-ons are a collection of useful utility modules for building React apps. <strong>These should be considered experimental</strong> and tend to change more often than the core.</p>
-
-<ul>
-<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
-<li><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a>, to simplify the coordination between user&#39;s form input data and the component&#39;s state.</li>
-<li><a href="clone-with-props.html"><code>cloneWithProps</code></a>, to make shallow copies of React components and change their props.</li>
-<li><a href="create-fragment.html"><code>createFragment</code></a>, to create a set of externally-keyed children.</li>
-<li><a href="update.html"><code>update</code></a>, a helper function that makes dealing with immutable data in JavaScript easier.</li>
-<li><a href="pure-render-mixin.html"><code>PureRenderMixin</code></a>, a performance booster under certain situations.</li>
-<li><a href="shallow-compare.html"><code>shallowCompare</code></a>, a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.</li>
-</ul>
-
-<p>The add-ons below are in the development (unminified) version of React only:</p>
-
-<ul>
-<li><a href="test-utils.html"><code>TestUtils</code></a>, simple helpers for writing test cases.</li>
-<li><a href="perf.html"><code>Perf</code></a>, a performance profiling tool for finding optimization opportunities.</li>
-</ul>
-
-<p>To get the add-ons, install them individually from npm (e.g., <code>npm install react-addons-pure-render-mixin</code>). We don&#39;t support using the addons if you&#39;re not using npm.</p>
-
-
-    <div class="docs-prevnext">
-      
-        <a class="docs-prev" href="/react/docs/environments.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/animation.html">Next &rarr;</a>
-      
-    </div>
-  </div>
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

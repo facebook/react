@@ -1,16 +1,19 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Community Round-up #20 | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Community Round-up #20 | React">
-  <meta property="og:type" content="website">
+  <title>Community Round-up #20 - React Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Community Round-up #20 - React Blog">
+  <meta property="og:type" content="article">
   <meta property="og:url" content="https://facebook.github.io/react/blog/2014/07/28/community-roundup-20.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
-  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="og:description" content="It&#39;s an exciting time for React as there are now more commits from open source contributors than from Facebook engineers! Keep up the good work :)
+">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
@@ -44,60 +47,31 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/" class="active">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/" class="active">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
-
-    
-
-    <section class="content wrap blogContent">
-  <div class="nav-docs nav-blog">
-  <div class="nav-docs-section">
-    <h3>Recent posts</h3>
-    <ul>
-      
-        <li><a href="/react/blog/2016/09/28/our-first-50000-stars.html">Our First 50,000 Stars</a></li>
-      
-        <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
-      
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
-        <li><a href="/react/blog/2016/03/07/react-v15-rc1.html">React v15.0 Release Candidate</a></li>
-      
-      <li><a href="/react/blog/all.html">All posts ...</a></li>
-    </ul>
   </div>
 </div>
+
+
+    <section class="content wrap blogContent">
 
   <div class="inner-content">
     
@@ -130,11 +104,11 @@
 <h2><a class="anchor" name="why-does-react-scale"></a>Why Does React Scale? <a class="hash-link" href="#why-does-react-scale">#</a></h2>
 <p>At the last <a href="http://2014.jsconf.us/">JSConf.us</a>, Vjeux talked about the design decisions made in the API that allows it to scale to a large number of developers. If you don&#39;t have 20 minutes, take a look at the <a href="https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014">annotated slides</a>.</p>
 
-<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
 <h2><a class="anchor" name="live-editing"></a>Live Editing <a class="hash-link" href="#live-editing">#</a></h2>
 <p>One of the best features of React is that it provides the foundations to implement concepts that were otherwise extremely difficult, like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... <a href="https://twitter.com/dan_abramov">Dan Abramov</a> got hot code reloading working with webpack in order to <a href="https://gaearon.github.io/react-hot-loader/">live edit a React project</a>!</p>
 
-<iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe src="//player.vimeo.com/video/100010922" width="100%" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 <h2><a class="anchor" name="reactintl-mixin-by-yahoo"></a>ReactIntl Mixin by Yahoo <a class="hash-link" href="#reactintl-mixin-by-yahoo">#</a></h2>
 <p>There are a couple of React-related projects that recently appeared on Yahoo&#39;s GitHub, the first one being an  <a href="https://github.com/yahoo/react-intl">internationalization mixin</a>. It&#39;s great to see them getting excited about React and contributing back to the community.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -165,7 +139,7 @@
 <li>Building an isomorphic, real-time to-do list with moped and node.js</li>
 </ul>
 
-<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
 
 <p>In related news, the next <a href="http://www.meetup.com/ReactJS-San-Francisco/events/195518392/">React SF Meetup</a> will be from Prezi: <a href="https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135">“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”</a>. While not in React, their tech is really awesome and shares a lot of React&#39;s design principles and perf optimizations.</p>
 <h2><a class="anchor" name="using-react-and-kendoui-together"></a>Using React and KendoUI Together <a class="hash-link" href="#using-react-and-kendoui-together">#</a></h2>
@@ -208,22 +182,84 @@
 
 
   </div>
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2016/09/28/our-first-50000-stars.html">Our First 50,000 Stars</a></li>
+      
+        <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
+      
+        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
+      
+        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
+      
+        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
+      
+        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
+      
+        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
+      
+        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
+      
+        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
+      
+        <li><a href="/react/blog/2016/03/07/react-v15-rc1.html">React v15.0 Release Candidate</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

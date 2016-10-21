@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Thinking in React | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Thinking in React | React">
+  <title>Thinking in React - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Thinking in React - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/thinking-in-react.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,31 +46,192 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
+  </div>
+</div>
 
-    
 
     <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/thinking-in-react.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      Thinking in React
+    </h1>
+    <div class="subHeader"></div>
+
+    <p>React is, in our opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.</p>
+
+<p>One of the many great parts of React is how it makes you think about apps as you build them. In this document, we&#39;ll walk you through the thought process of building a searchable product data table using React.</p>
+<h2><a class="anchor" name="start-with-a-mock"></a>Start With A Mock <a class="hash-link" href="#start-with-a-mock">#</a></h2>
+<p>Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn&#39;t very good because the mock looks like this:</p>
+
+<p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
+
+<p>Our JSON API returns some data that looks like this:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">[
+  {category: &quot;Sporting Goods&quot;, price: &quot;$49.99&quot;, stocked: true, name: &quot;Football&quot;},
+  {category: &quot;Sporting Goods&quot;, price: &quot;$9.99&quot;, stocked: true, name: &quot;Baseball&quot;},
+  {category: &quot;Sporting Goods&quot;, price: &quot;$29.99&quot;, stocked: false, name: &quot;Basketball&quot;},
+  {category: &quot;Electronics&quot;, price: &quot;$99.99&quot;, stocked: true, name: &quot;iPod Touch&quot;},
+  {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
+  {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
+];
+</code></pre></div><h2><a class="anchor" name="step-1-break-the-ui-into-a-component-hierarchy"></a>Step 1: Break The UI Into A Component Hierarchy <a class="hash-link" href="#step-1-break-the-ui-into-a-component-hierarchy">#</a></h2>
+<p>The first thing you&#39;ll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you&#39;re working with a designer, they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!</p>
+
+<p>But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsibility principle</a>, that is, a component should ideally only do one thing. If it ends up growing, it should be decomposed into smaller subcomponents.</p>
+
+<p>Since you&#39;re often displaying a JSON data model to a user, you&#39;ll find that if your model was built correctly, your UI (and therefore your component structure) will map nicely. That&#39;s because UI and data models tend to adhere to the same <em>information architecture</em>, which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.</p>
+
+<p><img src="/react/img/blog/thinking-in-react-components.png" alt="Component diagram"></p>
+
+<p>You&#39;ll see here that we have five components in our simple app. We&#39;ve italicized the data each component represents.</p>
+
+<ol>
+<li><strong><code>FilterableProductTable</code> (orange):</strong> contains the entirety of the example</li>
+<li><strong><code>SearchBar</code> (blue):</strong> receives all <em>user input</em></li>
+<li><strong><code>ProductTable</code> (green):</strong> displays and filters the <em>data collection</em> based on <em>user input</em></li>
+<li><strong><code>ProductCategoryRow</code> (turquoise):</strong> displays a heading for each <em>category</em></li>
+<li><strong><code>ProductRow</code> (red):</strong> displays a row for each <em>product</em></li>
+</ol>
+
+<p>If you look at <code>ProductTable</code>, you&#39;ll see that the table header (containing the &quot;Name&quot; and &quot;Price&quot; labels) isn&#39;t its own component. This is a matter of preference, and there&#39;s an argument to be made either way. For this example, we left it as part of <code>ProductTable</code> because it is part of rendering the <em>data collection</em> which is <code>ProductTable</code>&#39;s responsibility. However, if this header grows to be complex (i.e. if we were to add affordances for sorting), it would certainly make sense to make this its own <code>ProductTableHeader</code> component.</p>
+
+<p>Now that we&#39;ve identified the components in our mock, let&#39;s arrange them into a hierarchy. This is easy. Components that appear within another component in the mock should appear as a child in the hierarchy:</p>
+
+<ul>
+<li><code>FilterableProductTable</code>
+
+<ul>
+<li><code>SearchBar</code></li>
+<li><code>ProductTable</code>
+
+<ul>
+<li><code>ProductCategoryRow</code></li>
+<li><code>ProductRow</code></li>
+</ul></li>
+</ul></li>
+</ul>
+<h2><a class="anchor" name="step-2-build-a-static-version-in-react"></a>Step 2: Build A Static Version in React <a class="hash-link" href="#step-2-build-a-static-version-in-react">#</a></h2>
+<p data-height="600" data-theme-id="0" data-slug-hash="vXpAgj" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/vXpAgj/">Thinking In React: Step 2</a> on <a href="http://codepen.io">CodePen</a>.</p>
+
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
+
+<p>Now that you have your component hierarchy, it&#39;s time to implement your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&#39;s best to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&#39;ll see why.</p>
+
+<p>To build a static version of your app that renders your data model, you&#39;ll want to build components that reuse other components and pass data using <em>props</em>. <em>props</em> are a way of passing data from parent to child. If you&#39;re familiar with the concept of <em>state</em>, <strong>don&#39;t use state at all</strong> to build this static version. State is reserved only for interactivity, that is, data that changes over time. Since this is a static version of the app, you don&#39;t need it.</p>
+
+<p>You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with <code>FilterableProductTable</code>) or with the ones lower in it (<code>ProductRow</code>). In simpler examples, it&#39;s usually easier to go top-down, and on larger projects, it&#39;s easier to go bottom-up and write tests as you build.</p>
+
+<p>At the end of this step, you&#39;ll have a library of reusable components that render your data model. The components will only have <code>render()</code> methods since this is a static version of your app. The component at the top of the hierarchy (<code>FilterableProductTable</code>) will take your data model as a prop. If you make a change to your underlying data model and call <code>ReactDOM.render()</code> again, the UI will be updated. It&#39;s easy to see how your UI is updated and where to make changes since there&#39;s nothing complicated going on. React&#39;s <strong>one-way data flow</strong> (also called <em>one-way binding</em>) keeps everything modular and fast.</p>
+
+<p>Simply refer to the <a href="/react/docs/">React docs</a> if you need help executing this step.</p>
+<h3><a class="anchor" name="a-brief-interlude-props-vs-state"></a>A Brief Interlude: Props vs State <a class="hash-link" href="#a-brief-interlude-props-vs-state">#</a></h3>
+<p>There are two types of &quot;model&quot; data in React: props and state. It&#39;s important to understand the distinction between the two; skim <a href="/react/docs/interactivity-and-dynamic-uis.html">the official React docs</a> if you aren&#39;t sure what the difference is.</p>
+<h2><a class="anchor" name="step-3-identify-the-minimal-but-complete-representation-of-ui-state"></a>Step 3: Identify The Minimal (but complete) Representation Of UI State <a class="hash-link" href="#step-3-identify-the-minimal-but-complete-representation-of-ui-state">#</a></h2>
+<p>To make your UI interactive, you need to be able to trigger changes to your underlying data model. React makes this easy with <strong>state</strong>.</p>
+
+<p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out the absolute minimal representation of the state your application needs and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count, simply take the length of the TODO items array.</p>
+
+<p>Think of all of the pieces of data in our example application. We have:</p>
+
+<ul>
+<li>The original list of products</li>
+<li>The search text the user has entered</li>
+<li>The value of the checkbox</li>
+<li>The filtered list of products</li>
+</ul>
+
+<p>Let&#39;s go through each one and figure out which one is state. Simply ask three questions about each piece of data:</p>
+
+<ol>
+<li>Is it passed in from a parent via props? If so, it probably isn&#39;t state.</li>
+<li>Does it remain unchanged over time? If so, it probably isn&#39;t state.</li>
+<li>Can you compute it based on any other state or props in your component? If so, it isn&#39;t state.</li>
+</ol>
+
+<p>The original list of products is passed in as props, so that&#39;s not state. The search text and the checkbox seem to be state since they change over time and can&#39;t be computed from anything. And finally, the filtered list of products isn&#39;t state because it can be computed by combining the original list of products with the search text and value of the checkbox.</p>
+
+<p>So finally, our state is:</p>
+
+<ul>
+<li>The search text the user has entered</li>
+<li>The value of the checkbox</li>
+</ul>
+<h2><a class="anchor" name="step-4-identify-where-your-state-should-live"></a>Step 4: Identify Where Your State Should Live <a class="hash-link" href="#step-4-identify-where-your-state-should-live">#</a></h2>
+<p data-height="600" data-theme-id="0" data-slug-hash="ORzEkG" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/ORzEkG/">Thinking In React: Step 4</a> by Kevin Lacker (<a href="http://codepen.io/lacker">@lacker</a>) on <a href="http://codepen.io">CodePen</a>.</p>
+
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
+
+<p>OK, so we&#39;ve identified what the minimal set of app state is. Next, we need to identify which component mutates, or <em>owns</em>, this state.</p>
+
+<p>Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. <strong>This is often the most challenging part for newcomers to understand,</strong> so follow these steps to figure it out:</p>
+
+<p>For each piece of state in your application:</p>
+
+<ul>
+<li>Identify every component that renders something based on that state.</li>
+<li>Find a common owner component (a single component above all the components that need the state in the hierarchy).</li>
+<li>Either the common owner or another component higher up in the hierarchy should own the state.</li>
+<li>If you can&#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.</li>
+</ul>
+
+<p>Let&#39;s run through this strategy for our application:</p>
+
+<ul>
+<li><code>ProductTable</code> needs to filter the product list based on state and <code>SearchBar</code> needs to display the search text and checked state.</li>
+<li>The common owner component is <code>FilterableProductTable</code>.</li>
+<li>It conceptually makes sense for the filter text and checked value to live in <code>FilterableProductTable</code></li>
+</ul>
+
+<p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add a <code>getInitialState()</code> method to <code>FilterableProductTable</code> that returns <code>{filterText: &#39;&#39;, inStockOnly: false}</code> to reflect the initial state of your application. Then, pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
+
+<p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see that the data table is updated correctly.</p>
+<h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add Inverse Data Flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>
+<p data-height="600" data-theme-id="0" data-slug-hash="ALxdJq" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/ALxdJq/">Thinking In React: Step 5</a> on <a href="http://codepen.io">CodePen</a>.</p>
+
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
+
+<p>So far, we&#39;ve built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it&#39;s time to support data flowing the other way: the form components deep in the hierarchy need to update the state in <code>FilterableProductTable</code>.</p>
+
+<p>React makes this data flow explicit to make it easy to understand how your program works, but it does require a little more typing than traditional two-way data binding.</p>
+
+<p>If you try to type or check the box in the current version of the example, you&#39;ll see that React ignores your input. This is intentional, as we&#39;ve set the <code>value</code> prop of the <code>input</code> to always be equal to the <code>state</code> passed in from <code>FilterableProductTable</code>.</p>
+
+<p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form, we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass a callback to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. And the callback passed by <code>FilterableProductTable</code> will call <code>setState()</code>, and the app will be updated.</p>
+
+<p>Though this sounds complex, it&#39;s really just a few lines of code. And it&#39;s really explicit how your data is flowing throughout the app.</p>
+<h2><a class="anchor" name="and-thats-it"></a>And That&#39;s It <a class="hash-link" href="#and-thats-it">#</a></h2>
+<p>Hopefully, this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&#39;re used to, remember that code is read far more than it&#39;s written, and it&#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components, you&#39;ll appreciate this explicitness and modularity, and with code reuse, your lines of code will start to shrink. :)</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/composition-vs-inheritance.html">&larr; Prev</a>
+      
+      
+    </div>
+  </div>
+
   <div class="nav-docs">
   <!-- Docs Nav -->
   
@@ -77,97 +240,47 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
+            <a href="/react/docs/installation.html">Installation</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
+            <a href="/react/docs/hello-world.html">Hello World</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/thinking-in-react.html" class="active">Thinking in React</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/videos.html">Videos</a>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
             
           </li>
         
@@ -177,12 +290,86 @@
           </li>
         
           <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html" class="active">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
             
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                    <a href="/react/docs/react-component.html">React.Component</a>
                   </li>
                 
               </ul>
@@ -190,23 +377,22 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
             
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
             
           </li>
         
@@ -216,11 +402,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
                   <li>
@@ -228,7 +410,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                    <a href="/react/docs/animation.html">Animation</a>
                   </li>
                 
                   <li>
@@ -244,164 +426,15 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
                   </li>
                 
                   <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
                   </li>
                 
               </ul>
             
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
           </li>
         
       </ul>
@@ -433,183 +466,57 @@
       </ul>
     </div>
   
+
 </div>
 
-
-  <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/thinking-in-react.md" target="_blank">Edit on GitHub</a>
-    <h1>
-      Thinking in React
-    </h1>
-    <div class="subHeader"></div>
-
-    <p>by Pete Hunt</p>
-
-<p>React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.</p>
-
-<p>One of the many great parts of React is how it makes you think about apps as you build them. In this post, I&#39;ll walk you through the thought process of building a searchable product data table using React.</p>
-<h2><a class="anchor" name="start-with-a-mock"></a>Start with a mock <a class="hash-link" href="#start-with-a-mock">#</a></h2>
-<p>Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn&#39;t very good because the mock looks like this:</p>
-
-<p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
-
-<p>Our JSON API returns some data that looks like this:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">[
-  {category: &quot;Sporting Goods&quot;, price: &quot;$49.99&quot;, stocked: true, name: &quot;Football&quot;},
-  {category: &quot;Sporting Goods&quot;, price: &quot;$9.99&quot;, stocked: true, name: &quot;Baseball&quot;},
-  {category: &quot;Sporting Goods&quot;, price: &quot;$29.99&quot;, stocked: false, name: &quot;Basketball&quot;},
-  {category: &quot;Electronics&quot;, price: &quot;$99.99&quot;, stocked: true, name: &quot;iPod Touch&quot;},
-  {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
-  {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
-];
-</code></pre></div><h2><a class="anchor" name="step-1-break-the-ui-into-a-component-hierarchy"></a>Step 1: Break the UI into a component hierarchy <a class="hash-link" href="#step-1-break-the-ui-into-a-component-hierarchy">#</a></h2>
-<p>The first thing you&#39;ll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you&#39;re working with a designer, they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!</p>
-
-<p>But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsibility principle</a>, that is, a component should ideally only do one thing. If it ends up growing, it should be decomposed into smaller subcomponents.</p>
-
-<p>Since you&#39;re often displaying a JSON data model to a user, you&#39;ll find that if your model was built correctly, your UI (and therefore your component structure) will map nicely. That&#39;s because UI and data models tend to adhere to the same <em>information architecture</em>, which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.</p>
-
-<p><img src="/react/img/blog/thinking-in-react-components.png" alt="Component diagram"></p>
-
-<p>You&#39;ll see here that we have five components in our simple app. I&#39;ve italicized the data each component represents.</p>
-
-<ol>
-<li><strong><code>FilterableProductTable</code> (orange):</strong> contains the entirety of the example</li>
-<li><strong><code>SearchBar</code> (blue):</strong> receives all <em>user input</em></li>
-<li><strong><code>ProductTable</code> (green):</strong> displays and filters the <em>data collection</em> based on <em>user input</em></li>
-<li><strong><code>ProductCategoryRow</code> (turquoise):</strong> displays a heading for each <em>category</em></li>
-<li><strong><code>ProductRow</code> (red):</strong> displays a row for each <em>product</em></li>
-</ol>
-
-<p>If you look at <code>ProductTable</code>, you&#39;ll see that the table header (containing the &quot;Name&quot; and &quot;Price&quot; labels) isn&#39;t its own component. This is a matter of preference, and there&#39;s an argument to be made either way. For this example, I left it as part of <code>ProductTable</code> because it is part of rendering the <em>data collection</em> which is <code>ProductTable</code>&#39;s responsibility. However, if this header grows to be complex (i.e. if we were to add affordances for sorting), it would certainly make sense to make this its own <code>ProductTableHeader</code> component.</p>
-
-<p>Now that we&#39;ve identified the components in our mock, let&#39;s arrange them into a hierarchy. This is easy. Components that appear within another component in the mock should appear as a child in the hierarchy:</p>
-
-<ul>
-<li><code>FilterableProductTable</code>
-
-<ul>
-<li><code>SearchBar</code></li>
-<li><code>ProductTable</code>
-
-<ul>
-<li><code>ProductCategoryRow</code></li>
-<li><code>ProductRow</code></li>
-</ul></li>
-</ul></li>
-</ul>
-<h2><a class="anchor" name="step-2-build-a-static-version-in-react"></a>Step 2: Build a static version in React <a class="hash-link" href="#step-2-build-a-static-version-in-react">#</a></h2>
-<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
-
-<p>Now that you have your component hierarchy, it&#39;s time to implement your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&#39;s best to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&#39;ll see why.</p>
-
-<p>To build a static version of your app that renders your data model, you&#39;ll want to build components that reuse other components and pass data using <em>props</em>. <em>props</em> are a way of passing data from parent to child. If you&#39;re familiar with the concept of <em>state</em>, <strong>don&#39;t use state at all</strong> to build this static version. State is reserved only for interactivity, that is, data that changes over time. Since this is a static version of the app, you don&#39;t need it.</p>
-
-<p>You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with <code>FilterableProductTable</code>) or with the ones lower in it (<code>ProductRow</code>). In simpler examples, it&#39;s usually easier to go top-down, and on larger projects, it&#39;s easier to go bottom-up and write tests as you build.</p>
-
-<p>At the end of this step, you&#39;ll have a library of reusable components that render your data model. The components will only have <code>render()</code> methods since this is a static version of your app. The component at the top of the hierarchy (<code>FilterableProductTable</code>) will take your data model as a prop. If you make a change to your underlying data model and call <code>ReactDOM.render()</code> again, the UI will be updated. It&#39;s easy to see how your UI is updated and where to make changes since there&#39;s nothing complicated going on. React&#39;s <strong>one-way data flow</strong> (also called <em>one-way binding</em>) keeps everything modular and fast.</p>
-
-<p>Simply refer to the <a href="/react/docs/">React docs</a> if you need help executing this step.</p>
-<h3><a class="anchor" name="a-brief-interlude-props-vs-state"></a>A brief interlude: props vs state <a class="hash-link" href="#a-brief-interlude-props-vs-state">#</a></h3>
-<p>There are two types of &quot;model&quot; data in React: props and state. It&#39;s important to understand the distinction between the two; skim <a href="/react/docs/interactivity-and-dynamic-uis.html">the official React docs</a> if you aren&#39;t sure what the difference is.</p>
-<h2><a class="anchor" name="step-3-identify-the-minimal-but-complete-representation-of-ui-state"></a>Step 3: Identify the minimal (but complete) representation of UI state <a class="hash-link" href="#step-3-identify-the-minimal-but-complete-representation-of-ui-state">#</a></h2>
-<p>To make your UI interactive, you need to be able to trigger changes to your underlying data model. React makes this easy with <strong>state</strong>.</p>
-
-<p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out the absolute minimal representation of the state your application needs and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count, simply take the length of the TODO items array.</p>
-
-<p>Think of all of the pieces of data in our example application. We have:</p>
-
-<ul>
-<li>The original list of products</li>
-<li>The search text the user has entered</li>
-<li>The value of the checkbox</li>
-<li>The filtered list of products</li>
-</ul>
-
-<p>Let&#39;s go through each one and figure out which one is state. Simply ask three questions about each piece of data:</p>
-
-<ol>
-<li>Is it passed in from a parent via props? If so, it probably isn&#39;t state.</li>
-<li>Does it remain unchanged over time? If so, it probably isn&#39;t state.</li>
-<li>Can you compute it based on any other state or props in your component? If so, it isn&#39;t state.</li>
-</ol>
-
-<p>The original list of products is passed in as props, so that&#39;s not state. The search text and the checkbox seem to be state since they change over time and can&#39;t be computed from anything. And finally, the filtered list of products isn&#39;t state because it can be computed by combining the original list of products with the search text and value of the checkbox.</p>
-
-<p>So finally, our state is:</p>
-
-<ul>
-<li>The search text the user has entered</li>
-<li>The value of the checkbox</li>
-</ul>
-<h2><a class="anchor" name="step-4-identify-where-your-state-should-live"></a>Step 4: Identify where your state should live <a class="hash-link" href="#step-4-identify-where-your-state-should-live">#</a></h2>
-<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
-
-<p>OK, so we&#39;ve identified what the minimal set of app state is. Next, we need to identify which component mutates, or <em>owns</em>, this state.</p>
-
-<p>Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. <strong>This is often the most challenging part for newcomers to understand,</strong> so follow these steps to figure it out:</p>
-
-<p>For each piece of state in your application:</p>
-
-<ul>
-<li>Identify every component that renders something based on that state.</li>
-<li>Find a common owner component (a single component above all the components that need the state in the hierarchy).</li>
-<li>Either the common owner or another component higher up in the hierarchy should own the state.</li>
-<li>If you can&#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.</li>
-</ul>
-
-<p>Let&#39;s run through this strategy for our application:</p>
-
-<ul>
-<li><code>ProductTable</code> needs to filter the product list based on state and <code>SearchBar</code> needs to display the search text and checked state.</li>
-<li>The common owner component is <code>FilterableProductTable</code>.</li>
-<li>It conceptually makes sense for the filter text and checked value to live in <code>FilterableProductTable</code></li>
-</ul>
-
-<p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add a <code>getInitialState()</code> method to <code>FilterableProductTable</code> that returns <code>{filterText: &#39;&#39;, inStockOnly: false}</code> to reflect the initial state of your application. Then, pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
-
-<p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see that the data table is updated correctly.</p>
-<h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add inverse data flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>
-<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
-
-<p>So far, we&#39;ve built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it&#39;s time to support data flowing the other way: the form components deep in the hierarchy need to update the state in <code>FilterableProductTable</code>.</p>
-
-<p>React makes this data flow explicit to make it easy to understand how your program works, but it does require a little more typing than traditional two-way data binding.</p>
-
-<p>If you try to type or check the box in the current version of the example, you&#39;ll see that React ignores your input. This is intentional, as we&#39;ve set the <code>value</code> prop of the <code>input</code> to always be equal to the <code>state</code> passed in from <code>FilterableProductTable</code>.</p>
-
-<p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form, we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass a callback to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. And the callback passed by <code>FilterableProductTable</code> will call <code>setState()</code>, and the app will be updated.</p>
-
-<p>Though this sounds complex, it&#39;s really just a few lines of code. And it&#39;s really explicit how your data is flowing throughout the app.</p>
-<h2><a class="anchor" name="and-thats-it"></a>And that&#39;s it <a class="hash-link" href="#and-thats-it">#</a></h2>
-<p>Hopefully, this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&#39;re used to, remember that code is read far more than it&#39;s written, and it&#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components, you&#39;ll appreciate this explicitness and modularity, and with code reuse, your lines of code will start to shrink. :)</p>
-
-
-    <div class="docs-prevnext">
-      
-        <a class="docs-prev" href="/react/docs/tutorial.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/conferences.html">Next &rarr;</a>
-      
-    </div>
-  </div>
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

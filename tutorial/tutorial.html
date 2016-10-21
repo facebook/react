@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Tutorial: Intro To React - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Tutorial: Intro To React - React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://facebook.github.io/react/tutorial/tutorial.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html" class="active">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Tutorial Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tutorial</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tutorial/tutorial.html" class="active">Overview</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#what-were-building">What We're Building</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#what-is-react">What is React?</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#getting-started">Getting Started</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#passing-data-through-props">Passing Data Through Props</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#an-interactive-component">An Interactive Component</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#developer-tools">Developer Tools</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/tutorial/tutorial.html#lifting-state-up">Lifting State Up</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#why-immutability-is-important">Why Immutability Is Important</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#functional-components">Functional Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#taking-turns">Taking Turns</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#declaring-a-winner">Declaring a Winner</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/tutorial/tutorial.html#storing-a-history">Storing A History</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#showing-the-moves">Showing the Moves</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#keys">Keys</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#implementing-time-travel">Implementing Time Travel</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/tutorial/tutorial.html#wrapping-up">Wrapping Up</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <a class="edit-page-link"
+    href="https://github.com/facebook/react/tree/master/docs/tutorial/tutorial.md"
+    target="_blank">Edit on GitHub</a>
+    <h1>
+      Tutorial: Intro To React
+    </h1>
+    <div class="subHeader"></div>
+
+    <h2><a class="anchor" name="what-were-building"></a>What We&#39;re Building <a class="hash-link" href="#what-were-building">#</a></h2>
+<p>Today, we&#39;re going to build an interactive tic-tac-toe game. We&#39;ll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven&#39;t used them before.</p>
+
+<p>If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/debug/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go &quot;back in time&quot; and see what the board looked like just after that move was made.</p>
+<h2><a class="anchor" name="what-is-react"></a>What is React? <a class="hash-link" href="#what-is-react">#</a></h2>
+<p>React is a declarative, efficient, and flexible JavaScript library for building user interfaces.</p>
+
+<p>React has a few different kinds of components, but we&#39;ll start with React.Component subclasses:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">ShoppingList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;shopping-list&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Shopping</span> <span class="nx">List</span> <span class="k">for</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+        <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Instagram</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">WhatsApp</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Oculus</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+        <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Example usage: &lt;ShoppingList name=&quot;Mark&quot; /&gt;</span>
+</code></pre></div>
+<p>We&#39;ll get to the funny XML-like tags in a second. Your components tell React what you want to render – then React will efficiently update and render just the right components when your data changes.</p>
+
+<p>Here, ShoppingList is a <strong>React component class</strong>, or <strong>React component type</strong>. A component takes in parameters, called <code>props</code>, and returns a hierarchy of views to display via the <code>render</code> method.</p>
+
+<p>The <code>render</code> method return a <em>description</em> of what you want to render, and then React takes that description and renders it to the screen. In particular, <code>render</code> returns a <strong>React element</strong>, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The <code>&lt;div /&gt;</code> syntax is transformed at build time to <code>React.createElement(&#39;div&#39;)</code>. The example above is equivalent to:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;shopping-list&#39;</span><span class="p">},</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="p">...),</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">...)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.</p>
+
+<p>The <code>ShoppingList</code> component only renders built-in DOM components, but you can compose custom React components just as easily, by writing <code>&lt;ShoppingList /&gt;</code>. Each component is encapsulated so it can operate independently, which allows you to build complex UIs out of simple components.</p>
+<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2>
+<p>Start with this example: <a href="https://codepen.io/ericnakagawa/pen/vXpjwZ?editors=0010" target="_blank">Starter Code</a>.</p>
+
+<p>It contains the shell of what we&#39;re building today. We&#39;ve provided the styles so you only need to worry about the JavaScript.</p>
+
+<p>In particular, we have three components:</p>
+
+<ul>
+<li>Square</li>
+<li>Board</li>
+<li>Game</li>
+</ul>
+
+<p>The Square component renders a single <code>&lt;div&gt;</code>, the Board renders 9 squares, and the Game component renders a board with some placeholders that we&#39;ll fill in later. None of the components are interactive at this point.</p>
+
+<p>(The end of the JS file also defines a helper function <code>calculateWinner</code> that we&#39;ll use later.)</p>
+<h2><a class="anchor" name="passing-data-through-props"></a>Passing Data Through Props <a class="hash-link" href="#passing-data-through-props">#</a></h2>
+<p>Just to get our feet wet, let&#39;s try passing some data from the Board component to the Square component. In Board&#39;s <code>renderSquare</code> method, change the code to return <code>&lt;Square value={i} /&gt;</code> then change Square&#39;s render method to show that value by replacing <code>{/* TODO */}</code> with <code>{this.props.value}</code>.</p>
+
+<p>Before:</p>
+
+<p><img src="/react/img/tutorial/tictac-empty.png" alt="React Devtools"></p>
+
+<p>After: You should see a number in each square in the rendered output.</p>
+
+<p><img src="/react/img/tutorial/tictac-numbers.png" alt="React Devtools"></p>
+<h2><a class="anchor" name="an-interactive-component"></a>An Interactive Component <a class="hash-link" href="#an-interactive-component">#</a></h2>
+<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the tag returned in the <code>render()</code> function of the <code>Square</code> class to:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;button</span> <span class="na">className=</span><span class="s">&quot;square&quot;</span> <span class="na">onClick=</span><span class="s">{()</span> <span class="err">=</span><span class="nt">&gt;</span> alert(&#39;click&#39;)}&gt;
+</code></pre></div>
+<p>This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.</p>
+
+<p>React components can have state by setting <code>this.state</code> in the constructor, which should be considered private to the component. Let&#39;s store the current value of the square in state, and change it when the square is clicked. First, add a constructor to the class to initialize the state:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Square</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">value</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In JavaScript classes, you need to explicitly call <code>super();</code> when defining the constructor of a subclass.</p>
+
+<p>Now change the <code>render</code> method to display <code>this.state.value</code> instead of <code>this.props.value</code>, and change the event handler to  be <code>() =&gt; this.setState({value: &#39;X&#39;})</code> instead of the alert:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;X&#39;</span><span class="p">})}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="err">/button&gt;</span>
+</code></pre></div>
+<p>Whenever <code>this.setState</code> is called, an update to the component is scheduled, causing React to merge in the passed state update and rerender the component along with its descendants. When the component rerenders, <code>this.state.value</code> will be <code>&#39;X&#39;</code> so you&#39;ll see an X in the grid.</p>
+
+<p>If you click on any square, an X should show up in it.</p>
+<h2><a class="anchor" name="developer-tools"></a>Developer Tools <a class="hash-link" href="#developer-tools">#</a></h2>
+<p>The React Devtools extension for <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en">Chrome</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/react-devtools/">Firefox</a> lets you inspect a React component tree in your browser devtools.</p>
+
+<p><img src="/react/img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%"></p>
+
+<p>It lets you inspect the props and state of any of the components in your tree.</p>
+
+<p>It doesn&#39;t work great on CodePen because of the multiple frames, but if you log in to CodePen and confirm your email (for spam prevention), you can go to Change View &gt; Debug to open your code in a new tab, then the devtools will work. It&#39;s fine if you don&#39;t want to do this now, but it&#39;s good to know that it exists.</p>
+<h2><a class="anchor" name="lifting-state-up"></a>Lifting State Up <a class="hash-link" href="#lifting-state-up">#</a></h2>
+<p>We now have the basic building blocks for a tic-tac-toe game. But right now, the state is encapsulated in each Square component. To make a fully-working game, we now need to check if one player has won the game, and alternate placing X and O in the squares. To check if someone has won, we&#39;ll need to have the value of all 9 squares in one place, rather than split up across the Square components.</p>
+
+<p>You might think that Board should just inquire what the current state of each Square is. Although it is technically possible to do this in React, it is discouraged because it tends to make code difficult to understand, more brittle, and harder to refactor.</p>
+
+<p>Instead, the best solution here is to store this state in the Board component instead of in each Square – and the Board component can tell each Square what to display, like how we made each square display its index earlier.</p>
+
+<p><strong>When you want to aggregate data from multiple children or to have two child components communicate with each other, move the state upwards so that it lives in the parent component. The parent can then pass the state back down to the children via props, so that the child components are always in sync with each other and with the parent.</strong></p>
+
+<p>Pulling state upwards like this is common when refactoring React components, so let&#39;s take this opportunity to try it out. Add an initial state for Board containing an array with 9 nulls, corresponding to the 9 squares:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>We&#39;ll fill it in later so that a board looks something like</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span>
+  <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>Pass the value of each square down:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>And change Square to use <code>this.props.value</code> again. Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can&#39;t update Board&#39;s state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change <code>renderSquare</code> again so that it reads:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>Now we&#39;re passing down two props from Board to Square: <code>value</code> and <code>onClick</code>. The latter is a function that Square can call. So let&#39;s do that by changing <code>render</code> in Square to have:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">()}</span><span class="o">&gt;</span>
+</code></pre></div>
+<p>This means that when the square is clicked, it calls the onClick function that was passed by the parent. The <code>onClick</code> doesn&#39;t have any special meaning here, but it&#39;s popular to name handler props starting with <code>on</code> and their implementations with <code>handle</code>. Try clicking a square – you should get an error because we haven&#39;t defined <code>handleClick</code> yet. Add it to the Board class:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>We call <code>.slice()</code> to copy the <code>squares</code> array instead of mutating the existing array. Jump ahead a <a href="/react/tutorial/tutorial.html#why-immutability-is-important">section</a> to learn why immutability is important.</p>
+
+<p>Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board&#39;s state changes, the Square components rerender automatically.</p>
+
+<p>Square no longer keeps its own state; it receives its value from its parent <code>Board</code> and informs its parent when it&#39;s clicked. We call components like this <strong>controlled components</strong>.</p>
+<h2><a class="anchor" name="why-immutability-is-important"></a>Why Immutability Is Important <a class="hash-link" href="#why-immutability-is-important">#</a></h2>
+<p>In the previous code example, I suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changges and to prevent mutating the existing array. Let&#39;s talk about what this means and why it an important concept to learn.</p>
+
+<p>There are generally two ways for changing data. The first, and most common method in past, has been to <em>mutate</em> the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.</p>
+<h4><a class="anchor" name="data-change-with-mutation"></a>Data change with mutation <a class="hash-link" href="#data-change-with-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span>  <span class="mi">1</span><span class="p">}</span>
+<span class="nx">player</span><span class="p">.</span><span class="nx">score</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1">// same object mutated {score: 2}</span>
+</code></pre></div><h4><a class="anchor" name="data-change-without-mutation"></a>Data change without mutation <a class="hash-link" href="#data-change-without-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="nx">player</span> <span class="o">=</span> <span class="p">{...</span><span class="nx">player</span><span class="p">,</span> <span class="nx">score</span><span class="o">:</span> <span class="mi">2</span><span class="p">}</span> <span class="c1">// new object not mutated {score: 2}</span>
+</code></pre></div>
+<p>The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.</p>
+<h4><a class="anchor" name="tracking-changes"></a>Tracking Changes <a class="hash-link" href="#tracking-changes">#</a></h4>
+<p>Determining if a mutated object has changed is complex because changes are made directly to the object. This then requires comparing the current object to a previous copy, traversing the entire object tree, and comparing each variable and value. This process can become increasingly complex.</p>
+
+<p>Determining how a immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That&#39;s it.</p>
+<h3><a class="anchor" name="determining-when-to-re-render-in-react"></a>Determining When To Re-render in React <a class="hash-link" href="#determining-when-to-re-render-in-react">#</a></h3>
+<p>The biggest benefit of immutability in React comes when you build simple <em>pure components</em>. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.</p>
+
+<p>To learn how you can build <em>pure components</em> take a look at <a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>. Also, take a look at the <a href="https://facebook.github.io/immutable-js/">immutability.js</a> library to strictly enforce immutable data.</p>
+<h2><a class="anchor" name="functional-components"></a>Functional Components <a class="hash-link" href="#functional-components">#</a></h2>
+<p>Back to our project, you can now delete the <code>constructor</code> from <code>Square</code>; we won&#39;t need it any more. In fact, React supports a simpler syntax called <strong>stateless functional components</strong> for component types like Square that only consist of a <code>render</code> method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Square</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">()}</span><span class="o">&gt;</span>
+      <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="err">/button&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>You&#39;ll need to change <code>this.props</code> to <code>props</code> both times it appears. Many components in your apps will be able to written as functional components: these components tend to be easier to write and React will optimize them more in the future.</p>
+<h2><a class="anchor" name="taking-turns"></a>Taking Turns <a class="hash-link" href="#taking-turns">#</a></h2>
+<p>An obvious defect in our game is that only X can play. Let&#39;s fix that.</p>
+
+<p>Let&#39;s default the first move to be by &#39;X&#39;. Modify our starting state in our <code>Game</code> constructor.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="p">...</span>
+      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Each time we move we shall toggle <code>xIsNext</code> by flipping the boolean value and saving the state. Now update our <code>handleClick</code> function to flip the value of <code>xIsNext</code>.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+    <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">,</span>
+    <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Now X and O take turns. Next, change the &quot;status&quot; text in Board&#39;s <code>render</code> so that it also displays who is next.</p>
+<h2><a class="anchor" name="declaring-a-winner"></a>Declaring a Winner <a class="hash-link" href="#declaring-a-winner">#</a></h2>
+<p>Let&#39;s show when the game is won. A <code>calculateWinner(squares)</code> helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+  <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>You can now change <code>handleClick</code> to return early and ignore the click if someone has already won the game or if a square is already filled:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So <em>you&#39;re</em> probably the real winner here.</p>
+<h2><a class="anchor" name="storing-a-history"></a>Storing a History <a class="hash-link" href="#storing-a-history">#</a></h2>
+<p>Let&#39;s make it possible to revisit old states of the board so we can see what it looked like after any of the previous moves. We&#39;re already creating a new <code>squares</code> array each time a move is made, which means we can easily store the past board states simultaneously.</p>
+
+<p>Let&#39;s plan to store an object like this in state:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">history</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span>
+    <span class="nx">squares</span><span class="o">:</span> <span class="p">[</span><span class="kc">null</span> <span class="nx">x</span> <span class="mi">9</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nx">squares</span><span class="o">:</span> <span class="p">[...</span> <span class="nx">x</span> <span class="mi">9</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="p">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>We&#39;ll want the top-level <code>Game</code> component to be responsible for displaying the list of moves. So just as we pulled the state up before from <code>Square</code> into <code>Board</code>, let&#39;s now pull it up again from <code>Board</code> into <code>Game</code> – so that we have all the information we need at the top level.</p>
+
+<p>First, set up the initial state for <code>Game</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Game</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">history</span><span class="o">:</span> <span class="p">[{</span>
+        <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
+      <span class="p">}],</span>
+      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Then remove the constructor and change <code>Board</code> so that it takes <code>squares</code> via props and has its own <code>onClick</code> prop specified by <code>Game</code>, like the transformation we made for <code>Square</code> and <code>Board</code> earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p><code>Game</code>&#39;s <code>render</code> should look at the most recent history entry and can take over calculating the game status:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
+<span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+<span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+
+<span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="p">...</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Board</span>
+    <span class="nx">squares</span><span class="o">=</span><span class="p">{</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">}</span>
+    <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+  <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-info&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* TODO */</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>Its <code>handleClick</code> can push a new entry onto the stack by concatenating the new history entry to make a new history array:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">)</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+    <span class="nx">history</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">concat</span><span class="p">([{</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span>
+    <span class="p">}]),</span>
+    <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>At this point, Board only needs <code>renderStep</code> and <code>render</code>; the state initialization and click handler should both live in Game.</p>
+<h2><a class="anchor" name="showing-the-moves"></a>Showing the Moves <a class="hash-link" href="#showing-the-moves">#</a></h2>
+<p>Let&#39;s show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let&#39;s do that in the <code>render</code> method of Game:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">moves</span> <span class="o">=</span> <span class="nx">history</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">step</span><span class="p">,</span> <span class="nx">move</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">desc</span> <span class="o">=</span> <span class="nx">move</span> <span class="o">?</span>
+    <span class="s1">&#39;Move #&#39;</span> <span class="o">+</span> <span class="nx">move</span> <span class="o">:</span>
+    <span class="s1">&#39;Game start&#39;</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">move</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">move</span><span class="p">)}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">desc</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+    <span class="o">&lt;</span><span class="err">/li&gt;</span>
+  <span class="p">);</span>
+<span class="p">});</span>
+<span class="p">...</span>
+<span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">moves</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
+</code></pre></div>
+<p>For each step in the history, we create a list item <code>&lt;li&gt;</code> with a link <code>&lt;a&gt;</code> inside it that goes nowhere (<code>href=&quot;#&quot;</code>) but has a click handler which we&#39;ll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says</p>
+
+<blockquote>
+<p>Warning:
+ Each child in an array or iterator should have a unique &quot;key&quot; prop. Check the render method of &quot;Game&quot;.</p>
+</blockquote>
+
+<p>Let&#39;s talk about what that warning means.</p>
+<h2><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h2>
+<p>When you render a list of items, React always stores some info about each item in the list. If you render a component that has state, that state needs to be stored – and regardless of how you implement your components, React stores a reference to the backing native views.</p>
+
+<p>When you update that list, React needs to determine what has changed. You could&#39;ve added, removed, rearranged, or updated items in the list.</p>
+
+<p>Imagine transitioning from</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;li&gt;</span>Alexa: 7 tasks left<span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;li&gt;</span>Ben: 5 tasks left<span class="nt">&lt;/li&gt;</span>
+</code></pre></div>
+<p>to</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;li&gt;</span>Ben: 9 tasks left<span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;li&gt;</span>Claudia: 8 tasks left<span class="nt">&lt;/li&gt;</span>
+<span class="nt">&lt;li&gt;</span>Alexa: 5 tasks left<span class="nt">&lt;/li&gt;</span>
+</code></pre></div>
+<p>To a human eye, it looks likely that Alexa and Ben swapped places and Claudia was added – but React is just a computer program and doesn&#39;t know what you intended it to do. As a result, React asks you to specify a <em>key</em> property on each element in a list, a string to differentiate each component from its siblings. In this case, <code>alexa</code>, <code>ben</code>, <code>claudia</code> might be sensible keys; if the items correspond to objects in a database, the database ID is usually a good choice:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">{user.id}</span><span class="nt">&gt;</span>{user.name}: {user.taskCount} tasks left<span class="nt">&lt;/li&gt;</span>
+</code></pre></div>
+<p><code>key</code> is a special property that&#39;s reserved by React (along with <code>ref</code>, a more advanced feature). When an element is created, React pulls off the <code>key</code> property and stores the key directly on the returned element. Even though it may look like it is part of props, it cannot be referenced with <code>this.props.key</code>. React uses the key automatically while deciding which children to update; there is no way for a component to inquire about its own key.</p>
+
+<p>When a list is rerendered, React takes each element in the new version and looks for one with a matching key in the previous list. When a key is added to the set, a component is created; when a key is removed, a component is destroyed. Keys tell React about the identity of each component, so that it can maintain the state across rerenders. If you change the key of a component, it will be completely destroyed and recreated with a new state.</p>
+
+<p><strong>It&#39;s strongly recommended that you assign proper keys whenever you build dynamic lists.</strong> If you don&#39;t have an appropriate key handy, you may want to consider restructuring your data so that you do.</p>
+
+<p>If you don&#39;t specify any key, React will warn you and fall back to using the array index as a key – which is not the correct choice if you ever reorder elements in the list or add/remove items anywhere but the bottom of the list. Explicitly passing <code>key={i}</code> silences the warning but has the same problem so isn&#39;t recommended in most cases.</p>
+
+<p>Component keys don&#39;t need to be globally unique, only unique relative to the immediate siblings.</p>
+<h2><a class="anchor" name="implementing-time-travel"></a>Implementing Time Travel <a class="hash-link" href="#implementing-time-travel">#</a></h2>
+<p>For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as <code>&lt;li key={move}&gt;</code> and the key warning should disappear.</p>
+
+<p>Clicking any of the move links throws an error because <code>jumpTo</code> is undefined. Let&#39;s add a new key to Game&#39;s state to indicate which step we&#39;re currently viewing. First, add <code>stepNumber: 0</code> to the initial state, then have <code>jumpTo</code> update that state.</p>
+
+<p>We also want to update <code>xIsNext</code>. We set <code>xIsNext</code> to true if the index of the move number is an even number.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+    <span class="nx">stepNumber</span><span class="o">:</span> <span class="nx">step</span><span class="p">,</span>
+    <span class="nx">xIsNext</span><span class="o">:</span> <span class="p">(</span><span class="nx">step</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">?</span> <span class="kc">false</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Then update <code>stepNumber</code> when a new move is made by adding <code>stepNumber: history.length</code> to the state update in <code>handleClick</code>. Now you can modify <code>render</code> to read from that step in the history:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">stepNumber</span><span class="p">];</span>
+</code></pre></div>
+<p>If you click any move link now, the board should immediately update to show what the game looked like at that time. You may also want to update <code>handleClick</code> to be aware of <code>stepNumber</code> when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It&#39;s easiest to <code>.slice()</code> off the extra elements from <code>history</code> at the very top of <code>handleClick</code>.)</p>
+<h2><a class="anchor" name="wrapping-up"></a>Wrapping Up <a class="hash-link" href="#wrapping-up">#</a></h2>
+<p>Now, you&#39;ve made a tic-tac-toe game that:</p>
+
+<ul>
+<li>lets you play tic-tac-toe,</li>
+<li>indicates when one player has won the game,</li>
+<li>stores the history of moves during the game,</li>
+<li>allows players to jump back in time to see older versions of the game board.</li>
+</ul>
+
+<p>Nice work! We hope you now feel like you have a decent grasp on how React works.</p>
+
+<p>If you have extra time or want to practice your new skills, here are some ideas for improvements you could make, listed in order of increasing difficulty:</p>
+
+<ol>
+<li>Display the move locations in the format &quot;(1, 3)&quot; instead of &quot;6&quot;.</li>
+<li>Bold the currently-selected item in the move list.</li>
+<li>Rewrite Board to use two loops to make the squares instead of hardcoding them.</li>
+<li>Add a toggle button that lets you sort the moves in either ascending or descending order.</li>
+<li>When someone wins, highlight the three squares that caused the win.</li>
+</ol>
+
+
+    <div class="docs-prevnext">
+      
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
+
+  </div>
+
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
+  </script>
+</body>
+</html>

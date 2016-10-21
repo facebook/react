@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Two-Way Binding Helpers | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Two-Way Binding Helpers | React">
+  <title>Two-way Binding Helpers - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Two-way Binding Helpers - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/two-way-binding-helpers.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,31 +46,145 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
+  </div>
+</div>
 
-    
 
     <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/addons-two-way-binding-helpers.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      Two-way Binding Helpers
+    </h1>
+    <div class="subHeader"></div>
+
+    <blockquote>
+<p>Note:
+<code>LinkedStateMixin</code> is deprecated as of React v15. The recommendation is to explicitly set the value and change handler, instead of using <code>LinkedStateMixin</code>.</p>
+</blockquote>
+
+<p><strong>Importing</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">LinkedStateMixin</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-linked-state-mixin&#39;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
+<span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+<p><code>LinkedStateMixin</code> is an easy way to express two-way binding with React.</p>
+
+<p>In React, data flows one way: from owner to child. This is because data only flows one direction in <a href="https://en.wikipedia.org/wiki/Von_Neumann_architecture">the Von Neumann model of computing</a>. You can think of it as &quot;one-way data binding.&quot;</p>
+
+<p>However, there are lots of applications that require you to read some data and flow it back into your program. For example, when developing forms, you&#39;ll often want to update some React <code>state</code> when you receive user input. Or perhaps you want to perform layout in JavaScript and react to changes in some DOM element size.</p>
+
+<p>In React, you would implement this by listening to a &quot;change&quot; event, read from your data source (usually the DOM) and call <code>setState()</code> on one of your components. &quot;Closing the data flow loop&quot; explicitly leads to more understandable and easier-to-maintain programs. See <a href="/react/docs/forms.html">our forms documentation</a> for more information.</p>
+
+<p>Two-way binding -- implicitly enforcing that some value in the DOM is always consistent with some React <code>state</code> -- is concise and supports a wide variety of applications. We&#39;ve provided <code>LinkedStateMixin</code>: syntactic sugar for setting up the common data flow loop pattern described above, or &quot;linking&quot; some data source to React <code>state</code>.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p><code>LinkedStateMixin</code> is just a thin wrapper and convention around the <code>onChange</code>/<code>setState()</code> pattern. It doesn&#39;t fundamentally change how data flows in your React application.</p>
+</blockquote>
+<h2><a class="anchor" name="linkedstatemixin-before-and-after"></a>LinkedStateMixin: Before and After <a class="hash-link" href="#linkedstatemixin-before-and-after">#</a></h2>
+<p>Here&#39;s a simple form example without using <code>LinkedStateMixin</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">message</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">message</span><span class="p">;</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>This works really well and it&#39;s very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let&#39;s use <code>LinkedStateMixin</code> to save us some typing:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
+</span>  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="hll"><span class="p">});</span>
+</span></code></pre></div>
+<p><code>LinkedStateMixin</code> adds a method to your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>valueLink</code> object which contains the current value of the React state and a callback to change it.</p>
+
+<p><code>valueLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
+
+<p>Note that checkboxes have a special behavior regarding their <code>value</code> attribute, which is the value that will be sent on form submit if the checkbox is checked (defaults to <code>on</code>). The <code>value</code> attribute is not updated when the checkbox is checked or unchecked. For checkboxes, you should use <code>checkedLink</code> instead of <code>valueLink</code>:
+<code>
+&lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
+</code></p>
+<h2><a class="anchor" name="under-the-hood"></a>Under the Hood <a class="hash-link" href="#under-the-hood">#</a></h2>
+<p>There are two sides to <code>LinkedStateMixin</code>: the place where you create the <code>valueLink</code> instance and the place where you use it. To prove how simple <code>LinkedStateMixin</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
+<h3><a class="anchor" name="valuelink-without-linkedstatemixin"></a>valueLink Without LinkedStateMixin <a class="hash-link" href="#valuelink-without-linkedstatemixin">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+<span class="hll">  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">newValue</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">message</span><span class="o">:</span> <span class="nx">newValue</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">},</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">valueLink</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+</span><span class="hll">      <span class="nx">requestChange</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span>
+</span><span class="hll">    <span class="p">};</span>
+</span>    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="nx">valueLink</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>As you can see, <code>valueLink</code> objects are very simple objects that just have a <code>value</code> and <code>requestChange</code> prop. And <code>LinkedStateMixin</code> is similarly simple: it just populates those fields with a value from <code>this.state</code> and a callback that calls <code>this.setState()</code>.</p>
+<h3><a class="anchor" name="linkedstatemixin-without-valuelink"></a>LinkedStateMixin Without valueLink <a class="hash-link" href="#linkedstatemixin-without-valuelink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">valueLink</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">handleChange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">valueLink</span><span class="p">.</span><span class="nx">requestChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="p">};</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">valueLink</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>The <code>valueLink</code> prop is also quite simple. It simply handles the <code>onChange</code> event and calls <code>this.props.valueLink.requestChange()</code> and also uses <code>this.props.valueLink.value</code> instead of <code>this.props.value</code>. That&#39;s it!</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/pure-render-mixin.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/update.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+
   <div class="nav-docs">
   <!-- Docs Nav -->
   
@@ -77,97 +193,47 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
+            <a href="/react/docs/installation.html">Installation</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
+            <a href="/react/docs/hello-world.html">Hello World</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/videos.html">Videos</a>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
             
           </li>
         
@@ -177,12 +243,86 @@
           </li>
         
           <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
             
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                    <a href="/react/docs/react-component.html">React.Component</a>
                   </li>
                 
               </ul>
@@ -190,23 +330,22 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
             
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
             
           </li>
         
@@ -216,11 +355,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html" class="active">Two-Way Binding Helpers</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
                   <li>
@@ -228,7 +363,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                    <a href="/react/docs/animation.html">Animation</a>
                   </li>
                 
                   <li>
@@ -244,164 +379,15 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
                   </li>
                 
                   <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                    <a href="/react/docs/two-way-binding-helpers.html" class="active">Two-way Binding Helpers</a>
                   </li>
                 
               </ul>
             
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
           </li>
         
       </ul>
@@ -433,136 +419,57 @@
       </ul>
     </div>
   
+
 </div>
 
-
-  <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.2-form-input-binding-sugar.md" target="_blank">Edit on GitHub</a>
-    <h1>
-      Two-Way Binding Helpers
-    </h1>
-    <div class="subHeader"></div>
-
-    <p><code>ReactLink</code> is an easy way to express two-way binding with React.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>ReactLink is deprecated as of React v15. The recommendation is to explicitly set the value and change handler, instead of using ReactLink.</p>
-</blockquote>
-
-<p>In React, data flows one way: from owner to child. This is because data only flows one direction in <a href="https://en.wikipedia.org/wiki/Von_Neumann_architecture">the Von Neumann model of computing</a>. You can think of it as &quot;one-way data binding.&quot;</p>
-
-<p>However, there are lots of applications that require you to read some data and flow it back into your program. For example, when developing forms, you&#39;ll often want to update some React <code>state</code> when you receive user input. Or perhaps you want to perform layout in JavaScript and react to changes in some DOM element size.</p>
-
-<p>In React, you would implement this by listening to a &quot;change&quot; event, read from your data source (usually the DOM) and call <code>setState()</code> on one of your components. &quot;Closing the data flow loop&quot; explicitly leads to more understandable and easier-to-maintain programs. See <a href="/react/docs/forms.html">our forms documentation</a> for more information.</p>
-
-<p>Two-way binding -- implicitly enforcing that some value in the DOM is always consistent with some React <code>state</code> -- is concise and supports a wide variety of applications. We&#39;ve provided <code>ReactLink</code>: syntactic sugar for setting up the common data flow loop pattern described above, or &quot;linking&quot; some data source to React <code>state</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p><code>ReactLink</code> is just a thin wrapper and convention around the <code>onChange</code>/<code>setState()</code> pattern. It doesn&#39;t fundamentally change how data flows in your React application.</p>
-</blockquote>
-<h2><a class="anchor" name="reactlink-before-and-after"></a>ReactLink: Before and After <a class="hash-link" href="#reactlink-before-and-after">#</a></h2>
-<p>Here&#39;s a simple form example without using <code>ReactLink</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">message</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">message</span><span class="p">;</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>This works really well and it&#39;s very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let&#39;s use <code>ReactLink</code> to save us some typing:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
-</span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>LinkedStateMixin</code> adds a method to your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>ReactLink</code> object which contains the current value of the React state and a callback to change it.</p>
-
-<p><code>ReactLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
-
-<p>Note that checkboxes have a special behavior regarding their <code>value</code> attribute, which is the value that will be sent on form submit if the checkbox is checked (defaults to <code>on</code>). The <code>value</code> attribute is not updated when the checkbox is checked or unchecked. For checkboxes, you should use <code>checkedLink</code> instead of <code>valueLink</code>:
-<code>
-&lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
-</code></p>
-<h2><a class="anchor" name="under-the-hood"></a>Under the Hood <a class="hash-link" href="#under-the-hood">#</a></h2>
-<p>There are two sides to <code>ReactLink</code>: the place where you create the <code>ReactLink</code> instance and the place where you use it. To prove how simple <code>ReactLink</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
-<h3><a class="anchor" name="reactlink-without-linkedstatemixin"></a>ReactLink Without LinkedStateMixin <a class="hash-link" href="#reactlink-without-linkedstatemixin">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-<span class="hll">  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">newValue</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">message</span><span class="o">:</span> <span class="nx">newValue</span><span class="p">});</span>
-</span><span class="hll">  <span class="p">},</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kd">var</span> <span class="nx">valueLink</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">requestChange</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span>
-</span><span class="hll">    <span class="p">};</span>
-</span>    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="nx">valueLink</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>As you can see, <code>ReactLink</code> objects are very simple objects that just have a <code>value</code> and <code>requestChange</code> prop. And <code>LinkedStateMixin</code> is similarly simple: it just populates those fields with a value from <code>this.state</code> and a callback that calls <code>this.setState()</code>.</p>
-<h3><a class="anchor" name="reactlink-without-valuelink"></a>ReactLink Without valueLink <a class="hash-link" href="#reactlink-without-valuelink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">valueLink</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">handleChange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">valueLink</span><span class="p">.</span><span class="nx">requestChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">valueLink</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>The <code>valueLink</code> prop is also quite simple. It simply handles the <code>onChange</code> event and calls <code>this.props.valueLink.requestChange()</code> and also uses <code>this.props.valueLink.value</code> instead of <code>this.props.value</code>. That&#39;s it!</p>
-
-
-    <div class="docs-prevnext">
-      
-        <a class="docs-prev" href="/react/docs/animation.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/test-utils.html">Next &rarr;</a>
-      
-    </div>
-  </div>
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

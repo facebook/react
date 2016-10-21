@@ -1,0 +1,643 @@
+
+
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React.Component - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="React.Component - React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/react-component.html">
+  <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="https://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script src="//use.typekit.net/vqa1hcx.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script src="/react/js/html5shiv.min.js"></script>
+  <script src="/react/js/es5-shim.min.js"></script>
+  <script src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
+  <script src="/react/js/codemirror.js"></script>
+  <script src="/react/js/javascript.js"></script>
+  <script src="/react/js/xml.js"></script>
+  <script src="/react/js/jsx.js"></script>
+  <script src="/react/js/react.js"></script>
+  <script src="/react/js/react-dom.js"></script>
+  <script src="/react/js/babel.min.js"></script>
+  <script src="/react/js/live_editor.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+    <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/reference-react-component.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      React.Component
+    </h1>
+    <div class="subHeader"></div>
+
+    <p><a href="/react/docs/components-and-props.html">Components</a> let you split the UI into independent, reusable pieces, and think about each piece in isolation. <code>React.Component</code> is provided by <a href="/react/docs/react-api.html"><code>React</code></a>.</p>
+<h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+<p><code>React.Component</code> is an abstract base class, so it rarely makes sense to refer to <code>React.Component</code> directly. Instead, you will typically subclass it, and define at least a <a href="#render"><code>render()</code></a> method.</p>
+
+<p>Normally you would define a React component as a plain <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes">JavaScript class</a>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If you don&#39;t use ES6 yet, you may use the <a href="/react/docs/react-api.html#createclass"><code>React.createClass</code></a> helper instead. Take a look at <a href="/react/docs/react-without-es6.html">Using React without ES6</a> to learn more.</p>
+<h3><a class="anchor" name="the-component-lifecycle"></a>The Component Lifecycle <a class="hash-link" href="#the-component-lifecycle">#</a></h3>
+<p>Each component has several &quot;lifecycle methods&quot; that you can override to run code at particular times in the process. Methods prefixed with <strong><code>will</code></strong> are called right before something happens, and methods prefixed with <strong><code>did</code></strong> are called right after something happens.</p>
+<h4><a class="anchor" name="mounting"></a>Mounting <a class="hash-link" href="#mounting">#</a></h4>
+<p>These methods are called when an instance of a component is being created and inserted into the DOM:</p>
+
+<ul>
+<li><a href="#constructor"><code>constructor()</code></a></li>
+<li><a href="#componentwillmount"><code>componentWillMount()</code></a></li>
+<li><a href="#render"><code>render()</code></a></li>
+<li><a href="#componentdidmount"><code>componentDidMount()</code></a></li>
+</ul>
+<h4><a class="anchor" name="updating"></a>Updating <a class="hash-link" href="#updating">#</a></h4>
+<p>An update can be caused by changes to props or state. These methods are called when a component is being re-rendered:</p>
+
+<ul>
+<li><a href="#componentwillreceiveprops"><code>componentWillReceiveProps()</code></a></li>
+<li><a href="#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a></li>
+<li><a href="#componentwillupdate"><code>componentWillUpdate()</code></a></li>
+<li><a href="#render"><code>render()</code></a></li>
+<li><a href="#componentdidupdate"><code>componentDidUpdate()</code></a></li>
+</ul>
+<h4><a class="anchor" name="unmounting"></a>Unmounting <a class="hash-link" href="#unmounting">#</a></h4>
+<p>This method is called when a component is being removed from the DOM:</p>
+
+<ul>
+<li><a href="#componentwillunmount"><code>componentWillUnmount()</code></a></li>
+</ul>
+<h3><a class="anchor" name="other-apis"></a>Other APIs <a class="hash-link" href="#other-apis">#</a></h3>
+<p>Each component also provides some other APIs:</p>
+
+<ul>
+<li><a href="#setstate"><code>setState()</code></a></li>
+<li><a href="#forceupdate"><code>forceUpdate()</code></a></li>
+</ul>
+<h3><a class="anchor" name="class-properties"></a>Class Properties <a class="hash-link" href="#class-properties">#</a></h3>
+<ul>
+<li><a href="#defaultprops"><code>defaultProps</code></a></li>
+<li><a href="#displayName"><code>displayName</code></a></li>
+<li><a href="#proptypes"><code>propTypes</code></a></li>
+</ul>
+<h3><a class="anchor" name="instance-properties"></a>Instance Properties <a class="hash-link" href="#instance-properties">#</a></h3>
+<ul>
+<li><a href="#props"><code>props</code></a></li>
+<li><a href="#state"><code>state</code></a></li>
+</ul>
+
+<hr>
+<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="render"></a><code>render()</code> <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span>
+</code></pre></div>
+<p>The <code>render()</code> method is required.</p>
+
+<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single React element. This element can be either a representation of a native DOM component, such as <code>&lt;div /&gt;</code>, or another composite component that you&#39;ve defined yourself.</p>
+
+<p>You can also return <code>null</code> or <code>false</code> to indicate that you don&#39;t want anything rendered. When returning <code>null</code> or <code>false</code>, <code>ReactDOM.findDOMNode(this)</code> will return <code>null</code>.</p>
+
+<p>The <code>render()</code> function should be pure, meaning that it does not modify component state, it returns the same result each time it&#39;s invoked, and it does not directly interact with the browser. If you need to interact with the browser, perform your work in <code>componentDidMount()</code> or the other lifecycle methods instead. Keeping <code>render()</code> pure makes components easier to think about.</p>
+
+<blockquote>
+<p>Note</p>
+
+<p><code>render()</code> will not be invoked if <a href="#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> returns false.</p>
+</blockquote>
+
+<hr>
+<h3><a class="anchor" name="constructor"></a><code>constructor()</code> <a class="hash-link" href="#constructor">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span>
+</code></pre></div>
+<p>The constructor for a React component is called before it is mounted. When implementing the constructor for a <code>React.Component</code> subclass, you should call <code>super(props)</code> before any other statement. Otherwise, <code>this.props</code> will be undefined in the constructor, which can lead to bugs.</p>
+
+<p>The constructor is the right place to initialize state. If you don&#39;t initialize state and you don&#39;t bind methods, you don&#39;t need to implement a constructor for your React component.</p>
+
+<p>It&#39;s okay to initialize state based on props if you know what you&#39;re doing. Here&#39;s an example of a valid <code>React.Component</code> subclass constructor:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialColor</span>
+  <span class="p">};</span>
+<span class="p">}</span>  
+</code></pre></div>
+<p>Beware of this pattern, as it effectively &quot;forks&quot; the props and can lead to bugs. Instead of syncing props to state, you often want to <a href="/react/docs/lifting-state-up.html">lift the state up</a>.</p>
+
+<p>If you &quot;fork&quot; props by using them for state, you might also want to implement <a href="#componentwillreceiveprops"><code>componentWillReceiveProps(nextProps)</code></a> to keep the state up-to-date with them. But lifting state up is often easier and less bug-prone.</p>
+
+<hr>
+<h3><a class="anchor" name="componentwillmount"></a><code>componentWillMount()</code> <a class="hash-link" href="#componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
+</code></pre></div>
+<p><code>componentWillMount()</code> is invoked immediately before mounting occurs. It is called before <code>render()</code>, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.</p>
+
+<p>This is the only lifecycle hook called on server rendering. Generally, we recommend using the <code>constructor()</code> instead.</p>
+
+<hr>
+<h3><a class="anchor" name="componentdidmount"></a><code>componentDidMount()</code> <a class="hash-link" href="#componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">()</span>
+</code></pre></div>
+<p><code>componentDidMount()</code> is invoked immediately after a component is mounted. Initialization that requires DOM nodes should go here. If you need to load data from a remote endpoint, this is a good place to instantiate the network request. Setting state in this method will trigger a re-rendering.</p>
+
+<hr>
+<h3><a class="anchor" name="componentwillreceiveprops"></a><code>componentWillReceiveProps()</code> <a class="hash-link" href="#componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">)</span>
+</code></pre></div>
+<p><code>componentWillReceiveProps()</code> is invoked before a mounted component receives new props. If you need to update the state in response to prop changes (for example, to reset it), you may compare <code>this.props</code> and <code>nextProps</code> and perform state transitions using <code>this.setState()</code> in this method.</p>
+
+<p>Note that React may call this method even if the props have not changed, so make sure to compare the current and next values if you only want to handle changes. This may occur when the parent component causes your component to re-render.</p>
+
+<p><code>componentWillReceiveProps()</code> is not invoked if you just call <code>this.setState()</code></p>
+
+<hr>
+<h3><a class="anchor" name="shouldcomponentupdate"></a><code>shouldComponentUpdate()</code> <a class="hash-link" href="#shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span>
+</code></pre></div>
+<p>Use <code>shouldComponentUpdate()</code> to let React know if a component&#39;s output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.</p>
+
+<p><code>shouldComponentUpdate()</code> is invoked before rendering when new props or state are being received. Defaults to <code>true</code> This method is not called for the initial render or when <code>forceUpdate()</code> is used.</p>
+
+<p>Returning <code>false</code> does not prevent child components from re-rendering when <em>their</em> state changes.</p>
+
+<p>Currently, if <code>shouldComponentUpdate()</code> returns <code>false</code>, then <a href="#componentwillupdate"><code>componentWillUpdate()</code></a>, <a href="#render"><code>render()</code></a>, and <a href="#componentdidupdate"><code>componentDidUpdate()</code></a> will not be invoked. Note that in the future React may treat <code>shouldComponentUpdate()</code> as a hint rather than a strict directive, and returning <code>false</code> may still result in a re-rendering of the component.</p>
+
+<p>If you determine a specific component is slow after profiling, you may change it to inherit from <a href="/react/docs/react-api.html#react.purecomponent"><code>React.PureComponent</code></a> which implements <code>shouldComponentUpdate()</code> with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare <code>this.props</code> with <code>nextProps</code> and <code>this.state</code> with <code>nextState</code> and return <code>false</code> to tell React the update can be skipped.</p>
+
+<hr>
+<h3><a class="anchor" name="componentwillupdate"></a><code>componentWillUpdate()</code> <a class="hash-link" href="#componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span>
+</code></pre></div>
+<p><code>componentWillUpdate()</code> is invoked immediately before rendering when new props or state are being received. Use this as an opportunity to perform preparation before an update occurs. This method is not called for the initial render.</p>
+
+<p>Note that you cannot call <code>this.setState()</code> here. If you need to update state in response to a prop change, use <code>componentWillReceiveProps()</code> instead.</p>
+
+<blockquote>
+<p>Note</p>
+
+<p><code>componentWillUpdate()</code> will not be invoked if <a href="#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> returns false.</p>
+</blockquote>
+
+<hr>
+<h3><a class="anchor" name="componentdidupdate"></a><code>componentDidUpdate()</code> <a class="hash-link" href="#componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">prevProps</span><span class="p">,</span> <span class="nx">prevState</span><span class="p">)</span>
+</code></pre></div>
+<p><code>componentDidUpdate()</code> is invoked immediately after updating occurs. This method is not called for the initial render.</p>
+
+<p>Use this as an opportunity to operate on the DOM when the component has been updated. This is also a good place to do network requests as long as you compare the current props to previous props (e.g. a network request may not be necessary if the props have not changed).</p>
+
+<blockquote>
+<p>Note</p>
+
+<p><code>componentDidUpdate()</code> will not be invoked if <a href="#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> returns false.</p>
+</blockquote>
+
+<hr>
+<h3><a class="anchor" name="componentwillunmount"></a><code>componentWillUnmount()</code> <a class="hash-link" href="#componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
+</code></pre></div>
+<p><code>componentWillUnmount()</code> is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in <code>componentDidMount</code></p>
+
+<hr>
+<h3><a class="anchor" name="setstate"></a><code>setState()</code> <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">nextState</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span>
+</code></pre></div>
+<p>Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.</p>
+
+<p>The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.</p>
+
+<p>Here is the simple object usage:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">mykey</span><span class="o">:</span> <span class="s1">&#39;my new value&#39;</span><span class="p">});</span>
+</code></pre></div>
+<p>It&#39;s also possible to pass a function with the signature <code>function(state, props) =&gt; newState</code>. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state by <code>props.step</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">((</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span><span class="nx">myInteger</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">myInteger</span> <span class="o">+</span> <span class="nx">props</span><span class="p">.</span><span class="nx">step</span><span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>The second parameter is an optional callback function that will be executed once <code>setState</code> is completed and the component is re-rendered. Generally we recommend using <code>componentDidUpdate()</code> for such logic instead.</p>
+
+<p><code>setState()</code> does not immediately mutate <code>this.state</code> but creates a pending state transition. Accessing <code>this.state</code> after calling this method can potentially return the existing value.</p>
+
+<p>There is no guarantee of synchronous operation of calls to <code>setState</code> and calls may be batched for performance gains.</p>
+
+<p><code>setState()</code> will always lead to a re-render unless <code>shouldComponentUpdate()</code> returns <code>false</code>. If mutable objects are being used and conditional rendering logic cannot be implemented in <code>shouldComponentUpdate()</code>, calling <code>setState()</code> only when the new state differs from the previous state will avoid unnecessary re-renders.</p>
+
+<hr>
+<h3><a class="anchor" name="forceupdate"></a><code>forceUpdate()</code> <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">component</span><span class="p">.</span><span class="nx">forceUpdate</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
+</code></pre></div>
+<p>By default, when your component&#39;s state or props change, your component will re-render. If your <code>render()</code> method depends on some other data, you can tell React that the component needs re-rendering by calling <code>forceUpdate()</code>.</p>
+
+<p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component, skipping <code>shouldComponentUpdate()</code>. This will trigger the normal lifecycle methods for child components, including the <code>shouldComponentUpdate()</code> method of each child. React will still only update the DOM if the markup changes.</p>
+
+<p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>.</p>
+
+<hr>
+<h2><a class="anchor" name="class-properties"></a>Class Properties <a class="hash-link" href="#class-properties">#</a></h2><h3><a class="anchor" name="defaultprops"></a><code>defaultProps</code> <a class="hash-link" href="#defaultprops">#</a></h3>
+<p><code>defaultProps</code> can be defined as a property on the component class itself, to set the default props for the class. This is used for undefined props, but not for null props. For example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">CustomButton</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="nx">CustomButton</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>If <code>props.color</code> is not provided, it will be set by default to <code>&#39;blue&#39;</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CustomButton</span> <span class="o">/&gt;</span> <span class="p">;</span> <span class="c1">// props.color will be set to blue</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>If <code>props.color</code> is set to null, it will remain null:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CustomButton</span> <span class="nx">color</span><span class="o">=</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="p">;</span> <span class="c1">// props.color will remain null</span>
+  <span class="p">}</span>
+</code></pre></div>
+<hr>
+<h3><a class="anchor" name="displayname"></a><code>displayName</code> <a class="hash-link" href="#displayname">#</a></h3>
+<p>The <code>displayName</code> string is used in debugging messages. JSX sets this value automatically; see <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>.</p>
+
+<hr>
+<h3><a class="anchor" name="proptypes"></a><code>propTypes</code> <a class="hash-link" href="#proptypes">#</a></h3>
+<p><code>propTypes</code> can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in <a href="/react/docs/react-api.html#react.proptypes"><code>React.PropTypes</code></a>. In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, <code>propTypes</code> checks are skipped for efficiency.</p>
+
+<p>For example, this code ensures that the <code>color</code> prop is a string:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">CustomButton</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="nx">CustomButton</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">name</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>We recommend using <a href="https://flowtype.org/">Flow</a> when possible, to get compile-time typechecking instead of runtime typechecking. <a href="https://flowtype.org/docs/react.html">Flow has built-in support for React</a> so it&#39;s easy to run static analysis on a React app.</p>
+
+<hr>
+<h2><a class="anchor" name="instance-properties"></a>Instance Properties <a class="hash-link" href="#instance-properties">#</a></h2><h3><a class="anchor" name="props"></a><code>props</code> <a class="hash-link" href="#props">#</a></h3>
+<p><code>this.props</code> contains the props that were defined by the caller of this component. See <a href="/react/docs/components-and-props.html">Components and Props</a> for an introduction to props.</p>
+
+<p>In particular, <code>this.props.children</code> is a special prop, typically defined by the child tags in the JSX expression rather than in the tag itself.</p>
+<h3><a class="anchor" name="state"></a><code>state</code> <a class="hash-link" href="#state">#</a></h3>
+<p>The state contains data specific to this component that may change over time. The state is user-defined, and it should be a plain JavaScript object.</p>
+
+<p>If you don&#39;t use it in `render(), it shouldn&#39;t be on the state. For example, you can put timer IDs directly on the instance.</p>
+
+<p>See <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a> for more information about the state.</p>
+
+<p>Never mutate <code>this.state</code> directly, as calling <code>setState()</code> afterwards may replace the mutation you made. Treat <code>this.state</code> as if it were immutable.</p>
+
+
+    <div class="docs-prevnext">
+      
+      
+    </div>
+  </div>
+
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/installation.html">Installation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/hello-world.html">Hello World</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/react-component.html" class="active">React.Component</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Contributing Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Contributing</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/contributing/how-to-contribute.html">How to Contribute</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/codebase-overview.html">Codebase Overview</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/implementation-notes.html">Implementation Notes</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/design-principles.html">Design Principles</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+
+</div>
+
+</section>
+
+
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
+
+  </div>
+
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.6&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    docsearch({
+      apiKey: '36221914cce388c46d0420343e0bb32e',
+      indexName: 'react',
+      inputSelector: '#algolia-doc-search'
+    });
+  </script>
+</body>
+</html>

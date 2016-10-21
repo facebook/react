@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Context | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Context | React">
+  <title>Context - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Context - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/context.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,421 +46,53 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
-    </div>
-
-    
-
-    <section class="content wrap documentationContent">
-  <div class="nav-docs">
-  <!-- Docs Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Quick Start</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
       </ul>
     </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/videos.html">Videos</a>
-            
-          </li>
-        
-          <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
-            
-          </li>
-        
-          <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/forms.html">Forms</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html" class="active">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Contributing Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Contributing</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/contributing/how-to-contribute.html">How to Contribute</a>
-          </li>
-        
-          <li>
-            <a href="/react/contributing/codebase-overview.html">Codebase Overview</a>
-          </li>
-        
-          <li>
-            <a href="/react/contributing/implementation-notes.html">Implementation Notes</a>
-          </li>
-        
-          <li>
-            <a href="/react/contributing/design-principles.html">Design Principles</a>
-          </li>
-        
-      </ul>
-    </div>
-  
+  </div>
 </div>
 
 
+    <section class="content wrap documentationContent">
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/12-context.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/context.md" target="_blank">Edit on GitHub</a>
     <h1>
       Context
     </h1>
     <div class="subHeader"></div>
 
-    <p>One of React&#39;s biggest strengths is that it&#39;s easy to track the flow of data through your React components. When you look at a component, you can easily see exactly which props are being passed in which makes your apps easy to reason about.</p>
+    <p>With React, it&#39;s easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.</p>
 
-<p>Occasionally, you want to pass data through the component tree without having to pass the props down manually at every level. React&#39;s &quot;context&quot; feature lets you do this.</p>
+<p>In some cases, you want to pass data through the component tree without having to pass the props down manually at every level.
+You can do this directly in React with the powerful &quot;context&quot; API.</p>
+<h2><a class="anchor" name="why-not-to-use-context"></a>Why Not To Use Context <a class="hash-link" href="#why-not-to-use-context">#</a></h2>
+<p>The vast majority of applications do not need to use context.</p>
 
-<blockquote>
-<p>Note:</p>
+<p>If you want your application to be stable, don&#39;t use context. It is an experimental API and it is likely to break in future releases of React.</p>
 
-<p>Context is an advanced and experimental feature. The API is likely to change in future releases.</p>
+<p>If you aren&#39;t familiar with state management libraries like <a href="https://github.com/reactjs/redux">Redux</a> or <a href="https://github.com/mobxjs/mobx">MobX</a>, don&#39;t use context. For many practical applications, these libraries and their React bindings are a good choice for managing state that is relevant to many components. It is far more likely that Redux is the right solution to your problem than that context is the right solution.</p>
 
-<p>Most applications will never need to use context. Especially if you are just getting started with React, you likely do not want to use context. Using context will make your code harder to understand because it makes the data flow less clear. It is similar to using global variables to pass state through your application.</p>
+<p>If you aren&#39;t an experienced React developer, don&#39;t use context. There is usually a better way to implement functionality just using props and state.</p>
 
-<p><strong>If you have to use context, use it sparingly.</strong></p>
-
-<p>Regardless of whether you&#39;re building an application or a library, try to isolate your use of context to a small area and avoid using the context API directly when possible so that it&#39;s easier to upgrade when the API changes.</p>
-</blockquote>
-<h2><a class="anchor" name="passing-info-automatically-through-a-tree"></a>Passing info automatically through a tree <a class="hash-link" href="#passing-info-automatically-through-a-tree">#</a></h2>
+<p>If you insist on using context despite these warnings, try to isolate your use of context to a small area and avoid using the context API directly when possible so that it&#39;s easier to upgrade when the API changes.</p>
+<h2><a class="anchor" name="how-to-use-context"></a>How To Use Context <a class="hash-link" href="#how-to-use-context">#</a></h2>
 <p>Suppose you have a structure like:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -490,7 +124,7 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>In this example, we manually thread through a <code>color</code> prop in order to style the <code>Button</code> and <code>Message</code> components appropriately. Theming is a good example of when you might want an entire subtree to have access to some piece of information (a color). Using context, we can pass this through the tree automatically:</p>
+<p>In this example, we manually thread through a <code>color</code> prop in order to style the <code>Button</code> and <code>Message</code> components appropriately. Using context, we can pass this through the tree automatically:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -535,21 +169,30 @@
 <p>By adding <code>childContextTypes</code> and <code>getChildContext</code> to <code>MessageList</code> (the context provider), React passes the information down automatically and any component in the subtree (in this case, <code>Button</code>) can access it by defining <code>contextTypes</code>.</p>
 
 <p>If <code>contextTypes</code> is not defined, then <code>context</code> will be an empty object.</p>
-<h2><a class="anchor" name="parent-child-coupling"></a>Parent-child coupling <a class="hash-link" href="#parent-child-coupling">#</a></h2>
-<p>Context can also let you build an API such as:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="nx">MenuItem</span><span class="o">&gt;</span><span class="nx">aubergine</span><span class="o">&lt;</span><span class="err">/MenuItem&gt;</span>
-  <span class="o">&lt;</span><span class="nx">MenuItem</span><span class="o">&gt;</span><span class="nx">butternut</span> <span class="nx">squash</span><span class="o">&lt;</span><span class="err">/MenuItem&gt;</span>
-  <span class="o">&lt;</span><span class="nx">MenuItem</span><span class="o">&gt;</span><span class="nx">clementine</span><span class="o">&lt;</span><span class="err">/MenuItem&gt;</span>
-<span class="o">&lt;</span><span class="err">/Menu&gt;</span>
-</code></pre></div>
-<p>By passing down the relevant info in the <code>Menu</code> component, each <code>MenuItem</code> can communicate back to the containing <code>Menu</code> component.</p>
+<h2><a class="anchor" name="parent-child-coupling"></a>Parent-Child Coupling <a class="hash-link" href="#parent-child-coupling">#</a></h2>
+<p>Context can also let you build an API where parents and children communicate. For example, one library that works this way is <a href="https://react-router.now.sh/basic">React Router V4</a>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">BasicExample</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="o">&gt;</span><span class="nx">Home</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+        <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+        <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/topics&quot;</span><span class="o">&gt;</span><span class="nx">Topics</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+      <span class="o">&lt;</span><span class="err">/ul&gt;</span>
 
-<p><strong>Before you build components with this API, consider if there are cleaner alternatives.</strong> We&#39;re fond of simply passing the items as an array in cases like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Menu</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;aubergine&#39;</span><span class="p">,</span> <span class="s1">&#39;butternut squash&#39;</span><span class="p">,</span> <span class="s1">&#39;clementine&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">hr</span><span class="o">/&gt;</span>
+
+      <span class="o">&lt;</span><span class="nx">Match</span> <span class="nx">exactly</span> <span class="nx">pattern</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Match</span> <span class="nx">pattern</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Match</span> <span class="nx">pattern</span><span class="o">=</span><span class="s2">&quot;/topics&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Topics</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">)</span>
 </code></pre></div>
-<p>Recall that you can also pass entire React components in props if you&#39;d like to.</p>
-<h2><a class="anchor" name="referencing-context-in-lifecycle-methods"></a>Referencing context in lifecycle methods <a class="hash-link" href="#referencing-context-in-lifecycle-methods">#</a></h2>
+<p>By passing down some information from the <code>Router</code> component, each <code>Link</code> and <code>Match</code> can communicate back to the containing <code>Router</code>.</p>
+
+<p>Before you build components with an API similar to this, consider if there are cleaner alternatives. For example, you can pass entire React component as props if you&#39;d like to.</p>
+<h2><a class="anchor" name="referencing-context-in-lifecycle-methods"></a>Referencing Context in Lifecycle Methods <a class="hash-link" href="#referencing-context-in-lifecycle-methods">#</a></h2>
 <p>If <code>contextTypes</code> is defined within a component, the following lifecycle methods will receive an additional parameter, the <code>context</code> object:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">void</span> <span class="nx">componentWillReceiveProps</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextContext</span>
@@ -566,15 +209,19 @@
 <span class="k">void</span> <span class="nx">componentDidUpdate</span><span class="p">(</span>
   <span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevContext</span>
 <span class="p">)</span>
-</code></pre></div><h2><a class="anchor" name="referencing-context-in-stateless-functional-components"></a>Referencing context in stateless functional components <a class="hash-link" href="#referencing-context-in-stateless-functional-components">#</a></h2>
-<p>Stateless functional components are also able to reference <code>context</code> if <code>contextTypes</code> is defined as a property of the function. The following code shows the <code>Button</code> component above written as a stateless functional component.</p>
+</code></pre></div><h2><a class="anchor" name="referencing-context-in-stateless-functional-components"></a>Referencing Context in Stateless Functional Components <a class="hash-link" href="#referencing-context-in-stateless-functional-components">#</a></h2>
+<p>Stateless functional components are also able to reference <code>context</code> if <code>contextTypes</code> is defined as a property of the function. The following code shows a <code>Button</code> component written as a stateless functional component.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">Button</span> <span class="o">=</span> <span class="p">({</span><span class="nx">children</span><span class="p">},</span> <span class="nx">context</span><span class="p">)</span> <span class="o">=&gt;</span>
   <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
     <span class="p">{</span><span class="nx">children</span><span class="p">}</span>
   <span class="o">&lt;</span><span class="err">/button&gt;;</span>
 
 <span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
-</code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating context <a class="hash-link" href="#updating-context">#</a></h2>
+</code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating Context <a class="hash-link" href="#updating-context">#</a></h2>
+<p>Don&#39;t do it.</p>
+
+<p>React has an API to update context, but it is fundamentally broken and you should not use it.</p>
+
 <p>The <code>getChildContext</code> function will be called when the state or props changes. In order to update data in the context, trigger a local state update with <code>this.setState</code>. This will trigger a new context and changes will be received by the children.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">MediaQuery</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
@@ -606,39 +253,301 @@
 <span class="nx">MediaQuery</span><span class="p">.</span><span class="nx">childContextTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">type</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
 <span class="p">};</span>
-</code></pre></div><h2><a class="anchor" name="when-not-to-use-context"></a>When not to use context <a class="hash-link" href="#when-not-to-use-context">#</a></h2>
-<p>Just as global variables are best avoided when writing clear code, you should avoid using context in most cases. In particular, think twice before using it to &quot;save typing&quot; and using it instead of passing explicit props.</p>
-
-<p>The best use cases for context are for implicitly passing down the logged-in user, the current language, or theme information. All of these might otherwise be true globals, but context lets you scope them to a single React subtree.</p>
-
-<p>Do not use context to pass your model data through components. Threading your data through the tree explicitly is much easier to understand. Using context makes your components more coupled and less reusable, because they behave differently depending on where they&#39;re rendered.</p>
-<h2><a class="anchor" name="known-limitations"></a>Known limitations <a class="hash-link" href="#known-limitations">#</a></h2>
-<p>If a context value provided by a component changes, descendants that use that value won&#39;t update if an intermediate parent returns <code>false</code> from <code>shouldComponentUpdate</code>. See issue <a href="https://github.com/facebook/react/issues/2517">#2517</a> for more details.</p>
+</code></pre></div>
+<p>The problem is, if a context value provided by component changes, descendants that use that value won&#39;t update if an intermediate parent returns <code>false</code> from <code>shouldComponentUpdate</code>. This is totally out of control of the components using context, so there&#39;s basically no way to reliably update the context. <a href="https://medium.com/@mweststrate/how-to-safely-use-react-context-b7e343eff076">This blog post</a> has a good explanation of why this is a problem and how you might get around it.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/advanced-performance.html">&larr; Prev</a>
-      
       
     </div>
   </div>
+
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/installation.html">Installation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/hello-world.html">Hello World</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html" class="active">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/react-component.html">React.Component</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Contributing Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Contributing</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/contributing/how-to-contribute.html">How to Contribute</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/codebase-overview.html">Codebase Overview</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/implementation-notes.html">Implementation Notes</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/design-principles.html">Design Principles</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+
+</div>
+
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Animation | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Animation | React">
+  <title>Animation Add-Ons - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Animation Add-Ons - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/animation.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,413 +46,47 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
-    </div>
-
-    
-
-    <section class="content wrap documentationContent">
-  <div class="nav-docs">
-  <!-- Docs Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Quick Start</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
       </ul>
     </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/videos.html">Videos</a>
-            
-          </li>
-        
-          <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
-            
-          </li>
-        
-          <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/forms.html">Forms</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/animation.html" class="active">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-              </ul>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Contributing Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Contributing</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/contributing/how-to-contribute.html">How to Contribute</a>
-          </li>
-        
-          <li>
-            <a href="/react/contributing/codebase-overview.html">Codebase Overview</a>
-          </li>
-        
-          <li>
-            <a href="/react/contributing/implementation-notes.html">Implementation Notes</a>
-          </li>
-        
-          <li>
-            <a href="/react/contributing/design-principles.html">Design Principles</a>
-          </li>
-        
-      </ul>
-    </div>
-  
+  </div>
 </div>
 
 
+    <section class="content wrap documentationContent">
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.1-animation.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/addons-animation.md" target="_blank">Edit on GitHub</a>
     <h1>
-      Animation
+      Animation Add-Ons
     </h1>
     <div class="subHeader"></div>
 
-    <p>React provides a <code>ReactTransitionGroup</code> add-on component as a low-level API for animation, and a <code>ReactCSSTransitionGroup</code> for easily implementing basic CSS animations and transitions.</p>
-<h2><a class="anchor" name="high-level-api-reactcsstransitiongroup"></a>High-level API: <code>ReactCSSTransitionGroup</code> <a class="hash-link" href="#high-level-api-reactcsstransitiongroup">#</a></h2>
-<p><code>ReactCSSTransitionGroup</code> is based on <code>ReactTransitionGroup</code> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
-<h3><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h3>
-<p><code>ReactCSSTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
+    <p>The <a href="#reacttransitiongroup"><code>ReactTransitionGroup</code></a> add-on component is a low-level API for animation, and <a href="#reactcsstransitiongroup"><code>ReactCSSTransitionGroup</code></a> is an add-on component for easily implementing basic CSS animations and transitions.</p>
+<h2><a class="anchor" name="high-level-api-reactcsstransitiongroup"></a>High-level API: ReactCSSTransitionGroup <a class="hash-link" href="#high-level-api-reactcsstransitiongroup">#</a></h2>
+<p><code>ReactCSSTransitionGroup</code> is a high-level API based on <a href="#low-level-api-reacttransitiongroup"><code>ReactTransitionGroup</code></a> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
 
-<span class="kr">class</span> <span class="nx">TodoList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p><strong>Importing</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-css-transition-group&#39;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
+<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+</code></pre></div><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">TodoList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">items</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">,</span> <span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="s1">&#39;me&#39;</span><span class="p">]};</span>
@@ -480,9 +116,9 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> 
-</span><span class="hll">          <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> 
-</span><span class="hll">          <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span> 
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
+</span><span class="hll">          <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span>
+</span><span class="hll">          <span class="nx">transitionEnterTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span>
 </span><span class="hll">          <span class="nx">transitionLeaveTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">300</span><span class="p">}</span><span class="o">&gt;</span>
 </span><span class="hll">          <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
@@ -521,16 +157,16 @@
 <p>You&#39;ll notice that animation durations need to be specified in both the CSS and the render method; this tells React when to remove the animation classes from the element and -- if it&#39;s leaving -- when to remove the element from the DOM.</p>
 <h3><a class="anchor" name="animate-initial-mounting"></a>Animate Initial Mounting <a class="hash-link" href="#animate-initial-mounting">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> provides the optional prop <code>transitionAppear</code>, to add an extra transition phase at the initial mount of the component. There is generally no transition phase at the initial mount as the default value of <code>transitionAppear</code> is <code>false</code>. The following is an example which passes the prop <code>transitionAppear</code> with the value <code>true</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> 
-        <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span> 
-<span class="hll">        <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> 
-</span><span class="hll">        <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
-      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
+      <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span>
+<span class="hll">      <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span>
+</span><span class="hll">      <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
+</span>      <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+    <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>During the initial mount <code>ReactCSSTransitionGroup</code> will get the <code>example-appear</code> CSS class and the <code>example-appear-active</code> CSS class added in the next tick.</p>
 <div class="highlight"><pre><code class="language-css" data-lang="css"><span class="nc">.example-appear</span> <span class="p">{</span>
@@ -551,51 +187,51 @@
 </blockquote>
 <h3><a class="anchor" name="custom-classes"></a>Custom Classes <a class="hash-link" href="#custom-classes">#</a></h3>
 <p>It is also possible to use custom class names for each of the steps in your transitions. Instead of passing a string into transitionName you can pass an object containing either the <code>enter</code> and <code>leave</code> class names, or an object containing the <code>enter</code>, <code>enter-active</code>, <code>leave-active</code>, and <code>leave</code> class names. If only the enter and leave classes are provided, the enter-active and leave-active classes will be determined by appending &#39;-active&#39; to the end of the class name. Here are two examples using custom classes:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="p">...</span>
-  <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
-    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
-      <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
-      <span class="nx">enterActive</span><span class="o">:</span> <span class="s1">&#39;enterActive&#39;</span><span class="p">,</span>
-      <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
-      <span class="nx">leaveActive</span><span class="o">:</span> <span class="s1">&#39;leaveActive&#39;</span><span class="p">,</span>
-      <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span><span class="p">,</span>
-      <span class="nx">appearActive</span><span class="o">:</span> <span class="s1">&#39;appearActive&#39;</span>
-    <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
-    <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
-  <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// ...</span>
+<span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
+  <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
+    <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
+    <span class="nx">enterActive</span><span class="o">:</span> <span class="s1">&#39;enterActive&#39;</span><span class="p">,</span>
+    <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
+    <span class="nx">leaveActive</span><span class="o">:</span> <span class="s1">&#39;leaveActive&#39;</span><span class="p">,</span>
+    <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span><span class="p">,</span>
+    <span class="nx">appearActive</span><span class="o">:</span> <span class="s1">&#39;appearActive&#39;</span>
+  <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
+  <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
 
-  <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
-    <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
-      <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
-      <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
-      <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span>
-    <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
-    <span class="p">{</span><span class="nx">item2</span><span class="p">}</span>
-  <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
-  <span class="p">...</span>
+<span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
+  <span class="nx">transitionName</span><span class="o">=</span><span class="p">{</span> <span class="p">{</span>
+    <span class="nx">enter</span><span class="o">:</span> <span class="s1">&#39;enter&#39;</span><span class="p">,</span>
+    <span class="nx">leave</span><span class="o">:</span> <span class="s1">&#39;leave&#39;</span><span class="p">,</span>
+    <span class="nx">appear</span><span class="o">:</span> <span class="s1">&#39;appear&#39;</span>
+  <span class="p">}</span> <span class="p">}</span><span class="o">&gt;</span>
+  <span class="p">{</span><span class="nx">item2</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+<span class="c1">// ...</span>
 </code></pre></div><h3><a class="anchor" name="animation-group-must-be-mounted-to-work"></a>Animation Group Must Be Mounted To Work <a class="hash-link" href="#animation-group-must-be-mounted-to-work">#</a></h3>
 <p>In order for it to apply transitions to its children, the <code>ReactCSSTransitionGroup</code> must already be mounted in the DOM or the prop <code>transitionAppear</code> must be set to <code>true</code>.</p>
 
 <p>The example below would <strong>not</strong> work, because the <code>ReactCSSTransitionGroup</code> is being mounted along with the new item, instead of the new item being mounted within it. Compare this to the <a href="#getting-started">Getting Started</a> section above to see the difference.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleRemove</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span><span class="o">&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
-</span>          <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
-<span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">));</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleRemove</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span><span class="o">&gt;</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
+</span>        <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
+<span class="hll">      <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+</span>    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">));</span>
 
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
-<span class="hll">        <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+<span class="hll">      <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
+</span>    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="animating-one-or-zero-items"></a>Animating One or Zero Items <a class="hash-link" href="#animating-one-or-zero-items">#</a></h3>
 <p>In the example above, we rendered a list of items into <code>ReactCSSTransitionGroup</code>. However, the children of <code>ReactCSSTransitionGroup</code> can also be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element. For example, we can implement a simple image carousel like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">;</span>
 
 <span class="kd">function</span> <span class="nx">ImageCarousel</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
@@ -617,33 +253,37 @@
 
 <p>When using <code>ReactCSSTransitionGroup</code>, there&#39;s no way for your components to be notified when a transition has ended or to perform any more complex logic around animation. If you want more fine-grained control, you can use the lower-level <code>ReactTransitionGroup</code> API which provides the hooks you need to do custom transitions.</p>
 </blockquote>
-<h2><a class="anchor" name="low-level-api-reacttransitiongroup"></a>Low-level API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#low-level-api-reacttransitiongroup">#</a></h2>
-<p><code>ReactTransitionGroup</code> is the basis for animations. It is accessible from <code>require(&#39;react-addons-transition-group&#39;)</code>. When children are declaratively added or removed from it (as in the example above) special lifecycle hooks are called on them.</p>
-<h3><a class="anchor" name="componentwillappearcallback"></a><code>componentWillAppear(callback)</code> <a class="hash-link" href="#componentwillappearcallback">#</a></h3>
-<p>This is called at the same time as <code>componentDidMount()</code> for components that are initially mounted in a <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It is only called on the initial render of a <code>TransitionGroup</code>.</p>
-<h3><a class="anchor" name="componentdidappear"></a><code>componentDidAppear()</code> <a class="hash-link" href="#componentdidappear">#</a></h3>
-<p>This is called after the <code>callback</code> function that was passed to <code>componentWillAppear</code> is called.</p>
-<h3><a class="anchor" name="componentwillentercallback"></a><code>componentWillEnter(callback)</code> <a class="hash-link" href="#componentwillentercallback">#</a></h3>
-<p>This is called at the same time as <code>componentDidMount()</code> for components added to an existing <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It will not be called on the initial render of a <code>TransitionGroup</code>.</p>
-<h3><a class="anchor" name="componentdidenter"></a><code>componentDidEnter()</code> <a class="hash-link" href="#componentdidenter">#</a></h3>
-<p>This is called after the <code>callback</code> function that was passed to <code>componentWillEnter</code> is called.</p>
-<h3><a class="anchor" name="componentwillleavecallback"></a><code>componentWillLeave(callback)</code> <a class="hash-link" href="#componentwillleavecallback">#</a></h3>
-<p>This is called when the child has been removed from the <code>ReactTransitionGroup</code>. Though the child has been removed, <code>ReactTransitionGroup</code> will keep it in the DOM until <code>callback</code> is called.</p>
-<h3><a class="anchor" name="componentdidleave"></a><code>componentDidLeave()</code> <a class="hash-link" href="#componentdidleave">#</a></h3>
-<p>This is called when the <code>willLeave</code> <code>callback</code> is called (at the same time as <code>componentWillUnmount</code>).</p>
-<h3><a class="anchor" name="rendering-a-different-component"></a>Rendering a Different Component <a class="hash-link" href="#rendering-a-different-component">#</a></h3>
-<p>By default <code>ReactTransitionGroup</code> renders as a <code>span</code>. You can change this behavior by providing a <code>component</code> prop. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code>:</p>
+
+<hr>
+<h2><a class="anchor" name="low-level-api-reacttransitiongroup"></a>Low-level API: ReactTransitionGroup <a class="hash-link" href="#low-level-api-reacttransitiongroup">#</a></h2>
+<p><strong>Importing</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactTransitionGroup</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-transition-group&#39;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">ReactTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-transition-group&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
+<span class="kd">var</span> <span class="nx">ReactTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TransitionGroup</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+</code></pre></div>
+<p><code>ReactTransitionGroup</code> is the basis for animations. When children are declaratively added or removed from it (as in the <a href="#getting-started">example above</a>), special lifecycle hooks are called on them.</p>
+
+<ul>
+<li><a href="#componentwillappear"><code>componentWillAppear()</code></a></li>
+<li><a href="#componentdidappear"><code>componentDidAppear()</code></a></li>
+<li><a href="#componentwillenter"><code>componentWillEnter()</code></a></li>
+<li><a href="#componentdidenter"><code>componentDidEnter()</code></a></li>
+<li><a href="#componentwillleave"><code>componentWillLeave()</code></a></li>
+<li><a href="#componentdidleave"><code>componentDidLeave()</code></a></li>
+</ul>
+<h4><a class="anchor" name="rendering-a-different-component"></a>Rendering a Different Component <a class="hash-link" href="#rendering-a-different-component">#</a></h4>
+<p><code>ReactTransitionGroup</code> renders as a <code>span</code> by default. You can change this behavior by providing a <code>component</code> prop. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span><span class="o">&gt;</span>
-</span>  <span class="p">...</span>
+</span>  <span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
 <p>Any additional, user-defined, properties will become properties of the rendered component. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code> with CSS class:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>
-</span>  <span class="p">...</span>
+</span>  <span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
 <p>Every DOM component that React can render is available for use. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself! Just write <code>component={List}</code> and your component will receive <code>this.props.children</code>.</p>
-<h3><a class="anchor" name="rendering-a-single-child"></a>Rendering a Single Child <a class="hash-link" href="#rendering-a-single-child">#</a></h3>
+<h4><a class="anchor" name="rendering-a-single-child"></a>Rendering a Single Child <a class="hash-link" href="#rendering-a-single-child">#</a></h4>
 <p>People often use <code>ReactTransitionGroup</code> to animate mounting and unmounting of a single child such as a collapsible panel. Normally <code>ReactTransitionGroup</code> wraps all its children in a <code>span</code> (or a custom <code>component</code> as described above). This is because any React component has to return a single root element, and <code>ReactTransitionGroup</code> is no exception to this rule.</p>
 
 <p>However if you only need to render a single child inside <code>ReactTransitionGroup</code>, you can completely avoid wrapping it in a <code>&lt;span&gt;</code> or any other DOM component. To do this, create a custom component that renders the first child passed to it directly:</p>
@@ -659,32 +299,332 @@
 </code></pre></div>
 <p>This only works when you are animating a single child in and out, such as a collapsible panel. This approach wouldn&#39;t work when animating multiple children or replacing the single child with another child, such as an image carousel. For an image carousel, while the current image is animating out, another image will animate in, so <code>&lt;ReactTransitionGroup&gt;</code> needs to give them a common DOM parent. You can&#39;t avoid the wrapper for multiple children, but you can customize the wrapper with the <code>component</code> prop as described above.</p>
 
+<hr>
+<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="componentwillappear"></a><code>componentWillAppear()</code> <a class="hash-link" href="#componentwillappear">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillAppear</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
+</code></pre></div>
+<p>This is called at the same time as <code>componentDidMount()</code> for components that are initially mounted in a <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It is only called on the initial render of a <code>TransitionGroup</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="componentdidappear"></a><code>componentDidAppear()</code> <a class="hash-link" href="#componentdidappear">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidAppear</span><span class="p">()</span>
+</code></pre></div>
+<p>This is called after the <code>callback</code> function that was passed to <code>componentWillAppear</code> is called.</p>
+
+<hr>
+<h3><a class="anchor" name="componentwillenter"></a><code>componentWillEnter()</code> <a class="hash-link" href="#componentwillenter">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillEnter</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
+</code></pre></div>
+<p>This is called at the same time as <code>componentDidMount()</code> for components added to an existing <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It will not be called on the initial render of a <code>TransitionGroup</code>.</p>
+
+<hr>
+<h3><a class="anchor" name="componentdidenter"></a><code>componentDidEnter()</code> <a class="hash-link" href="#componentdidenter">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidEnter</span><span class="p">()</span>
+</code></pre></div>
+<p>This is called after the <code>callback</code> function that was passed to <a href="#componentwillenter"><code>componentWillEnter()</code></a> is called.</p>
+
+<hr>
+<h3><a class="anchor" name="componentwillleave"></a><code>componentWillLeave()</code> <a class="hash-link" href="#componentwillleave">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillLeave</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
+</code></pre></div>
+<p>This is called when the child has been removed from the <code>ReactTransitionGroup</code>. Though the child has been removed, <code>ReactTransitionGroup</code> will keep it in the DOM until <code>callback</code> is called.</p>
+
+<hr>
+<h3><a class="anchor" name="componentdidleave"></a><code>componentDidLeave()</code> <a class="hash-link" href="#componentdidleave">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidLeave</span><span class="p">()</span>
+</code></pre></div>
+<p>This is called when the <code>willLeave</code> <code>callback</code> is called (at the same time as <code>componentWillUnmount()</code>).</p>
+
 
     <div class="docs-prevnext">
       
         <a class="docs-prev" href="/react/docs/addons.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/two-way-binding-helpers.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/create-fragment.html">Next &rarr;</a>
       
     </div>
   </div>
+
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/installation.html">Installation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/hello-world.html">Hello World</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/react-component.html">React.Component</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/animation.html" class="active">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Contributing Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Contributing</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/contributing/how-to-contribute.html">How to Contribute</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/codebase-overview.html">Codebase Overview</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/implementation-notes.html">Implementation Notes</a>
+          </li>
+        
+          <li>
+            <a href="/react/contributing/design-principles.html">Design Principles</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+
+</div>
+
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

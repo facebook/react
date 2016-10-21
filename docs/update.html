@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Immutability Helpers | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Immutability Helpers | React">
+  <title>Immutability Helpers - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Immutability Helpers - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/update.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,31 +46,116 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
+  </div>
+</div>
 
-    
 
     <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/addons-update.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      Immutability Helpers
+    </h1>
+    <div class="subHeader"></div>
+
+    <blockquote>
+<p>Note:
+<code>update</code> is a legacy add-on. Use <a href="https://github.com/kolodny/immutability-helper">kolodny/immutability-helper</a> instead.</p>
+</blockquote>
+
+<p><strong>Importing</strong></p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">update</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-update&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-update&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
+<span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">update</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+<p>React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it&#39;s easy to implement a fast <a href="/react/docs/react-component.html#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> method to significantly speed up your app.</p>
+
+<p>Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like <a href="http://clojure.org/">Clojure</a>. However, we&#39;ve provided a simple immutability helper, <code>update()</code>, that makes dealing with this type of data much easier, <em>without</em> fundamentally changing how your data is represented. You can also take a look at Facebook&#39;s <a href="https://facebook.github.io/immutable-js/docs/">Immutable-js</a> and the <a href="/react/docs/advanced-performance.html">Advanced Performance</a> section for more detail on Immutable-js.</p>
+<h3><a class="anchor" name="the-main-idea"></a>The Main Idea <a class="hash-link" href="#the-main-idea">#</a></h3>
+<p>If you mutate data like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="c1">// or...</span>
+<span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
+</code></pre></div>
+<p>You have no way of determining which data has changed since the previous copy has been overwritten. Instead, you need to create a new copy of <code>myData</code> and change only the parts of it that need to be changed. Then you can compare the old copy of <code>myData</code> with the new one in <code>shouldComponentUpdate()</code> using triple-equals:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">deepCopy</span><span class="p">(</span><span class="nx">myData</span><span class="p">);</span>
+<span class="nx">newData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="nx">newData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
+</code></pre></div>
+<p>Unfortunately, deep copies are expensive, and sometimes impossible. You can alleviate this by only copying objects that need to be changed and by reusing the objects that haven&#39;t changed. Unfortunately, in today&#39;s JavaScript this can be cumbersome:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">x</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="mi">7</span><span class="p">}),</span>
+  <span class="p">}),</span>
+  <span class="nx">a</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="mi">9</span><span class="p">)})</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>While this is fairly performant (since it only makes a shallow copy of <code>log n</code> objects and reuses the rest), it&#39;s a big pain to write. Look at all the repetition! This is not only annoying, but also provides a large surface area for bugs.</p>
+<h2><a class="anchor" name="update"></a><code>update()</code> <a class="hash-link" href="#update">#</a></h2>
+<p><code>update()</code> provides simple syntactic sugar around this pattern to make writing this code easier. This code becomes:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">update</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-update&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">x</span><span class="o">:</span> <span class="p">{</span><span class="nx">y</span><span class="o">:</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="mi">7</span><span class="p">}}},</span>
+  <span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">9</span><span class="p">]}}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>While the syntax takes a little getting used to (though it&#39;s inspired by <a href="http://docs.mongodb.org/manual/core/crud-introduction/#query">MongoDB&#39;s query language</a>) there&#39;s no redundancy, it&#39;s statically analyzable and it&#39;s not much more typing than the mutative version.</p>
+
+<p>The <code>$</code>-prefixed keys are called <em>commands</em>. The data structure they are &quot;mutating&quot; is called the <em>target</em>.</p>
+<h2><a class="anchor" name="available-commands"></a>Available Commands <a class="hash-link" href="#available-commands">#</a></h2>
+<ul>
+<li><code>{$push: array}</code> <code>push()</code> all the items in <code>array</code> on the target.</li>
+<li><code>{$unshift: array}</code> <code>unshift()</code> all the items in <code>array</code> on the target.</li>
+<li><code>{$splice: array of arrays}</code> for each item in <code>arrays</code> call <code>splice()</code> on the target with the parameters provided by the item.</li>
+<li><code>{$set: any}</code> replace the target entirely.</li>
+<li><code>{$merge: object}</code> merge the keys of <code>object</code> with the target.</li>
+<li><code>{$apply: function}</code> passes in the current value to the function and updates it with the new returned value.</li>
+</ul>
+<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2><h3><a class="anchor" name="simple-push"></a>Simple push <a class="hash-link" href="#simple-push">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">initialArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>
+<span class="kd">var</span> <span class="nx">newArray</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">initialArray</span><span class="p">,</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">]});</span> <span class="c1">// =&gt; [1, 2, 3, 4]</span>
+</code></pre></div>
+<p><code>initialArray</code> is still <code>[1, 2, 3]</code>.</p>
+<h3><a class="anchor" name="nested-collections"></a>Nested collections <a class="hash-link" href="#nested-collections">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">collection</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">15</span><span class="p">]}];</span>
+<span class="kd">var</span> <span class="nx">newCollection</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">collection</span><span class="p">,</span> <span class="p">{</span><span class="mi">2</span><span class="o">:</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">$splice</span><span class="o">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">]]}}});</span>
+<span class="c1">// =&gt; [1, 2, {a: [12, 13, 14, 15]}]</span>
+</code></pre></div>
+<p>This accesses <code>collection</code>&#39;s index <code>2</code>, key <code>a</code>, and does a splice of one item starting from index <code>1</code> (to remove <code>17</code>) while inserting <code>13</code> and <code>14</code>.</p>
+<h3><a class="anchor" name="updating-a-value-based-on-its-current-one"></a>Updating a value based on its current one <a class="hash-link" href="#updating-a-value-based-on-its-current-one">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
+<span class="kd">var</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$apply</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">x</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;}}});</span>
+<span class="c1">// =&gt; {a: 5, b: 6}</span>
+<span class="c1">// This is equivalent, but gets verbose for deeply nested collections:</span>
+<span class="kd">var</span> <span class="nx">newObj2</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">b</span> <span class="o">*</span> <span class="mi">2</span><span class="p">}});</span>
+</code></pre></div><h3><a class="anchor" name="shallow-merge"></a>(Shallow) Merge <a class="hash-link" href="#shallow-merge">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
+<span class="kd">var</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">$merge</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="mi">6</span><span class="p">,</span> <span class="nx">c</span><span class="o">:</span> <span class="mi">7</span><span class="p">}});</span> <span class="c1">// =&gt; {a: 5, b: 6, c: 7}</span>
+</code></pre></div>
+
+    <div class="docs-prevnext">
+      
+      
+    </div>
+  </div>
+
   <div class="nav-docs">
   <!-- Docs Nav -->
   
@@ -77,97 +164,47 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
+            <a href="/react/docs/installation.html">Installation</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
+            <a href="/react/docs/hello-world.html">Hello World</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/videos.html">Videos</a>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
             
           </li>
         
@@ -177,12 +214,86 @@
           </li>
         
           <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
             
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                    <a href="/react/docs/react-component.html">React.Component</a>
                   </li>
                 
               </ul>
@@ -190,23 +301,22 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
             
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
             
           </li>
         
@@ -216,11 +326,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
                   <li>
@@ -228,7 +334,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                    <a href="/react/docs/animation.html">Animation</a>
                   </li>
                 
                   <li>
@@ -244,164 +350,15 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
                   </li>
                 
                   <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
                   </li>
                 
               </ul>
             
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
           </li>
         
       </ul>
@@ -433,103 +390,57 @@
       </ul>
     </div>
   
+
 </div>
 
-
-  <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.7-update.md" target="_blank">Edit on GitHub</a>
-    <h1>
-      Immutability Helpers
-    </h1>
-    <div class="subHeader"></div>
-
-    <p>React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it&#39;s easy to implement a fast <code>shouldComponentUpdate()</code> method to significantly speed up your app.</p>
-
-<p>Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like <a href="http://clojure.org/">Clojure</a>. However, we&#39;ve provided a simple immutability helper, <code>update()</code>, that makes dealing with this type of data much easier, <em>without</em> fundamentally changing how your data is represented. You can also take a look at Facebook&#39;s <a href="https://facebook.github.io/immutable-js/docs/">Immutable-js</a> and the <a href="/react/docs/advanced-performance.html">Advanced Performance</a> section for more detail on Immutable-js.</p>
-<h2><a class="anchor" name="the-main-idea"></a>The main idea <a class="hash-link" href="#the-main-idea">#</a></h2>
-<p>If you mutate data like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
-<span class="c1">// or...</span>
-<span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
-</code></pre></div>
-<p>You have no way of determining which data has changed since the previous copy has been overwritten. Instead, you need to create a new copy of <code>myData</code> and change only the parts of it that need to be changed. Then you can compare the old copy of <code>myData</code> with the new one in <code>shouldComponentUpdate()</code> using triple-equals:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">deepCopy</span><span class="p">(</span><span class="nx">myData</span><span class="p">);</span>
-<span class="nx">newData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
-<span class="nx">newData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
-</code></pre></div>
-<p>Unfortunately, deep copies are expensive, and sometimes impossible. You can alleviate this by only copying objects that need to be changed and by reusing the objects that haven&#39;t changed. Unfortunately, in today&#39;s JavaScript this can be cumbersome:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">x</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="p">{</span>
-    <span class="nx">y</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="mi">7</span><span class="p">}),</span>
-  <span class="p">}),</span>
-  <span class="nx">a</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="mi">9</span><span class="p">)})</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>While this is fairly performant (since it only makes a shallow copy of <code>log n</code> objects and reuses the rest), it&#39;s a big pain to write. Look at all the repetition! This is not only annoying, but also provides a large surface area for bugs.</p>
-
-<p><code>update()</code> provides simple syntactic sugar around this pattern to make writing this code easier. This code becomes:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-update&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">x</span><span class="o">:</span> <span class="p">{</span><span class="nx">y</span><span class="o">:</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="mi">7</span><span class="p">}}},</span>
-  <span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">9</span><span class="p">]}}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>While the syntax takes a little getting used to (though it&#39;s inspired by <a href="http://docs.mongodb.org/manual/core/crud-introduction/#query">MongoDB&#39;s query language</a>) there&#39;s no redundancy, it&#39;s statically analyzable and it&#39;s not much more typing than the mutative version.</p>
-
-<p>The <code>$</code>-prefixed keys are called <em>commands</em>. The data structure they are &quot;mutating&quot; is called the <em>target</em>.</p>
-<h2><a class="anchor" name="available-commands"></a>Available commands <a class="hash-link" href="#available-commands">#</a></h2>
-<ul>
-<li><code>{$push: array}</code> <code>push()</code> all the items in <code>array</code> on the target.</li>
-<li><code>{$unshift: array}</code> <code>unshift()</code> all the items in <code>array</code> on the target.</li>
-<li><code>{$splice: array of arrays}</code> for each item in <code>arrays</code> call <code>splice()</code> on the target with the parameters provided by the item.</li>
-<li><code>{$set: any}</code> replace the target entirely.</li>
-<li><code>{$merge: object}</code> merge the keys of <code>object</code> with the target.</li>
-<li><code>{$apply: function}</code> passes in the current value to the function and updates it with the new returned value.</li>
-</ul>
-<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2><h3><a class="anchor" name="simple-push"></a>Simple push <a class="hash-link" href="#simple-push">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">initialArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>
-<span class="kd">var</span> <span class="nx">newArray</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">initialArray</span><span class="p">,</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">]});</span> <span class="c1">// =&gt; [1, 2, 3, 4]</span>
-</code></pre></div>
-<p><code>initialArray</code> is still <code>[1, 2, 3]</code>.</p>
-<h3><a class="anchor" name="nested-collections"></a>Nested collections <a class="hash-link" href="#nested-collections">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">collection</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">15</span><span class="p">]}];</span>
-<span class="kd">var</span> <span class="nx">newCollection</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">collection</span><span class="p">,</span> <span class="p">{</span><span class="mi">2</span><span class="o">:</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">$splice</span><span class="o">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">]]}}});</span>
-<span class="c1">// =&gt; [1, 2, {a: [12, 13, 14, 15]}]</span>
-</code></pre></div>
-<p>This accesses <code>collection</code>&#39;s index <code>2</code>, key <code>a</code>, and does a splice of one item starting from index <code>1</code> (to remove <code>17</code>) while inserting <code>13</code> and <code>14</code>.</p>
-<h3><a class="anchor" name="updating-a-value-based-on-its-current-one"></a>Updating a value based on its current one <a class="hash-link" href="#updating-a-value-based-on-its-current-one">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
-<span class="kd">var</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$apply</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">x</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;}}});</span>
-<span class="c1">// =&gt; {a: 5, b: 6}</span>
-<span class="c1">// This is equivalent, but gets verbose for deeply nested collections:</span>
-<span class="kd">var</span> <span class="nx">newObj2</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">b</span> <span class="o">*</span> <span class="mi">2</span><span class="p">}});</span>
-</code></pre></div><h3><a class="anchor" name="shallow-merge"></a>(Shallow) merge <a class="hash-link" href="#shallow-merge">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
-<span class="kd">var</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">$merge</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="mi">6</span><span class="p">,</span> <span class="nx">c</span><span class="o">:</span> <span class="mi">7</span><span class="p">}});</span> <span class="c1">// =&gt; {a: 5, b: 6, c: 7}</span>
-</code></pre></div>
-
-    <div class="docs-prevnext">
-      
-        <a class="docs-prev" href="/react/docs/create-fragment.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/pure-render-mixin.html">Next &rarr;</a>
-      
-    </div>
-  </div>
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

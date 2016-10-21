@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>JSX in Depth | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="JSX in Depth | React">
+  <title>JSX In Depth - React</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="JSX In Depth - React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://facebook.github.io/react/docs/jsx-in-depth.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
@@ -44,31 +46,275 @@
   <div class="container">
 
     <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
-          <li><a href="/react/support.html">Support</a></li>
-          <li><a href="/react/downloads.html">Download</a></li>
-          <li><a href="/react/blog/">Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
+  <div class="wrap">
+    <a class="nav-home" href="/react/index.html">
+      <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+      React
+    </a>
+    <div class="nav-lists">
+      <ul class="nav-site nav-site-internal">
+        <li><a href="/react/docs/hello-world.html" class="active">Docs</a></li>
+        <li><a href="/react/tutorial/tutorial.html">Tutorial</a></li>
+        <li><a href="/react/community/support.html">Community</a></li>
+        <li><a href="/react/blog/">Blog</a></li>
+        <li class="nav-site-search">
+          <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
+        </li>
+      </ul>
+      <ul class="nav-site nav-site-external">
+        <li><a href="https://github.com/facebook/react">GitHub</a></li>
+        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+      </ul>
     </div>
+  </div>
+</div>
 
-    
 
     <section class="content wrap documentationContent">
+  <div class="inner-content">
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/jsx-in-depth.md" target="_blank">Edit on GitHub</a>
+    <h1>
+      JSX In Depth
+    </h1>
+    <div class="subHeader"></div>
+
+    <p>Fundamentally, JSX just provides syntactic sugar for the <code>React.createElement(component, props, ...children)</code> function. The JSX code:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyButton</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="nx">shadowSize</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Click</span> <span class="nx">Me</span><span class="o">&lt;</span><span class="err">/MyButton&gt;</span>
+</code></pre></div>
+<p>compiles into:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">MyButton</span><span class="p">,</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="nx">shadowSize</span><span class="o">:</span> <span class="mi">2</span><span class="p">},</span> <span class="s1">&#39;Click Me&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>You can also use the self-closing form of the tag if there are no children. So:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;sidebar&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>compiles into:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;sidebar&#39;</span><span class="p">},</span> <span class="kc">null</span><span class="p">)</span>
+</code></pre></div>
+<p>If you want to test out how some specific JSX is converted into JavaScript, you can try out <a href="https://babeljs.io/repl/#?babili=false&amp;evaluate=true&amp;lineWrap=false&amp;presets=es2015%2Creact%2Cstage-0&amp;code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D">the online Babel compiler</a>.</p>
+<h2><a class="anchor" name="specifying-the-react-element-type"></a>Specifying The React Element Type <a class="hash-link" href="#specifying-the-react-element-type">#</a></h2>
+<p>The first part of a JSX tag determines the type of the React element.</p>
+
+<p>Capitalized types indicate that the JSX tag is referring to a React component. These tags get compiled into a direct reference to the named variable, so if you use the JSX <code>&lt;Foo /&gt;</code> expression, <code>Foo</code> must be in scope.</p>
+
+<p>Since JSX compiles into calls to <code>React.createElement</code>, the <code>React</code> library must also always be in scope from your JSX code.</p>
+
+<p>For example, both of the imports are necessary in this code, even though &#39;React&#39; and &#39;CustomButton&#39; are not directly referenced from JavaScript:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">CustomButton</span> <span class="nx">from</span> <span class="s1">&#39;./CustomButton&#39;</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">WarningButton</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CustomButton</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If you don&#39;t use a JavaScript bundler and added React as a script tag, it is already in scope as a React global.</p>
+
+<p>You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if <code>MyComponents.DatePicker</code> is a component, you can use it directly from JSX with:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">MyComponents</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">DatePicker</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">imagine</span> <span class="nx">a</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">}</span> <span class="nx">datepicker</span> <span class="nx">here</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">BlueDatePicker</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponents</span><span class="p">.</span><span class="nx">DatePicker</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When an element type starts with a lowercase letter, it refers to a built-in component like <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code> and results in a string <code>&#39;div&#39;</code> or <code>&#39;span&#39;</code> passed to <code>React.createElement</code>. Types that start with a capital letter like <code>&lt;Foo /&gt;</code> compile to <code>React.createElement(Foo)</code> and correspond to a component defined or imported in your JavaScript file.</p>
+
+<p>We recommend naming components with a capital letter. If you do have a component that starts with a lowercase letter, assign it to a capitalized variable before using it in JSX.</p>
+
+<p>For example, this code will not run as expected:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">hello</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// This use of &lt;div&gt; is legitimate because div is a valid HTML tag</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">toWhat</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">HelloWorld</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// This code attempts to create an HTML &lt;hello&gt; tag and fails</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">hello</span> <span class="nx">toWhat</span><span class="o">=</span><span class="s2">&quot;World&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>You cannot use a general expression as the React element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. This often comes up when you want to render a different component based on a prop:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">PhotoStory</span><span class="p">,</span> <span class="nx">VideoStory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;./stories&#39;</span><span class="p">;</span>
+
+<span class="kr">const</span> <span class="nx">components</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">photo</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">PhotoStory</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nx">video</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">VideoStory</span> <span class="o">/&gt;</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="kd">function</span> <span class="nx">Story1</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Not valid JSX</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">]</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">render2</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">];</span>
+
+  <span class="c1">// Valid JSX</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><h2><a class="anchor" name="props-in-jsx"></a>Props in JSX <a class="hash-link" href="#props-in-jsx">#</a></h2>
+<p>There are several different ways to specify props in JSX.</p>
+<h3><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h3>
+<p>You can pass any JavaScript expression as a prop, by surrounding it with <code>{}</code>. For example, in this JSX:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>For <code>MyComponent</code>, The value of <code>props.foo</code> will be <code>10</code> because the expression <code>1 + 2 + 3 + 4</code> gets evaluated.</p>
+
+<p><code>if</code> statements and <code>for</code> loops are not expressions in JavaScript, so they can&#39;t be used in JSX directly. Instead, you can put these in the surrounding code. For example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">NumberDescriber</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">description</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">description</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">even</span><span class="o">&lt;</span><span class="err">/strong&gt;;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="nx">description</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">i</span><span class="o">&gt;</span><span class="nx">odd</span><span class="o">&lt;</span><span class="err">/i&gt;;</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span><span class="p">}</span> <span class="nx">is</span> <span class="nx">an</span> <span class="p">{</span><span class="nx">description</span><span class="p">}</span> <span class="nx">number</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+</code></pre></div><h3><a class="anchor" name="string-literals"></a>String Literals <a class="hash-link" href="#string-literals">#</a></h3>
+<p>You can pass a string literal as a prop. These two JSX expressions are equivalent:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="s2">&quot;hello world&quot;</span> <span class="o">/&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;hello world&quot;</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>When you pass a string literal, its value is HTML-unescaped. So these two JSX expressions are equivalent:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="s2">&quot;&amp;lt;3&quot;</span> <span class="o">/&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;&lt;3&quot;</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>This behavior is usually not relevant. It&#39;s only mentioned here for completeness.</p>
+<h3><a class="anchor" name="props-default-to-true"></a>Props Default to &quot;True&quot; <a class="hash-link" href="#props-default-to-true">#</a></h3>
+<p>If you pass no value for a prop, it defaults to <code>true</code>. These two JSX expressions are equivalent:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyTextBox</span> <span class="nx">autocomplete</span> <span class="o">/&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">MyTextBox</span> <span class="nx">autocomplete</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>In general, we don&#39;t recommend using this because it can be confused with the ES6 object shorthand <code>{foo}</code> which is short for {foo: foo} rather than <code>{foo: true}</code>. This behavior is just there so that it matches the behavior of HTML.</p>
+<h3><a class="anchor" name="spread-attributes"></a>Spread Attributes <a class="hash-link" href="#spread-attributes">#</a></h3>
+<p>If you already have <code>props</code> as an object, and you want to pass it in JSX, you can use <code>...</code> as a &quot;spread&quot; operator to pass the whole props object. These two render functions are equivalent:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">render1</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span><span class="nx">left</span><span class="o">:</span> <span class="s1">&#39;ben&#39;</span><span class="p">,</span> <span class="nx">right</span><span class="o">:</span> <span class="s1">&#39;hector&#39;</span><span class="p">};</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">render2</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">left</span><span class="o">=</span><span class="s2">&quot;ben&quot;</span> <span class="nx">right</span><span class="o">=</span><span class="s2">&quot;hector&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Spread attributes can be useful when you are building generic containers. However, they can also make your code messy by making it easy to pass a lot of irrelevant props to components that don&#39;t care about them. We recommend that you use this syntax sparingly.</p>
+<h2><a class="anchor" name="children-in-jsx"></a>Children in JSX <a class="hash-link" href="#children-in-jsx">#</a></h2>
+<p>In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: <code>props.children</code>. There are several different ways to pass children:</p>
+<h3><a class="anchor" name="string-literals"></a>String Literals <a class="hash-link" href="#string-literals">#</a></h3>
+<p>You can put a string between the opening and closing tags and <code>props.children</code> will just be that string. This is useful for many of the built-in HTML elements. For example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/MyComponent&gt;</span>
+</code></pre></div>
+<p>This is valid JSX, and <code>props.children</code> in <code>MyComponent</code> will simply be the string <code>&quot;Hello world!&quot;</code>. HTML is unescaped, so you can generally write JSX just like you would write HTML in this way:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>This is valid HTML <span class="ni">&amp;amp;</span> JSX at the same time.<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>JSX removes whitespace at the beginning and ending of a line. It also removes blank lines. New lines adjacent to tags are removed; new lines that occur in the middle of string literals are condensed into a single space. So these all render to the same thing:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+  <span class="nx">Hello</span> <span class="nx">World</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+  <span class="nx">Hello</span>
+  <span class="nx">World</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+
+  <span class="nx">Hello</span> <span class="nx">World</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div><h3><a class="anchor" name="jsx-children"></a>JSX Children <a class="hash-link" href="#jsx-children">#</a></h3>
+<p>You can provide more JSX elements as the children. This is useful for displaying nested components:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyContainer</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">MyFirstComponent</span> <span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="nx">MySecondComponent</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/MyContainer&gt;</span>
+</code></pre></div>
+<p>You can mix together different types of children, so you can use string literals together with JSX children. This is another way in which JSX is like HTML, so that this is both valid JSX and valid HTML:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
+  Here is a list:
+  <span class="nt">&lt;ul&gt;</span>
+    <span class="nt">&lt;li&gt;</span>Item 1<span class="nt">&lt;/li&gt;</span>
+    <span class="nt">&lt;li&gt;</span>Item 2<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;/ul&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>A React component can&#39;t return multiple React elements, but a single JSX expression can have multiple children, so if you want a component to render multiple things you can wrap it in a <code>div</code> like this.</p>
+<h3><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h3>
+<p>You can pass any JavaScript expression as children, by enclosing it within <code>{}</code>. For example, these expressions are equivalent:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">foo</span><span class="o">&lt;</span><span class="err">/MyComponent&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;foo&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/MyComponent&gt;</span>
+</code></pre></div>
+<p>This is often useful for rendering a list of JSX expressions of arbitrary length. For example, this renders an HTML list:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Item</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">message</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">renderTodoList</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">todos</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;finish doc&#39;</span><span class="p">,</span> <span class="s1">&#39;submit pr&#39;</span><span class="p">,</span> <span class="s1">&#39;nag dan to review&#39;</span><span class="p">];</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+      <span class="p">{</span><span class="nx">todos</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Item</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">)}</span>
+    <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>JavaScript expressions can be mixed with other types of children. This is often useful in lieu of string templates:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Hello</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">addressee</span><span class="p">}</span><span class="o">!&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, <code>props.children</code> works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as <code>props.children</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">ListOfTenThings</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">Repeat</span> <span class="nx">numTimes</span><span class="o">=</span><span class="p">{</span><span class="mi">10</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="p">{(</span><span class="nx">index</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">index</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">This</span> <span class="nx">is</span> <span class="nx">item</span> <span class="p">{</span><span class="nx">index</span><span class="p">}</span> <span class="k">in</span> <span class="nx">the</span> <span class="nx">list</span><span class="o">&lt;</span><span class="err">/div&gt;}</span>
+    <span class="o">&lt;</span><span class="err">/Repeat&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Calls the children callback numTimes to produce a repeated component</span>
+<span class="kd">function</span> <span class="nx">Repeat</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">numTimes</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">(</span><span class="nx">i</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">items</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Children passed to a custom component can be anything, as long as that component transforms them into something React can understand before rendering. This usage is not common, but it works if you want to stretch what JSX is capable of.</p>
+
+<p><code>false</code>, <code>null</code>, &#39;undefined&#39;, and &#39;true&#39; are valid children. They simply don&#39;t render. These JSX expressions will all render to the same thing:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>This can be useful to conditionally render React elements. This JSX only renders a <code>&lt;Header /&gt;</code> if <code>showHeader</code> is true:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">showHeader</span> <span class="o">&amp;&amp;</span> <span class="o">&lt;</span><span class="nx">Header</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="nx">Content</span> <span class="o">/&gt;&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+
+    <div class="docs-prevnext">
+      
+      
+    </div>
+  </div>
+
   <div class="nav-docs">
   <!-- Docs Nav -->
   
@@ -77,97 +323,47 @@
       <ul>
         
           <li>
-            <a href="/react/docs/getting-started.html">Getting Started</a>
+            <a href="/react/docs/installation.html">Installation</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/tutorial.html">Tutorial</a>
+            <a href="/react/docs/hello-world.html">Hello World</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Community Resources</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/conferences.html">Conferences</a>
+            <a href="/react/docs/introducing-jsx.html">Introducing JSX</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/videos.html">Videos</a>
+            <a href="/react/docs/rendering-elements.html">Rendering Elements</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Complementary-Tools" class="external">Complementary Tools</a>
+            <a href="/react/docs/components-and-props.html">Components and Props</a>
             
           </li>
         
           <li>
-            <a href="https://github.com/facebook/react/wiki/Examples" class="external">Examples</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Guides</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/why-react.html">Why React?</a>
+            <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html">Displaying Data</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/jsx-in-depth.html" class="active">JSX in Depth</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
-                  </li>
-                
-              </ul>
+            <a href="/react/docs/handling-events.html">Handling Events</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            <a href="/react/docs/conditional-rendering.html">Conditional Rendering</a>
             
           </li>
         
           <li>
-            <a href="/react/docs/multiple-components.html">Multiple Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reusable-components.html">Reusable Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            <a href="/react/docs/lists-and-keys.html">Lists and Keys</a>
             
           </li>
         
@@ -177,12 +373,86 @@
           </li>
         
           <li>
-            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            <a href="/react/docs/lifting-state-up.html">Lifting State Up</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/composition-vs-inheritance.html">Composition vs Inheritance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking In React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Advanced Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/jsx-in-depth.html" class="active">JSX In Depth</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/optimizing-performance.html">Optimizing Performance</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-es6.html">React Without ES6</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-without-jsx.html">React Without JSX</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/context.html">Context</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/react-api.html">React</a>
             
               <ul>
                 
                   <li>
-                    <a href="/react/docs/more-about-refs.html">Refs to Components</a>
+                    <a href="/react/docs/react-component.html">React.Component</a>
                   </li>
                 
               </ul>
@@ -190,23 +460,22 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            <a href="/react/docs/react-dom.html">ReactDOM</a>
             
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/language-tooling.html">Language Tooling</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/package-management.html">Package Management</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/environments.html">Server-side Environments</a>
-                  </li>
-                
-              </ul>
+          </li>
+        
+          <li>
+            <a href="/react/docs/react-dom-server.html">ReactDOMServer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-elements.html">DOM Elements</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">SyntheticEvent</a>
             
           </li>
         
@@ -216,11 +485,7 @@
               <ul>
                 
                   <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
                   </li>
                 
                   <li>
@@ -228,7 +493,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">Cloning Elements</a>
+                    <a href="/react/docs/animation.html">Animation</a>
                   </li>
                 
                   <li>
@@ -244,164 +509,15 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
+                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
                   </li>
                 
                   <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
                   </li>
                 
               </ul>
             
-          </li>
-        
-          <li>
-            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/context.html">Context</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-    <div class="nav-docs-section">
-      <h3>Reference</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/docs/top-level-api.html">Top-Level API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-api.html">Component API</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/events.html">Event System</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/dom-differences.html">DOM Differences</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/reconciliation.html">Reconciliation</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/webcomponents.html">Web Components</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
-            
-          </li>
-        
-      </ul>
-    </div>
-  
-
-  <!-- Tips Nav -->
-  
-    <div class="nav-docs-section">
-      <h3>Tips</h3>
-      <ul>
-        
-          <li>
-            <a href="/react/tips/introduction.html">Introduction</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/inline-styles.html">Inline Styles</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
-          </li>
-        
-          <li>
-            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
           </li>
         
       </ul>
@@ -433,210 +549,57 @@
       </ul>
     </div>
   
+
 </div>
 
-
-  <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02.1-jsx-in-depth.md" target="_blank">Edit on GitHub</a>
-    <h1>
-      JSX in Depth
-    </h1>
-    <div class="subHeader"></div>
-
-    <p><a href="https://facebook.github.io/jsx/">JSX</a> is a JavaScript syntax extension that looks similar to XML. You can use a simple JSX syntactic transform with React.</p>
-<h2><a class="anchor" name="why-jsx"></a>Why JSX? <a class="hash-link" href="#why-jsx">#</a></h2>
-<p>You don&#39;t have to use JSX with React. You can just use plain JS. However, we recommend using JSX because it is a concise and familiar syntax for defining tree structures with attributes.</p>
-
-<p>It&#39;s more familiar for casual developers such as designers.</p>
-
-<p>XML has the benefit of balanced opening and closing tags. This helps make large trees easier to read than function calls or object literals.</p>
-
-<p>It doesn&#39;t alter the semantics of JavaScript.</p>
-<h2><a class="anchor" name="html-tags-vs.-react-components"></a>HTML Tags vs. React Components <a class="hash-link" href="#html-tags-vs.-react-components">#</a></h2>
-<p>React can either render HTML tags (strings) or React components (classes).</p>
-
-<p>To render an HTML tag, just use lower-case tag names in JSX:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myDivElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myDivElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div>
-<p>To render a React Component, just create a local variable that starts with an upper-case letter:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
-<span class="kd">var</span> <span class="nx">myElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">someProperty</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div>
-<p>React&#39;s JSX uses the upper vs. lower case convention to distinguish between local component classes and HTML tags.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>Since JSX is JavaScript, identifiers such as <code>class</code> and <code>for</code> are discouraged
-as XML attribute names. Instead, React DOM components expect DOM property
-names like <code>className</code> and <code>htmlFor</code>, respectively.</p>
-</blockquote>
-<h2><a class="anchor" name="the-transform"></a>The Transform <a class="hash-link" href="#the-transform">#</a></h2>
-<p>React JSX transforms from an XML-like syntax into native JavaScript. XML elements, attributes and children are transformed into arguments that are passed to <code>React.createElement</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
-<span class="c1">// Input (JSX):</span>
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">,</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span><span class="s2">&quot;blue&quot;</span><span class="p">});</span>
-</code></pre></div>
-<p>Notice that in order to use <code>&lt;Nav /&gt;</code>, the <code>Nav</code> variable must be in scope.</p>
-
-<p>JSX also allows specifying children using XML syntax:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">,</span> <span class="nx">Profile</span><span class="p">;</span>
-<span class="c1">// Input (JSX):</span>
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="o">&gt;&lt;</span><span class="nx">Profile</span><span class="o">&gt;</span><span class="nx">click</span><span class="o">&lt;</span><span class="err">/Profile&gt;&lt;/Nav&gt;;</span>
-<span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
-  <span class="nx">Nav</span><span class="p">,</span>
-  <span class="p">{</span><span class="nx">color</span><span class="o">:</span><span class="s2">&quot;blue&quot;</span><span class="p">},</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Profile</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>JSX will infer the class&#39;s <a href="/react/docs/component-specs.html#displayname">displayName</a> from the variable assignment when the displayName is undefined:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
-<span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">});</span>
-<span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s2">&quot;Nav&quot;</span><span class="p">,</span> <span class="p">});</span>
-</code></pre></div>
-<p>Use the <a href="https://babeljs.io/repl/">Babel REPL</a> to try out JSX and see how it desugars into native JavaScript, and the <a href="http://magic.reactjs.net/htmltojsx.htm">HTML to JSX converter</a> to convert your existing HTML to JSX.</p>
-
-<p>If you want to use JSX, the <a href="/react/docs/getting-started.html">Getting Started</a> guide shows how to set up compilation.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>The JSX expression always evaluates to a ReactElement. The actual
-implementation details may vary. An optimized mode could inline the
-ReactElement as an object literal to bypass the validation code in
-<code>React.createElement</code>.</p>
-</blockquote>
-<h2><a class="anchor" name="namespaced-components"></a>Namespaced Components <a class="hash-link" href="#namespaced-components">#</a></h2>
-<p>If you are building a component that has many children, like a form, you might end up with something with a lot of variable declarations:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Awkward block of variable declarations</span>
-<span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">FormRow</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">FormLabel</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">FormInput</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">;</span>
-
-<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span><span class="o">&gt;</span>
-    <span class="o">&lt;</span><span class="nx">FormRow</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">FormLabel</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="nx">FormInput</span> <span class="o">/&gt;</span>
-    <span class="o">&lt;</span><span class="err">/FormRow&gt;</span>
-  <span class="o">&lt;</span><span class="err">/Form&gt;</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>To make it simpler and easier, <em>namespaced components</em> let you use one component that has other components as attributes:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
-
-<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span><span class="o">&gt;</span>
-    <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span> <span class="o">/&gt;</span>
-    <span class="o">&lt;</span><span class="err">/Form.Row&gt;</span>
-  <span class="o">&lt;</span><span class="err">/Form&gt;</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>To do this, you just need to create your <em>&quot;sub-components&quot;</em> as attributes of the main component:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyFormComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
-
-<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Row</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
-<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Label</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
-<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Input</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
-</code></pre></div>
-<p>JSX will handle this properly when compiling your code.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
-      <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">,</span> <span class="kc">null</span><span class="p">),</span>
-      <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
-    <span class="p">)</span>
-  <span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<blockquote>
-<p>Note:</p>
-
-<p>This feature is available in <a href="/react/blog/2014/07/17/react-v0.11.html#jsx">v0.11</a> and above.</p>
-</blockquote>
-<h2><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h2><h3><a class="anchor" name="attribute-expressions"></a>Attribute Expressions <a class="hash-link" href="#attribute-expressions">#</a></h3>
-<p>To use a JavaScript expression as an attribute value, wrap the expression in a pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</code>).</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
-<span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Person</span> <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
-  <span class="nx">Person</span><span class="p">,</span>
-  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
-<span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name="boolean-attributes"></a>Boolean Attributes <a class="hash-link" href="#boolean-attributes">#</a></h3>
-<p>Omitting the value of an attribute causes JSX to treat it as <code>true</code>. To pass <code>false</code> an attribute expression must be used. This often comes up when using HTML form elements, with attributes like <code>disabled</code>, <code>required</code>, <code>checked</code> and <code>readOnly</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// These two are equivalent in JSX for disabling a button</span>
-<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-
-<span class="c1">// And these two are equivalent in JSX for not disabling a button</span>
-<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span> <span class="nx">disabled</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h3><a class="anchor" name="child-expressions"></a>Child Expressions <a class="hash-link" href="#child-expressions">#</a></h3>
-<p>Likewise, JavaScript expressions may be used to express children:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
-<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Container&gt;;</span>
-<span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
-  <span class="nx">Container</span><span class="p">,</span>
-  <span class="kc">null</span><span class="p">,</span>
-  <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">)</span> <span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Login</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name="comments"></a>Comments <a class="hash-link" href="#comments">#</a></h3>
-<p>It&#39;s easy to add comments within your JSX; they&#39;re just JS expressions. You just need to be careful to put <code>{}</code> around the comments when you are within the children section of a tag.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
-    <span class="p">{</span><span class="cm">/* child comment, put {} around */</span><span class="p">}</span>
-    <span class="o">&lt;</span><span class="nx">Person</span>
-      <span class="cm">/* multi</span>
-<span class="cm">         line</span>
-<span class="cm">         comment */</span>
-      <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="c1">// end of line comment</span>
-    <span class="o">/&gt;</span>
-  <span class="o">&lt;</span><span class="err">/Nav&gt;</span>
-<span class="p">);</span>
-</code></pre></div>
-<blockquote>
-<p>NOTE:</p>
-
-<p>JSX is similar to HTML, but not exactly the same. See <a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> for some key differences.</p>
-</blockquote>
-
-
-    <div class="docs-prevnext">
-      
-        <a class="docs-prev" href="/react/docs/displaying-data.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/jsx-spread.html">Next &rarr;</a>
-      
-    </div>
-  </div>
 </section>
 
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;2016 Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
-  </div>
-  <div id="fb-root"></div>
+    <footer class="nav-footer">
+  <section class="sitemap">
+    <a href="/react/" class="nav-home">
+    </a>
+    <div>
+      <h5><a href="/react/docs/">Docs</a></h5>
+      <a href="/react/docs/hello-world.html">Quick Start</a>
+      <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+      <a href="/react/tutorial/tutorial.html">Tutorial</a>
+      <a href="/react/docs/jsx-in-depth.html">Advanced Guides</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Community</a></h5>
+      <a href="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</a>
+      <a href="https://discuss.reactjs.org/" target="_blank">Discussion Forum</a>
+      <a href="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</a>
+      <a href="https://www.facebook.com/react" target="_blank">Facebook</a>
+      <a href="https://twitter.com/reactjs" target="_blank">Twitter</a>
+    </div>
+    <div>
+      <h5><a href="/react/community/support.html">Resources</a></h5>
+      <a href="/react/community/conferences.html">Conferences</a>
+      <a href="/react/community/videos.html">Videos</a>
+      <a href="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</a>
+      <a href="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</a>
+    </div>
+    <div>
+      <h5>More</h5>
+      <a href="/react/blog/">Blog</a>
+      <a href="https://github.com/facebook/react" target="_blank">GitHub</a>
+      <a href="http://facebook.github.io/react-native/" target="_blank">React Native</a>
+      <a href="/react/acknowledgements.html">Acknowledgements</a>
+    </div>
+  </section>
+  <a href="https://code.facebook.com/projects/" target="_blank" class="fbOpenSource">
+    <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
+  </a>
+  <section class="copyright">
+    Copyright © 2016 Facebook Inc.
+  </section>
+</footer>
 
+  </div>
+
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
