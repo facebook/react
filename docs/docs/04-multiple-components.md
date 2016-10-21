@@ -123,7 +123,7 @@ The situation gets more complicated when the children are shuffled around (as in
 
 When React reconciles the keyed children, it will ensure that any child with `key` will be reordered (instead of clobbered) or destroyed (instead of reused).
 
-The `key` should *always* be supplied directly to the components in the array, not to the container HTML child of each component in the array:
+The `key` should *always* be supplied directly to the elements or components in the array, not to the container HTML child of each component in the array:
 
 ```javascript
 // WRONG!
