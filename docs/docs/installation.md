@@ -2,9 +2,7 @@
 id: installation
 title: Installation
 permalink: docs/installation.html
-redirect_from: "docs/index.html"
 redirect_from: "downloads.html"
-redirect_from: "docs/getting-started.html"
 redirect_from: "docs/tooling-integration.html"
 redirect_from: "/docs/package-management.html"
 redirect_from: "/docs/language-tooling.html"
