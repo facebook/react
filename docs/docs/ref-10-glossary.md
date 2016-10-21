@@ -89,14 +89,20 @@ These are used as properties of other `ReactElement`s to represent children. Eff
 
 You can use React using only `ReactElement`s but to really take advantage of React, you'll want to use `ReactComponent`s to create encapsulations with embedded state.
 
-A `ReactComponent` Class is simply just a JavaScript class (or "constructor function").
-
+A `ReactComponent` Class is simply just a JavaScript class:
 ```javascript
-var MyComponent = React.createClass({
-  render: function() {
+class MyComponent extends React.Component {
+  render() {
     ...
   }
-});
+}
+```
+
+Or you can define it as a function (but it will be a stateless `ReactComponent`):
+```javascript
+function MyComponent() {
+  return ...
+}
 ```
 
 When this constructor is invoked it is expected to return an object with at least a `render` method on it. This object is referred to as a `ReactComponent`.
