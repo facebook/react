@@ -166,6 +166,77 @@ class MyComponent extends React.Component {
 
 You can also key children by passing a ReactFragment object. See [Keyed Fragments](create-fragment.html) for more details.
 
+> Warning:
+>
+> The key you use should be tied to the data you pass to the keyed element. This is NOT the case when using the `index` of your iterating method (i.e `.map()`)
+
+```javascript
+var fruits = [
+  {id: 12, text: 'banana'},
+  {id: 34, text: 'pineapple'},
+  {id: 56, text: 'mango'},
+];
+
+var ListItemWrapper = React.createClass({
+  render: function () {
+      return (
+        <li> {this.props.data.text} </li>
+      );
+  },
+});
+
+// Say we pass fruits as a props.fruits
+var FruitList = React.createClass({
+  render: function () {
+    return (
+      <ul>
+        {this.props.fruits.map(function(fruit, index) {
+          return <ListItemWrapper key={index} data={fruit} />
+        })}
+      </ul>
+    );
+  },
+});
+```
+```html
+//Render Pass 1
+<ul>
+  <li> banana </li>     // key 0
+  <li> pineapple </li>  // key 1
+  <li> mango </li>      // key 2
+</ul>
+```
+```javascript
+//Now let's insert a new fruit before all others
+var fruits = [
+  {id: 78, text: 'coconut'},
+  {id: 12, text: 'banana'},
+  {id: 34, text: 'pineapple'},
+  {id: 56, text: 'mango'},
+];
+```
+```html
+//Render Pass 2
+<ul>
+  <li> coconut </li>    // key 0, which was used for banana
+  <li> banana </li>     // key 1, which was used for pineapple
+  <li> pineapple </li>  // key 2, which was used for mango
+  <li> mango </li>      // key 3, oh, a new key (when mango needed key 2 here.)
+</ul>
+
+//What React expected
+<ul>
+  <li> coconut </li>    // key 3, oh, a new key. This is a new element !
+  <li> banana </li>     // key 0, I already used it for banana, I'll just continue
+  <li> pineapple </li>  // key 1, ...
+  <li> mango </li>      // key 2, ...
+</ul>
+
+//This would have be the case using fruit.id as key
+```
+
+Conclusion: Do not use indexes as keys. Use unique identifiers provided by your data.
+
 ## Data Flow
 
 In React, data flows from owner to owned component through `props` as discussed above. This is effectively one-way data binding: owners bind their owned component's props to some value the owner has computed based on its `props` or `state`. Since this process happens recursively, data changes are automatically reflected everywhere they are used.
