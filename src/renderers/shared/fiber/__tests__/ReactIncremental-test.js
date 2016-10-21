@@ -839,8 +839,14 @@ describe('ReactIncremental', () => {
   it('can call sCU while resuming a partly mounted component', () => {
     var ops = [];
 
+    var instances = new Set();
+
     class Bar extends React.Component {
       state = { y: 'A' };
+      constructor() {
+        super();
+        instances.add(this);
+      }
       shouldComponentUpdate(newProps, newState) {
         return this.props.x !== newProps.x ||
                this.state.y !== newState.y;
@@ -855,20 +861,29 @@ describe('ReactIncremental', () => {
       ops.push('Foo');
       return [
         <Bar key="a" x="A" />,
-        <Bar key="b" x="B" />,
+        <Bar key="b" x={props.step === 0 ? 'B' : 'B2'} />,
         <Bar key="c" x="C" />,
+        <Bar key="d" x="D" />,
       ];
     }
 
-    ReactNoop.render(<Foo />);
-    ReactNoop.flushDeferredPri(30);
-    expect(ops).toEqual(['Foo', 'Bar:A', 'Bar:B']);
+    ReactNoop.render(<Foo step={0} />);
+    ReactNoop.flushDeferredPri(40);
+    expect(ops).toEqual(['Foo', 'Bar:A', 'Bar:B', 'Bar:C']);
+
+    expect(instances.size).toBe(3);
 
     ops = [];
 
-    ReactNoop.render(<Foo />);
-    ReactNoop.flushDeferredPri(40);
-    expect(ops).toEqual(['Foo', 'Bar:B', 'Bar:C']);
+    ReactNoop.render(<Foo step={1} />);
+    ReactNoop.flushDeferredPri(50);
+    // A completed and was reused. B completed but couldn't be reused because
+    // props differences. C didn't complete and therefore couldn't be reused.
+    // D never even started so it needed a new instance.
+    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:C', 'Bar:D']);
+
+    // We expect each rerender to correspond to a new instance.
+    expect(instances.size).toBe(6);
   });
 
   it('gets new props when setting state on a partly updated component', () => {
@@ -925,6 +940,298 @@ describe('ReactIncremental', () => {
 
     ReactNoop.flush();
     expect(ops).toEqual(['Bar:A-1', 'Baz', 'Baz']);
+  });
+
+  it('calls componentWillMount twice if the initial render is aborted', () => {
+    var ops = [];
+
+    class LifeCycle extends React.Component {
+      state = { x: this.props.x };
+      componentWillMount() {
+        ops.push('componentWillMount:' + this.state.x + '-' + this.props.x);
+      }
+      componentDidMount() {
+        ops.push('componentDidMount:' + this.state.x + '-' + this.props.x);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    function Trail() {
+      ops.push('Trail');
+    }
+
+    function App(props) {
+      ops.push('App');
+      return (
+        <div>
+          <LifeCycle x={props.x} />
+          <Trail />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<App x={0} />);
+    ReactNoop.flushDeferredPri(30);
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillMount:0-0',
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<App x={1} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillMount:1-1',
+      'Trail',
+      'componentDidMount:1-1',
+    ]);
+  });
+
+  it('calls componentWill* twice if an update render is aborted', () => {
+    var ops = [];
+
+    class LifeCycle extends React.Component {
+      componentWillMount() {
+        ops.push('componentWillMount:' + this.props.x);
+      }
+      componentDidMount() {
+        ops.push('componentDidMount:' + this.props.x);
+      }
+      componentWillReceiveProps(nextProps) {
+        ops.push('componentWillReceiveProps:' + this.props.x + '-' + nextProps.x);
+      }
+      shouldComponentUpdate(nextProps) {
+        ops.push('shouldComponentUpdate:' + this.props.x + '-' + nextProps.x);
+        return true;
+      }
+      componentWillUpdate(nextProps) {
+        ops.push('componentWillUpdate:' + this.props.x + '-' + nextProps.x);
+      }
+      componentDidUpdate(prevProps) {
+        ops.push('componentDidUpdate:' + this.props.x + '-' + prevProps.x);
+      }
+      render() {
+        ops.push('render:' + this.props.x);
+        return <span />;
+      }
+    }
+
+    function Sibling() {
+      // The sibling is used to confirm that we've completed the first child,
+      // but not yet flushed.
+      ops.push('Sibling');
+      return <span />;
+    }
+
+    function App(props) {
+      ops.push('App');
+
+      return [
+        <LifeCycle key="a" x={props.x} />,
+        <Sibling key="b" />,
+      ];
+    }
+
+    ReactNoop.render(<App x={0} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillMount:0',
+      'render:0',
+      'Sibling',
+      'componentDidMount:0',
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<App x={1} />);
+    ReactNoop.flushDeferredPri(30);
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillReceiveProps:0-1',
+      'shouldComponentUpdate:0-1',
+      'componentWillUpdate:0-1',
+      'render:1',
+      'Sibling',
+      // no componentDidUpdate
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<App x={2} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillReceiveProps:1-2',
+      'shouldComponentUpdate:1-2',
+      'componentWillUpdate:1-2',
+      'render:2',
+      'Sibling',
+      // When componentDidUpdate finally gets called, it covers both updates.
+      'componentDidUpdate:2-0',
+    ]);
+  });
+
+  it('does not call componentWillReceiveProps for state-only updates', () => {
+    var ops = [];
+
+    var instances = [];
+
+    class LifeCycle extends React.Component {
+      state = { x: 0 };
+      tick() {
+        this.setState({
+          x: this.state.x + 1,
+        });
+      }
+      componentWillMount() {
+        instances.push(this);
+        ops.push('componentWillMount:' + this.state.x);
+      }
+      componentDidMount() {
+        ops.push('componentDidMount:' + this.state.x);
+      }
+      componentWillReceiveProps(nextProps) {
+        ops.push('componentWillReceiveProps');
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        ops.push('shouldComponentUpdate:' + this.state.x + '-' + nextState.x);
+        return true;
+      }
+      componentWillUpdate(nextProps, nextState) {
+        ops.push('componentWillUpdate:' + this.state.x + '-' + nextState.x);
+      }
+      componentDidUpdate(prevProps, prevState) {
+        ops.push('componentDidUpdate:' + this.state.x + '-' + prevState.x);
+      }
+      render() {
+        ops.push('render:' + this.state.x);
+        return <span />;
+      }
+    }
+
+    // This wrap is a bit contrived because we can't pause a completed root and
+    // there is currently an issue where a component can't reuse its render
+    // output unless it fully completed.
+    class Wrap extends React.Component {
+      state = { y: 0 };
+      componentWillMount() {
+        instances.push(this);
+      }
+      tick() {
+        this.setState({
+          y: this.state.y + 1,
+        });
+      }
+      render() {
+        ops.push('Wrap');
+        return <LifeCycle y={this.state.y} />;
+      }
+    }
+
+    function Sibling() {
+      // The sibling is used to confirm that we've completed the first child,
+      // but not yet flushed.
+      ops.push('Sibling');
+      return <span />;
+    }
+
+    function App(props) {
+      ops.push('App');
+      return [
+        <Wrap key="a" />,
+        <Sibling key="b" />,
+      ];
+    }
+
+    ReactNoop.render(<App y={0} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'App',
+      'Wrap',
+      'componentWillMount:0',
+      'render:0',
+      'Sibling',
+      'componentDidMount:0',
+    ]);
+
+    ops = [];
+
+    // LifeCycle
+    instances[1].tick();
+
+    ReactNoop.flushDeferredPri(25);
+
+    expect(ops).toEqual([
+      // no componentWillReceiveProps
+      'shouldComponentUpdate:0-1',
+      'componentWillUpdate:0-1',
+      'render:1',
+      // no componentDidUpdate
+    ]);
+
+    ops = [];
+
+    // LifeCycle
+    instances[1].tick();
+
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      // no componentWillReceiveProps
+      'shouldComponentUpdate:1-2',
+      'componentWillUpdate:1-2',
+      'render:2',
+      // When componentDidUpdate finally gets called, it covers both updates.
+      'componentDidUpdate:2-0',
+    ]);
+
+    ops = [];
+
+    // Next we will update props of LifeCycle by updating its parent.
+
+    instances[0].tick();
+
+    ReactNoop.flushDeferredPri(30);
+
+    expect(ops).toEqual([
+      'Wrap',
+      'componentWillReceiveProps',
+      'shouldComponentUpdate:2-2',
+      'componentWillUpdate:2-2',
+      'render:2',
+      // no componentDidUpdate
+    ]);
+
+    ops = [];
+
+    // Next we will update LifeCycle directly but not with new props.
+    instances[1].tick();
+
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      // This should not trigger another componentWillReceiveProps because
+      // we never got new props.
+      'shouldComponentUpdate:2-3',
+      'componentWillUpdate:2-3',
+      'render:3',
+      'componentDidUpdate:3-2',
+    ]);
+
+    // TODO: Test that we get the expected values for the same scenario with
+    // incomplete parents.
+
   });
 
 });
