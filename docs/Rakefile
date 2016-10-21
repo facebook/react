@@ -3,7 +3,7 @@ require('json')
 require('yaml')
 require('open-uri')
 
-desc "download babel-browser"
+desc "download babel-standalone"
 task :fetch_remotes do
   IO.copy_stream(
     open('https://unpkg.com/babel-standalone@6.15.0/babel.min.js'),
