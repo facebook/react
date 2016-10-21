@@ -44,6 +44,21 @@
       title: React Without JSX
     - id: web-components
       title: Web Components
+- title: Reference
+  items:
+    - id: react-api
+      title: React
+      subitems:
+        - id: react-component
+          title: React.Component
+    - id: react-dom
+      title: ReactDOM
+    - id: react-dom-server
+      title: ReactDOMServer
+    - id: dom-elements
+      title: DOM Elements
+    - id: events
+      title: SyntheticEvent
     - id: addons
       title: Add-Ons
       subitems:
@@ -63,18 +78,4 @@
           title: Shallow Compare
         - id: two-way-binding-helpers
           title: Two-way Binding Helpers
-- title: Reference
-  items:
-    - id: react-api
-      title: React
-      subitems:
-        - id: react-component
-          title: React.Component
-    - id: react-dom
-      title: ReactDOM
-    - id: react-dom-server
-      title: ReactDOMServer
-    - id: dom-elements
-      title: DOM Elements
-    - id: events
-      title: SyntheticEvent
+      
