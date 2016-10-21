@@ -598,7 +598,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    expect(ops).toEqual(['Baz', 'Bar', 'Baz', 'Bar', 'Bar']);
+    expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
   it('deprioritizes setStates that happens within a deprioritized tree', () => {

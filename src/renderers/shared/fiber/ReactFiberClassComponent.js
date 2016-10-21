@@ -165,12 +165,12 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
   function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
     const instance = workInProgress.stateNode;
 
-    const oldProps = current.memoizedProps;
+    const oldProps = workInProgress.memoizedProps || current.memoizedProps;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
       // If there aren't any new props, then we'll reuse the memoized props.
       // This could be from already completed work.
-      newProps = workInProgress.memoizedProps;
+      newProps = oldProps;
       if (!newProps) {
         throw new Error('There should always be pending or memoized props.');
       }
@@ -199,7 +199,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
 
     if (typeof instance.shouldComponentUpdate === 'function' &&
         !(updateQueue && updateQueue.isForced) &&
-        workInProgress.memoizedProps !== null &&
+        oldProps !== null &&
         !instance.shouldComponentUpdate(newProps, newState)) {
       // TODO: Should this get the new props/state updated regardless?
       return false;

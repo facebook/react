@@ -625,10 +625,10 @@ describe('ReactIncremental', () => {
     // Normally shouldComponentUpdate->false is not enough to determine that we
     // can safely reuse the old props, but I think in this case it would be ok,
     // since it is a resume of already started work.
-    // Because of the above we can also not reuse the work of Bar because the
+    // Because of the above we can not reuse the work of Bar because the
     // rerender of Content will generate a new element which will mean we don't
     // auto-bail out from Bar.
-    expect(ops).toEqual(['Content', 'Bar', 'Middle']);
+    expect(ops).toEqual(['Bar', 'Middle']);
 
   });
 
