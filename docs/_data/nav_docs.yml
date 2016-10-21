@@ -12,10 +12,12 @@
       title: Components and Props
     - id: state-and-lifecycle
       title: State and Lifecycle
-    - id: lists-conditional-rendering
-      title: Lists & Conditional Rendering
     - id: handling-events
       title: Handling Events
+    - id: conditional-rendering
+      title: Conditional Rendering
+    - id: lists-and-keys
+      title: Lists and Keys
     - id: forms
       title: Forms
     - id: lifting-state-up
@@ -34,14 +36,14 @@
       title: Refs and the DOM
     - id: optimizing-performance
       title: Optimizing Performance
-    - id: context
-      title: Context
-    - id: reconciliation
-      title: Reconciliation
     - id: react-without-es6
       title: React Without ES6
     - id: react-without-jsx
       title: React Without JSX
+    - id: reconciliation
+      title: Reconciliation
+    - id: context
+      title: Context
     - id: web-components
       title: Web Components
 - title: Reference
