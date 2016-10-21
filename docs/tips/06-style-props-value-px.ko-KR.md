@@ -1,6 +1,6 @@
 ---
 id: style-props-value-px-ko-KR
-title: 스타일 속성에서 특정 픽셀 값 넣는 간단한 방법 
+title: 스타일 속성에서 특정 픽셀 값 넣는 간단한 방법
 layout: tips
 permalink: tips/style-props-value-px-ko-KR.html
 prev: maximum-number-of-jsx-root-nodes-ko-KR.html
@@ -37,6 +37,7 @@ ReactDOM.render(<div style={divStyle}>Hello World!</div>, mountNode);
 - `order`
 - `orphans`
 - `stopOpacity`
+- `strokeDasharray`
 - `strokeDashoffset`
 - `strokeOpacity`
 - `strokeWidth`

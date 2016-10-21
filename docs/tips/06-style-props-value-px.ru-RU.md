@@ -37,6 +37,7 @@ ReactDOM.render(<div style={divStyle}>Hello World!</div>, mountNode);
 - `order`
 - `orphans`
 - `stopOpacity`
+- `strokeDasharray`
 - `strokeDashoffset`
 - `strokeOpacity`
 - `strokeWidth`
