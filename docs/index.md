@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: hero
 title: A JavaScript library for building user interfaces
 id: home
 ---
@@ -81,7 +81,7 @@ id: home
 <hr class="home-divider" />
 <section class="home-bottom-section">
   <div class="buttons-unit">
-    <a href="docs/getting-started.html" class="button">Get Started</a>
-    <a href="downloads.html" class="button">Download React v{{site.react_version}}</a>
+    <a href="docs/hello-world.html" class="button">Get Started</a>
+    <a href="tutorial/tutorial.html" class="button">Take the Tutorial</a>
   </div>
 </section>

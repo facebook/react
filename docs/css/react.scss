@@ -7,8 +7,9 @@
 
 @mixin code-typography {
   font-family: 'source-code-pro', Menlo, Consolas, 'Courier New', monospace;
-  font-size: 13px;
   line-height: 1.5;
+  font-size: 13px;
+  -webkit-text-size-adjust: none;
 }
 
 $skinnyContentWidth: 650px;
@@ -19,7 +20,28 @@ $columnGutter: 40px;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
 $navHeight: 50px;
 
+// Breakpoints
+$bp-large: 960px;
+$bp-medium: 640px;
+$bp-small: 480px;
 
+@mixin bp-small {
+  @media (max-width: $bp-small) {
+    @content;
+  }
+}
+
+@mixin bp-medium {
+  @media (max-width: $bp-medium) {
+    @content;
+  }
+}
+
+@mixin bp-large {
+  @media (max-width: $bp-large) {
+    @content;
+  }
+}
 
 // basic reset
 * {
@@ -46,15 +68,20 @@ html {
 
 .container {
   padding-top: $navHeight;
-  min-width: $contentWidth + (2 * $contentPadding);
+  width: 100%;
 }
 
 .wrap {
-  width: $contentWidth + (2 * $contentPadding);
+  max-width: $contentWidth + (2 * $contentPadding);
   margin-left: auto;
   margin-right: auto;
   padding-left: 20px;
   padding-right: 20px;
+
+  @include bp-large {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }
 
 .skinnyWrap {
@@ -110,21 +137,19 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   z-index: 100;
 
+  @include bp-large {
+    height: auto;
+  }
+
   a {
     color: $lightColor;
     text-decoration: none;
   }
 
-  .nav-site-internal {
-    margin: 0 0 0 20px;
-  }
-
-  .nav-site-external {
-    float: right;
-    margin: 0;
-  }
-
   .nav-site {
+    display: inline-flex;
+    flex: 1;
+
     li {
       margin: 0;
     }
@@ -136,16 +161,80 @@ h1, h2, h3, h4, h5, h6 {
       display: inline-block;
       height: $navHeight;
       color: #ddd;
+      white-space: nowrap;
+
+      @include bp-large {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 5px;
+        line-height: inherit;
+      }
 
       &:hover {
         color: #fff;
       }
 
       &.active {
+        position: relative;
         color: $lightTextColor;
-        border-bottom: 3px solid $primary;
         background: #333;
+
+        &:after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          border-bottom: 3px solid $primary;
+        }
+
+        @include bp-large {
+          background: inherit;
+        }
       }
+    }
+
+    .nav-site-item {
+      &--hidden-sm {
+        @include bp-large {
+          display: none;
+        }
+      }
+    }
+
+    .nav-site-search {
+      @include bp-large {
+        position: absolute;
+        z-index: 1;
+        right: 0;
+        top: 0;
+        margin: 0 10px;
+
+        &:focus {
+          width: 170px;
+        }
+      }
+    }
+  }
+
+  .nav-site-internal {
+    margin: 0 0 0 20px;
+
+    @include bp-large {
+      margin: 0;
+    }
+  }
+
+  .nav-site-external {
+    float: right;
+    margin: 0;
+
+    @include bp-large {
+      position: absolute;
+      top: 0;
+      right: 55px;
+      float: none;
     }
   }
 
@@ -155,11 +244,20 @@ h1, h2, h3, h4, h5, h6 {
     line-height: $navHeight;
     height: $navHeight;
     display: inline-block;
+
+    @include bp-large {
+      font-size: 20px;
+    }
   }
 
   .nav-logo {
     vertical-align: middle;
     display: inline-block;
+
+    @include bp-large {
+      height: 30px;
+      width: auto;
+    }
   }
 
   ul {
@@ -172,10 +270,35 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+.nav-lists {
+  display: inline-block;
+  vertical-align: top;
+  width: calc(100% - 120px);
+
+  @include bp-large {
+    display: flex;
+    width: calc(100% + 20px);
+    margin: 0 -10px;
+    font-size: 0.9em;
+
+    li {
+      display: flex;
+      flex: 1 0 auto;
+      align-items: center;
+
+      a {
+        flex: 1;
+        text-align: center;
+        line-height: 1.2;
+      }
+    }
+  }
+}
+
 // Hero!
 
 .hero {
-  height: 300px;
+  min-height: 300px;
   // background: $darkColor url(../img/header.png) no-repeat center;
   background: $darkColor;
   padding-top: 50px;
@@ -200,8 +323,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .buttons-unit {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-top: 60px;
   text-align: center;
+  font-size: 1em;
 
   a {
     color: $blueColor;
@@ -214,6 +341,11 @@ h1, h2, h3, h4, h5, h6 {
 
     &:active {
       background: darken($primary, 5%);
+    }
+
+    @include bp-large {
+      margin: 5px;
+      font-size: 1em;
     }
   }
 }
@@ -233,12 +365,17 @@ h1, h2, h3, h4, h5, h6 {
   float: left;
   width: 210px;
 
+  @include bp-medium {
+    width: 100%;
+    padding-bottom: 40px;
+  }
+
   ul {
     list-style: none;
     margin: 0;
   }
   ul ul {
-    margin: 6px 0 0 20px;
+    margin: 0 0 6px 20px;
   }
   li {
     line-height: 16px;
@@ -292,6 +429,25 @@ h1, h2, h3, h4, h5, h6 {
       padding-bottom: 0;
       border-bottom: 0;
     }
+
+    > ul {
+      @include bp-medium {
+        columns: 2
+      }
+
+      @include bp-small {
+        columns: 1;
+      }
+
+      li {
+        margin: 0;
+
+        a {
+          padding: 0;
+          line-height: 1.6;
+        }
+      }
+    }
   }
 
 }
@@ -311,7 +467,8 @@ h1, h2, h3, h4, h5, h6 {
 .home-divider {
   border-top-color: #bbb;
   margin: 0 auto;
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .skinny-row {
@@ -336,6 +493,11 @@ h1, h2, h3, h4, h5, h6 {
   float: left;
   margin-left: 40px;
   width: $columnWidth;
+
+  @include bp-large {
+    margin: 0;
+    width: 100%;
+  }
 
   h3 {
     color: $darkColor;
@@ -447,14 +609,6 @@ h1, h2, h3, h4, h5, h6 {
   float: right;
 }
 
-footer {
-  font-size: 13px;
-  font-weight: 600;
-  margin-top: 36px;
-  margin-bottom: 18px;
-  overflow: auto;
-}
-
 section.black content {
   padding-bottom: 18px;
 }
@@ -467,6 +621,10 @@ section.black content {
   @include clearfix;
 
   padding-top: 20px;
+  padding-bottom: 80px;
+  @include bp-medium {
+    padding-bottom: 0;
+  }
 
   blockquote {
     padding: 5px 15px;
@@ -501,13 +659,17 @@ section.black content {
   }
 
   padding-top: 20px;
+  padding-bottom: 80px;
+  @include bp-medium {
+    padding-bottom: 0;
+  }
 
   // Make a notice box out of blockquotes in the documentation:
   blockquote {
       padding: 15px 30px 15px 15px;
       margin: 20px 0;
-      background-color: rgba(204, 122, 111, 0.09999999999999998);
-      border-left: 5px solid rgba(191, 87, 73, 0.19999999999999996);
+      background-color: rgba(248, 245, 236, 0.5);
+      border-left: 5px solid rgba(191, 87, 73, 0.2);
     h4 {
       margin-top: 0;
     }
@@ -608,7 +770,17 @@ figure {
 
 .inner-content {
   float: right;
-  width: $skinnyContentWidth;
+  width: 100%;
+  max-width: $skinnyContentWidth;
+
+  @include bp-large {
+    width: calc(100% - 240px);
+    max-width: 100%;
+  }
+
+  @include bp-medium {
+    width: 100%;
+  }
 }
 
 .nosidebar .inner-content {
@@ -627,7 +799,47 @@ h1 {
   font-weight: normal;
   line-height: 20px;
   margin-top: 17px;
+
+  @include bp-medium {
+    float: left;
+    width: 100%;
+  }
 }
+
+/**
+ * Community
+ */
+
+.communityContent {
+  @include clearfix;
+
+  h3 {
+    margin-top: 30px;
+  }
+
+  padding-top: 20px;
+
+  blockquote {
+    padding: 5px 15px;
+    margin: 20px 0;
+    background-color: #f8f5ec;
+    border-left: 5px solid #f7ebc6;
+  }
+
+  th {
+    padding-right: 6px;
+    text-align: right;
+    vertical-align: top;
+    font-weight: normal;
+    @include code-typography;
+  }
+
+  td {
+    vertical-align: top;
+    text-align: left;
+  }
+}
+
 
 /* Blog */
 
@@ -702,7 +914,8 @@ p a code {
   border-radius: 0 3px 3px 3px;
   float: left;
   overflow: hidden;
-  width: $twoColumnWidth;
+  width: 100%;
+  max-width: $twoColumnWidth;
 }
 
 .playgroundPreview {
@@ -806,9 +1019,9 @@ p a code {
   text-decoration: none !important;
 }
 
-@media screen and (max-width: 960px) {
+@include bp-large {
   .nav-main {
-    position: static;
+    position: relative;
   }
   .container {
     padding-top: 0;
@@ -821,6 +1034,7 @@ p a code {
 
 .post img {
   max-width: 100%;
+  height: auto;
 }
 
 .pagination {
@@ -839,6 +1053,20 @@ p a code {
 div[data-twttr-id] iframe {
   margin: 10px auto !important;
   width: 100% !important;
+}
+
+.fb_iframe_widget {
+  max-width: 100%;
+
+  * {
+    max-width: 100%;
+  }
+}
+
+#twitter-widget-0 {
+  @include bp-large {
+    display: none !important; // Need !important because they inline display on the iframe.
+  }
 }
 
 /* Acknowledgements */
@@ -860,12 +1088,6 @@ div[data-twttr-id] iframe {
 
 /* Algolia Doc Search */
 
-@media screen and (max-width: 960px) {
-  #algolia-doc-search {
-    display: none;
-  }
-}
-
 input#algolia-doc-search {
   background: transparent url('/react/img/search.png') no-repeat 10px center;
   background-size: 16px 16px;
@@ -886,10 +1108,21 @@ input#algolia-doc-search {
   width: 170px;
 
   transition: width .2s ease;
-}
 
-input#algolia-doc-search:focus {
-  width: 240px;
+  &:focus {
+    width: 240px;
+  }
+
+  @include bp-large {
+    background-color: transparent;
+    width: 0;
+    cursor: pointer;
+
+    &:focus {
+      width: 200px;
+      background-color: #333;
+    }
+  }
 }
 
 .algolia-autocomplete .aa-dropdown-menu {
@@ -924,4 +1157,95 @@ input#algolia-doc-search:focus {
 
 .aa-cursor .algolia-docsearch-suggestion {
   background: #f1f3f5;
+}
+
+/**
+ * Footer
+ */
+
+footer.nav-footer {
+  box-sizing: border-box;
+  border: none;
+  font-weight: 300;
+  color: #202020;
+  font-size: 15px;
+  line-height: 24px;
+  background: #2D2D2D;
+  box-shadow: inset 0 10px 10px -5px #0d1116;
+  padding-top: 2em;
+  padding-bottom: 2em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+footer .sitemap {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1080px;
+  margin: 0 auto 3em;
+}
+footer .sitemap div {
+  flex: 1;
+}
+footer .sitemap .nav-home {
+  display: table;
+  margin: -12px 20px 0 0;
+  padding: 10px;
+  width: 60px;
+  height: 60px;
+  transition: opacity 0.15s ease-in-out;
+  background: url("../img/logo_small_gray.png") no-repeat content-box;
+}
+footer .sitemap .nav-home:hover,
+footer .sitemap .nav-home:focus {
+  background-image: url("../img/logo_small.png");
+}
+@media screen and (max-width: 740px) {
+  footer .sitemap {
+    display: none;
+  }
+}
+
+footer .sitemap a {
+  color: white;
+  display: table;
+  margin: 2px -10px;
+  padding: 3px 10px;
+}
+footer .sitemap a:hover,
+footer .sitemap a:focus {
+  color: #61dafb;
+  text-decoration: none;
+}
+footer .sitemap h6 > a:hover,
+footer .sitemap h6 > a:focus {
+  color: #61dafb;
+  text-decoration: none;
+}
+footer .sitemap h5,
+footer .sitemap h6 {
+  margin: 0 0 10px;
+}
+footer .sitemap h5,
+footer .sitemap h6,
+footer .sitemap h5 > a,
+footer .sitemap h6 > a {
+  color: white;
+}
+footer .sitemap h5 > a,
+footer .sitemap h6 > a {
+  margin: 0 -10px;
+}
+footer .fbOpenSource {
+  display: block;
+  margin: 1em auto;
+  opacity: 0.4;
+  transition: opacity 0.15s ease-in-out;
+  width: 170px;
+}
+footer .fbOpenSource:hover {
+  opacity: 1.0;
+}
+footer .copyright {
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
 }

@@ -1,16 +1,26 @@
+{% if page.excerpt %}
+{% assign type = 'article' %}
+{% assign sectionTitle = 'React Blog' %}
+{% assign description = page.excerpt | remove: '<p>' | remove: '</p>' %}
+{% else %}
+{% assign type = 'website' %}
+{% assign sectionTitle = 'React' %}
+{% assign description = 'A JavaScript library for building user interfaces' %}
+{% endif %}
+{% assign title = page.title | append: ' - ' | append: sectionTitle %}
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>{{ page.title }} | React</title>
-  <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="{{ page.title }} | React">
-  <meta property="og:type" content="website">
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:type" content="{{ type }}">
   <meta property="og:url" content="https://facebook.github.io/react{{ page.url }}">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
-  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="og:description" content="{{ description }}">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
@@ -43,60 +53,14 @@
 
   <div class="container">
 
-    <div class="nav-main">
-      <div class="wrap">
-        <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
-          React
-        </a>
-        <ul class="nav-site nav-site-internal">
-          <li><a href="/react/docs/getting-started.html"{% if page.sectionid == 'docs' or page.sectionid == 'tips' or page.sectionid == 'contributing' %} class="active"{% endif %}>Docs</a></li>
-          <li><a href="/react/support.html"{% if page.id == 'support' %} class="active"{% endif %}>Support</a></li>
-          <li><a href="/react/downloads.html"{% if page.id == 'downloads' %} class="active"{% endif %}>Download</a></li>
-          <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>Blog</a></li>
-          <li>
-            <input id="algolia-doc-search" type="text" placeholder="Search docs..." />
-          </li>
-        </ul>
-
-        <ul class="nav-site nav-site-external">
-          <li><a href="https://github.com/facebook/react">GitHub</a></li>
-          <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
-        </ul>
-      </div>
-    </div>
-
-    {% if page.id == 'home' %}
-    <div class="hero">
-      <div class="wrap">
-        <div class="text"><strong>React</strong></div>
-        <div class="minitext">
-          A JavaScript library for building user interfaces
-        </div>
-
-        <div class="buttons-unit">
-          <a href="/react/docs/getting-started.html" class="button">Get Started</a>
-          <a href="/react/downloads.html" class="button">Download React v{{site.react_version}}</a>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    {% include navigation.html %}
 
     {{ content }}
 
-    <footer class="wrap">
-      <div class="left">
-        A Facebook &amp; Instagram collaboration.<br>
-        <a href="/react/acknowledgements.html">Acknowledgements</a>
-      </div>
-      <div class="right">
-        &copy; 2013&ndash;{{ site.time | date: '%Y' }} Facebook Inc.<br>
-        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
-      </div>
-    </footer>
+    {% include footer.html %}
   </div>
-  <div id="fb-root"></div>
 
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

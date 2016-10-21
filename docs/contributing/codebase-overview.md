@@ -38,7 +38,7 @@ var setInnerHTML = require('setInnerHTML');
 
 Haste was originally developed for giant apps like Facebook. It's easy to move files to different folders and import them without worrying about relative paths. The fuzzy file search in any editor always takes you to the correct place thanks to globally unique names.
 
-React itself was extracted from Facebook codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.
+React itself was extracted from the Facebook codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However, this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.
 
 **Haste will make more sense to you if you remember a few rules:**
 
@@ -54,7 +54,7 @@ This is a GitHub shortcut for searching the current repo for fuzzy filename matc
 
 ### External Dependencies
 
-React has almost no external dependencies. Usually a `require()` points to a file in React's own codebase. However there are a few relatively rare exceptions.
+React has almost no external dependencies. Usually, a `require()` points to a file in React's own codebase. However, there are a few relatively rare exceptions.
 
 If you see a `require()` that does not correspond to a file in the React repository, you can look in a special repository called [fbjs](https://github.com/facebook/fbjs). For example, `require('warning')` will resolve to the [`warning` module from fbjs](https://github.com/facebook/fbjs/blob/df9047fec0bbd1e64635ae369c045975777cba7c/packages/fbjs/src/__forks__/warning.js).
 
@@ -67,7 +67,7 @@ After cloning the [React repository](https://github.com/facebook/react), you wil
 * [`src`](https://github.com/facebook/react/tree/master/src) is the source code of React. **If your change is related to the code, `src` is where you'll spend most of your time.**
 * [`docs`](https://github.com/facebook/react/tree/master/docs) is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.
 * [`examples`](https://github.com/facebook/react/tree/master/examples) contains a few small React demos with different build setups.
-* [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
+* [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless, their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
 * `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/react/contributing/how-to-contribute.html#development-workflow) for the first time.
 
 There are a few other top-level folders but they are mostly used for the tooling and you likely won't ever encounter them when contributing.
@@ -86,7 +86,7 @@ For example, files inside [`src/renderers/dom/client`](https://github.com/facebo
 
 However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
 
-There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case we hoist the shared module up to a folder called `shared` inside the closest common ancestor folder of the modules that need to rely on it.
+There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case, we hoist the shared module up to a folder called `shared` inside the closest common ancestor folder of the modules that need to rely on it.
 
 For example, code shared between [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) and [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) lives in [`src/renderers/dom/shared`](https://github.com/facebook/react/tree/master/src/renderers/dom/shared).
 
@@ -196,7 +196,7 @@ You can run `npm run flow` locally to check your code with Flow.
 
 ### Classes and Mixins
 
-React was originally written in ES5. We have since enabled ES2015 features with [Babel](http://babeljs.io/), including classes. However most of React code is still written in ES5.
+React was originally written in ES5. We have since enabled ES6 features with [Babel](http://babeljs.io/), including classes. However, most of React code is still written in ES5.
 
 In particular, you might see the following pattern quite often:
 
@@ -224,7 +224,7 @@ module.exports = ReactDOMComponent;
 
 The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
 
-Equivalent code in ES2015 would like this:
+Equivalent code in ES6 would like this:
 
 ```js
 class ReactDOMComponent {
@@ -240,7 +240,7 @@ class ReactDOMComponent {
 module.exports = ReactDOMComponent;
 ```
 
-Sometimes we [convert old code to ES2015 classes](https://github.com/facebook/react/pull/7647/files). However this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
+Sometimes we [convert old code to ES6 classes](https://github.com/facebook/react/pull/7647/files). However, this is not very important to us because there is an [ongoing effort](#fiber-reconciler) to replace the React reconciler implementation with a less object-oriented approach which wouldn't use classes at all.
 
 ### Dynamic Injection
 
@@ -291,7 +291,7 @@ There are multiple injection points in the codebase. In the future, we intend to
 
 React is a [monorepo](http://danluu.com/monorepo/). Its repository contains multiple separate packages so that their changes can be coordinated together, and documentation and issues live in one place.
 
-The npm metadata such as `package.json` files is located in the [`packages`](https://github.com/facebook/react/tree/master/packages) top-level folder. However there is almost no real code in it.
+The npm metadata such as `package.json` files is located in the [`packages`](https://github.com/facebook/react/tree/master/packages) top-level folder. However, there is almost no real code in it.
 
 For example, [`packages/react/react.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/packages/react/react.js) re-exports [`src/isomorphic/React.js`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/isomorphic/React.js), the real npm entry point. Other packages mostly repeat this pattern. All the important code lives in [`src`](https://github.com/facebook/react/tree/master/src).
 
@@ -313,7 +313,7 @@ The code for React core is located in [`src/isomorphic`](https://github.com/face
 
 >**Note:**
 >
->Until very recently, `react` npm package and `react.js` standalone build contained all React code (including React DOM) rather than just the core. This was done for backwards compatibility and historical reasons. Since React 15.4.0, the core is better separated in the build output.
+>Until very recently, `react` npm package and `react.js` standalone build contained all React code (including React DOM) rather than just the core. This was done for backward compatibility and historical reasons. Since React 15.4.0, the core is better separated in the build output.
 >
 >There is also an additional standalone browser build called `react-with-addons.js` which we will consider separately further below.
 
@@ -329,7 +329,7 @@ Renderers are located in [`src/renderers`](https://github.com/facebook/react/tre
 * [React Native Renderer](https://github.com/facebook/react/tree/master/src/renderers/native) renders React components to native views. It is used internally by React Native via [`react-native-renderer`](https://www.npmjs.com/package/react-native-renderer) npm package. In the future a copy of it may get checked into the React Native [repository](https://github.com/facebook/react-native) so that React Native can update React at its own pace.
 * [React Test Renderer](https://github.com/facebook/react/tree/master/src/renderers/testing) renders React components to JSON trees. It is used by the [Snapshot Testing](https://facebook.github.io/jest/blog/2016/07/27/jest-14.html) feature of [Jest](https://facebook.github.io/jest) and is available as [react-test-renderer](https://www.npmjs.com/package/react-test-renderer) npm package.
 
-The only other officially supported renderer is [`react-art`](https://github.com/reactjs/react-art). To avoid accidentally breaking it as we make changes to React, we checked it in as [`src/renderers/art`](https://github.com/facebook/react/tree/master/src/renderers/art) and run its test suite. Nevertheless its [GitHub repository](https://github.com/reactjs/react-art) still acts as the source of truth.
+The only other officially supported renderer is [`react-art`](https://github.com/reactjs/react-art). To avoid accidentally breaking it as we make changes to React, we checked it in as [`src/renderers/art`](https://github.com/facebook/react/tree/master/src/renderers/art) and run its test suite. Nevertheless, its [GitHub repository](https://github.com/reactjs/react-art) still acts as the source of truth.
 
 While it is [technically possible](https://github.com/iamdustan/tiny-react-renderer) to create custom React renderer, this is currently not officially supported. There is no stable public contract for custom renderers yet which is another reason why we keep them all in a single place.
 
@@ -365,7 +365,7 @@ User-defined ("composite") components should behave the same way with all render
 
 Composite components also implement [mounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181), [updating](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703), and [unmounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524). However, unlike host components, `ReactCompositeComponent` needs to behave differently depending on user's code. This is why it calls methods, such as `render()` and `componentDidMount()`, on the user-supplied class.
 
-During an update, `ReactCompositeComponent` checks whether the `render()` output has a different `type` or `key` than the last time. If neither `type` nor `key` has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance, and mounts a new one. This is described in the [reconciliation algorithm](/react/docs/reconciliation.html).
+During an update, `ReactCompositeComponent` checks whether the `render()` output has a different `type` or `key` than the last time. If neither `type` nor `key` has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance and mounts a new one. This is described in the [reconciliation algorithm](/react/docs/reconciliation.html).
 
 #### Recursion
 
@@ -381,7 +381,7 @@ It is important to understand that the stack reconciler always processes the com
 
 The "fiber" reconciler is a new effort aiming to resolve the problems inherent in the stack reconciler and fix a few long-standing issues.
 
-It is a complete rewrite of the reconciler, and is currently [in active development](https://github.com/facebook/react/pulls?utf8=%E2%9C%93&q=is%3Apr%20is%3Aopen%20fiber).
+It is a complete rewrite of the reconciler and is currently [in active development](https://github.com/facebook/react/pulls?utf8=%E2%9C%93&q=is%3Apr%20is%3Aopen%20fiber).
 
 Its main goals are:
 

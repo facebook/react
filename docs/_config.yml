@@ -21,21 +21,28 @@ defaults:
   values:
     sectionid: blog
 - scope:
+    path: tutorial
+    type: pages
+  values:
+    layout: tutorial
+    sectionid: tutorial
+- scope:
     path: docs
     type: pages
   values:
     layout: docs
     sectionid: docs
 - scope:
-    path: tips
-    type: pages
-  values:
-    sectionid: docs
-- scope:
     path: contributing
     type: pages
   values:
     sectionid: docs
+- scope:
+    path: community
+    type: pages
+  values:
+    layout: community
+    sectionid: community
 exclude:
 - Gemfile
 - Gemfile.lock

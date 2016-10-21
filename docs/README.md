@@ -38,7 +38,7 @@ $ cd react/docs
 $ bundle exec rake
 $ bundle exec rake fetch_remotes
 $ bundle exec jekyll serve -w
-$ open http://localhost:4000/react/
+$ open http://localhost:4000/react/index.html
 ```
 
 We use [SASS](http://sass-lang.com/) (with [Bourbon](http://bourbon.io/)) for our CSS, and we use JSX to transform some of our JS.
