@@ -4,6 +4,7 @@ title: Conditional Rendering
 permalink: docs/conditional-rendering.html
 prev: handling-events.html
 next: lists-and-keys.html
+redirect_from: "/tips/false-in-jsx.html"
 ---
 
 In React, you can create distinct components that encapsulate behavior you need. Then, you can render only some of them, depending on the state of your application.
@@ -92,7 +93,7 @@ class LoginControl extends React.Component {
 
   render() {
     const isLoggedIn = this.state.isLoggedIn;
-    
+
     let button = null;
     if (isLoggedIn) {
       button = <LogoutButton onClick={this.handleLogoutClick} />;
@@ -218,7 +219,7 @@ class Page extends React.Component {
       showWarning: !prevState.showWarning
     }));
   }
-  
+
   render() {
     return (
       <div>

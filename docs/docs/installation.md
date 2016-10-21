@@ -7,6 +7,8 @@ redirect_from: "downloads.html"
 redirect_from: "docs/getting-started.html"
 redirect_from: "docs/tooling-integration.html"
 redirect_from: "/docs/package-management.html"
+redirect_from: "/docs/language-tooling.html"
+redirect_from: "/docs/environments.html"
 next: hello-world.html
 ---
 

@@ -8,7 +8,6 @@ redirect_from: "/tips/if-else-in-JSX.html"
 redirect_from: "/tips/self-closing-tag.html"
 redirect_from: "/tips/maximum-number-of-jsx-root-nodes.html"
 redirect_from: "/tips/children-props-type.html"
-redirect_from: "/tips/false-in-jsx.html"
 ---
 
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:
