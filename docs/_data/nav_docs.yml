@@ -1,104 +1,83 @@
 - title: Quick Start
   items:
-  - id: getting-started
-    title: Getting Started
-  - id: tutorial
-    title: Tutorial
-  - id: thinking-in-react
-    title: Thinking in React
-- title: Community Resources
+    - id: installation
+      title: Installation
+    - id: hello-world
+      title: Hello World
+    - id: introducing-jsx
+      title: Introducing JSX
+    - id: rendering-elements
+      title: Rendering Elements
+    - id: components-and-props
+      title: Components and Props
+    - id: state-and-lifecycle
+      title: State and Lifecycle
+    - id: handling-events
+      title: Handling Events
+    - id: conditional-rendering
+      title: Conditional Rendering
+    - id: lists-and-keys
+      title: Lists and Keys
+    - id: forms
+      title: Forms
+    - id: lifting-state-up
+      title: Lifting State Up
+    - id: composition-vs-inheritance
+      title: Composition vs Inheritance
+    - id: thinking-in-react
+      title: Thinking In React
+- title: Advanced Guides
   items:
-  - id: conferences
-    title: Conferences
-  - id: videos
-    title: Videos
-  - id: complementary-tools
-    title: Complementary Tools
-    href: https://github.com/facebook/react/wiki/Complementary-Tools
-  - id: examples
-    title: Examples
-    href: https://github.com/facebook/react/wiki/Examples
-- title: Guides
-  items:
-  - id: why-react
-    title: Why React?
-  - id: displaying-data
-    title: Displaying Data
-    subitems:
     - id: jsx-in-depth
-      title: JSX in Depth
-    - id: jsx-spread
-      title: JSX Spread Attributes
-    - id: jsx-gotchas
-      title: JSX Gotchas
-  - id: interactivity-and-dynamic-uis
-    title: Interactivity and Dynamic UIs
-  - id: multiple-components
-    title: Multiple Components
-  - id: reusable-components
-    title: Reusable Components
-  - id: transferring-props
-    title: Transferring Props
-  - id: forms
-    title: Forms
-  - id: working-with-the-browser
-    title: Working With the Browser
-    subitems:
-    - id: more-about-refs
-      title: Refs to Components
-  - id: tooling-integration
-    title: Tooling Integration
-    subitems:
-    - id: language-tooling
-      title: Language Tooling
-    - id: package-management
-      title: Package Management
-    - id: environments
-      title: Server-side Environments
-  - id: addons
-    title: Add-Ons
-    subitems:
-    - id: animation
-      title: Animation
-    - id: two-way-binding-helpers
-      title: Two-Way Binding Helpers
-    - id: test-utils
-      title: Test Utilities
-    - id: clone-with-props
-      title: Cloning Elements
-    - id: create-fragment
-      title: Keyed Fragments
-    - id: update
-      title: Immutability Helpers
-    - id: pure-render-mixin
-      title: PureRenderMixin
-    - id: perf
-      title: Performance Tools
-    - id: shallow-compare
-      title: Shallow Compare
-  - id: advanced-performance
-    title: Advanced Performance
-  - id: context
-    title: Context
+      title: JSX In Depth
+    - id: typechecking-with-proptypes
+      title: Typechecking With PropTypes
+    - id: refs-and-the-dom
+      title: Refs and the DOM
+    - id: optimizing-performance
+      title: Optimizing Performance
+    - id: react-without-es6
+      title: React Without ES6
+    - id: react-without-jsx
+      title: React Without JSX
+    - id: reconciliation
+      title: Reconciliation
+    - id: context
+      title: Context
+    - id: web-components
+      title: Web Components
 - title: Reference
   items:
-  - id: top-level-api
-    title: Top-Level API
-  - id: component-api
-    title: Component API
-  - id: component-specs
-    title: Component Specs and Lifecycle
-  - id: tags-and-attributes
-    title: Supported Tags and Attributes
-  - id: events
-    title: Event System
-  - id: dom-differences
-    title: DOM Differences
-  - id: special-non-dom-attributes
-    title: Special Non-DOM Attributes
-  - id: reconciliation
-    title: Reconciliation
-  - id: webcomponents
-    title: Web Components
-  - id: glossary
-    title: React (Virtual) DOM Terminology
+    - id: react-api
+      title: React
+      subitems:
+        - id: react-component
+          title: React.Component
+    - id: react-dom
+      title: ReactDOM
+    - id: react-dom-server
+      title: ReactDOMServer
+    - id: dom-elements
+      title: DOM Elements
+    - id: events
+      title: SyntheticEvent
+    - id: addons
+      title: Add-Ons
+      subitems:
+        - id: perf
+          title: Performance Tools
+        - id: test-utils
+          title: Test Utilities
+        - id: animation
+          title: Animation
+        - id: create-fragment
+          title: Keyed Fragments
+        - id: update
+          title: Immutability Helpers
+        - id: pure-render-mixin
+          title: PureRenderMixin
+        - id: shallow-compare
+          title: Shallow Compare
+        - id: two-way-binding-helpers
+          title: Two-way Binding Helpers
+      

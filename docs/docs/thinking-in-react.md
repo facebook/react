@@ -2,18 +2,15 @@
 id: thinking-in-react
 title: Thinking in React
 permalink: docs/thinking-in-react.html
-prev: tutorial.html
-next: conferences.html
 redirect_from: 'blog/2013/11/05/thinking-in-react.html'
+prev: composition-vs-inheritance.html
 ---
 
-by Pete Hunt
+React is, in our opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.
 
-React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.
+One of the many great parts of React is how it makes you think about apps as you build them. In this document, we'll walk you through the thought process of building a searchable product data table using React.
 
-One of the many great parts of React is how it makes you think about apps as you build them. In this post, I'll walk you through the thought process of building a searchable product data table using React.
-
-## Start with a mock
+## Start With A Mock
 
 Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn't very good because the mock looks like this:
 
@@ -32,7 +29,7 @@ Our JSON API returns some data that looks like this:
 ];
 ```
 
-## Step 1: Break the UI into a component hierarchy
+## Step 1: Break The UI Into A Component Hierarchy
 
 The first thing you'll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you're working with a designer, they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!
 
@@ -42,7 +39,7 @@ Since you're often displaying a JSON data model to a user, you'll find that if y
 
 ![Component diagram](/react/img/blog/thinking-in-react-components.png)
 
-You'll see here that we have five components in our simple app. I've italicized the data each component represents.
+You'll see here that we have five components in our simple app. We've italicized the data each component represents.
 
   1. **`FilterableProductTable` (orange):** contains the entirety of the example
   2. **`SearchBar` (blue):** receives all *user input*
@@ -50,7 +47,7 @@ You'll see here that we have five components in our simple app. I've italicized 
   4. **`ProductCategoryRow` (turquoise):** displays a heading for each *category*
   5. **`ProductRow` (red):** displays a row for each *product*
 
-If you look at `ProductTable`, you'll see that the table header (containing the "Name" and "Price" labels) isn't its own component. This is a matter of preference, and there's an argument to be made either way. For this example, I left it as part of `ProductTable` because it is part of rendering the *data collection* which is `ProductTable`'s responsibility. However, if this header grows to be complex (i.e. if we were to add affordances for sorting), it would certainly make sense to make this its own `ProductTableHeader` component.
+If you look at `ProductTable`, you'll see that the table header (containing the "Name" and "Price" labels) isn't its own component. This is a matter of preference, and there's an argument to be made either way. For this example, we left it as part of `ProductTable` because it is part of rendering the *data collection* which is `ProductTable`'s responsibility. However, if this header grows to be complex (i.e. if we were to add affordances for sorting), it would certainly make sense to make this its own `ProductTableHeader` component.
 
 Now that we've identified the components in our mock, let's arrange them into a hierarchy. This is easy. Components that appear within another component in the mock should appear as a child in the hierarchy:
 
@@ -60,9 +57,10 @@ Now that we've identified the components in our mock, let's arrange them into a 
       * `ProductCategoryRow`
       * `ProductRow`
 
-## Step 2: Build a static version in React
+## Step 2: Build A Static Version in React
 
-<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<p data-height="600" data-theme-id="0" data-slug-hash="vXpAgj" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/vXpAgj/">Thinking In React: Step 2</a> on <a href="http://codepen.io">CodePen</a>.</p>
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
 
 Now that you have your component hierarchy, it's time to implement your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It's best to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We'll see why.
 
@@ -74,11 +72,11 @@ At the end of this step, you'll have a library of reusable components that rende
 
 Simply refer to the [React docs](/react/docs/) if you need help executing this step.
 
-### A brief interlude: props vs state
+### A Brief Interlude: Props vs State
 
 There are two types of "model" data in React: props and state. It's important to understand the distinction between the two; skim [the official React docs](/react/docs/interactivity-and-dynamic-uis.html) if you aren't sure what the difference is.
 
-## Step 3: Identify the minimal (but complete) representation of UI state
+## Step 3: Identify The Minimal (but complete) Representation Of UI State
 
 To make your UI interactive, you need to be able to trigger changes to your underlying data model. React makes this easy with **state**.
 
@@ -104,9 +102,10 @@ So finally, our state is:
   * The search text the user has entered
   * The value of the checkbox
 
-## Step 4: Identify where your state should live
+## Step 4: Identify Where Your State Should Live
 
-<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<p data-height="600" data-theme-id="0" data-slug-hash="ORzEkG" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/ORzEkG/">Thinking In React: Step 4</a> by Kevin Lacker (<a href="http://codepen.io/lacker">@lacker</a>) on <a href="http://codepen.io">CodePen</a>.</p>
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
 
 OK, so we've identified what the minimal set of app state is. Next, we need to identify which component mutates, or *owns*, this state.
 
@@ -129,9 +128,10 @@ Cool, so we've decided that our state lives in `FilterableProductTable`. First, 
 
 You can start seeing how your application will behave: set `filterText` to `"ball"` and refresh your app. You'll see that the data table is updated correctly.
 
-## Step 5: Add inverse data flow
+## Step 5: Add Inverse Data Flow
 
-<iframe width="100%" height="600" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<p data-height="600" data-theme-id="0" data-slug-hash="ALxdJq" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/ALxdJq/">Thinking In React: Step 5</a> on <a href="http://codepen.io">CodePen</a>.</p>
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
 
 So far, we've built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it's time to support data flowing the other way: the form components deep in the hierarchy need to update the state in `FilterableProductTable`.
 
@@ -143,6 +143,6 @@ Let's think about what we want to happen. We want to make sure that whenever the
 
 Though this sounds complex, it's really just a few lines of code. And it's really explicit how your data is flowing throughout the app.
 
-## And that's it
+## And That's It
 
 Hopefully, this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you're used to, remember that code is read far more than it's written, and it's extremely easy to read this modular, explicit code. As you start to build large libraries of components, you'll appreciate this explicitness and modularity, and with code reuse, your lines of code will start to shrink. :)
