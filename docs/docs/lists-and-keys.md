@@ -42,7 +42,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on Codepen.](https://codepen.io/gaearon/pen/GjPyQr?editors=0011)
+[Try it out on CodePen.](https://codepen.io/gaearon/pen/GjPyQr?editors=0011)
 
 This code displays a bullet list of numbers between 1 and 5.
 
@@ -94,7 +94,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on Codepen.](https://codepen.io/gaearon/pen/jrXYRR?editors=0011)
+[Try it out on CodePen.](https://codepen.io/gaearon/pen/jrXYRR?editors=0011)
 
 ## Keys
 
@@ -200,7 +200,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on Codepen.](https://codepen.io/gaearon/pen/ozJEPy?editors=0010)
+[Try it out on CodePen.](https://codepen.io/rthor/pen/QKzJKG?editors=0010)
 
 A good rule of thumb is that elements inside the `map()` call need keys.
 
