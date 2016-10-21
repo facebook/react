@@ -6,12 +6,7 @@ prev: installation.html
 next: introducing-jsx.html
 ---
 
-The next sections assume you are following along [using CodePen or an HTML file](/react/docs/installation.html#trying-out-react). If you use [Create React App](/react/docs/installation.html#creating-a-single-page-application) or [npm](/react/docs/installation.html#using-npm), you will need to import `react` and `react-dom`:
-
-```js
-import React from 'react';
-import ReactDOM from 'react-dom';
-```
+The easiest way to get started with React is to use [this Hello World example code on CodePen](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010). You don't need to install anything; you can just open it in another tab and follow along as we go through examples. If you'd rather use a local development environment, check out the [Installation](/docs/installation.html) page.
 
 The smallest React example looks like this:
 
@@ -21,8 +16,6 @@ ReactDOM.render(
   document.getElementById('root')
 );
 ```
-
-[Try it on CodePen.](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010)
 
 It renders a header saying "Hello World" on the page.
 
