@@ -39,7 +39,7 @@ script:
         bundle exec rake release
         cd $GH_PAGES_DIR
         git status
-        if ! git diff-index --quiet HEAD --; then
+        if test -n "$(git status --porcelain)"; then
           git add -A .
           git commit -m "Rebuild website"
           git push origin gh-pages
