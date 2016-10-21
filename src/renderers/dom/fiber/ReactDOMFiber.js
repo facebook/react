@@ -54,9 +54,10 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.children === 'string' ||
-        typeof props.children === 'number') {
+    if (typeof props.children === 'string') {
       domElement.textContent = props.children;
+    } else if (typeof props.children === 'number') {
+      domElement.textContent = props.children.toString();
     }
     return domElement;
   },
@@ -70,9 +71,10 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
-    if (typeof newProps.children === 'string' ||
-        typeof newProps.children === 'number') {
+    if (typeof newProps.children === 'string') {
       domElement.textContent = newProps.children;
+    } else if (typeof newProps.children === 'number') {
+      domElement.textContent = newProps.children.toString();
     }
   },
 
@@ -118,11 +120,13 @@ var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement) {
     warnAboutUnstableUse();
+    let root;
     if (!container._reactRootContainer) {
-      container._reactRootContainer = DOMRenderer.mountContainer(element, container);
+      root = container._reactRootContainer = DOMRenderer.mountContainer(element, container);
     } else {
-      DOMRenderer.updateContainer(element, container._reactRootContainer);
+      DOMRenderer.updateContainer(element, root = container._reactRootContainer);
     }
+    return DOMRenderer.getPublicRootInstance(root);
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {

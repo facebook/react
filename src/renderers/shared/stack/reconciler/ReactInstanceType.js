@@ -12,22 +12,27 @@
 
 'use strict';
 
+import type {ReactElement} from 'ReactElementType';
+
 export type DebugID = number;
 
 export type ReactInstance = {
-  // ReactCompositeComponent
+  // Shared
   mountComponent: any,
+  unmountComponent: any,
+  receiveComponent: any,
+  getName: () => string,
+  getPublicInstance: any,
+  _currentElement: ReactElement,
+
+  // ReactCompositeComponent
   performInitialMountWithErrorHandling: any,
   performInitialMount: any,
   getHostNode: any,
-  unmountComponent: any,
-  receiveComponent: any,
   performUpdateIfNecessary: any,
   updateComponent: any,
   attachRef: (ref: string, component: ReactInstance) => void,
   detachRef: (ref: string) => void,
-  getName: () => string,
-  getPublicInstance: any,
   _rootNodeID: number,
 
   // ReactDOMComponent

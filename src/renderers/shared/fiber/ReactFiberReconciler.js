@@ -54,17 +54,17 @@ export type HostConfig<T, P, I, TI, C> = {
 
 type OpaqueNode = Fiber;
 
-export type Reconciler<C> = {
+export type Reconciler<C, I> = {
   mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
   updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
   unmountContainer(container : OpaqueNode) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
 
   // Used to extract the return value from the initial render. Legacy API.
-  getPublicRootInstance(container : OpaqueNode) : (C | null),
+  getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | null),
 };
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C> {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I> {
 
   var { scheduleWork, performWithPriority } = ReactFiberScheduler(config);
 
@@ -106,8 +106,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
 
     performWithPriority,
 
-    getPublicRootInstance(container : OpaqueNode) : (C | null) {
-      return null;
+    getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | null) {
+      const root : FiberRoot = (container.stateNode : any);
+      const containerFiber = root.current;
+      if (!containerFiber.child) {
+        return null;
+      }
+      return containerFiber.child.stateNode;
     },
 
   };

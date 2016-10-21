@@ -41,9 +41,6 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  mergeUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {
   Placement,
 } = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
@@ -51,7 +48,11 @@ var ReactFiberClassComponent = require('ReactFiberClassComponent');
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
 
   const {
-    mount,
+    adoptClassInstance,
+    constructClassInstance,
+    mountClassInstance,
+    resumeMountClassInstance,
+    updateClassInstance,
   } = ReactFiberClassComponent(scheduleUpdate);
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
@@ -156,45 +157,27 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
   }
 
   function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
-    // A class component update is the result of either new props or new state.
-    // Account for the possibly of missing pending props by falling back to the
-    // memoized props.
-    var props = workInProgress.pendingProps;
-    if (!props && current) {
-      props = current.memoizedProps;
-    }
-    // Compute the state using the memoized state and the update queue.
-    var updateQueue = workInProgress.updateQueue;
-    var previousState = current ? current.memoizedState : null;
-    var state = updateQueue ?
-      mergeUpdateQueue(updateQueue, previousState, props) :
-      previousState;
-
-    var instance = workInProgress.stateNode;
-    if (!instance) {
-      var ctor = workInProgress.type;
-      workInProgress.stateNode = instance = new ctor(props);
-      mount(workInProgress, instance);
-      state = instance.state || null;
-    } else if (typeof instance.shouldComponentUpdate === 'function' &&
-               !(updateQueue && updateQueue.isForced)) {
-      if (workInProgress.memoizedProps !== null) {
-        // Reset the props, in case this is a ping-pong case rather than a
-        // completed update case. For the completed update case, the instance
-        // props will already be the memoizedProps.
-        instance.props = workInProgress.memoizedProps;
-        instance.state = workInProgress.memoizedState;
-        if (!instance.shouldComponentUpdate(props, state)) {
-          return bailoutOnAlreadyFinishedWork(current, workInProgress);
-        }
+    let shouldUpdate;
+    if (!current) {
+      if (!workInProgress.stateNode) {
+        // In the initial pass we might need to construct the instance.
+        constructClassInstance(workInProgress);
+        mountClassInstance(workInProgress);
+        shouldUpdate = true;
+      } else {
+        // In a resume, we'll already have an instance we can reuse.
+        shouldUpdate = resumeMountClassInstance(workInProgress);
       }
+    } else {
+      shouldUpdate = updateClassInstance(current, workInProgress);
     }
-
-    instance.props = props;
-    instance.state = state;
-    var nextChildren = instance.render();
+    if (!shouldUpdate) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    // Rerender
+    const instance = workInProgress.stateNode;
+    const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
-
     return workInProgress.child;
   }
 
@@ -249,22 +232,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
   }
 
   function mountIndeterminateComponent(current, workInProgress) {
+    if (current) {
+      throw new Error('An indeterminate component should never have mounted.');
+    }
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
     var value = fn(props);
     if (typeof value === 'object' && value && typeof value.render === 'function') {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
-      if (current) {
-        current.tag = ClassComponent;
-      }
+      adoptClassInstance(workInProgress, value);
+      mountClassInstance(workInProgress);
       value = value.render();
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
-      if (current) {
-        current.tag = FunctionalComponent;
-      }
     }
     reconcileChildren(current, workInProgress, value);
     return workInProgress.child;
@@ -299,6 +281,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+
+    if (workInProgress.tag === HostComponent &&
+        workInProgress.memoizedProps.hidden &&
+        workInProgress.pendingWorkPriority !== OffscreenPriority) {
+      // This subtree still has work, but it should be deprioritized so we need
+      // to bail out and not do any work yet.
+      // TODO: It would be better if this tree got its correct priority set
+      // during scheduleUpdate instead because otherwise we'll start a higher
+      // priority reconciliation first before we can get down here. However,
+      // that is a bit tricky since workInProgress and current can have
+      // different "hidden" settings.
+      let child = workInProgress.progressedChild;
+      while (child) {
+        // To ensure that this subtree gets its priority reset, the children
+        // need to be reset.
+        child.pendingWorkPriority = OffscreenPriority;
+        child = child.sibling;
+      }
+      return null;
+    }
 
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
@@ -369,7 +371,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
         // next one immediately.
         return workInProgress.child;
       case HostComponent:
-        if (workInProgress.stateNode && config.beginUpdate) {
+        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);
