@@ -4,7 +4,7 @@ title: Forms
 permalink: docs/forms.html
 prev: state-and-lifecycle.html
 next: lifting-state-up.html
-redirect_from: "/tips/controlled-input-null-value.html"
+redirect_from: "tips/controlled-input-null-value.html"
 ---
 
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.

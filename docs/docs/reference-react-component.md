@@ -4,12 +4,13 @@ title: React.Component
 layout: docs
 category: Reference
 permalink: docs/react-component.html
-redirect_from: "/docs/component-api.html"
-redirect_from: "/docs/component-specs.html"
-redirect_from: "/tips/componentWillReceiveProps-not-triggered-after-mounting.html"
-redirect_from: "/tips/dom-event-listeners.html"
-redirect_from: "/tips/initial-ajax.html"
-redirect_from: "/tips/use-react-with-other-libraries.html"
+redirect_from:
+  - "docs/component-api.html"
+  - "docs/component-specs.html"
+  - "tips/componentWillReceiveProps-not-triggered-after-mounting.html"
+  - "tips/dom-event-listeners.html"
+  - "tips/initial-ajax.html"
+  - "tips/use-react-with-other-libraries.html"
 ---
 
 [Components](/react/docs/components-and-props.html) let you split the UI into independent, reusable pieces, and think about each piece in isolation. `React.Component` is provided by [`React`](/react/docs/react-api.html).
