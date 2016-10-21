@@ -4,8 +4,9 @@ title: "Tutorial: Intro To React"
 layout: tutorial
 sectionid: tutorial
 permalink: /tutorial/tutorial.html
-redirect_from: "/docs/tutorial.html"
-redirect_from: "/docs/why-react.html"
+redirect_from:
+  - "docs/tutorial.html"
+  - "docs/why-react.html"
 ---
 
 ## What We're Building

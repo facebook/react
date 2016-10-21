@@ -2,7 +2,7 @@
 id: state-and-lifecycle
 title: State and Lifecycle
 permalink: docs/state-and-lifecycle.html
-redirect_from: "/docs/interactivity-and-dynamic-uis.html"
+redirect_from: "docs/interactivity-and-dynamic-uis.html"
 prev: components-and-props.html
 next: handling-events.html
 ---

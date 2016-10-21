@@ -2,7 +2,7 @@
 id: optimizing-performance
 title: Optimizing Performance
 permalink: docs/optimizing-performance.html
-redirect_from: "/docs/advanced-performance.html"
+redirect_from: "docs/advanced-performance.html"
 ---
 
 Internally, React uses several clever techniques to minimize the number of costly DOM operations required to update the UI. For many applications, using React will lead to a fast user interface without doing much work to specifically optimize for performance. Nevertheless, there are several ways you can speed up your React application.
