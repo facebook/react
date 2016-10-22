@@ -117,14 +117,14 @@ In order to solve this issue, React supports a `key` attribute. When children ha
 
 ```xml
 <ul>
-  <li key="2015"}>Duke</li>
-  <li key="2016"}>Villanova</li>
+  <li key="2015">Duke</li>
+  <li key="2016">Villanova</li>
 </ul>
 
 <ul>
-  <li key="2014"}>Connecticut</li>
-  <li key="2015"}>Duke</li>
-  <li key="2016"}>Villanova</li>
+  <li key="2014">Connecticut</li>
+  <li key="2015">Duke</li>
+  <li key="2016">Villanova</li>
 </ul>
 ```
 

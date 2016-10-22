@@ -70,7 +70,7 @@ var MyComponents = {
 }
 
 function BlueDatePicker() {
-  return <MyComponents.DatePicker color="blue"} />;
+  return <MyComponents.DatePicker color="blue" />;
 }
 ```
 
