@@ -373,7 +373,7 @@ if (winner) {
 <div className="game-board">
   <Board
     squares={current.squares}
-    onClick={() => this.handleClick(i)}
+    onClick={(i) => this.handleClick(i)}
   />
 </div>
 <div className="game-info">
@@ -402,7 +402,7 @@ handleClick(i) {
 }
 ```
 
-At this point, Board only needs `renderStep` and `render`; the state initialization and click handler should both live in Game.
+At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
 
 ## Showing the Moves
 
