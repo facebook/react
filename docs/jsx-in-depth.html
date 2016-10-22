@@ -111,14 +111,14 @@
 <p>You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if <code>MyComponents.DatePicker</code> is a component, you can use it directly from JSX with:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
 
-<span class="kd">var</span> <span class="nx">MyComponents</span> <span class="o">=</span> <span class="p">{</span>
+<span class="kr">const</span> <span class="nx">MyComponents</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">DatePicker</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">imagine</span> <span class="nx">a</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">}</span> <span class="nx">datepicker</span> <span class="nx">here</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kd">function</span> <span class="nx">BlueDatePicker</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponents</span><span class="p">.</span><span class="nx">DatePicker</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponents</span><span class="p">.</span><span class="nx">DatePicker</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>When an element type starts with a lowercase letter, it refers to a built-in component like <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code> and results in a string <code>&#39;div&#39;</code> or <code>&#39;span&#39;</code> passed to <code>React.createElement</code>. Types that start with a capital letter like <code>&lt;Foo /&gt;</code> compile to <code>React.createElement(Foo)</code> and correspond to a component defined or imported in your JavaScript file.</p>
@@ -153,7 +153,7 @@
 <span class="p">}</span>
 
 <span class="kd">function</span> <span class="nx">render2</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">];</span>
+  <span class="kr">const</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">];</span>
 
   <span class="c1">// Valid JSX</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -168,7 +168,7 @@
 
 <p><code>if</code> statements and <code>for</code> loops are not expressions in JavaScript, so they can&#39;t be used in JSX directly. Instead, you can put these in the surrounding code. For example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">NumberDescriber</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">description</span><span class="p">;</span>
+  <span class="kd">let</span> <span class="nx">description</span><span class="p">;</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">description</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="nx">even</span><span class="o">&lt;</span><span class="err">/strong&gt;;</span>
   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
@@ -198,7 +198,7 @@
 <h3><a class="anchor" name="spread-attributes"></a>Spread Attributes <a class="hash-link" href="#spread-attributes">#</a></h3>
 <p>If you already have <code>props</code> as an object, and you want to pass it in JSX, you can use <code>...</code> as a &quot;spread&quot; operator to pass the whole props object. These two render functions are equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">render1</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span><span class="nx">left</span><span class="o">:</span> <span class="s1">&#39;ben&#39;</span><span class="p">,</span> <span class="nx">right</span><span class="o">:</span> <span class="s1">&#39;hector&#39;</span><span class="p">};</span>
+  <span class="kr">const</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span><span class="nx">left</span><span class="o">:</span> <span class="s1">&#39;ben&#39;</span><span class="p">,</span> <span class="nx">right</span><span class="o">:</span> <span class="s1">&#39;hector&#39;</span><span class="p">};</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="p">}</span>
 
@@ -261,7 +261,7 @@
 <span class="p">}</span>
 
 <span class="kd">function</span> <span class="nx">renderTodoList</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">todos</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;finish doc&#39;</span><span class="p">,</span> <span class="s1">&#39;submit pr&#39;</span><span class="p">,</span> <span class="s1">&#39;nag dan to review&#39;</span><span class="p">];</span>
+  <span class="kr">const</span> <span class="nx">todos</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;finish doc&#39;</span><span class="p">,</span> <span class="s1">&#39;submit pr&#39;</span><span class="p">,</span> <span class="s1">&#39;nag dan to review&#39;</span><span class="p">];</span>
   <span class="k">return</span> <span class="p">(</span>
     <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
       <span class="p">{</span><span class="nx">todos</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">message</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Item</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">)}</span>
@@ -285,8 +285,8 @@
 
 <span class="c1">// Calls the children callback numTimes to produce a repeated component</span>
 <span class="kd">function</span> <span class="nx">Repeat</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">[];</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">numTimes</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">numTimes</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">(</span><span class="nx">i</span><span class="p">));</span>
   <span class="p">}</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">items</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>

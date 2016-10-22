@@ -87,7 +87,7 @@
 
 <p>That is, if you have a component such as:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Swapper</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">children</span><span class="p">;</span>
+  <span class="kd">let</span> <span class="nx">children</span><span class="p">;</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">swapped</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">children</span> <span class="o">=</span> <span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">rightChildren</span><span class="p">,</span> <span class="nx">props</span><span class="p">.</span><span class="nx">leftChildren</span><span class="p">];</span>
   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
@@ -101,10 +101,10 @@
 <p>To solve this problem, you can use the <code>createFragment</code> add-on to give keys to the sets of children.</p>
 <h4><a class="anchor" name="arrayltreactnodegt-createfragmentobject-children"></a><code>Array&lt;ReactNode&gt; createFragment(object children)</code> <a class="hash-link" href="#arrayltreactnodegt-createfragmentobject-children">#</a></h4>
 <p>Instead of creating arrays, we write:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">createFragment</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-create-fragment&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">createFragment</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-create-fragment&#39;</span>
 
 <span class="kd">function</span> <span class="nx">Swapper</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">children</span><span class="p">;</span>
+  <span class="kd">let</span> <span class="nx">children</span><span class="p">;</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">swapped</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">children</span> <span class="o">=</span> <span class="nx">createFragment</span><span class="p">({</span>
       <span class="nx">right</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">rightChildren</span><span class="p">,</span>

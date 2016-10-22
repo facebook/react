@@ -162,14 +162,14 @@
 <h3><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h3>
 <p>In order to solve this issue, React supports a <code>key</code> attribute. When children have keys, React uses the key to match children in the original tree with children in the subsequent tree. For example, adding a <code>key</code> to our inefficient example above can make the tree conversion efficient:</p>
 <div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;ul&gt;</span>
-  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2015&quot;</span><span class="err">}</span><span class="nt">&gt;</span>Duke<span class="nt">&lt;/li&gt;</span>
-  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2016&quot;</span><span class="err">}</span><span class="nt">&gt;</span>Villanova<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2015&quot;</span><span class="nt">&gt;</span>Duke<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2016&quot;</span><span class="nt">&gt;</span>Villanova<span class="nt">&lt;/li&gt;</span>
 <span class="nt">&lt;/ul&gt;</span>
 
 <span class="nt">&lt;ul&gt;</span>
-  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2014&quot;</span><span class="err">}</span><span class="nt">&gt;</span>Connecticut<span class="nt">&lt;/li&gt;</span>
-  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2015&quot;</span><span class="err">}</span><span class="nt">&gt;</span>Duke<span class="nt">&lt;/li&gt;</span>
-  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2016&quot;</span><span class="err">}</span><span class="nt">&gt;</span>Villanova<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2014&quot;</span><span class="nt">&gt;</span>Connecticut<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2015&quot;</span><span class="nt">&gt;</span>Duke<span class="nt">&lt;/li&gt;</span>
+  <span class="nt">&lt;li</span> <span class="na">key=</span><span class="s">&quot;2016&quot;</span><span class="nt">&gt;</span>Villanova<span class="nt">&lt;/li&gt;</span>
 <span class="nt">&lt;/ul&gt;</span>
 </code></pre></div>
 <p>Now React knows that the element with key <code>&#39;2014&#39;</code> is the new one, and the elements with the keys <code>&#39;2015&#39;</code> and <code>&#39;2016&#39;</code> have just moved.</p>

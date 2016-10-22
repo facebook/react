@@ -325,7 +325,7 @@
 
 <p>Square no longer keeps its own state; it receives its value from its parent <code>Board</code> and informs its parent when it&#39;s clicked. We call components like this <strong>controlled components</strong>.</p>
 <h2><a class="anchor" name="why-immutability-is-important"></a>Why Immutability Is Important <a class="hash-link" href="#why-immutability-is-important">#</a></h2>
-<p>In the previous code example, I suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changges and to prevent mutating the existing array. Let&#39;s talk about what this means and why it an important concept to learn.</p>
+<p>In the previous code example, I suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changes and to prevent mutating the existing array. Let&#39;s talk about what this means and why it an important concept to learn.</p>
 
 <p>There are generally two ways for changing data. The first, and most common method in past, has been to <em>mutate</em> the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.</p>
 <h4><a class="anchor" name="data-change-with-mutation"></a>Data change with mutation <a class="hash-link" href="#data-change-with-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span>  <span class="mi">1</span><span class="p">}</span>
@@ -341,7 +341,7 @@
 <h3><a class="anchor" name="determining-when-to-re-render-in-react"></a>Determining When To Re-render in React <a class="hash-link" href="#determining-when-to-re-render-in-react">#</a></h3>
 <p>The biggest benefit of immutability in React comes when you build simple <em>pure components</em>. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.</p>
 
-<p>To learn how you can build <em>pure components</em> take a look at <a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>. Also, take a look at the <a href="https://facebook.github.io/immutable-js/">immutability.js</a> library to strictly enforce immutable data.</p>
+<p>To learn how you can build <em>pure components</em> take a look at <a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>. Also, take a look at the <a href="https://facebook.github.io/immutable-js/">Immutable.js</a> library to strictly enforce immutable data.</p>
 <h2><a class="anchor" name="functional-components"></a>Functional Components <a class="hash-link" href="#functional-components">#</a></h2>
 <p>Back to our project, you can now delete the <code>constructor</code> from <code>Square</code>; we won&#39;t need it any more. In fact, React supports a simpler syntax called <strong>stateless functional components</strong> for component types like Square that only consist of a <code>render</code> method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Square</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
@@ -464,7 +464,7 @@
   <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
     <span class="k">return</span><span class="p">;</span>
   <span class="p">}</span>
-  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">)</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
     <span class="nx">history</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">concat</span><span class="p">([{</span>
       <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span>

@@ -94,20 +94,20 @@
   <span class="p">}</span>
 
   <span class="nx">handleAdd</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">concat</span><span class="p">([</span>
+    <span class="kr">const</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">concat</span><span class="p">([</span>
       <span class="nx">prompt</span><span class="p">(</span><span class="s1">&#39;Enter some text&#39;</span><span class="p">)</span>
     <span class="p">]);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">newItems</span><span class="p">});</span>
   <span class="p">}</span>
 
   <span class="nx">handleRemove</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+    <span class="kd">let</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
     <span class="nx">newItems</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">newItems</span><span class="p">});</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+    <span class="kr">const</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleRemove</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span><span class="o">&gt;</span>
         <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -214,7 +214,7 @@
 
 <p>The example below would <strong>not</strong> work, because the <code>ReactCSSTransitionGroup</code> is being mounted along with the new item, instead of the new item being mounted within it. Compare this to the <a href="#getting-started">Getting Started</a> section above to see the difference.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+  <span class="kr">const</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
     <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleRemove</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span><span class="o">&gt;</span>
 <span class="hll">      <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
 </span>        <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
@@ -288,7 +288,7 @@
 
 <p>However if you only need to render a single child inside <code>ReactTransitionGroup</code>, you can completely avoid wrapping it in a <code>&lt;span&gt;</code> or any other DOM component. To do this, create a custom component that renders the first child passed to it directly:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">FirstChild</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">childrenArray</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">);</span>
+  <span class="kr">const</span> <span class="nx">childrenArray</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">);</span>
   <span class="k">return</span> <span class="nx">childrenArray</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">||</span> <span class="kc">null</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
