@@ -42,7 +42,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on Codepen.](https://codepen.io/gaearon/pen/GjPyQr?editors=0011)
+[Try it out on CodePen.](https://codepen.io/gaearon/pen/GjPyQr?editors=0011)
 
 This code displays a bullet list of numbers between 1 and 5.
 
@@ -94,7 +94,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on Codepen.](https://codepen.io/gaearon/pen/jrXYRR?editors=0011)
+[Try it out on CodePen.](https://codepen.io/gaearon/pen/jrXYRR?editors=0011)
 
 ## Keys
 
@@ -136,12 +136,12 @@ We don't recommend using indexes for keys if the items can reorder, as that woul
 
 Keys only make sense in the context of the surrounding array.
 
-For example, if you [extract](/react/docs/components-and-props.html#extracting-components) a `Number` component, you should keep the key on the `<Number />` elements in the array rather than on the root `<li>` element in the `Number` itself.
+For example, if you [extract](/react/docs/components-and-props.html#extracting-components) a `ListItem` component, you should keep the key on the `<ListItem />` elements in the array rather than on the root `<li>` element in the `ListItem` itself.
 
 **Example: Incorrect Key Usage**
 
 ```javascript{4,5,14,15}
-function Number(props) {
+function ListItem(props) {
   const value = props.value;
   return (
     // Wrong! There is no need to specify the key here:
@@ -155,7 +155,7 @@ function NumberList(props) {
   const numbers = props.numbers;
   const listItems = numbers.map((item) =>
     // Wrong! The key should have been specified here:
-    <Number value={number} />
+    <ListItem value={number} />
   );
   return (
     <ul>
@@ -174,7 +174,7 @@ ReactDOM.render(
 **Example: Correct Key Usage**
 
 ```javascript{2,3,9,10}
-function Number(props) {
+function ListItem(props) {
   // Correct! There is no need to specify the key here:
   return <li>{props.value}</li>;
 }
@@ -183,8 +183,8 @@ function NumberList(props) {
   const numbers = props.numbers;
   const listItems = numbers.map((number) =>
     // Correct! Key should be specified inside the array.
-    <Number key={number.toString()}
-            value={number} />
+    <ListItem key={number.toString()}
+              value={number} />
   );
   return (
     <ul>
@@ -200,7 +200,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on Codepen.](https://codepen.io/gaearon/pen/ozJEPy?editors=0010)
+[Try it out on CodePen.](https://codepen.io/rthor/pen/QKzJKG?editors=0010)
 
 A good rule of thumb is that elements inside the `map()` call need keys.
 
@@ -267,8 +267,8 @@ In the examples above we declared a separate `listItems` variable and included i
 function NumberList(props) {
   const numbers = props.numbers;
   const listItems = numbers.map((number) =>
-    <Number key={number.toString()}
-            value={number} />
+    <ListItem key={number.toString()}
+              value={number} />
   );
   return (
     <ul>
@@ -286,8 +286,8 @@ function NumberList(props) {
   return (
     <ul>
       {numbers.map((number) =>
-        <Number key={number.toString()}
-                value={number} />
+        <ListItem key={number.toString()}
+                  value={number} />
       )}
     </ul>
   );
