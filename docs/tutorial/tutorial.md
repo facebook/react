@@ -232,7 +232,7 @@ Determining how a immutable object has changed is considerably easier. If the ob
 
 The biggest benefit of immutability in React comes when you build simple _pure components_. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.
 
-To learn how you can build *pure components* take a look at [shouldComponentUpdate()](https://facebook.github.io/react/docs/update.html). Also, take a look at the [immutability.js](https://facebook.github.io/immutable-js/) library to strictly enforce immutable data.
+To learn how you can build *pure components* take a look at [shouldComponentUpdate()](https://facebook.github.io/react/docs/update.html). Also, take a look at the [Immutable.js](https://facebook.github.io/immutable-js/) library to strictly enforce immutable data.
 
 ## Functional Components
 
