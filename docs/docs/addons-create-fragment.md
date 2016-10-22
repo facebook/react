@@ -24,7 +24,7 @@ That is, if you have a component such as:
 
 ```js
 function Swapper(props) {
-  var children;
+  let children;
   if (props.swapped) {
     children = [props.rightChildren, props.leftChildren];
   } else {
@@ -43,10 +43,10 @@ To solve this problem, you can use the `createFragment` add-on to give keys to t
 Instead of creating arrays, we write:
 
 ```js
-var createFragment = require('react-addons-create-fragment');
+import createFragment from 'react-addons-create-fragment'
 
 function Swapper(props) {
-  var children;
+  let children;
   if (props.swapped) {
     children = createFragment({
       right: props.rightChildren,

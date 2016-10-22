@@ -45,7 +45,7 @@ As such, you cannot access the event in an asynchronous way.
 function onClick(event) {
   console.log(event); // => nullified object.
   console.log(event.type); // => "click"
-  var eventType = event.type; // => "click"
+  const eventType = event.type; // => "click"
 
   setTimeout(function() {
     console.log(event.type); // => null
