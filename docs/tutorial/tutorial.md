@@ -414,7 +414,7 @@ const moves = history.map((step, move) => {
     'Move #' + move :
     'Game start';
   return (
-    <li key={move}>
+    <li>
       <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
     </li>
   );
