@@ -392,7 +392,7 @@ handleClick(i) {
   if (calculateWinner(squares) || squares[i]) {
     return;
   }
-  squares[i] = this.state.xIsNext(current.squares) ? 'X' : 'O';
+  squares[i] = this.state.xIsNext ? 'X' : 'O';
   this.setState({
     history: history.concat([{
       squares: squares
