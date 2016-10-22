@@ -63,7 +63,7 @@ You can also refer to a React component using dot-notation from within JSX. This
 ```js
 import React from 'react';
 
-var MyComponents = {
+const MyComponents = {
   DatePicker: function(props) {
     return <div>imagine a {props.color} datepicker here</div>;
   }
@@ -111,7 +111,7 @@ function Story1(props) {
 }
 
 function render2(props) {
-  var MyComponent = components[props.story];
+  const MyComponent = components[props.story];
 
   // Valid JSX
   return <MyComponent />;
@@ -136,7 +136,7 @@ For `MyComponent`, The value of `props.foo` will be `10` because the expression 
 
 ```js
 function NumberDescriber(props) {
-  var description;
+  let description;
   if (props.number % 2 == 0) {
     description = <strong>even</strong>;
   } else {
@@ -184,7 +184,7 @@ If you already have `props` as an object, and you want to pass it in JSX, you ca
 
 ```js
 function render1() {
-  var props = {left: 'ben', right: 'hector'};
+  const props = {left: 'ben', right: 'hector'};
   return <MyComponent {...props} />;
 }
 
@@ -276,7 +276,7 @@ function Item(props) {
 }
 
 function renderTodoList() {
-  var todos = ['finish doc', 'submit pr', 'nag dan to review'];
+  const todos = ['finish doc', 'submit pr', 'nag dan to review'];
   return (
     <ul>
       {todos.map((message) => <Item key={message} message={message} />)}
@@ -306,8 +306,8 @@ function ListOfTenThings() {
 
 // Calls the children callback numTimes to produce a repeated component
 function Repeat(props) {
-  var items = [];
-  for (var i = 0; i < numTimes; i++) {
+  let items = [];
+  for (let i = 0; i < numTimes; i++) {
     items.push(props.children(i));
   }
   return <div>{items}</div>

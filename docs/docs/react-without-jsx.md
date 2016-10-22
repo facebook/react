@@ -45,7 +45,7 @@ The component can either be provided as a string, or as a subclass of `React.Com
 If you get tired of typing `React.createElement` so much, one common pattern is to assign a shorthand:
 
 ```js
-var e = React.createElement;
+const e = React.createElement;
 
 ReactDOM.render(
   e('div', null, 'Hello World'),
