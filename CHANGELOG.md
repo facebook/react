@@ -388,7 +388,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 - `React.initializeTouchEvents` is no longer necessary and has been removed completely. Touch events now work automatically.
 - Add-Ons: Due to the DOM node refs change mentioned above, `TestUtils.findAllInRenderedTree` and related helpers are no longer able to take a DOM component, only a custom component.
-- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
+- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://facebook.github.io/react/docs/react-api.html#cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
 - Plain objects are no longer supported as React children; arrays should be used instead. You can use the [`createFragment`](https://facebook.github.io/react/docs/create-fragment.html) helper to migrate, which now returns an array.
 - Add-Ons: `classSet` has been removed. Use [classnames](https://github.com/JedWatson/classnames) instead.
 - Web components (custom elements) now use native property names.  Eg: `class` instead of `className`.
@@ -399,7 +399,7 @@ Each of these changes will continue to work as before with a new warning until t
 - `setProps` and `replaceProps` are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.
 - ES6 component classes must now extend `React.Component` in order to enable stateless function components. The [ES3 module pattern](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages) will continue to work.
 - Reusing and mutating a `style` object between renders has been deprecated. This mirrors our change to freeze the `props` object.
-- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
+- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://facebook.github.io/react/docs/react-api.html#cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
 - Add-Ons: To improve reliability, `CSSTransitionGroup` will no longer listen to transition events. Instead, you should specify transition durations manually using props such as `transitionEnterTimeout={500}`.
 
 ### Notable enhancements
