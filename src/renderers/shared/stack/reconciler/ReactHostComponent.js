@@ -43,12 +43,20 @@ var ReactHostComponentInjection = {
  * @return {function} The internal class constructor function.
  */
 function createInternalComponent(element) {
-  invariant(
-    genericComponentClass,
-    'There is no registered component for the tag %s',
-    element.type
-  );
-  return new genericComponentClass(element);
+  var internalComponent;
+
+  if (tagToComponentClass[element.type]) {
+    internalComponent = new tagToComponentClass[element.type](element);
+  } else {
+    invariant(
+      genericComponentClass,
+      'There is no registered component for the tag %s',
+      element.type
+    );
+    internalComponent = new genericComponentClass(element);
+  }
+
+  return internalComponent;
 }
 
 /**
