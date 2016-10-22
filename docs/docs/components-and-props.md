@@ -133,8 +133,9 @@ function Comment(props) {
     <div className="Comment">
       <div className="UserInfo">
         <img className="Avatar"
-             src={props.author.avatarUrl}
-             alt={props.author.name} />
+          src={props.author.avatarUrl}
+          alt={props.author.name}
+        />
         <div className="UserInfo-name">
           {props.author.name}
         </div>
@@ -158,12 +159,13 @@ This component can be tricky to change because of all the nesting, and it is als
 
 First, we will extract `Avatar`:
 
-```js{3-5}
+```js{3-6}
 function Avatar(props) {
   return (
     <img className="Avatar"
-         src={props.user.avatarUrl}
-         alt={props.user.name} />
+      src={props.user.avatarUrl}
+      alt={props.user.name}
+    />
   );
 }
 ```
