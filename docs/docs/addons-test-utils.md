@@ -65,7 +65,7 @@ You can then begin to assert facts about the output. For example, if your compon
 Then you can assert:
 
 ```javascript
-var renderer = ReactTestUtils.createRenderer();
+const renderer = ReactTestUtils.createRenderer();
 result = renderer.getRenderOutput();
 expect(result.type).toBe('div');
 expect(result.props.children).toEqual([
@@ -99,7 +99,7 @@ Simulate an event dispatch on a DOM node with optional `eventData` event data.
 
 ```javascript
 // <button ref="button">...</button>
-var node = this.refs.button;
+const node = this.refs.button;
 ReactTestUtils.Simulate.click(node);
 ```
 
@@ -107,7 +107,7 @@ ReactTestUtils.Simulate.click(node);
 
 ```javascript
 // <input ref="input" />
-var node = this.refs.input;
+const node = this.refs.input;
 node.value = 'giraffe';
 ReactTestUtils.Simulate.change(node);
 ReactTestUtils.Simulate.keyDown(node, {key: "Enter", keyCode: 13, which: 13});

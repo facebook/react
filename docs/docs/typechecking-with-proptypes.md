@@ -115,7 +115,7 @@ With `React.PropTypes.element` you can specify that only a single child can be p
 class MyComponent extends React.Component {
   render() {
     // This must be exactly one element or it will warn.
-    var children = this.props.children;
+    const children = this.props.children;
     return (
       <div>
         {children}

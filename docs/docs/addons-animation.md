@@ -31,20 +31,20 @@ class TodoList extends React.Component {
   }
 
   handleAdd() {
-    var newItems = this.state.items.concat([
+    const newItems = this.state.items.concat([
       prompt('Enter some text')
     ]);
     this.setState({items: newItems});
   }
 
   handleRemove(i) {
-    var newItems = this.state.items.slice();
+    let newItems = this.state.items.slice();
     newItems.splice(i, 1);
     this.setState({items: newItems});
   }
 
   render() {
-    var items = this.state.items.map((item, i) => (
+    const items = this.state.items.map((item, i) => (
       <div key={item} onClick={() => this.handleRemove(i)}>
         {item}
       </div>
@@ -168,7 +168,7 @@ The example below would **not** work, because the `ReactCSSTransitionGroup` is b
 
 ```javascript{4,6,13}
 render() {
-  var items = this.state.items.map((item, i) => (
+  const items = this.state.items.map((item, i) => (
     <div key={item} onClick={() => this.handleRemove(i)}>
       <ReactCSSTransitionGroup transitionName="example">
         {item}
@@ -263,7 +263,7 @@ However if you only need to render a single child inside `ReactTransitionGroup`,
 
 ```javascript
 function FirstChild(props) {
-  var childrenArray = React.Children.toArray(props.children);
+  const childrenArray = React.Children.toArray(props.children);
   return childrenArray[0] || null;
 }
 ```

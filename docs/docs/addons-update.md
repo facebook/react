@@ -36,7 +36,7 @@ myData.a.b.push(9);
 You have no way of determining which data has changed since the previous copy has been overwritten. Instead, you need to create a new copy of `myData` and change only the parts of it that need to be changed. Then you can compare the old copy of `myData` with the new one in `shouldComponentUpdate()` using triple-equals:
 
 ```js
-var newData = deepCopy(myData);
+const newData = deepCopy(myData);
 newData.x.y.z = 7;
 newData.a.b.push(9);
 ```
@@ -44,7 +44,7 @@ newData.a.b.push(9);
 Unfortunately, deep copies are expensive, and sometimes impossible. You can alleviate this by only copying objects that need to be changed and by reusing the objects that haven't changed. Unfortunately, in today's JavaScript this can be cumbersome:
 
 ```js
-var newData = extend(myData, {
+const newData = extend(myData, {
   x: extend(myData.x, {
     y: extend(myData.x.y, {z: 7}),
   }),
@@ -61,7 +61,7 @@ While this is fairly performant (since it only makes a shallow copy of `log n` o
 ```js
 import update from 'react-addons-update';
 
-var newData = update(myData, {
+const newData = update(myData, {
   x: {y: {z: {$set: 7}}},
   a: {b: {$push: [9]}}
 });
@@ -85,16 +85,16 @@ The `$`-prefixed keys are called *commands*. The data structure they are "mutati
 ### Simple push
 
 ```js
-var initialArray = [1, 2, 3];
-var newArray = update(initialArray, {$push: [4]}); // => [1, 2, 3, 4]
+const initialArray = [1, 2, 3];
+const newArray = update(initialArray, {$push: [4]}); // => [1, 2, 3, 4]
 ```
 `initialArray` is still `[1, 2, 3]`.
 
 ### Nested collections
 
 ```js
-var collection = [1, 2, {a: [12, 17, 15]}];
-var newCollection = update(collection, {2: {a: {$splice: [[1, 1, 13, 14]]}}});
+const collection = [1, 2, {a: [12, 17, 15]}];
+const newCollection = update(collection, {2: {a: {$splice: [[1, 1, 13, 14]]}}});
 // => [1, 2, {a: [12, 13, 14, 15]}]
 ```
 This accesses `collection`'s index `2`, key `a`, and does a splice of one item starting from index `1` (to remove `17`) while inserting `13` and `14`.
@@ -102,16 +102,16 @@ This accesses `collection`'s index `2`, key `a`, and does a splice of one item s
 ### Updating a value based on its current one
 
 ```js
-var obj = {a: 5, b: 3};
-var newObj = update(obj, {b: {$apply: function(x) {return x * 2;}}});
+const obj = {a: 5, b: 3};
+const newObj = update(obj, {b: {$apply: function(x) {return x * 2;}}});
 // => {a: 5, b: 6}
 // This is equivalent, but gets verbose for deeply nested collections:
-var newObj2 = update(obj, {b: {$set: obj.b * 2}});
+const newObj2 = update(obj, {b: {$set: obj.b * 2}});
 ```
 
 ### (Shallow) Merge
 
 ```js
-var obj = {a: 5, b: 3};
-var newObj = update(obj, {$merge: {b: 6, c: 7}}); // => {a: 5, b: 6, c: 7}
+const obj = {a: 5, b: 3};
+const newObj = update(obj, {$merge: {b: 6, c: 7}}); // => {a: 5, b: 6, c: 7}
 ```
