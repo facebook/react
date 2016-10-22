@@ -402,7 +402,7 @@ handleClick(i) {
 }
 ```
 
-At this point, Board only needs `renderStep` and `render`; the state initialization and click handler should both live in Game.
+At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
 
 ## Showing the Moves
 
@@ -414,7 +414,7 @@ const moves = history.map((step, move) => {
     'Move #' + move :
     'Game start';
   return (
-    <li key={move}>
+    <li>
       <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
     </li>
   );
