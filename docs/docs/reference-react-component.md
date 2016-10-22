@@ -70,7 +70,7 @@ Each component also provides some other APIs:
 ### Class Properties
 
   - [`defaultProps`](#defaultprops)
-  - [`displayName`](#displayName)
+  - [`displayName`](#displayname)
   - [`propTypes`](#proptypes)
 
 ### Instance Properties
