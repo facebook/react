@@ -77,7 +77,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
- * See https://facebook.github.io/react/docs/top-level-api.html#reactdomserver.rendertostring
+ * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
  */
 function renderToString(element) {
   invariant(
@@ -90,7 +90,7 @@ function renderToString(element) {
 /**
  * Similar to renderToString, except this doesn't create extra DOM attributes
  * such as data-react-id that React uses internally.
- * See https://facebook.github.io/react/docs/top-level-api.html#reactdomserver.rendertostaticmarkup
+ * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostaticmarkup
  */
 function renderToStaticMarkup(element) {
   invariant(
