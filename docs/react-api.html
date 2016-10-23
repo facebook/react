@@ -188,12 +188,11 @@
   <span class="p">[...</span><span class="nx">children</span><span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Create and return a new React element of the given type. The type argument can be either an
-html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a React class (created via <code>React.createClass()</code>).</p>
+<p>Create and return a new <a href="/react/docs/rendering-elements.html">React element</a> of the given type. The type argument can be either a tag name string (such as <code>&#39;div&#39;</code> or <code>&#39;span&#39;</code>), or a <a href="/react/docs/components-and-props.html">React component</a> type (a class or a function).</p>
 
-<p>Code written with JSX will be converted to use <code>React.createElement()</code>. You will not typically invoke <code>React.createElement()</code> directly if you are using JSX. See <a href="/react/docs/react-without-jsx.html">React Without JSX</a> to learn more.</p>
+<p>Convenience wrappers around <code>React.createElement()</code> for DOM components are provided by <code>React.DOM</code>. For example, <code>React.DOM.a(...)</code> is a convenience wrapper for <code>React.createElement(&#39;a&#39;, ...)</code>. They are considered legacy, and we encourage you to either use JSX or use <code>React.createElement()</code> directly instead.</p>
 
-<p>Convenience wrappers around <code>React.createElement()</code> for DOM components are provided by <code>React.DOM</code>. For example, <code>React.DOM.a(...)</code> is a convenience wrapper for <code>React.createElement(&#39;a&#39;, ...)</code>.</p>
+<p>Code written with <a href="/react/docs/introducing-jsx.html">JSX</a> will be converted to use <code>React.createElement()</code>. You will not typically invoke <code>React.createElement()</code> directly if you are using JSX. See <a href="/react/docs/react-without-jsx.html">React Without JSX</a> to learn more.</p>
 
 <hr>
 <h3><a class="anchor" name="cloneelement"></a><code>cloneElement()</code> <a class="hash-link" href="#cloneelement">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">React.cloneElement(
@@ -214,7 +213,9 @@ html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a React class 
 <hr>
 <h3><a class="anchor" name="createfactory"></a><code>createFactory()</code> <a class="hash-link" href="#createfactory">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span>
 </code></pre></div>
-<p>Return a function that produces React elements of a given type. Like <a href="#createElement"><code>React.createElement()</code></a>, the type argument can be either an html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a React class.</p>
+<p>Return a function that produces React elements of a given type. Like <a href="#createElement"><code>React.createElement()</code></a>, the type argument can be either a tag name string (such as <code>&#39;div&#39;</code> or <code>&#39;span&#39;</code>), or a <a href="/react/docs/components-and-props.html">React component</a> type (a class or a function).</p>
+
+<p>This helper is considered legacy, and we encourage you to either use JSX or use <code>React.createElement()</code> directly instead.</p>
 
 <p>You will not typically invoke <code>React.createFactory()</code> directly if you are using JSX. See <a href="/react/docs/react-without-jsx.html">React Without JSX</a> to learn more.</p>
 
