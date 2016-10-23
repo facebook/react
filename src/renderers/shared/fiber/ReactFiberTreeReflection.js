@@ -23,6 +23,17 @@ var {
   HostText,
 } = require('ReactTypeOfWork');
 
+exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
+  var parent : ?Fiber = ReactInstanceMap.get(component);
+  if (!parent) {
+    return false;
+  }
+  // TODO: This doesn't deal with the case where it has completed but not yet
+  // committed. It also doesn't deal with unmounts since they currently don't
+  // clean up the item in the ReactInstanceMap.
+  return true;
+};
+
 exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any>) : Fiber | null {
   var parent : ?Fiber = ReactInstanceMap.get(component);
   if (!parent) {

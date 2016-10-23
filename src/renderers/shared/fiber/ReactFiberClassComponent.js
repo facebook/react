@@ -23,6 +23,7 @@ var {
   addCallbackToQueue,
   mergeUpdateQueue,
 } = require('ReactFiberUpdateQueue');
+var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
@@ -39,6 +40,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
 
   // Class component state updater
   const updater = {
+    isMounted,
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue ?
