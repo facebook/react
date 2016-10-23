@@ -203,7 +203,7 @@
 <li>It conceptually makes sense for the filter text and checked value to live in <code>FilterableProductTable</code></li>
 </ul>
 
-<p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add a <code>getInitialState()</code> method to <code>FilterableProductTable</code> that returns <code>{filterText: &#39;&#39;, inStockOnly: false}</code> to reflect the initial state of your application. Then, pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
+<p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add an instance property <code>this.state = {filterText: &#39;&#39;, inStockOnly: false}</code> to <code>FilterableProductTable</code>&#39;s <code>constructor</code> to reflect the initial state of your application. Then, pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
 
 <p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see that the data table is updated correctly.</p>
 <h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add Inverse Data Flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>

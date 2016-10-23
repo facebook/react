@@ -337,7 +337,7 @@
 <h4><a class="anchor" name="tracking-changes"></a>Tracking Changes <a class="hash-link" href="#tracking-changes">#</a></h4>
 <p>Determining if a mutated object has changed is complex because changes are made directly to the object. This then requires comparing the current object to a previous copy, traversing the entire object tree, and comparing each variable and value. This process can become increasingly complex.</p>
 
-<p>Determining how a immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That&#39;s it.</p>
+<p>Determining how an immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That&#39;s it.</p>
 <h3><a class="anchor" name="determining-when-to-re-render-in-react"></a>Determining When To Re-render in React <a class="hash-link" href="#determining-when-to-re-render-in-react">#</a></h3>
 <p>The biggest benefit of immutability in React comes when you build simple <em>pure components</em>. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.</p>
 
@@ -356,7 +356,7 @@
 <h2><a class="anchor" name="taking-turns"></a>Taking Turns <a class="hash-link" href="#taking-turns">#</a></h2>
 <p>An obvious defect in our game is that only X can play. Let&#39;s fix that.</p>
 
-<p>Let&#39;s default the first move to be by &#39;X&#39;. Modify our starting state in our <code>Game</code> constructor.</p>
+<p>Let&#39;s default the first move to be by &#39;X&#39;. Modify our starting state in our <code>Board</code> constructor.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">();</span>
@@ -448,7 +448,7 @@
 <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
   <span class="o">&lt;</span><span class="nx">Board</span>
     <span class="nx">squares</span><span class="o">=</span><span class="p">{</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">}</span>
-    <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+    <span class="nx">onClick</span><span class="o">=</span><span class="p">{(</span><span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
   <span class="o">/&gt;</span>
 <span class="o">&lt;</span><span class="err">/div&gt;</span>
 <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-info&quot;</span><span class="o">&gt;</span>
@@ -473,7 +473,7 @@
   <span class="p">});</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>At this point, Board only needs <code>renderStep</code> and <code>render</code>; the state initialization and click handler should both live in Game.</p>
+<p>At this point, Board only needs <code>renderSquare</code> and <code>render</code>; the state initialization and click handler should both live in Game.</p>
 <h2><a class="anchor" name="showing-the-moves"></a>Showing the Moves <a class="hash-link" href="#showing-the-moves">#</a></h2>
 <p>Let&#39;s show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let&#39;s do that in the <code>render</code> method of Game:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">moves</span> <span class="o">=</span> <span class="nx">history</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">step</span><span class="p">,</span> <span class="nx">move</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
@@ -481,7 +481,7 @@
     <span class="s1">&#39;Move #&#39;</span> <span class="o">+</span> <span class="nx">move</span> <span class="o">:</span>
     <span class="s1">&#39;Game start&#39;</span><span class="p">;</span>
   <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">move</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span>
       <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">move</span><span class="p">)}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">desc</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
     <span class="o">&lt;</span><span class="err">/li&gt;</span>
   <span class="p">);</span>
