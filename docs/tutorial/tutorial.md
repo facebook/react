@@ -254,7 +254,7 @@ You'll need to change `this.props` to `props` both times it appears. Many compon
 
 An obvious defect in our game is that only X can play. Let's fix that.
 
-Let's default the first move to be by 'X'. Modify our starting state in our `Game` constructor.
+Let's default the first move to be by 'X'. Modify our starting state in our `Board` constructor.
 
 ```javascript
 class Board extends React.Component {
