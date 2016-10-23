@@ -990,10 +990,17 @@ ReactDOMComponent.Mixin = {
         }
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.deleteValueForAttribute(
-            getNode(this),
-            propKey
-          );
+          if (DOMProperty.properties.hasOwnProperty(propKey)) {
+            DOMPropertyOperations.deleteValueForProperty(
+              getNode(this),
+              propKey
+            );
+          } else {
+            DOMPropertyOperations.deleteValueForAttribute(
+              getNode(this),
+              propKey
+            );
+          }
         }
       } else if (
           DOMProperty.properties[propKey] ||
@@ -1054,11 +1061,19 @@ ReactDOMComponent.Mixin = {
         }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.setValueForAttribute(
-            getNode(this),
-            propKey,
-            nextProp
-          );
+          if (DOMProperty.properties.hasOwnProperty(propKey)) {
+            DOMPropertyOperations.setValueForProperty(
+              getNode(this),
+              propKey,
+              nextProp
+            );
+          } else {
+            DOMPropertyOperations.setValueForAttribute(
+              getNode(this),
+              propKey,
+              nextProp
+            );
+          }
         }
       } else if (
           DOMProperty.properties[propKey] ||
