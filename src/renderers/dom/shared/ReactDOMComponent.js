@@ -14,6 +14,7 @@
 'use strict';
 
 var AutoFocusUtils = require('AutoFocusUtils');
+var CSSProperty = require('CSSProperty');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
@@ -1034,12 +1035,23 @@ ReactDOMComponent.Mixin = {
               styleUpdates[styleName] = '';
             }
           }
-          // Update styles that changed since `lastProp`.
-          for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = nextProp[styleName];
+          // Update only styles that changed since `lastProp`
+          // Unless either `nextProp` or `lastProp` has shorthand properties
+          if (!CSSProperty.hasShorthandProperty(lastProp) &&
+              !CSSProperty.hasShorthandProperty(nextProp)) {
+            for (styleName in nextProp) {
+              if (nextProp.hasOwnProperty(styleName) &&
+                  lastProp[styleName] !== nextProp[styleName]) {
+                styleUpdates = styleUpdates || {};
+                styleUpdates[styleName] = nextProp[styleName];
+              }
+            }
+          } else {
+            for (styleName in nextProp) {
+              if (nextProp.hasOwnProperty(styleName)) {
+                styleUpdates = styleUpdates || {};
+                styleUpdates[styleName] = nextProp[styleName];
+              }
             }
           }
         } else {

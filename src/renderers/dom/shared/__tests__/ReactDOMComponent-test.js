@@ -105,6 +105,32 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
       expect(stubStyle.lineHeight).toEqual('0.5');
+      
+      var node = ReactTestUtils.renderIntoDocument(<div>rhinoceros</div>);
+
+      var oldStyle = {
+        'background': 'url(http://abc.com/a.jpg) no-repeat center',
+        'backgroundSize': 'cover',
+        'backgroundColor': 'red',
+      };
+
+      node.setProps({ style: oldStyle });
+
+      expect(node.getDOMNode().style.background).toBe(oldStyle.background);
+      expect(node.getDOMNode().style.backgroundSize).toBe('cover');
+      expect(node.getDOMNode().style.backgroundColor).toBe('red');
+
+      var newStyle = {
+        'background': 'url(http://abc.com/b.jpg) no-repeat center',
+        'backgroundSize': 'cover',
+        'backgroundColor': 'red',
+      };
+      
+      node.setProps({ style: newStyle });
+
+      expect(node.getDOMNode().style.background).toBe(newStyle.background);
+      expect(node.getDOMNode().style.backgroundSize).toBe('cover');
+      expect(node.getDOMNode().style.backgroundColor).toBe('red');
 
       ReactDOM.render(<div style={undefined} />, container);
       expect(stubStyle.display).toBe('');
