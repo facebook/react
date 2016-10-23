@@ -21,13 +21,15 @@ var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
 
+import type { ReactElement } from 'ReactElementType';
+
 ReactNativeDefaultInjection.inject();
 
 var render = function(
-  element: ReactElement<any>,
+  element: ReactElement | string | number | null | false,
   mountInto: number,
   callback?: ?(() => void)
-): ?ReactComponent<any, any, any> {
+): ReactElement | string | number | null | false {
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
