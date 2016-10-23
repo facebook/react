@@ -136,25 +136,13 @@ Before you build components with an API similar to this, consider if there are c
 
 ## Referencing Context in Lifecycle Methods
 
-If `contextTypes` is defined within a component, the following lifecycle methods will receive an additional parameter, the `context` object:
+If `contextTypes` is defined within a component, the following [lifecycle methods](/react/docs/react-component.html#the-component-lifecycle) will receive an additional parameter, the `context` object:
 
-```javascript
-void componentWillReceiveProps(
-  object nextProps, object nextContext
-)
-
-boolean shouldComponentUpdate(
-  object nextProps, object nextState, object nextContext
-)
-
-void componentWillUpdate(
-  object nextProps, object nextState, object nextContext
-)
-
-void componentDidUpdate(
-  object prevProps, object prevState, object prevContext
-)
-```
+- [`constructor(props, context)`](/react/docs/react-component.html#constructor)
+- [`componentWillReceiveProps(nextProps, nextContext)`](/react/docs/react-component.html#componentwillreceiveprops)
+- [`shouldComponentUpdate(nextProps, nextState, nextContext)`](/react/docs/react-component.html#shouldcomponentupdate)
+- [`componentWillUpdate(nextProps, nextState, nextContext)`](/react/docs/react-component.html#componentwillupdate)
+- [`componentDidUpdate(prevProps, prevState, prevContext)`](/react/docs/react-component.html#componentdidupdate)
 
 ## Referencing Context in Stateless Functional Components
 
