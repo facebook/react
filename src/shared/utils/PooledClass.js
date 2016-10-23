@@ -15,64 +15,23 @@
 var invariant = require('invariant');
 
 /**
- * Static poolers. Several custom versions for each potential number of
- * arguments. A completely generic pooler is easy to implement, but would
- * require accessing the `arguments` object. In each of these, `this` refers to
- * the Class itself, not an instance. If any others are needed, simply add them
- * here, or in their own files.
+ * Static poolers. If Pooler has instance that recycle instance but
+ * Pooler hasn`t instance that create instance.
+ * The argumentsPooler handle instance regardless of arguments length.
  */
-var oneArgumentPooler = function(copyFieldsFrom) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, copyFieldsFrom);
-    return instance;
-  } else {
-    return new Klass(copyFieldsFrom);
-  }
-};
 
-var twoArgumentPooler = function(a1, a2) {
+var slice = Array.prototype.slice;
+var bind = Function.prototype.bind;
+var argumentsPooler = function() {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2);
+    Klass.apply(instance, arguments);
     return instance;
   } else {
-    return new Klass(a1, a2);
-  }
-};
-
-var threeArgumentPooler = function(a1, a2, a3) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3);
-  }
-};
-
-var fourArgumentPooler = function(a1, a2, a3, a4) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3, a4);
-  }
-};
-
-var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4, a5);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3, a4, a5);
+    var param = slice.call(arguments);
+    param.unshift(Klass);
+    return new (bind.apply(Klass, param));
   }
 };
 
@@ -89,7 +48,7 @@ var standardReleaser = function(instance) {
 };
 
 var DEFAULT_POOL_SIZE = 10;
-var DEFAULT_POOLER = oneArgumentPooler;
+var DEFAULT_POOLER = argumentsPooler;
 
 type Pooler = any;
 
@@ -123,11 +82,7 @@ var addPoolingTo = function<T>(
 
 var PooledClass = {
   addPoolingTo: addPoolingTo,
-  oneArgumentPooler: (oneArgumentPooler: Pooler),
-  twoArgumentPooler: (twoArgumentPooler: Pooler),
-  threeArgumentPooler: (threeArgumentPooler: Pooler),
-  fourArgumentPooler: (fourArgumentPooler: Pooler),
-  fiveArgumentPooler: (fiveArgumentPooler: Pooler),
+  argumentsPooler: (argumentsPooler: Pooler),
 };
 
 module.exports = PooledClass;

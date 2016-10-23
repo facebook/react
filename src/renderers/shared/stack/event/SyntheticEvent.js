@@ -252,10 +252,10 @@ SyntheticEvent.augmentClass = function(Class, Interface) {
   Class.Interface = Object.assign({}, Super.Interface, Interface);
   Class.augmentClass = Super.augmentClass;
 
-  PooledClass.addPoolingTo(Class, PooledClass.fourArgumentPooler);
+  PooledClass.addPoolingTo(Class, PooledClass.argumentsPooler);
 };
 
-PooledClass.addPoolingTo(SyntheticEvent, PooledClass.fourArgumentPooler);
+PooledClass.addPoolingTo(SyntheticEvent, PooledClass.argumentsPooler);
 
 module.exports = SyntheticEvent;
 
