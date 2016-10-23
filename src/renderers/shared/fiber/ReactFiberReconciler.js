@@ -24,6 +24,8 @@ if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 }
 
+var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
+
 type Deadline = {
   timeRemaining : () => number
 };
@@ -58,17 +60,20 @@ export type HostConfig<T, P, I, TI, C> = {
 
 type OpaqueNode = Fiber;
 
-export type Reconciler<C, I> = {
+export type Reconciler<C, I, TI> = {
   mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
   updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
   unmountContainer(container : OpaqueNode) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
 
   // Used to extract the return value from the initial render. Legacy API.
-  getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | null),
+  getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
+
+  // Use for findDOMNode/findHostNode. Legacy API.
+  findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null,
 };
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I> {
+module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
 
   var { scheduleWork, performWithPriority } = ReactFiberScheduler(config);
 
@@ -122,13 +127,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
 
     performWithPriority,
 
-    getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | null) {
+    getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | TI | null) {
       const root : FiberRoot = (container.stateNode : any);
       const containerFiber = root.current;
       if (!containerFiber.child) {
         return null;
       }
       return containerFiber.child.stateNode;
+    },
+
+    findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null {
+      const fiber = findCurrentHostFiber(component);
+      if (!fiber) {
+        return null;
+      }
+      return fiber.stateNode;
     },
 
   };
