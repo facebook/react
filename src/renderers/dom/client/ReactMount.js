@@ -109,6 +109,8 @@ function mountComponentIntoNode(
     console.time(markerName);
   }
 
+  transaction.getReactMountReady().enqueue(ReactUpdates.notifyAsapCallbacks);
+
   var markup = ReactReconciler.mountComponent(
     wrapperInstance,
     transaction,
