@@ -226,7 +226,7 @@ The end result is the same but by not mutating (or changing the underlying data)
 
 Determining if a mutated object has changed is complex because changes are made directly to the object. This then requires comparing the current object to a previous copy, traversing the entire object tree, and comparing each variable and value. This process can become increasingly complex.
 
-Determining how a immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That's it.
+Determining how an immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That's it.
 
 ### Determining When To Re-render in React
 
