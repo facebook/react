@@ -22,7 +22,7 @@ var warning = require('warning');
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
-type Props = { };
+type Props = { className ?: string };
 type Instance = Element;
 type TextInstance = Text;
 
@@ -54,6 +54,9 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
+    if (typeof props.className !== 'undefined') {
+      domElement.className = props.className;
+    }
     if (typeof props.children === 'string') {
       domElement.textContent = props.children;
     } else if (typeof props.children === 'number') {
@@ -71,6 +74,9 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
+    if (typeof newProps.className !== 'undefined') {
+      domElement.className = newProps.className;
+    }
     if (typeof newProps.children === 'string') {
       domElement.textContent = newProps.children;
     } else if (typeof newProps.children === 'number') {
