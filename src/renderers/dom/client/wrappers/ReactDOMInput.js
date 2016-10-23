@@ -74,7 +74,7 @@ var ReactDOMInput = {
       defaultChecked: undefined,
       defaultValue: undefined,
       value: value != null ? value : inst._wrapperState.initialValue,
-      checked: checked != null ? checked : inst._wrapperState.initialChecked,
+      checked: checked !== undefined ? checked : inst._wrapperState.initialChecked,
       onChange: inst._wrapperState.onChange,
     });
 
@@ -145,7 +145,7 @@ var ReactDOMInput = {
 
     var defaultValue = props.defaultValue;
     inst._wrapperState = {
-      initialChecked: props.checked != null ? props.checked : props.defaultChecked,
+      initialChecked: props.checked !== undefined ? props.checked : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       listeners: null,
       onChange: _handleChange.bind(inst),
@@ -191,7 +191,7 @@ var ReactDOMInput = {
 
     // TODO: Shouldn't this be getChecked(props)?
     var checked = props.checked;
-    if (checked != null) {
+    if (checked !== undefined) {
       DOMPropertyOperations.setValueForProperty(
         ReactDOMComponentTree.getNodeFromInstance(inst),
         'checked',
