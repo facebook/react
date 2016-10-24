@@ -44,7 +44,7 @@ We'll get to the funny XML-like tags in a second. Your components tell React wha
 
 Here, ShoppingList is a **React component class**, or **React component type**. A component takes in parameters, called `props`, and returns a hierarchy of views to display via the `render` method.
 
-The `render` method return a *description* of what you want to render, and then React takes that description and renders it to the screen. In particular, `render` returns a **React element**, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The `<div />` syntax is transformed at build time to `React.createElement('div')`. The example above is equivalent to:
+The `render` method returns a *description* of what you want to render, and then React takes that description and renders it to the screen. In particular, `render` returns a **React element**, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The `<div />` syntax is transformed at build time to `React.createElement('div')`. The example above is equivalent to:
 
 ```javascript
 return React.createElement('div', {className: 'shopping-list'},
@@ -248,7 +248,7 @@ function Square(props) {
 }
 ```
 
-You'll need to change `this.props` to `props` both times it appears. Many components in your apps will be able to written as functional components: these components tend to be easier to write and React will optimize them more in the future.
+You'll need to change `this.props` to `props` both times it appears. Many components in your apps will be able to be written as functional components: these components tend to be easier to write and React will optimize them more in the future.
 
 ## Taking Turns
 
