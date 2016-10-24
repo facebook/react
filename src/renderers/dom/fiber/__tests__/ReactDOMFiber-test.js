@@ -64,5 +64,106 @@ describe('ReactDOMFiber', () => {
 
       expect(container.textContent).toEqual('10');
     });
+
+    it('finds the DOM Text node of a string child', () => {
+      class Text extends React.Component {
+        render() {
+          return this.props.value;
+        }
+      }
+
+      let instance = null;
+      ReactDOM.render(
+        <Text value="foo" ref={ref => instance = ref} />,
+        container
+      );
+
+      const textNode = ReactDOM.findDOMNode(instance);
+      expect(textNode).toBe(container.firstChild);
+      expect(textNode.nodeType).toBe(3);
+      expect(textNode.nodeValue).toBe('foo');
+    });
+
+    it('finds the first child when a component returns a fragment', () => {
+      class Fragment extends React.Component {
+        render() {
+          return [
+            <div />,
+            <span />,
+          ];
+        }
+      }
+
+      let instance = null;
+      ReactDOM.render(
+        <Fragment ref={ref => instance = ref} />,
+        container
+      );
+
+      expect(container.childNodes.length).toBe(2);
+
+      const firstNode = ReactDOM.findDOMNode(instance);
+      expect(firstNode).toBe(container.firstChild);
+      expect(firstNode.tagName).toBe('DIV');
+    });
+
+    it('finds the first child even when fragment is nested', () => {
+      class Wrapper extends React.Component {
+        render() {
+          return this.props.children;
+        }
+      }
+
+      class Fragment extends React.Component {
+        render() {
+          return [
+            <Wrapper><div /></Wrapper>,
+            <span />,
+          ];
+        }
+      }
+
+      let instance = null;
+      ReactDOM.render(
+        <Fragment ref={ref => instance = ref} />,
+        container
+      );
+
+      expect(container.childNodes.length).toBe(2);
+
+      const firstNode = ReactDOM.findDOMNode(instance);
+      expect(firstNode).toBe(container.firstChild);
+      expect(firstNode.tagName).toBe('DIV');
+    });
+
+    it('finds the first child even when first child renders null', () => {
+      class NullComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      class Fragment extends React.Component {
+        render() {
+          return [
+            <NullComponent />,
+            <div />,
+            <span />,
+          ];
+        }
+      }
+
+      let instance = null;
+      ReactDOM.render(
+        <Fragment ref={ref => instance = ref} />,
+        container
+      );
+
+      expect(container.childNodes.length).toBe(2);
+
+      const firstNode = ReactDOM.findDOMNode(instance);
+      expect(firstNode).toBe(container.firstChild);
+      expect(firstNode.tagName).toBe('DIV');
+    });
   }
 });
