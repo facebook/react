@@ -359,9 +359,12 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="radio" name="choice" value="A" onChange={this.handleChange} /> Option A<br />
-        <input type="radio" name="choice" value="B" onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="radio" name="choice" value="C" onChange={this.handleChange} /> Option C<br />
+        <input type="radio" name="choice" value="A"
+          onChange={this.handleChange} /> Option A<br />
+        <input type="radio" name="choice" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
+        <input type="radio" name="choice" value="C"
+        onChange={this.handleChange} /> Option C<br />
         <br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
@@ -404,9 +407,12 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="checkbox" value="A" onChange={this.handleChange} /> Option A<br />
-        <input type="checkbox" value="B" onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="checkbox" value="C" onChange={this.handleChange} /> Option C<br />
+        <input type="checkbox" value="A"
+          onChange={this.handleChange} /> Option A<br />
+        <input type="checkbox" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
+        <input type="checkbox" value="C"
+          onChange={this.handleChange} /> Option C<br />
         <br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
