@@ -124,4 +124,152 @@ describe('ReactIncrementalReflection', () => {
 
   });
 
+  it('finds no node before insertion and correct node before deletion', () => {
+
+    let ops = [];
+
+    let classInstance = null;
+
+    class Component extends React.Component {
+      componentWillMount() {
+        classInstance = this;
+        ops.push('componentWillMount', ReactNoop.findInstance(this));
+      }
+      componentDidMount() {
+        ops.push('componentDidMount', ReactNoop.findInstance(this));
+      }
+      componentWillUpdate() {
+        ops.push('componentWillUpdate', ReactNoop.findInstance(this));
+      }
+      componentDidUpdate() {
+        ops.push('componentDidUpdate', ReactNoop.findInstance(this));
+      }
+      render() {
+        ops.push('render');
+        return this.props.step < 2 ?
+          <span ref={ref => this.span = ref} /> :
+          this.props.step === 2 ?
+          <div ref={ref => this.div = ref} /> :
+          null;
+      }
+    }
+
+    function Sibling() {
+      // Sibling is used to assert that we've rendered past the first component.
+      ops.push('render sibling');
+      return <span />;
+    }
+
+    function Foo(props) {
+      return [
+        <Component step={props.step} />,
+        <Sibling />,
+      ];
+    }
+
+    ReactNoop.render(<Foo step={0} />);
+    // Flush past Component but don't complete rendering everything yet.
+    ReactNoop.flushDeferredPri(30);
+
+    expect(ops).toEqual([
+      'componentWillMount', null,
+      'render',
+      'render sibling',
+    ]);
+
+    ops = [];
+
+    expect(classInstance).toBeDefined();
+    // The instance has been complete but is still not committed so it should
+    // not find any host nodes in it.
+    expect(ReactNoop.findInstance(classInstance)).toBe(null);
+
+    ReactNoop.flush();
+
+    const hostSpan = classInstance.span;
+    expect(hostSpan).toBeDefined();
+
+    expect(ReactNoop.findInstance(classInstance)).toBe(hostSpan);
+
+    expect(ops).toEqual([
+      'componentDidMount', hostSpan,
+    ]);
+
+    ops = [];
+
+    // Flush next step which will cause an update but not yet render a new host
+    // node.
+    ReactNoop.render(<Foo step={1} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'componentWillUpdate', hostSpan,
+      'render',
+      'render sibling',
+      'componentDidUpdate', hostSpan,
+    ]);
+
+    expect(ReactNoop.findInstance(classInstance)).toBe(hostSpan);
+
+    ops = [];
+
+    // The next step will render a new host node but won't get committed yet.
+    // We expect this to mutate the original Fiber.
+    ReactNoop.render(<Foo step={2} />);
+    ReactNoop.flushDeferredPri(30);
+
+    expect(ops).toEqual([
+      'componentWillUpdate', hostSpan,
+      'render',
+      'render sibling',
+    ]);
+
+    ops = [];
+
+    // This should still be the host span.
+    expect(ReactNoop.findInstance(classInstance)).toBe(hostSpan);
+
+    // When we finally flush the tree it will get committed.
+    ReactNoop.flush();
+
+    const hostDiv = classInstance.div;
+
+    expect(hostDiv).toBeDefined();
+    expect(hostSpan).not.toBe(hostDiv);
+
+    expect(ops).toEqual([
+      'componentDidUpdate', hostDiv,
+    ]);
+
+    ops = [];
+
+    // We should now find the new host node.
+    expect(ReactNoop.findInstance(classInstance)).toBe(hostDiv);
+
+    // Finally we will render to null but not yet commit it.
+    ReactNoop.render(<Foo step={3} />);
+    ReactNoop.flushDeferredPri(25);
+
+    expect(ops).toEqual([
+      'componentWillUpdate', hostDiv,
+      'render',
+      'render sibling',
+    ]);
+
+    ops = [];
+
+    // This should still be the host div since the deletion is not committed.
+    expect(ReactNoop.findInstance(classInstance)).toBe(hostDiv);
+
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'componentDidUpdate', null,
+    ]);
+
+    // This should still be the host div since the deletion is not committed.
+    expect(ReactNoop.findInstance(classInstance)).toBe(null);
+  });
+
+
 });

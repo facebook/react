@@ -17,7 +17,6 @@ import type { Fiber } from 'ReactFiber';
 var ReactInstanceMap = require('ReactInstanceMap');
 
 var {
-  ClassComponent,
   HostContainer,
   HostComponent,
   HostText,
@@ -28,13 +27,9 @@ var {
   Placement,
 } = require('ReactTypeOfSideEffect');
 
-exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
-  var parent : ?Fiber = ReactInstanceMap.get(component);
-  if (!parent) {
-    return false;
-  }
-  let node = parent;
-  if (!parent.alternate) {
+function isFiberMounted(fiber : Fiber) : boolean {
+  let node = fiber;
+  if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
     if ((node.effectTag & Placement) !== NoEffect) {
@@ -58,17 +53,47 @@ exports.isMounted = function(component : ReactComponent<any, any, any>) : boolea
   }
   // If we didn't hit the root, that means that we're in an disconnected tree.
   return false;
+}
+
+exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
+  var fiber : ?Fiber = ReactInstanceMap.get(component);
+  if (!fiber) {
+    return false;
+  }
+  return isFiberMounted(fiber);
 };
 
 exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any>) : Fiber | null {
-  var parent : ?Fiber = ReactInstanceMap.get(component);
+  let parent = ReactInstanceMap.get(component);
   if (!parent) {
     return null;
   }
 
-  // TODO: This search is incomplete because this could be one of two possible fibers.
+  if (!isFiberMounted(parent)) {
+    // First check if this node itself is mounted.
+    return null;
+  }
+
+  let didTryOtherTree = false;
+
+  // Next we'll drill down this component to find the first HostComponent/Text.
   let node : Fiber = parent;
   while (true) {
+    if ((node.effectTag & Placement) !== NoEffect || !node.return) {
+      // If any node along the way was deleted, or is an insertion, that means
+      // that we're actually in a work in progress to update this component with
+      // a different component. We need to look in the "current" fiber instead.
+      if (!parent.alternate) {
+        return null;
+      }
+      if (didTryOtherTree) {
+        // Safety, to avoid an infinite loop if something goes wrong.
+        throw new Error('This should never hit this infinite loop.');
+      }
+      didTryOtherTree = true;
+      node = parent = parent.alternate;
+      continue;
+    }
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
     } else if (node.child) {
