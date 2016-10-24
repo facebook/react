@@ -259,12 +259,12 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   return alt;
 };
 
-exports.createHostContainerFiber = function() {
+exports.createHostContainerFiber = function() : Fiber {
   const fiber = createFiber(HostContainer, null);
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) {
+exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) : Fiber {
 // $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
   const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
@@ -272,7 +272,7 @@ exports.createFiberFromElement = function(element : ReactElement<*>, priorityLev
   return fiber;
 };
 
-exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) {
+exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) : Fiber {
   // TODO: Consider supporting keyed fragments. Technically, we accidentally
   // support that in the existing React.
   const fiber = createFiber(Fragment, null);
@@ -281,14 +281,14 @@ exports.createFiberFromFragment = function(elements : ReactFragment, priorityLev
   return fiber;
 };
 
-exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) {
+exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiber(HostText, null);
   fiber.pendingProps = content;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-function createFiberFromElementType(type : mixed, key : null | string) {
+function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
@@ -314,7 +314,7 @@ function createFiberFromElementType(type : mixed, key : null | string) {
 
 exports.createFiberFromElementType = createFiberFromElementType;
 
-exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) {
+exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
@@ -322,7 +322,7 @@ exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priority
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) {
+exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiber(YieldComponent, yieldNode.key);
   fiber.pendingProps = {};
   return fiber;
