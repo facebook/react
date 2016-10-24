@@ -212,6 +212,7 @@ The selected `<option>` in an HTML `<select>` is normally specified through that
     <option value="C">Cranberry</option>
   </select>
 ```
+As you can see, the `value="B"` attribute on the select tag sets the current value of the select.
 
 To make an uncontrolled component, `defaultValue` is used instead.
 
