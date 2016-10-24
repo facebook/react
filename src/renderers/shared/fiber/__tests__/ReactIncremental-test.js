@@ -993,6 +993,53 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  it('uses state set in componentWillMount even if initial render was aborted', () => {
+    var ops = [];
+
+    class LifeCycle extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {x: this.props.x + '(ctor)'};
+      }
+      componentWillMount() {
+        ops.push('componentWillMount:' + this.state.x);
+        this.setState({x: this.props.x + '(willMount)'});
+      }
+      componentDidMount() {
+        ops.push('componentDidMount:' + this.state.x);
+      }
+      render() {
+        ops.push('render:' + this.state.x);
+        return <span />;
+      }
+    }
+
+    function App(props) {
+      ops.push('App');
+      return <LifeCycle x={props.x} />;
+    }
+
+    ReactNoop.render(<App x={0} />);
+    ReactNoop.flushDeferredPri(20);
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillMount:0(ctor)',
+      'render:0(willMount)',
+    ]);
+
+    ops = [];
+    ReactNoop.render(<App x={1} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'App',
+      'componentWillMount:1(ctor)',
+      'render:1(willMount)',
+      'componentDidMount:1(willMount)',
+    ]);
+  });
+
   it('calls componentWill* twice if an update render is aborted', () => {
     var ops = [];
 
