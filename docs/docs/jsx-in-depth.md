@@ -14,13 +14,19 @@ redirect_from:
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:
 
 ```js
-<MyButton color="blue" shadowSize={2}>Click Me</MyButton>
+<MyButton color="blue" shadowSize={2}>
+  Click Me
+</MyButton>
 ```
 
 compiles into:
 
 ```js
-React.createElement(MyButton, {color: "blue", shadowSize: 2}, 'Click Me')
+React.createElement(
+  MyButton,
+  {color: 'blue', shadowSize: 2},
+  'Click Me'
+)
 ```
 
 You can also use the self-closing form of the tag if there are no children. So:
@@ -32,7 +38,11 @@ You can also use the self-closing form of the tag if there are no children. So:
 compiles into:
 
 ```js
-React.createElement('div', {className: 'sidebar'}, null)
+React.createElement(
+  'div',
+  {className: 'sidebar'},
+  null
+)
 ```
 
 If you want to test out how some specific JSX is converted into JavaScript, you can try out [the online Babel compiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
@@ -65,7 +75,7 @@ import React from 'react';
 
 const MyComponents = {
   DatePicker: function(props) {
-    return <div>imagine a {props.color} datepicker here</div>;
+    return <div>Imagine a {props.color} datepicker here.</div>;
   }
 }
 
@@ -80,41 +90,70 @@ We recommend naming components with a capital letter. If you do have a component
 
 For example, this code will not run as expected:
 
-```js
+```js{3,4,10,11}
 import React from 'react';
 
+// Wrong! This is a component and should have been capitalized:
 function hello(props) {
-  // This use of <div> is legitimate because div is a valid HTML tag
+  // Correct! This use of <div> is legitimate because div is a valid HTML tag:
   return <div>Hello {props.toWhat}</div>;
 }
 
 function HelloWorld() {
-  // This code attempts to create an HTML <hello> tag and fails
+  // Wrong! React thinks <hello /> is an HTML tag because it's not capitalized:
   return <hello toWhat="World" />;
+}
+```
+
+To fix this, we will rename `hello` to `Hello` and use `<Hello />` when referring to it:
+
+```js{3,4,10,11}
+import React from 'react';
+
+// Correct! This is a component and should be capitalized:
+function Hello(props) {
+  // Correct! This use of <div> is legitimate because div is a valid HTML tag:
+  return <div>Hello {props.toWhat}</div>;
+}
+
+function HelloWorld() {
+  // Correct! React knows <Hello /> is a component because it's capitalized.
+  return <Hello toWhat="World" />;
 }
 ```
 
 You cannot use a general expression as the React element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. This often comes up when you want to render a different component based on a prop:
 
-```js
+```js{10,11}
 import React from 'react';
 import { PhotoStory, VideoStory } from './stories';
 
 const components = {
-  photo: <PhotoStory />,
-  video: <VideoStory />,
+  photo: PhotoStory,
+  video: VideoStory
 };
 
-function Story1(props) {
-  // Not valid JSX
-  return <components[props.story] />;
+function Story(props) {
+  // Wrong! JSX type can't be an expression.
+  return <components[props.storyType] story={props.story} />;
 }
+```
 
-function render2(props) {
-  const MyComponent = components[props.story];
+To fix this, we will assign type to a capitalized variable:
 
-  // Valid JSX
-  return <MyComponent />;
+```js{9-11}
+import React from 'react';
+import { PhotoStory, VideoStory } from './stories';
+
+const components = {
+  photo: PhotoStory,
+  video: VideoStory
+};
+
+function Story(props) {
+  // Correct! JSX type can be a capitalized variable.
+  const SpecificStory = components[props.storyType];
+  return <SpecificStory story={props.story} />;
 }
 ```
 
@@ -134,7 +173,7 @@ For `MyComponent`, The value of `props.foo` will be `10` because the expression 
 
 `if` statements and `for` loops are not expressions in JavaScript, so they can't be used in JSX directly. Instead, you can put these in the surrounding code. For example:
 
-```js
+```js{3-7}
 function NumberDescriber(props) {
   let description;
   if (props.number % 2 == 0) {
@@ -153,7 +192,7 @@ You can pass a string literal as a prop. These two JSX expressions are equivalen
 ```js
 <MyComponent message="hello world" />
 
-<MyComponent message={"hello world"} />
+<MyComponent message={'hello world'} />
 ```
 
 When you pass a string literal, its value is HTML-unescaped. So these two JSX expressions are equivalent:
@@ -161,7 +200,7 @@ When you pass a string literal, its value is HTML-unescaped. So these two JSX ex
 ```js
 <MyComponent message="&lt;3" />
 
-<MyComponent message={"<3"} />
+<MyComponent message={'<3'} />
 ```
 
 This behavior is usually not relevant. It's only mentioned here for completeness.
@@ -176,20 +215,20 @@ If you pass no value for a prop, it defaults to `true`. These two JSX expression
 <MyTextBox autocomplete={true} />
 ```
 
-In general, we don't recommend using this because it can be confused with the ES6 object shorthand `{foo}` which is short for {foo: foo} rather than `{foo: true}`. This behavior is just there so that it matches the behavior of HTML.
+In general, we don't recommend using this because it can be confused with the [ES6 object shorthand](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#New_notations_in_ECMAScript_2015) `{foo}` which is short for `{foo: foo}` rather than `{foo: true}`. This behavior is just there so that it matches the behavior of HTML.
 
 ### Spread Attributes
 
-If you already have `props` as an object, and you want to pass it in JSX, you can use `...` as a "spread" operator to pass the whole props object. These two render functions are equivalent:
+If you already have `props` as an object, and you want to pass it in JSX, you can use `...` as a "spread" operator to pass the whole props object. These two components are equivalent:
 
-```js
-function render1() {
-  const props = {left: 'ben', right: 'hector'};
-  return <MyComponent {...props} />;
+```js{7}
+function App1() {
+  return <Greeting firstName="Ben" lastName="Hector" />;
 }
 
-function render2() {
-  return <MyComponent left="ben" right="hector" />;
+function App2() {
+  const props = {firstName: 'Ben', lastName: 'Hector'};
+  return <Greeting {...props} />;
 }
 ```
 
@@ -270,12 +309,12 @@ You can pass any JavaScript expression as children, by enclosing it within `{}`.
 
 This is often useful for rendering a list of JSX expressions of arbitrary length. For example, this renders an HTML list:
 
-```js
+```js{2,9}
 function Item(props) {
   return <li>{props.message}</li>;
 }
 
-function renderTodoList() {
+function TodoList() {
   const todos = ['finish doc', 'submit pr', 'nag dan to review'];
   return (
     <ul>
@@ -295,7 +334,7 @@ function Hello(props) {
 
 Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, `props.children` works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as `props.children`:
 
-```js
+```js{4,13}
 function ListOfTenThings() {
   return (
     <Repeat numTimes={10}>
@@ -307,16 +346,16 @@ function ListOfTenThings() {
 // Calls the children callback numTimes to produce a repeated component
 function Repeat(props) {
   let items = [];
-  for (let i = 0; i < numTimes; i++) {
+  for (let i = 0; i < props.numTimes; i++) {
     items.push(props.children(i));
   }
-  return <div>{items}</div>
+  return <div>{items}</div>;
 }
 ```
 
 Children passed to a custom component can be anything, as long as that component transforms them into something React can understand before rendering. This usage is not common, but it works if you want to stretch what JSX is capable of.
 
-`false`, `null`, 'undefined', and 'true' are valid children. They simply don't render. These JSX expressions will all render to the same thing:
+`false`, `null`, `undefined`, and `true` are valid children. They simply don't render. These JSX expressions will all render to the same thing:
 
 ```js
 <div />
@@ -330,8 +369,11 @@ Children passed to a custom component can be anything, as long as that component
 <div>{true}</div>
 ```
 
-This can be useful to conditionally render React elements. This JSX only renders a `<Header />` if `showHeader` is true:
+This can be useful to conditionally render React elements. This JSX only renders a `<Header />` if `showHeader` is `true`:
 
-```js
-<div>{showHeader && <Header />}<Content /></div>
+```js{2}
+<div>
+  {showHeader && <Header />}
+  <Content />
+</div>
 ```
