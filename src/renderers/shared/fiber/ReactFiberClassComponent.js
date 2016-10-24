@@ -152,7 +152,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       // process them now.
       const newUpdateQueue = workInProgress.updateQueue;
       if (newUpdateQueue) {
-        instance.state = mergeUpdateQueue(newUpdateQueue, newState, newProps);
+        newInstance.state = mergeUpdateQueue(newUpdateQueue, newState, newProps);
       }
     }
     return true;
