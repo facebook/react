@@ -30,9 +30,8 @@ function Greeting(props) {
   const isLoggedIn = props.isLoggedIn;
   if (isLoggedIn) {
     return <UserGreeting />;
-  } else {
-    return <GuestGreeting />;
   }
+  return <GuestGreeting />;
 }
 
 ReactDOM.render(
