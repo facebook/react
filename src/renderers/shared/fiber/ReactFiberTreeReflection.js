@@ -23,15 +23,41 @@ var {
   HostText,
 } = require('ReactTypeOfWork');
 
+var {
+  NoEffect,
+  Placement,
+} = require('ReactTypeOfSideEffect');
+
 exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
   var parent : ?Fiber = ReactInstanceMap.get(component);
   if (!parent) {
     return false;
   }
-  // TODO: This doesn't deal with the case where it has completed but not yet
-  // committed. It also doesn't deal with unmounts since they currently don't
-  // clean up the item in the ReactInstanceMap.
-  return true;
+  let node = parent;
+  if (!parent.alternate) {
+    // If there is no alternate, this might be a new tree that isn't inserted
+    // yet. If it is, then it will have a pending insertion effect on it.
+    if ((node.effectTag & Placement) !== NoEffect) {
+      return false;
+    }
+    while (node.return) {
+      node = node.return;
+      if ((node.effectTag & Placement) !== NoEffect) {
+        return false;
+      }
+    }
+  } else {
+    while (node.return) {
+      node = node.return;
+    }
+  }
+  if (node.tag === HostContainer) {
+    // TODO: Check if this was a nested HostContainer when used with
+    // renderContainerIntoSubtree.
+    return true;
+  }
+  // If we didn't hit the root, that means that we're in an disconnected tree.
+  return false;
 };
 
 exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any>) : Fiber | null {

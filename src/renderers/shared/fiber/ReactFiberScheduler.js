@@ -119,12 +119,18 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       switch (effectfulFiber.effectTag) {
         case Placement: {
           commitInsertion(effectfulFiber);
+          // Clear the effect tag so that we know that this is inserted, before
+          // any life-cycles like componentDidMount gets called.
+          effectfulFiber.effectTag = NoWork;
           break;
         }
         case PlacementAndUpdate: {
           commitInsertion(effectfulFiber);
           const current = effectfulFiber.alternate;
           commitWork(current, effectfulFiber);
+          // Clear the effect tag so that we know that this is inserted, before
+          // any life-cycles like componentDidMount gets called.
+          effectfulFiber.effectTag = Update;
           break;
         }
         case Update: {
@@ -158,7 +164,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       effectfulFiber.nextEffect = null;
       // Ensure that we reset the effectTag here so that we can rely on effect
       // tags to reason about the current life-cycle.
-      effectfulFiber.effectTag = NoWork;
       effectfulFiber = next;
     }
 
