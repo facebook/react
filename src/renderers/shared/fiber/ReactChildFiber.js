@@ -71,7 +71,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function deleteChild(
     returnFiber : Fiber,
     childToDelete : Fiber
-  ) {
+  ) : void {
     if (!shouldTrackSideEffects) {
       // Noop.
       return;
@@ -102,7 +102,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function deleteRemainingChildren(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber
-  ) {
+  ) : null {
     if (!shouldTrackSideEffects) {
       // Noop.
       return null;
@@ -139,7 +139,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return existingChildren;
   }
 
-  function useFiber(fiber : Fiber, priority : PriorityLevel) {
+  function useFiber(fiber : Fiber, priority : PriorityLevel) : Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
@@ -159,7 +159,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
   }
 
-  function placeChild(newFiber : Fiber, lastPlacedIndex : number, newIndex : number) {
+  function placeChild(newFiber : Fiber, lastPlacedIndex : number, newIndex : number) : number {
     newFiber.index = newIndex;
     if (!shouldTrackSideEffects) {
       // Noop.
@@ -183,7 +183,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
   }
 
-  function placeSingleChild(newFiber : Fiber) {
+  function placeSingleChild(newFiber : Fiber) : Fiber {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && !newFiber.alternate) {
@@ -217,7 +217,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     current : ?Fiber,
     element : ReactElement<any>,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     if (current == null || current.type !== element.type) {
       // Insert
       const created = createFiberFromElement(element, priority);
@@ -239,7 +239,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     current : ?Fiber,
     coroutine : ReactCoroutine,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     // TODO: Should this also compare handler to determine whether to reuse?
     if (current == null || current.tag !== CoroutineComponent) {
       // Insert
@@ -260,7 +260,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     current : ?Fiber,
     yieldNode : ReactYield,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     // TODO: Should this also compare continuation to determine whether to reuse?
     if (current == null || current.tag !== YieldComponent) {
       // Insert
@@ -286,7 +286,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     current : ?Fiber,
     fragment : Iterable<*>,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     if (current == null || current.tag !== Fragment) {
       // Insert
       const created = createFiberFromFragment(fragment, priority);
@@ -461,7 +461,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
     newChildren : Array<*>,
-    priority : PriorityLevel) {
+    priority : PriorityLevel) : ?Fiber {
 
     // This algorithm can't optimize by searching from boths ends since we
     // don't have backpointers on fibers. I'm trying to see how far we can get
@@ -600,7 +600,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
     newChildren : Iterator<*>,
-    priority : PriorityLevel) {
+    priority : PriorityLevel) : null {
     // TODO: Copy everything from reconcileChildrenArray but use the iterator
     // instead.
     return null;
@@ -611,7 +611,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     currentFirstChild : ?Fiber,
     textContent : string,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     // There's no need to check for keys on text nodes since we don't have a
     // way to define them.
     if (currentFirstChild && currentFirstChild.tag === HostText) {
@@ -636,7 +636,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     currentFirstChild : ?Fiber,
     element : ReactElement<any>,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     const key = element.key;
     let child = currentFirstChild;
     while (child) {
@@ -671,7 +671,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     currentFirstChild : ?Fiber,
     coroutine : ReactCoroutine,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     const key = coroutine.key;
     let child = currentFirstChild;
     while (child) {
@@ -704,7 +704,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     currentFirstChild : ?Fiber,
     yieldNode : ReactYield,
     priority : PriorityLevel
-  ) {
+  ) : Fiber {
     const key = yieldNode.key;
     let child = currentFirstChild;
     while (child) {
@@ -820,7 +820,7 @@ exports.reconcileChildFibersInPlace = ChildReconciler(false, true);
 
 exports.mountChildFibersInPlace = ChildReconciler(false, false);
 
-exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
+exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) : void {
   if (!workInProgress.child) {
     return;
   }
