@@ -60,9 +60,8 @@ This means that you can use JSX inside of `if` statements and `for` loops, assig
 function getGreeting(user) {
   if (user) {
     return <h1>Hello, {formatName(user)}!</h1>;
-  } else {
-    return <h1>Hello, Stranger.</h1>;
   }
+  return <h1>Hello, Stranger.</h1>;
 }
 ```
 
