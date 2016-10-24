@@ -16,9 +16,8 @@ We will start with a component called `BoilingVerdict`. It accepts the `celsius`
 function BoilingVerdict(props) {
   if (props.celsius >= 100) {
     return <p>The water would boil.</p>;
-  } else {
-    return <p>The water would not boil.</p>;
   }
+  return <p>The water would not boil.</p>;
 }
 ```
 
