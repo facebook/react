@@ -24,7 +24,7 @@ React components let you split the UI into independent, reusable pieces, and thi
 
 If you don't use ES6 classes, you may use this helper instead.
 
- - [`createClass()`](#react.createclass)
+ - [`createClass()`](#createclass)
 
 ### Creating React Elements
 
