@@ -186,13 +186,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Recursively delete all host nodes from the parent.
     // TODO: Error handling.
     const parent = getHostParent(current);
+
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
     // TODO: Call componentWillUnmount on all classes as needed. Recurse down
     // removed HostComponents but don't call removeChild on already removed
     // children.
     let node : Fiber = current;
-    while (true) {
+    outer: while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
         commitNestedUnmounts(node);
         // After all the children have unmounted, it is now safe to remove the
@@ -209,15 +210,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
       if (node === current) {
-        return;
+        break outer;
       }
       while (!node.sibling) {
         if (!node.return || node.return === current) {
-          return;
+          break outer;
         }
         node = node.return;
       }
       node = node.sibling;
+    }
+    // Cut off the return pointers to disconnect it from the tree. Ideally, we
+    // should clear the child pointer of the parent alternate to let this
+    // get GC:ed but we don't know which for sure which parent is the current
+    // one so we'll settle for GC:ing the subtree of this child. This child
+    // itself will be GC:ed when the parent updates the next time.
+    current.return = null;
+    current.child = null;
+    if (current.alternate) {
+      current.alternate.child = null;
+      current.alternate.return = null;
     }
   }
 

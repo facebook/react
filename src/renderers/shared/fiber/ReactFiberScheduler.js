@@ -156,6 +156,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // and lastEffect since they're on every node, not just the effectful
       // ones. So we have to clean everything as we reuse nodes anyway.
       effectfulFiber.nextEffect = null;
+      // Ensure that we reset the effectTag here so that we can rely on effect
+      // tags to reason about the current life-cycle.
+      effectfulFiber.effectTag = NoWork;
       effectfulFiber = next;
     }
 
