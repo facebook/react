@@ -21,7 +21,7 @@ In practice, these assumptions are valid for almost all practical use cases.
 
 ## The Diffing Algorithm
 
-When diffing two trees, React first compares the the two root elements. The behavior is different depending on the types of the root elements.
+When diffing two trees, React first compares the two root elements. The behavior is different depending on the types of the root elements.
 
 ### Elements Of Different Types
 
