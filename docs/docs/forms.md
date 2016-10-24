@@ -225,7 +225,7 @@ For instance, if you want to imperatively submit a form, one approach would be t
 
 ## Examples
 
-### Basic Text Input
+### Basic Controlled Text Input
 
 ```javascript
 class Form extends React.Component {
@@ -261,7 +261,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 [Try this on Codepen.](https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010)
 
 
-### Basic Textarea
+### Basic Controlled Textarea
 
 ```javascript
 class Form extends React.Component {
@@ -299,7 +299,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 
 [Try this on Codepen.](https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010)
 
-### Basic Select
+### Basic Uncontrolled Select
 
 ```javascript
 class Form extends React.Component {
@@ -337,7 +337,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 
 [Try this on Codepen.](https://codepen.io/ericnakagawa/pen/pExQbL?editors=0010)
 
-### Basic Radio Button
+### Basic Uncontrolled Radio Button
 
 ```javascript
 class Form extends React.Component {
@@ -377,8 +377,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 
 [Try this on Codepen.](https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010)
 
-
-### Basic Checkbox
+### Basic Uncontrolled Checkbox
 
 ```javascript
 class Form extends React.Component {
