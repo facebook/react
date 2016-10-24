@@ -258,8 +258,8 @@ describe('ReactDOMComponent', () => {
 
       var lightDOM = container.firstChild.childNodes;
 
-      expect(lightDOM[0].getAttribute('slot')).toBe("first");
-      expect(lightDOM[1].getAttribute('slot')).toBe("second");
+      expect(lightDOM[0].getAttribute('slot')).toBe('first');
+      expect(lightDOM[1].getAttribute('slot')).toBe('second');
 
     } );
 
