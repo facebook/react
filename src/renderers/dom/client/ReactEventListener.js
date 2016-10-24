@@ -34,7 +34,7 @@ function findParent(inst) {
   }
   var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
   var container = rootNode.parentNode;
-  return ReactDOMComponentTree.getClosestInstanceFromNode(container);
+  return container ? ReactDOMComponentTree.getClosestInstanceFromNode(container) : null;
 }
 
 // Used to store ancestor hierarchy in top level callback
