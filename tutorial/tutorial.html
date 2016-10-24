@@ -205,7 +205,7 @@
 
 <p>Here, ShoppingList is a <strong>React component class</strong>, or <strong>React component type</strong>. A component takes in parameters, called <code>props</code>, and returns a hierarchy of views to display via the <code>render</code> method.</p>
 
-<p>The <code>render</code> method return a <em>description</em> of what you want to render, and then React takes that description and renders it to the screen. In particular, <code>render</code> returns a <strong>React element</strong>, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The <code>&lt;div /&gt;</code> syntax is transformed at build time to <code>React.createElement(&#39;div&#39;)</code>. The example above is equivalent to:</p>
+<p>The <code>render</code> method returns a <em>description</em> of what you want to render, and then React takes that description and renders it to the screen. In particular, <code>render</code> returns a <strong>React element</strong>, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The <code>&lt;div /&gt;</code> syntax is transformed at build time to <code>React.createElement(&#39;div&#39;)</code>. The example above is equivalent to:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;shopping-list&#39;</span><span class="p">},</span>
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="p">...),</span>
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">...)</span>
@@ -352,7 +352,7 @@
   <span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>You&#39;ll need to change <code>this.props</code> to <code>props</code> both times it appears. Many components in your apps will be able to written as functional components: these components tend to be easier to write and React will optimize them more in the future.</p>
+<p>You&#39;ll need to change <code>this.props</code> to <code>props</code> both times it appears. Many components in your apps will be able to be written as functional components: these components tend to be easier to write and React will optimize them more in the future.</p>
 <h2><a class="anchor" name="taking-turns"></a>Taking Turns <a class="hash-link" href="#taking-turns">#</a></h2>
 <p>An obvious defect in our game is that only X can play. Let&#39;s fix that.</p>
 

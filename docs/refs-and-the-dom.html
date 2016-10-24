@@ -82,7 +82,7 @@
 <h2><a class="anchor" name="the-ref-callback-attribute"></a>The ref Callback Attribute <a class="hash-link" href="#the-ref-callback-attribute">#</a></h2>
 <p>React supports a special attribute that you can attach to any component. The <code>ref</code> attribute takes a callback function, and the callback will be executed immediately after the component is mounted or unmounted.</p>
 
-<p>When the <code>ref</code> attribute is used on a HTML element, the <code>ref</code> callback receives the underlying DOM element as its argument. For example, this code uses the <code>ref</code> callback to store a reference to a DOM node:</p>
+<p>When the <code>ref</code> attribute is used on an HTML element, the <code>ref</code> callback receives the underlying DOM element as its argument. For example, this code uses the <code>ref</code> callback to store a reference to a DOM node:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">CustomTextInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
@@ -90,17 +90,19 @@
   <span class="p">}</span>
 
   <span class="nx">focus</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Explicitly focus the text input using the raw DOM API</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="c1">// Explicitly focus the text input using the raw DOM API</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
+</span>  <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Use the `ref` callback to store a reference to the text input DOM</span>
-    <span class="c1">// element in this.textInput</span>
+    <span class="c1">// element in this.textInput.</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+<span class="hll">          <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span>
           <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span>
           <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Focus the text input&quot;</span>
           <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">focus</span><span class="p">}</span>
@@ -117,27 +119,32 @@
 <p>When the <code>ref</code> attribute is used on a custom component, the <code>ref</code> callback receives the mounted instance of the component as its argument. For example, if we wanted to wrap the <code>CustomTextInput</code> above to simulate it being clicked immediately after mounting:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">AutoFocusTextInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
+</span>  <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CustomTextInput</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">CustomTextInput</span>
+<span class="hll">        <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">textInput</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>You may not use the <code>ref</code> attribute on functional components because they don&#39;t have instances. You can, however, use the <code>ref</code> attribute inside the <code>render</code> function of a functional component:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">CustomTextInput</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="c1">// textInput must be declared here so the ref callback can refer to it</span>
-  <span class="kd">let</span> <span class="nx">textInput</span><span class="p">;</span>
-
+<span class="hll">  <span class="c1">// textInput must be declared here so the ref callback can refer to it</span>
+</span><span class="hll">  <span class="kd">let</span> <span class="nx">textInput</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+</span>
   <span class="kd">function</span> <span class="nx">handleClick</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">textInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="nx">textInput</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
+</span>  <span class="p">}</span>
 
   <span class="k">return</span> <span class="p">(</span>
     <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">textInput</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="nx">input</span>
+        <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+<span class="hll">        <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">textInput</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>      <span class="o">&lt;</span><span class="nx">input</span>
         <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;button&quot;</span>
         <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Focus the text input&quot;</span>
         <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">handleClick</span><span class="p">}</span>
@@ -146,7 +153,7 @@
   <span class="p">);</span>  
 <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="dont-overuse-refs"></a>Don&#39;t Overuse Refs <a class="hash-link" href="#dont-overuse-refs">#</a></h3>
-<p>Your first inclination may be to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy - see the <a href="/react/docs/lifting-state-up.html">Lifting State Up</a> guide for examples of this.</p>
+<p>Your first inclination may be to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. See the <a href="/react/docs/lifting-state-up.html">Lifting State Up</a> guide for examples of this.</p>
 
 
     <div class="docs-prevnext">
