@@ -92,9 +92,6 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
 
     const state = instance.state || null;
 
-    // A class component update is the result of either new props or new state.
-    // Account for the possibly of missing pending props by falling back to the
-    // memoized props.
     let props = workInProgress.pendingProps;
     if (!props) {
       throw new Error('There must be pending props for an initial mount.');
