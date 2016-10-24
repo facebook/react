@@ -90,17 +90,17 @@ describe('ReactCompositeComponent', () => {
 
     reactComponentExpect(instance)
       .expectRenderedChild()
-      .toBeDOMComponentWithTag('a');
+      .toBeComponentOfType('a');
 
     instance._toggleActivatedState();
     reactComponentExpect(instance)
       .expectRenderedChild()
-      .toBeDOMComponentWithTag('b');
+      .toBeComponentOfType('b');
 
     instance._toggleActivatedState();
     reactComponentExpect(instance)
       .expectRenderedChild()
-      .toBeDOMComponentWithTag('a');
+      .toBeComponentOfType('a');
   });
 
   it('should not thrash a server rendered layout with client side one', () => {
@@ -134,7 +134,7 @@ describe('ReactCompositeComponent', () => {
     ReactTestUtils.Simulate.click(renderedChild);
     reactComponentExpect(instance)
       .expectRenderedChild()
-      .toBeDOMComponentWithTag('b');
+      .toBeComponentOfType('b');
   });
 
   it('should rewire refs when rendering to different child types', () => {

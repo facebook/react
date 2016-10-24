@@ -59,7 +59,7 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
         .expectRenderedChild()
         .toBeCompositeComponentWithType(LowerLevelComposite)
           .expectRenderedChild()
-          .toBeDOMComponentWithTag('div')
+          .toBeComponentOfType('div')
           .toBeDOMComponentWithNoChildren();
     };
   });
@@ -97,10 +97,10 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
       .expectRenderedChild()
       .toBeCompositeComponentWithType(LowerLevelComposite)
         .expectRenderedChild()
-        .toBeDOMComponentWithTag('div')
+        .toBeComponentOfType('div')
         .toBeDOMComponentWithChildCount(1)
         .expectRenderedChildAt(0)
-          .toBeDOMComponentWithTag('ul')
+          .toBeComponentOfType('ul')
           .toBeDOMComponentWithNoChildren();
   });
 
