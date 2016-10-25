@@ -628,7 +628,7 @@ describe('ReactDOMComponent', () => {
     beforeEach(() => {
       var ReactDOMInjection = require('ReactDOMInjection');
       ReactDOMInjection.inject();
-      var ReactDOMStackInjection = require('ReactDOMInjection');
+      var ReactDOMStackInjection = require('ReactDOMStackInjection');
       ReactDOMStackInjection.inject();
 
       var ReactDOMComponent = require('ReactDOMComponent');
