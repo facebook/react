@@ -27,7 +27,6 @@ var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
 var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
-var ReactNativeTreeTraversal = require('ReactNativeTreeTraversal');
 var ResponderEventPlugin = require('ResponderEventPlugin');
 
 function inject() {
@@ -41,7 +40,6 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
   EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
-  EventPluginUtils.injection.injectTreeTraversal(ReactNativeTreeTraversal);
 
   ResponderEventPlugin.injection.injectGlobalResponderHandler(
     ReactNativeGlobalResponderHandler

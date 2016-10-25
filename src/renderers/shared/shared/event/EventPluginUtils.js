@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactTreeTraversal = require('ReactTreeTraversal');
 var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('invariant');
@@ -25,7 +26,6 @@ var warning = require('warning');
  *   and actual node references.
  */
 var ComponentTree;
-var TreeTraversal;
 var injection = {
   injectComponentTree: function(Injected) {
     ComponentTree = Injected;
@@ -36,16 +36,6 @@ var injection = {
         Injected.getInstanceFromNode,
         'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
         'module is missing getNodeFromInstance or getInstanceFromNode.'
-      );
-    }
-  },
-  injectTreeTraversal: function(Injected) {
-    TreeTraversal = Injected;
-    if (__DEV__) {
-      warning(
-        Injected && Injected.isAncestor && Injected.getLowestCommonAncestor,
-        'EventPluginUtils.injection.injectTreeTraversal(...): Injected ' +
-        'module is missing isAncestor or getLowestCommonAncestor.'
       );
     }
   },
@@ -237,19 +227,19 @@ var EventPluginUtils = {
     return ComponentTree.getNodeFromInstance(node);
   },
   isAncestor: function(a, b) {
-    return TreeTraversal.isAncestor(a, b);
+    return ReactTreeTraversal.isAncestor(a, b);
   },
   getLowestCommonAncestor: function(a, b) {
-    return TreeTraversal.getLowestCommonAncestor(a, b);
+    return ReactTreeTraversal.getLowestCommonAncestor(a, b);
   },
   getParentInstance: function(inst) {
-    return TreeTraversal.getParentInstance(inst);
+    return ReactTreeTraversal.getParentInstance(inst);
   },
   traverseTwoPhase: function(target, fn, arg) {
-    return TreeTraversal.traverseTwoPhase(target, fn, arg);
+    return ReactTreeTraversal.traverseTwoPhase(target, fn, arg);
   },
   traverseEnterLeave: function(from, to, fn, argFrom, argTo) {
-    return TreeTraversal.traverseEnterLeave(from, to, fn, argFrom, argTo);
+    return ReactTreeTraversal.traverseEnterLeave(from, to, fn, argFrom, argTo);
   },
 
   injection: injection,

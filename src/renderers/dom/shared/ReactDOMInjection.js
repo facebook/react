@@ -22,7 +22,6 @@ var EventPluginUtils = require('EventPluginUtils');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
 var ReactEventListener = require('ReactEventListener');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
@@ -48,7 +47,6 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
   EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
-  EventPluginUtils.injection.injectTreeTraversal(ReactDOMTreeTraversal);
 
   /**
    * Some important event plugins included by default (without having to require
