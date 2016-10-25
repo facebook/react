@@ -13,6 +13,7 @@
 
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var ViewportMetrics = require('ViewportMetrics');
+var MouseMetrics = require('MouseMetrics');
 
 var getEventModifierState = require('getEventModifierState');
 
@@ -62,6 +63,28 @@ var MouseEventInterface = {
     return 'pageY' in event ?
       event.pageY :
       event.clientY + ViewportMetrics.currentScrollTop;
+  },
+  movementX: function(event) {
+    if ('movementX' in event) {
+      return event.movementX;
+    }
+    var previousScreenX = MouseMetrics.previousScreenX;
+    MouseMetrics.setPreviousScreenX(event.screenX);
+    if (previousScreenX === null) {
+      return 0;
+    }
+    return event.screenX - previousScreenX;
+  },
+  movementY: function(event) {
+    if ('movementY' in event) {
+      return event.movementY;
+    }
+    var previousScreenY = MouseMetrics.previousScreenY;
+    MouseMetrics.setPreviousScreenY(event.screenY);
+    if (previousScreenY === null) {
+      return 0;
+    }
+    return event.screenY - previousScreenY;
   },
 };
 
