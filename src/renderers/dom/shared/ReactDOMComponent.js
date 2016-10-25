@@ -31,6 +31,7 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
+var ReactDOMHTMLComponent = require('ReactDOMHTMLComponent');
 
 var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -478,6 +479,10 @@ var globalIdCounter = 1;
  * @extends ReactMultiChild
  */
 function ReactDOMComponent(element) {
+  if (element.type === 'rawhtml') {
+    return new ReactDOMHTMLComponent(element);
+  }
+
   var tag = element.type;
   validateDangerousTag(tag);
   this._currentElement = element;
