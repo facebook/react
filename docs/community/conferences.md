@@ -37,7 +37,7 @@ April 16 in Amsterdam, The Netherlands
 ### ReactEurope 2016
 June 2 & 3 in Paris, France
 
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule) - [Videos](https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A/playlists)
 
 ### ReactRally 2016
 August 25-26 in Salt Lake City, UT
@@ -47,10 +47,10 @@ August 25-26 in Salt Lake City, UT
 ### ReactNext 2016
 September 15 in Tel Aviv, Israel
 
-[Website](http://react-next.com/) - [Schedule](http://react-next.com/#schedule)
+[Website](http://react-next.com/) - [Schedule](http://react-next.com/#schedule) - [Videos](https://www.youtube.com/channel/UC3BT8hh3yTTYxbLQy_wbk2w)
 
 ### ReactNL 2016
-October 13 in Amsterdam, The Netherlands
+October 13 in Amsterdam, The Netherlands - [Schedule](http://reactnl.org/#program)
 
 [Website](http://reactnl.org/)
 
@@ -58,3 +58,8 @@ October 13 in Amsterdam, The Netherlands
 October 26-28 in Bratislava, Slovakia
 
 [Website](https://reactiveconf.com/)
+
+### React Remote Conf 2016
+October 26-28 online
+
+[Website](https://allremoteconfs.com/react-2016) - [Schedule](https://allremoteconfs.com/react-2016#schedule)
