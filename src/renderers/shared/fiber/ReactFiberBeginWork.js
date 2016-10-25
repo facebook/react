@@ -25,7 +25,6 @@ var {
 } = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
-  IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostContainer,
@@ -231,27 +230,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
     }
   }
 
-  function mountIndeterminateComponent(current, workInProgress) {
-    if (current) {
-      throw new Error('An indeterminate component should never have mounted.');
-    }
-    var fn = workInProgress.type;
-    var props = workInProgress.pendingProps;
-    var value = fn(props);
-    if (typeof value === 'object' && value && typeof value.render === 'function') {
-      // Proceed under the assumption that this is a class instance
-      workInProgress.tag = ClassComponent;
-      adoptClassInstance(workInProgress, value);
-      mountClassInstance(workInProgress);
-      value = value.render();
-    } else {
-      // Proceed under the assumption that this is a functional component
-      workInProgress.tag = FunctionalComponent;
-    }
-    reconcileChildren(current, workInProgress, value);
-    return workInProgress.child;
-  }
-
   function updateCoroutineComponent(current, workInProgress) {
     var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
     if (!coroutine) {
@@ -359,8 +337,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
     }
 
     switch (workInProgress.tag) {
-      case IndeterminateComponent:
-        return mountIndeterminateComponent(current, workInProgress);
       case FunctionalComponent:
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
