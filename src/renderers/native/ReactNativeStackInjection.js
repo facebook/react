@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeDefaultInjection
+ * @providesModule ReactNativeStackInjection
  * @flow
  */
 'use strict';
@@ -19,54 +19,19 @@
  */
 require('InitializeJavaScriptAppEngine');
 
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
-var RCTEventEmitter = require('RCTEventEmitter');
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
 var ReactHostComponent = require('ReactHostComponent');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
-var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
-var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
-var ReactNativeTreeTraversal = require('ReactNativeTreeTraversal');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
-var ResponderEventPlugin = require('ResponderEventPlugin');
 
 var invariant = require('invariant');
 
 function inject() {
-  /**
-   * Register the event emitter with the native bridge
-   */
-  RCTEventEmitter.register(ReactNativeEventEmitter);
-
-  /**
-   * Inject module for resolving DOM hierarchy and plugin ordering.
-   */
-  EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
-  EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
-  EventPluginUtils.injection.injectTreeTraversal(ReactNativeTreeTraversal);
-
-  ResponderEventPlugin.injection.injectGlobalResponderHandler(
-    ReactNativeGlobalResponderHandler
-  );
-
-  /**
-   * Some important event plugins included by default (without having to require
-   * them).
-   */
-  EventPluginHub.injection.injectEventPluginsByName({
-    'ResponderEventPlugin': ResponderEventPlugin,
-    'ReactNativeBridgeEventPlugin': ReactNativeBridgeEventPlugin,
-  });
-
   ReactUpdates.injection.injectReconcileTransaction(
     ReactNativeComponentEnvironment.ReactReconcileTransaction
   );

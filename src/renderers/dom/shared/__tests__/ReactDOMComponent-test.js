@@ -626,8 +626,10 @@ describe('ReactDOMComponent', () => {
     }
 
     beforeEach(() => {
-      var ReactDefaultInjection = require('ReactDefaultInjection');
-      ReactDefaultInjection.inject();
+      var ReactDOMInjection = require('ReactDOMInjection');
+      ReactDOMInjection.inject();
+      var ReactDOMStackInjection = require('ReactDOMStackInjection');
+      ReactDOMStackInjection.inject();
 
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');

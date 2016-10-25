@@ -6,28 +6,24 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDefaultInjection
+ * @providesModule ReactDOMInjection
  */
 
 'use strict';
 
 var ARIADOMPropertyConfig = require('ARIADOMPropertyConfig');
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
+var DOMProperty = require('DOMProperty');
 var ChangeEventPlugin = require('ChangeEventPlugin');
-var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
+var DOMEventPluginOrder = require('DOMEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+var EventPluginHub = require('EventPluginHub');
+var EventPluginUtils = require('EventPluginUtils');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
-var ReactDOMComponent = require('ReactDOMComponent');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
 var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
-var ReactDOMTextComponent = require('ReactDOMTextComponent');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEventListener = require('ReactEventListener');
-var ReactInjection = require('ReactInjection');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
@@ -43,22 +39,22 @@ function inject() {
   }
   alreadyInjected = true;
 
-  ReactInjection.EventEmitter.injectReactEventListener(
+  ReactBrowserEventEmitter.injection.injectReactEventListener(
     ReactEventListener
   );
 
   /**
    * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
-  ReactInjection.EventPluginHub.injectEventPluginOrder(DefaultEventPluginOrder);
-  ReactInjection.EventPluginUtils.injectComponentTree(ReactDOMComponentTree);
-  ReactInjection.EventPluginUtils.injectTreeTraversal(ReactDOMTreeTraversal);
+  EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
+  EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
+  EventPluginUtils.injection.injectTreeTraversal(ReactDOMTreeTraversal);
 
   /**
    * Some important event plugins included by default (without having to require
    * them).
    */
-  ReactInjection.EventPluginHub.injectEventPluginsByName({
+  EventPluginHub.injection.injectEventPluginsByName({
     SimpleEventPlugin: SimpleEventPlugin,
     EnterLeaveEventPlugin: EnterLeaveEventPlugin,
     ChangeEventPlugin: ChangeEventPlugin,
@@ -66,32 +62,9 @@ function inject() {
     BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
-  ReactInjection.HostComponent.injectGenericComponentClass(
-    ReactDOMComponent
-  );
-
-  ReactInjection.HostComponent.injectTextComponentClass(
-    ReactDOMTextComponent
-  );
-
-  ReactInjection.DOMProperty.injectDOMPropertyConfig(ARIADOMPropertyConfig);
-  ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
-  ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
-
-  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
-    function(instantiate) {
-      return new ReactDOMEmptyComponent(instantiate);
-    }
-  );
-
-  ReactInjection.Updates.injectReconcileTransaction(
-    ReactReconcileTransaction
-  );
-  ReactInjection.Updates.injectBatchingStrategy(
-    ReactDefaultBatchingStrategy
-  );
-
-  ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
+  DOMProperty.injection.injectDOMPropertyConfig(ARIADOMPropertyConfig);
+  DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
+  DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 }
 
 module.exports = {

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule DefaultEventPluginOrder
+ * @providesModule DOMEventPluginOrder
  */
 
 'use strict';
@@ -20,7 +20,7 @@
  * `ResponderEventPlugin` must occur before `SimpleEventPlugin` so that
  * preventing default on events is convenient in `SimpleEventPlugin` handlers.
  */
-var DefaultEventPluginOrder = [
+var DOMEventPluginOrder = [
   'ResponderEventPlugin',
   'SimpleEventPlugin',
   'TapEventPlugin',
@@ -30,4 +30,4 @@ var DefaultEventPluginOrder = [
   'BeforeInputEventPlugin',
 ];
 
-module.exports = DefaultEventPluginOrder;
+module.exports = DOMEventPluginOrder;

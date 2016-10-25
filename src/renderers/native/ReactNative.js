@@ -14,14 +14,16 @@
 // Require ReactNativeDefaultInjection first for its side effects of setting up
 // the JS environment
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeDefaultInjection = require('ReactNativeDefaultInjection');
+var ReactNativeInjection = require('ReactNativeInjection');
+var ReactNativeStackInjection = require('ReactNativeStackInjection');
 
 var ReactNativeMount = require('ReactNativeMount');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
 
-ReactNativeDefaultInjection.inject();
+ReactNativeInjection.inject();
+ReactNativeStackInjection.inject();
 
 var render = function(
   element: ReactElement<any>,
