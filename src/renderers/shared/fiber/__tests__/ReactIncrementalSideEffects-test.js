@@ -164,6 +164,124 @@ describe('ReactIncrementalSideEffects', () => {
 
   });
 
+  it('can delete a child that changes type - implicit keys', function() {
+
+    let unmounted = false;
+
+    class ClassComponent extends React.Component {
+      componentWillUnmount() {
+        unmounted = true;
+      }
+      render() {
+        return <span prop="Class" />;
+      }
+    }
+
+    function FunctionalComponent(props) {
+      return <span prop="Function" />;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.useClass ?
+            <ClassComponent /> :
+            props.useFunction ?
+            <FunctionalComponent /> :
+            props.useText ?
+            'Text' :
+            null
+          }
+          Trail
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo useClass={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span('Class'), 'Trail'),
+    ]);
+
+    expect(unmounted).toBe(false);
+
+    ReactNoop.render(<Foo useFunction={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span('Function'), 'Trail'),
+    ]);
+
+    expect(unmounted).toBe(true);
+
+    ReactNoop.render(<Foo useText={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div('Text', 'Trail'),
+    ]);
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div('Trail'),
+    ]);
+
+  });
+
+  it('can delete a child that changes type - explicit keys', function() {
+
+    let unmounted = false;
+
+    class ClassComponent extends React.Component {
+      componentWillUnmount() {
+        unmounted = true;
+      }
+      render() {
+        return <span prop="Class" />;
+      }
+    }
+
+    function FunctionalComponent(props) {
+      return <span prop="Function" />;
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.useClass ?
+            <ClassComponent key="a" /> :
+            props.useFunction ?
+            <FunctionalComponent key="a" /> :
+            null
+          }
+          Trail
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo useClass={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span('Class'), 'Trail'),
+    ]);
+
+    expect(unmounted).toBe(false);
+
+    ReactNoop.render(<Foo useFunction={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div(span('Function'), 'Trail'),
+    ]);
+
+    expect(unmounted).toBe(true);
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.root.children).toEqual([
+      div('Trail'),
+    ]);
+
+  });
+
   it('does not update child nodes if a flush is aborted', () => {
 
     function Bar(props) {

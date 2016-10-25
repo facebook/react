@@ -508,6 +508,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         // boolean, undefined, etc.
         break;
       }
+      if (shouldTrackSideEffects) {
+        if (oldFiber && !newFiber.alternate) {
+          // We matched the slot, but we didn't reuse the existing fiber, so we
+          // need to delete the existing child.
+          deleteChild(returnFiber, oldFiber);
+        }
+      }
       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
       if (!previousNewFiber) {
         // TODO: Move out of the loop. This only happens for the first run.
@@ -573,7 +580,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             // it from the child list so that we don't add it to the deletion
             // list.
             existingChildren.delete(
-              newFiber.key === null ? newFiber.index : newFiber.key
+              newFiber.key === null ? newIdx : newFiber.key
             );
           }
         }
