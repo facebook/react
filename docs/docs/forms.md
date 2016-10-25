@@ -2,10 +2,11 @@
 id: forms
 title: Forms
 permalink: docs/forms.html
-prev: state-and-lifecycle.html
-next: lifting-state-up.html
-redirect_from: "/tips/controlled-input-null-value.html"
+prev: 
+next: 
 ---
+
+## Forms
 
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
 
@@ -36,7 +37,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
+  
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -61,7 +62,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try it on CodePen.](https://codepen.io/ericnakagawa/pen/QKkJva?editors=0010)
+[Try it on Codepen](https://codepen.io/ericnakagawa/pen/QKkJva?editors=0010)
 
 In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
@@ -101,7 +102,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
+  
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -114,8 +115,6 @@ class Form extends React.Component {
     return (
       <div>
         <input type="text"
-          placeholder="Hello!"
-          value={this.state.value}
           onChange={this.handleChange} />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
@@ -126,7 +125,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try it on CodePen.](https://codepen.io/ericnakagawa/pen/XjxyoL?editors=0010)
+[Try it on Codepen](https://codepen.io/ericnakagawa/pen/XjxyoL?editors=0010)
 
 ###Default Values
 
@@ -226,7 +225,7 @@ For instance, if you want to imperatively submit a form, one approach would be t
 
 ## Examples
 
-### Basic Text Input
+### Basic Controlled Text Input
 
 ```javascript
 class Form extends React.Component {
@@ -236,7 +235,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
+  
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -259,10 +258,10 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010)
+[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010)
 
 
-### Basic Textarea
+### Basic Controlled Textarea
 
 ```javascript
 class Form extends React.Component {
@@ -298,9 +297,9 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010)
+[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010)
 
-### Basic Select
+### Basic Uncontrolled Select
 
 ```javascript
 class Form extends React.Component {
@@ -336,9 +335,9 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/pExQbL?editors=0010)
+[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/pExQbL?editors=0010)
 
-### Basic Radio Button
+### Basic Uncontrolled Radio Button
 
 ```javascript
 class Form extends React.Component {
@@ -360,9 +359,12 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="radio" name="choice" value="A" onChange={this.handleChange} /> Option A<br />
-        <input type="radio" name="choice" value="B" onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="radio" name="choice" value="C" onChange={this.handleChange} /> Option C<br />
+        <input type="radio" name="choice" value="A"
+          onChange={this.handleChange} /> Option A<br />
+        <input type="radio" name="choice" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
+        <input type="radio" name="choice" value="C"
+        onChange={this.handleChange} /> Option C<br />
         <br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
@@ -373,10 +375,9 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try this on CodePen.](https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010)
+[Try this on Codepen.](https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010)
 
-
-### Basic Checkbox
+### Basic Uncontrolled Checkbox
 
 ```javascript
 class Form extends React.Component {
@@ -389,7 +390,7 @@ class Form extends React.Component {
 
   handleChange(event) {
     let val = event.target.value;
-    let checked = this.state.checked.slice(); // copy
+    let checked = this.state.checked.slice(); // copy 
     if(checked.includes(val)) {
       checked.splice(checked.indexOf(val), 1);
     } else {
@@ -405,9 +406,12 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="checkbox" value="A" onChange={this.handleChange} /> Option A<br />
-        <input type="checkbox" value="B" onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="checkbox" value="C" onChange={this.handleChange} /> Option C<br />
+        <input type="checkbox" value="A"
+          onChange={this.handleChange} /> Option A<br />
+        <input type="checkbox" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
+        <input type="checkbox" value="C"
+          onChange={this.handleChange} /> Option C<br />
         <br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
@@ -417,7 +421,7 @@ class Form extends React.Component {
 ReactDOM.render(<Form />, document.getElementById('root'));
 ```
 
-[Try it on CodePen.](https://codepen.io/ericnakagawa/pen/kkAzPO?editors=0010)
+[Try it on Codepen](https://codepen.io/ericnakagawa/pen/kkAzPO?editors=0010)
 
 ### Form Events
 
