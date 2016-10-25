@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactInputSelection
+ * @flow
  */
 
 'use strict';
@@ -17,7 +18,14 @@ var containsNode = require('containsNode');
 var focusNode = require('focusNode');
 var getActiveElement = require('getActiveElement');
 
-function isInDocument(node) {
+type SelectionRange = {start: number, end: number}
+type SelectionInformation = {
+  focusedElem: HTMLElement,
+  selectionRange: SelectionRange
+}
+
+
+function isInDocument(node : Node) {
   return containsNode(document.documentElement, node);
 }
 
@@ -29,13 +37,10 @@ function isInDocument(node) {
  */
 var ReactInputSelection = {
 
-  hasSelectionCapabilities: function(elem) {
-    var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-    return nodeName && (
-      (nodeName === 'input' && elem.type === 'text') ||
-      nodeName === 'textarea' ||
-      elem.contentEditable === 'true'
-    );
+  hasSelectionCapabilities: function(elem : HTMLElement) {
+    return (elem instanceof HTMLInputElement && elem.type === 'text') ||
+      elem instanceof HTMLTextAreaElement ||
+      elem.contentEditable === 'true';
   },
 
   getSelectionInformation: function() {
@@ -54,7 +59,7 @@ var ReactInputSelection = {
    * restore it. This is useful when performing operations that could remove dom
    * nodes and place them back in, resulting in focus being lost.
    */
-  restoreSelection: function(priorSelectionInformation) {
+  restoreSelection: function(priorSelectionInformation : SelectionInformation) {
     var curFocusedElem = getActiveElement();
     var priorFocusedElem = priorSelectionInformation.focusedElem;
     var priorSelectionRange = priorSelectionInformation.selectionRange;
@@ -111,18 +116,19 @@ var ReactInputSelection = {
    * -@input     Set selection bounds of this input or textarea
    * -@offsets   Object of same form that is returned from get*
    */
-  setSelection: function(input, offsets) {
+  setSelection: function(input : HTMLElement, offsets : SelectionRange) {
     var start = offsets.start;
     var end = offsets.end;
     if (end === undefined) {
       end = start;
     }
 
-    if ('selectionStart' in input) {
+    if ('selectionStart' in input &&
+        (input instanceof HTMLInputElement ||
+         input instanceof HTMLTextAreaElement)) {
       input.selectionStart = start;
       input.selectionEnd = Math.min(end, input.value.length);
-    } else if (document.selection &&
-        (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
+    } else if (document.selection && input instanceof HTMLInputElement) {
       var range = input.createTextRange();
       range.collapse(true);
       range.moveStart('character', start);
