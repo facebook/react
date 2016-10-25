@@ -408,20 +408,9 @@ describe('ResponderEventPlugin', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
 
-    EventPluginHub = require('EventPluginHub');
-    EventPluginUtils = require('EventPluginUtils');
-    ResponderEventPlugin = require('ResponderEventPlugin');
-
-    EventPluginUtils.injection.injectComponentTree({
-      getInstanceFromNode: function(id) {
-        return idToInstance[id];
-      },
-      getNodeFromInstance: function(inst) {
-        return inst._rootNodeID;
-      },
-    });
-
-    EventPluginUtils.injection.injectTreeTraversal({
+    // Inline mock
+    const ReactTreeTraversal = require('ReactTreeTraversal');
+    Object.assign(ReactTreeTraversal, {
       isAncestor: function(a, b) {
         return isAncestorIDOf(a._rootNodeID, b._rootNodeID);
       },
@@ -441,6 +430,19 @@ describe('ResponderEventPlugin', () => {
             fn(idToInstance[id], phase, arg);
           }
         );
+      },
+    });
+
+    EventPluginHub = require('EventPluginHub');
+    EventPluginUtils = require('EventPluginUtils');
+    ResponderEventPlugin = require('ResponderEventPlugin');
+
+    EventPluginUtils.injection.injectComponentTree({
+      getInstanceFromNode: function(id) {
+        return idToInstance[id];
+      },
+      getNodeFromInstance: function(inst) {
+        return inst._rootNodeID;
       },
     });
   });
