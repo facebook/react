@@ -1281,4 +1281,103 @@ describe('ReactIncremental', () => {
 
   });
 
+  it('skips will/DidUpdate when bailing unless an update was already in progress', () => {
+    var ops = [];
+
+    class LifeCycle extends React.Component {
+      componentWillMount() {
+        ops.push('componentWillMount');
+      }
+      componentDidMount() {
+        ops.push('componentDidMount');
+      }
+      componentWillReceiveProps(nextProps) {
+        ops.push('componentWillReceiveProps');
+      }
+      shouldComponentUpdate(nextProps) {
+        ops.push('shouldComponentUpdate');
+        // Bail
+        return this.props.x !== nextProps.x;
+      }
+      componentWillUpdate(nextProps) {
+        ops.push('componentWillUpdate');
+      }
+      componentDidUpdate(prevProps) {
+        ops.push('componentDidUpdate');
+      }
+      render() {
+        ops.push('render');
+        return <span />;
+      }
+    }
+
+    function Sibling() {
+      ops.push('render sibling');
+      return <span />;
+    }
+
+    function App(props) {
+      return [
+        <LifeCycle x={props.x} />,
+        <Sibling />,
+      ];
+    }
+
+    ReactNoop.render(<App x={0} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'componentWillMount',
+      'render',
+      'render sibling',
+      'componentDidMount',
+    ]);
+
+    ops = [];
+
+    // Update to same props
+    ReactNoop.render(<App x={0} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'componentWillReceiveProps',
+      'shouldComponentUpdate',
+      // no componentWillUpdate
+      // no render
+      'render sibling',
+      // no componentDidUpdate
+    ]);
+
+    ops = [];
+
+    // Begin updating to new props...
+    ReactNoop.render(<App x={1} />);
+    ReactNoop.flushDeferredPri(30);
+
+    expect(ops).toEqual([
+      'componentWillReceiveProps',
+      'shouldComponentUpdate',
+      'componentWillUpdate',
+      'render',
+      'render sibling',
+      // no componentDidUpdate yet
+    ]);
+
+    ops = [];
+
+    // ...but we'll interrupt it to rerender the same props.
+    ReactNoop.render(<App x={1} />);
+    ReactNoop.flush();
+
+    // We can bail out this time, but we must call componentDidUpdate.
+    expect(ops).toEqual([
+      'componentWillReceiveProps',
+      'shouldComponentUpdate',
+      // no componentWillUpdate
+      // no render
+      'render sibling',
+      'componentDidUpdate',
+    ]);
+  });
+
 });
