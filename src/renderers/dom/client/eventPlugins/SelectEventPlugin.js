@@ -71,16 +71,19 @@ function getSelection(node) {
       start: node.selectionStart,
       end: node.selectionEnd,
     };
-  } else if (window.getSelection) {
-    var selection = window.getSelection();
+  }
+  var doc = node.ownerDocument || node.document || node;
+  var win = doc.defaultView || doc.parentWindow;
+  if (win.getSelection) {
+    var selection = win.getSelection();
     return {
       anchorNode: selection.anchorNode,
       anchorOffset: selection.anchorOffset,
       focusNode: selection.focusNode,
       focusOffset: selection.focusOffset,
     };
-  } else if (document.selection) {
-    var range = document.selection.createRange();
+  } else if (doc.selection) {
+    var range = doc.selection.createRange();
     return {
       parentElement: range.parentElement(),
       text: range.text,
@@ -94,6 +97,7 @@ function getSelection(node) {
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {
@@ -101,9 +105,10 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
+  var doc = nativeEventTarget.ownerDocument || nativeEventTarget.document || nativeEventTarget;
   if (mouseDown ||
       activeElement == null ||
-      activeElement !== getActiveElement()) {
+      activeElement !== getActiveElement(doc)) {
     return null;
   }
 

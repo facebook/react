@@ -18,7 +18,21 @@ var focusNode = require('focusNode');
 var getActiveElement = require('getActiveElement');
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return containsNode(node.ownerDocument.documentElement, node);
+}
+
+function getFocusedElement() {
+  var win = window;
+  var focusedElem = getActiveElement();
+  while (focusedElem instanceof win.HTMLIFrameElement) {
+    try {
+      win = focusedElem.contentDocument.defaultView;
+    } catch (e) {
+      return focusedElem;
+    }
+    focusedElem = getActiveElement(win.document);
+  }
+  return focusedElem;
 }
 
 /**
@@ -39,7 +53,7 @@ var ReactInputSelection = {
   },
 
   getSelectionInformation: function() {
-    var focusedElem = getActiveElement();
+    var focusedElem = getFocusedElement();
     return {
       focusedElem: focusedElem,
       selectionRange:
@@ -55,7 +69,7 @@ var ReactInputSelection = {
    * nodes and place them back in, resulting in focus being lost.
    */
   restoreSelection: function(priorSelectionInformation) {
-    var curFocusedElem = getActiveElement();
+    var curFocusedElem = getFocusedElement();
     var priorFocusedElem = priorSelectionInformation.focusedElem;
     var priorSelectionRange = priorSelectionInformation.selectionRange;
     if (curFocusedElem !== priorFocusedElem &&
@@ -85,10 +99,10 @@ var ReactInputSelection = {
         start: input.selectionStart,
         end: input.selectionEnd,
       };
-    } else if (document.selection &&
+    } else if (input.ownerDocument.selection &&
         (input.nodeName && input.nodeName.toLowerCase() === 'input')) {
       // IE8 input.
-      var range = document.selection.createRange();
+      var range = input.ownerDocument.selection.createRange();
       // There can only be one selection per document in IE, so it must
       // be in our element.
       if (range.parentElement() === input) {
@@ -106,8 +120,8 @@ var ReactInputSelection = {
   },
 
   /**
-   * @setSelection: Sets the selection bounds of a textarea or input and focuses
-   * the input.
+   * @setSelection: Sets the selection bounds of a textarea, input or
+   * contentEditable node.
    * -@input     Set selection bounds of this input or textarea
    * -@offsets   Object of same form that is returned from get*
    */
