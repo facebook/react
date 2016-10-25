@@ -153,7 +153,7 @@ function ListItem(props) {
 
 function NumberList(props) {
   const numbers = props.numbers;
-  const listItems = numbers.map((item) =>
+  const listItems = numbers.map((number) =>
     // Wrong! The key should have been specified here:
     <ListItem value={number} />
   );
