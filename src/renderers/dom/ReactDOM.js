@@ -14,7 +14,8 @@
 'use strict';
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactDOMInjection = require('ReactDOMInjection');
+var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactMount = require('ReactMount');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
@@ -25,7 +26,8 @@ var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
-ReactDefaultInjection.inject();
+ReactDOMInjection.inject();
+ReactDOMStackInjection.inject();
 
 var ReactDOM = {
   findDOMNode: findDOMNode,

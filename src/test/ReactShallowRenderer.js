@@ -13,7 +13,8 @@
 'use strict';
 
 var React = require('React');
-var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactDOMInjection = require('ReactDOMInjection');
+var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
@@ -84,7 +85,8 @@ class ReactShallowRenderer {
     // Ensure we've done the default injections. This might not be true in the
     // case of a simple test that only requires React and the TestUtils in
     // conjunction with an inline-requires transform.
-    ReactDefaultInjection.inject();
+    ReactDOMInjection.inject();
+    ReactDOMStackInjection.inject();
 
     invariant(
       React.isValidElement(element),

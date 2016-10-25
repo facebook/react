@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDefaultInjection
+ * @providesModule ReactDOMInjection
  */
 
 'use strict';
@@ -21,20 +21,9 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
-var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
 var ReactDOMTreeTraversal = require('ReactDOMTreeTraversal');
-var ReactDOMTextComponent = require('ReactDOMTextComponent');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactEventListener = require('ReactEventListener');
-var ReactHostComponent = require('ReactHostComponent');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
-var ReactUpdates = require('ReactUpdates');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
@@ -73,32 +62,9 @@ function inject() {
     BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
-  ReactHostComponent.injection.injectGenericComponentClass(
-    ReactDOMComponent
-  );
-
-  ReactHostComponent.injection.injectTextComponentClass(
-    ReactDOMTextComponent
-  );
-
   DOMProperty.injection.injectDOMPropertyConfig(ARIADOMPropertyConfig);
   DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);
-
-  ReactEmptyComponent.injection.injectEmptyComponentFactory(
-    function(instantiate) {
-      return new ReactDOMEmptyComponent(instantiate);
-    }
-  );
-
-  ReactUpdates.injection.injectReconcileTransaction(
-    ReactReconcileTransaction
-  );
-  ReactUpdates.injection.injectBatchingStrategy(
-    ReactDefaultBatchingStrategy
-  );
-
-  ReactComponentEnvironment.injection.injectEnvironment(ReactComponentBrowserEnvironment);
 }
 
 module.exports = {
