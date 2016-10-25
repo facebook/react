@@ -92,6 +92,20 @@ var paths = {
     ],
     lib: 'build/node_modules/react-test-renderer/lib',
   },
+  reactNoopRenderer: {
+    src: [
+      'src/renderers/noop/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+      '!src/shared/vendor/**/*.js',
+      '!src/**/__benchmarks__/**/*.js',
+      '!src/**/__tests__/**/*.js',
+      '!src/**/__mocks__/**/*.js',
+    ],
+    lib: 'build/node_modules/react-noop-renderer/lib',
+  },
 };
 
 var moduleMapBase = Object.assign(
@@ -148,6 +162,13 @@ var moduleMapReactTestRenderer = Object.assign(
   moduleMapBase
 );
 
+var moduleMapReactNoopRenderer = Object.assign(
+  {},
+  rendererSharedState,
+  moduleMapBase
+);
+
+
 var errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
@@ -180,6 +201,13 @@ var babelOptsReactTestRenderer = {
   ],
 };
 
+var babelOptsReactNoopRenderer = {
+  plugins: [
+    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
+    [babelPluginModules, {map: moduleMapReactNoopRenderer}],
+  ],
+};
+
 gulp.task('eslint', getTask('eslint'));
 
 gulp.task('lint', ['eslint']);
@@ -194,6 +222,7 @@ gulp.task('react:clean', function() {
     paths.reactDOM.lib,
     paths.reactNative.lib,
     paths.reactTestRenderer.lib,
+    paths.reactNoopRenderer.lib,
   ]);
 });
 
@@ -225,7 +254,14 @@ gulp.task('react:modules', function() {
       .pipe(stripProvidesModule())
       .pipe(babel(babelOptsReactTestRenderer))
       .pipe(flatten())
-      .pipe(gulp.dest(paths.reactTestRenderer.lib))
+      .pipe(gulp.dest(paths.reactTestRenderer.lib)),
+
+    gulp
+      .src(paths.reactNoopRenderer.src)
+      .pipe(stripProvidesModule())
+      .pipe(babel(babelOptsReactNoopRenderer))
+      .pipe(flatten())
+      .pipe(gulp.dest(paths.reactNoopRenderer.lib))
   );
 });
 
@@ -234,7 +270,8 @@ gulp.task('react:extract-errors', function() {
     gulp.src(paths.react.src).pipe(extractErrors(errorCodeOpts)),
     gulp.src(paths.reactDOM.src).pipe(extractErrors(errorCodeOpts)),
     gulp.src(paths.reactNative.src).pipe(extractErrors(errorCodeOpts)),
-    gulp.src(paths.reactTestRenderer.src).pipe(extractErrors(errorCodeOpts))
+    gulp.src(paths.reactTestRenderer.src).pipe(extractErrors(errorCodeOpts)),
+    gulp.src(paths.reactNoopRenderer.src).pipe(extractErrors(errorCodeOpts))
   );
 });
 

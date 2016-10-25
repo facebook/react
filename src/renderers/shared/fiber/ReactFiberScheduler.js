@@ -42,6 +42,10 @@ var {
   HostContainer,
 } = require('ReactTypeOfWork');
 
+if (__DEV__) {
+  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
+}
+
 var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
@@ -273,15 +277,28 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // means that we don't need an additional field on the work in
     // progress.
     const current = workInProgress.alternate;
-    const next = beginWork(current, workInProgress, nextPriorityLevel);
 
-    if (next) {
-      // If this spawns new work, do that next.
-      return next;
-    } else {
-      // Otherwise, complete the current work.
-      return completeUnitOfWork(workInProgress);
+    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+      ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
+    // See if beginning this work spawns more work.
+    let next = beginWork(current, workInProgress, nextPriorityLevel);
+    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+      ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
+    }
+
+    if (!next) {
+      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+        ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
+      }
+      // If this doesn't spawn new work, complete the current work.
+      next = completeUnitOfWork(workInProgress);
+      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+        ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
+      }
+    }
+
+    return next;
   }
 
   function performDeferredWork(deadline) {
