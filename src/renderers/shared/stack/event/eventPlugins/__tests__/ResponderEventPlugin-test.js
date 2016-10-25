@@ -791,8 +791,8 @@ describe('ResponderEventPlugin', () => {
 
     // Parent is responder, and responder is transferred by a second touch start
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: true};
-    config.responderGrant.grandParent = {order: 1};
-    config.responderTerminationRequest.parent = {order: 2, returnVal: true};
+    config.responderTerminationRequest.parent = {order: 1, returnVal: true};
+    config.responderGrant.grandParent = {order: 2};
     config.responderTerminate.parent = {order: 3};
     config.responderStart.grandParent = {order: 4};
     run(config, three, startConfig(three.child, [three.child, three.child], [1]));
@@ -960,11 +960,10 @@ describe('ResponderEventPlugin', () => {
     config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
     config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
     config.moveShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
-    config.responderGrant.parent = {order: 3};
-    config.responderTerminationRequest.child = {order: 4, returnVal: false};
-    config.responderReject.parent = {order: 5};
+    config.responderTerminationRequest.child = {order: 3, returnVal: false};
+    config.responderReject.parent = {order: 4};
     // The start/move should occur on the original responder if new one is rejected
-    config.responderMove.child = {order: 6};
+    config.responderMove.child = {order: 5};
 
     var touchConfig =
       moveConfig(three.child, [three.child], [0]);
@@ -975,11 +974,10 @@ describe('ResponderEventPlugin', () => {
     config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
     config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
     config.startShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
-    config.responderGrant.parent = {order: 3};
-    config.responderTerminationRequest.child = {order: 4, returnVal: false};
-    config.responderReject.parent = {order: 5};
+    config.responderTerminationRequest.child = {order: 3, returnVal: false};
+    config.responderReject.parent = {order: 4};
     // The start/move should occur on the original responder if new one is rejected
-    config.responderStart.child = {order: 6};
+    config.responderStart.child = {order: 5};
 
     touchConfig =
       startConfig(three.child, [three.child, three.child], [1]);
@@ -1009,9 +1007,8 @@ describe('ResponderEventPlugin', () => {
     config.scrollShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
     config.scrollShouldSetResponder.captured.parent = {order: 1, returnVal: false};
     config.scrollShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
-    config.responderGrant.parent = {order: 3};
-    config.responderTerminationRequest.child = {order: 4, returnVal: false};
-    config.responderReject.parent = {order: 5};
+    config.responderTerminationRequest.child = {order: 3, returnVal: false};
+    config.responderReject.parent = {order: 4};
 
     run(config, three, {
       topLevelType: 'topScroll',
@@ -1026,8 +1023,8 @@ describe('ResponderEventPlugin', () => {
     config.scrollShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
     config.scrollShouldSetResponder.captured.parent = {order: 1, returnVal: false};
     config.scrollShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
-    config.responderGrant.parent = {order: 3};
-    config.responderTerminationRequest.child = {order: 4, returnVal: true};
+    config.responderTerminationRequest.child = {order: 3, returnVal: true};
+    config.responderGrant.parent = {order: 4};
     config.responderTerminate.child = {order: 5};
 
     run(config, three, {
