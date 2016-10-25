@@ -129,7 +129,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // Transfer update queue to callbackList field so callbacks can be
         // called during commit phase.
         workInProgress.callbackList = workInProgress.updateQueue;
-        markUpdate(workInProgress);
+        if (current) {
+          if (current.memoizedProps !== workInProgress.memoizedProps ||
+              current.memoizedState !== workInProgress.memoizedState) {
+            markUpdate(workInProgress);
+          }
+        } else {
+          markUpdate(workInProgress);
+        }
         return null;
       case HostContainer:
         transferOutput(workInProgress.child, workInProgress);
