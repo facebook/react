@@ -221,6 +221,7 @@ function getDataFromCustomEvent(nativeEvent) {
 
 // Track the current IME composition fallback object, if any.
 var currentComposition = null;
+var compositionWithoutEvent = null;
 
 /**
  * @return {?object} A SyntheticCompositionEvent.
@@ -243,6 +244,16 @@ function extractCompositionEvent(
   } else if (isFallbackCompositionEnd(topLevelType, nativeEvent)) {
     eventType = eventTypes.compositionEnd;
   }
+
+  // Even when composition events are available, in some cases IE will still not always produce these.
+  // Try to detect such cases so we can still produce a beforeInput event.
+  if (canUseCompositionEvent && !eventType && !currentComposition
+      && useFallbackCompositionData && isFallbackCompositionStart(topLevelType, nativeEvent)) {
+    compositionWithoutEvent = FallbackCompositionState.getPooled(nativeEventTarget);
+  } else if (eventType || currentComposition) {
+    compositionWithoutEvent = null;
+  }
+
 
   if (!eventType) {
     return null;
@@ -357,6 +368,11 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
       return chars;
     }
     return null;
+  } else if (compositionWithoutEvent && topLevelType === 'topKeyUp') {
+    var data = compositionWithoutEvent.getData();
+    FallbackCompositionState.release(compositionWithoutEvent);
+    compositionWithoutEvent = null;
+    return data;
   }
 
   switch (topLevelType) {
