@@ -15,7 +15,7 @@ var ARIADOMPropertyConfig = require('ARIADOMPropertyConfig');
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var DOMProperty = require('DOMProperty');
 var ChangeEventPlugin = require('ChangeEventPlugin');
-var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
+var DOMEventPluginOrder = require('DOMEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
@@ -46,7 +46,7 @@ function inject() {
   /**
    * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
-  EventPluginHub.injection.injectEventPluginOrder(DefaultEventPluginOrder);
+  EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
   EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
   EventPluginUtils.injection.injectTreeTraversal(ReactDOMTreeTraversal);
 
