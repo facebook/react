@@ -18,6 +18,8 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var invariant = require('invariant');
 var warning = require('warning');
 
+import type { ReactInstance } from 'ReactInstanceType';
+
 /**
  * ReactNative vs ReactWeb
  * -----------------------
@@ -50,7 +52,8 @@ var warning = require('warning');
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    // TODO: fix this unsafe cast to work with Fiber.
+    var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
     if (owner !== null) {
       warning(
         owner._warnedAboutRefsInRender,
@@ -61,6 +64,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
         'componentDidUpdate instead.',
         owner.getName() || 'A component'
       );
+
       owner._warnedAboutRefsInRender = true;
     }
   }

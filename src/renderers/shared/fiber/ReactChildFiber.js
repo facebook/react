@@ -28,6 +28,7 @@ var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
+var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 
 const {
@@ -47,6 +48,7 @@ const {
 const isArray = Array.isArray;
 
 const {
+  ClassComponent,
   HostText,
   CoroutineComponent,
   YieldComponent,
@@ -61,6 +63,31 @@ const {
   Placement,
   Deletion,
 } = ReactTypeOfSideEffect;
+
+function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactElement<any>) {
+  if (typeof element.ref === 'string') {
+    if (element._owner) {
+      const ownerFiber : ?Fiber = (element._owner : any);
+      if (ownerFiber && ownerFiber.tag === ClassComponent) {
+        const stringRef = element.ref;
+        // Check if previous string ref matches new string ref
+        if (current && current.ref && current.ref._stringRef === stringRef) {
+          workInProgress.ref = current.ref;
+          return;
+        }
+        const inst = ownerFiber.stateNode;
+        const ref = function(value) {
+          const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+          refs[stringRef] = value;
+        };
+        ref._stringRef = stringRef;
+        workInProgress.ref = ref;
+      }
+    }
+  } else {
+    workInProgress.ref = element.ref;
+  }
+}
 
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
@@ -221,13 +248,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (current == null || current.type !== element.type) {
       // Insert
       const created = createFiberFromElement(element, priority);
-      created.ref = element.ref;
+      transferRef(current, created, element);
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
-      existing.ref = element.ref;
+      transferRef(current, existing, element);
       existing.pendingProps = element.props;
       existing.return = returnFiber;
       return existing;
@@ -319,7 +346,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           const created = createFiberFromElement(newChild, priority);
-          created.ref = newChild.ref;
+          transferRef(null, created, newChild);
           created.return = returnFiber;
           return created;
         }
@@ -653,7 +680,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
-          existing.ref = element.ref;
+          transferRef(child, existing, element);
           existing.pendingProps = element.props;
           existing.return = returnFiber;
           return existing;
@@ -668,7 +695,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     const created = createFiberFromElement(element, priority);
-    created.ref = element.ref;
+    transferRef(currentFirstChild, created, element);
     created.return = returnFiber;
     return created;
   }

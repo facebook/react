@@ -1072,4 +1072,28 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
+  it('supports string refs', () => {
+    var fooInstance = null;
+
+    class Bar extends React.Component {
+      componentDidMount() {
+        this.test = 'test';
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    class Foo extends React.Component {
+      render() {
+        fooInstance = this;
+        return <Bar ref="bar" />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+
+    expect(fooInstance.refs.bar.test).toEqual('test');
+  });
 });

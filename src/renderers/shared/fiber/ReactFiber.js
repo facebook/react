@@ -39,11 +39,18 @@ var {
   NoEffect,
 } = require('ReactTypeOfSideEffect');
 
-// An Instance is shared between all versions of a component. We can easily
-// break this out into a separate object to avoid copying so much to the
-// alternate versions of the tree. We put this on a single object for now to
-// minimize the number of objects created during the initial render.
-type Instance = {
+// A Fiber is work on a Component that needs to be done or was done. There can
+// be more than one per component.
+export type Fiber = {
+  // These first fields are conceptually members of an Instance. This used to
+  // be split into a separate type and intersected with the other Fiber fields,
+  // but until Flow fixes its intersection bugs, we've merged them into a
+  // single type.
+
+  // An Instance is shared between all versions of a component. We can easily
+  // break this out into a separate object to avoid copying so much to the
+  // alternate versions of the tree. We put this on a single object for now to
+  // minimize the number of objects created during the initial render.
 
   // Tag identifying the type of fiber.
   tag: TypeOfWork,
@@ -61,11 +68,7 @@ type Instance = {
   // parent : Instance -> return The parent happens to be the same as the
   // return fiber since we've merged the fiber and instance.
 
-};
-
-// A Fiber is work on a Component that needs to be done or was done. There can
-// be more than one per component.
-export type Fiber = Instance & {
+  // Remaining fields belong to Fiber
 
   // The Fiber to return to after finishing processing this one.
   // This is effectively the parent, but there can be multiple parents (two)
@@ -80,7 +83,7 @@ export type Fiber = Instance & {
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (handle : ?Object) => void,
+  ref: null | (((handle : ?Object) => void) & { _stringRef: ?string }),
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
@@ -327,4 +330,3 @@ exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : 
   fiber.pendingProps = {};
   return fiber;
 };
-
