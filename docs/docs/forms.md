@@ -399,9 +399,9 @@ class Form extends React.Component {
 
   handleSubmit(event) {
     alert("Boxes checked: " +
-      (this.state.checked.A ? "A ":"") +
-      (this.state.checked.B ? "B ":"") +
-      (this.state.checked.C ? "C":"")
+      (this.state.checked.A ? "A " : "") +
+      (this.state.checked.B ? "B " : "") +
+      (this.state.checked.C ? "C" : "")
     );
   }
 
