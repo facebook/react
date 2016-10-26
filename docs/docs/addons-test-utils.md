@@ -122,10 +122,10 @@ ReactTestUtils.Simulate.keyDown(node, {key: "Enter", keyCode: 13, which: 13});
 ### `renderIntoDocument()`
 
 ```javascript
-renderIntoDocument(instance)
+renderIntoDocument(element)
 ```
 
-Render a component into a detached DOM node in the document. **This function requires a DOM.**
+Render a React element into a detached DOM node in the document. **This function requires a DOM.**
 
 > Note:
 >
