@@ -364,16 +364,24 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="radio" name="choice" value="A" id="choice-a"
-          onChange={this.handleChange} />
-          <label htmlFor="choice-a">Option A</label><br />
-        <input type="radio" name="choice" value="B" id="choice-b"
-          onChange={this.handleChange} defaultChecked={true} />
-          <label htmlFor="choice-b">Option B</label><br />
-        <input type="radio" name="choice" value="C" id="choice-c"
-          onChange={this.handleChange} /> 
-          <label htmlFor="choice-c">Option C</label><br />
+        <label>
+          <input type="radio" name="choice" value="A" id="choice-a"
+            onChange={this.handleChange} />
+          Option A
+        </label>
         <br />
+        <label>
+          <input type="radio" name="choice" value="B" id="choice-b"
+            onChange={this.handleChange} defaultChecked={true} />
+          Option B
+        </label>
+        <br />
+        <label>
+          <input type="radio" name="choice" value="C" id="choice-c"
+          onChange={this.handleChange} /> 
+          Option C
+        </label>
+        <br /><br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
     );
@@ -415,16 +423,23 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="checkbox" value="A" id="checkbox-a"
-          onChange={this.handleChange} /> 
-          <label htmlFor="checkbox-a">Option A</label><br />
-        <input type="checkbox" value="B" id="checkbox-b"
-          onChange={this.handleChange} defaultChecked={true} /> 
-          <label htmlFor="checkbox-b">Option B</label><br />
-        <input type="checkbox" value="C" id="checkbox-c"
-          onChange={this.handleChange} /> 
-          <label htmlFor="checkbox-c">Option C</label><br />
+        <label>
+          <input type="checkbox" value="A"
+            onChange={this.handleChange} /> 
+          Option A
+        </label>
         <br />
+        <label>
+          <input type="checkbox" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> 
+          Option B
+        </label>
+        <br />
+        <label><input type="checkbox" value="C"
+          onChange={this.handleChange} /> 
+          Option C
+        </label>
+        <br /><br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
     );
