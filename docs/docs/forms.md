@@ -28,7 +28,7 @@ render() {
 
 User input has no effect on the rendered element because React has declared the value to be "Hello!". To update the value in response to user input, you would use the onChange event:
 
-```javascript
+```javascript{22}
 class Form extends React.Component {
   constructor(props) {
     super(props);
@@ -36,7 +36,6 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -65,8 +64,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 
 In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
-```javascript
-  handleChange(event) {
+```javascript  handleChange(event) {
     this.setState({value: event.target.value.substr(0, 140)});
   }
 ```
@@ -93,7 +91,7 @@ An **uncontrolled** component manages its own state.
 
 If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components.
 
-```javascript
+```javascript{22}
 class Form extends React.Component {
   constructor(props) {
     super(props);
@@ -101,7 +99,6 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -226,7 +223,7 @@ For instance, if you want to imperatively submit a form, one approach would be t
 
 ## Examples
 
-### Basic Text Input
+### Basic Controlled Input
 
 ```javascript
 class Form extends React.Component {
@@ -236,7 +233,6 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -262,7 +258,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 [Try this on CodePen.](https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010)
 
 
-### Basic Textarea
+### Basic Controlled Textarea
 
 ```javascript
 class Form extends React.Component {
@@ -272,7 +268,6 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -300,7 +295,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 
 [Try this on CodePen.](https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010)
 
-### Basic Select
+### Basic Uncontrolled Select
 
 ```javascript
 class Form extends React.Component {
@@ -310,7 +305,6 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -348,7 +342,6 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -360,9 +353,12 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="radio" name="choice" value="A" onChange={this.handleChange} /> Option A<br />
-        <input type="radio" name="choice" value="B" onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="radio" name="choice" value="C" onChange={this.handleChange} /> Option C<br />
+        <input type="radio" name="choice" value="A"
+          onChange={this.handleChange} /> Option A<br />
+        <input type="radio" name="choice" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
+        <input type="radio" name="choice" value="C"
+          onChange={this.handleChange} /> Option C<br />
         <br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
@@ -376,7 +372,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 [Try this on CodePen.](https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010)
 
 
-### Basic Checkbox
+### Basic Uncontrolled Checkbox
 
 ```javascript
 class Form extends React.Component {
@@ -386,11 +382,10 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-
   handleChange(event) {
     let val = event.target.value;
     let checked = this.state.checked.slice(); // copy
-    if(checked.includes(val)) {
+    if (checked.includes(val)) {
       checked.splice(checked.indexOf(val), 1);
     } else {
       checked.push(val);
@@ -405,9 +400,12 @@ class Form extends React.Component {
   render() {
     return (
       <div>
-        <input type="checkbox" value="A" onChange={this.handleChange} /> Option A<br />
-        <input type="checkbox" value="B" onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="checkbox" value="C" onChange={this.handleChange} /> Option C<br />
+        <input type="checkbox" value="A"
+          onChange={this.handleChange} /> Option A<br />
+        <input type="checkbox" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
+        <input type="checkbox" value="C"
+          onChange={this.handleChange} /> Option C<br />
         <br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
