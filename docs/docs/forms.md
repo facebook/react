@@ -204,9 +204,9 @@ If you *do* decide to use children, they will behave like `defaultValue`.
 
 ### Why Select Value?
 
-The selected `<option>` in an HTML `<select>` is normally specified through that option's `selected` attribute. In React, in order to make components easier to manipulate, the following format is adopted instead:
+The selected `<option>` in an HTML `<select>` is normally specified through that option's `selected` attribute. In React we assign the `select` component a specific value by passing a `value` prop:
 
-```javascript
+```javascript{1}
   <select value="B">
     <option value="A">Apple</option>
     <option value="B">Banana</option>
