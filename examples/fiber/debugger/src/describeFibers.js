@@ -11,24 +11,22 @@ function getFiberUniqueID(fiber) {
 function getFriendlyTag(tag) {
   switch (tag) {
     case 0:
-      return '[indeterminate]';
-    case 1:
       return '[fn]';
-    case 2:
+    case 1:
       return '[class]';
-    case 3:
+    case 2:
       return '[root]';
-    case 4:
+    case 3:
       return '[host]';
-    case 5:
+    case 4:
       return '[text]';
-    case 6:
+    case 5:
       return '[coroutine]';
-    case 7:
+    case 6:
       return '[handler]';
-    case 8:
+    case 7:
       return '[yield]';
-    case 9:
+    case 8:
       return '[frag]';
     default:
       throw new Error('Unknown tag.');

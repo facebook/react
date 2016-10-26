@@ -21,7 +21,6 @@ var { reconcileChildFibers } = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
-  IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostContainer,
@@ -226,8 +225,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
 
       // Error cases
-      case IndeterminateComponent:
-        throw new Error('An indeterminate component should have become determinate before completing.');
       default:
         throw new Error('Unknown unit of work tag');
     }

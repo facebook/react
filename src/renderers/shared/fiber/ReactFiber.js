@@ -21,7 +21,7 @@ import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
-  IndeterminateComponent,
+  FunctionalComponent,
   ClassComponent,
   HostContainer,
   HostComponent,
@@ -293,7 +293,7 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
       createFiber(ClassComponent, key) :
-      createFiber(IndeterminateComponent, key);
+      createFiber(FunctionalComponent, key);
     fiber.type = type;
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key);
