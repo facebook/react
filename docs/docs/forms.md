@@ -30,7 +30,7 @@ User input has no effect on the rendered element because React has declared the 
 
 To update the value in response to user input, you would use the `onChange` event to save the new value, then pass that to the `value` prop of the form:
 
-```javascript{9,19,20}
+```javascript{10,22,23}
 class Form extends React.Component {
   constructor(props) {
     super(props);
@@ -38,12 +38,15 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
+
   handleSubmit(event) {
     alert("Text field value is: '" + this.state.value + "'");
   }
+
   render() {
     return (
       <div>
@@ -92,7 +95,7 @@ An **uncontrolled** component manages its own state.
 
 If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components, however you would _not_ pass the value you saved to the component.
 
-```javascript{9,19}
+```javascript{10,22}
 class Form extends React.Component {
   constructor(props) {
     super(props);
@@ -100,12 +103,15 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
+
   handleSubmit(event) {
     alert("Text field value is: '" + this.state.value + "'");
   }
+
   render() {
     return (
       <div>
@@ -266,6 +272,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -303,6 +310,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
@@ -340,6 +348,7 @@ class Form extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   handleChange(event) {
     this.setState({value: event.target.value});
   }
