@@ -37,6 +37,7 @@ describe('ReactIncremental', () => {
 
   it('should render a simple component, in steps if needed', () => {
 
+    var renderCallbackCalled = false;
     var barCalled = false;
     function Bar() {
       barCalled = true;
@@ -52,17 +53,20 @@ describe('ReactIncremental', () => {
       ];
     }
 
-    ReactNoop.render(<Foo />);
+    ReactNoop.render(<Foo />, () => renderCallbackCalled = true);
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
+    expect(renderCallbackCalled).toBe(false);
     // Do one step of work.
     ReactNoop.flushDeferredPri(7 + 5);
     expect(fooCalled).toBe(true);
     expect(barCalled).toBe(false);
+    expect(renderCallbackCalled).toBe(false);
     // Do the rest of the work.
     ReactNoop.flushDeferredPri(50);
     expect(fooCalled).toBe(true);
     expect(barCalled).toBe(true);
+    expect(renderCallbackCalled).toBe(true);
   });
 
   it('updates a previous render', () => {
@@ -98,21 +102,22 @@ describe('ReactIncremental', () => {
       );
     }
 
-    ReactNoop.render(<Foo text="foo" />);
+    ReactNoop.render(<Foo text="foo" />, () => ops.push('renderCallbackCalled'));
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Foo', 'Header', 'Content', 'Footer']);
+    expect(ops).toEqual(['Foo', 'Header', 'Content', 'Footer', 'renderCallbackCalled']);
 
     ops = [];
 
-    ReactNoop.render(<Foo text="bar" />);
+    ReactNoop.render(<Foo text="bar" />, () => ops.push('firstRenderCallbackCalled'));
+    ReactNoop.render(<Foo text="bar" />, () => ops.push('secondRenderCallbackCalled'));
     ReactNoop.flush();
 
     // TODO: Test bail out of host components. This is currently unobservable.
 
     // Since this is an update, it should bail out and reuse the work from
     // Header and Content.
-    expect(ops).toEqual(['Foo', 'Content']);
+    expect(ops).toEqual(['Foo', 'Content', 'firstRenderCallbackCalled', 'secondRenderCallbackCalled']);
 
   });
 

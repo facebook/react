@@ -146,11 +146,11 @@ var ReactNoop = {
 
   root: rootContainer,
 
-  render(element : ReactElement<any>) {
+  render(element : ReactElement<any>, callback: ?Function) {
     if (!root) {
-      root = NoopRenderer.mountContainer(element, rootContainer);
+      root = NoopRenderer.mountContainer(element, rootContainer, callback);
     } else {
-      NoopRenderer.updateContainer(element, root);
+      NoopRenderer.updateContainer(element, root, callback);
     }
   },
 

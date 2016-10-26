@@ -124,13 +124,13 @@ function warnAboutUnstableUse() {
 
 var ReactDOM = {
 
-  render(element : ReactElement<any>, container : DOMContainerElement) {
+  render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     warnAboutUnstableUse();
     let root;
     if (!container._reactRootContainer) {
-      root = container._reactRootContainer = DOMRenderer.mountContainer(element, container);
+      root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, callback);
     } else {
-      DOMRenderer.updateContainer(element, root = container._reactRootContainer);
+      DOMRenderer.updateContainer(element, root = container._reactRootContainer, callback);
     }
     return DOMRenderer.getPublicRootInstance(root);
   },
