@@ -105,7 +105,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       if (callback) {
-        const queue = createUpdateQueue(null);
+        const queue = root.callbackList ?
+          root.callbackList :
+          createUpdateQueue(null);
         addCallbackToQueue(queue, callback);
         root.callbackList = queue;
       }

@@ -109,14 +109,15 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    ReactNoop.render(<Foo text="bar" />, () => ops.push('renderCallbackCalled'));
+    ReactNoop.render(<Foo text="bar" />, () => ops.push('firstRenderCallbackCalled'));
+    ReactNoop.render(<Foo text="bar" />, () => ops.push('secondRenderCallbackCalled'));
     ReactNoop.flush();
 
     // TODO: Test bail out of host components. This is currently unobservable.
 
     // Since this is an update, it should bail out and reuse the work from
     // Header and Content.
-    expect(ops).toEqual(['Foo', 'Content', 'renderCallbackCalled']);
+    expect(ops).toEqual(['Foo', 'Content', 'firstRenderCallbackCalled', 'secondRenderCallbackCalled']);
 
   });
 
