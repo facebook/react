@@ -64,7 +64,8 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 
 In this example, we are accepting the value provided by the user and updating the `value` prop of the `<input>` component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:
 
-```javascript  handleChange(event) {
+```javascript
+  handleChange(event) {
     this.setState({value: event.target.value.substr(0, 140)});
   }
 ```
