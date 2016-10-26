@@ -313,7 +313,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (instance.callbackList) {
           const { callbackList } = instance;
           instance.callbackList = null;
-          callCallbacks(callbackList, instance);
+          callCallbacks(callbackList, instance.current.child.stateNode);
         }
       }
       case HostComponent: {
