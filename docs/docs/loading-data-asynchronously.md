@@ -45,7 +45,7 @@ Note that, the component will perform an initial render without any of the netwo
 
 If the props change, we might need to fetch new data for the updated props. The `componentDidUpdate` [lifecycle hook](https://facebook.github.io/react/docs/react-component.html#componentdidupdate) is a good place to achieve this, since we may not need to fetch new data if the props that we're interested in have not changed.
 
-Building on the previous, we will pass the username as a prop instead and fetch new gists when it changes:
+Building on the previous example, we will pass the username as a prop instead and fetch new gists when it changes:
 
 ```javascript{10-20}
 class Gists extends React.Component {
