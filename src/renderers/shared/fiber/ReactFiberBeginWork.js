@@ -46,7 +46,10 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
+module.exports = function<T, P, I, TI, C>(
+  config : HostConfig<T, P, I, TI, C>,
+  scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void
+) {
 
   const {
     adoptClassInstance,
@@ -152,11 +155,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
       }
     }
 
+    var nextChildren;
+
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      var nextChildren = fn(props);
+      nextChildren = fn(props);
     } else {
-      var nextChildren = fn(props);
+      nextChildren = fn(props);
     }
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
@@ -244,12 +249,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>, s
     }
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
+    var value;
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      var value = fn(props);
+      value = fn(props);
     } else {
-      var value = fn(props);
+      value = fn(props);
     }
 
     if (typeof value === 'object' && value && typeof value.render === 'function') {

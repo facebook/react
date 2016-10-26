@@ -96,7 +96,11 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.appendChild(child);
   },
 
-  insertBefore(parentInstance : Instance, child : Instance | TextInstance, beforeChild : Instance | TextInstance) : void {
+  insertBefore(
+    parentInstance : Instance,
+    child : Instance | TextInstance,
+    beforeChild : Instance | TextInstance
+  ) : void {
     parentInstance.insertBefore(child, beforeChild);
   },
 
