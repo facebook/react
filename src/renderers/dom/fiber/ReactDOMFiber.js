@@ -146,6 +146,18 @@ var ReactDOM = {
     }
   },
 
+  findDOMNode(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
+    if (componentOrElement == null) {
+      return null;
+    }
+    // Unsound duck typing.
+    const component = (componentOrElement : any);
+    if (component.nodeType === 1) {
+      return component;
+    }
+    return DOMRenderer.findHostInstance(component);
+  },
+
 };
 
 module.exports = ReactDOM;

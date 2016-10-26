@@ -154,6 +154,18 @@ var ReactNoop = {
     }
   },
 
+  findInstance(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Instance | TextInstance {
+    if (componentOrElement == null) {
+      return null;
+    }
+    // Unsound duck typing.
+    const component = (componentOrElement : any);
+    if (component.tag === TERMINAL_TAG || component.tag === TEXT_TAG) {
+      return component;
+    }
+    return NoopRenderer.findHostInstance(component);
+  },
+
   flushAnimationPri() {
     var cb = scheduledAnimationCallback;
     if (cb === null) {
