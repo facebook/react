@@ -34,7 +34,7 @@ To update the value in response to user input, you would use the `onChange` even
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: ""};
+    this.state = {value: ''};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -44,7 +44,7 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Text field value is: '" + this.state.value + "'");
+    alert('Text field value is: ' + this.state.value);
   }
 
   render() {
@@ -99,7 +99,7 @@ If you wanted to listen to updates to the value, you could use the `onChange` ev
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: ""};
+    this.state = {value: ''};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -109,7 +109,7 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Text field value is: '" + this.state.value + "'");
+    alert('Text field value is: ' + this.state.value);
   }
 
   render() {
@@ -161,7 +161,7 @@ Like all DOM events, the `onChange` prop is supported on all native components a
 
 > Note:
 >
-> For `<input>` and `<textarea>`, `onChange` should generally used instead of — the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
+> For `<input>` and `<textarea>`, `onChange` should generally be used instead of the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
 
 ## Advanced Topics
 
@@ -204,9 +204,9 @@ If you *do* decide to use children, they will behave like `defaultValue`.
 
 ### Why Select Value?
 
-The selected `<option>` in an HTML `<select>` is normally specified through that option's `selected` attribute. In React, in order to make components easier to manipulate, the following format is adopted instead:
+The selected `<option>` in an HTML `<select>` is normally specified through that option's `selected` attribute. In React we assign the `select` component a specific value by passing a `value` prop:
 
-```javascript
+```javascript{1}
   <select value="B">
     <option value="A">Apple</option>
     <option value="B">Banana</option>
@@ -233,7 +233,7 @@ For instance, if you want to imperatively submit a form, one approach would be t
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: ""};
+    this.state = {value: ''};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -242,14 +242,18 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Text field value is: '" + this.state.value + "'");
+    alert('Text field value is: ' + this.state.value);
   }
 
   render() {
     return (
       <div>
-        <input type="text" placeholder="edit me"
-          value={this.state.value} onChange={this.handleChange} />
+        <input
+          type="text"
+          placeholder="edit me"
+          value={this.state.value}
+          onChange={this.handleChange}
+        />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
     );
@@ -268,7 +272,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: ""};
+    this.state = {value: ''};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -278,7 +282,7 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Textarea value is: '" + this.state.value + "'");
+    alert('Textarea value is: ' + this.state.value);
   }
 
   render() {
@@ -306,7 +310,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: "B"};
+    this.state = {value: 'B'};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -316,7 +320,7 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Select value is: '" + this.state.value + "'");
+    alert('Select value is: ' + this.state.value);
   }
 
   render() {
@@ -344,7 +348,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {value: "B"};
+    this.state = {value: 'B'};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -354,19 +358,30 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Radio button value is: '" + this.state.value + "'");
+    alert('Radio button value is: ' + this.state.value);
   }
 
   render() {
     return (
       <div>
-        <input type="radio" name="choice" value="A"
-          onChange={this.handleChange} /> Option A<br />
-        <input type="radio" name="choice" value="B"
-          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="radio" name="choice" value="C"
-          onChange={this.handleChange} /> Option C<br />
+        <label>
+          <input type="radio" value="A" id="choice-a"
+            onChange={this.handleChange} />
+          Option A
+        </label>
         <br />
+        <label>
+          <input type="radio" value="B" id="choice-b"
+            onChange={this.handleChange} defaultChecked={true} />
+          Option B
+        </label>
+        <br />
+        <label>
+          <input type="radio" value="C" id="choice-c"
+          onChange={this.handleChange} /> 
+          Option C
+        </label>
+        <br /><br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
     );
@@ -385,7 +400,7 @@ ReactDOM.render(<Form />, document.getElementById('root'));
 class Form extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {checked: {"A": false, "B": true, "C": false}};
+    this.state = {checked: {'A': false, 'B': true, 'C': false}};
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -398,23 +413,33 @@ class Form extends React.Component {
   }
 
   handleSubmit(event) {
-    alert("Boxes checked: " +
-      (this.state.checked.A ? "A " : "") +
-      (this.state.checked.B ? "B " : "") +
-      (this.state.checked.C ? "C" : "")
+    alert('Boxes checked: ' +
+      (this.state.checked.A ? 'A ' : '') +
+      (this.state.checked.B ? 'B ' : '') +
+      (this.state.checked.C ? 'C' : '')
     );
   }
 
   render() {
     return (
       <div>
-        <input type="checkbox" value="A"
-          onChange={this.handleChange} /> Option A<br />
-        <input type="checkbox" value="B"
-          onChange={this.handleChange} defaultChecked={true} /> Option B<br />
-        <input type="checkbox" value="C"
-          onChange={this.handleChange} /> Option C<br />
+        <label>
+          <input type="checkbox" value="A"
+            onChange={this.handleChange} /> 
+          Option A
+        </label>
         <br />
+        <label>
+          <input type="checkbox" value="B"
+          onChange={this.handleChange} defaultChecked={true} /> 
+          Option B
+        </label>
+        <br />
+        <label><input type="checkbox" value="C"
+          onChange={this.handleChange} /> 
+          Option C
+        </label>
+        <br /><br />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
     );
