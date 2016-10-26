@@ -386,8 +386,8 @@ Its `handleClick` can push a new entry onto the stack by concatenating the new h
 
 ```javascript
 handleClick(i) {
-  var history = this.state.history;
-  var current = history[history.length - 1];
+  const history = this.state.history;
+  const current = history[history.length - 1];
   const squares = current.squares.slice();
   if (calculateWinner(squares) || squares[i]) {
     return;
