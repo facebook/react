@@ -114,8 +114,6 @@ class Form extends React.Component {
     return (
       <div>
         <input type="text"
-          placeholder="Hello!"
-          value={this.state.value}
           onChange={this.handleChange} />
         <button onClick={this.handleSubmit}>Submit</button>
       </div>
