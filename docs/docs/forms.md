@@ -365,19 +365,19 @@ class Form extends React.Component {
     return (
       <div>
         <label>
-          <input type="radio" name="choice" value="A" id="choice-a"
+          <input type="radio" value="A" id="choice-a"
             onChange={this.handleChange} />
           Option A
         </label>
         <br />
         <label>
-          <input type="radio" name="choice" value="B" id="choice-b"
+          <input type="radio" value="B" id="choice-b"
             onChange={this.handleChange} defaultChecked={true} />
           Option B
         </label>
         <br />
         <label>
-          <input type="radio" name="choice" value="C" id="choice-c"
+          <input type="radio" value="C" id="choice-c"
           onChange={this.handleChange} /> 
           Option C
         </label>
