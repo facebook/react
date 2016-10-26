@@ -79,7 +79,7 @@ function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactEleme
         const ref = function(value) {
           const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
           refs[stringRef] = value;
-        }
+        };
         ref._stringRef = stringRef;
         workInProgress.ref = ref;
       }
