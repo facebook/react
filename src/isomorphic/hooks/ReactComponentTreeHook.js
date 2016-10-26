@@ -315,9 +315,10 @@ var ReactComponentTreeHook = {
     }
 
     var currentOwner = ReactCurrentOwner.current;
-    var id = currentOwner && currentOwner._debugID;
-
-    info += ReactComponentTreeHook.getStackAddendumByID(id);
+    if (currentOwner && typeof currentOwner._debugID === 'number') {
+      var id = currentOwner && currentOwner._debugID;
+      info += ReactComponentTreeHook.getStackAddendumByID(id);
+    }
     return info;
   },
 

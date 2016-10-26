@@ -51,7 +51,9 @@ var warning = require('warning');
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     var owner = ReactCurrentOwner.current;
-    if (owner !== null) {
+    if (owner !== null &&
+        typeof owner._warnedAboutRefsInRender === 'boolean' &&
+        typeof owner.getName === 'function') {
       warning(
         owner._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
@@ -61,6 +63,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
         'componentDidUpdate instead.',
         owner.getName() || 'A component'
       );
+
       owner._warnedAboutRefsInRender = true;
     }
   }
