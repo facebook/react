@@ -160,7 +160,7 @@ Like all DOM events, the `onChange` prop is supported on all native components a
 
 > Note:
 >
-> For `<input>` and `<textarea>`, `onChange` should generally used instead of — the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
+> For `<input>` and `<textarea>`, `onChange` should generally be used instead of — the DOM's built-in [`oninput`](https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput) event handler.
 
 ## Advanced Topics
 
