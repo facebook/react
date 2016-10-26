@@ -13,6 +13,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 const { createHostContainerFiber } = require('ReactFiber');
 
@@ -25,6 +26,8 @@ export type FiberRoot = {
   isScheduled: boolean,
   // The work schedule is a linked list.
   nextScheduledRoot: ?FiberRoot,
+  // Linked list of callbacks to call after updates are committed.
+  callbackList: ?UpdateQueue,
 };
 
 exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
@@ -36,6 +39,7 @@ exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
     containerInfo: containerInfo,
     isScheduled: false,
     nextScheduledRoot: null,
+    callbackList: null,
   };
   uninitializedFiber.stateNode = root;
   return root;
