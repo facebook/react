@@ -80,7 +80,7 @@ export type Fiber = Instance & {
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (handle : ?Object) => void,
+  ref: null | (((handle : ?Object) => void) & { _stringRef: ?string }),
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
@@ -327,4 +327,3 @@ exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : 
   fiber.pendingProps = {};
   return fiber;
 };
-

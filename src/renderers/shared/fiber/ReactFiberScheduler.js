@@ -20,6 +20,7 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
 
@@ -297,6 +298,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
       }
     }
+
+    ReactCurrentOwner.current = null;
 
     return next;
   }
