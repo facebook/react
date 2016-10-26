@@ -29,7 +29,7 @@ Whenever the root elements have different types, React will tear down the old tr
 
 When tearing down a tree, old DOM nodes are destroyed. Component instances receive `componentWillUnmount()`. When building up a new tree, new DOM nodes are inserted into the DOM. Component instances receive `componentWillMount()` and then `componentDidMount()`. Any state associated with the old tree is lost.
 
-Any componts below the root will also get unmounted and have their state destroyed. For example, when diffing:
+Any components below the root will also get unmounted and have their state destroyed. For example, when diffing:
 
 ```xml
 <div>
