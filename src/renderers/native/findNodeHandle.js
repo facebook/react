@@ -18,6 +18,8 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var invariant = require('invariant');
 var warning = require('warning');
 
+import type { ReactInstance } from 'ReactInstanceType';
+
 /**
  * ReactNative vs ReactWeb
  * -----------------------
