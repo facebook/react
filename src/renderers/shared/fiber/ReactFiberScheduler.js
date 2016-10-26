@@ -164,10 +164,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     if (finishedWork.effectTag !== NoEffect) {
       const current = finishedWork.alternate;
       commitWork(current, finishedWork);
-    }
-    // if the root is a HostContainer, it may have a callback.
-    if (finishedWork.tag === HostContainer) {
-      const current = finishedWork.alternate;
       commitLifeCycles(current, finishedWork);
     }
   }
