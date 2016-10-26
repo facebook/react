@@ -93,7 +93,7 @@ An **uncontrolled** component manages its own state.
   }
 ```
 
-If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components, however you would _not_ pass the value you saved to the component.
+If you wanted to listen to updates to the value, you could use the `onChange` event just like you can with controlled components. However, you would _not_ pass the value you saved to the component.
 
 ```javascript{10,22}
 class Form extends React.Component {
@@ -393,15 +393,15 @@ class Form extends React.Component {
   handleChange(event) {
     let value = event.target.value;
     let checked = this.state.checked; // copy 
-    if(!checked[value]) { checked[value] = true; } else { checked[value] = false; }
+    if (!checked[value]) { checked[value] = true; } else { checked[value] = false; }
     this.setState({checked: checked})
   }
 
   handleSubmit(event) {
     alert("Boxes checked: " +
-      (this.state.checked.A?"A ":"") +
-      (this.state.checked.B?"B ":"") +
-      (this.state.checked.C?"C":"")
+      (this.state.checked.A ? "A ":"") +
+      (this.state.checked.B ? "B ":"") +
+      (this.state.checked.C ? "C":"")
     );
   }
 
