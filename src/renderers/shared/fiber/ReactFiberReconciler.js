@@ -20,6 +20,8 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
+var { createUpdateQueue, addCallbackToQueue } = require('ReactFiberUpdateQueue');
+
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 }
@@ -79,9 +81,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode {
+    mountContainer(element : ReactElement<any>, containerInfo : C, callback: ?Function) : OpaqueNode {
       const root = createFiberRoot(containerInfo);
       const container = root.current;
+      if (callback) {
+        const queue = createUpdateQueue(null);
+        addCallbackToQueue(queue, callback);
+        root.callbackList = queue;
+      }
       // TODO: Use pending work/state instead of props.
       // TODO: This should not override the pendingWorkPriority if there is
       // higher priority work in the subtree.
@@ -99,9 +106,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       return container;
     },
 
-    updateContainer(element : ReactElement<any>, container : OpaqueNode) : void {
+    updateContainer(element : ReactElement<any>, container : OpaqueNode, callback: ?Function) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
+      if (callback) {
+        const queue = root.callbackList ?
+          root.callbackList :
+          createUpdateQueue(null);
+        addCallbackToQueue(queue, callback);
+        root.callbackList = queue;
+      }
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = element;
 

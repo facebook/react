@@ -43,6 +43,26 @@ describe('ReactDOMFiber', () => {
     expect(container.textContent).toEqual('10');
   });
 
+  it('should be called a callback argument', () => {
+    // mounting phase
+    let called = false;
+    ReactDOM.render(
+      <div>Foo</div>,
+      container,
+      () => called = true
+    );
+    expect(called).toEqual(true);
+
+    // updating phase
+    called = false;
+    ReactDOM.render(
+      <div>Foo</div>,
+      container,
+      () => called = true
+    );
+    expect(called).toEqual(true);
+  });
+
   if (ReactDOMFeatureFlags.useFiber) {
     it('should render a component returning strings directly from render', () => {
       const Text = ({value}) => value;

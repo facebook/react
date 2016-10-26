@@ -173,6 +173,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     if (finishedWork.effectTag !== NoEffect) {
       const current = finishedWork.alternate;
       commitWork(current, finishedWork);
+      commitLifeCycles(current, finishedWork);
     }
   }
 

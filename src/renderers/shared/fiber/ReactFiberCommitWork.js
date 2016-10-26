@@ -322,6 +322,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         attachRef(current, finishedWork, instance);
         return;
       }
+      case HostContainer: {
+        const instance = finishedWork.stateNode;
+        if (instance.callbackList) {
+          const { callbackList } = instance;
+          instance.callbackList = null;
+          callCallbacks(callbackList, instance.current.child.stateNode);
+        }
+      }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
         attachRef(current, finishedWork, instance);
