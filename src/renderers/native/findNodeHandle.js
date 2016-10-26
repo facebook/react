@@ -50,10 +50,9 @@ var warning = require('warning');
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
-    if (owner !== null &&
-        typeof owner._warnedAboutRefsInRender === 'boolean' &&
-        typeof owner.getName === 'function') {
+    // TODO: fix this unsafe cast to work with Fiber.
+    var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
+    if (owner !== null) {
       warning(
         owner._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
