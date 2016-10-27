@@ -124,3 +124,13 @@ class Gists extends React.Component {
 ```
 
 [Try it out on CodePen.](http://codepen.io/rthor/pen/kkqrQx?editors=0010)
+
+## Pitfalls
+
+An old promise can be pending when a newer promise fulfills. This can cause the old promise to override the results of the new one. If a promise is pending when a component is updated, the pending promise should be cancelled before a new one is created.
+
+Additionally, a component can unmount while a promise is pending. To avoid unexpected behavior and memory leaks when this happens, be sure to also cancel all pending promises in the `componentWillUnmount` [lifecycle hook](/react/docs/react-component.html#componentwillunmount).
+
+> **Caveat:**
+>
+> A standard for cancelling promises is still being worked on. Therefore, some workarounds, or 3rd party libraries, may be needed at this point.
