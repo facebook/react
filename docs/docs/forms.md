@@ -98,7 +98,7 @@ Controlled components also let us reset inputs to arbitrary values by setting th
 
 ### Potential Issues With Checkboxes and Radio Buttons
 
-Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React listens to a `click` browser event to implement the `onChange` event.
+Be aware that, in an attempt to normalize change handling for checkboxes and radio inputs, React listens to a `click` browser event to implement the `onChange` event.
 
 For the most part this behaves as expected, except when calling `preventDefault` in a `change` handler. `preventDefault` stops the browser from visually updating the input, even if `checked` gets toggled. This can be worked around either by removing the call to `preventDefault`, or putting the toggle of `checked` in a `setTimeout`.
 
