@@ -7,7 +7,7 @@ prev: typechecking-with-proptypes.html
 
 Often, the data that a component needs is not available at initial render. We can load data asynchronously in the `componentDidMount` [lifecycle hook](/react/docs/react-component.html#componentdidmount).
 
-In the following example we use the `fetch` API to retrieve information about Facebook's Gists on GitHub and store them in the state.
+In the following example we use the `fetch` [browser API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to retrieve information about Facebook's Gists on GitHub and store them in the state.
 
 ```javascript{7-11}
 class Gists extends React.Component {
@@ -34,7 +34,11 @@ class Gists extends React.Component {
 }
 ```
 
-Note that, the component will perform an initial render without any of the network data. When the fetch promise resolves, it calls `setState` and the component is rerendered.
+The component will perform an initial render without any of the network data. When the fetch promise resolves, it calls `setState` and the component is rerendered.
+
+> **Note:**
+>
+> The API specification for `fetch` has not been stabilized and browser support is not quite there yet. To use `fetch` today, a [polyfill](https://github.com/github/fetch) is available for non-supporting browsers. If you're using Create React App, a polyfill is available by default.
 
 ## Updates
 
