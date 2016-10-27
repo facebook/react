@@ -924,6 +924,7 @@ p a code {
   float: right;
   padding: 15px 20px;
   width: $columnWidth;
+  word-wrap: break-word;
 }
 
 .playgroundError {
@@ -938,6 +939,7 @@ p a code {
 
 .MarkdownEditor .content {
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .hll {
