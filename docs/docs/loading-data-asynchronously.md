@@ -2,7 +2,6 @@
 id: loading-data-asynchronously
 title: Loading Data Asynchronously
 permalink: docs/loading-data-asynchronously.html
-prev: typechecking-with-proptypes.html
 ---
 
 Often, the data that a component needs is not available at initial render. We can load data asynchronously in the `componentDidMount` [lifecycle hook](/react/docs/react-component.html#componentdidmount).
