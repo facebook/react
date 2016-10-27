@@ -302,7 +302,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/JRVaYB?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/JRVaYB?editors=0010)
 
 ### Controlled Textarea
 
@@ -346,7 +346,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/NRmLxN?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/NRmLxN?editors=0010)
 
 ### Controlled Select
 
@@ -389,7 +389,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/qawrbr?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/qawrbr?editors=0010)
 
 ### Uncontrolled Radio Button
 
@@ -456,7 +456,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/ozOPLJ?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/ozOPLJ?editors=0010)
 
 ### Uncontrolled Checkbox
 

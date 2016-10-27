@@ -42,7 +42,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/ZpVxNq?editors=0011)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/ZpVxNq?editors=0011)
 
 This example renders a different greeting depending on the value of `isLoggedIn` prop.
 
@@ -116,7 +116,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/QKzAgB?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/QKzAgB?editors=0010)
 
 While declaring a variable and using an `if` statement is a fine way to conditionally render a component, sometimes you might want to use a shorter syntax. There are a few ways to inline conditions in JSX, explained below.
 
@@ -238,4 +238,4 @@ ReactDOM.render(
 );
 ```
 
-[Try it out on CodePen.](https://codepen.io/gaearon/pen/Xjoqwm?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/Xjoqwm?editors=0010)
