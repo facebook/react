@@ -5,19 +5,15 @@ permalink: docs/loading-data-asynchronously.html
 prev: typechecking-with-proptypes.html
 ---
 
-
 Often, the data that a component needs is not available at initial render. We can load data asynchronously in the `componentDidMount` [lifecycle hook](/react/docs/react-component.html#componentdidmount).
 
 In the following example we use the `fetch` API to retrieve information about Facebook's Gists on GitHub and store them in the state.
 
-```javascript{10-14}
+```javascript{7-11}
 class Gists extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      gists: [],
-    };
+    this.state = {gists: []};
   }
 
   componentDidMount() {
@@ -28,7 +24,6 @@ class Gists extends React.Component {
 
   render() {
     const { gists } = this.state;
-
     return (
       <div>
         <h1>Gists by facebook</h1>
@@ -47,11 +42,15 @@ If the props change, we might need to fetch new data for the updated props. The 
 
 Building on the previous example, we will pass the username as a prop instead and fetch new gists when it changes:
 
-```javascript{10-20}
+```javascript{7-12,14-23}
 class Gists extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {gists: []};
+  }
+
   componentDidMount() {
     const { username } = this.props;
-
     fetch(`https://api.github.com/users/${username}/gists`)
       .then(res => res.json())
       .then(gists => this.setState({ gists }));
@@ -59,7 +58,6 @@ class Gists extends React.Component {
 
   componentDidUpdate(prevProps) {
     const { username } = this.props;
-
     // Make sure that the `username` prop did change before
     // we initiate a network request.
     if (username !== prevProps.username) {
@@ -72,23 +70,27 @@ class Gists extends React.Component {
   render() {
     const { username } = this.props;
     const { gists } = this.state;
-
     return (
       <div>
         <h1>Gists by {username}.</h1>
-        {gists.map(gist => <p><a href={gist.html_url}>{gist.id}</a></p>)}
+        {gists.map(gist => 
+          <p><a href={gist.html_url}>{gist.id}</a></p>
+        )}
       </div>
     );
   }
-
-  /* ... */
 }
 ```
 
 We can extract the common code in `componentDidMount` and `componentDidUpdate` into a new method, `fetchGists`, and call that in both lifecycle hooks.
 
-```javascript
+```javascript{8,13,17-22}
 class Gists extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {gists: []};
+  }
+
   componentDidMount() {
     this.fetchGists();
   }
@@ -101,13 +103,23 @@ class Gists extends React.Component {
 
   fetchGists() {
     const { username } = this.props;
-
     fetch(`https://api.github.com/users/${username}/gists`)
       .then(res => res.json())
       .then(gists => this.setState({ gists }));
   }
 
-  /* ... */
+  render() {
+    const { username } = this.props;
+    const { gists } = this.state;
+    return (
+      <div>
+        <h1>Gists by {username}.</h1>
+        {gists.map(gist => 
+          <p><a href={gist.html_url}>{gist.id}</a></p>
+        )}
+      </div>
+    );
+  }
 }
 ```
 
