@@ -25,6 +25,7 @@ var {
 } = require('ReactFiberUpdateQueue');
 var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
+var shallowEqual = require('shallowEqual');
 
 module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
 
@@ -73,6 +74,28 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
     },
   };
 
+  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState) {
+    const updateQueue = workInProgress.updateQueue;
+    if (oldProps === null || (updateQueue && updateQueue.isForced)) {
+      return true;
+    }
+
+    const instance = workInProgress.stateNode;
+    if (typeof instance.shouldComponentUpdate === 'function') {
+      return instance.shouldComponentUpdate(newProps, newState);
+    }
+
+    const type = workInProgress.type;
+    if (type.prototype && type.prototype.isPureReactComponent) {
+      return (
+        !shallowEqual(oldProps, newProps) ||
+        !shallowEqual(instance.state, newState)
+      );
+    }
+
+    return true;
+  }
+
   function adoptClassInstance(workInProgress : Fiber, instance : any) : void {
     instance.updater = updater;
     workInProgress.stateNode = instance;
@@ -116,7 +139,6 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(workInProgress : Fiber) : boolean {
-    const instance = workInProgress.stateNode;
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -132,13 +154,12 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
     // componentWillMount and before this componentWillMount? Probably
     // unsupported anyway.
 
-    const updateQueue = workInProgress.updateQueue;
-
-    // If this completed, we might be able to just reuse this instance.
-    if (typeof instance.shouldComponentUpdate === 'function' &&
-        !(updateQueue && updateQueue.isForced) &&
-        workInProgress.memoizedProps !== null &&
-        !instance.shouldComponentUpdate(newProps, newState)) {
+    if (!checkShouldComponentUpdate(
+      workInProgress,
+      workInProgress.memoizedProps,
+      newProps,
+      newState
+    )) {
       return false;
     }
 
@@ -196,10 +217,12 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       newState = previousState;
     }
 
-    if (typeof instance.shouldComponentUpdate === 'function' &&
-        !(updateQueue && updateQueue.isForced) &&
-        oldProps !== null &&
-        !instance.shouldComponentUpdate(newProps, newState)) {
+    if (!checkShouldComponentUpdate(
+      workInProgress,
+      oldProps,
+      newProps,
+      newState
+    )) {
       // TODO: Should this get the new props/state updated regardless?
       return false;
     }
