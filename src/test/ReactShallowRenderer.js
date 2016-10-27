@@ -20,9 +20,8 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
+var getNextDebugID = require('getNextDebugID');
 var invariant = require('invariant');
-
-var nextDebugID = 1;
 
 class NoopInternalComponent {
   constructor(element) {
@@ -30,7 +29,7 @@ class NoopInternalComponent {
     this._currentElement = element;
 
     if (__DEV__) {
-      this._debugID = nextDebugID++;
+      this._debugID = getNextDebugID();
     }
   }
   mountComponent() {}
@@ -50,7 +49,7 @@ class NoopInternalComponent {
 var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
-    this._debugID = nextDebugID++;
+    this._debugID = getNextDebugID();
   }
 
   this.construct(element);

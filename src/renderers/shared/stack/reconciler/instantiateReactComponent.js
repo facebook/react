@@ -15,6 +15,7 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
 
+var getNextDebugID = require('getNextDebugID');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -55,8 +56,6 @@ function isInternalComponentType(type) {
     typeof type.prototype.receiveComponent === 'function'
   );
 }
-
-var nextDebugID = 1;
 
 /**
  * Given a ReactNode, create an instance that will actually be mounted.
@@ -125,7 +124,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
   instance._mountImage = null;
 
   if (__DEV__) {
-    instance._debugID = shouldHaveDebugID ? nextDebugID++ : 0;
+    instance._debugID = shouldHaveDebugID ? getNextDebugID() : 0;
   }
 
   // Internal instances should fully constructed at this point, so they should
