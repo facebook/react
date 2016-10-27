@@ -191,7 +191,7 @@
 
 <span class="kd">function</span> <span class="nx">NumberList</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">numbers</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">numbers</span><span class="p">;</span>
-  <span class="kr">const</span> <span class="nx">listItems</span> <span class="o">=</span> <span class="nx">numbers</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span> <span class="o">=&gt;</span>
+  <span class="kr">const</span> <span class="nx">listItems</span> <span class="o">=</span> <span class="nx">numbers</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">number</span><span class="p">)</span> <span class="o">=&gt;</span>
 <span class="hll">    <span class="c1">// Wrong! The key should have been specified here:</span>
 </span><span class="hll">    <span class="o">&lt;</span><span class="nx">ListItem</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">number</span><span class="p">}</span> <span class="o">/&gt;</span>
 </span>  <span class="p">);</span>

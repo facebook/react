@@ -103,7 +103,7 @@
 
 <p>As of v0.14, returning <code>false</code> from an event handler will no longer stop event propagation. Instead, <code>e.stopPropagation()</code> or <code>e.preventDefault()</code> should be triggered manually, as appropriate.</p>
 </blockquote>
-<h3><a class="anchor" name="event-pooling"></a>Event pooling <a class="hash-link" href="#event-pooling">#</a></h3>
+<h3><a class="anchor" name="event-pooling"></a>Event Pooling <a class="hash-link" href="#event-pooling">#</a></h3>
 <p>The <code>SyntheticEvent</code> is pooled. This means that the <code>SyntheticEvent</code> object will be reused and all properties will be nullified after the event callback has been invoked.
 This is for performance reasons.
 As such, you cannot access the event in an asynchronous way.</p>

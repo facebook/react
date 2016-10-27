@@ -93,13 +93,13 @@
 
 <p>In practice, these assumptions are valid for almost all practical use cases.</p>
 <h2><a class="anchor" name="the-diffing-algorithm"></a>The Diffing Algorithm <a class="hash-link" href="#the-diffing-algorithm">#</a></h2>
-<p>When diffing two trees, React first compares the the two root elements. The behavior is different depending on the types of the root elements.</p>
+<p>When diffing two trees, React first compares the two root elements. The behavior is different depending on the types of the root elements.</p>
 <h3><a class="anchor" name="elements-of-different-types"></a>Elements Of Different Types <a class="hash-link" href="#elements-of-different-types">#</a></h3>
 <p>Whenever the root elements have different types, React will tear down the old tree and build the new tree from scratch. Going from <code>&lt;a&gt;</code> to <code>&lt;img&gt;</code>, or from <code>&lt;Article&gt;</code> to <code>&lt;Comment&gt;</code>, or from <code>&lt;Button&gt;</code> to <code>&lt;div&gt;</code> - any of those will lead to a full rebuild.</p>
 
 <p>When tearing down a tree, old DOM nodes are destroyed. Component instances receive <code>componentWillUnmount()</code>. When building up a new tree, new DOM nodes are inserted into the DOM. Component instances receive <code>componentWillMount()</code> and then <code>componentDidMount()</code>. Any state associated with the old tree is lost.</p>
 
-<p>Any componts below the root will also get unmounted and have their state destroyed. For example, when diffing:</p>
+<p>Any components below the root will also get unmounted and have their state destroyed. For example, when diffing:</p>
 <div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;div&gt;</span>
   <span class="nt">&lt;Counter</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/div&gt;</span>

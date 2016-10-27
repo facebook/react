@@ -80,7 +80,7 @@
 
     <p>Form components such as <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;option&gt;</code> differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.</p>
 
-<p>Two types of form components:</p>
+<p>There are two types of form components:</p>
 
 <ul>
 <li>Controlled Components</li>
@@ -91,24 +91,30 @@
 <h2><a class="anchor" name="controlled-components"></a>Controlled Components <a class="hash-link" href="#controlled-components">#</a></h2>
 <p>A <strong>controlled</strong> form component provides a <code>value</code> prop. A <strong>controlled</strong> component does not maintain its own internal state; the component renders purely based on props.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">input</span>
+      <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+<span class="hll">      <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span>
+</span>  <span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>User input has no effect on the rendered element because React has declared the value to be &quot;Hello!&quot;. To update the value in response to user input, you would use the onChange event:</p>
+<p>If you try to run this example, you will notice that the input doesn&#39;t change as you type. This is because the component has declared the input&#39;s <code>value</code> to always be <code>&quot;Hello!&quot;</code>.</p>
+
+<p>To update the value in response to user input, you would use the <code>onChange</code> event to save the new value, then pass that to the <code>value</code> prop of the input:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span>  <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Text field value is: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Text field value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -116,28 +122,44 @@
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
           <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/QKkJva?editors=0010">Try it on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/NRmBmq?editors=0010">Try it on CodePen.</a></p>
 
 <p>In this example, we are accepting the value provided by the user and updating the <code>value</code> prop of the <code>&lt;input&gt;</code> component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">)});</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+<span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">)</span>
+</span>    <span class="p">});</span>
   <span class="p">}</span>
 </code></pre></div>
 <p>This would accept user input and truncate the value to the first 140 characters.</p>
-<h3><a class="anchor" name="potential-issues-with-checkboxes-and-radio-buttons"></a>Potential Issues With Checkboxes and Radio Buttons <a class="hash-link" href="#potential-issues-with-checkboxes-and-radio-buttons">#</a></h3>
-<p>Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React uses a <code>click</code> event in place of a <code>change</code> event. For the most part this behaves as expected, except when calling <code>preventDefault</code> in a <code>change</code> handler. <code>preventDefault</code> stops the browser from visually updating the input, even if <code>checked</code> gets toggled. This can be worked around either by removing the call to <code>preventDefault</code>, or putting the toggle of <code>checked</code> in a <code>setTimeout</code>.</p>
+
+<p>Controlled components also let us reset inputs to arbitrary values by setting the state:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClearClick</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+<span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span>
+</span>    <span class="p">});</span>
+  <span class="p">}</span>
+</code></pre></div><h3><a class="anchor" name="potential-issues-with-checkboxes-and-radio-buttons"></a>Potential Issues With Checkboxes and Radio Buttons <a class="hash-link" href="#potential-issues-with-checkboxes-and-radio-buttons">#</a></h3>
+<p>Be aware that, in an attempt to normalize change handling for checkbox and radio inputs, React listens to a <code>click</code> browser event to implement the <code>onChange</code> event.</p>
+
+<p>For the most part this behaves as expected, except when calling <code>preventDefault</code> in a <code>change</code> handler. <code>preventDefault</code> stops the browser from visually updating the input, even if <code>checked</code> gets toggled. This can be worked around either by removing the call to <code>preventDefault</code>, or putting the toggle of <code>checked</code> in a <code>setTimeout</code>.</p>
 <h2><a class="anchor" name="uncontrolled-components"></a>Uncontrolled Components <a class="hash-link" href="#uncontrolled-components">#</a></h2>
-<p>Form components that do not provide a <code>value</code> prop are <em>uncontrolled</em>.</p>
+<p>Form components that do not provide a <code>value</code> prop are <strong>uncontrolled</strong>.</p>
 
 <p>The example below renders an <code>&lt;input&gt;</code> control with an empty value. Any user input will be immediately reflected by the rendered element.</p>
 
@@ -146,39 +168,48 @@
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>If you wanted to listen to updates to the value, you could use the <code>onChange</code> event just like you can with controlled components.</p>
+<p>If you wanted to listen to updates to the value, you could use the <code>onChange</code> event just like you can with controlled components. However, you would <em>not</em> pass the value you saved to the component.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Note: with uncontrolled inputs, you don&#39;t</span>
+    <span class="c1">// have to put the value in the state.</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
   <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Text field value is: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Text field value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
           <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+<span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/XjxyoL?editors=0010">Try it on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/pEBOJR?editors=0010">Try it on CodePen.</a></p>
+
+<p>While this example puts value in the state so we can later read it in <code>handleSubmit()</code>, uncontrolled form components don&#39;t require this. You may completely omit an <code>onChange</code> handler and instead read the input value using <a href="/react/docs/refs-and-the-dom.html">DOM references</a>, an advanced feature discussed later.</p>
 <h3><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h3>
 <p>To initialize an uncontrolled component with a non-empty value, you can supply a <code>defaultValue</code> prop.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -210,7 +241,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>For <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>, <code>onChange</code> should generally used instead of — the DOM&#39;s built-in <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> event handler.</p>
+<p>For <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>, <code>onChange</code> should generally be used instead of the DOM&#39;s built-in <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> event handler.</p>
 </blockquote>
 <h2><a class="anchor" name="advanced-topics"></a>Advanced Topics <a class="hash-link" href="#advanced-topics">#</a></h2><h3><a class="anchor" name="why-controlled-components"></a>Why Controlled Components? <a class="hash-link" href="#why-controlled-components">#</a></h3>
 <p>Using form components such as <code>&lt;input&gt;</code> in React presents a challenge that is absent when writing traditional form HTML. For example, in HTML:</p>
@@ -226,7 +257,7 @@
 <p>Since this method describes the view at any point in time, the value of the text input should <em>always</em> be <code>Untitled</code>.</p>
 <h3><a class="anchor" name="why-textarea-value"></a>Why Textarea Value? <a class="hash-link" href="#why-textarea-value">#</a></h3>
 <p>In HTML, the value of <code>&lt;textarea&gt;</code> is usually set using its children:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- antipattern: DO NOT DO THIS! --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- Don&#39;t do this in React. --&gt;</span>
   <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
 </code></pre></div>
 <p>For HTML, this easily allows developers to supply multiline values. However, since React is JavaScript, we do not have string limitations and can use <code>\n</code> if we want newlines. In a world where we have <code>value</code> and <code>defaultValue</code>, it is ambiguous what role children play. For this reason, you should not use children when setting <code>&lt;textarea&gt;</code> values:</p>
@@ -234,9 +265,9 @@
 </code></pre></div>
 <p>If you <em>do</em> decide to use children, they will behave like <code>defaultValue</code>.</p>
 <h3><a class="anchor" name="why-select-value"></a>Why Select Value? <a class="hash-link" href="#why-select-value">#</a></h3>
-<p>The selected <code>&lt;option&gt;</code> in an HTML <code>&lt;select&gt;</code> is normally specified through that option&#39;s <code>selected</code> attribute. In React, in order to make components easier to manipulate, the following format is adopted instead:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
-    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+<p>The selected <code>&lt;option&gt;</code> in an HTML <code>&lt;select&gt;</code> is normally specified through that option&#39;s <code>selected</code> attribute. In React we assign the <code>select</code> component a specific value by passing a <code>value</code> prop:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
+</span>    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
   <span class="o">&lt;</span><span class="err">/select&gt;</span>
@@ -248,53 +279,62 @@
 
 <p>You can pass an array into the <code>value</code> attribute, allowing you to select multiple options in a <code>select</code> tag: <code>&lt;select multiple={true} value={[&#39;B&#39;, &#39;C&#39;]}&gt;</code>.</p>
 </blockquote>
-<h3><a class="anchor" name="imperative-operations"></a>Imperative operations <a class="hash-link" href="#imperative-operations">#</a></h3>
+<h3><a class="anchor" name="imperative-operations"></a>Imperative Operations <a class="hash-link" href="#imperative-operations">#</a></h3>
 <p>If you need to imperatively perform an operation, you have to obtain a <a href="/react/docs/more-about-refs.html#the-ref-callback-attribute">reference to the DOM node</a>.
 For instance, if you want to imperatively submit a form, one approach would be to attach a <code>ref</code> to the <code>form</code> element and manually call <code>form.submit()</code>.</p>
-<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2><h3><a class="anchor" name="basic-text-input"></a>Basic Text Input <a class="hash-link" href="#basic-text-input">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2><h3><a class="anchor" name="controlled-input"></a>Controlled Input <a class="hash-link" href="#controlled-input">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span>  <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Text field value is: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Text field value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;edit me&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;edit me&quot;</span>
+<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+</span>        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/JRmZjz?editors=0010">Try this on CodePen.</a></p>
-<h3><a class="anchor" name="basic-textarea"></a>Basic Textarea <a class="hash-link" href="#basic-textarea">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p><a href="https://codepen.io/gaearon/pen/JRVaYB?editors=0010">Try it out on CodePen.</a></p>
+<h3><a class="anchor" name="controlled-textarea"></a>Controlled Textarea <a class="hash-link" href="#controlled-textarea">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;&quot;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span>  <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Textarea value is: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Textarea value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -302,55 +342,66 @@ For instance, if you want to imperatively submit a form, one approach would be t
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">textarea</span>
           <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
-        <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+</span>        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/kkAQPp?editors=0010">Try this on CodePen.</a></p>
-<h3><a class="anchor" name="basic-select"></a>Basic Select <a class="hash-link" href="#basic-select">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p><a href="https://codepen.io/gaearon/pen/NRmLxN?editors=0010">Try it out on CodePen.</a></p>
+<h3><a class="anchor" name="controlled-select"></a>Controlled Select <a class="hash-link" href="#controlled-select">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;B&quot;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;B&#39;</span><span class="p">};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">}</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span>  <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Select value is: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Select value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span><span class="o">&gt;</span>
+</span>          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
           <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
           <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
         <span class="o">&lt;</span><span class="err">/select&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/pExQbL?editors=0010">Try this on CodePen.</a></p>
-<h3><a class="anchor" name="basic-radio-button"></a>Basic Radio Button <a class="hash-link" href="#basic-radio-button">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p><a href="https://codepen.io/gaearon/pen/qawrbr?editors=0010">Try it out on CodePen.</a></p>
+<h3><a class="anchor" name="uncontrolled-radio-button"></a>Uncontrolled Radio Button <a class="hash-link" href="#uncontrolled-radio-button">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s2">&quot;B&quot;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;B&#39;</span><span class="p">};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
@@ -360,67 +411,128 @@ For instance, if you want to imperatively submit a form, one approach would be t
   <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Radio button value is: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Radio button value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="nx">A</span><span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="nx">defaultChecked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="nx">B</span><span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="nx">C</span><span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span>
+            <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span>
+            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
+<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>          <span class="nx">Option</span> <span class="nx">A</span>
+        <span class="o">&lt;</span><span class="err">/label&gt;</span>
         <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span>
+            <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span>
+            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span>
+<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+</span><span class="hll">            <span class="nx">defaultChecked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>          <span class="nx">Option</span> <span class="nx">B</span>
+        <span class="o">&lt;</span><span class="err">/label&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span>
+            <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span>
+            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
+<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> 
+</span>          <span class="nx">Option</span> <span class="nx">C</span>
+        <span class="o">&lt;</span><span class="err">/label&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/WGaYVg?editors=0010">Try this on CodePen.</a></p>
-<h3><a class="anchor" name="basic-checkbox"></a>Basic Checkbox <a class="hash-link" href="#basic-checkbox">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p><a href="https://codepen.io/gaearon/pen/ozOPLJ?editors=0010">Try it out on CodePen.</a></p>
+<h3><a class="anchor" name="uncontrolled-checkbox"></a>Uncontrolled Checkbox <a class="hash-link" href="#uncontrolled-checkbox">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">checked</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">]};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">checked</span><span class="o">:</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="o">:</span> <span class="kc">false</span><span class="p">}};</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">let</span> <span class="nx">val</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
-    <span class="kd">let</span> <span class="nx">checked</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span> <span class="c1">// copy</span>
-    <span class="k">if</span><span class="p">(</span><span class="nx">checked</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">val</span><span class="p">))</span> <span class="p">{</span>
-      <span class="nx">checked</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">checked</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">val</span><span class="p">),</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+    <span class="c1">// Copy the object so we don&#39;t mutate the old state.</span>
+    <span class="c1">// (This requires an Object.assign polyfill):</span>
+    <span class="kr">const</span> <span class="nx">checked</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">checked</span><span class="p">[</span><span class="nx">value</span><span class="p">])</span> <span class="p">{</span>
+      <span class="nx">checked</span><span class="p">[</span><span class="nx">value</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-      <span class="nx">checked</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">val</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">checked</span><span class="o">:</span> <span class="nx">checked</span><span class="p">})</span>
+      <span class="nx">checked</span><span class="p">[</span><span class="nx">value</span><span class="p">]</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">checked</span><span class="p">});</span>
   <span class="p">}</span>
 
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s2">&quot;Boxes checked are: &#39;&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Boxes checked: &#39;</span> <span class="o">+</span>
+      <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">A</span> <span class="o">?</span> <span class="s1">&#39;A &#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">B</span> <span class="o">?</span> <span class="s1">&#39;B &#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">C</span> <span class="o">?</span> <span class="s1">&#39;C&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="nx">A</span><span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="nx">defaultChecked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="nx">B</span><span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> <span class="nx">Option</span> <span class="nx">C</span><span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
+            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
+<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> 
+</span>          <span class="nx">Option</span> <span class="nx">A</span>
+        <span class="o">&lt;</span><span class="err">/label&gt;</span>
         <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Submit</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
+            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span>
+<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+</span><span class="hll">            <span class="nx">defaultChecked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span> 
+</span>          <span class="nx">Option</span> <span class="nx">B</span>
+        <span class="o">&lt;</span><span class="err">/label&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
+<span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span> 
+</span>          <span class="nx">Option</span> <span class="nx">C</span>
+        <span class="o">&lt;</span><span class="err">/label&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+          <span class="nx">Submit</span>
+        <span class="o">&lt;</span><span class="err">/button&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/ericnakagawa/pen/kkAzPO?editors=0010">Try it on CodePen.</a></p>
-<h3><a class="anchor" name="form-events"></a>Form Events <a class="hash-link" href="#form-events">#</a></h3>
-<p>Event names:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
-</code></pre></div>
+<p><a href="https://codepen.io/gaearon/pen/rrbkWz?editors=0010">Try it on CodePen.</a></p>
+
 
     <div class="docs-prevnext">
       
