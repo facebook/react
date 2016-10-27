@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 var React;
 var ReactDOM;
 
@@ -33,6 +35,9 @@ describe('ReactErrorBoundaries', () => {
   var Normal;
 
   beforeEach(() => {
+    // TODO: Fiber isn't error resilient and one test can bring down them all.
+    jest.resetModuleRegistry();
+
     ReactDOM = require('ReactDOM');
     React = require('React');
 
@@ -46,7 +51,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenConstructor render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenConstructor componentWillMount');
@@ -75,7 +80,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenComponentWillMount render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenComponentWillMount componentWillMount [!]');
@@ -105,7 +110,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenComponentDidMount render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenComponentDidMount componentWillMount');
@@ -135,7 +140,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenComponentWillReceiveProps render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenComponentWillReceiveProps componentWillMount');
@@ -165,7 +170,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenComponentWillUpdate render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenComponentWillUpdate componentWillMount');
@@ -195,7 +200,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenComponentDidUpdate render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenComponentDidUpdate componentWillMount');
@@ -225,7 +230,7 @@ describe('ReactErrorBoundaries', () => {
       }
       render() {
         log.push('BrokenComponentWillUnmount render');
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
       componentWillMount() {
         log.push('BrokenComponentWillUnmount componentWillMount');
@@ -459,52 +464,52 @@ describe('ReactErrorBoundaries', () => {
     };
   });
 
-  // Known limitation: error boundary only "sees" errors caused by updates
-  // flowing through it. This might be easier to fix in Fiber.
-  it('currently does not catch errors originating downstream', () => {
-    var fail = false;
-    class Stateful extends React.Component {
-      state = {shouldThrow: false};
+  if (ReactDOMFeatureFlags.useFiber) {
+    // This test implements a new feature in Fiber.
+    it('catches errors originating downstream', () => {
+      var fail = false;
+      class Stateful extends React.Component {
+        state = {shouldThrow: false};
 
-      render() {
-        if (fail) {
-          log.push('Stateful render [!]');
-          throw new Error('Hello');
+        render() {
+          if (fail) {
+            log.push('Stateful render [!]');
+            throw new Error('Hello');
+          }
+          return <div>{this.props.children}</div>;
         }
-        return <div />;
       }
-    }
 
-    var statefulInst;
-    var container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <Stateful ref={inst => statefulInst = inst} />
-      </ErrorBoundary>,
-      container
-    );
+      var statefulInst;
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary>
+          <Stateful ref={inst => statefulInst = inst} />
+        </ErrorBoundary>,
+        container
+      );
 
-    log.length = 0;
-    expect(() => {
-      fail = true;
-      statefulInst.forceUpdate();
-    }).toThrow();
+      log.length = 0;
+      expect(() => {
+        fail = true;
+        statefulInst.forceUpdate();
+      }).not.toThrow();
 
-    expect(log).toEqual([
-      'Stateful render [!]',
-      // FIXME: uncomment when downstream errors get caught.
-      // Catch and render an error message
-      // 'ErrorBoundary unstable_handleError',
-      // 'ErrorBoundary render error',
-      // 'ErrorBoundary componentDidUpdate',
-    ]);
+      expect(log).toEqual([
+        'Stateful render [!]',
+        'ErrorBoundary unstable_handleError',
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render error',
+        'ErrorBoundary componentDidUpdate',
+      ]);
 
-    log.length = 0;
-    ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      'ErrorBoundary componentWillUnmount',
-    ]);
-  });
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'ErrorBoundary componentWillUnmount',
+      ]);
+    });
+  }
 
   it('renders an error state if child throws in render', () => {
     var container = document.createElement('div');
@@ -526,6 +531,12 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -553,6 +564,12 @@ describe('ReactErrorBoundaries', () => {
       'BrokenConstructor constructor [!]',
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -581,6 +598,12 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillMount componentWillMount [!]',
       // Catch and render an error message
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -615,6 +638,12 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Handle the error:
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       'ErrorBoundary render error',
       // Mount the error message:
       'ErrorMessage constructor',
@@ -632,40 +661,64 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  // Known limitation because componentDidMount() does not occur on the stack.
-  // We could either hardcode searching for parent boundary, or wait for Fiber.
-  it('currently does not catch errors in componentDidMount', () => {
-    var container = document.createElement('div');
-    expect(() => {
+  if (ReactDOMFeatureFlags.useFiber) {
+    // This test implements a new feature in Fiber.
+    it('catches errors in componentDidMount', () => {
+      var container = document.createElement('div');
       ReactDOM.render(
         <ErrorBoundary>
+          <BrokenComponentWillUnmount>
+            <Normal />
+          </BrokenComponentWillUnmount>
           <BrokenComponentDidMount />
+          <Normal logName="LastChild" />
         </ErrorBoundary>,
         container
       );
-    }).toThrow();
-    expect(log).toEqual([
-      'ErrorBoundary constructor',
-      'ErrorBoundary componentWillMount',
-      'ErrorBoundary render success',
-      'BrokenComponentDidMount constructor',
-      'BrokenComponentDidMount componentWillMount',
-      'BrokenComponentDidMount render',
-      'BrokenComponentDidMount componentDidMount [!]',
-      // FIXME: uncomment when componentDidMount() gets caught.
-      // Catch and render an error message
-      // 'ErrorBoundary unstable_handleError',
-      // 'ErrorBoundary render error',
-      // 'ErrorBoundary componentDidMount',
-    ]);
+      expect(log).toEqual([
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+        'ErrorBoundary render success',
+        'BrokenComponentWillUnmount constructor',
+        'BrokenComponentWillUnmount componentWillMount',
+        'BrokenComponentWillUnmount render',
+        'Normal constructor',
+        'Normal componentWillMount',
+        'Normal render',
+        'BrokenComponentDidMount constructor',
+        'BrokenComponentDidMount componentWillMount',
+        'BrokenComponentDidMount render',
+        'LastChild constructor',
+        'LastChild componentWillMount',
+        'LastChild render',
+        // Start flushing didMount queue
+        'Normal componentDidMount',
+        'BrokenComponentWillUnmount componentDidMount',
+        'BrokenComponentDidMount componentDidMount [!]',
+        // Continue despite the error
+        'LastChild componentDidMount',
+        'ErrorBoundary componentDidMount',
+        // Now we are ready to handle the error
+        'ErrorBoundary unstable_handleError',
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render error',
+        // Safely unmount every child
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        // Continue unmounting safely despite any errors
+        'Normal componentWillUnmount',
+        'BrokenComponentDidMount componentWillUnmount',
+        'LastChild componentWillUnmount',
+        // The update has finished
+        'ErrorBoundary componentDidUpdate',
+      ]);
 
-    log.length = 0;
-    ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      'ErrorBoundary componentWillUnmount',
-      'BrokenComponentDidMount componentWillUnmount',
-    ]);
-  });
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'ErrorBoundary componentWillUnmount',
+      ]);
+    });
+  }
 
   it('propagates errors on retry on mounting', () => {
     var container = document.createElement('div');
@@ -688,15 +741,30 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
-      // The first error boundary catches the error
-      // However, it doesn't adjust its state so next render also fails
+      // The first error boundary catches the error.
+      // However, it doesn't adjust its state so next render will also fail.
       'NoopErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+        'ErrorBoundary render success',
+        'NoopErrorBoundary constructor',
+        'NoopErrorBoundary componentWillMount',
+      ] : []),
       'NoopErrorBoundary render',
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       // This time, the error propagates to the higher boundary
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       // Render the error
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
@@ -726,6 +794,12 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillMountErrorBoundary componentWillMount [!]',
       // The error propagates to the higher boundary
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       // Render the error
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
@@ -762,9 +836,24 @@ describe('ReactErrorBoundaries', () => {
       // The first error boundary catches the error
       // It adjusts state but throws displaying the message
       'BrokenRenderErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+        'ErrorBoundary render success',
+        'BrokenRenderErrorBoundary constructor',
+        'BrokenRenderErrorBoundary componentWillMount',
+      ] : []),
       'BrokenRenderErrorBoundary render error [!]',
       // The error propagates to the higher boundary
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       // Render the error
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
@@ -822,6 +911,12 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Error boundary catches the error
       'ErrorBoundary unstable_handleError',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : []),
       // Render the error message
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
@@ -860,8 +955,16 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Handle error:
       'ErrorBoundary unstable_handleError',
-      // Child ref wasn't (and won't be) set but there's no harm in clearing:
-      'Child ref is set to null',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+      ] : [
+        // Stack reconciler resets ref on update, as it doesn't know ref was never set.
+        // This is unnecessary, and Fiber doesn't do it:
+        'Child ref is set to null',
+      ]),
       'ErrorBoundary render error',
       // Ref to error message should get set:
       'Error message ref is set to [object HTMLDivElement]',
@@ -932,10 +1035,20 @@ describe('ReactErrorBoundaries', () => {
       // BrokenConstructor will abort rendering:
       'BrokenConstructor constructor [!]',
       'ErrorBoundary unstable_handleError',
-      // Unmount the previously mounted components:
-      'Normal componentWillUnmount',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        // Fiber renders first, then unmounts in a batch:
+        'ErrorBoundary render error',
+        'Normal componentWillUnmount',
+      ] : [
+        // Stack unmounts first, then renders:
+        'Normal componentWillUnmount',
+        'ErrorBoundary render error',
+      ]),
       // Normal2 does not get lifefycle because it was never mounted
-      'ErrorBoundary render error',
       'ErrorBoundary componentDidUpdate',
     ]);
 
@@ -980,10 +1093,20 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillMount constructor',
       'BrokenComponentWillMount componentWillMount [!]',
       'ErrorBoundary unstable_handleError',
-      // Unmount the previously mounted components:
-      'Normal componentWillUnmount',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        // Fiber renders first, then unmounts in a batch:
+        'ErrorBoundary render error',
+        'Normal componentWillUnmount',
+      ] : [
+        // Stack unmounts first, then renders:
+        'Normal componentWillUnmount',
+        'ErrorBoundary render error',
+      ]),
       // Normal2 does not get lifefycle because it was never mounted
-      'ErrorBoundary render error',
       'ErrorBoundary componentDidUpdate',
     ]);
 
@@ -1023,11 +1146,21 @@ describe('ReactErrorBoundaries', () => {
       // BrokenComponentWillReceiveProps will abort rendering:
       'BrokenComponentWillReceiveProps componentWillReceiveProps [!]',
       'ErrorBoundary unstable_handleError',
-      // Unmount the previously mounted components:
-      'Normal componentWillUnmount',
-      'BrokenComponentWillReceiveProps componentWillUnmount',
-      // Render error:
-      'ErrorBoundary render error',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        // Fiber renders first, then unmounts in a batch:
+        'ErrorBoundary render error',
+        'Normal componentWillUnmount',
+        'BrokenComponentWillReceiveProps componentWillUnmount',
+      ] : [
+        // Stack unmounts first, then renders:
+        'Normal componentWillUnmount',
+        'BrokenComponentWillReceiveProps componentWillUnmount',
+        'ErrorBoundary render error',
+      ]),
       'ErrorBoundary componentDidUpdate',
     ]);
 
@@ -1068,11 +1201,21 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillUpdate componentWillReceiveProps',
       'BrokenComponentWillUpdate componentWillUpdate [!]',
       'ErrorBoundary unstable_handleError',
-      // Unmount the previously mounted components:
-      'Normal componentWillUnmount',
-      'BrokenComponentWillUpdate componentWillUnmount',
-      // Render error:
-      'ErrorBoundary render error',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        // Fiber renders first, then unmounts in a batch:
+        'ErrorBoundary render error',
+        'Normal componentWillUnmount',
+        'BrokenComponentWillUpdate componentWillUnmount',
+      ] : [
+        // Stack unmounts first, then renders:
+        'Normal componentWillUnmount',
+        'BrokenComponentWillUpdate componentWillUnmount',
+        'ErrorBoundary render error',
+      ]),
       'ErrorBoundary componentDidUpdate',
     ]);
 
@@ -1118,10 +1261,20 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       'ErrorBoundary unstable_handleError',
-      // Unmount the previously mounted components:
-      'Normal componentWillUnmount',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        // Fiber renders first, then unmounts in a batch:
+        'ErrorBoundary render error',
+        'Normal componentWillUnmount',
+      ] : [
+        // Stack unmounts first, then renders:
+        'Normal componentWillUnmount',
+        'ErrorBoundary render error',
+      ]),
       // Normal2 does not get lifefycle because it was never mounted
-      'ErrorBoundary render error',
       'ErrorBoundary componentDidUpdate',
     ]);
 
@@ -1177,9 +1330,19 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       'ErrorBoundary unstable_handleError',
-      // Unmount the previously mounted components:
-      'Child1 ref is set to null',
-      'ErrorBoundary render error',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        // Fiber renders first, resets refs later
+        'ErrorBoundary render error',
+        'Child1 ref is set to null',
+      ] : [
+        // Stack resets ref first, renders later
+        'Child1 ref is set to null',
+        'ErrorBoundary render error',
+      ]),
       'Error message ref is set to [object HTMLDivElement]',
       // Child2 ref is never set because its mounting aborted
       'ErrorBoundary componentDidUpdate',
@@ -1193,48 +1356,49 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  // Known limitation because componentDidUpdate() does not occur on the stack.
-  // We could either hardcode searching for parent boundary, or wait for Fiber.
-  it('currently does not catch errors in componentDidUpdate', () => {
-    var container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenComponentDidUpdate />
-      </ErrorBoundary>,
-      container
-    );
-
-    log.length = 0;
-    expect(() => {
+  if (ReactDOMFeatureFlags.useFiber) {
+    // This test implements a new feature in Fiber.
+    it('catches errors in componentDidUpdate', () => {
+      var container = document.createElement('div');
       ReactDOM.render(
         <ErrorBoundary>
           <BrokenComponentDidUpdate />
         </ErrorBoundary>,
         container
       );
-    }).toThrow();
-    expect(log).toEqual([
-      'ErrorBoundary componentWillReceiveProps',
-      'ErrorBoundary componentWillUpdate',
-      'ErrorBoundary render success',
-      'BrokenComponentDidUpdate componentWillReceiveProps',
-      'BrokenComponentDidUpdate componentWillUpdate',
-      'BrokenComponentDidUpdate render',
-      'BrokenComponentDidUpdate componentDidUpdate [!]',
-      // FIXME: uncomment when componentDidUpdate() gets caught.
-      // Catch and render an error message
-      // 'ErrorBoundary unstable_handleError',
-      // 'ErrorBoundary render error',
-      // 'ErrorBoundary componentDidUpdate',
-    ]);
 
-    log.length = 0;
-    ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      'ErrorBoundary componentWillUnmount',
-      'BrokenComponentDidUpdate componentWillUnmount',
-    ]);
-  });
+      log.length = 0;
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentDidUpdate />
+        </ErrorBoundary>,
+        container
+      );
+      expect(log).toEqual([
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render success',
+        'BrokenComponentDidUpdate componentWillReceiveProps',
+        'BrokenComponentDidUpdate componentWillUpdate',
+        'BrokenComponentDidUpdate render',
+        // All lifecycles run
+        'BrokenComponentDidUpdate componentDidUpdate [!]',
+        'ErrorBoundary componentDidUpdate',
+        // Then, error is handled
+        'ErrorBoundary unstable_handleError',
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render error',
+        'BrokenComponentDidUpdate componentWillUnmount',
+        'ErrorBoundary componentDidUpdate',
+      ]);
+
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'ErrorBoundary componentWillUnmount',
+      ]);
+    });
+  }
 
   it('recovers from componentWillUnmount errors on update', () => {
     var container = document.createElement('div');
@@ -1242,7 +1406,7 @@ describe('ReactErrorBoundaries', () => {
       <ErrorBoundary>
         <BrokenComponentWillUnmount />
         <BrokenComponentWillUnmount />
-        <BrokenComponentWillUnmount />
+        <Normal />
       </ErrorBoundary>,
       container
     );
@@ -1250,7 +1414,6 @@ describe('ReactErrorBoundaries', () => {
     log.length = 0;
     ReactDOM.render(
       <ErrorBoundary>
-        <BrokenComponentWillUnmount />
         <BrokenComponentWillUnmount />
       </ErrorBoundary>,
       container
@@ -1260,23 +1423,39 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
-      // Update existing children:
-      'BrokenComponentWillUnmount componentWillReceiveProps',
-      'BrokenComponentWillUnmount componentWillUpdate',
-      'BrokenComponentWillUnmount render',
+      // Update existing child:
       'BrokenComponentWillUnmount componentWillReceiveProps',
       'BrokenComponentWillUnmount componentWillUpdate',
       'BrokenComponentWillUnmount render',
       // Unmounting throws:
       'BrokenComponentWillUnmount componentWillUnmount [!]',
-      'ErrorBoundary unstable_handleError',
-      // Attempt to unmount previous children:
-      'BrokenComponentWillUnmount componentWillUnmount [!]',
-      'BrokenComponentWillUnmount componentWillUnmount [!]',
-      // Render error:
-      'ErrorBoundary render error',
-      'ErrorBoundary componentDidUpdate',
-      // Children don't get componentDidUpdate() since update was aborted
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // Fiber proceeds with lifecycles despite errors
+        'Normal componentWillUnmount',
+        // The components have updated in this phase
+        'BrokenComponentWillUnmount componentDidUpdate',
+        'ErrorBoundary componentDidUpdate',
+        // Now that commit phase is done, Fiber handles errors
+        'ErrorBoundary unstable_handleError',
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillUpdate',
+        // Render an error now (stack will do it later)
+        'ErrorBoundary render error',
+        // Attempt to unmount previous child:
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        // Done
+        'ErrorBoundary componentDidUpdate',
+      ] : [
+        // Stack will handle error immediately
+        'ErrorBoundary unstable_handleError',
+        // Attempt to unmount previous children:
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        'Normal componentWillUnmount',
+        // Render an error now (Fiber will do it earlier)
+        'ErrorBoundary render error',
+        'ErrorBoundary componentDidUpdate',
+      ]),
     ]);
 
     log.length = 0;
@@ -1321,13 +1500,32 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillUnmount render',
       // Unmounting throws:
       'BrokenComponentWillUnmount componentWillUnmount [!]',
-      'ErrorBoundary unstable_handleError',
-      // Attempt to unmount previous children:
-      'Normal componentWillUnmount',
-      'BrokenComponentWillUnmount componentWillUnmount [!]',
-      // Render error:
-      'ErrorBoundary render error',
-      'ErrorBoundary componentDidUpdate',
+      ...(ReactDOMFeatureFlags.useFiber ? [
+        // Fiber proceeds with lifecycles despite errors
+        'BrokenComponentWillUnmount componentDidUpdate',
+        'Normal componentDidUpdate',
+        'ErrorBoundary componentDidUpdate',
+        // Now that commit phase is done, Fiber handles errors
+        'ErrorBoundary unstable_handleError',
+        // The initial render was aborted, so
+        // Fiber retries from the root.
+        'ErrorBoundary componentWillUpdate',
+        // Render an error now (stack will do it later)
+        'ErrorBoundary render error',
+        // Attempt to unmount previous child:
+        'Normal componentWillUnmount',
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        // Done
+        'ErrorBoundary componentDidUpdate',
+      ] : [
+        'ErrorBoundary unstable_handleError',
+        // Attempt to unmount previous children:
+        'Normal componentWillUnmount',
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        // Stack calls lifecycles first, then renders.
+        'ErrorBoundary render error',
+        'ErrorBoundary componentDidUpdate',
+      ]),
     ]);
 
     log.length = 0;
@@ -1474,7 +1672,7 @@ describe('ReactErrorBoundaries', () => {
         if (fail) {
           throw new Error('Hello');
         }
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
     }
 
