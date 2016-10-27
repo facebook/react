@@ -86,10 +86,9 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">BoilingVerdict</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">celsius</span> <span class="o">&gt;=</span> <span class="mi">100</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">The</span> <span class="nx">water</span> <span class="nx">would</span> <span class="nx">boil</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;;</span>
-</span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">The</span> <span class="nx">water</span> <span class="nx">would</span> <span class="nx">not</span> <span class="nx">boil</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;;</span>
 </span>  <span class="p">}</span>
-<span class="p">}</span>
+<span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">The</span> <span class="nx">water</span> <span class="nx">would</span> <span class="nx">not</span> <span class="nx">boil</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;;</span>
+</span><span class="p">}</span>
 </code></pre></div>
 <p>Next, we will create a component called <code>Calculator</code>. It renders an <code>&lt;input&gt;</code> that lets you enter the temperature, and keeps its value in <code>this.state.value</code>.</p>
 
