@@ -325,7 +325,7 @@ class CustomButton extends React.Component {
 }
 
 CustomButton.propTypes = {
-  name: React.PropTypes.string
+  color: React.PropTypes.string
 };
 ```
 
