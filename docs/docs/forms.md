@@ -4,7 +4,9 @@ title: Forms
 permalink: docs/forms.html
 prev: state-and-lifecycle.html
 next: lifting-state-up.html
-redirect_from: "tips/controlled-input-null-value.html"
+redirect_from:
+  - "tips/controlled-input-null-value.html"
+  - "docs/forms-zh-CN.html"
 ---
 
 HTML form elements work a little bit differently from other DOM elements in React, because form elements naturally keep some internal state. For example, this form in plain HTML accepts a single name:
