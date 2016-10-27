@@ -105,7 +105,9 @@ render() {
     <ReactCSSTransitionGroup
       transitionName="example"
       transitionAppear={true}
-      transitionAppearTimeout={500}>
+      transitionAppearTimeout={500}
+      transitionEnter={false}
+      transitionLeave={false}>
       <h1>Fading at Initial Mount</h1>
     </ReactCSSTransitionGroup>
   );
@@ -130,6 +132,8 @@ At the initial mount, all children of the `ReactCSSTransitionGroup` will `appear
 > Note:
 >
 > The prop `transitionAppear` was added to `ReactCSSTransitionGroup` in version `0.13`. To maintain backwards compatibility, the default value is set to `false`.
+>
+> However, the default values of `transitionEnter` and `transitionLeave` are `true` so you must specify `transitionEnterTimeout` and `transitionLeaveTimeout` by default. If you don't need either enter or leave animations, pass `transitionEnter={false}` or `transitionLeave={false}`.
 
 ### Custom Classes
 
