@@ -56,8 +56,9 @@ export type HostConfig<T, P, I, TI, C> = {
   removeChild(parentInstance : I, child : I | TI) : void,
 
   scheduleAnimationCallback(callback : () => void) : void,
-  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
 
+  useSyncScheduling ?: boolean,
 };
 
 type OpaqueNode = Fiber;

@@ -62,11 +62,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const scheduleAnimationCallback = config.scheduleAnimationCallback;
   const scheduleDeferredCallback = config.scheduleDeferredCallback;
+  const useSyncScheduling = config.useSyncScheduling;
 
   // The priority level to use when scheduling an update.
   let priorityContext : (PriorityLevel | null) = null;
   // The priority level to use if there is no priority context.
-  let defaultPriorityContext : PriorityLevel = LowPriority;
+  let defaultPriorityContext : PriorityLevel = useSyncScheduling ?
+    SynchronousPriority :
+    LowPriority;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
