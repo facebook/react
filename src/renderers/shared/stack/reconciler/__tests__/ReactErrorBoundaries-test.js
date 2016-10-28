@@ -36,9 +36,6 @@ describe('ReactErrorBoundaries', () => {
   var Normal;
 
   beforeEach(() => {
-    // TODO: Fiber isn't error resilient and one test can bring down them all.
-    jest.resetModuleRegistry();
-
     ReactDOM = require('ReactDOM');
     React = require('React');
 
