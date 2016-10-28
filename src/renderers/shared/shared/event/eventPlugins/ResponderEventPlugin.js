@@ -466,8 +466,8 @@ function noResponderTouches(nativeEvent) {
 var ResponderEventPlugin = {
 
   /* For unit testing only */
-  _getResponderID: function() {
-    return responderInst ? responderInst._rootNodeID : null;
+  _getResponder: function() {
+    return responderInst;
   },
 
   eventTypes: eventTypes,
