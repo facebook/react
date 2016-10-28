@@ -196,7 +196,7 @@ describe('ReactErrorBoundaries', () => {
 
     BrokenComponentDidUpdate = class extends React.Component {
       static defaultProps = {
-        errorText: 'Hello'
+        errorText: 'Hello',
       };
       constructor(props) {
         super(props);
@@ -229,7 +229,7 @@ describe('ReactErrorBoundaries', () => {
 
     BrokenComponentWillUnmount = class extends React.Component {
       static defaultProps = {
-        errorText: 'Hello'
+        errorText: 'Hello',
       };
       constructor(props) {
         super(props);
@@ -500,6 +500,90 @@ describe('ReactErrorBoundaries', () => {
         return <div>Caught an error: {this.props.message}.</div>;
       }
     };
+  });
+
+  it('does not swallow exceptions on mounting without boundaries', () => {
+    var container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<BrokenRender />, container);
+    }).toThrow('Hello');
+
+    container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<BrokenComponentWillMount />, container);
+    }).toThrow('Hello');
+
+    container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<BrokenComponentDidMount />, container);
+    }).toThrow('Hello');
+  });
+
+  it('does not swallow exceptions on updating without boundaries', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<BrokenComponentWillUpdate />, container);
+    expect(() => {
+      ReactDOM.render(<BrokenComponentWillUpdate />, container);
+    }).toThrow('Hello');
+
+    container = document.createElement('div');
+    ReactDOM.render(<BrokenComponentWillReceiveProps />, container);
+    expect(() => {
+      ReactDOM.render(<BrokenComponentWillReceiveProps />, container);
+    }).toThrow('Hello');
+
+    container = document.createElement('div');
+    ReactDOM.render(<BrokenComponentDidUpdate />, container);
+    expect(() => {
+      ReactDOM.render(<BrokenComponentDidUpdate />, container);
+    }).toThrow('Hello');
+  });
+
+  it('does not swallow exceptions on unmounting without boundaries', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<BrokenComponentWillUnmount />, container);
+    expect(() => {
+      ReactDOM.unmountComponentAtNode(container);
+    }).toThrow('Hello');
+  });
+
+  it('prevents errors from leaking into other roots', () => {
+    var container1 = document.createElement('div');
+    var container2 = document.createElement('div');
+    var container3 = document.createElement('div');
+
+    ReactDOM.render(<span>Before 1</span>, container1);
+    expect(() => {
+      ReactDOM.render(<BrokenRender />, container2);
+    }).toThrow('Hello');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container3
+    );
+    expect(container1.firstChild.textContent).toBe('Before 1');
+    expect(container2.firstChild).toBe(null);
+    expect(container3.firstChild.textContent).toBe('Caught an error: Hello.');
+
+    ReactDOM.render(<span>After 1</span>, container1);
+    ReactDOM.render(<span>After 2</span>, container2);
+    ReactDOM.render(
+      <ErrorBoundary forceRetry={true}>
+        After 3
+      </ErrorBoundary>,
+      container3
+    );
+    expect(container1.firstChild.textContent).toBe('After 1');
+    expect(container2.firstChild.textContent).toBe('After 2');
+    expect(container3.firstChild.textContent).toBe('After 3');
+
+    ReactDOM.unmountComponentAtNode(container1);
+    ReactDOM.unmountComponentAtNode(container2);
+    ReactDOM.unmountComponentAtNode(container3);
+    expect(container1.firstChild).toBe(null);
+    expect(container2.firstChild).toBe(null);
+    expect(container3.firstChild).toBe(null);
   });
 
   it('renders an error state if child throws in render', () => {
