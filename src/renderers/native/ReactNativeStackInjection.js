@@ -23,6 +23,7 @@ var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactGenericBatching = require('ReactGenericBatching');
 var ReactHostComponent = require('ReactHostComponent');
 var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment');
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
@@ -32,6 +33,10 @@ var ReactUpdates = require('ReactUpdates');
 var invariant = require('invariant');
 
 function inject() {
+  ReactGenericBatching.injection.injectStackBatchedUpdates(
+    ReactUpdates.batchedUpdates
+  );
+
   ReactUpdates.injection.injectReconcileTransaction(
     ReactNativeComponentEnvironment.ReactReconcileTransaction
   );

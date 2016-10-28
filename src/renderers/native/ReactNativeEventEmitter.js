@@ -16,7 +16,7 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 
 var warning = require('warning');
 
@@ -123,7 +123,7 @@ var ReactNativeEventEmitter = {
       // any events.
       return;
     }
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
       ReactNativeEventEmitter.handleTopLevel(
         topLevelType,
         inst,
