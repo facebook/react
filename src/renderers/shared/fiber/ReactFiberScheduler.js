@@ -71,6 +71,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     SynchronousPriority :
     LowPriority;
 
+  // Whether updates should be batched. Only applies when using sync scheduling.
+  let shouldBatchUpdates : boolean = false;
+
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
   let nextPriorityLevel : PriorityLevel = NoWork;
@@ -490,9 +493,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (nextUnitOfWork &&
            nextPriorityLevel === SynchronousPriority) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
-      // If there's no nextUnitOfWork, we don't need to search for more
-      // because it shouldn't be possible to schedule sync work without
-      // immediately performing it
+
+      if (!nextUnitOfWork) {
+        nextUnitOfWork = findNextUnitOfWork();
+      }
     }
     if (nextUnitOfWork) {
       if (nextPriorityLevel > AnimationPriority) {
@@ -504,7 +508,35 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performSynchronousWork() {
+    if (useSyncScheduling) {
+      // Start batching updates
+      shouldBatchUpdates = true;
+    }
     performAndHandleErrors(performSynchronousWorkUnsafe);
+    shouldBatchUpdates = false;
+  }
+
+  function scheduleSynchronousWork(root : FiberRoot) {
+    root.current.pendingWorkPriority = SynchronousPriority;
+
+    if (root.isScheduled) {
+      // If we're already scheduled, we can bail out.
+      return;
+    }
+    root.isScheduled = true;
+    if (lastScheduledRoot) {
+      // Schedule ourselves to the end.
+      lastScheduledRoot.nextScheduledRoot = root;
+      lastScheduledRoot = root;
+    } else {
+      // We're the only work scheduled.
+      nextScheduledRoot = root;
+      lastScheduledRoot = root;
+
+      if (!shouldBatchUpdates) {
+        performSynchronousWork();
+      }
+    }
   }
 
   function performAndHandleErrors<A>(fn: (a: A) => void, a: A) {
@@ -560,10 +592,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
       // We will process an update caused by each error boundary synchronously.
       affectedBoundaries.forEach(boundary => {
-        // FIXME: We only specify LowPriority here so that setState() calls from the error
-        // boundaries are respected. Instead we should set default priority level or something
-        // like this. Reconsider this piece when synchronous scheduling is in place.
-        const priority = LowPriority;
+        const priority = priorityContext !== null ?
+          priorityContext :
+          defaultPriorityContext;
         const root = scheduleErrorBoundaryWork(boundary, priority);
         // This should use findNextUnitOfWork() when synchronous scheduling is implemented.
         let fiber = cloneFiber(root.current, priority);
@@ -604,8 +635,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     if (priorityLevel === SynchronousPriority) {
-      root.current.pendingWorkPriority = SynchronousPriority;
-      performSynchronousWork();
+      scheduleSynchronousWork(root);
     }
 
     if (priorityLevel === NoWork) {
@@ -624,15 +654,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       priorityLevel = priorityContext !== null ?
         priorityContext :
         defaultPriorityContext;
-    }
-
-    // Don't bother bubbling the priority to the root if it is synchronous. Just
-    // perform it now.
-    if (priorityLevel === SynchronousPriority) {
-      fiber.pendingWorkPriority = SynchronousPriority;
-      nextUnitOfWork = fiber;
-      performSynchronousWork();
-      return;
     }
 
     while (true) {
