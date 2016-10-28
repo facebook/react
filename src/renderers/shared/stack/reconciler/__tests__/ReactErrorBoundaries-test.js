@@ -195,6 +195,9 @@ describe('ReactErrorBoundaries', () => {
     };
 
     BrokenComponentDidUpdate = class extends React.Component {
+      static defaultProps = {
+        errorText: 'Hello'
+      };
       constructor(props) {
         super(props);
         log.push('BrokenComponentDidUpdate constructor');
@@ -217,7 +220,7 @@ describe('ReactErrorBoundaries', () => {
       }
       componentDidUpdate() {
         log.push('BrokenComponentDidUpdate componentDidUpdate [!]');
-        throw new Error('Hello');
+        throw new Error(this.props.errorText);
       }
       componentWillUnmount() {
         log.push('BrokenComponentDidUpdate componentWillUnmount');
@@ -225,6 +228,9 @@ describe('ReactErrorBoundaries', () => {
     };
 
     BrokenComponentWillUnmount = class extends React.Component {
+      static defaultProps = {
+        errorText: 'Hello'
+      };
       constructor(props) {
         super(props);
         log.push('BrokenComponentWillUnmount constructor');
@@ -250,7 +256,7 @@ describe('ReactErrorBoundaries', () => {
       }
       componentWillUnmount() {
         log.push('BrokenComponentWillUnmount componentWillUnmount [!]');
-        throw new Error('Hello');
+        throw new Error(this.props.errorText);
       }
     };
 
@@ -1418,10 +1424,10 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('picks the right boundary when handling unmounting errors', () => {
-    function renderInnerError(error, props) {
+    function renderInnerError(error) {
       return <div>Caught an inner error: {error.message}.</div>;
     }
-    function renderOuterError(error, props) {
+    function renderOuterError(error) {
       return <div>Caught an outer error: {error.message}.</div>;
     }
 
@@ -1756,6 +1762,47 @@ describe('ReactErrorBoundaries', () => {
       ]);
     });
 
+    it('catches errors in componentDidUpdate', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentDidUpdate />
+        </ErrorBoundary>,
+        container
+      );
+
+      log.length = 0;
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentDidUpdate />
+        </ErrorBoundary>,
+        container
+      );
+      expect(log).toEqual([
+        'ErrorBoundary componentWillReceiveProps',
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render success',
+        'BrokenComponentDidUpdate componentWillReceiveProps',
+        'BrokenComponentDidUpdate componentWillUpdate',
+        'BrokenComponentDidUpdate render',
+        // All lifecycles run
+        'BrokenComponentDidUpdate componentDidUpdate [!]',
+        'ErrorBoundary componentDidUpdate',
+        // Then, error is handled
+        'ErrorBoundary unstable_handleError',
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render error',
+        'BrokenComponentDidUpdate componentWillUnmount',
+        'ErrorBoundary componentDidUpdate',
+      ]);
+
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'ErrorBoundary componentWillUnmount',
+      ]);
+    });
+
     it('propagates errors inside boundary during componentDidMount', () => {
       var container = document.createElement('div');
       ReactDOM.render(
@@ -1796,44 +1843,98 @@ describe('ReactErrorBoundaries', () => {
       ]);
     });
 
-    it('catches errors in componentDidUpdate', () => {
+    it('lets different boundaries catch their own first errors', () => {
+      function renderUnmountError(error) {
+        return <div>Caught an unmounting error: {error.message}.</div>;
+      }
+      function renderUpdateError(error) {
+        return <div>Caught an updating error: {error.message}.</div>;
+      }
+
       var container = document.createElement('div');
       ReactDOM.render(
-        <ErrorBoundary>
-          <BrokenComponentDidUpdate />
+        <ErrorBoundary logName="OuterErrorBoundary">
+          <ErrorBoundary logName="InnerUnmountBoundary" renderError={renderUnmountError}>
+            <BrokenComponentWillUnmount errorText="E1" />
+            <BrokenComponentWillUnmount errorText="E2" />
+          </ErrorBoundary>
+          <ErrorBoundary logName="InnerUpdateBoundary" renderError={renderUpdateError}>
+            <BrokenComponentDidUpdate errorText="E3" />
+            <BrokenComponentDidUpdate errorText="E4" />
+          </ErrorBoundary>
         </ErrorBoundary>,
         container
       );
 
       log.length = 0;
       ReactDOM.render(
-        <ErrorBoundary>
-          <BrokenComponentDidUpdate />
+        <ErrorBoundary logName="OuterErrorBoundary">
+          <ErrorBoundary logName="InnerUnmountBoundary" renderError={renderUnmountError} />
+          <ErrorBoundary logName="InnerUpdateBoundary" renderError={renderUpdateError}>
+            <BrokenComponentDidUpdate errorText="E3" />
+            <BrokenComponentDidUpdate errorText="E4" />
+          </ErrorBoundary>
         </ErrorBoundary>,
         container
       );
+
+      expect(container.firstChild.textContent).toBe(
+        'Caught an unmounting error: E1.' +
+        'Caught an updating error: E3.'
+      );
       expect(log).toEqual([
-        'ErrorBoundary componentWillReceiveProps',
-        'ErrorBoundary componentWillUpdate',
-        'ErrorBoundary render success',
+        // Begin update phase
+        'OuterErrorBoundary componentWillReceiveProps',
+        'OuterErrorBoundary componentWillUpdate',
+        'OuterErrorBoundary render success',
+        'InnerUnmountBoundary componentWillReceiveProps',
+        'InnerUnmountBoundary componentWillUpdate',
+        'InnerUnmountBoundary render success',
+        'InnerUpdateBoundary componentWillReceiveProps',
+        'InnerUpdateBoundary componentWillUpdate',
+        'InnerUpdateBoundary render success',
+        // First come the updates
         'BrokenComponentDidUpdate componentWillReceiveProps',
         'BrokenComponentDidUpdate componentWillUpdate',
         'BrokenComponentDidUpdate render',
-        // All lifecycles run
+        'BrokenComponentDidUpdate componentWillReceiveProps',
+        'BrokenComponentDidUpdate componentWillUpdate',
+        'BrokenComponentDidUpdate render',
+        // We're in commit phase now, deleting
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        'BrokenComponentWillUnmount componentWillUnmount [!]',
+        // Continue despite errors, handle them after commit is done
+        'InnerUnmountBoundary componentDidUpdate',
+        // We're still in commit phase, now calling update lifecycles
         'BrokenComponentDidUpdate componentDidUpdate [!]',
-        'ErrorBoundary componentDidUpdate',
-        // Then, error is handled
-        'ErrorBoundary unstable_handleError',
-        'ErrorBoundary componentWillUpdate',
-        'ErrorBoundary render error',
+        // Again, continue despite errors, we'll handle them later
+        'BrokenComponentDidUpdate componentDidUpdate [!]',
+        'InnerUpdateBoundary componentDidUpdate',
+        'OuterErrorBoundary componentDidUpdate',
+        // The interesting part starts now.
+        // Acknowledge errors independently but don't update yet:
+        'InnerUnmountBoundary unstable_handleError',
+        'InnerUpdateBoundary unstable_handleError',
+        // Only two of four errors are acknowledged: one per boundary.
+        // The rest are likely cascading and we ignore them.
+        // Now update:
+        'InnerUnmountBoundary componentWillUpdate',
+        'InnerUnmountBoundary render error',
+        'InnerUpdateBoundary componentWillUpdate',
+        'InnerUpdateBoundary render error',
+        // Commit
         'BrokenComponentDidUpdate componentWillUnmount',
-        'ErrorBoundary componentDidUpdate',
+        'BrokenComponentDidUpdate componentWillUnmount',
+        'InnerUnmountBoundary componentDidUpdate',
+        'InnerUpdateBoundary componentDidUpdate',
       ]);
 
       log.length = 0;
       ReactDOM.unmountComponentAtNode(container);
       expect(log).toEqual([
-        'ErrorBoundary componentWillUnmount',
+        'OuterErrorBoundary componentWillUnmount',
+        'InnerUnmountBoundary componentWillUnmount',
+        'InnerUpdateBoundary componentWillUnmount',
       ]);
     });
   }
