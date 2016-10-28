@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { TrappedError } from 'ReactFiberErrorBoundary';
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
@@ -205,8 +206,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     // Now that the tree has been committed, we can handle errors.
     if (allTrappedErrors) {
-      // TODO: handle multiple errors with distinct boundaries.
-      handleError(allTrappedErrors[0]);
+      handleErrors(allTrappedErrors);
     }
   }
 
@@ -377,7 +377,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         throw error;
       }
       const trappedError = trapError(failedUnitOfWork, error);
-      handleError(trappedError);
+      handleErrors([trappedError]);
     }
   }
 
@@ -408,6 +408,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // We're the only work scheduled.
       nextScheduledRoot = root;
       lastScheduledRoot = root;
+
       scheduleDeferredCallback(performDeferredWork);
     }
   }
@@ -443,7 +444,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         throw error;
       }
       const trappedError = trapError(failedUnitOfWork, error);
-      handleError(trappedError);
+      handleErrors([trappedError]);
     }
   }
 
@@ -471,56 +472,99 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function handleError(trappedError) {
-    const boundary = trappedError.boundary;
-    const error = trappedError.error;
-    if (!boundary) {
-      throw error;
+  function scheduleErrorBoundaryWork(boundary : Fiber, priority) : FiberRoot {
+    let root = null;
+    let fiber = boundary;
+    while (fiber) {
+      fiber.pendingWorkPriority = priority;
+      if (fiber.alternate) {
+        fiber.alternate.pendingWorkPriority = priority;
+      }
+      if (!fiber.return) {
+        if (fiber.tag === HostContainer) {
+          // We found the root.
+          // Remember it so we can update it.
+          root = ((fiber.stateNode : any) : FiberRoot);
+          break;
+        } else {
+          throw new Error('Invalid root');
+        }
+      }
+      fiber = fiber.return;
+    }
+    if (!root) {
+      throw new Error('Could not find root from the boundary.');
+    }
+    return root;
+  }
+
+  function handleErrors(initialTrappedErrors : Array<TrappedError>) : void {
+    let nextTrappedErrors = initialTrappedErrors;
+    let firstUncaughtError = null;
+
+    // In each phase, we will attempt to pass errors to boundaries and re-render them.
+    // If we get more errors, we propagate them to higher boundaries in the next iterations.
+    while (nextTrappedErrors) {
+      const trappedErrors = nextTrappedErrors;
+      nextTrappedErrors = null;
+
+      // Pass errors to all affected boundaries.
+      const affectedBoundaries : Set<Fiber> = new Set();
+      trappedErrors.forEach(trappedError => {
+        const boundary = trappedError.boundary;
+        const error = trappedError.error;
+        if (!boundary) {
+          firstUncaughtError = firstUncaughtError || error;
+          return;
+        }
+        // Don't visit boundaries twice.
+        if (affectedBoundaries.has(boundary)) {
+          return;
+        }
+        // Give error boundary a chance to update its state.
+        try {
+          acknowledgeErrorInBoundary(boundary, error);
+          affectedBoundaries.add(boundary);
+        } catch (nextError) {
+          // If it throws, propagate the error.
+          nextTrappedErrors = nextTrappedErrors || [];
+          nextTrappedErrors.push(trapError(boundary, nextError));
+        }
+      });
+
+      // We will process an update caused by each error boundary synchronously.
+      affectedBoundaries.forEach(boundary => {
+        // FIXME: We only specify LowPriority here so that setState() calls from the error
+        // boundaries are respected. Instead we should set default priority level or something
+        // like this. Reconsider this piece when synchronous scheduling is in place.
+        const priority = LowPriority;
+        const root = scheduleErrorBoundaryWork(boundary, priority);
+        // This should use findNextUnitOfWork() when synchronous scheduling is implemented.
+        let fiber = cloneFiber(root.current, priority);
+        try {
+          while (fiber) {
+            // TODO: this is the only place where we recurse and it's unfortunate.
+            // (This may potentially get us into handleErrors() again.)
+            fiber = performUnitOfWork(fiber, true);
+          }
+        } catch (nextError) {
+          // If it throws, propagate the error.
+          nextTrappedErrors = nextTrappedErrors || [];
+          nextTrappedErrors.push(trapError(boundary, nextError));
+        }
+      });
     }
 
-    try {
-      // Give error boundary a chance to update its state
-      acknowledgeErrorInBoundary(boundary, error);
+    // Surface the first error uncaught by the boundaries to the user.
+    if (firstUncaughtError) {
+      // We need to make sure any future root can get scheduled despite these errors.
+      // Currently after throwing, nothing gets scheduled because these fields are set.
+      // FIXME: this is likely a wrong fix! It's still better than ignoring updates though.
+      nextScheduledRoot = null;
+      lastScheduledRoot = null;
 
-      // We will process an update caused by an error boundary with synchronous priority.
-      // This leaves us free to not keep track of whether a boundary has errored.
-      // If it errors again, we will just catch the error and synchronously propagate it higher.
-
-      // First, traverse upwards and set pending synchronous priority on the whole tree.
-      let fiber = boundary;
-      while (fiber) {
-        fiber.pendingWorkPriority = SynchronousPriority;
-        if (fiber.alternate) {
-          fiber.alternate.pendingWorkPriority = SynchronousPriority;
-        }
-        if (!fiber.return) {
-          if (fiber.tag === HostContainer) {
-            // We found the root.
-            // Now go to the second phase and update it synchronously.
-            break;
-          } else {
-            throw new Error('Invalid root');
-          }
-        }
-        fiber = fiber.return;
-      }
-
-      if (!fiber) {
-        throw new Error('Could not find an error boundary root.');
-      }
-
-      // Find the work in progress tree.
-      const root : FiberRoot = (fiber.stateNode : any);
-      fiber = root.current.alternate;
-
-      // Perform all the work synchronously.
-      while (fiber) {
-        fiber = performUnitOfWork(fiber, true);
-      }
-    } catch (nextError) {
-      // Propagate error to the next boundary or rethrow.
-      const nextTrappedError = trapError(boundary, nextError);
-      handleError(nextTrappedError);
+      // Throw any unhandled errors.
+      throw firstUncaughtError;
     }
   }
 

@@ -131,6 +131,7 @@ var ReactDOM = {
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     warnAboutUnstableUse();
     let root;
+
     if (!container._reactRootContainer) {
       root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, callback);
     } else {
