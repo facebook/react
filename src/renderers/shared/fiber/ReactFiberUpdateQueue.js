@@ -73,14 +73,14 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
   }
 };
 
-exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props : any) : any {
+exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
   let node : ?UpdateQueueNode = queue;
   let state = queue.isReplace ? null : Object.assign({}, prevState);
   while (node) {
     let partialState;
     if (typeof node.partialState === 'function') {
       const updateFn = node.partialState;
-      partialState = updateFn(state, props);
+      partialState = updateFn.call(instance, state, props);
     } else {
       partialState = node.partialState;
     }

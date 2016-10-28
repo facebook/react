@@ -112,6 +112,8 @@ var DOMRenderer = ReactFiberReconciler({
 
   scheduleDeferredCallback: window.requestIdleCallback,
 
+  useSyncScheduling: true,
+
 });
 
 var warned = false;

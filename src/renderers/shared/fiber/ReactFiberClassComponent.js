@@ -130,7 +130,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?Prior
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, state, props);
+        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
       }
     }
   }
@@ -174,7 +174,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?Prior
       // process them now.
       const newUpdateQueue = workInProgress.updateQueue;
       if (newUpdateQueue) {
-        newInstance.state = mergeUpdateQueue(newUpdateQueue, newState, newProps);
+        newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
       }
     }
     return true;
@@ -211,7 +211,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?Prior
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      newState = mergeUpdateQueue(updateQueue, previousState, newProps);
+      newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
     } else {
       newState = previousState;
     }
