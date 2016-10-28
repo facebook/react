@@ -72,7 +72,7 @@ var invariant = require('invariant');`
       "!condition ? " +
       "process.env.NODE_ENV !== 'production' ? " +
       "invariant(false, 'Do not override existing functions.') : " +
-      `_prodInvariant('16') : void 0;`
+      `_prodInvariant('28') : void 0;`
     );
   });
 
@@ -81,7 +81,7 @@ var invariant = require('invariant');`
       "!condition ? " +
       "process.env.NODE_ENV !== 'production' ? " +
       "invariant(false, 'Do not override existing functions.') : " +
-      `_prodInvariant('16') : void 0;`
+      `_prodInvariant('28') : void 0;`
     );
 
     compare(
@@ -104,7 +104,7 @@ ${expectedInvariantTransformResult}`
       "!condition ? " +
       "process.env.NODE_ENV !== 'production' ? " +
       "invariant(false, 'Expected %s target to be an array; got %s', 'foo', 'bar') : " +
-      `_prodInvariant('7', 'foo', 'bar') : void 0;`
+      `_prodInvariant('43', 'foo', 'bar') : void 0;`
     );
   });
 
@@ -115,7 +115,7 @@ ${expectedInvariantTransformResult}`
       "!condition ? " +
       "process.env.NODE_ENV !== 'production' ? " +
       "invariant(false, 'Expected a component class, got %s.%s', 'Foo', 'Bar') : " +
-      `_prodInvariant('18', 'Foo', 'Bar') : void 0;`
+      `_prodInvariant('44', 'Foo', 'Bar') : void 0;`
     );
   });
 
