@@ -373,20 +373,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performDeferredWork(deadline) {
-    try {
-      performDeferredWorkUnsafe(deadline);
-    } catch (error) {
-      const failedUnitOfWork = nextUnitOfWork;
-      // Reset because it points to the error boundary:
-      nextUnitOfWork = null;
-      if (!failedUnitOfWork) {
-        // We shouldn't end up here because nextUnitOfWork
-        // should always be set while work is being performed.
-        throw error;
-      }
-      const trappedError = trapError(failedUnitOfWork, error);
-      handleErrors([trappedError]);
-    }
+    performAndHandleErrors(performDeferredWorkUnsafe, deadline);
   }
 
   function scheduleDeferredWork(root : FiberRoot, priority : PriorityLevel) {
@@ -439,20 +426,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performAnimationWork() {
-    try {
-      performAnimationWorkUnsafe();
-    } catch (error) {
-      const failedUnitOfWork = nextUnitOfWork;
-      // Reset because it points to the error boundary:
-      nextUnitOfWork = null;
-      if (!failedUnitOfWork) {
-        // We shouldn't end up here because nextUnitOfWork
-        // should always be set while work is being performed.
-        throw error;
-      }
-      const trappedError = trapError(failedUnitOfWork, error);
-      handleErrors([trappedError]);
-    }
+    performAndHandleErrors(performAnimationWorkUnsafe);
   }
 
   function scheduleAnimationWork(root: FiberRoot, priorityLevel : PriorityLevel) {
@@ -503,6 +477,46 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       throw new Error('Could not find root from the boundary.');
     }
     return root;
+  }
+
+  function performSynchronousWorkUnsafe() {
+    // Perform work now
+    nextUnitOfWork = findNextUnitOfWork();
+    while (nextUnitOfWork &&
+           nextPriorityLevel === SynchronousPriority) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+      // If there's no nextUnitForWork, we don't need to search for more
+      // because it shouldn't be possible to schedule sync work without
+      // immediately performing it
+    }
+    if (nextUnitOfWork) {
+      if (nextPriorityLevel > AnimationPriority) {
+        scheduleDeferredCallback(performDeferredWork);
+        return;
+      }
+      scheduleAnimationCallback(performAnimationWork);
+    }
+  }
+
+  function performSynchronousWork() {
+    performAndHandleErrors(performSynchronousWorkUnsafe);
+  }
+
+  function performAndHandleErrors<A>(fn: (a: A) => void, a: A) {
+    try {
+      fn(a);
+    } catch (error) {
+      const failedUnitOfWork = nextUnitOfWork;
+      // Reset because it points to the error boundary:
+      nextUnitOfWork = null;
+      if (!failedUnitOfWork) {
+        // We shouldn't end up here because nextUnitOfWork
+        // should always be set while work is being performed.
+        throw error;
+      }
+      const trappedError = trapError(failedUnitOfWork, error);
+      handleErrors([trappedError]);
+    }
   }
 
   function handleErrors(initialTrappedErrors : Array<TrappedError>) : void {
@@ -579,7 +593,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function scheduleWork(root : FiberRoot) {
     if (defaultPriority === SynchronousPriority) {
-      throw new Error('Not implemented yet');
+      root.current.pendingWorkPriority = SynchronousPriority;
+      performSynchronousWork();
     }
 
     if (defaultPriority === NoWork) {
