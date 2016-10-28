@@ -63,8 +63,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const scheduleAnimationCallback = config.scheduleAnimationCallback;
   const scheduleDeferredCallback = config.scheduleDeferredCallback;
 
-  // The default priority to use for updates.
-  let defaultPriority : PriorityLevel = LowPriority;
+  // The priority level to use when scheduling an update.
+  let priorityContext : (PriorityLevel | null) = null;
+  // The priority level to use if there is no priority context.
+  let defaultPriorityContext : PriorityLevel = LowPriority;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -485,7 +487,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (nextUnitOfWork &&
            nextPriorityLevel === SynchronousPriority) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
-      // If there's no nextUnitForWork, we don't need to search for more
+      // If there's no nextUnitOfWork, we don't need to search for more
       // because it shouldn't be possible to schedule sync work without
       // immediately performing it
     }
@@ -591,23 +593,45 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function scheduleWork(root : FiberRoot) {
-    if (defaultPriority === SynchronousPriority) {
+  function scheduleWork(root : FiberRoot, priorityLevel : ?PriorityLevel) {
+    if (priorityLevel == null) {
+      priorityLevel = priorityContext !== null ?
+        priorityContext :
+        defaultPriorityContext;
+    }
+
+    if (priorityLevel === SynchronousPriority) {
       root.current.pendingWorkPriority = SynchronousPriority;
       performSynchronousWork();
     }
 
-    if (defaultPriority === NoWork) {
+    if (priorityLevel === NoWork) {
       return;
     }
-    if (defaultPriority > AnimationPriority) {
-      scheduleDeferredWork(root, defaultPriority);
+    if (priorityLevel > AnimationPriority) {
+      scheduleDeferredWork(root, priorityLevel);
       return;
     }
-    scheduleAnimationWork(root, defaultPriority);
+    scheduleAnimationWork(root, priorityLevel);
   }
 
-  function scheduleUpdate(fiber: Fiber, priorityLevel : PriorityLevel): void {
+  function scheduleUpdate(fiber: Fiber, priorityLevel : ?PriorityLevel): void {
+    // Use priority context if no priority is provided
+    if (priorityLevel == null) {
+      priorityLevel = priorityContext !== null ?
+        priorityContext :
+        defaultPriorityContext;
+    }
+
+    // Don't bother bubbling the priority to the root if it is synchronous. Just
+    // perform it now.
+    if (priorityLevel === SynchronousPriority) {
+      fiber.pendingWorkPriority = SynchronousPriority;
+      nextUnitOfWork = fiber;
+      performSynchronousWork();
+      return;
+    }
+
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
           fiber.pendingWorkPriority >= priorityLevel) {
@@ -622,7 +646,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       if (!fiber.return) {
         if (fiber.tag === HostContainer) {
           const root : FiberRoot = (fiber.stateNode : any);
-          scheduleDeferredWork(root, priorityLevel);
+          scheduleWork(root, priorityLevel);
           return;
         } else {
           throw new Error('Invalid root');
@@ -633,12 +657,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
-    const previousDefaultPriority = defaultPriority;
-    defaultPriority = priorityLevel;
+    const previousPriorityContext = priorityContext;
+    priorityContext = priorityLevel;
     try {
       fn();
     } finally {
-      defaultPriority = previousDefaultPriority;
+      priorityContext = previousPriorityContext;
     }
   }
 
