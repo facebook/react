@@ -4,7 +4,9 @@ title: Forms
 permalink: docs/forms.html
 prev: state-and-lifecycle.html
 next: lifting-state-up.html
-redirect_from: "tips/controlled-input-null-value.html"
+redirect_from:
+  - "tips/controlled-input-null-value.html"
+  - "docs/forms-zh-CN.html"
 ---
 
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
@@ -437,7 +439,7 @@ class Form extends React.Component {
             type="radio"
             name="choice"
             value="C"
-            onChange={this.handleChange} /> 
+            onChange={this.handleChange} />
           Option C
         </label>
         <br />
@@ -497,7 +499,7 @@ class Form extends React.Component {
           <input
             type="checkbox"
             value="A"
-            onChange={this.handleChange} /> 
+            onChange={this.handleChange} />
           Option A
         </label>
         <br />
@@ -506,7 +508,7 @@ class Form extends React.Component {
             type="checkbox"
             value="B"
             onChange={this.handleChange}
-            defaultChecked={true} /> 
+            defaultChecked={true} />
           Option B
         </label>
         <br />
@@ -514,7 +516,7 @@ class Form extends React.Component {
         <input
           type="checkbox"
           value="C"
-          onChange={this.handleChange} /> 
+          onChange={this.handleChange} />
           Option C
         </label>
         <br />

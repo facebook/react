@@ -7,6 +7,8 @@ permalink: docs/react-component.html
 redirect_from:
   - "docs/component-api.html"
   - "docs/component-specs.html"
+  - "docs/component-specs-ko-KR.html"
+  - "docs/component-specs-zh-CN.html"
   - "tips/componentWillReceiveProps-not-triggered-after-mounting.html"
   - "tips/dom-event-listeners.html"
   - "tips/initial-ajax.html"
