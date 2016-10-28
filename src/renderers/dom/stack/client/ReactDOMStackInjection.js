@@ -19,6 +19,7 @@ var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
+var ReactGenericBatching = require('ReactGenericBatching');
 var ReactHostComponent = require('ReactHostComponent');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
@@ -33,6 +34,10 @@ function inject() {
     return;
   }
   alreadyInjected = true;
+
+  ReactGenericBatching.injection.injectStackBatchedUpdates(
+    ReactUpdates.batchedUpdates
+  );
 
   ReactHostComponent.injection.injectGenericComponentClass(
     ReactDOMComponent

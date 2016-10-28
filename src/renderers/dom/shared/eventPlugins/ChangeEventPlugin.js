@@ -15,7 +15,7 @@ var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 
 var inputValueTracking = require('inputValueTracking');
@@ -98,7 +98,7 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  ReactUpdates.batchedUpdates(runEventInBatch, event);
+  ReactGenericBatching.batchedUpdates(runEventInBatch, event);
 }
 
 function runEventInBatch(event) {

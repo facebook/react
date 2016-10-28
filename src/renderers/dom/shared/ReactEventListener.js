@@ -15,7 +15,7 @@ var EventListener = require('EventListener');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
@@ -165,7 +165,7 @@ var ReactEventListener = {
     try {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.
-      ReactUpdates.batchedUpdates(handleTopLevelImpl, bookKeeping);
+      ReactGenericBatching.batchedUpdates(handleTopLevelImpl, bookKeeping);
     } finally {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }
