@@ -25,6 +25,6 @@ If you need an answer right away, check out the [Reactiflux Discord](https://dis
 
 ## Facebook and Twitter
 
-For the latest news about React, [like us on Facebook](https://facebook/react) and [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the [#reactjs](https://twitter.com/hashtag/reactjs) hashtag to see what others are saying or add to the conversation.
+For the latest news about React, [like us on Facebook](https://facebook.com/react) and [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the [#reactjs](https://twitter.com/hashtag/reactjs) hashtag to see what others are saying or add to the conversation.
 
 <div><a class="twitter-timeline" data-dnt="true" data-chrome="nofooter noheader transparent" href="https://twitter.com/search?q=%23reactjs" data-widget-id="342522405270470656"></a></div>
