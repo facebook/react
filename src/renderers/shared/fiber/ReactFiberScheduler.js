@@ -425,17 +425,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Always start from the root
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
-           nextPriorityLevel !== NoWork) {
+           nextPriorityLevel !== NoWork &&
+           nextPriorityLevel <= AnimationPriority) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
       if (!nextUnitOfWork) {
         // Keep searching for animation work until there's no more left
         nextUnitOfWork = findNextUnitOfWork();
       }
-      // Stop if the next unit of work is low priority
-      if (nextPriorityLevel > AnimationPriority) {
-        scheduleDeferredCallback(performDeferredWork);
-        return;
-      }
+    }
+    if (nextUnitOfWork && nextPriorityLevel > AnimationPriority) {
+      scheduleDeferredCallback(performDeferredWork);
     }
   }
 
