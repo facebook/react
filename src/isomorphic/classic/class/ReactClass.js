@@ -728,6 +728,11 @@ var ReactClassMixin = {
    * type signature and the only use case for this, is to avoid that.
    */
   replaceState: function(newState, callback) {
+    if (this.updater.isFiberUpdater) {
+      this.updater.enqueueReplaceState(this, newState, callback);
+      return;
+    }
+
     this.updater.enqueueReplaceState(this, newState);
     if (callback) {
       this.updater.enqueueCallback(this, callback, 'replaceState');

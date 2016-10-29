@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 var React;
 var ReactDOM;
 
@@ -148,72 +150,146 @@ describe('ReactCompositeComponent-state', () => {
 
     ReactDOM.unmountComponentAtNode(container);
 
-    expect(stateListener.mock.calls.join('\n')).toEqual([
-      // there is no state when getInitialState() is called
-      ['getInitialState', null],
-      ['componentWillMount-start', 'red'],
-      // setState()'s only enqueue pending states.
-      ['componentWillMount-after-sunrise', 'red'],
-      ['componentWillMount-end', 'red'],
-      // pending state queue is processed
-      ['before-setState-sunrise', 'red'],
-      ['after-setState-sunrise', 'sunrise'],
-      ['after-setState-orange', 'orange'],
-      // pending state has been applied
-      ['render', 'orange'],
-      ['componentDidMount-start', 'orange'],
-      // setState-sunrise and setState-orange should be called here,
-      // after the bug in #1740
-      // componentDidMount() called setState({color:'yellow'}), which is async.
-      // The update doesn't happen until the next flush.
-      ['componentDidMount-end', 'orange'],
-      ['shouldComponentUpdate-currentState', 'orange'],
-      ['shouldComponentUpdate-nextState', 'yellow'],
-      ['componentWillUpdate-currentState', 'orange'],
-      ['componentWillUpdate-nextState', 'yellow'],
-      ['render', 'yellow'],
-      ['componentDidUpdate-currentState', 'yellow'],
-      ['componentDidUpdate-prevState', 'orange'],
-      ['setState-sunrise', 'yellow'],
-      ['setState-orange', 'yellow'],
-      ['setState-yellow', 'yellow'],
-      ['initial-callback', 'yellow'],
-      ['componentWillReceiveProps-start', 'yellow'],
-      // setState({color:'green'}) only enqueues a pending state.
-      ['componentWillReceiveProps-end', 'yellow'],
-      // pending state queue is processed
-      // before-setState-receiveProps never called, due to replaceState.
-      ['before-setState-again-receiveProps', undefined],
-      ['after-setState-receiveProps', 'green'],
-      ['shouldComponentUpdate-currentState', 'yellow'],
-      ['shouldComponentUpdate-nextState', 'green'],
-      ['componentWillUpdate-currentState', 'yellow'],
-      ['componentWillUpdate-nextState', 'green'],
-      ['render', 'green'],
-      ['componentDidUpdate-currentState', 'green'],
-      ['componentDidUpdate-prevState', 'yellow'],
-      ['setState-receiveProps', 'green'],
-      ['setProps', 'green'],
-      // setFavoriteColor('blue')
-      ['shouldComponentUpdate-currentState', 'green'],
-      ['shouldComponentUpdate-nextState', 'blue'],
-      ['componentWillUpdate-currentState', 'green'],
-      ['componentWillUpdate-nextState', 'blue'],
-      ['render', 'blue'],
-      ['componentDidUpdate-currentState', 'blue'],
-      ['componentDidUpdate-prevState', 'green'],
-      ['setFavoriteColor', 'blue'],
-      // forceUpdate()
-      ['componentWillUpdate-currentState', 'blue'],
-      ['componentWillUpdate-nextState', 'blue'],
-      ['render', 'blue'],
-      ['componentDidUpdate-currentState', 'blue'],
-      ['componentDidUpdate-prevState', 'blue'],
-      ['forceUpdate', 'blue'],
-      // unmountComponent()
-      // state is available within `componentWillUnmount()`
-      ['componentWillUnmount', 'blue'],
-    ].join('\n'));
+    let expected;
+    if (ReactDOMFeatureFlags.useFiber) {
+      expected = [
+        // there is no state when getInitialState() is called
+        ['getInitialState', null],
+        ['componentWillMount-start', 'red'],
+        // setState()'s only enqueue pending states.
+        ['componentWillMount-after-sunrise', 'red'],
+        ['componentWillMount-end', 'red'],
+        // pending state queue is processed
+        ['before-setState-sunrise', 'red'],
+        ['after-setState-sunrise', 'sunrise'],
+        ['after-setState-orange', 'orange'],
+        // pending state has been applied
+        ['render', 'orange'],
+        ['componentDidMount-start', 'orange'],
+        // setState-sunrise and setState-orange should be called here,
+        // after the bug in #1740
+        // componentDidMount() called setState({color:'yellow'}), which is async.
+        // The update doesn't happen until the next flush.
+        ['componentDidMount-end', 'orange'],
+        ['setState-sunrise', 'orange'],
+        ['setState-orange', 'orange'],
+        ['initial-callback', 'orange'],
+        ['shouldComponentUpdate-currentState', 'orange'],
+        ['shouldComponentUpdate-nextState', 'yellow'],
+        ['componentWillUpdate-currentState', 'orange'],
+        ['componentWillUpdate-nextState', 'yellow'],
+        ['render', 'yellow'],
+        ['componentDidUpdate-currentState', 'yellow'],
+        ['componentDidUpdate-prevState', 'orange'],
+        ['setState-yellow', 'yellow'],
+        ['componentWillReceiveProps-start', 'yellow'],
+        // setState({color:'green'}) only enqueues a pending state.
+        ['componentWillReceiveProps-end', 'yellow'],
+        // pending state queue is processed
+        // before-setState-receiveProps never called, due to replaceState.
+        ['before-setState-again-receiveProps', undefined],
+        ['after-setState-receiveProps', 'green'],
+        ['shouldComponentUpdate-currentState', 'yellow'],
+        ['shouldComponentUpdate-nextState', 'green'],
+        ['componentWillUpdate-currentState', 'yellow'],
+        ['componentWillUpdate-nextState', 'green'],
+        ['render', 'green'],
+        ['componentDidUpdate-currentState', 'green'],
+        ['componentDidUpdate-prevState', 'yellow'],
+        ['setState-receiveProps', 'green'],
+        ['setProps', 'green'],
+        // setFavoriteColor('blue')
+        ['shouldComponentUpdate-currentState', 'green'],
+        ['shouldComponentUpdate-nextState', 'blue'],
+        ['componentWillUpdate-currentState', 'green'],
+        ['componentWillUpdate-nextState', 'blue'],
+        ['render', 'blue'],
+        ['componentDidUpdate-currentState', 'blue'],
+        ['componentDidUpdate-prevState', 'green'],
+        ['setFavoriteColor', 'blue'],
+        // forceUpdate()
+        ['componentWillUpdate-currentState', 'blue'],
+        ['componentWillUpdate-nextState', 'blue'],
+        ['render', 'blue'],
+        ['componentDidUpdate-currentState', 'blue'],
+        ['componentDidUpdate-prevState', 'blue'],
+        ['forceUpdate', 'blue'],
+        // unmountComponent()
+        // state is available within `componentWillUnmount()`
+        ['componentWillUnmount', 'blue'],
+      ];
+    } else {
+      // There's a bug in the stack reconciler where setState callbacks inside
+      // componentWillMount aren't flushed properly
+      expected = [
+        // there is no state when getInitialState() is called
+        ['getInitialState', null],
+        ['componentWillMount-start', 'red'],
+        // setState()'s only enqueue pending states.
+        ['componentWillMount-after-sunrise', 'red'],
+        ['componentWillMount-end', 'red'],
+        // pending state queue is processed
+        ['before-setState-sunrise', 'red'],
+        ['after-setState-sunrise', 'sunrise'],
+        ['after-setState-orange', 'orange'],
+        // pending state has been applied
+        ['render', 'orange'],
+        ['componentDidMount-start', 'orange'],
+        // setState-sunrise and setState-orange should be called here,
+        // after the bug in #1740
+        // componentDidMount() called setState({color:'yellow'}), which is async.
+        // The update doesn't happen until the next flush.
+        ['componentDidMount-end', 'orange'],
+        ['shouldComponentUpdate-currentState', 'orange'],
+        ['shouldComponentUpdate-nextState', 'yellow'],
+        ['componentWillUpdate-currentState', 'orange'],
+        ['componentWillUpdate-nextState', 'yellow'],
+        ['render', 'yellow'],
+        ['componentDidUpdate-currentState', 'yellow'],
+        ['componentDidUpdate-prevState', 'orange'],
+        ['setState-sunrise', 'yellow'],
+        ['setState-orange', 'yellow'],
+        ['setState-yellow', 'yellow'],
+        ['initial-callback', 'yellow'],
+        ['componentWillReceiveProps-start', 'yellow'],
+        // setState({color:'green'}) only enqueues a pending state.
+        ['componentWillReceiveProps-end', 'yellow'],
+        // pending state queue is processed
+        // before-setState-receiveProps never called, due to replaceState.
+        ['before-setState-again-receiveProps', undefined],
+        ['after-setState-receiveProps', 'green'],
+        ['shouldComponentUpdate-currentState', 'yellow'],
+        ['shouldComponentUpdate-nextState', 'green'],
+        ['componentWillUpdate-currentState', 'yellow'],
+        ['componentWillUpdate-nextState', 'green'],
+        ['render', 'green'],
+        ['componentDidUpdate-currentState', 'green'],
+        ['componentDidUpdate-prevState', 'yellow'],
+        ['setState-receiveProps', 'green'],
+        ['setProps', 'green'],
+        // setFavoriteColor('blue')
+        ['shouldComponentUpdate-currentState', 'green'],
+        ['shouldComponentUpdate-nextState', 'blue'],
+        ['componentWillUpdate-currentState', 'green'],
+        ['componentWillUpdate-nextState', 'blue'],
+        ['render', 'blue'],
+        ['componentDidUpdate-currentState', 'blue'],
+        ['componentDidUpdate-prevState', 'green'],
+        ['setFavoriteColor', 'blue'],
+        // forceUpdate()
+        ['componentWillUpdate-currentState', 'blue'],
+        ['componentWillUpdate-nextState', 'blue'],
+        ['render', 'blue'],
+        ['componentDidUpdate-currentState', 'blue'],
+        ['componentDidUpdate-prevState', 'blue'],
+        ['forceUpdate', 'blue'],
+        // unmountComponent()
+        // state is available within `componentWillUnmount()`
+        ['componentWillUnmount', 'blue'],
+      ];
+    }
+
+    expect(stateListener.mock.calls.join('\n')).toEqual(expected.join('\n'));
   });
 
   it('should batch unmounts', () => {
