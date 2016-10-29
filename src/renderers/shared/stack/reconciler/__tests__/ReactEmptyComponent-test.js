@@ -16,8 +16,6 @@ var ReactDOM;
 var ReactTestUtils;
 var TogglingComponent;
 
-var reactComponentExpect;
-
 var log;
 
 describe('ReactEmptyComponent', () => {
@@ -27,8 +25,6 @@ describe('ReactEmptyComponent', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-
-    reactComponentExpect = require('reactComponentExpect');
 
     log = jasmine.createSpy();
 
@@ -51,7 +47,7 @@ describe('ReactEmptyComponent', () => {
     };
   });
 
-  it('should render null and false as a noscript tag under the hood', () => {
+  it('should not produce child DOM nodes for null and false', () => {
     class Component1 extends React.Component {
       render() {
         return null;
@@ -64,14 +60,13 @@ describe('ReactEmptyComponent', () => {
       }
     }
 
-    var instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
-    var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
-    reactComponentExpect(instance1)
-      .expectRenderedChild()
-      .toBeEmptyComponent();
-    reactComponentExpect(instance2)
-      .expectRenderedChild()
-      .toBeEmptyComponent();
+    var container1 = document.createElement('div');
+    ReactDOM.render(<Component1 />, container1);
+    expect(container1.children.length).toBe(0);
+
+    var container2 = document.createElement('div');
+    ReactDOM.render(<Component2 />, container2);
+    expect(container2.children.length).toBe(0);
   });
 
   it('should still throw when rendering to undefined', () => {
