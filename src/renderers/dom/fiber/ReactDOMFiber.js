@@ -88,8 +88,12 @@ var DOMRenderer = ReactFiberReconciler({
     return document.createTextNode(text);
   },
 
-  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
+  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string, parentInstance: Instance) : void {
     textInstance.nodeValue = newText;
+    // After a Node#normalize() on a parent, we need to reattach to the tree
+    if (!textInstance.parentNode) {
+      parentInstance.appendChild(textInstance);
+    }
   },
 
   appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {

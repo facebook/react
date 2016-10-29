@@ -288,7 +288,8 @@ module.exports = function<T, P, I, TI, C>(
         const textInstance : TI = finishedWork.stateNode;
         const newText : string = finishedWork.memoizedProps;
         const oldText : string = current.memoizedProps;
-        commitTextUpdate(textInstance, oldText, newText);
+        const parentInstance : I = current.return.stateNode;
+        commitTextUpdate(textInstance, oldText, newText, parentInstance);
         return;
       }
       default:
