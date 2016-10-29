@@ -157,9 +157,9 @@ var ReactTestUtils = {
       return false;
     }
     var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance
-      ._currentElement
-      .type;
+    var constructor = typeof internalInstance.tag === 'number' ?
+      internalInstance.type : // Fiber reconciler
+      internalInstance._currentElement.type; // Stack reconciler
 
     return (constructor === type);
   },

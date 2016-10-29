@@ -266,7 +266,11 @@ describe('ReactElement', () => {
       React.createElement(Wrapper)
     );
 
-    expect(element._owner.getPublicInstance()).toBe(instance);
+    if (typeof element._owner.tag === 'number') { // Fiber reconciler
+      expect(element._owner.stateNode).toBe(instance);
+    } else { // Stack reconciler
+      expect(element._owner.getPublicInstance()).toBe(instance);
+    }
   });
 
   it('merges an additional argument onto the children prop', () => {
