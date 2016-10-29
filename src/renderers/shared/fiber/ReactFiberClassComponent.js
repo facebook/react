@@ -41,36 +41,35 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?Prior
   // Class component state updater
   const updater = {
     isMounted,
-    enqueueSetState(instance, partialState) {
+    enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue ?
         addToQueue(fiber.updateQueue, partialState) :
         createUpdateQueue(partialState);
+      if (callback) {
+        addCallbackToQueue(updateQueue, callback);
+      }
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueReplaceState(instance, state) {
+    enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = createUpdateQueue(state);
       updateQueue.isReplace = true;
+      if (callback) {
+        addCallbackToQueue(updateQueue, callback);
+      }
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueForceUpdate(instance) {
+    enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue || createUpdateQueue(null);
       updateQueue.isForced = true;
+      if (callback) {
+        addCallbackToQueue(updateQueue, callback);
+      }
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      fiber.updateQueue = updateQueue;
-      if (fiber.alternate) {
-        fiber.alternate.updateQueue = updateQueue;
-      }
-    },
+    isFiberUpdater: true,
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState) {
