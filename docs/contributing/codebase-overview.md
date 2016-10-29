@@ -397,7 +397,7 @@ Its source code is located in [`src/renderers/shared/fiber`](https://github.com/
 
 ### Event System
 
-React implements a synthetic event system which is agnostic of the renderers and works both with React DOM and React Native. Its source code is located in [`src/renderers/shared/stack/event`](https://github.com/facebook/react/tree/master/src/renderers/shared/stack/event).
+React implements a synthetic event system which is agnostic of the renderers and works both with React DOM and React Native. Its source code is located in [`src/renderers/shared/shared/event`](https://github.com/facebook/react/tree/master/src/renderers/shared/shared/event).
 
 There is a [video with a deep code dive into it](https://www.youtube.com/watch?v=dRo_egw7tBc) (66 mins).
 
