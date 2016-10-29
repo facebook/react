@@ -45,9 +45,17 @@ describe('refs-destruction', () => {
     var testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
       .toBe(true);
-    expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
+    expect(
+      Object.keys(testInstance.refs || {})
+        .filter(key => testInstance.refs[key])
+        .length
+    ).toEqual(1);
     ReactDOM.unmountComponentAtNode(container);
-    expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
+    expect(
+      Object.keys(testInstance.refs || {})
+        .filter(key => testInstance.refs[key])
+        .length
+    ).toEqual(0);
   });
 
   it('should remove refs when destroying the child', () => {
@@ -55,9 +63,17 @@ describe('refs-destruction', () => {
     var testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
       .toBe(true);
-    expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
+    expect(
+      Object.keys(testInstance.refs || {})
+        .filter(key => testInstance.refs[key])
+        .length
+    ).toEqual(1);
     ReactDOM.render(<TestComponent destroy={true} />, container);
-    expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
+    expect(
+      Object.keys(testInstance.refs || {})
+        .filter(key => testInstance.refs[key])
+        .length
+    ).toEqual(0);
   });
 
   it('should not error when destroying child with ref asynchronously', () => {
