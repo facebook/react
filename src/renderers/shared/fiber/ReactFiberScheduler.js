@@ -555,6 +555,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       });
     }
 
+    ReactCurrentOwner.current = null;
+
     // Surface the first error uncaught by the boundaries to the user.
     if (firstUncaughtError) {
       // We need to make sure any future root can get scheduled despite these errors.
