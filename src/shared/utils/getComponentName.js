@@ -12,19 +12,26 @@
 
 'use strict';
 
-function getComponentName(internalInstance) : string | null {
-  if (typeof internalInstance.getName === 'function') {
-    // Stack reconciler
-    return internalInstance.getName() || 'Component';
-  }
-  if (typeof internalInstance.tag === 'number') {
-    // Fiber reconciler
-    const {type} = internalInstance;
-    if (typeof type === 'string') {
-      return type;
+import type { ReactInstance } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
+
+function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string | null {
+  if (__DEV__) {
+    if (typeof instanceOrFiber.getName === 'function') {
+      // Stack reconciler
+      const instance = ((instanceOrFiber : any) : ReactInstance);
+      return instance.getName() || 'Component';
     }
-    if (typeof type === 'function') {
-      return type.displayName || type.name || null;
+    if (typeof instanceOrFiber.tag === 'number') {
+      // Fiber reconciler
+      const fiber = ((instanceOrFiber : any) : Fiber);
+      const {type} = fiber;
+      if (typeof type === 'string') {
+        return type;
+      }
+      if (typeof type === 'function') {
+        return type.displayName || type.name || null;
+      }
     }
   }
   return null;
