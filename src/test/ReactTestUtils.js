@@ -96,6 +96,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     );
     child = child.sibling;
   }
+  // TODO: visit stateNode for coroutines
   return ret;
 }
 
