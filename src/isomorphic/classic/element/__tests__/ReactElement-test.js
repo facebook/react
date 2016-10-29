@@ -266,11 +266,9 @@ describe('ReactElement', () => {
       React.createElement(Wrapper)
     );
 
-    // If the element is owned by a Fiber, there is no methods
-    // We need to circumvent getPublicInstance() to introspect the owner
-    if (element._owner.stateNode) {
+    if (typeof element._owner.tag === 'number') { // Fiber reconciler
       expect(element._owner.stateNode).toBe(instance);
-    } else {
+    } else { // Stack reconciler
       expect(element._owner.getPublicInstance()).toBe(instance);
     }
   });
