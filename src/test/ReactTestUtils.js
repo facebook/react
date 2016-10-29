@@ -157,9 +157,10 @@ var ReactTestUtils = {
       return false;
     }
     var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance
-      ._currentElement
-      .type;
+    // If internalInstance is a Fiber, you can access directly the type
+    var constructor = internalInstance.type ?
+      internalInstance.type :
+      internalInstance._currentElement.type;
 
     return (constructor === type);
   },
