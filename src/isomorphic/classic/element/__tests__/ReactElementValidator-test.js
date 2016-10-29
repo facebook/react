@@ -318,6 +318,8 @@ describe('ReactElementValidator', () => {
     );
     React.createElement('div');
     expect(console.error.calls.count()).toBe(4);
+    React.createElement({ tag: 1 });
+    expect(console.error.calls.count()).toBe(4);
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {
