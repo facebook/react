@@ -12,6 +12,7 @@
 'use strict';
 
 var emptyFunction = require('emptyFunction');
+var getComponentName = require('getComponentName');
 var warning = require('warning');
 
 var validateDOMNesting = emptyFunction;
@@ -371,16 +372,16 @@ if (__DEV__) {
 
       var UNKNOWN = '(unknown)';
       var childOwnerNames = childOwners.slice(deepestCommon + 1).map(
-        (inst) => inst.getName() || UNKNOWN
+        (inst) => getComponentName(inst) || UNKNOWN
       );
       var ancestorOwnerNames = ancestorOwners.slice(deepestCommon + 1).map(
-        (inst) => inst.getName() || UNKNOWN
+        (inst) => getComponentName(inst) || UNKNOWN
       );
       var ownerInfo = [].concat(
         // If the parent and child instances have a common owner ancestor, start
         // with that -- otherwise we just start with the parent's owners.
         deepestCommon !== -1 ?
-          childOwners[deepestCommon].getName() || UNKNOWN :
+          getComponentName(childOwners[deepestCommon]) || UNKNOWN :
           [],
         ancestorOwnerNames,
         ancestorTag,

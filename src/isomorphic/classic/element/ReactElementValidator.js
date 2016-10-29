@@ -25,12 +25,13 @@ var ReactElement = require('ReactElement');
 var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var canDefineProperty = require('canDefineProperty');
+var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 var warning = require('warning');
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    var name = ReactCurrentOwner.current.getName();
+    var name = getComponentName(ReactCurrentOwner.current);
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }
@@ -94,7 +95,7 @@ function validateExplicitKey(element, parentType) {
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
     childOwner =
-      ` It was passed a child from ${element._owner.getName()}.`;
+      ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
   warning(
