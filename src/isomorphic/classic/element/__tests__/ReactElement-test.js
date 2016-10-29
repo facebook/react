@@ -266,7 +266,13 @@ describe('ReactElement', () => {
       React.createElement(Wrapper)
     );
 
-    expect(element._owner.getPublicInstance()).toBe(instance);
+    // If the element is owned by a Fiber, there is no methods
+    // We need to circumvent getPublicInstance() to introspect the owner
+    if (element._owner.stateNode) {
+      expect(element._owner.stateNode).toBe(instance);
+    } else {
+      expect(element._owner.getPublicInstance()).toBe(instance);
+    }
   });
 
   it('merges an additional argument onto the children prop', () => {
