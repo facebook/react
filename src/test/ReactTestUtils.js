@@ -20,6 +20,7 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
@@ -28,6 +29,11 @@ var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
+var {
+  ClassComponent,
+  HostComponent,
+  HostText,
+} = ReactTypeOfWork;
 
 function Event(suffix) {}
 
@@ -35,7 +41,7 @@ function Event(suffix) {}
  * @class ReactTestUtils
  */
 
-function findAllInRenderedTreeInternal(inst, test) {
+function findAllInRenderedStackTreeInternal(inst, test) {
   if (!inst || !inst.getPublicInstance) {
     return [];
   }
@@ -50,7 +56,7 @@ function findAllInRenderedTreeInternal(inst, test) {
         continue;
       }
       ret = ret.concat(
-        findAllInRenderedTreeInternal(
+        findAllInRenderedStackTreeInternal(
           renderedChildren[key],
           test
         )
@@ -61,9 +67,36 @@ function findAllInRenderedTreeInternal(inst, test) {
     typeof currentElement.type === 'function'
   ) {
     ret = ret.concat(
-      findAllInRenderedTreeInternal(inst._renderedComponent, test)
+      findAllInRenderedStackTreeInternal(inst._renderedComponent, test)
     );
   }
+  return ret;
+}
+
+function findAllInRenderedFiberTreeInternal(fiber, test) {
+  if (!fiber) {
+    return [];
+  }
+  if (
+    fiber.tag !== ClassComponent &&
+    fiber.tag !== HostComponent &&
+    fiber.tag !== HostText
+  ) {
+    return [];
+  }
+  var publicInst = fiber.stateNode;
+  var ret = publicInst && test(publicInst) ? [publicInst] : [];
+  var child = fiber.child;
+  while (child) {
+    ret = ret.concat(
+      findAllInRenderedFiberTreeInternal(
+        child,
+        test
+      )
+    );
+    child = child.sibling;
+  }
+  // TODO: visit stateNode for coroutines
   return ret;
 }
 
@@ -170,7 +203,12 @@ var ReactTestUtils = {
       ReactTestUtils.isCompositeComponent(inst),
       'findAllInRenderedTree(...): instance must be a composite component'
     );
-    return findAllInRenderedTreeInternal(ReactInstanceMap.get(inst), test);
+    var internalInstance = ReactInstanceMap.get(inst);
+    if (internalInstance && typeof internalInstance.tag === 'number') {
+      return findAllInRenderedFiberTreeInternal(internalInstance, test);
+    } else {
+      return findAllInRenderedStackTreeInternal(internalInstance, test);
+    }
   },
 
   /**
