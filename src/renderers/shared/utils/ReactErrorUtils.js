@@ -19,8 +19,7 @@ var caughtError = null;
  *
  * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
- * @param {*} a First argument
- * @param {*} b Second argument
+ * @param {*} a Argument
  */
 function invokeGuardedCallback<A>(
   name: string,
