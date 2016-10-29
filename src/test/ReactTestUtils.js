@@ -157,7 +157,6 @@ var ReactTestUtils = {
       return false;
     }
     var internalInstance = ReactInstanceMap.get(inst);
-    // If internalInstance is a Fiber, you can access directly the type
     var constructor = typeof internalInstance.tag === 'number' ?
       internalInstance.type : // Fiber reconciler
       internalInstance._currentElement.type; // Stack reconciler
