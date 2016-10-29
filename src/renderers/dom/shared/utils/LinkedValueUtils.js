@@ -13,6 +13,7 @@
 
 var React = require('React');
 
+var getComponentName = require('getComponentName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -88,7 +89,7 @@ var propTypes = {
 var loggedTypeFailures = {};
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
-    var name = owner.getName();
+    var name = getComponentName(owner);
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }

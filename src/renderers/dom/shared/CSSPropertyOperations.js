@@ -17,6 +17,7 @@ var ReactInstrumentation = require('ReactInstrumentation');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
+var getComponentName = require('getComponentName');
 var hyphenateStyleName = require('hyphenateStyleName');
 var memoizeStringOnly = require('memoizeStringOnly');
 var warning = require('warning');
@@ -114,7 +115,7 @@ if (__DEV__) {
 
   var checkRenderMessage = function(owner) {
     if (owner) {
-      var name = owner.getName();
+      var name = getComponentName(owner);
       if (name) {
         return ' Check the render method of `' + name + '`.';
       }

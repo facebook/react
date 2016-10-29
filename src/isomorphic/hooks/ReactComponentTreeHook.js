@@ -14,6 +14,7 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var getComponentName = require('getComponentName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -310,7 +311,7 @@ var ReactComponentTreeHook = {
       info += describeComponentFrame(
         name,
         topElement._source,
-        owner && owner.getName()
+        owner && getComponentName(owner)
       );
     }
 
