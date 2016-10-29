@@ -90,16 +90,13 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string, parentInstance: Instance) : void {
     let nodeValueLen = textInstance.nodeValue.length;
-
+    let nextSibling = textInstance.nextSibling;
     // The Node may have been split in this case we need to clean up some next sibling nodes
-    if (nodeValueLen < oldText.length) {
-      let nextSibling = textInstance.nextSibling;
-      while (nextSibling instanceof Text && nodeValueLen < oldText.length) {
-        const currentSibling = nextSibling;
-        nextSibling = currentSibling.nextSibling;
-        nodeValueLen += currentSibling.nodeValue.length;
-        currentSibling.remove();
-      }
+    while (nodeValueLen < oldText.length) {
+      const currentSibling = nextSibling;
+      nextSibling = currentSibling.nextSibling;
+      nodeValueLen += currentSibling.nodeValue.length;
+      currentSibling.remove();
     }
     textInstance.nodeValue = newText;
     // After a Node#normalize() on a parent, we need to reattach to the tree
