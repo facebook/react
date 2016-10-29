@@ -14,9 +14,6 @@
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 
-var reactComponentExpect = require('reactComponentExpect');
-
-
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered
  * has a ref of the form "clickLogN".
@@ -92,17 +89,13 @@ class TestRefsComponent extends React.Component {
 var renderTestRefsComponent = function() {
   var testRefsComponent =
       ReactTestUtils.renderIntoDocument(<TestRefsComponent />);
-
-  reactComponentExpect(testRefsComponent)
-      .toBeCompositeComponentWithType(TestRefsComponent);
+  expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
 
   var generalContainer = testRefsComponent.refs.myContainer;
-  var counter = testRefsComponent.refs.myCounter;
+  expect(generalContainer instanceof GeneralContainerComponent).toBe(true);
 
-  reactComponentExpect(generalContainer)
-      .toBeCompositeComponentWithType(GeneralContainerComponent);
-  reactComponentExpect(counter)
-      .toBeCompositeComponentWithType(ClickCounter);
+  var counter = testRefsComponent.refs.myCounter;
+  expect(counter instanceof ClickCounter).toBe(true);
 
   return testRefsComponent;
 };

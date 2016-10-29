@@ -21,13 +21,10 @@ var ReactServerRendering;
 var ReactTestUtils;
 var ReactUpdates;
 
-var reactComponentExpect;
-
 describe('ReactCompositeComponent', () => {
 
   beforeEach(() => {
     jest.resetModuleRegistry();
-    reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCurrentOwner = require('ReactCurrentOwner');
@@ -85,22 +82,17 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should support rendering to different child types over time', () => {
-    var instance = <MorphingComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeComponentOfType('a');
+    var instance = ReactTestUtils.renderIntoDocument(<MorphingComponent />);
+    var el = ReactDOM.findDOMNode(instance);
+    expect(el.tagName).toBe('A');
 
     instance._toggleActivatedState();
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeComponentOfType('b');
+    el = ReactDOM.findDOMNode(instance);
+    expect(el.tagName).toBe('B');
 
     instance._toggleActivatedState();
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeComponentOfType('a');
+    el = ReactDOM.findDOMNode(instance);
+    expect(el.tagName).toBe('A');
   });
 
   it('should not thrash a server rendered layout with client side one', () => {
@@ -124,22 +116,17 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should react to state changes from callbacks', () => {
-    var instance = <MorphingComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(<MorphingComponent />);
+    var el = ReactDOM.findDOMNode(instance);
+    expect(el.tagName).toBe('A');
 
-    var renderedChild = reactComponentExpect(instance)
-      .expectRenderedChild()
-      .instance();
-
-    ReactTestUtils.Simulate.click(renderedChild);
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeComponentOfType('b');
+    ReactTestUtils.Simulate.click(el);
+    el = ReactDOM.findDOMNode(instance);
+    expect(el.tagName).toBe('B');
   });
 
   it('should rewire refs when rendering to different child types', () => {
-    var instance = <MorphingComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(<MorphingComponent />);
 
     expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
     instance._toggleActivatedState();
@@ -237,17 +224,14 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    var instance1 = <Component />;
-    instance1 = ReactTestUtils.renderIntoDocument(instance1);
-    reactComponentExpect(instance1).scalarPropsEqual({prop: 'testKey'});
+    var instance1 = ReactTestUtils.renderIntoDocument(<Component />);
+    expect(instance1.props).toEqual({prop: 'testKey'});
 
-    var instance2 = <Component prop={undefined} />;
-    instance2 = ReactTestUtils.renderIntoDocument(instance2);
-    reactComponentExpect(instance2).scalarPropsEqual({prop: 'testKey'});
+    var instance2 = ReactTestUtils.renderIntoDocument(<Component prop={undefined} />);
+    expect(instance2.props).toEqual({prop: 'testKey'});
 
-    var instance3 = <Component prop={null} />;
-    instance3 = ReactTestUtils.renderIntoDocument(instance3);
-    reactComponentExpect(instance3).scalarPropsEqual({prop: null});
+    var instance3 = ReactTestUtils.renderIntoDocument(<Component prop={null} />);
+    expect(instance3.props).toEqual({prop: null});
   });
 
   it('should not mutate passed-in props object', () => {
@@ -659,12 +643,11 @@ describe('ReactCompositeComponent', () => {
     );
 
     expect(parentInstance.state.flag).toBe(false);
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: false});
+    expect(childInstance.context).toEqual({foo: 'bar', flag: false});
 
     parentInstance.setState({flag: true});
     expect(parentInstance.state.flag).toBe(true);
-
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
+    expect(childInstance.context).toEqual({foo: 'bar', flag: true});
   });
 
   it('should pass context when re-rendered for static child within a composite component', () => {
@@ -714,13 +697,13 @@ describe('ReactCompositeComponent', () => {
     );
 
     expect(wrapper.refs.parent.state.flag).toEqual(true);
-    reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: true});
+    expect(wrapper.refs.child.context).toEqual({flag: true});
 
     // We update <Parent /> while <Child /> is still a static prop relative to this update
     wrapper.refs.parent.setState({flag: false});
 
     expect(wrapper.refs.parent.state.flag).toEqual(false);
-    reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: false});
+    expect(wrapper.refs.child.context).toEqual({flag: false});
   });
 
   it('should pass context transitively', () => {
@@ -780,8 +763,8 @@ describe('ReactCompositeComponent', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Parent />);
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
-    reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
+    expect(childInstance.context).toEqual({foo: 'bar', depth: 0});
+    expect(grandchildInstance.context).toEqual({foo: 'bar', depth: 1});
   });
 
   it('should pass context when re-rendered', () => {
@@ -835,7 +818,7 @@ describe('ReactCompositeComponent', () => {
     });
     expect(parentInstance.state.flag).toBe(true);
 
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
+    expect(childInstance.context).toEqual({foo: 'bar', depth: 0});
   });
 
   it('unmasked context propagates through updates', () => {

@@ -21,8 +21,6 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-var reactComponentExpect;
-
 describe('ReactContextValidator', () => {
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -34,7 +32,6 @@ describe('ReactContextValidator', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   // TODO: This behavior creates a runtime dependency on propTypes. We should
@@ -65,12 +62,12 @@ describe('ReactContextValidator', () => {
       },
 
       render: function() {
-        return <Component />;
+        return <Component ref="child" />;
       },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
-    reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
+    expect(instance.refs.child.context).toEqual({foo: 'abc'});
   });
 
   it('should filter context properly in callbacks', () => {

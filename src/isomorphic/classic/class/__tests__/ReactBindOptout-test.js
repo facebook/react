@@ -13,7 +13,6 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var reactComponentExpect = require('reactComponentExpect');
 
 // TODO: Test render and all stock methods.
 describe('autobind optout', () => {
@@ -36,6 +35,7 @@ describe('autobind optout', () => {
       render: function() {
         return (
           <div
+            ref="child"
             onMouseOver={this.onMouseEnter.bind(this)}
             onMouseOut={this.onMouseLeave.bind(this)}
             onClick={this.onClick.bind(this)}
@@ -44,41 +44,35 @@ describe('autobind optout', () => {
       },
     });
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+    var instance1 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered1 = instance1.refs.child;
 
-    var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
-    var rendered2 = reactComponentExpect(mountedInstance2)
-      .expectRenderedChild()
-      .instance();
+    var instance2 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered2 = instance2.refs.child;
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
 
     ReactTestUtils.Simulate.click(rendered2);
     expect(mouseDidClick.mock.instances.length).toBe(2);
-    expect(mouseDidClick.mock.instances[1]).toBe(mountedInstance2);
+    expect(mouseDidClick.mock.instances[1]).toBe(instance2);
 
     ReactTestUtils.Simulate.mouseOver(rendered1);
     expect(mouseDidEnter.mock.instances.length).toBe(1);
-    expect(mouseDidEnter.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidEnter.mock.instances[0]).toBe(instance1);
 
     ReactTestUtils.Simulate.mouseOver(rendered2);
     expect(mouseDidEnter.mock.instances.length).toBe(2);
-    expect(mouseDidEnter.mock.instances[1]).toBe(mountedInstance2);
+    expect(mouseDidEnter.mock.instances[1]).toBe(instance2);
 
     ReactTestUtils.Simulate.mouseOut(rendered1);
     expect(mouseDidLeave.mock.instances.length).toBe(1);
-    expect(mouseDidLeave.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidLeave.mock.instances[0]).toBe(instance1);
 
     ReactTestUtils.Simulate.mouseOut(rendered2);
     expect(mouseDidLeave.mock.instances.length).toBe(2);
-    expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
+    expect(mouseDidLeave.mock.instances[1]).toBe(instance2);
   });
 
   it('should not hold reference to instance', () => {
@@ -103,30 +97,25 @@ describe('autobind optout', () => {
       render: function() {
         return (
           <div
+            ref="child"
             onClick={this.onClick}
           />
         );
       },
     });
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+    var instance1 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered1 = instance1.refs.child;
 
-    var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
-    var rendered2 = reactComponentExpect(mountedInstance2)
-      .expectRenderedChild()
-      .instance();
+    var instance2 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered2 = instance2.refs.child;
 
     expect(function() {
       var badIdea = instance1.badIdeas.badBind;
       badIdea();
     }).toThrow();
 
-    expect(mountedInstance1.onClick).toBe(mountedInstance2.onClick);
+    expect(instance1.onClick).toBe(instance2.onClick);
 
     expect(function() {
       ReactTestUtils.Simulate.click(rendered1);
@@ -148,19 +137,16 @@ describe('autobind optout', () => {
       mixins: [TestMixin],
 
       render: function() {
-        return <div onClick={this.onClick} />;
+        return <div ref="child" onClick={this.onClick} />;
       },
     });
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+    var instance1 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered1 = instance1.refs.child;
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
   });
 
   it('works with mixins that have opted out of autobinding', () => {
@@ -175,19 +161,16 @@ describe('autobind optout', () => {
       mixins: [TestMixin],
 
       render: function() {
-        return <div onClick={this.onClick.bind(this)} />;
+        return <div ref="child" onClick={this.onClick.bind(this)} />;
       },
     });
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+    var instance1 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered1 = instance1.refs.child;
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
   });
 
   it('does not warn if you try to bind to this', () => {

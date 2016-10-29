@@ -13,8 +13,8 @@
 
 // Requires
 var React;
+var ReactDOM;
 var ReactTestUtils;
-var reactComponentExpect;
 
 // Test components
 var LowerLevelComposite;
@@ -30,8 +30,8 @@ var expectSingleChildlessDiv;
 describe('ReactCompositeComponentDOMMinimalism', () => {
 
   beforeEach(() => {
-    reactComponentExpect = require('reactComponentExpect');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
     LowerLevelComposite = class extends React.Component {
@@ -55,12 +55,9 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
     };
 
     expectSingleChildlessDiv = function(instance) {
-      reactComponentExpect(instance)
-        .expectRenderedChild()
-        .toBeCompositeComponentWithType(LowerLevelComposite)
-          .expectRenderedChild()
-          .toBeComponentOfType('div')
-          .toBeDOMComponentWithNoChildren();
+      var el = ReactDOM.findDOMNode(instance);
+      expect(el.tagName).toBe('DIV');
+      expect(el.children.length).toBe(0);
     };
   });
 
@@ -93,15 +90,11 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
       </MyCompositeComponent>
     );
     instance = ReactTestUtils.renderIntoDocument(instance);
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeCompositeComponentWithType(LowerLevelComposite)
-        .expectRenderedChild()
-        .toBeComponentOfType('div')
-        .toBeDOMComponentWithChildCount(1)
-        .expectRenderedChildAt(0)
-          .toBeComponentOfType('ul')
-          .toBeDOMComponentWithNoChildren();
+    var el = ReactDOM.findDOMNode(instance);
+    expect(el.tagName).toBe('DIV');
+    expect(el.children.length).toBe(1);
+    expect(el.children[0].tagName).toBe('UL');
+    expect(el.children[0].children.length).toBe(0);
   });
 
 });
