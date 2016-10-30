@@ -102,6 +102,9 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
+    if (instance.state && (typeof instance.state !== 'object' || Array.isArray(instance.state))) {
+      throw new Error(`${ctor.name}.state: must be set to an object or null`);
+    }
     adoptClassInstance(workInProgress, instance);
     return instance;
   }
