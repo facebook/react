@@ -13,12 +13,14 @@
 
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactTestUtils;
 
 describe('ReactComponent', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -195,7 +197,7 @@ describe('ReactComponent', () => {
       getInner = () => {
         // (With old-style refs, it's impossible to get a ref to this div
         // because Wrapper is the current owner when this function is called.)
-        return <div title="inner" ref={(c) => this.innerRef = c} />;
+        return <div className="inner" ref={(c) => this.innerRef = c} />;
       };
 
       render() {
@@ -211,7 +213,7 @@ describe('ReactComponent', () => {
       componentDidMount() {
         // Check .props.title to make sure we got the right elements back
         expect(this.wrapperRef.getTitle()).toBe('wrapper');
-        expect(ReactDOM.findDOMNode(this.innerRef).title).toBe('inner');
+        expect(ReactDOM.findDOMNode(this.innerRef).className).toBe('inner');
         mounted = true;
       }
     }
@@ -291,10 +293,19 @@ describe('ReactComponent', () => {
         'outer componentDidMount',
       'start update',
         // Previous (equivalent) refs get cleared
-        'ref 1 got null',
-        'inner 1 render',
-        'ref 2 got null',
-        'inner 2 render',
+        ...(ReactDOMFeatureFlags.useFiber ? [
+          // Fiber renders first, resets refs later
+          'inner 1 render',
+          'inner 2 render',
+          'ref 1 got null',
+          'ref 2 got null',
+        ] : [
+          // Stack resets refs before rendering
+          'ref 1 got null',
+          'inner 1 render',
+          'ref 2 got null',
+          'inner 2 render',
+        ]),
         'inner 1 componentDidUpdate',
         'ref 1 got instance 1',
         'inner 2 componentDidUpdate',
