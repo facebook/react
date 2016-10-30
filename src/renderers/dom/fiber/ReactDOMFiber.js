@@ -13,6 +13,7 @@
 'use strict';
 
 import type { HostChildren } from 'ReactFiberReconciler';
+import type { Fiber } from 'ReactFiber';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -88,7 +89,7 @@ var DOMRenderer = ReactFiberReconciler({
     return document.createTextNode(text);
   },
 
-  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string, parentInstance: ?Instance) : void {
+  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string, current: ?Fiber) : void {
     let nodeValueLen = textInstance.nodeValue.length;
     let nextSibling : ?Node = textInstance.nextSibling;
     // The Node may have been split in this case we need to clean up some next sibling nodes
@@ -96,15 +97,25 @@ var DOMRenderer = ReactFiberReconciler({
       const currentSibling : Node = nextSibling;
       nextSibling = currentSibling.nextSibling;
       nodeValueLen += currentSibling.nodeValue.length;
-      const parentNode = parentInstance || currentSibling.parentElement;
+      const parentNode = currentSibling.parentElement;
       if (parentNode) {
         parentNode.removeChild(currentSibling);
       }
     }
     textInstance.nodeValue = newText;
     // After a Node#normalize() on a parent, we need to reattach to the tree
-    if (!textInstance.parentNode && parentInstance) {
-      parentInstance.appendChild(textInstance);
+    if (!textInstance.parentNode) {
+      // We may need to go back through different types of work (not necessarily an host node)
+      // That's why, we're going up the stack testing for the availability of appendChild
+      let parentFiber: ?Fiber = current && current.return;
+      while (parentFiber) {
+        const parentInstance = parentFiber.stateNode;
+        if (typeof parentInstance.appendChild === 'function') {
+          parentInstance.appendChild(textInstance);
+          break;
+        }
+        parentFiber = parentFiber.return;
+      }
     }
   },
 
