@@ -91,6 +91,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     return true;
   }
 
+  function checkClassInstance(ctor: Function, instance: any) {
+    if (__DEV__) {
+      if (typeof instance.render !== 'function') {
+        console.error(
+          `Warning: ${ctor.name}(...): No \`render\` method found on the returned component ` +
+          'instance: you may have forgotten to define `render`.'
+        );
+      }
+    }
+
+    if (instance.state && (typeof instance.state !== 'object' || Array.isArray(instance.state))) {
+      throw new Error(`${ctor.name}.state: must be set to an object or null`);
+    }
+  }
+
   function adoptClassInstance(workInProgress : Fiber, instance : any) : void {
     instance.updater = updater;
     workInProgress.stateNode = instance;
@@ -102,9 +117,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
-    if (instance.state && (typeof instance.state !== 'object' || Array.isArray(instance.state))) {
-      throw new Error(`${ctor.name}.state: must be set to an object or null`);
-    }
+    checkClassInstance(ctor, instance);
     adoptClassInstance(workInProgress, instance);
     return instance;
   }
