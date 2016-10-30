@@ -46,6 +46,11 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
+if (__DEV__) {
+  var ReactInstrumentation = require('ReactInstrumentation');
+  var getDebugID = require('getDebugID');
+}
+
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
   scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void
@@ -377,6 +382,21 @@ module.exports = function<T, P, I, TI, C>(
       )) &&
       workInProgress.updateQueue === null) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    if (__DEV__ && ReactInstrumentation.debugTool) {
+      if (!current) {
+        ReactInstrumentation.debugTool.onBeforeMountComponent(
+          getDebugID(workInProgress),
+          {
+            type: workInProgress.type,
+            props: workInProgress.pendingProps,
+          },
+          workInProgress.return.tag === HostContainer ?
+            0 :
+            getDebugID(workInProgress.return)
+        );
+      }
     }
 
     switch (workInProgress.tag) {

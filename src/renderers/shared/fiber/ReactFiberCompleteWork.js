@@ -36,6 +36,11 @@ var {
   Update,
 } = ReactTypeOfSideEffect;
 
+if (__DEV__) {
+  var ReactInstrumentation = require('ReactInstrumentation');
+  var getDebugID = require('getDebugID');
+}
+
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const createInstance = config.createInstance;
@@ -113,6 +118,24 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+    if (__DEV__ && ReactInstrumentation.debugTool) {
+      if (!current) {
+        const childDebugIDs = [];
+        let nextChild = workInProgress.child;
+        while (nextChild) {
+          childDebugIDs.push(getDebugID(nextChild));
+          nextChild = nextChild.sibling;
+        }
+        ReactInstrumentation.debugTool.onSetChildren(
+          getDebugID(workInProgress),
+          childDebugIDs
+        );
+        ReactInstrumentation.debugTool.onMountComponent(
+          getDebugID(workInProgress)
+        );
+      }
+    }
+
     switch (workInProgress.tag) {
       case FunctionalComponent:
         transferOutput(workInProgress.child, workInProgress);
