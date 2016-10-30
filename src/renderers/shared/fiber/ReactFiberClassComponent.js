@@ -99,6 +99,18 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
           'instance: you may have forgotten to define `render`.'
         );
       }
+
+      ['getInitialState', 'getDefaultProps'].forEach(classicProperty => {
+        if (typeof instance[classicProperty] === 'function') {
+          console.error(`${classicProperty} was defined on ${ctor.name}, a plain JavaScript class.`);
+        }
+      });
+
+      ['propTypes', 'contextTypes'].forEach(instanceProperty => {
+        if (instance[instanceProperty]) {
+          console.error(`${instanceProperty} was defined as an instance property on ${ctor.name}.`);
+        }
+      });
     }
 
     if (instance.state && (typeof instance.state !== 'object' || Array.isArray(instance.state))) {
