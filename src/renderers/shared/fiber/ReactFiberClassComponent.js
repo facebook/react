@@ -168,11 +168,13 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     ReactInstanceMap.set(instance, workInProgress);
   }
 
-  function constructClassInstance(workInProgress : Fiber) : any {
+  function constructClassInstance(workInProgress : Fiber, resuming?: boolean) : any {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
-    checkClassInstance(workInProgress, instance);
+    if (!resuming) {
+      checkClassInstance(workInProgress, instance);
+    }
     adoptClassInstance(workInProgress, instance);
     return instance;
   }
@@ -231,7 +233,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     // If we didn't bail out we need to construct a new instance. We don't
     // want to reuse one that failed to fully mount.
-    const newInstance = constructClassInstance(workInProgress);
+    const newInstance = constructClassInstance(workInProgress, true);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
 
