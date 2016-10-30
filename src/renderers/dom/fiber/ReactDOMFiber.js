@@ -157,10 +157,19 @@ var ReactDOM = {
     }
     // Unsound duck typing.
     const component = (componentOrElement : any);
-    if (component.nodeType === 1) {
+    if (component.nodeType === 1) { // Element
       return component;
     }
-    return DOMRenderer.findHostInstance(component);
+    if (component.updater) { // Component
+      const whileRendering = component._reactInternalInstance.progressedChild;
+      if (!component.updater.isMounted(component) && whileRendering) {
+        throw new Error('findDOMNode was called on an unmounted component.');
+      }
+      return DOMRenderer.findHostInstance(component);
+    }
+    throw new Error(
+      `Element appears to be neither ReactComponent nor DOMNode (keys: ${Object.keys(component).join(', ')})`
+    );
   },
 
 };
