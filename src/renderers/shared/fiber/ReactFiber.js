@@ -137,6 +137,10 @@ export type Fiber = {
   // memory if we need to.
   alternate: ?Fiber,
 
+  // If the component creation triggered some warnings, we add a flag in order
+  // to avoid outputting more than once the warnings
+  componentWarned: boolean,
+
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
@@ -198,6 +202,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     progressedLastDeletion: null,
 
     alternate: null,
+
+    componentWarned: false,
 
   };
 };

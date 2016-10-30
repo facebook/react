@@ -26,6 +26,8 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
 var warning = require('warning');
 
+const isArray = Array.isArray;
+
 module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
   function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
@@ -101,62 +103,87 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       'A Component'
     );
     if (__DEV__) {
+      const renderPresent = inst.render;
       warning(
-        inst.render,
+        renderPresent,
         '%s(...): No `render` method found on the returned component ' +
         'instance: you may have forgotten to define `render`.',
         name
       );
-      warning(
+      const noGetInitialStateOnES6 = (
         !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved,
+        inst.getInitialState.isReactClassApproved
+      );
+      warning(
+        noGetInitialStateOnES6,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a state property instead?',
         name
       );
-      warning(
+      const noGetDefaultPropsOnES6 = (
         !inst.getDefaultProps ||
-        inst.getDefaultProps.isReactClassApproved,
+        inst.getDefaultProps.isReactClassApproved
+      );
+      warning(
+        noGetDefaultPropsOnES6,
         'getDefaultProps was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Use a static property to define defaultProps instead.',
         name
       );
-      ['propTypes', 'contextTypes'].forEach(instProp => {
-        warning(
-          !inst[instProp],
-          '%s was defined as an instance property on %s. Use a static ' +
-          'property to define %s instead.',
-          instProp,
-          name,
-          instProp
-        );
-      });
+      const noInstancePropTypes = !inst.propTypes;
       warning(
-        typeof inst.componentShouldUpdate !== 'function',
+        noInstancePropTypes,
+        'propTypes was defined as an instance property on %s. Use a static ' +
+        'property to define propTypes instead.',
+        name,
+      );
+      const noInstanceContextTypes = !inst.contextTypes;
+      warning(
+        noInstanceContextTypes,
+        'contextTypes was defined as an instance property on %s. Use a static ' +
+        'property to define contextTypes instead.',
+        name,
+      );
+      const noComponentShouldUpdate = typeof inst.componentShouldUpdate !== 'function';
+      warning(
+        noComponentShouldUpdate,
         '%s has a method called ' +
         'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
         'The name is phrased as a question because the function is ' +
         'expected to return a value.',
         name
       );
+      const noComponentDidUnmount = typeof inst.componentDidUnmount !== 'function';
       warning(
-        typeof inst.componentDidUnmount !== 'function',
+        noComponentDidUnmount,
         '%s has a method called ' +
         'componentDidUnmount(). But there is no such lifecycle method. ' +
         'Did you mean componentWillUnmount()?',
         name
       );
+      const noComponentWillRecieveProps = typeof inst.componentWillRecieveProps !== 'function';
       warning(
-        typeof inst.componentWillRecieveProps !== 'function',
+        noComponentWillRecieveProps,
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name
       );
+      workInProgress.componentWarned =
+        !renderPresent ||
+        !noGetInitialStateOnES6 ||
+        !noGetDefaultPropsOnES6 ||
+        !noInstancePropTypes ||
+        !noInstanceContextTypes ||
+        !noComponentShouldUpdate ||
+        !noComponentDidUnmount ||
+        !noComponentWillRecieveProps;
     }
 
-    if (inst.state && (typeof inst.state !== 'object' || Array.isArray(inst.state))) {
+    if (inst.state && (typeof inst.state !== 'object' || isArray(inst.state))) {
+      workInProgress.componentWarned = true;
+      // TODO: Change this to be a warning.
       throw new Error(`${name}.state: must be set to an object or null`);
     }
   }
@@ -168,11 +195,11 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     ReactInstanceMap.set(instance, workInProgress);
   }
 
-  function constructClassInstance(workInProgress : Fiber, resuming?: boolean) : any {
+  function constructClassInstance(workInProgress : Fiber) : any {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
-    if (!resuming) {
+    if (!workInProgress.componentWarned) {
       checkClassInstance(workInProgress, instance);
     }
     adoptClassInstance(workInProgress, instance);
@@ -233,7 +260,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     // If we didn't bail out we need to construct a new instance. We don't
     // want to reuse one that failed to fully mount.
-    const newInstance = constructClassInstance(workInProgress, true);
+    const newInstance = constructClassInstance(workInProgress);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
 
