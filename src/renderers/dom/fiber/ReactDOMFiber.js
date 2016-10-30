@@ -17,6 +17,7 @@ import type { Fiber } from 'ReactFiber';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var warning = require('warning');
 
@@ -106,12 +107,11 @@ var DOMRenderer = ReactFiberReconciler({
     // After a Node#normalize() on a parent, we need to reattach to the tree
     if (!textInstance.parentNode) {
       // We may need to go back through different types of work (not necessarily an host node)
-      // That's why, we're going up the stack testing for the availability of appendChild
+      // That's why, we're going up the stack testing for an HostComponent type of work
       let parentFiber: ?Fiber = current && current.return;
       while (parentFiber) {
-        const parentInstance = parentFiber.stateNode;
-        if (typeof parentInstance.appendChild === 'function') {
-          parentInstance.appendChild(textInstance);
+        if (parentFiber.tag === ReactTypeOfWork.HostComponent) {
+          (parentFiber.stateNode: Instance).appendChild(textInstance);
           break;
         }
         parentFiber = parentFiber.return;
