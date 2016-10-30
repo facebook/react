@@ -92,52 +92,72 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     return true;
   }
 
-  function checkClassInstance(ctor: Function, instance: any) {
+  function checkClassInstance(workInProgress: Fiber, inst: any) {
+    const type = workInProgress.type;
+    const constructor = inst && inst.constructor;
+    const name = (
+      type.displayName || (constructor && constructor.displayName) ||
+      type.name || (constructor && constructor.name) ||
+      'A Component'
+    );
     if (__DEV__) {
       warning(
-        typeof instance.render === 'function',
-        '%s(...): No \`render\` method found on the returned component ' +
+        inst.render,
+        '%s(...): No `render` method found on the returned component ' +
         'instance: you may have forgotten to define `render`.',
-        ctor.name
+        name
       );
-
-      ['getInitialState', 'getDefaultProps'].forEach(classicProperty => {
-        warning(
-          typeof instance[classicProperty] !== 'function',
-          '%s was defined on %s, a plain JavaScript class.',
-          classicProperty,
-          ctor.name
-        );
-      });
-
-      ['propTypes', 'contextTypes'].forEach(instanceProperty => {
-        warning(
-          !instance[instanceProperty],
-          '%s was defined as an instance property on %s.',
-          instanceProperty,
-          ctor.name
-        );
-      });
-
       warning(
-        !instance.componentShouldUpdate,
+        !inst.getInitialState ||
+        inst.getInitialState.isReactClassApproved,
+        'getInitialState was defined on %s, a plain JavaScript class. ' +
+        'This is only supported for classes created using React.createClass. ' +
+        'Did you mean to define a state property instead?',
+        name
+      );
+      warning(
+        !inst.getDefaultProps ||
+        inst.getDefaultProps.isReactClassApproved,
+        'getDefaultProps was defined on %s, a plain JavaScript class. ' +
+        'This is only supported for classes created using React.createClass. ' +
+        'Use a static property to define defaultProps instead.',
+        name
+      );
+      ['propTypes', 'contextTypes'].forEach(instProp => {
+        warning(
+          !inst[instProp],
+          '%s was defined as an instance property on %s. Use a static ' +
+          'property to define %s instead.',
+          instProp,
+          name,
+          instProp
+        );
+      });
+      warning(
+        typeof inst.componentShouldUpdate !== 'function',
         '%s has a method called ' +
         'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
         'The name is phrased as a question because the function is ' +
         'expected to return a value.',
-        ctor.name
+        name
       );
-
       warning(
-        !instance.componentWillRecieveProps,
+        typeof inst.componentDidUnmount !== 'function',
+        '%s has a method called ' +
+        'componentDidUnmount(). But there is no such lifecycle method. ' +
+        'Did you mean componentWillUnmount()?',
+        name
+      );
+      warning(
+        typeof inst.componentWillRecieveProps !== 'function',
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
-        ctor.name
+        name
       );
     }
 
-    if (instance.state && (typeof instance.state !== 'object' || Array.isArray(instance.state))) {
-      throw new Error(`${ctor.name}.state: must be set to an object or null`);
+    if (inst.state && (typeof inst.state !== 'object' || Array.isArray(inst.state))) {
+      throw new Error(`${name}.state: must be set to an object or null`);
     }
   }
 
@@ -152,7 +172,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
-    checkClassInstance(ctor, instance);
+    checkClassInstance(workInProgress, instance);
     adoptClassInstance(workInProgress, instance);
     return instance;
   }
