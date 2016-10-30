@@ -24,6 +24,7 @@ var {
 var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
+var warning = require('warning');
 
 module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
@@ -93,23 +94,29 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
   function checkClassInstance(ctor: Function, instance: any) {
     if (__DEV__) {
-      if (typeof instance.render !== 'function') {
-        console.error(
-          `Warning: ${ctor.name}(...): No \`render\` method found on the returned component ` +
-          'instance: you may have forgotten to define `render`.'
-        );
-      }
+      warning(
+        typeof instance.render === 'function',
+        '%s(...): No \`render\` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+        ctor.name
+      );
 
       ['getInitialState', 'getDefaultProps'].forEach(classicProperty => {
-        if (typeof instance[classicProperty] === 'function') {
-          console.error(`${classicProperty} was defined on ${ctor.name}, a plain JavaScript class.`);
-        }
+        warning(
+          typeof instance[classicProperty] !== 'function',
+          '%s was defined on %s, a plain JavaScript class.',
+          classicProperty,
+          ctor.name
+        );
       });
 
       ['propTypes', 'contextTypes'].forEach(instanceProperty => {
-        if (instance[instanceProperty]) {
-          console.error(`${instanceProperty} was defined as an instance property on ${ctor.name}.`);
-        }
+        warning(
+          !instance[instanceProperty],
+          '%s was defined as an instance property on %s.',
+          instanceProperty,
+          ctor.name
+        );
       });
     }
 
