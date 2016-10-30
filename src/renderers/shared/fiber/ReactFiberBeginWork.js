@@ -188,6 +188,12 @@ module.exports = function<T, P, I, TI, C>(
     // Rerender
     const instance = workInProgress.stateNode;
     ReactCurrentOwner.current = workInProgress;
+    if (typeof instance.render !== 'function') {
+      console.error(
+        `Warning: ${instance.constructor.name}(...): No \`render\` method found on the returned component ` +
+        'instance: you may have forgotten to define `render`.'
+      );
+    }
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
