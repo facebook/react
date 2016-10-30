@@ -128,6 +128,22 @@ class Gists extends React.Component {
 
 [Try it out on CodePen.](http://codepen.io/rthor/pen/kkqrQx?editors=0010)
 
+We can simplify the `fetchGists` method by using the [`async / await`](https://tc39.github.io/ecmascript-asyncawait/) feature:
+
+```javascript{1,3-4}
+async fetchGists() {
+  const { username } = this.props;
+  const data = await fetch(`https://api.github.com/users/${username}/gists`);
+  this.setState({gists: await data.json()});
+}
+```
+
+[Try it out on CodePen.](https://codepen.io/rthor/pen/xEoWod?editors=0010)
+
+> **Note:**
+> 
+> `async / await` is still a proposal for the ECMAScript spec and therefore hasn't been implemented in most browsers. To use it today, a [Babel](http://babeljs.io/docs/plugins/transform-async-to-generator/) (or similar) transform is needed. If you're using Create React App, it works by default.
+
 ## Pitfalls
 
 An old promise can be pending when a newer promise fulfills. This can cause the old promise to override the result of the new one. If a promise is pending when a component is updated, the result of the first promise should be ignored before a new one is created.
