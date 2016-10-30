@@ -118,6 +118,22 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
           ctor.name
         );
       });
+
+      warning(
+        !instance.componentShouldUpdate,
+        '%s has a method called ' +
+        'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+        'The name is phrased as a question because the function is ' +
+        'expected to return a value.',
+        ctor.name
+      );
+
+      warning(
+        !instance.componentWillRecieveProps,
+        '%s has a method called ' +
+        'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+        ctor.name
+      );
     }
 
     if (instance.state && (typeof instance.state !== 'object' || Array.isArray(instance.state))) {
