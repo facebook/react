@@ -4,6 +4,10 @@ title: Loading Data Asynchronously
 permalink: docs/loading-data-asynchronously.html
 ---
 
+React has no special capabilities for dealing with asynchronous network requests and a 3rd-party library or browser API is needed to perform them. If a component needs to have its UI respond to new data arriving, it has to call `setState` to rerender itself.
+
+## Initial Render
+
 Often, the data that a component needs is not available at initial render. We can load data asynchronously in the `componentDidMount` [lifecycle hook](/react/docs/react-component.html#componentdidmount).
 
 In the following example we use the `fetch` [browser API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to retrieve information about Facebook's Gists on GitHub and store them in the state.
@@ -148,7 +152,7 @@ async fetchGists() {
 
 An old promise can be pending when a newer promise fulfills. This can cause the old promise to override the result of the new one. If a promise is pending when a component is updated, the result of the first promise should be ignored before a new one is created.
 
-Additionally, a component can unmount while a promise is pending. React warns you if you call `setState()` on unmounted components to prevent memory leaks. Some data fetching APIs allow you to cancel requests, and this is preferable when a component unmounts. For APIs such as `fetch()` that don't offer a cancellation mechanism, you need to keep track of whether the component is mounted to avoid seeing warnings. Here is how we could implement this:
+Additionally, a component can unmount while a promise is pending. React warns you if you call `setState` on unmounted components to prevent memory leaks. Some data fetching APIs allow you to cancel requests, and this is preferable when a component unmounts. For APIs such as `fetch` that don't offer a cancellation mechanism, you need to keep track of whether the component is mounted to avoid seeing warnings. Here is how we could implement this:
 
 ```javascript{8,15,19-21,23,26,29-34}
 class Gists extends React.Component {
