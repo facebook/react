@@ -185,7 +185,7 @@ function describeID(id: DebugID): string {
 
 var ReactComponentTreeHook = {
   onSetChildren(id: DebugID, nextChildIDs: Array<DebugID>): void {
-    //console.log('setting children', id, nextChildIDs)
+    // console.log('setting children', id, nextChildIDs)
     var item = getItem(id);
     invariant(item, 'Item must have been set');
     item.childIDs = nextChildIDs;
@@ -236,7 +236,7 @@ var ReactComponentTreeHook = {
       isMounted: false,
       updateCount: 0,
     };
-    //console.log('will mount', item);
+    // console.log('will mount', item);
     setItem(id, item);
   },
 
@@ -248,6 +248,7 @@ var ReactComponentTreeHook = {
       return;
     }
     item.element = element;
+    // console.log('will update', item);
   },
 
   onMountComponent(id: DebugID): void {
@@ -258,7 +259,7 @@ var ReactComponentTreeHook = {
     if (isRoot) {
       addRoot(id);
     }
-    //console.log('mounted', item);
+    // console.log('mounted', item);
   },
 
   onUpdateComponent(id: DebugID): void {
@@ -269,6 +270,7 @@ var ReactComponentTreeHook = {
       return;
     }
     item.updateCount++;
+    // console.log('did update', item);
   },
 
   onUnmountComponent(id: DebugID): void {
@@ -337,7 +339,7 @@ var ReactComponentTreeHook = {
 
   getChildIDs(id: DebugID): Array<DebugID> {
     var item = getItem(id);
-    //console.log('getChildIDs for', id, item ? item.childIDs : [])
+    // console.log('getChildIDs for', id, item ? item.childIDs : [])
     return item ? item.childIDs : [];
   },
 

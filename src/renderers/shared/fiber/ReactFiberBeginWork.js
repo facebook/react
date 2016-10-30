@@ -385,17 +385,36 @@ module.exports = function<T, P, I, TI, C>(
     }
 
     if (__DEV__ && ReactInstrumentation.debugTool) {
-      if (!current) {
-        ReactInstrumentation.debugTool.onBeforeMountComponent(
-          getDebugID(workInProgress),
-          {
-            type: workInProgress.type,
-            props: workInProgress.pendingProps,
-          },
-          workInProgress.return.tag === HostContainer ?
-            0 :
-            getDebugID(workInProgress.return)
-        );
+      if (
+        workInProgress.tag === IndeterminateComponent ||
+        workInProgress.tag === FunctionalComponent ||
+        workInProgress.tag === ClassComponent ||
+        workInProgress.tag === HostComponent ||
+        workInProgress.tag === HostText
+      ) {
+        if (current) {
+          ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+            getDebugID(workInProgress),
+            workInProgress.tag === HostText ? workInProgress.pendingProps : {
+              type: workInProgress.type,
+              props: workInProgress.pendingProps,
+            },
+            workInProgress.return.tag === HostContainer ?
+              0 :
+              getDebugID(workInProgress.return)
+          );        
+        } else {
+          ReactInstrumentation.debugTool.onBeforeMountComponent(
+            getDebugID(workInProgress),
+            workInProgress.tag === HostText ? workInProgress.pendingProps : {
+              type: workInProgress.type,
+              props: workInProgress.pendingProps,
+            },
+            workInProgress.return.tag === HostContainer ?
+              0 :
+              getDebugID(workInProgress.return)
+          );
+        }
       }
     }
 

@@ -119,7 +119,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     if (__DEV__ && ReactInstrumentation.debugTool) {
-      if (!current) {
+      if (
+        workInProgress.tag === FunctionalComponent ||
+        workInProgress.tag === ClassComponent ||
+        workInProgress.tag === HostComponent ||
+        workInProgress.tag === HostText
+      ) {
         const childDebugIDs = [];
         let nextChild = workInProgress.child;
         while (nextChild) {
@@ -130,9 +135,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           getDebugID(workInProgress),
           childDebugIDs
         );
-        ReactInstrumentation.debugTool.onMountComponent(
-          getDebugID(workInProgress)
-        );
+        if (current) {
+          ReactInstrumentation.debugTool.onUpdateComponent(
+            getDebugID(workInProgress)
+          );        
+        } else {
+          ReactInstrumentation.debugTool.onMountComponent(
+            getDebugID(workInProgress)
+          );
+        }
       }
     }
 

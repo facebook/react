@@ -20,6 +20,7 @@ import type { HostConfig } from 'ReactFiberReconciler';
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   ClassComponent,
+  FunctionalComponent,
   HostContainer,
   HostComponent,
   HostText,
@@ -31,6 +32,11 @@ var {
   Placement,
   PlacementAndUpdate,
 } = require('ReactTypeOfSideEffect');
+
+if (__DEV__) {
+  var ReactInstrumentation = require('ReactInstrumentation');
+  var getDebugID = require('getDebugID');
+}
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
@@ -262,6 +268,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function commitUnmount(current : Fiber) : TrappedError | null {
+    if (__DEV__ && ReactInstrumentation.debugTool) {
+      if (
+        current.tag === FunctionalComponent ||
+        current.tag === ClassComponent ||
+        current.tag === HostComponent ||
+        current.tag === HostText
+      ) {
+        ReactInstrumentation.debugTool.onBeforeUnmountComponent(
+          getDebugID(current)
+        );
+      } 
+    }
+    let trappedError = null;
     switch (current.tag) {
       case ClassComponent: {
         detachRef(current);
@@ -269,19 +288,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (typeof instance.componentWillUnmount === 'function') {
           const error = tryCallComponentWillUnmount(instance);
           if (error) {
-            return trapError(current, error);
+            trappedError = trapError(current, error);
           }
         }
-        return null;
       }
       case HostComponent: {
         detachRef(current);
-        return null;
-      }
-      default: {
-        return null;
       }
     }
+    if (__DEV__ && ReactInstrumentation.debugTool) {
+      ReactInstrumentation.debugTool.onUnmountComponent(
+        getDebugID(current)
+      );
+    }
+    return null;
   }
 
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
