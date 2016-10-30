@@ -130,10 +130,59 @@ class Gists extends React.Component {
 
 ## Pitfalls
 
-An old promise can be pending when a newer promise fulfills. This can cause the old promise to override the results of the new one. If a promise is pending when a component is updated, the pending promise should be cancelled before a new one is created.
+An old promise can be pending when a newer promise fulfills. This can cause the old promise to override the result of the new one. If a promise is pending when a component is updated, the result of the first promise should be ignored before a new one is created.
 
-Additionally, a component can unmount while a promise is pending. To avoid unexpected behavior and memory leaks when this happens, be sure to also cancel all pending promises in the `componentWillUnmount` [lifecycle hook](/react/docs/react-component.html#componentwillunmount).
+Additionally, a component can unmount while a promise is pending. React warns you if you call `setState()` on unmounted components to prevent memory leaks. Some data fetching APIs allow you to cancel requests, and this is preferable when a component unmounts. For APIs such as `fetch()` that don't offer a cancellation mechanism, you need to keep track of whether the component is mounted to avoid seeing warnings. Here is how we could implement this:
 
-> **Caveat:**
->
-> A standard for cancelling promises is still being worked on. Therefore, some workarounds, or 3rd party libraries, may be needed at this point.
+```javascript{8,15,19-21,23,26,29-34}
+class Gists extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { gists: [] };
+  }
+
+  componentDidMount() {
+    this.fetchGists(this.props.username);
+  }
+
+  componentDidUpdate(prevProps) {
+    // Make sure that the `username` prop did change before
+    // we initiate a network request.
+    if (this.props.username !== prevProps.username) {
+      this.fetchGists(this.props.username);
+    }
+  }
+
+  componentWillUnmount() {
+    this.isUnmounted = true;
+  }
+
+  fetchGists(username) {   
+    fetch(`https://api.github.com/users/${username}/gists`)
+      .then(data => data.json())
+      .then(gists => this.handleFetchSuccess(username, gists));
+  }
+
+  handleFetchSuccess(username, gists) {
+    if (this.isUnmounted || username !== this.props.username) {
+      return;
+    }
+    this.setState({ gists });
+  }
+
+  render() {
+    const { username } = this.props;
+    const { gists } = this.state;
+    return (
+      <div>
+        <h1>Gists by {username}.</h1>
+        {gists.map(gist => 
+          <p><a href={gist.html_url}>{gist.id}</a></p>
+        )}
+      </div>
+    );
+  }
+}
+```
+
+[Try it out on CodePen.](http://codepen.io/rthor/pen/edweqz?editors=0010)
