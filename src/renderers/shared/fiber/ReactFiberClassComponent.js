@@ -25,6 +25,8 @@ var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
 var warning = require('warning');
+var invariant = require('invariant');
+
 
 const isArray = Array.isArray;
 
@@ -177,8 +179,11 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     }
 
     if (inst.state && (typeof inst.state !== 'object' || isArray(inst.state))) {
-      // TODO: Change this to be a warning.
-      throw new Error(`${getName(workInProgress, inst)}.state: must be set to an object or null`);
+      invariant(
+        false,
+        '%s.state: must be set to an object or null',
+        getName(workInProgress, inst)
+      );
     }
   }
 
