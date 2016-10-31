@@ -170,19 +170,9 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name
       );
-      workInProgress.componentWarned =
-        !renderPresent ||
-        !noGetInitialStateOnES6 ||
-        !noGetDefaultPropsOnES6 ||
-        !noInstancePropTypes ||
-        !noInstanceContextTypes ||
-        !noComponentShouldUpdate ||
-        !noComponentDidUnmount ||
-        !noComponentWillRecieveProps;
     }
 
     if (inst.state && (typeof inst.state !== 'object' || isArray(inst.state))) {
-      workInProgress.componentWarned = true;
       // TODO: Change this to be a warning.
       throw new Error(`${name}.state: must be set to an object or null`);
     }
@@ -199,9 +189,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
-    if (!workInProgress.componentWarned) {
-      checkClassInstance(workInProgress, instance);
-    }
+    checkClassInstance(workInProgress, instance);
     adoptClassInstance(workInProgress, instance);
     return instance;
   }
