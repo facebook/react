@@ -500,12 +500,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performSynchronousWork() {
-    if (useSyncScheduling) {
-      // Start batching updates
-      shouldBatchUpdates = true;
-    }
-    performAndHandleErrors(performSynchronousWorkUnsafe);
-    shouldBatchUpdates = false;
+    // All nested updates are batched
+    batchedUpdates(() => {
+      performAndHandleErrors(performSynchronousWorkUnsafe);
+    });
   }
 
   function scheduleSynchronousWork(root : FiberRoot) {
@@ -526,6 +524,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       lastScheduledRoot = root;
 
       if (!shouldBatchUpdates) {
+        // Unless in batched mode, perform work immediately
         performSynchronousWork();
       }
     }
@@ -682,9 +681,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
+  function batchedUpdates(fn: Function) {
+    const prev = shouldBatchUpdates;
+    shouldBatchUpdates = true;
+    try {
+      fn();
+    } finally {
+      shouldBatchUpdates = prev;
+    }
+  }
+
   return {
     scheduleWork: scheduleWork,
     scheduleDeferredWork: scheduleDeferredWork,
     performWithPriority: performWithPriority,
+    batchedUpdates: batchedUpdates,
   };
 };
