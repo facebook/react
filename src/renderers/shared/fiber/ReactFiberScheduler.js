@@ -498,10 +498,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performSynchronousWork() {
+    const prev = shouldBatchUpdates;
+    shouldBatchUpdates = true;
     // All nested updates are batched
-    batchedUpdates(() => {
+    try {
       performAndHandleErrors(performSynchronousWorkUnsafe);
-    });
+    } finally {
+      shouldBatchUpdates = prev;
+    }
   }
 
   function scheduleSynchronousWork(root : FiberRoot) {
@@ -680,6 +684,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       return fn();
     } finally {
       shouldBatchUpdates = prev;
+      // If we've exited the batch, perform any scheduled sync work
+      if (!shouldBatchUpdates) {
+        performSynchronousWork();
+      }
     }
   }
 
