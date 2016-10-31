@@ -418,6 +418,14 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should not count time in a portal towards lifecycle method
 * should work when measurement starts during reconciliation
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
+* schedules deferred work in animation callback
+* schedules deferred work and performs animation work in animation callback
+* performs animation work and schedules deferred work in animation callback
+* schedules deferred work in deferred callback if it runs out of time
+* schedules animated work and deferred work in deferred callback if it runs out of time
+* schedules deferred work and animated work in deferred callback if it runs out of time
+
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
 * uses displayName, name, or ReactComponent for modern components
