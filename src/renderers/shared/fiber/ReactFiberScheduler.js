@@ -456,30 +456,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function scheduleErrorBoundaryWork(boundary : Fiber, priority) : FiberRoot {
-    let root = null;
+  function scheduleErrorBoundaryWork(boundary : Fiber, priority) {
     let fiber = boundary;
     while (fiber) {
       fiber.pendingWorkPriority = priority;
       if (fiber.alternate) {
         fiber.alternate.pendingWorkPriority = priority;
       }
-      if (!fiber.return) {
-        if (fiber.tag === HostContainer) {
-          // We found the root.
-          // Remember it so we can update it.
-          root = ((fiber.stateNode : any) : FiberRoot);
-          break;
-        } else {
-          throw new Error('Invalid root');
-        }
-      }
       fiber = fiber.return;
     }
-    if (!root) {
-      throw new Error('Could not find root from the boundary.');
-    }
-    return root;
   }
 
   function performSynchronousWorkUnsafe() {
@@ -543,16 +528,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     try {
       if (priorityLevel === SynchronousPriority) {
         performSynchronousWorkUnsafe();
-      }
-      if (priorityLevel > AnimationPriority) {
+      } else if (priorityLevel > AnimationPriority) {
         if (!deadline) {
           throw new Error('No deadline');
         } else {
           performDeferredWorkUnsafe(deadline);
         }
-        return;
+      } else {
+        performAnimationWorkUnsafe();
       }
-      performAnimationWorkUnsafe();
     } catch (error) {
       const failedUnitOfWork = nextUnitOfWork;
       // Reset because it points to the error boundary:
@@ -572,6 +556,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function handleErrors() : void {
     let firstUncaughtError = null;
+    let rootsWithUncaughtErrors = null;
 
     // In each phase, we will attempt to pass errors to boundaries and re-render them.
     // If we get more errors, we propagate them to higher boundaries in the next iterations.
@@ -580,22 +565,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       nextTrappedErrors = null;
 
       // Pass errors to all affected boundaries.
-      const affectedBoundaries : Set<Fiber> = new Set();
+      const affectedRootsByBondary : Map<Fiber, FiberRoot> = new Map();
       trappedErrors.forEach(trappedError => {
         const boundary = trappedError.boundary;
         const error = trappedError.error;
+        const root = trappedError.root;
         if (!boundary) {
           firstUncaughtError = firstUncaughtError || error;
+          rootsWithUncaughtErrors = rootsWithUncaughtErrors || new Set();
+          rootsWithUncaughtErrors.add(root);
           return;
         }
         // Don't visit boundaries twice.
-        if (affectedBoundaries.has(boundary)) {
+        if (affectedRootsByBondary.has(boundary)) {
           return;
         }
         // Give error boundary a chance to update its state.
         try {
           acknowledgeErrorInBoundary(boundary, error);
-          affectedBoundaries.add(boundary);
+          affectedRootsByBondary.set(boundary, root);
         } catch (nextError) {
           // If it throws, propagate the error.
           nextTrappedErrors = nextTrappedErrors || [];
@@ -604,9 +592,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       });
 
       // We will process an update caused by each error boundary synchronously.
-      affectedBoundaries.forEach(boundary => {
+      affectedRootsByBondary.forEach((root, boundary) => {
         const priority = priorityContext;
-        const root = scheduleErrorBoundaryWork(boundary, priority);
+        scheduleErrorBoundaryWork(boundary, priority);
         // This should use findNextUnitOfWork() when synchronous scheduling is implemented.
         let fiber = cloneFiber(root.current, priority);
         try {
@@ -623,15 +611,40 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     ReactCurrentOwner.current = null;
 
+    // Unschedule any roots with uncaught errors
+    if (rootsWithUncaughtErrors) {
+      // Filter the linked list
+      let newNextScheduledRoot = null;
+      let newLastScheduledRoot = null;
+      // Find first root that has no errors
+      let root = nextScheduledRoot;
+      while (root) {
+        if (rootsWithUncaughtErrors.has(root)) {
+          root.isScheduled = false;
+          root = root.nextScheduledRoot;
+        } else {
+          newNextScheduledRoot = root;
+          newLastScheduledRoot = root;
+          break;
+        }
+      }
+      // Find the rest of the roots with no errors
+      while (root) {
+        if (root.nextScheduledRoot && rootsWithUncaughtErrors.has(root.nextScheduledRoot)) {
+          root.nextScheduledRoot.isScheduled = false;
+          root.nextScheduledRoot = root.nextScheduledRoot.nextScheduledRoot;
+        } else {
+          newLastScheduledRoot = root;
+          root = root.nextScheduledRoot;
+        }
+      }
+      // Update the first and last pointers
+      nextScheduledRoot = newNextScheduledRoot;
+      lastScheduledRoot = newLastScheduledRoot;
+    }
+
     // Surface the first error uncaught by the boundaries to the user.
     if (firstUncaughtError) {
-      // We need to make sure any future root can get scheduled despite these errors.
-      // Currently after throwing, nothing gets scheduled because these fields are set.
-      // FIXME: this is likely a wrong fix! It's still better than ignoring updates though.
-      nextScheduledRoot = null;
-      lastScheduledRoot = null;
-
-      // Throw any unhandled errors.
       throw firstUncaughtError;
     }
   }

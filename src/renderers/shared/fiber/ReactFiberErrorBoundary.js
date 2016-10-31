@@ -13,14 +13,17 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 
 var {
   ClassComponent,
+  HostContainer,
 } = require('ReactTypeOfWork');
 
 export type TrappedError = {
   boundary: Fiber | null,
   error: any,
+  root: FiberRoot,
 };
 
 function findClosestErrorBoundary(fiber : Fiber): Fiber | null {
@@ -37,9 +40,24 @@ function findClosestErrorBoundary(fiber : Fiber): Fiber | null {
   return null;
 }
 
+function findRoot(fiber : Fiber) : FiberRoot {
+  while (fiber) {
+    if (!fiber.return) {
+      if (fiber.tag === HostContainer) {
+        return ((fiber.stateNode : any) : FiberRoot);
+      } else {
+        throw new Error('Invalid root');
+      }
+    }
+    fiber = fiber.return;
+  }
+  throw new Error('Could not find a root.');
+}
+
 function trapError(fiber : Fiber, error : any) : TrappedError {
   return {
     boundary: findClosestErrorBoundary(fiber),
+    root: findRoot(fiber),
     error,
   };
 }
