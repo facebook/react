@@ -94,15 +94,19 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     return true;
   }
 
-  function checkClassInstance(workInProgress: Fiber, inst: any) {
+  function getName(workInProgress: Fiber, inst: any): string {
     const type = workInProgress.type;
     const constructor = inst && inst.constructor;
-    const name = (
+    return (
       type.displayName || (constructor && constructor.displayName) ||
       type.name || (constructor && constructor.name) ||
       'A Component'
     );
+  }
+
+  function checkClassInstance(workInProgress: Fiber, inst: any) {
     if (__DEV__) {
+      const name = getName(workInProgress, inst);
       const renderPresent = inst.render;
       warning(
         renderPresent,
@@ -174,7 +178,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     if (inst.state && (typeof inst.state !== 'object' || isArray(inst.state))) {
       // TODO: Change this to be a warning.
-      throw new Error(`${name}.state: must be set to an object or null`);
+      throw new Error(`${getName(workInProgress, inst)}.state: must be set to an object or null`);
     }
   }
 
