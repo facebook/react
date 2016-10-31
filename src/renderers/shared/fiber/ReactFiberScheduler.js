@@ -47,6 +47,7 @@ var {
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
+  var ReactInstrumentation = require('ReactInstrumentation');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -300,7 +301,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
+
+        if (__DEV__ && ReactInstrumentation.debugTool) {
+          ReactInstrumentation.debugTool.onBeginFlush();
+        }
         commitAllWork(workInProgress, ignoreUnmountingErrors);
+        if (__DEV__ && ReactInstrumentation.debugTool) {
+          ReactInstrumentation.debugTool.onEndFlush();
+        }
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't
@@ -553,6 +561,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           nextTrappedErrors.push(trapError(boundary, nextError));
         }
       });
+    }
+
+    if (__DEV__ && ReactInstrumentation.debugTool) {
+      ReactInstrumentation.debugTool.onEndFlush();
     }
 
     // Surface the first error uncaught by the boundaries to the user.

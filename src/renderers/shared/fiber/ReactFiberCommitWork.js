@@ -278,6 +278,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         ReactInstrumentation.debugTool.onBeforeUnmountComponent(
           getDebugID(current)
         );
+        ReactInstrumentation.debugTool.onUnmountComponent(
+          getDebugID(current)
+        );
       } 
     }
     let trappedError = null;

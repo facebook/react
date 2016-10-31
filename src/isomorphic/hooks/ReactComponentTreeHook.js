@@ -136,6 +136,7 @@ var unmountedIDs: Array<DebugID> = [];
 
 function purgeDeep(id) {
   var item = getItem(id);
+  // console.log('purging', id, item)
   if (item) {
     var {childIDs} = item;
     removeItem(id);
@@ -286,6 +287,7 @@ var ReactComponentTreeHook = {
       if (isRoot) {
         removeRoot(id);
       }
+      // console.log('did unmount', item);
     }
     unmountedIDs.push(id);
   },
@@ -296,6 +298,7 @@ var ReactComponentTreeHook = {
       return;
     }
 
+    // console.log('will purge. ids', unmountedIDs)
     for (var i = 0; i < unmountedIDs.length; i++) {
       var id = unmountedIDs[i];
       purgeDeep(id);
