@@ -84,7 +84,7 @@ Even though Haste allows us to import any module from anywhere in the repository
 
 For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client) may import other files in the same folder or any folder below.
 
-However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
+However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client).
 
 There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case, we hoist the shared module up to a folder called `shared` inside the closest common ancestor folder of the modules that need to rely on it.
 
