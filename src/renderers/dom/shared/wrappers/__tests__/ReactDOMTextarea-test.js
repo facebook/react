@@ -17,7 +17,6 @@ describe('ReactDOMTextarea', () => {
   var React;
   var ReactDOM;
   var ReactDOMServer;
-  var ReactLink;
   var ReactTestUtils;
 
   var renderTextarea;
@@ -26,7 +25,6 @@ describe('ReactDOMTextarea', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
-    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
 
     renderTextarea = function(component, container) {
@@ -338,29 +336,6 @@ describe('ReactDOMTextarea', () => {
     expect(node.value).toBe('[object Object]');
 
     expect(console.error.calls.count()).toBe(2);
-  });
-
-  it('should support ReactLink', () => {
-    var link = new ReactLink('yolo', jest.fn());
-    var instance = <textarea valueLink={link} />;
-
-    spyOn(console, 'error');
-    instance = renderTextarea(instance);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
-    );
-
-
-    expect(instance.value).toBe('yolo');
-    expect(link.value).toBe('yolo');
-    expect(link.requestChange.mock.calls.length).toBe(0);
-
-    instance.value = 'test';
-    ReactTestUtils.Simulate.change(instance);
-
-    expect(link.requestChange.mock.calls.length).toBe(1);
-    expect(link.requestChange.mock.calls[0][0]).toEqual('test');
   });
 
   it('should unmount', () => {

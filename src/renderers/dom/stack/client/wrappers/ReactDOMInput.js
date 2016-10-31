@@ -12,15 +12,13 @@
 'use strict';
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var LinkedValueUtils = require('LinkedValueUtils');
+var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
 
-var didWarnValueLink = false;
-var didWarnCheckedLink = false;
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;
@@ -56,8 +54,8 @@ function isControlled(props) {
  */
 var ReactDOMInput = {
   getHostProps: function(inst, props) {
-    var value = LinkedValueUtils.getValue(props);
-    var checked = LinkedValueUtils.getChecked(props);
+    var value = props.value;
+    var checked = props.checked;
 
     var hostProps = Object.assign({
       // Make sure we set .type before any other properties (setting .value
@@ -83,7 +81,7 @@ var ReactDOMInput = {
 
   mountWrapper: function(inst, props) {
     if (__DEV__) {
-      LinkedValueUtils.checkPropTypes(
+      ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
         inst._currentElement._owner
@@ -91,20 +89,6 @@ var ReactDOMInput = {
 
       var owner = inst._currentElement._owner;
 
-      if (props.valueLink !== undefined && !didWarnValueLink) {
-        warning(
-          false,
-          '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
-        );
-        didWarnValueLink = true;
-      }
-      if (props.checkedLink !== undefined && !didWarnCheckedLink) {
-        warning(
-          false,
-          '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
-        );
-        didWarnCheckedLink = true;
-      }
       if (
         props.checked !== undefined &&
         props.defaultChecked !== undefined &&
@@ -189,7 +173,6 @@ var ReactDOMInput = {
       }
     }
 
-    // TODO: Shouldn't this be getChecked(props)?
     var checked = props.checked;
     if (checked != null) {
       DOMPropertyOperations.setValueForProperty(
@@ -200,7 +183,7 @@ var ReactDOMInput = {
     }
 
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    var value = LinkedValueUtils.getValue(props);
+    var value = props.value;
     if (value != null) {
 
       // Cast `value` to a string to ensure the value is set correctly. While
@@ -285,7 +268,10 @@ var ReactDOMInput = {
 function _handleChange(event) {
   var props = this._currentElement.props;
 
-  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+  var returnValue;
+  if (props.onChange) {
+    returnValue = props.onChange.call(undefined, event);
+  }
 
   // Here we use asap to wait until all updates have propagated, which
   // is important when using controlled components within layers:

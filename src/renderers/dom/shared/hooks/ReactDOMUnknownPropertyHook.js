@@ -26,9 +26,7 @@ if (__DEV__) {
 
     autoFocus: true,
     defaultValue: true,
-    valueLink: true,
     defaultChecked: true,
-    checkedLink: true,
     innerHTML: true,
     suppressContentEditableWarning: true,
     onFocusIn: true,

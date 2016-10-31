@@ -11,14 +11,13 @@
 
 'use strict';
 
-var LinkedValueUtils = require('LinkedValueUtils');
+var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
 
-var didWarnValueLink = false;
 var didWarnValDefaultVal = false;
 
 function forceUpdateIfMounted() {
@@ -67,18 +66,11 @@ var ReactDOMTextarea = {
 
   mountWrapper: function(inst, props) {
     if (__DEV__) {
-      LinkedValueUtils.checkPropTypes(
+      ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
         inst._currentElement._owner
       );
-      if (props.valueLink !== undefined && !didWarnValueLink) {
-        warning(
-          false,
-          '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
-        );
-        didWarnValueLink = true;
-      }
       if (
         props.value !== undefined &&
         props.defaultValue !== undefined &&
@@ -97,7 +89,7 @@ var ReactDOMTextarea = {
     }
 
 
-    var value = LinkedValueUtils.getValue(props);
+    var value = props.value;
     var initialValue = value;
 
     // Only bother fetching default value if we're going to use it
@@ -144,7 +136,7 @@ var ReactDOMTextarea = {
     var props = inst._currentElement.props;
 
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    var value = LinkedValueUtils.getValue(props);
+    var value = props.value;
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
@@ -175,7 +167,10 @@ var ReactDOMTextarea = {
 
 function _handleChange(event) {
   var props = this._currentElement.props;
-  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+  var returnValue;
+  if (props.onChange) {
+    returnValue = props.onChange.call(undefined, event);
+  }
   ReactUpdates.asap(forceUpdateIfMounted, this);
   return returnValue;
 }
