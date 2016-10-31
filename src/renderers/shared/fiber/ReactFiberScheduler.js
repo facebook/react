@@ -15,7 +15,7 @@
 import type { TrappedError } from 'ReactFiberErrorBoundary';
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
-import type { HostConfig } from 'ReactFiberReconciler';
+import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
@@ -379,7 +379,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performDeferredWork(deadline) {
-    performAndHandleErrors(performDeferredWorkUnsafe, deadline);
+    performAndHandleErrors(LowPriority, deadline);
   }
 
   function scheduleDeferredWork(root : FiberRoot, priority : PriorityLevel) {
@@ -432,7 +432,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performAnimationWork() {
-    performAndHandleErrors(performAnimationWorkUnsafe);
+    performAndHandleErrors(AnimationPriority);
   }
 
   function scheduleAnimationWork(root: FiberRoot, priorityLevel : PriorityLevel) {
@@ -510,7 +510,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     shouldBatchUpdates = true;
     // All nested updates are batched
     try {
-      performAndHandleErrors(performSynchronousWorkUnsafe);
+      performAndHandleErrors(SynchronousPriority);
     } finally {
       shouldBatchUpdates = prev;
     }
@@ -540,9 +540,22 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performAndHandleErrors<A>(fn: (a: A) => void, a: A) {
+  function performAndHandleErrors(priorityLevel : PriorityLevel, deadline : ?Deadline) {
+    // The exact priority level doesn't matter, so long as it's in range of the
+    // work (sync, animation, deferred) being performed.
     try {
-      fn(a);
+      if (priorityLevel === SynchronousPriority) {
+        performSynchronousWorkUnsafe();
+      }
+      if (priorityLevel > AnimationPriority) {
+        if (!deadline) {
+          throw new Error('No deadline');
+        } else {
+          performDeferredWorkUnsafe(deadline);
+        }
+        return;
+      }
+      performAnimationWorkUnsafe();
     } catch (error) {
       const failedUnitOfWork = nextUnitOfWork;
       // Reset because it points to the error boundary:

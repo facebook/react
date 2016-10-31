@@ -28,7 +28,7 @@ if (__DEV__) {
 
 var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
 
-type Deadline = {
+export type Deadline = {
   timeRemaining : () => number
 };
 
