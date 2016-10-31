@@ -11,13 +11,12 @@
 
 'use strict';
 
-var LinkedValueUtils = require('LinkedValueUtils');
+var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
 
 var warning = require('warning');
 
-var didWarnValueLink = false;
 var didWarnValueDefaultValue = false;
 
 function updateOptionsIfPendingUpdateAndMounted() {
@@ -25,7 +24,7 @@ function updateOptionsIfPendingUpdateAndMounted() {
     this._wrapperState.pendingUpdate = false;
 
     var props = this._currentElement.props;
-    var value = LinkedValueUtils.getValue(props);
+    var value = props.value;
 
     if (value != null) {
       updateOptions(this, Boolean(props.multiple), value);
@@ -51,19 +50,11 @@ var valuePropNames = ['value', 'defaultValue'];
  */
 function checkSelectPropTypes(inst, props) {
   var owner = inst._currentElement._owner;
-  LinkedValueUtils.checkPropTypes(
+  ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
     owner
   );
-
-  if (props.valueLink !== undefined && !didWarnValueLink) {
-    warning(
-      false,
-      '`valueLink` prop on `select` is deprecated; set `value` and `onChange` instead.'
-    );
-    didWarnValueLink = true;
-  }
 
   for (var i = 0; i < valuePropNames.length; i++) {
     var propName = valuePropNames[i];
@@ -156,7 +147,7 @@ var ReactDOMSelect = {
       checkSelectPropTypes(inst, props);
     }
 
-    var value = LinkedValueUtils.getValue(props);
+    var value = props.value;
     inst._wrapperState = {
       pendingUpdate: false,
       initialValue: value != null ? value : props.defaultValue,
@@ -198,7 +189,7 @@ var ReactDOMSelect = {
     var wasMultiple = inst._wrapperState.wasMultiple;
     inst._wrapperState.wasMultiple = Boolean(props.multiple);
 
-    var value = LinkedValueUtils.getValue(props);
+    var value = props.value;
     if (value != null) {
       inst._wrapperState.pendingUpdate = false;
       updateOptions(inst, Boolean(props.multiple), value);
@@ -216,7 +207,10 @@ var ReactDOMSelect = {
 
 function _handleChange(event) {
   var props = this._currentElement.props;
-  var returnValue = LinkedValueUtils.executeOnChange(props, event);
+  var returnValue;
+  if (props.onChange) {
+    returnValue = props.onChange.call(undefined, event);
+  }
 
   if (this._rootNodeID) {
     this._wrapperState.pendingUpdate = true;

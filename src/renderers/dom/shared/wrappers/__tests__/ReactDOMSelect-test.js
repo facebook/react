@@ -16,7 +16,6 @@ describe('ReactDOMSelect', () => {
   var React;
   var ReactDOM;
   var ReactDOMServer;
-  var ReactLink;
   var ReactTestUtils;
 
   var noop = function() {};
@@ -25,7 +24,6 @@ describe('ReactDOMSelect', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
-    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -345,40 +343,6 @@ describe('ReactDOMSelect', () => {
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
     expect(node.options[2].selected).toBe(true);  // gorilla
-  });
-
-  it('should support ReactLink', () => {
-    var link = new ReactLink('giraffe', jest.fn());
-    var stub =
-      <select valueLink={link}>
-        <option value="monkey">A monkey!</option>
-        <option value="giraffe">A giraffe!</option>
-        <option value="gorilla">A gorilla!</option>
-      </select>;
-
-    spyOn(console, 'error');
-
-    stub = ReactTestUtils.renderIntoDocument(stub);
-
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      '`valueLink` prop on `select` is deprecated; set `value` and `onChange` instead.'
-    );
-
-    var node = ReactDOM.findDOMNode(stub);
-
-    expect(node.options[0].selected).toBe(false);  // monkey
-    expect(node.options[1].selected).toBe(true);  // giraffe
-    expect(node.options[2].selected).toBe(false);  // gorilla
-    expect(link.requestChange.mock.calls.length).toBe(0);
-
-    node.options[1].selected = false;
-    node.options[2].selected = true;
-    ReactTestUtils.Simulate.change(node);
-
-    expect(link.requestChange.mock.calls.length).toBe(1);
-    expect(link.requestChange.mock.calls[0][0]).toEqual('gorilla');
-
   });
 
   it('should support server-side rendering', () => {

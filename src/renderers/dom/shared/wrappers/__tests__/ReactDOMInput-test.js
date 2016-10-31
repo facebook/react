@@ -19,7 +19,6 @@ describe('ReactDOMInput', () => {
   var ReactDOM;
   var ReactDOMServer;
   var ReactDOMFeatureFlags;
-  var ReactLink;
   var ReactTestUtils;
   var inputValueTracking;
 
@@ -36,7 +35,6 @@ describe('ReactDOMInput', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
     spyOn(console, 'error');
@@ -373,39 +371,6 @@ describe('ReactDOMInput', () => {
     expect(cNode.checked).toBe(true);
   });
 
-  it('should support ReactLink', () => {
-    var link = new ReactLink('yolo', jest.fn());
-    var instance = <input type="text" valueLink={link} />;
-
-    instance = ReactTestUtils.renderIntoDocument(instance);
-
-    expect(ReactDOM.findDOMNode(instance).value).toBe('yolo');
-    expect(link.value).toBe('yolo');
-    expect(link.requestChange.mock.calls.length).toBe(0);
-
-    ReactDOM.findDOMNode(instance).value = 'test';
-    ReactTestUtils.Simulate.change(ReactDOM.findDOMNode(instance));
-
-    expect(link.requestChange.mock.calls.length).toBe(1);
-    expect(link.requestChange.mock.calls[0][0]).toEqual('test');
-  });
-
-  it('should warn with value and no onChange handler', () => {
-    var link = new ReactLink('yolo', jest.fn());
-    ReactTestUtils.renderIntoDocument(<input type="text" valueLink={link} />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
-    );
-
-    ReactTestUtils.renderIntoDocument(
-      <input type="text" value="zoink" onChange={jest.fn()} />
-    );
-    expect(console.error.calls.count()).toBe(1);
-    ReactTestUtils.renderIntoDocument(<input type="text" value="zoink" />);
-    expect(console.error.calls.count()).toBe(2);
-  });
-
   it('should warn with value and no onChange handler and readOnly specified', () => {
     ReactTestUtils.renderIntoDocument(
       <input type="text" value="zoink" readOnly={true} />
@@ -429,71 +394,6 @@ describe('ReactDOMInput', () => {
     ReactTestUtils.Simulate.change(instance);
   });
 
-  it('should throw if both value and valueLink are provided', () => {
-    var node = document.createElement('div');
-    var link = new ReactLink('yolo', jest.fn());
-    var instance = <input type="text" valueLink={link} />;
-
-    expect(() => ReactDOM.render(instance, node)).not.toThrow();
-
-    instance =
-      <input
-        type="text"
-        valueLink={link}
-        value="test"
-        onChange={emptyFunction}
-      />;
-    expect(() => ReactDOM.render(instance, node)).toThrow();
-
-    instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
-    expect(() => ReactDOM.render(instance, node)).toThrow();
-
-  });
-
-  it('should support checkedLink', () => {
-    var link = new ReactLink(true, jest.fn());
-    var instance = <input type="checkbox" checkedLink={link} />;
-
-    instance = ReactTestUtils.renderIntoDocument(instance);
-
-    expect(ReactDOM.findDOMNode(instance).checked).toBe(true);
-    expect(link.value).toBe(true);
-    expect(link.requestChange.mock.calls.length).toBe(0);
-
-    ReactDOM.findDOMNode(instance).checked = false;
-    ReactTestUtils.Simulate.change(ReactDOM.findDOMNode(instance));
-
-    expect(link.requestChange.mock.calls.length).toBe(1);
-    expect(link.requestChange.mock.calls[0][0]).toEqual(false);
-  });
-
-  it('should warn with checked and no onChange handler', () => {
-    var node = document.createElement('div');
-    var link = new ReactLink(true, jest.fn());
-    ReactDOM.render(<input type="checkbox" checkedLink={link} />, node);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
-    );
-
-    ReactTestUtils.renderIntoDocument(
-      <input
-        type="checkbox"
-        checked="false"
-        onChange={jest.fn()}
-      />
-    );
-    expect(console.error.calls.count()).toBe(1);
-
-    ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" checked="false" readOnly={true} />
-    );
-    expect(console.error.calls.count()).toBe(1);
-
-    ReactTestUtils.renderIntoDocument(<input type="checkbox" checked="false" />);
-    expect(console.error.calls.count()).toBe(2);
-  });
-
   it('should warn with checked and no onChange handler with readOnly specified', () => {
     ReactTestUtils.renderIntoDocument(
       <input type="checkbox" checked="false" readOnly={true} />
@@ -506,48 +406,11 @@ describe('ReactDOMInput', () => {
     expect(console.error.calls.count()).toBe(1);
   });
 
-  it('should throw if both checked and checkedLink are provided', () => {
-    var node = document.createElement('div');
-    var link = new ReactLink(true, jest.fn());
-    var instance = <input type="checkbox" checkedLink={link} />;
-
-    expect(() => ReactDOM.render(instance, node)).not.toThrow();
-
-    instance =
-      <input
-        type="checkbox"
-        checkedLink={link}
-        checked="false"
-        onChange={emptyFunction}
-      />;
-    expect(() => ReactDOM.render(instance, node)).toThrow();
-
-    instance =
-      <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
-    expect(() => ReactDOM.render(instance, node)).toThrow();
-
-  });
-
   it('should update defaultValue to empty string', () => {
     var container = document.createElement('div');
     ReactDOM.render(<input type="text" defaultValue={'foo'} />, container);
     ReactDOM.render(<input type="text" defaultValue={''} />, container);
     expect(container.firstChild.defaultValue).toBe('');
-  });
-
-  it('should throw if both checkedLink and valueLink are provided', () => {
-    var node = document.createElement('div');
-    var link = new ReactLink(true, jest.fn());
-    var instance = <input type="checkbox" checkedLink={link} />;
-
-    expect(() => ReactDOM.render(instance, node)).not.toThrow();
-
-    instance = <input type="checkbox" valueLink={link} />;
-    expect(() => ReactDOM.render(instance, node)).not.toThrow();
-
-    instance =
-      <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
-    expect(() => ReactDOM.render(instance, node)).toThrow();
   });
 
   it('should warn if value is null', () => {
