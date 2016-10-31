@@ -68,7 +68,10 @@ export type Reconciler<C, I, TI> = {
   updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
   unmountContainer(container : OpaqueNode) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
-  batchedUpdates(fn: Function) : void,
+  /* eslint-disable no-undef */
+  // FIXME: ESLint complains about type parameter
+  batchedUpdates<A>(fn : () => A) : A,
+  /* eslint-enable no-undef */
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
