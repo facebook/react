@@ -165,8 +165,8 @@ var ReactDOM = {
     return DOMRenderer.findHostInstance(component);
   },
 
-  unstable_batchedUpdates(fn : Function) : void {
-    DOMRenderer.batchedUpdates(fn);
+  unstable_batchedUpdates<A>(fn : () => A) : A {
+    return DOMRenderer.batchedUpdates(fn);
   },
 
 };

@@ -681,11 +681,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function batchedUpdates(fn: Function) {
+  function batchedUpdates<A>(fn : () => A) : A {
     const prev = shouldBatchUpdates;
     shouldBatchUpdates = true;
     try {
-      fn();
+      return fn();
     } finally {
       shouldBatchUpdates = prev;
     }
