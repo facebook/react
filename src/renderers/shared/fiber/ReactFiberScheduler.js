@@ -712,10 +712,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
+  function syncUpdates<A>(fn : () => A) : A {
+    const previousPriorityContext = priorityContext;
+    priorityContext = SynchronousPriority;
+    try {
+      return fn();
+    } finally {
+      priorityContext = previousPriorityContext;
+    }
+  }
+
   return {
     scheduleWork: scheduleWork,
     scheduleDeferredWork: scheduleDeferredWork,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
+    syncUpdates: syncUpdates,
   };
 };

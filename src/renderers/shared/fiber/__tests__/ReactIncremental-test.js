@@ -1386,4 +1386,83 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  it('performs batched updates at the end of the batch', () => {
+    var ops = [];
+    var instance;
+
+    class Foo extends React.Component {
+      state = { n: 0 };
+      render() {
+        instance = this;
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    ops = [];
+
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.batchedUpdates(() => {
+        instance.setState({ n: 1 }, () => ops.push('setState 1'));
+        instance.setState({ n: 2 }, () => ops.push('setState 2'));
+        ops.push('end batchedUpdates');
+      });
+      ops.push('end syncUpdates');
+    });
+
+    // ReactNoop.flush() not needed because updates are synchronous
+
+    expect(ops).toEqual([
+      'end batchedUpdates',
+      'setState 1',
+      'setState 2',
+      'end syncUpdates',
+    ]);
+    expect(instance.state.n).toEqual(2);
+  });
+
+  it('can nest batchedUpdates', () => {
+    var ops = [];
+    var instance;
+
+    class Foo extends React.Component {
+      state = { n: 0 };
+      render() {
+        instance = this;
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    ops = [];
+
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.batchedUpdates(() => {
+        instance.setState({ n: 1 }, () => ops.push('setState 1'));
+        instance.setState({ n: 2 }, () => ops.push('setState 2'));
+        ReactNoop.batchedUpdates(() => {
+          instance.setState({ n: 3 }, () => ops.push('setState 3'));
+          instance.setState({ n: 4 }, () => ops.push('setState 4'));
+          ops.push('end inner batchedUpdates');
+        });
+        ops.push('end outer batchedUpdates');
+      });
+      ops.push('end syncUpdates');
+    });
+
+    // ReactNoop.flush() not needed because updates are synchronous
+
+    expect(ops).toEqual([
+      'end inner batchedUpdates',
+      'end outer batchedUpdates',
+      'setState 1',
+      'setState 2',
+      'setState 3',
+      'setState 4',
+      'end syncUpdates',
+    ]);
+    expect(instance.state.n).toEqual(4);
+  });
 });

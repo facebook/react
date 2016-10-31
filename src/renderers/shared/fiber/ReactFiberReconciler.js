@@ -71,6 +71,7 @@ export type Reconciler<C, I, TI> = {
   /* eslint-disable no-undef */
   // FIXME: ESLint complains about type parameter
   batchedUpdates<A>(fn : () => A) : A,
+  syncUpdates<A>(fn : () => A) : A,
   /* eslint-enable no-undef */
 
   // Used to extract the return value from the initial render. Legacy API.
@@ -86,6 +87,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
     scheduleWork,
     performWithPriority,
     batchedUpdates,
+    syncUpdates,
   } = ReactFiberScheduler(config);
 
   return {
@@ -151,6 +153,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
     performWithPriority,
 
     batchedUpdates,
+
+    syncUpdates,
 
     getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | TI | null) {
       const root : FiberRoot = (container.stateNode : any);
