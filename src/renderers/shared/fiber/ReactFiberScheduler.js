@@ -76,11 +76,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let nextUnitOfWork : ?Fiber = null;
   let nextPriorityLevel : PriorityLevel = NoWork;
 
+  // The next errors we need to handle before the next item of work.
+  let nextTrappedErrors : Array<TrappedError> | null = null;
+
   // Linked list of roots with scheduled work on them.
   let nextScheduledRoot : ?FiberRoot = null;
   let lastScheduledRoot : ?FiberRoot = null;
 
   function findNextUnitOfWork() {
+    if (nextTrappedErrors) {
+      // While we have errors, we can't perform any normal work.
+      return null;
+    }
+
     // Clear out roots with no more work on them.
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
       nextScheduledRoot.isScheduled = false;
@@ -210,10 +218,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    // Now that the tree has been committed, we can handle errors.
-    if (allTrappedErrors) {
-      handleErrors(allTrappedErrors);
-    }
+    nextTrappedErrors = allTrappedErrors;
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
@@ -558,12 +563,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         throw error;
       }
       const trappedError = trapError(failedUnitOfWork, error);
-      handleErrors([trappedError]);
+      nextTrappedErrors = [trappedError];
+    }
+    if (nextTrappedErrors) {
+      handleErrors();
     }
   }
 
-  function handleErrors(initialTrappedErrors : Array<TrappedError>) : void {
-    let nextTrappedErrors = initialTrappedErrors;
+  function handleErrors() : void {
     let firstUncaughtError = null;
 
     // In each phase, we will attempt to pass errors to boundaries and re-render them.
@@ -604,8 +611,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         let fiber = cloneFiber(root.current, priority);
         try {
           while (fiber) {
-            // TODO: this is the only place where we recurse and it's unfortunate.
-            // (This may potentially get us into handleErrors() again.)
             fiber = performUnitOfWork(fiber, true);
           }
         } catch (nextError) {
