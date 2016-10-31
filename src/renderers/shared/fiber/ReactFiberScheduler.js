@@ -65,9 +65,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const useSyncScheduling = config.useSyncScheduling;
 
   // The priority level to use when scheduling an update.
-  let priorityContext : (PriorityLevel | null) = null;
-  // The priority level to use if there is no priority context.
-  let defaultPriorityContext : PriorityLevel = useSyncScheduling ?
+  let priorityContext : PriorityLevel = useSyncScheduling ?
     SynchronousPriority :
     LowPriority;
 
@@ -591,9 +589,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
       // We will process an update caused by each error boundary synchronously.
       affectedBoundaries.forEach(boundary => {
-        const priority = priorityContext !== null ?
-          priorityContext :
-          defaultPriorityContext;
+        const priority = priorityContext;
         const root = scheduleErrorBoundaryWork(boundary, priority);
         // This should use findNextUnitOfWork() when synchronous scheduling is implemented.
         let fiber = cloneFiber(root.current, priority);
@@ -628,9 +624,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function scheduleWork(root : FiberRoot, priorityLevel : ?PriorityLevel) {
     if (priorityLevel == null) {
-      priorityLevel = priorityContext !== null ?
-        priorityContext :
-        defaultPriorityContext;
+      priorityLevel = priorityContext;
     }
 
     if (priorityLevel === SynchronousPriority) {
@@ -650,9 +644,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function scheduleUpdate(fiber: Fiber, priorityLevel : ?PriorityLevel): void {
     // Use priority context if no priority is provided
     if (priorityLevel == null) {
-      priorityLevel = priorityContext !== null ?
-        priorityContext :
-        defaultPriorityContext;
+      priorityLevel = priorityContext;
     }
 
     while (true) {
