@@ -125,11 +125,43 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         workInProgress.tag === HostComponent ||
         workInProgress.tag === HostText
       ) {
-        const childDebugIDs = [];
+        let childDebugIDs = [];
         let nextChild = workInProgress.child;
         while (nextChild) {
           childDebugIDs.push(getDebugID(nextChild));
           nextChild = nextChild.sibling;
+        }
+
+        if (workInProgress.tag === HostComponent) {
+          const wasText = (
+            current && current.memoizedProps &&
+            typeof workInProgress.pendingProps.children !== 'string' &&
+            typeof workInProgress.pendingProps.children !== 'number'
+          );
+          const willBeText = (
+            typeof workInProgress.pendingProps.children === 'string' ||
+            typeof workInProgress.pendingProps.children === 'number'
+          );
+          if (wasText && !willBeText) {
+            ReactInstrumentation.debugTool.onUnmountComponent(
+              getDebugID(workInProgress) + '#text'
+            );
+          }
+          if (wasText && willBeText) {
+            ReactInstrumentation.debugTool.onUpdateComponent(
+              getDebugID(workInProgress) + '#text',
+              workInProgress.pendingProps.children,
+              getDebugID(workInProgress)
+            );
+          }
+          if (!wasText && willBeText) {
+            ReactInstrumentation.debugTool.onMountComponent(
+              getDebugID(workInProgress) + '#text',
+              workInProgress.pendingProps.children,
+              getDebugID(workInProgress)
+            );
+            childDebugIDs = [getDebugID(workInProgress) + '#text'];
+          }
         }
         ReactInstrumentation.debugTool.onSetChildren(
           getDebugID(workInProgress),

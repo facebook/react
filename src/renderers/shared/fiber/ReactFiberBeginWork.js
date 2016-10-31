@@ -402,7 +402,7 @@ module.exports = function<T, P, I, TI, C>(
             workInProgress.return.tag === HostContainer ?
               0 :
               getDebugID(workInProgress.return)
-          );        
+          );
         } else {
           ReactInstrumentation.debugTool.onBeforeMountComponent(
             getDebugID(workInProgress),
@@ -414,6 +414,36 @@ module.exports = function<T, P, I, TI, C>(
               0 :
               getDebugID(workInProgress.return)
           );
+        }
+        if (workInProgress.tag === HostComponent) {
+          const wasText = (
+            current && current.memoizedProps &&
+            typeof workInProgress.pendingProps.children !== 'string' &&
+            typeof workInProgress.pendingProps.children !== 'number'
+          );
+          const willBeText = (
+            typeof workInProgress.pendingProps.children === 'string' ||
+            typeof workInProgress.pendingProps.children === 'number'
+          );
+          if (wasText && !willBeText) {
+            ReactInstrumentation.debugTool.onBeforeUnmountComponent(
+              getDebugID(workInProgress) + '#text'
+            );
+          }
+          if (wasText && willBeText) {
+            ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+              getDebugID(workInProgress) + '#text',
+              workInProgress.pendingProps.children,
+              getDebugID(workInProgress)
+            );            
+          }
+          if (!wasText && willBeText) {
+            ReactInstrumentation.debugTool.onBeforeMountComponent(
+              getDebugID(workInProgress) + '#text',
+              workInProgress.pendingProps.children,
+              getDebugID(workInProgress)
+            );
+          }
         }
       }
     }
