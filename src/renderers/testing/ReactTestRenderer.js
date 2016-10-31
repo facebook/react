@@ -53,11 +53,13 @@ class ReactTestComponent {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
+  _hostNode: null | Object;
 
   constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
+    this._hostNode = null;
   }
 
   mountComponent(
@@ -66,7 +68,10 @@ class ReactTestComponent {
     nativeContainerInfo: ?null,
     context: Object,
   ) {
+    var options = transaction.getTestOptions();
     var element = this._currentElement;
+    this._hostNode = options.createNodeMock(element);
+
     // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.mountChildren(element.props.children, transaction, context);
   }
@@ -76,7 +81,9 @@ class ReactTestComponent {
     transaction: ReactTestReconcileTransaction,
     context: Object,
   ) {
+    var options = transaction.getTestOptions();
     this._currentElement = nextElement;
+    this._hostNode = options.createNodeMock(nextElement);
     // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.updateChildren(nextElement.props.children, transaction, context);
   }
