@@ -13,13 +13,8 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var warning = require('warning');
 var canDefineProperty = require('canDefineProperty');
-var hasValidProp = require('hasValidProp');
-var hasValidKey = hasValidProp('key');
-var hasValidRef = hasValidProp('ref');
-var definePropWarningGetter = require('definePropWarningGetter');
-var defineKeyPropWarningGetter = definePropWarningGetter('key');
-var defineRefPropWarningGetter = definePropWarningGetter('ref');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
@@ -30,6 +25,50 @@ var RESERVED_PROPS = {
   __self: true,
   __source: true,
 };
+
+function hasValidProp(name) {
+  return function(object) {
+    if (__DEV__ && hasOwnProperty.call(object, name)) {
+      var getter = Object.getOwnPropertyDescriptor(object, name).get;
+      if (getter && getter.isReactWarning) {
+        return false;
+      }
+    }
+    return object[name] !== undefined;
+  };
+}
+
+var hasValidKey = hasValidProp('key');
+var hasValidRef = hasValidProp('ref');
+
+function definePropWarningGetter(name) {
+  var specialPropWarningShown;
+
+  return function(props, displayName) {
+    var warnAboutAccessingKey = function() {
+      if (!specialPropWarningShown) {
+        specialPropWarningShown = true;
+        warning(
+          false,
+          '%s: `%s` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+          displayName,
+          name
+        );
+      }
+    };
+    warnAboutAccessingKey.isReactWarning = true;
+    Object.defineProperty(props, name, {
+      get: warnAboutAccessingKey,
+      configurable: true,
+    });
+  };
+}
+
+var defineKeyPropWarningGetter = definePropWarningGetter('key');
+var defineRefPropWarningGetter = definePropWarningGetter('ref');
 
 /**
  * Factory method to create a new React element. This no longer adheres to
