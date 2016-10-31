@@ -46,6 +46,11 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
+if (__DEV__) {
+  var ReactInstrumentation = require('ReactInstrumentation');
+  var getDebugID = require('getDebugID');
+}
+
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
   scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void
@@ -377,6 +382,70 @@ module.exports = function<T, P, I, TI, C>(
       )) &&
       workInProgress.updateQueue === null) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    if (__DEV__ && ReactInstrumentation.debugTool) {
+      if (
+        workInProgress.tag === IndeterminateComponent ||
+        workInProgress.tag === FunctionalComponent ||
+        workInProgress.tag === ClassComponent ||
+        workInProgress.tag === HostComponent ||
+        workInProgress.tag === HostText
+      ) {
+        if (current) {
+          ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+            getDebugID(workInProgress),
+            workInProgress.tag === HostText ? workInProgress.pendingProps : {
+              type: workInProgress.type,
+              props: workInProgress.pendingProps,
+            },
+            workInProgress.return.tag === HostContainer ?
+              0 :
+              getDebugID(workInProgress.return)
+          );
+        } else {
+          ReactInstrumentation.debugTool.onBeforeMountComponent(
+            getDebugID(workInProgress),
+            workInProgress.tag === HostText ? workInProgress.pendingProps : {
+              type: workInProgress.type,
+              props: workInProgress.pendingProps,
+            },
+            workInProgress.return.tag === HostContainer ?
+              0 :
+              getDebugID(workInProgress.return)
+          );
+        }
+        if (workInProgress.tag === HostComponent) {
+          const wasText = (
+            current && current.memoizedProps &&
+            typeof workInProgress.pendingProps.children !== 'string' &&
+            typeof workInProgress.pendingProps.children !== 'number'
+          );
+          const willBeText = (
+            typeof workInProgress.pendingProps.children === 'string' ||
+            typeof workInProgress.pendingProps.children === 'number'
+          );
+          if (wasText && !willBeText) {
+            ReactInstrumentation.debugTool.onBeforeUnmountComponent(
+              getDebugID(workInProgress) + '#text'
+            );
+          }
+          if (wasText && willBeText) {
+            ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+              getDebugID(workInProgress) + '#text',
+              workInProgress.pendingProps.children,
+              getDebugID(workInProgress)
+            );            
+          }
+          if (!wasText && willBeText) {
+            ReactInstrumentation.debugTool.onBeforeMountComponent(
+              getDebugID(workInProgress) + '#text',
+              workInProgress.pendingProps.children,
+              getDebugID(workInProgress)
+            );
+          }
+        }
+      }
     }
 
     switch (workInProgress.tag) {
