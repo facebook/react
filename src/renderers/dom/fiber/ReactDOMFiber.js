@@ -165,6 +165,10 @@ var ReactDOM = {
     return DOMRenderer.findHostInstance(component);
   },
 
+  unstable_batchedUpdates(fn : Function) : void {
+    DOMRenderer.batchedUpdates(fn);
+  },
+
 };
 
 module.exports = ReactDOM;
