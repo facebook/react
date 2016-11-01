@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const SearchSource = require('jest').SearchSource;
+const TestRunner = require('jest').TestRunner;
+
+const createHasteContext = require('jest-runtime').createHasteContext;
+const readConfig = require('jest-config').readConfig;
+
+const argv = {};
+const root = path.normalize(path.join(__dirname, '..', '..'));
+const testPathPattern = '';
+
+function runJest() {
+  return readConfig(argv, root)
+    .then((config) => {
+      return createHasteContext(config, {}).then((hasteMap) => {
+        const source = new SearchSource(hasteMap, config);
+        return source.getTestPaths({testPathPattern})
+          .then((data) => {
+            const runner = new TestRunner(
+              hasteMap,
+              config,
+              {
+                maxWorkers: Math.max(os.cpus().length - 1, 1),
+                getTestSummary: () => 'You did it!'
+              }
+            );
+            return runner.runTests(data.paths);
+          });
+      });
+    });
+}
+
+function formatResults(runResults, predicate) {
+  const formatted = [];
+  runResults.testResults.forEach((fileResult) => {
+    const file = path.relative(root, fileResult.testFilePath);
+    const tests = fileResult.testResults.filter(
+      (test) => predicate(fileResult, test)
+    );
+    if (tests.length) {
+      const lines = [file].concat(tests.map((test) => '* ' + test.title));
+      formatted.push(lines.join('\n'));
+    }
+  });
+  formatted.sort();
+  return formatted.join('\n\n');
+}
+
+process.env.REACT_DOM_JEST_USE_FIBER = true;
+runJest()
+  .then((runResults) => {
+    const passing = formatResults(
+      runResults,
+      (file, test) => test.status === 'passed'
+    );
+    const failing = formatResults(
+      runResults,
+      (file, test) => test.status === 'failed'
+    );
+    fs.writeFileSync(
+      path.join(__dirname, 'tests-passing.txt'),
+      passing + '\n'
+    );
+    fs.writeFileSync(
+      path.join(__dirname, 'tests-failing.txt'),
+      failing + '\n'
+    );
+  });
