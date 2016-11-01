@@ -497,9 +497,7 @@ describe('ReactDOMSelect', () => {
     stub = ReactDOM.render(stub, container);
     var node = ReactDOM.findDOMNode(stub);
 
-    expect(() => ReactTestUtils.Simulate.change(node)).not.toThrow(
-      "Cannot set property 'pendingUpdate' of null"
-    );
+    expect(() => ReactTestUtils.Simulate.change(node)).not.toThrow();
   });
 
   it('should select grandchild options nested inside an optgroup', () => {
