@@ -34,7 +34,7 @@ var scheduledDeferredCallback = null;
 const TERMINAL_TAG = 99;
 const TEXT_TAG = 98;
 
-type Container = { rootID: number, children: Array<Instance | TextInstance> };
+type Container = { rootID: string, children: Array<Instance | TextInstance> };
 type Props = { prop: any };
 type Instance = { tag: 99, type: string, id: number, children: Array<Instance | TextInstance>, prop: any };
 type TextInstance = { tag: 98, text: string };
@@ -145,19 +145,46 @@ var NoopRenderer = ReactFiberReconciler({
 
 });
 
-var rootContainer = { rootID: 0, children: [] };
-
-var root = null;
+var rootContainers = new Map();
+var roots = new Map();
+var DEFAULT_ROOT_ID = '<default>';
 
 var ReactNoop = {
 
-  root: rootContainer,
-
-  render(element : ReactElement<any>, callback: ?Function) {
-    if (!root) {
-      root = NoopRenderer.mountContainer(element, rootContainer, callback);
+  getChildren(rootID : string = DEFAULT_ROOT_ID) {
+    const container = rootContainers.get(rootID);
+    if (container) {
+      return container.children;
     } else {
-      NoopRenderer.updateContainer(element, root, callback);
+      return null;
+    }
+  },
+
+  // Shortcut for testing a single root
+  render(element : ReactElement<any>, callback: ?Function) {
+    ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
+  },
+
+  renderToRootWithID(element : ReactElement<any>, rootID : string, callback : ?Function) {
+    if (!roots.has(rootID)) {
+      const container = { rootID: rootID, children: [] };
+      rootContainers.set(rootID, container);
+      const root = NoopRenderer.mountContainer(element, container, callback);
+      roots.set(rootID, root);
+    } else {
+      const root = roots.get(rootID);
+      if (root) {
+        NoopRenderer.updateContainer(element, root, callback);
+      }
+    }
+  },
+
+  unmountRootWithID(rootID : string) {
+    const root = roots.get(rootID);
+    roots.delete(rootID);
+    rootContainers.delete(rootID);
+    if (root) {
+      NoopRenderer.unmountContainer(root);
     }
   },
 
@@ -211,8 +238,10 @@ var ReactNoop = {
   },
 
   // Logs the current state of the tree.
-  dumpTree() {
-    if (!root) {
+  dumpTree(rootID : string = DEFAULT_ROOT_ID) {
+    const root = roots.get(rootID);
+    const rootContainer = rootContainers.get(rootID);
+    if (!root || !rootContainer) {
       console.log('Nothing rendered yet.');
       return;
     }
