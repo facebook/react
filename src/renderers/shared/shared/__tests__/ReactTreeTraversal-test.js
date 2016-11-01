@@ -24,9 +24,9 @@ var ARG2 = {arg2: true};
 class ChildComponent extends React.Component {
   render() {
     return (
-      <div ref="DIV">
-        <div ref="DIV_1" />
-        <div ref="DIV_2" />
+      <div ref="DIV" id={this.props.id + '__DIV'}>
+        <div ref="DIV_1" id={this.props.id + '__DIV_1'} />
+        <div ref="DIV_2" id={this.props.id + '__DIV_2'} />
       </div>
     );
   }
@@ -35,12 +35,12 @@ class ChildComponent extends React.Component {
 class ParentComponent extends React.Component {
   render() {
     return (
-      <div ref="P">
-        <div ref="P_P1">
-          <ChildComponent ref="P_P1_C1" />
-          <ChildComponent ref="P_P1_C2" />
+      <div ref="P" id="P">
+        <div ref="P_P1" id="P_P1">
+          <ChildComponent ref="P_P1_C1" id="P_P1_C1" />
+          <ChildComponent ref="P_P1_C2" id="P_P1_C2" />
         </div>
-        <div ref="P_OneOff" />
+        <div ref="P_OneOff" id="P_OneOff" />
       </div>
     );
   }
@@ -56,7 +56,7 @@ describe('ReactTreeTraversal', () => {
   var aggregatedArgs;
   function argAggregator(inst, phase, arg) {
     aggregatedArgs.push({
-      node: ReactDOMComponentTree.getNodeFromInstance(inst),
+      node: ReactDOMComponentTree.getNodeFromInstance(inst).id,
       phase: phase,
       arg: arg,
     });
@@ -82,15 +82,15 @@ describe('ReactTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [
-        {node: parent.refs.P, phase: 'captured', arg: ARG},
-        {node: parent.refs.P_P1, phase: 'captured', arg: ARG},
-        {node: parent.refs.P_P1_C1.refs.DIV, phase: 'captured', arg: ARG},
-        {node: parent.refs.P_P1_C1.refs.DIV_1, phase: 'captured', arg: ARG},
+        {node: 'P', phase: 'captured', arg: ARG},
+        {node: 'P_P1', phase: 'captured', arg: ARG},
+        {node: 'P_P1_C1__DIV', phase: 'captured', arg: ARG},
+        {node: 'P_P1_C1__DIV_1', phase: 'captured', arg: ARG},
 
-        {node: parent.refs.P_P1_C1.refs.DIV_1, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P_P1_C1.refs.DIV, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P_P1, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P, phase: 'bubbled', arg: ARG},
+        {node: 'P_P1_C1__DIV_1', phase: 'bubbled', arg: ARG},
+        {node: 'P_P1_C1__DIV', phase: 'bubbled', arg: ARG},
+        {node: 'P_P1', phase: 'bubbled', arg: ARG},
+        {node: 'P', phase: 'bubbled', arg: ARG},
       ];
       ReactTreeTraversal.traverseTwoPhase(target, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
@@ -100,8 +100,8 @@ describe('ReactTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P);
       var expectedAggregation = [
-        {node: parent.refs.P, phase: 'captured', arg: ARG},
-        {node: parent.refs.P, phase: 'bubbled', arg: ARG},
+        {node: 'P', phase: 'captured', arg: ARG},
+        {node: 'P', phase: 'bubbled', arg: ARG},
       ];
       ReactTreeTraversal.traverseTwoPhase(target, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
@@ -134,9 +134,9 @@ describe('ReactTreeTraversal', () => {
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_2);
       var expectedAggregation = [
-        {node: parent.refs.P_P1_C1.refs.DIV_1, phase: 'bubbled', arg: ARG},
+        {node: 'P_P1_C1__DIV_1', phase: 'bubbled', arg: ARG},
         // enter/leave shouldn't fire anything on the parent
-        {node: parent.refs.P_P1_C1.refs.DIV_2, phase: 'captured', arg: ARG2},
+        {node: 'P_P1_C1__DIV_2', phase: 'captured', arg: ARG2},
       ];
       ReactTreeTraversal.traverseEnterLeave(
         leave, enter, argAggregator, ARG, ARG2
@@ -149,7 +149,7 @@ describe('ReactTreeTraversal', () => {
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {node: parent.refs.P_P1_C1.refs.DIV_1, phase: 'bubbled', arg: ARG},
+        {node: 'P_P1_C1__DIV_1', phase: 'bubbled', arg: ARG},
       ];
       ReactTreeTraversal.traverseEnterLeave(
         leave, enter, argAggregator, ARG, ARG2
@@ -162,9 +162,9 @@ describe('ReactTreeTraversal', () => {
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {node: parent.refs.P, phase: 'captured', arg: ARG2},
-        {node: parent.refs.P_P1, phase: 'captured', arg: ARG2},
-        {node: parent.refs.P_P1_C1.refs.DIV, phase: 'captured', arg: ARG2},
+        {node: 'P', phase: 'captured', arg: ARG2},
+        {node: 'P_P1', phase: 'captured', arg: ARG2},
+        {node: 'P_P1_C1__DIV', phase: 'captured', arg: ARG2},
       ];
       ReactTreeTraversal.traverseEnterLeave(
         leave, enter, argAggregator, ARG, ARG2
@@ -177,7 +177,7 @@ describe('ReactTreeTraversal', () => {
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P);
       var expectedAggregation = [
-        {node: parent.refs.P, phase: 'captured', arg: ARG2},
+        {node: 'P', phase: 'captured', arg: ARG2},
       ];
       ReactTreeTraversal.traverseEnterLeave(
         leave, enter, argAggregator, ARG, ARG2
@@ -190,9 +190,9 @@ describe('ReactTreeTraversal', () => {
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {node: parent.refs.P_P1_C1.refs.DIV, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P_P1, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P, phase: 'bubbled', arg: ARG},
+        {node: 'P_P1_C1__DIV', phase: 'bubbled', arg: ARG},
+        {node: 'P_P1', phase: 'bubbled', arg: ARG},
+        {node: 'P', phase: 'bubbled', arg: ARG},
       ];
       ReactTreeTraversal.traverseEnterLeave(
         leave, enter, argAggregator, ARG, ARG2
@@ -205,9 +205,9 @@ describe('ReactTreeTraversal', () => {
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {node: parent.refs.P_P1_C1.refs.DIV, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P_P1, phase: 'bubbled', arg: ARG},
-        {node: parent.refs.P, phase: 'bubbled', arg: ARG},
+        {node: 'P_P1_C1__DIV', phase: 'bubbled', arg: ARG},
+        {node: 'P_P1', phase: 'bubbled', arg: ARG},
+        {node: 'P', phase: 'bubbled', arg: ARG},
       ];
       ReactTreeTraversal.traverseEnterLeave(
         leave, enter, argAggregator, ARG, ARG2
