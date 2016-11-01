@@ -137,7 +137,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           commitInsertion(effectfulFiber);
           // Clear the effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag = NoWork;
+          effectfulFiber.effectTag = NoEffect;
           break;
         }
         case PlacementAndUpdate: {

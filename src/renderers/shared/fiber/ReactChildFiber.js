@@ -23,7 +23,6 @@ var {
 } = require('ReactCoroutine');
 
 var ReactFiber = require('ReactFiber');
-var ReactPriorityLevel = require('ReactPriorityLevel');
 var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -56,10 +55,7 @@ const {
 } = ReactTypeOfWork;
 
 const {
-  NoWork,
-} = ReactPriorityLevel;
-
-const {
+  NoEffect,
   Placement,
   Deletion,
 } = ReactTypeOfSideEffect;
@@ -179,7 +175,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // we're reconciling at a lower priority that means that this was
       // down-prioritized.
       fiber.pendingWorkPriority = priority;
-      fiber.effectTag = NoWork;
+      fiber.effectTag = NoEffect;
       fiber.index = 0;
       fiber.sibling = null;
       return fiber;
