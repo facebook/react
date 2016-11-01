@@ -77,14 +77,22 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function findNextUnitOfWork() {
     // Clear out roots with no more work on them.
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
+      // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
+      // Read the next pointer now.
+      // We need to clear it in case this root gets scheduled again later.
+      const next = nextScheduledRoot.nextScheduledRoot;
+      nextScheduledRoot.nextScheduledRoot = null;
+      // Exit if we cleared all the roots and there's no work to do.
       if (nextScheduledRoot === lastScheduledRoot) {
         nextScheduledRoot = null;
         lastScheduledRoot = null;
         nextPriorityLevel = NoWork;
         return null;
       }
-      nextScheduledRoot = nextScheduledRoot.nextScheduledRoot;
+      // Continue with the next root.
+      // If there's no work on it, it will get unscheduled too.
+      nextScheduledRoot = next;
     }
     let root = nextScheduledRoot;
     let highestPriorityRoot = null;
