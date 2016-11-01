@@ -70,6 +70,36 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('a')).toEqual([span('a:6')]);
   });
 
+  it('works on deferred roots in the order they were scheduled', () => {
+    ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
+    ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
+    ReactNoop.renderToRootWithID(<span prop="c:1" />, 'c');
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
+
+    // Schedule deferred work in the reverse order
+    ReactNoop.renderToRootWithID(<span prop="c:2" />, 'c');
+    ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
+    // Ensure it starts in the order it was scheduled
+    ReactNoop.flushDeferredPri(15);
+    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+    // Schedule last bit of work, it will get processed the last
+    ReactNoop.renderToRootWithID(<span prop="a:2" />, 'a');
+    // Keep performing work in the order it was scheduled
+    ReactNoop.flushDeferredPri(15);
+    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+    ReactNoop.flushDeferredPri(15);
+    expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+  });
+
   it('works on roots with animation priority before deferred work', () => {
     ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
@@ -85,7 +115,8 @@ describe('ReactIncrementalScheduling', () => {
       ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
       ReactNoop.renderToRootWithID(<span prop="c:2" />, 'c');
     });
-    // Handle roots with animation work first
+    // We're flushing deferred work
+    // Still, roots with animation work are handled first
     ReactNoop.flushDeferredPri(15);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
@@ -94,10 +125,26 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
-    // Then handle deferred root
+
+    // More deferred and animation work just got scheduled!
+    ReactNoop.renderToRootWithID(<span prop="c:3" />, 'c');
+    ReactNoop.performAnimationWork(() => {
+      ReactNoop.renderToRootWithID(<span prop="b:3" />, 'b');
+    });
+    // Animation is still handled first
+    ReactNoop.flushDeferredPri(15);
+    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+
+    // Finally we handle deferred root in the order it was scheduled
     ReactNoop.flushDeferredPri(15);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+    ReactNoop.flushDeferredPri(15);
+    expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:3')]);
   });
 });

@@ -794,6 +794,11 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted when an unmount is deferred
 * finds no node before insertion and correct node before deletion
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
+* schedules multiple roots
+* works on deferred roots in the order they were scheduled
+* works on roots with animation priority before deferred work
+
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
 * can update child nodes of a fragment
