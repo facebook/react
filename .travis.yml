@@ -94,6 +94,13 @@ script:
       node scripts/facts-tracker/index.js \
         "fiber-tests" "$FIBER_TESTS"
 
+      # Should consolidate this with the above fiber run
+      echo 'Testing in fiber mode against test records...'
+      scripts/fiber/record-tests
+      git --no-pager diff scripts/fiber
+      FIBER_TESTS_STATUS=$(git status --porcelain scripts/fiber)
+      test -z "$FIBER_TESTS_STATUS"
+
       ./node_modules/.bin/gulp react:extract-errors
     elif [ "$TEST_TYPE" = flow ]; then
       set -e
