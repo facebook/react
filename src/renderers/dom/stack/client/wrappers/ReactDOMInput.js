@@ -29,6 +29,8 @@ function forceUpdateIfMounted() {
     // DOM component is still mounted; update
     ReactDOMInput.updateWrapper(this);
   }
+  var props = this._currentElement.props;
+  updateNamedCousins(this, props);
 }
 
 function isControlled(props) {
@@ -278,9 +280,13 @@ function _handleChange(event) {
   // https://github.com/facebook/react/issues/1698
   ReactUpdates.asap(forceUpdateIfMounted, this);
 
+  return returnValue;
+}
+
+function updateNamedCousins(thisInstance, props) {
   var name = props.name;
   if (props.type === 'radio' && name != null) {
-    var rootNode = ReactDOMComponentTree.getNodeFromInstance(this);
+    var rootNode = ReactDOMComponentTree.getNodeFromInstance(thisInstance);
     var queryRoot = rootNode;
 
     while (queryRoot.parentNode) {
@@ -291,8 +297,9 @@ function _handleChange(event) {
     // but that sometimes behaves strangely in IE8. We could also try using
     // `form.getElementsByName`, but that will only return direct children
     // and won't include inputs that use the HTML5 `form=` attribute. Since
-    // the input might not even be in a form, let's just use the global
-    // `querySelectorAll` to ensure we don't miss anything.
+    // the input might not even be in a form. It might not even be in the
+    // document. Let's just use the local `querySelectorAll` to ensure we don't
+    // miss anything.
     var group = queryRoot.querySelectorAll(
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
 
@@ -315,11 +322,11 @@ function _handleChange(event) {
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      ReactUpdates.asap(forceUpdateIfMounted, otherInstance);
+      if (otherInstance._rootNodeID) {
+        ReactDOMInput.updateWrapper(otherInstance);
+      }
     }
   }
-
-  return returnValue;
 }
 
 module.exports = ReactDOMInput;
