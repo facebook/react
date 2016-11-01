@@ -74,6 +74,18 @@ describe('ReactDOMTextComponent', () => {
     expect(childNodes[2].data).toBe('bar');
   });
 
+  it('can reconcile text merged by Node.normalize() alongside other elements', () => {
+    var el = document.createElement('div');
+    var inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}<span />{'qux'}</div>, el);
+
+    var container = ReactDOM.findDOMNode(inst);
+    container.normalize();
+
+    inst = ReactDOM.render(<div>{'bar'}{'baz'}{'qux'}<span />{'foo'}</div>, el);
+    container = ReactDOM.findDOMNode(inst);
+    expect(container.textContent).toBe('barbazquxfoo');
+  });
+
   it('can reconcile text merged by Node.normalize()', () => {
     var el = document.createElement('div');
     var inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}</div>, el);
