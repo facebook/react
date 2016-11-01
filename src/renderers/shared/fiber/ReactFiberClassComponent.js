@@ -178,7 +178,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       );
     }
 
-    if (typeof inst.state !== 'object' || isArray(inst.state)) {
+    const instanceState = inst.state;
+    if (instanceState && (typeof instanceState !== 'object' || isArray(instanceState))) {
       invariant(
         false,
         '%s.state: must be set to an object or null',
