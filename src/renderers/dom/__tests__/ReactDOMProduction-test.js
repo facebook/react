@@ -65,7 +65,7 @@ describe('ReactDOMProduction', () => {
       container
     );
 
-    expect(container.firstChild).toBe(inst);
+    expect(container.firstChild === inst).toBe(true);
     expect(inst.className).toBe('blue');
     expect(inst.textContent).toBe('ABC');
 
