@@ -1246,6 +1246,20 @@ ReactDOMComponent.Mixin = {
     }
   },
 
+  restoreControlledState: function() {
+    switch (this._tag) {
+      case 'input':
+        ReactDOMInput.restoreControlledState(this);
+        return;
+      case 'textarea':
+        ReactDOMTextarea.restoreControlledState(this);
+        return;
+      case 'select':
+        ReactDOMSelect.restoreControlledState(this);
+        return;
+    }
+  },
+
   getPublicInstance: function() {
     return getNode(this);
   },

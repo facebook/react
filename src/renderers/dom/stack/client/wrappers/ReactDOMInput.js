@@ -14,7 +14,6 @@
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -23,15 +22,6 @@ var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;
 var didWarnUncontrolledToControlled = false;
-
-function forceUpdateIfMounted() {
-  if (this._rootNodeID) {
-    // DOM component is still mounted; update
-    ReactDOMInput.updateWrapper(this);
-  }
-  var props = this._currentElement.props;
-  updateNamedCousins(this, props);
-}
 
 function isControlled(props) {
   var usesChecked = props.type === 'checkbox' || props.type === 'radio';
@@ -265,21 +255,23 @@ var ReactDOMInput = {
       node.name = name;
     }
   },
+
+  restoreControlledState: function(inst) {
+    if (inst._rootNodeID) {
+      // DOM component is still mounted; update
+      ReactDOMInput.updateWrapper(inst);
+    }
+    var props = inst._currentElement.props;
+    updateNamedCousins(inst, props);
+  },
 };
 
 function _handleChange(event) {
   var props = this._currentElement.props;
-
   var returnValue;
   if (props.onChange) {
     returnValue = props.onChange.call(undefined, event);
   }
-
-  // Here we use asap to wait until all updates have propagated, which
-  // is important when using controlled components within layers:
-  // https://github.com/facebook/react/issues/1698
-  ReactUpdates.asap(forceUpdateIfMounted, this);
-
   return returnValue;
 }
 

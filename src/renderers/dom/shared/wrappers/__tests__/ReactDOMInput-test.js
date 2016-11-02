@@ -404,7 +404,7 @@ describe('ReactDOMInput', () => {
       handleChange = () => {
         this.setState({
           changed: true,
-        })
+        });
       }
       componentDidUpdate() {
         sharedParent.appendChild(container2);

@@ -13,19 +13,11 @@
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
 
 var didWarnValDefaultVal = false;
-
-function forceUpdateIfMounted() {
-  if (this._rootNodeID) {
-    // DOM component is still mounted; update
-    ReactDOMTextarea.updateWrapper(this);
-  }
-}
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and
@@ -169,6 +161,14 @@ var ReactDOMTextarea = {
       node.value = textContent;
     }
   },
+
+  restoreControlledState: function(inst) {
+    if (inst._rootNodeID) {
+      // DOM component is still mounted; update
+      ReactDOMTextarea.updateWrapper(inst);
+    }
+  },
+
 };
 
 function _handleChange(event) {
@@ -177,7 +177,6 @@ function _handleChange(event) {
   if (props.onChange) {
     returnValue = props.onChange.call(undefined, event);
   }
-  ReactUpdates.asap(forceUpdateIfMounted, this);
   return returnValue;
 }
 

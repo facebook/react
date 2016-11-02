@@ -16,6 +16,7 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
+var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -431,12 +432,14 @@ function makeSimulator(eventType) {
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
+    var targetInst = ReactDOMComponentTree.getInstanceFromNode(node);
     var event = new SyntheticEvent(
       dispatchConfig,
-      ReactDOMComponentTree.getInstanceFromNode(node),
+      targetInst,
       fakeNativeEvent,
       node
     );
+
     // Since we aren't using pooling, always persist the event. This will make
     // sure it's marked and won't warn when setting additional properties.
     event.persist();
@@ -452,6 +455,12 @@ function makeSimulator(eventType) {
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
     });
+    // Normally extractEvent enqueues a state restore, but we'll just always do
+    // that.
+    ReactControlledComponent.enqueueStateRestore();
+    if (targetInst) {
+      ReactControlledComponent.restoreStateIfNeeded(targetInst);
+    }
   };
 }
 

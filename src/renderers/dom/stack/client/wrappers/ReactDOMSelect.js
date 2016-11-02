@@ -13,22 +13,10 @@
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
 
 var warning = require('warning');
 
 var didWarnValueDefaultValue = false;
-
-function forceUpdateIfMounted() {
-  if (this._rootNodeID) {
-    var props = this._currentElement.props;
-    var value = props.value;
-
-    if (value != null) {
-      updateOptions(this, Boolean(props.multiple), value);
-    }
-  }
-}
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -198,6 +186,17 @@ var ReactDOMSelect = {
       }
     }
   },
+
+  restoreControlledState: function(inst) {
+    if (inst._rootNodeID) {
+      var props = inst._currentElement.props;
+      var value = props.value;
+
+      if (value != null) {
+        updateOptions(inst, Boolean(props.multiple), value);
+      }
+    }
+  },
 };
 
 function _handleChange(event) {
@@ -206,8 +205,6 @@ function _handleChange(event) {
   if (props.onChange) {
     returnValue = props.onChange.call(undefined, event);
   }
-
-  ReactUpdates.asap(forceUpdateIfMounted, this);
   return returnValue;
 }
 
