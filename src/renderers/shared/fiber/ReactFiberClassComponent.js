@@ -16,7 +16,6 @@ import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
-var { LowPriority } = require('ReactPriorityLevel');
 var {
   createUpdateQueue,
   addToQueue,
@@ -27,51 +26,50 @@ var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
 
-module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
+module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?PriorityLevel) => void) {
 
-  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel) {
+  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
     fiber.updateQueue = updateQueue;
     // Schedule update on the alternate as well, since we don't know which tree
     // is current.
     if (fiber.alternate) {
       fiber.alternate.updateQueue = updateQueue;
     }
-    scheduleUpdate(fiber, priorityLevel);
+    scheduleUpdate(fiber);
   }
 
   // Class component state updater
   const updater = {
     isMounted,
-    enqueueSetState(instance, partialState) {
+    enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue ?
         addToQueue(fiber.updateQueue, partialState) :
         createUpdateQueue(partialState);
-      scheduleUpdateQueue(fiber, updateQueue, LowPriority);
+      if (callback) {
+        addCallbackToQueue(updateQueue, callback);
+      }
+      scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueReplaceState(instance, state) {
+    enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = createUpdateQueue(state);
       updateQueue.isReplace = true;
-      scheduleUpdateQueue(fiber, updateQueue, LowPriority);
+      if (callback) {
+        addCallbackToQueue(updateQueue, callback);
+      }
+      scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueForceUpdate(instance) {
+    enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue || createUpdateQueue(null);
       updateQueue.isForced = true;
-      scheduleUpdateQueue(fiber, updateQueue, LowPriority);
-    },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      fiber.updateQueue = updateQueue;
-      if (fiber.alternate) {
-        fiber.alternate.updateQueue = updateQueue;
+      if (callback) {
+        addCallbackToQueue(updateQueue, callback);
       }
+      scheduleUpdateQueue(fiber, updateQueue);
     },
+    isFiberUpdater: true,
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState) {
@@ -131,7 +129,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, state, props);
+        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
       }
     }
   }
@@ -175,7 +173,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       // process them now.
       const newUpdateQueue = workInProgress.updateQueue;
       if (newUpdateQueue) {
-        newInstance.state = mergeUpdateQueue(newUpdateQueue, newState, newProps);
+        newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
       }
     }
     return true;
@@ -212,7 +210,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      newState = mergeUpdateQueue(updateQueue, previousState, newProps);
+      newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
     } else {
       newState = previousState;
     }
