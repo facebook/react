@@ -355,6 +355,7 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
+    console.log('<', workInProgress.type && workInProgress.type.name || workInProgress.type, '>');
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);

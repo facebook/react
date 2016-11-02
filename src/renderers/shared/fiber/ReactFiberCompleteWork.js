@@ -113,6 +113,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+    console.log('</', workInProgress.type && workInProgress.type.name || workInProgress.type, '>');
     switch (workInProgress.tag) {
       case FunctionalComponent:
         transferOutput(workInProgress.child, workInProgress);
