@@ -19,10 +19,8 @@ var warning = require('warning');
 
 var didWarnValueDefaultValue = false;
 
-function updateOptionsIfPendingUpdateAndMounted() {
-  if (this._rootNodeID && this._wrapperState.pendingUpdate) {
-    this._wrapperState.pendingUpdate = false;
-
+function forceUpdateIfMounted() {
+  if (this._rootNodeID) {
     var props = this._currentElement.props;
     var value = props.value;
 
@@ -89,15 +87,14 @@ function checkSelectPropTypes(inst, props) {
  * @private
  */
 function updateOptions(inst, multiple, propValue) {
-  var selectedValue, i;
   var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
 
   if (multiple) {
-    selectedValue = {};
-    for (i = 0; i < propValue.length; i++) {
+    let selectedValue = {};
+    for (let i = 0; i < propValue.length; i++) {
       selectedValue['' + propValue[i]] = true;
     }
-    for (i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i++) {
       var selected = selectedValue.hasOwnProperty(options[i].value);
       if (options[i].selected !== selected) {
         options[i].selected = selected;
@@ -106,8 +103,8 @@ function updateOptions(inst, multiple, propValue) {
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    selectedValue = '' + propValue;
-    for (i = 0; i < options.length; i++) {
+    let selectedValue = '' + propValue;
+    for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
         return;
@@ -149,7 +146,6 @@ var ReactDOMSelect = {
 
     var value = props.value;
     inst._wrapperState = {
-      pendingUpdate: false,
       initialValue: value != null ? value : props.defaultValue,
       listeners: null,
       onChange: _handleChange.bind(inst),
@@ -191,7 +187,6 @@ var ReactDOMSelect = {
 
     var value = props.value;
     if (value != null) {
-      inst._wrapperState.pendingUpdate = false;
       updateOptions(inst, Boolean(props.multiple), value);
     } else if (wasMultiple !== Boolean(props.multiple)) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
@@ -212,10 +207,7 @@ function _handleChange(event) {
     returnValue = props.onChange.call(undefined, event);
   }
 
-  if (this._rootNodeID) {
-    this._wrapperState.pendingUpdate = true;
-  }
-  ReactUpdates.asap(updateOptionsIfPendingUpdateAndMounted, this);
+  ReactUpdates.asap(forceUpdateIfMounted, this);
   return returnValue;
 }
 
