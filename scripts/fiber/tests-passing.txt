@@ -819,6 +819,18 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * splits deferred work on multiple roots
 * works on deferred roots in the order they were scheduled
 * handles interleaved deferred and animation work
+* performs animation work in animation callback
+* schedules deferred work in animation callback
+* schedules deferred work and performs animation work in animation callback
+* performs animation work and schedules deferred work in animation callback
+* performs deferred work in deferred callback if it has time
+* schedules deferred work in deferred callback if it runs out of time
+* performs animated work in deferred callback if it has time
+* performs animated work and deferred work in deferred callback if it has time
+* performs deferred and animated work work in deferred callback if it has time
+* FIXME: schedules animated work as if it was deferred in deferred callback if it runs out of time
+* schedules animated work and deferred work in deferred callback if it runs out of time
+* schedules deferred work and animated work in deferred callback if it runs out of time
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
