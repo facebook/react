@@ -65,7 +65,6 @@ var ReactDOMInput = {
       defaultValue: undefined,
       value: value != null ? value : inst._wrapperState.initialValue,
       checked: checked != null ? checked : inst._wrapperState.initialChecked,
-      onChange: inst._wrapperState.onChange,
     });
 
     return hostProps;
@@ -124,7 +123,6 @@ var ReactDOMInput = {
       initialChecked: props.checked != null ? props.checked : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       listeners: null,
-      onChange: _handleChange.bind(inst),
     };
 
     if (__DEV__) {
@@ -265,15 +263,6 @@ var ReactDOMInput = {
     updateNamedCousins(inst, props);
   },
 };
-
-function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue;
-  if (props.onChange) {
-    returnValue = props.onChange.call(undefined, event);
-  }
-  return returnValue;
-}
 
 function updateNamedCousins(thisInstance, props) {
   var name = props.name;

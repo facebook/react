@@ -122,7 +122,6 @@ function updateOptions(inst, multiple, propValue) {
 var ReactDOMSelect = {
   getHostProps: function(inst, props) {
     return Object.assign({}, props, {
-      onChange: inst._wrapperState.onChange,
       value: undefined,
     });
   },
@@ -136,7 +135,6 @@ var ReactDOMSelect = {
     inst._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
       listeners: null,
-      onChange: _handleChange.bind(inst),
       wasMultiple: Boolean(props.multiple),
     };
 
@@ -198,14 +196,5 @@ var ReactDOMSelect = {
     }
   },
 };
-
-function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue;
-  if (props.onChange) {
-    returnValue = props.onChange.call(undefined, event);
-  }
-  return returnValue;
-}
 
 module.exports = ReactDOMSelect;

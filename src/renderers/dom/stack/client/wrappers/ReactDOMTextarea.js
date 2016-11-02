@@ -50,7 +50,6 @@ var ReactDOMTextarea = {
       value: undefined,
       defaultValue: undefined,
       children: '' + inst._wrapperState.initialValue,
-      onChange: inst._wrapperState.onChange,
     });
 
     return hostProps;
@@ -120,7 +119,6 @@ var ReactDOMTextarea = {
     inst._wrapperState = {
       initialValue: '' + initialValue,
       listeners: null,
-      onChange: _handleChange.bind(inst),
     };
   },
 
@@ -170,14 +168,5 @@ var ReactDOMTextarea = {
   },
 
 };
-
-function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue;
-  if (props.onChange) {
-    returnValue = props.onChange.call(undefined, event);
-  }
-  return returnValue;
-}
 
 module.exports = ReactDOMTextarea;
