@@ -369,7 +369,6 @@ src/renderers/dom/stack/client/__tests__/ReactMount-test.js
 * should account for escaping on a checksum mismatch
 * should warn if render removes React-rendered children
 * should warn if the unmounted node was rendered by another copy of React
-* passes the correct callback context
 * tracks root instances
 * marks top-level mounts
 
@@ -608,8 +607,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
-* does not update one component twice in a batch (#2410)
-* unstable_batchedUpdates should return value from a callback
 
 src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * Should increase refs with an increase in divs

@@ -29,7 +29,8 @@ var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 var {
   Placement,
-  PlacementAndUpdate,
+  Update,
+  Callback,
 } = require('ReactTypeOfSideEffect');
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
@@ -102,8 +103,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // If it is not host node and, we might have a host node inside it.
         // Try to search down until we find one.
         // TODO: For coroutines, this will have to search the stateNode.
-        if (node.effectTag === Placement ||
-          node.effectTag === PlacementAndUpdate) {
+        if (node.effectTag & Placement) {
           // If we don't have a child, try the siblings instead.
           continue siblings;
         }
@@ -114,8 +114,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
       // Check if this host node is stable or about to be placed.
-      if (node.effectTag !== Placement &&
-        node.effectTag !== PlacementAndUpdate) {
+      if (!(node.effectTag & Placement)) {
         // Found it!
         return node.stateNode;
       }
@@ -329,41 +328,41 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
         let error = null;
-        if (!current) {
-          if (typeof instance.componentDidMount === 'function') {
-            error = tryCallComponentDidMount(instance);
+        if (finishedWork.effectTag & Update) {
+          if (!current) {
+            if (typeof instance.componentDidMount === 'function') {
+              error = tryCallComponentDidMount(instance);
+            }
+          } else {
+            if (typeof instance.componentDidUpdate === 'function') {
+              const prevProps = current.memoizedProps;
+              const prevState = current.memoizedState;
+              error = tryCallComponentDidUpdate(instance, prevProps, prevState);
+            }
           }
-        } else {
-          if (typeof instance.componentDidUpdate === 'function') {
-            const prevProps = current.memoizedProps;
-            const prevState = current.memoizedState;
-            error = tryCallComponentDidUpdate(instance, prevProps, prevState);
-          }
+          attachRef(current, finishedWork, instance);
         }
-        // Clear updates from current fiber. This must go before the callbacks
-        // are reset, in case an update is triggered from inside a callback. Is
-        // this safe? Relies on the assumption that work is only committed if
-        // the update queue is empty.
+        // Clear updates from current fiber.
         if (finishedWork.alternate) {
           finishedWork.alternate.updateQueue = null;
         }
-        if (finishedWork.callbackList) {
-          const { callbackList } = finishedWork;
-          finishedWork.callbackList = null;
-          callCallbacks(callbackList, instance);
+        if (finishedWork.effectTag & Callback) {
+          if (finishedWork.callbackList) {
+            callCallbacks(finishedWork.callbackList, instance);
+            finishedWork.callbackList = null;
+          }
         }
-        attachRef(current, finishedWork, instance);
         if (error) {
           return trapError(finishedWork, error);
         }
         return null;
       }
       case HostContainer: {
-        const instance = finishedWork.stateNode;
-        if (instance.callbackList) {
-          const { callbackList } = instance;
-          instance.callbackList = null;
-          callCallbacks(callbackList, instance.current.child.stateNode);
+        const rootFiber = finishedWork.stateNode;
+        if (rootFiber.callbackList) {
+          const { callbackList } = rootFiber;
+          rootFiber.callbackList = null;
+          callCallbacks(callbackList, rootFiber.current.child.stateNode);
         }
       }
       case HostComponent: {

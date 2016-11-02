@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 var React;
 var ReactDOM;
 
@@ -148,7 +150,7 @@ describe('ReactCompositeComponent-state', () => {
 
     ReactDOM.unmountComponentAtNode(container);
 
-    expect(stateListener.mock.calls.join('\n')).toEqual([
+    let expected = [
       // there is no state when getInitialState() is called
       ['getInitialState', null],
       ['componentWillMount-start', 'red'],
@@ -167,17 +169,44 @@ describe('ReactCompositeComponent-state', () => {
       // componentDidMount() called setState({color:'yellow'}), which is async.
       // The update doesn't happen until the next flush.
       ['componentDidMount-end', 'orange'],
-      ['shouldComponentUpdate-currentState', 'orange'],
-      ['shouldComponentUpdate-nextState', 'yellow'],
-      ['componentWillUpdate-currentState', 'orange'],
-      ['componentWillUpdate-nextState', 'yellow'],
-      ['render', 'yellow'],
-      ['componentDidUpdate-currentState', 'yellow'],
-      ['componentDidUpdate-prevState', 'orange'],
-      ['setState-sunrise', 'yellow'],
-      ['setState-orange', 'yellow'],
-      ['setState-yellow', 'yellow'],
-      ['initial-callback', 'yellow'],
+    ];
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      // The setState callbacks in componentWillMount, and the initial callback
+      // passed to ReactDOM.render, should be flushed right after component
+      // did mount:
+      expected.push(
+        ['setState-sunrise', 'orange'], // 1
+        ['setState-orange', 'orange'], // 2
+        ['initial-callback', 'orange'], // 3
+        ['shouldComponentUpdate-currentState', 'orange'],
+        ['shouldComponentUpdate-nextState', 'yellow'],
+        ['componentWillUpdate-currentState', 'orange'],
+        ['componentWillUpdate-nextState', 'yellow'],
+        ['render', 'yellow'],
+        ['componentDidUpdate-currentState', 'yellow'],
+        ['componentDidUpdate-prevState', 'orange'],
+        ['setState-yellow', 'yellow'],
+      );
+    } else {
+      // There is a bug in the stack reconciler where those callbacks are
+      // enqueued, but aren't called until the next flush.
+      expected.push(
+        ['shouldComponentUpdate-currentState', 'orange'],
+        ['shouldComponentUpdate-nextState', 'yellow'],
+        ['componentWillUpdate-currentState', 'orange'],
+        ['componentWillUpdate-nextState', 'yellow'],
+        ['render', 'yellow'],
+        ['componentDidUpdate-currentState', 'yellow'],
+        ['componentDidUpdate-prevState', 'orange'],
+        ['setState-sunrise', 'yellow'], // 1
+        ['setState-orange', 'yellow'], // 2
+        ['setState-yellow', 'yellow'],
+        ['initial-callback', 'yellow'] // 3
+      );
+    }
+
+    expected.push(
       ['componentWillReceiveProps-start', 'yellow'],
       // setState({color:'green'}) only enqueues a pending state.
       ['componentWillReceiveProps-end', 'yellow'],
@@ -213,7 +242,9 @@ describe('ReactCompositeComponent-state', () => {
       // unmountComponent()
       // state is available within `componentWillUnmount()`
       ['componentWillUnmount', 'blue'],
-    ].join('\n'));
+    );
+
+    expect(stateListener.mock.calls.join('\n')).toEqual(expected.join('\n'));
   });
 
   it('should batch unmounts', () => {

@@ -860,6 +860,35 @@ describe('ReactIncrementalSideEffects', () => {
     expect(called).toBe(true);
   });
 
+  it('calls setState callback even if component bails out', () => {
+    let instance;
+    class Foo extends React.Component {
+      constructor() {
+        super();
+        instance = this;
+        this.state = { text: 'foo' };
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        return this.state.text !== nextState.text;
+      }
+      render() {
+        return <span prop={this.state.text} />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      span('foo'),
+    ]);
+    let called = false;
+    instance.setState({}, () => {
+      called = true;
+    });
+    ReactNoop.flush();
+    expect(called).toBe(true);
+  });
+
   // TODO: Test that callbacks are not lost if an update is preempted.
 
   it('calls componentWillUnmount after a deletion, even if nested', () => {

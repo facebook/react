@@ -34,6 +34,7 @@ var {
 } = ReactTypeOfWork;
 var {
   Update,
+  Callback,
 } = ReactTypeOfSideEffect;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
@@ -46,6 +47,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Tag the fiber with an update effect. This turns a Placement into
     // an UpdateAndPlacement.
     workInProgress.effectTag |= Update;
+  }
+
+  function markCallback(workInProgress : Fiber) {
+    // Tag the fiber with a callback effect.
+    workInProgress.effectTag |= Callback;
   }
 
   function transferOutput(child : ?Fiber, returnFiber : Fiber) {
@@ -124,18 +130,23 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // Also need to transfer the props, because pendingProps will be null
         // in the case of an update
         const { state, props } = workInProgress.stateNode;
+        const updateQueue = workInProgress.updateQueue;
         workInProgress.memoizedState = state;
         workInProgress.memoizedProps = props;
-        // Transfer update queue to callbackList field so callbacks can be
-        // called during commit phase.
-        workInProgress.callbackList = workInProgress.updateQueue;
         if (current) {
           if (current.memoizedProps !== workInProgress.memoizedProps ||
-              current.memoizedState !== workInProgress.memoizedState) {
+              current.memoizedState !== workInProgress.memoizedState ||
+              updateQueue && updateQueue.isForced) {
             markUpdate(workInProgress);
           }
         } else {
           markUpdate(workInProgress);
+        }
+        if (updateQueue && updateQueue.hasCallback) {
+          // Transfer update queue to callbackList field so callbacks can be
+          // called during commit phase.
+          workInProgress.callbackList = updateQueue;
+          markCallback(workInProgress);
         }
         return null;
       case HostContainer:

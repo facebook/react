@@ -112,6 +112,8 @@ var DOMRenderer = ReactFiberReconciler({
 
   scheduleDeferredCallback: window.requestIdleCallback,
 
+  useSyncScheduling: true,
+
 });
 
 var warned = false;
@@ -161,6 +163,10 @@ var ReactDOM = {
       return component;
     }
     return DOMRenderer.findHostInstance(component);
+  },
+
+  unstable_batchedUpdates<A>(fn : () => A) : A {
+    return DOMRenderer.batchedUpdates(fn);
   },
 
 };

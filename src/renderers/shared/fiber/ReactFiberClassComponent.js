@@ -13,10 +13,8 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
-var { LowPriority } = require('ReactPriorityLevel');
 var {
   createUpdateQueue,
   addToQueue,
@@ -27,16 +25,16 @@ var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
 
-module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void) {
+module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
-  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue, priorityLevel : PriorityLevel) {
+  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
     fiber.updateQueue = updateQueue;
     // Schedule update on the alternate as well, since we don't know which tree
     // is current.
     if (fiber.alternate) {
       fiber.alternate.updateQueue = updateQueue;
     }
-    scheduleUpdate(fiber, priorityLevel);
+    scheduleUpdate(fiber);
   }
 
   // Class component state updater
@@ -47,19 +45,19 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       const updateQueue = fiber.updateQueue ?
         addToQueue(fiber.updateQueue, partialState) :
         createUpdateQueue(partialState);
-      scheduleUpdateQueue(fiber, updateQueue, LowPriority);
+      scheduleUpdateQueue(fiber, updateQueue);
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = createUpdateQueue(state);
       updateQueue.isReplace = true;
-      scheduleUpdateQueue(fiber, updateQueue, LowPriority);
+      scheduleUpdateQueue(fiber, updateQueue);
     },
     enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue || createUpdateQueue(null);
       updateQueue.isForced = true;
-      scheduleUpdateQueue(fiber, updateQueue, LowPriority);
+      scheduleUpdateQueue(fiber, updateQueue);
     },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
@@ -67,10 +65,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
         fiber.updateQueue :
         createUpdateQueue(null);
       addCallbackToQueue(updateQueue, callback);
-      fiber.updateQueue = updateQueue;
-      if (fiber.alternate) {
-        fiber.alternate.updateQueue = updateQueue;
-      }
+      scheduleUpdateQueue(fiber, updateQueue);
     },
   };
 
@@ -131,7 +126,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, state, props);
+        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
       }
     }
   }
@@ -175,7 +170,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
       // process them now.
       const newUpdateQueue = workInProgress.updateQueue;
       if (newUpdateQueue) {
-        newInstance.state = mergeUpdateQueue(newUpdateQueue, newState, newProps);
+        newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
       }
     }
     return true;
@@ -212,9 +207,19 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : Priori
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      newState = mergeUpdateQueue(updateQueue, previousState, newProps);
+      if (!updateQueue.hasUpdate) {
+        newState = previousState;
+      } else {
+        newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
+      }
     } else {
       newState = previousState;
+    }
+
+    if (oldProps === newProps &&
+        previousState === newState &&
+        updateQueue && !updateQueue.isForced) {
+      return false;
     }
 
     if (!checkShouldComponentUpdate(

@@ -15,7 +15,7 @@
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
-import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { PriorityLevel } from 'ReactPriorityLevel';		
 import ReactCurrentOwner from 'ReactCurrentOwner';
 
 var {
@@ -48,7 +48,7 @@ var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  scheduleUpdate : (fiber: Fiber, priorityLevel : PriorityLevel) => void
+  scheduleUpdate : (fiber: Fiber) => void
 ) {
 
   const {

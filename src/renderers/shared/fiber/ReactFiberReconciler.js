@@ -28,7 +28,7 @@ if (__DEV__) {
 
 var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
 
-type Deadline = {
+export type Deadline = {
   timeRemaining : () => number
 };
 
@@ -56,8 +56,9 @@ export type HostConfig<T, P, I, TI, C> = {
   removeChild(parentInstance : I, child : I | TI) : void,
 
   scheduleAnimationCallback(callback : () => void) : void,
-  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
 
+  useSyncScheduling ?: boolean,
 };
 
 type OpaqueNode = Fiber;
@@ -67,6 +68,11 @@ export type Reconciler<C, I, TI> = {
   updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
   unmountContainer(container : OpaqueNode) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
+  /* eslint-disable no-undef */
+  // FIXME: ESLint complains about type parameter
+  batchedUpdates<A>(fn : () => A) : A,
+  syncUpdates<A>(fn : () => A) : A,
+  /* eslint-enable no-undef */
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
@@ -77,7 +83,12 @@ export type Reconciler<C, I, TI> = {
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
 
-  var { scheduleWork, performWithPriority } = ReactFiberScheduler(config);
+  var {
+    scheduleWork,
+    performWithPriority,
+    batchedUpdates,
+    syncUpdates,
+  } = ReactFiberScheduler(config);
 
   return {
 
@@ -140,6 +151,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
     },
 
     performWithPriority,
+
+    batchedUpdates,
+
+    syncUpdates,
 
     getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | TI | null) {
       const root : FiberRoot = (container.stateNode : any);

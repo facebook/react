@@ -22,6 +22,8 @@ type UpdateQueueNode = {
 export type UpdateQueue = UpdateQueueNode & {
   isReplace: boolean,
   isForced: boolean,
+  hasUpdate: boolean,
+  hasCallback: boolean,
   tail: UpdateQueueNode
 };
 
@@ -33,6 +35,8 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
     next: null,
     isReplace: false,
     isForced: false,
+    hasUpdate: partialState != null,
+    hasCallback: false,
     tail: (null : any),
   };
   queue.tail = queue;
@@ -48,6 +52,7 @@ function addToQueue(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
   };
   queue.tail.next = node;
   queue.tail = node;
+  queue.hasUpdate = queue.hasUpdate || (partialState == null);
   return queue;
 }
 
@@ -59,28 +64,34 @@ exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) :
     addToQueue(queue, null);
   }
   queue.tail.callback = callback;
+  queue.hasCallback = true;
   return queue;
 };
 
 exports.callCallbacks = function(queue : UpdateQueue, context : any) {
   let node : ?UpdateQueueNode = queue;
   while (node) {
-    if (node.callback && !node.callbackWasCalled) {
+    const callback = node.callback;
+    if (callback && !node.callbackWasCalled) {
       node.callbackWasCalled = true;
-      node.callback.call(context);
+      if (typeof context !== 'undefined') {
+        callback.call(context);
+      } else {
+        callback();
+      }
     }
     node = node.next;
   }
 };
 
-exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props : any) : any {
+exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
   let node : ?UpdateQueueNode = queue;
   let state = queue.isReplace ? null : Object.assign({}, prevState);
   while (node) {
     let partialState;
     if (typeof node.partialState === 'function') {
       const updateFn = node.partialState;
-      partialState = updateFn(state, props);
+      partialState = updateFn.call(instance, state, props);
     } else {
       partialState = node.partialState;
     }

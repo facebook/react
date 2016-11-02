@@ -97,10 +97,10 @@ describe('ReactTransitionGroup', () => {
       expect(log).toEqual(['didMount', 'willEnter', 'didEnter']);
 
       log = [];
-      instance.setState({count: 1}, function() {
-        expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
-      });
+      instance.setState({count: 1});
     });
+
+    expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
   });
 
   it('should handle enter/leave/enter/leave correctly', () => {

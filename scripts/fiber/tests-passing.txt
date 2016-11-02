@@ -692,6 +692,7 @@ src/renderers/dom/stack/client/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup
 * should not warn if mounting into non-empty node
 * should warn when mounting into document.body
+* passes the correct callback context
 
 src/renderers/dom/stack/client/__tests__/ReactMountDestruction-test.js
 * should destroy a react root upon request
@@ -788,6 +789,8 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * calls componentWill* twice if an update render is aborted
 * does not call componentWillReceiveProps for state-only updates
 * skips will/DidUpdate when bailing unless an update was already in progress
+* performs batched updates at the end of the batch
+* can nest batchedUpdates
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
@@ -833,6 +836,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can defer side-effects and reuse them later - complex
 * deprioritizes setStates that happens within a deprioritized tree
 * calls callback after update is flushed
+* calls setState callback even if component bails out
 * calls componentWillUnmount after a deletion, even if nested
 * calls componentDidMount/Update after insertion/update
 * invokes ref callbacks after insertion/update/unmount
@@ -1124,7 +1128,9 @@ src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should not reconcile children passed via props
 * should queue nested updates
 * calls componentWillReceiveProps setState callback properly
+* does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
+* unstable_batchedUpdates should return value from a callback
 
 src/renderers/shared/stack/reconciler/__tests__/Transaction-test.js
 * should invoke closers with/only-with init returns
