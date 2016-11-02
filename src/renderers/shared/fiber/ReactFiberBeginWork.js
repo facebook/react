@@ -15,8 +15,7 @@
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
-import type { PriorityLevel } from 'ReactPriorityLevel';		
-import ReactCurrentOwner from 'ReactCurrentOwner';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
   mountChildFibersInPlace,
@@ -44,6 +43,7 @@ var {
 var {
   Placement,
 } = require('ReactTypeOfSideEffect');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
 module.exports = function<T, P, I, TI, C>(
