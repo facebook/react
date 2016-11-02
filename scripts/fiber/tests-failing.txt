@@ -48,30 +48,15 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * includes the owner name when passing null, undefined, boolean, or number
 
 src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
-* throws if no render function is defined
 * renders based on context in the constructor
-* should throw with non-object in the initial state property
-* warns when classic properties are defined on the instance, but does not invoke them.
-* should warn when misspelling shouldComponentUpdate
-* should warn when misspelling componentWillReceiveProps
 * supports this.context passed via getChildContext
 
 src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
-* throws if no render function is defined
 * renders based on context in the constructor
-* should throw with non-object in the initial state property
-* warns when classic properties are defined on the instance, but does not invoke them.
-* should warn when misspelling shouldComponentUpdate
-* should warn when misspelling componentWillReceiveProps
 * supports this.context passed via getChildContext
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
-* throws if no render function is defined
 * renders based on context in the constructor
-* should throw with non-object in the initial state property
-* warns when classic properties are defined on the instance, but does not invoke them.
-* should warn when misspelling shouldComponentUpdate
-* should warn when misspelling componentWillReceiveProps
 * supports this.context passed via getChildContext
 
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
@@ -538,7 +523,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should warn when shouldComponentUpdate() returns undefined
-* should warn when componentDidUnmount method is defined
 * should pass context to children when not owner
 * should pass context when re-rendered for static child
 * should pass context when re-rendered for static child within a composite component
