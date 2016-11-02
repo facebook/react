@@ -16,6 +16,7 @@ var ReactNoop;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
+    jest.resetModuleRegistry();
     React = require('React');
     ReactNoop = require('ReactNoop');
   });

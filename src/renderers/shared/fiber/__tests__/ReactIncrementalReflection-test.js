@@ -16,6 +16,7 @@ var ReactNoop;
 
 describe('ReactIncrementalReflection', () => {
   beforeEach(() => {
+    jest.resetModuleRegistry();
     React = require('React');
     ReactNoop = require('ReactNoop');
   });
