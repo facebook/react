@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 var {

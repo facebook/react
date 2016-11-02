@@ -15,7 +15,7 @@
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
-import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { PriorityLevel } from 'ReactPriorityLevel';		
 import ReactCurrentOwner from 'ReactCurrentOwner';
 
 var {
