@@ -347,9 +347,9 @@ describe('ReactDOMInput', () => {
     }
 
     var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);
-    var aNode = ReactDOM.findDOMNode(stub.refs.a);
-    var bNode = ReactDOM.findDOMNode(stub.refs.b);
-    var cNode = ReactDOM.findDOMNode(stub.refs.c);
+    var aNode = stub.refs.a;
+    var bNode = stub.refs.b;
+    var cNode = stub.refs.c;
 
     expect(aNode.checked).toBe(true);
     expect(bNode.checked).toBe(false);
@@ -369,6 +369,78 @@ describe('ReactDOMInput', () => {
     // The original state should have been restored
     expect(aNode.checked).toBe(true);
     expect(cNode.checked).toBe(true);
+  });
+
+  it('should control radio buttons if the tree updates during render', () => {
+    var sharedParent = document.createElement('div');
+    var container1 = document.createElement('div');
+    var container2 = document.createElement('div');
+
+    sharedParent.appendChild(container1);
+
+    var aNode;
+    var bNode;
+    class ComponentA extends React.Component {
+      componentDidMount() {
+        ReactDOM.render(<ComponentB />, container2);
+      }
+      render() {
+        return (
+          <div>
+            <input
+              ref={n => aNode = n}
+              type="radio"
+              name="fruit"
+              checked={true}
+              onChange={emptyFunction}
+            />A
+          </div>
+        );
+      }
+    }
+
+    class ComponentB extends React.Component {
+      state = { changed: false };
+      handleChange = () => {
+        this.setState({
+          changed: true,
+        })
+      }
+      componentDidUpdate() {
+        sharedParent.appendChild(container2);
+      }
+      render() {
+        return (
+          <div>
+            <input
+              ref={n => bNode = n}
+              type="radio"
+              name="fruit"
+              checked={false}
+              onChange={this.handleChange}
+            />B
+          </div>
+        );
+      }
+    }
+
+    ReactDOM.render(<ComponentA />, container1);
+
+    expect(aNode.checked).toBe(true);
+    expect(bNode.checked).toBe(false);
+
+    bNode.checked = true;
+    // This next line isn't necessary in a proper browser environment, but
+    // jsdom doesn't uncheck the others in a group (which makes this whole test
+    // a little less effective)
+    aNode.checked = false;
+
+    // Now let's run the actual ReactDOMInput change event handler
+    ReactTestUtils.Simulate.change(bNode);
+
+    // The original state should have been restored
+    expect(aNode.checked).toBe(true);
+    expect(bNode.checked).toBe(false);
   });
 
   it('should warn with value and no onChange handler and readOnly specified', () => {
