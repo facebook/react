@@ -37,6 +37,8 @@ type CustomAttributeConfiguration =
 
 type AttributeConfiguration =
   { [key: string]: (
+    // This can be fixed with `+`, unfortunately babylon 6.8.0 can't parse that.
+    // $FlowFixMe: dictionary types are invariant by default from Flow v0.34.0
     CustomAttributeConfiguration | AttributeConfiguration /*| boolean*/
   ) };
 

@@ -291,7 +291,7 @@ exports.createFiberFromText = function(content : string, priorityLevel : Priorit
   return fiber;
 };
 
-function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
+function createFiberFromElementType(type : any, key : null | string) : Fiber {
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
