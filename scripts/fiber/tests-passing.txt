@@ -795,9 +795,27 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * finds no node before insertion and correct node before deletion
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
-* schedules multiple roots
-* works on deferred roots in the order they were scheduled
-* works on roots with animation priority before deferred work
+* schedules and flushes hi-pri work
+* schedules and flushes hi-pri work for many roots
+* flushes all scheduled hi-pri work
+* flushes all scheduled hi-pri work for many roots
+* schedules and flushes lo-pri work
+* schedules and flushes lo-pri work for many roots
+* flushes scheduled lo-pri work fitting within deadline
+* flushes scheduled lo-pri work fitting within deadline for many roots
+* schedules more lo-pri work if it runs out of time
+* schedules more lo-pri work if it runs out of time with many roots
+* FIXME: flushes late hi-pri work in a lo-pri callback if it wins
+* FIXME: flushes late hi-pri work in a lo-pri callback if it wins with many roots
+* FIXME: ignores late hi-pri work in a hi-pri callback if it wins
+* FIXME: ignores late hi-pri work in a hi-pri callback if it wins with many roots
+* FIXME: ignores all work in a lo-pri callback if it wins
+* FIXME: ignores all work in a lo-pri callback if it wins with many roots
+* flushes root with late lo-pri work in a hi-pri callback if it wins
+* flushes all roots with hi-pri work in a hi-pri callback if it wins
+* splits lo-pri work on multiple roots
+* works on lo-pri roots in the order they were scheduled
+* handles interleaved lo-pri and hi-pri work
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance

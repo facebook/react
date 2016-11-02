@@ -136,10 +136,22 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   scheduleAnimationCallback(callback) {
+    if (scheduledAnimationCallback) {
+      throw new Error(
+        'Scheduling an animation callback twice is excessive. ' +
+        'Instead, keep track of whether the callback has already been scheduled.'
+      );
+    }
     scheduledAnimationCallback = callback;
   },
 
   scheduleDeferredCallback(callback) {
+    if (scheduledDeferredCallback) {
+      throw new Error(
+        'Scheduling deferred callback twice is excessive. ' +
+        'Instead, keep track of whether the callback has already been scheduled.'
+      );
+    }
     scheduledDeferredCallback = callback;
   },
 
@@ -158,6 +170,14 @@ var ReactNoop = {
     } else {
       return null;
     }
+  },
+
+  hasScheduledDeferredCallback() {
+    return Boolean(scheduledDeferredCallback);
+  },
+
+  hasScheduledAnimationCallback() {
+    return Boolean(scheduledAnimationCallback);
   },
 
   // Shortcut for testing a single root
