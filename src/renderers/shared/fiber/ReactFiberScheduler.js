@@ -82,6 +82,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let nextScheduledRoot : ?FiberRoot = null;
   let lastScheduledRoot : ?FiberRoot = null;
 
+  // Keep track of which host environment callbacks are scheduled
+  let isAnimationCallbackScheduled : boolean = false;
+  let isDeferredCallbackScheduled : boolean = false;
+
   function findNextUnitOfWork() {
     // Clear out roots with no more work on them.
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
@@ -379,13 +383,17 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           nextUnitOfWork = findNextUnitOfWork();
         }
       } else {
-        scheduleDeferredCallback(performDeferredWork);
+        if (!isDeferredCallbackScheduled) {
+          isDeferredCallbackScheduled = true;
+          scheduleDeferredCallback(performDeferredWork);
+        }
         return;
       }
     }
   }
 
   function performDeferredWork(deadline) {
+    isDeferredCallbackScheduled = false;
     performAndHandleErrors(LowPriority, deadline);
   }
 
@@ -403,20 +411,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       root.current.pendingWorkPriority = priority;
     }
 
-    if (root.isScheduled) {
-      // If we're already scheduled, we can bail out.
-      return;
+    if (!root.isScheduled) {
+      root.isScheduled = true;
+      if (lastScheduledRoot) {
+        // Schedule ourselves to the end.
+        lastScheduledRoot.nextScheduledRoot = root;
+        lastScheduledRoot = root;
+      } else {
+        // We're the only work scheduled.
+        nextScheduledRoot = root;
+        lastScheduledRoot = root;
+      }
     }
-    root.isScheduled = true;
-    if (lastScheduledRoot) {
-      // Schedule ourselves to the end.
-      lastScheduledRoot.nextScheduledRoot = root;
-      lastScheduledRoot = root;
-    } else {
-      // We're the only work scheduled.
-      nextScheduledRoot = root;
-      lastScheduledRoot = root;
 
+    if (!isDeferredCallbackScheduled) {
+      isDeferredCallbackScheduled = true;
       scheduleDeferredCallback(performDeferredWork);
     }
   }
@@ -434,11 +443,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
     if (nextUnitOfWork && nextPriorityLevel > AnimationPriority) {
-      scheduleDeferredCallback(performDeferredWork);
+      if (!isDeferredCallbackScheduled) {
+        isDeferredCallbackScheduled = true;
+        scheduleDeferredCallback(performDeferredWork);
+      }
     }
   }
 
   function performAnimationWork() {
+    isAnimationCallbackScheduled = false;
     performAndHandleErrors(AnimationPriority);
   }
 
@@ -449,19 +462,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       root.current.pendingWorkPriority = priorityLevel;
     }
 
-    if (root.isScheduled) {
-      // If we're already scheduled, we can bail out.
-      return;
+    if (!root.isScheduled) {
+      root.isScheduled = true;
+      if (lastScheduledRoot) {
+        // Schedule ourselves to the end.
+        lastScheduledRoot.nextScheduledRoot = root;
+        lastScheduledRoot = root;
+      } else {
+        // We're the only work scheduled.
+        nextScheduledRoot = root;
+        lastScheduledRoot = root;
+      }
     }
-    root.isScheduled = true;
-    if (lastScheduledRoot) {
-      // Schedule ourselves to the end.
-      lastScheduledRoot.nextScheduledRoot = root;
-      lastScheduledRoot = root;
-    } else {
-      // We're the only work scheduled.
-      nextScheduledRoot = root;
-      lastScheduledRoot = root;
+
+    if (!isAnimationCallbackScheduled) {
+      isAnimationCallbackScheduled = true;
       scheduleAnimationCallback(performAnimationWork);
     }
   }
@@ -505,10 +520,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
     if (nextUnitOfWork) {
       if (nextPriorityLevel > AnimationPriority) {
-        scheduleDeferredCallback(performDeferredWork);
+        if (!isDeferredCallbackScheduled) {
+          isDeferredCallbackScheduled = true;
+          scheduleDeferredCallback(performDeferredWork);
+        }
         return;
       }
-      scheduleAnimationCallback(performAnimationWork);
+      if (!isAnimationCallbackScheduled) {
+        isAnimationCallbackScheduled = true;
+        scheduleAnimationCallback(performAnimationWork);
+      }
     }
   }
 

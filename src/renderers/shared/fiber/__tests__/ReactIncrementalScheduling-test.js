@@ -211,9 +211,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
   });
 
-  // This test documents the existing behavior. Desired behavior:
-  // it('flushes late animation work in an animation callback if it wins', () => {
-  it('FIXME: ignores late animation work in an animation callback if it wins', () => {
+  it('flushes late animation work in an animation callback if it wins', () => {
     // Schedule early deferred
     ReactNoop.render(<span prop="1" />);
     // Schedule late animation
@@ -223,20 +221,11 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Flushing animation should have flushed the animation.
-    // FIXME: But it currently doesn't.
     ReactNoop.flushAnimationPri();
-    // TODO: I would expect [span('2')] here because it was scheduled as animation:
-    // expect(ReactNoop.getChildren()).toEqual([span('2')]);
-    expect(ReactNoop.getChildren()).toEqual([]);
-
-    // TODO: I wouldn't expect this flush to be necessary for animation work to kick in.
-    ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren()).toEqual([span('2')]);
   });
 
-  // This test documents the existing behavior. Desired behavior:
-  // it('flushes late animation work in an animation callback if it wins with many roots', () => {
-  it('FIXME: ignores late animation work in an animation callback if it wins with many roots', () => {
+  it('flushes late animation work in an animation callback if it wins with many roots', () => {
     // Schedule early deferred
     ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
@@ -250,26 +239,18 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('c')).toEqual([]);
 
     // Flushing animation should have flushed the animation.
-    // FIXME: But it currently doesn't.
     ReactNoop.flushAnimationPri();
-    // TODO: I would expect this here because they were scheduled as animation:
-    // expect(ReactNoop.getChildren('a')).toEqual([]);
-    // expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
-    // expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
     expect(ReactNoop.getChildren('a')).toEqual([]);
-    expect(ReactNoop.getChildren('b')).toEqual([]);
-    expect(ReactNoop.getChildren('c')).toEqual([]);
+    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
+    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
 
-    // TODO: I wouldn't expect this flush to be necessary for animation work to kick in.
     ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
   });
 
-  // This test documents the existing behavior. Desired behavior:
-  // it('flushes all work in a deferred callback if it wins', () => {
-  it('FIXME: ignores all work in a deferred callback if it wins', () => {
+  it('flushes all work in a deferred callback if it wins', () => {
     // Schedule early animation
     ReactNoop.performAnimationWork(() => {
       ReactNoop.render(<span prop="1" />);
@@ -280,20 +261,11 @@ describe('ReactIncrementalScheduling', () => {
 
     // Flushing deferred should have flushed both early animation and late deferred work that invalidated it.
     // This is not a common case, as animation should generally be flushed before deferred work.
-    // FIXME: Instead, it currently doesn't do anything.
     ReactNoop.flushDeferredPri();
-    // TODO: I would expect [span('2')] here because we should have flushed everything by now:
-    // expect(ReactNoop.getChildren()).toEqual([span('2')]);
-    expect(ReactNoop.getChildren()).toEqual([]);
-
-    // Flushing animation should have been a no-op
-    ReactNoop.flushAnimationPri();
     expect(ReactNoop.getChildren()).toEqual([span('2')]);
   });
 
-  // This test documents the existing behavior. Desired behavior:
-  // it('flushes all work in a deferred callback if it wins with many roots', () => {
-  it('FIXME: ignores all work in a deferred callback if it wins with many roots', () => {
+  it('flushes all work in a deferred callback if it wins with many roots', () => {
     // Schedule early animation
     ReactNoop.performAnimationWork(() => {
       ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
@@ -308,26 +280,9 @@ describe('ReactIncrementalScheduling', () => {
 
     // Flushing deferred should have flushed both early animation and late deferred work that invalidated it.
     // This is not a common case, as animation should generally be flushed before deferred work.
-    // FIXME: Instead, it currently doesn't do anything.
     ReactNoop.flushDeferredPri();
-    // TODO: I would expect this here because we should have flushed everything:
-    // expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    // expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
-    // expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
-    expect(ReactNoop.getChildren('a')).toEqual([]);
-    expect(ReactNoop.getChildren('b')).toEqual([]);
-    expect(ReactNoop.getChildren('c')).toEqual([]);
-
-    // Flushing animation should have been a no-op.
-    ReactNoop.flushAnimationPri();
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
-    // FIXME: this deferred work should have been handled earlier.
-    // expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
-    expect(ReactNoop.getChildren('c')).toEqual([]);
-
-    // FIXME: it should be unnecessary to flush one more time:
-    ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
   });
 
@@ -756,9 +711,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('d')).toEqual([span('d:1')]);
   });
 
-  // This test documents the existing behavior. Desired behavior:
-  // it('schedules animated work in deferred callback if it runs out of time', () => {
-  it('FIXME: schedules animated work as if it was deferred in deferred callback if it runs out of time', () => {
+  it('schedules animated work in deferred callback if it runs out of time', () => {
     let hasScheduled = false;
     class Foo extends React.Component {
       componentDidMount() {
@@ -784,14 +737,6 @@ describe('ReactIncrementalScheduling', () => {
 
     // Flush the rest of work in an animated callback.
     ReactNoop.flushAnimationPri();
-    // FIXME: we should have flushed everything here.
-    // expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    // expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    expect(ReactNoop.getChildren('b')).toEqual([]);
-
-    // FIXME: it should be unnecessary to flush the deferred work:
-    ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
   });
