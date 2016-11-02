@@ -172,14 +172,6 @@ var ReactNoop = {
     }
   },
 
-  hasScheduledDeferredCallback() {
-    return Boolean(scheduledDeferredCallback);
-  },
-
-  hasScheduledAnimationCallback() {
-    return Boolean(scheduledAnimationCallback);
-  },
-
   // Shortcut for testing a single root
   render(element : ReactElement<any>, callback: ?Function) {
     ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
