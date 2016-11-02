@@ -48,7 +48,7 @@ var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  scheduleUpdate : (fiber: Fiber, priorityLevel : ?PriorityLevel) => void
+  scheduleUpdate : (fiber: Fiber) => void
 ) {
 
   const {

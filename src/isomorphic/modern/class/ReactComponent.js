@@ -65,12 +65,6 @@ ReactComponent.prototype.setState = function(partialState, callback) {
     'setState(...): takes an object of state variables to update or a ' +
     'function which returns an object of state variables.'
   );
-
-  if (this.updater.isFiberUpdater) {
-    this.updater.enqueueSetState(this, partialState, callback);
-    return;
-  }
-
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
     this.updater.enqueueCallback(this, callback, 'setState');
@@ -92,11 +86,6 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
-  if (this.updater.isFiberUpdater) {
-    this.updater.enqueueForceUpdate(this, callback);
-    return;
-  }
-
   this.updater.enqueueForceUpdate(this);
   if (callback) {
     this.updater.enqueueCallback(this, callback, 'forceUpdate');

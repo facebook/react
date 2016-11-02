@@ -26,7 +26,7 @@ var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
 
-module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?PriorityLevel) => void) {
+module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
   function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
     fiber.updateQueue = updateQueue;
@@ -41,35 +41,33 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?Prior
   // Class component state updater
   const updater = {
     isMounted,
-    enqueueSetState(instance, partialState, callback) {
+    enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue ?
         addToQueue(fiber.updateQueue, partialState) :
         createUpdateQueue(partialState);
-      if (callback) {
-        addCallbackToQueue(updateQueue, callback);
-      }
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueReplaceState(instance, state, callback) {
+    enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = createUpdateQueue(state);
       updateQueue.isReplace = true;
-      if (callback) {
-        addCallbackToQueue(updateQueue, callback);
-      }
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueForceUpdate(instance, callback) {
+    enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
       const updateQueue = fiber.updateQueue || createUpdateQueue(null);
       updateQueue.isForced = true;
-      if (callback) {
-        addCallbackToQueue(updateQueue, callback);
-      }
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    isFiberUpdater: true,
+    enqueueCallback(instance, callback) {
+      const fiber = ReactInstanceMap.get(instance);
+      let updateQueue = fiber.updateQueue ?
+        fiber.updateQueue :
+        createUpdateQueue(null);
+      addCallbackToQueue(updateQueue, callback);
+      scheduleUpdateQueue(fiber, updateQueue);
+    },
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState) {
@@ -210,9 +208,19 @@ module.exports = function(scheduleUpdate : (fiber: Fiber, priorityLevel : ?Prior
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
+      if (!updateQueue.hasUpdate) {
+        newState = previousState;
+      } else {
+        newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
+      }
     } else {
       newState = previousState;
+    }
+
+    if (oldProps === newProps &&
+        previousState === newState &&
+        updateQueue && !updateQueue.isForced) {
+      return false;
     }
 
     if (!checkShouldComponentUpdate(
