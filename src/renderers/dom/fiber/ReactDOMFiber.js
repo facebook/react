@@ -54,13 +54,13 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.className !== 'undefined') {
+    if (props.className !== undefined) {
       domElement.className = props.className;
     }
     if (typeof props.children === 'string') {
       domElement.textContent = props.children;
     } else if (typeof props.children === 'number') {
-      domElement.textContent = props.children.toString();
+      domElement.textContent = '' + props.children;
     }
     return domElement;
   },
@@ -74,13 +74,13 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
-    if (typeof newProps.className !== 'undefined') {
+    if (newProps.className !== undefined) {
       domElement.className = newProps.className;
     }
     if (typeof newProps.children === 'string') {
       domElement.textContent = newProps.children;
     } else if (typeof newProps.children === 'number') {
-      domElement.textContent = newProps.children.toString();
+      domElement.textContent = '' + newProps.children;
     }
   },
 
