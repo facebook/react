@@ -167,7 +167,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           commitInsertion(effectfulFiber);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag = NoEffect;
+          effectfulFiber.effectTag ^= Placement;
           break;
         }
         case PlacementAndUpdate:
@@ -176,7 +176,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           commitInsertion(effectfulFiber);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag = Update;
+          effectfulFiber.effectTag ^= Placement;
 
           // Update
           const current = effectfulFiber.alternate;
@@ -250,6 +250,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     if (allTrappedErrors) {
       handleErrors(allTrappedErrors);
     }
+    performTaskWork();
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
@@ -499,9 +500,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  // function performTaskWork() {
-  //   performAndHandleErrors(TaskPriority);
-  // }
+  function performTaskWork() {
+    performAndHandleErrors(TaskPriority);
+  }
 
   function performAndHandleErrors(priorityLevel : PriorityLevel, deadline : null | Deadline) {
     // The exact priority level doesn't matter, so long as it's in range of the
@@ -611,7 +612,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function scheduleWork(root : FiberRoot) {
-    scheduleWorkAtPriority(root, priorityContext);
+    let priorityLevel = priorityContext;
+
+    // If we're in a batch, switch to task priority
+    if (priorityLevel === SynchronousPriority && shouldBatchUpdates) {
+      priorityLevel = TaskPriority;
+    }
+
+    scheduleWorkAtPriority(root, priorityLevel);
   }
 
   function scheduleWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) {
@@ -647,10 +655,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function scheduleCallbackAtPriority(priorityLevel : PriorityLevel) {
     switch (priorityLevel) {
       case SynchronousPriority:
-        if (!shouldBatchUpdates) {
-          // Unless in batched mode, perform work immediately
-          performSynchronousWork();
-        }
+        // Perform work immediately
+        performSynchronousWork();
         return;
       case TaskPriority:
         // Do nothing. Task work should be flushed after committing.
@@ -667,7 +673,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function scheduleUpdate(fiber : Fiber) {
-    const priorityLevel = priorityContext;
+    let priorityLevel = priorityContext;
+    // If we're in a batch, switch to task priority
+    if (priorityLevel === SynchronousPriority && shouldBatchUpdates) {
+      priorityLevel = TaskPriority;
+    }
+
     while (true) {
       if (fiber.pendingWorkPriority === NoWork ||
           fiber.pendingWorkPriority >= priorityLevel) {
@@ -709,9 +720,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       return fn();
     } finally {
       shouldBatchUpdates = prev;
-      // If we've exited the batch, perform any scheduled sync work
+      // If we've exited the batch, perform any scheduled task work
       if (!shouldBatchUpdates) {
-        performSynchronousWork();
+        performTaskWork();
       }
     }
   }

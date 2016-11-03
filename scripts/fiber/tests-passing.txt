@@ -1016,6 +1016,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentDOMMinima
 * should not render extra nodes for non-interpolated text
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentState-test.js
+* should support setting state
 * should batch unmounts
 
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
@@ -1058,7 +1059,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
 * catches errors in componentDidMount
 * catches errors in componentDidUpdate
 * propagates errors inside boundary during componentDidMount
-* lets different boundaries catch their own first errors
 
 src/renderers/shared/stack/reconciler/__tests__/ReactIdentity-test.js
 * should allow key property to express identity

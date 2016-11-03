@@ -554,9 +554,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedState-test.js
 * should provide up to date values for props
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentState-test.js
-* should support setting state
-
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 * should be able to switch between rendering null and a normal tag
@@ -564,6 +561,9 @@ src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should distinguish between a script placeholder and an actual script tag
 * throws when rendering null at the top level
 * preserves the dom node during updates
+
+src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
+* lets different boundaries catch their own first errors
 
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChild-test.js
 * should warn for duplicated keys with component stack info
