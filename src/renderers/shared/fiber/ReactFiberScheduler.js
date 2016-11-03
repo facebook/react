@@ -485,11 +485,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performTaskWorkUnsafe() {
+  function performTaskWorkUnsafe(ignoreUnmountingErrors : boolean) {
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
            nextPriorityLevel === TaskPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+      nextUnitOfWork =
+        performUnitOfWork(nextUnitOfWork, ignoreUnmountingErrors);
 
       if (!nextUnitOfWork) {
         nextUnitOfWork = findNextUnitOfWork();
@@ -513,7 +514,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           performSynchronousWorkUnsafe();
           return;
         case TaskPriority:
-          performTaskWorkUnsafe();
+          performTaskWorkUnsafe(false);
           return;
         case AnimationPriority:
           performAnimationWorkUnsafe();
@@ -526,6 +527,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           } else {
             performDeferredWorkUnsafe(deadline);
           }
+          return;
+        default:
           return;
       }
     } catch (error) {
@@ -546,8 +549,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     let nextTrappedErrors = initialTrappedErrors;
     let firstUncaughtError = null;
 
+    const previousPriorityContext = priorityContext;
+    priorityContext = TaskPriority;
+
     // In each phase, we will attempt to pass errors to boundaries and re-render them.
     // If we get more errors, we propagate them to higher boundaries in the next iterations.
+
     while (nextTrappedErrors) {
       const trappedErrors = nextTrappedErrors;
       nextTrappedErrors = null;
@@ -578,16 +585,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
       // We will process an update caused by each error boundary synchronously.
       affectedBoundaries.forEach(boundary => {
-        const priority = priorityContext;
-        const root = scheduleErrorBoundaryWork(boundary, priority);
-        // This should use findNextUnitOfWork() when synchronous scheduling is implemented.
-        let fiber = cloneFiber(root.current, priority);
+        scheduleUpdate(boundary);
         try {
-          while (fiber) {
-            // TODO: this is the only place where we recurse and it's unfortunate.
-            // (This may potentially get us into handleErrors() again.)
-            fiber = performUnitOfWork(fiber, true);
-          }
+          nextUnitOfWork = findNextUnitOfWork();
+          performTaskWorkUnsafe(true);
         } catch (nextError) {
           // If it throws, propagate the error.
           nextTrappedErrors = nextTrappedErrors || [];
@@ -597,6 +598,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     ReactCurrentOwner.current = null;
+
+    priorityContext = previousPriorityContext;
 
     // Surface the first error uncaught by the boundaries to the user.
     if (firstUncaughtError) {

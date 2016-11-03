@@ -438,7 +438,6 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod React
 * should handle a simple flow
 * should call lifecycle methods
-* should throw with an error code in production
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render strings as children
@@ -1034,7 +1033,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
 * renders an error state if child throws in constructor
 * renders an error state if child throws in componentWillMount
 * mounts the error message if mounting fails
-* propagates errors on retry on mounting
 * propagates errors inside boundary during componentWillMount
 * propagates errors inside boundary while rendering error state
 * does not register event handlers for unmounted children
@@ -1059,6 +1057,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
 * catches errors in componentDidMount
 * catches errors in componentDidUpdate
 * propagates errors inside boundary during componentDidMount
+* lets different boundaries catch their own first errors
 
 src/renderers/shared/stack/reconciler/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
