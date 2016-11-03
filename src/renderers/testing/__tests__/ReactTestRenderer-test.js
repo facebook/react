@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var findDOMNode = require('findDOMNode');
 var ReactTestRenderer = require('ReactTestRenderer');
 
 describe('ReactTestRenderer', () => {
@@ -362,6 +363,48 @@ describe('ReactTestRenderer', () => {
       'Boundary render',
       'Boundary componentDidMount',
     ]);
+  });
+
+  it('works with findDOMNode', () => {
+    let nodes = [];
+    function createNodeMock(element) {
+      return element.type;
+    }
+
+    class GrandChild extends React.Component {
+      render() {
+        return <h1>Grand child</h1>;
+      }
+    }
+
+    class Child extends React.Component {
+
+      componentDidMount() {
+        nodes.push(findDOMNode(this.ref));
+      }
+
+      render() {
+        return (
+          <ul>
+            <li>
+              <GrandChild ref={n => this.ref = n} />
+            </li>
+          </ul>
+        );
+      }
+    }
+
+    class Parent extends React.Component {
+      componentDidMount() {
+        nodes.push(findDOMNode(this.ref));
+      }
+
+      render() {
+        return <Child ref={n => this.ref = n}/>;
+      }
+    }
+    ReactTestRenderer.create(<Parent />, { createNodeMock });
+    expect(nodes).toEqual(['h1', 'ul']);
   });
 
 });
