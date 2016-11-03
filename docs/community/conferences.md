@@ -9,6 +9,11 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
+### Agent Conference 2017
+January 20-21 in Dornbirn, Austria
+
+[Website](http://agent.sh/)
+
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
