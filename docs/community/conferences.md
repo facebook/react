@@ -83,3 +83,8 @@ October 26-28 in Bratislava, Slovakia
 October 26-28 online
 
 [Website](https://allremoteconfs.com/react-2016) - [Schedule](https://allremoteconfs.com/react-2016#schedule)
+
+### Agent Conference 2017
+January 20-21 in Dornbirn, Austria
+
+[Website](http://agent.sh/)
