@@ -21,7 +21,7 @@ var CodeMirrorEditor = React.createClass({
   componentDidMount: function() {
     if (IS_MOBILE) return;
 
-    this.editor = CodeMirror.fromTextArea(ReactDOM.findDOMNode(this.refs.editor), {
+    this.editor = CodeMirror.fromTextArea(this.refs.editor, {
       mode: 'jsx',
       lineNumbers: this.props.lineNumbers,
       lineWrapping: true,
@@ -200,7 +200,7 @@ var ReactPlayground = React.createClass({
   },
 
   executeCode: function() {
-    var mountNode = ReactDOM.findDOMNode(this.refs.mount);
+    var mountNode = this.refs.mount;
 
     try {
       ReactDOM.unmountComponentAtNode(mountNode);
