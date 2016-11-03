@@ -16,11 +16,11 @@ type UpdateQueueNode = {
   partialState: any,
   callback: ?Function,
   callbackWasCalled: boolean,
+  isReplace: boolean,
   next: ?UpdateQueueNode,
 };
 
 export type UpdateQueue = UpdateQueueNode & {
-  isReplace: boolean,
   isForced: boolean,
   hasUpdate: boolean,
   hasCallback: boolean,
@@ -32,8 +32,8 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
     partialState,
     callback: null,
     callbackWasCalled: false,
-    next: null,
     isReplace: false,
+    next: null,
     isForced: false,
     hasUpdate: partialState != null,
     hasCallback: false,
@@ -48,11 +48,12 @@ function addToQueue(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
     partialState,
     callback: null,
     callbackWasCalled: false,
+    isReplace: false,
     next: null,
   };
   queue.tail.next = node;
   queue.tail = node;
-  queue.hasUpdate = queue.hasUpdate || (partialState == null);
+  queue.hasUpdate = queue.hasUpdate || (partialState != null);
   return queue;
 }
 
@@ -86,8 +87,9 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
 
 exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
   let node : ?UpdateQueueNode = queue;
-  let state = queue.isReplace ? null : Object.assign({}, prevState);
+  let state = Object.assign({}, prevState);
   while (node) {
+    state = node.isReplace ? null : state;
     let partialState;
     if (typeof node.partialState === 'function') {
       const updateFn = node.partialState;
