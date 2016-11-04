@@ -58,7 +58,7 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
-export type TrappedError = {
+type TrappedError = {
   boundary: Fiber | null,
   error: any,
 };
@@ -93,10 +93,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let isAnimationCallbackScheduled : boolean = false;
   let isDeferredCallbackScheduled : boolean = false;
 
+  // Caught errors and error boundaries that are currently handling them
+  let activeErrorBoundaries : Set<Fiber> | null = null;
   let nextTrappedErrors : Array<TrappedError> | null = null;
-  let isHandlingErrors : boolean = false;
-  // Boundaries that have been acknowledged
-  let knownBoundaries : Set<Fiber | null> = new Set();
 
   function scheduleAnimationCallback(callback) {
     if (!isAnimationCallbackScheduled) {
@@ -159,13 +158,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function commitAllWork(finishedWork : Fiber, ignoreUnmountingErrors : boolean) {
     // Commit all the side-effects within a tree.
-
-    // Commit phase is meant to be atomic and non-interruptible.
-    // Any errors raised in it should be handled after it is over
-    // so that we don't end up in an inconsistent state due to user code.
-    // We'll keep track of all caught errors and handle them later.
-    let allTrappedErrors = null;
-
     // First, we'll perform all the host insertions, updates, deletions and
     // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
@@ -201,18 +193,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         case DeletionAndCallback:
           // Deletion might cause an error in componentWillUnmount().
           // We will continue nevertheless and handle those later on.
-          const trappedErrors = commitDeletion(effectfulFiber);
-          // There is a special case where we completely ignore errors.
+          // Note: There is a special case where we completely ignore errors.
           // It happens when we already caught an error earlier, and the update
           // is caused by an error boundary trying to render an error message.
           // In this case, we want to blow away the tree without catching errors.
-          if (trappedErrors && !ignoreUnmountingErrors) {
-            if (!allTrappedErrors) {
-              allTrappedErrors = trappedErrors;
-            } else {
-              allTrappedErrors.push.apply(allTrappedErrors, trappedErrors);
-            }
-          }
+          commitDeletion(effectfulFiber, ignoreUnmountingErrors);
           break;
       }
 
@@ -226,11 +211,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (effectfulFiber) {
       if (effectfulFiber.effectTag & (Update | Callback)) {
         const current = effectfulFiber.alternate;
-        const trappedError = commitLifeCycles(current, effectfulFiber);
-        if (trappedError) {
-          allTrappedErrors = allTrappedErrors || [];
-          allTrappedErrors.push(trappedError);
-        }
+        commitLifeCycles(current, effectfulFiber);
       }
       const next = effectfulFiber.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.
@@ -248,19 +229,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     if (finishedWork.effectTag !== NoEffect) {
       const current = finishedWork.alternate;
       commitWork(current, finishedWork);
-      const trappedError = commitLifeCycles(current, finishedWork);
-      if (trappedError) {
-        allTrappedErrors = allTrappedErrors || [];
-        allTrappedErrors.push(trappedError);
-      }
-    }
-
-    if (allTrappedErrors) {
-      if (nextTrappedErrors) {
-        nextTrappedErrors.push.apply(nextTrappedErrors, allTrappedErrors);
-      } else {
-        nextTrappedErrors = allTrappedErrors;
-      }
+      commitLifeCycles(current, finishedWork);
     }
 
     performTaskWork();
@@ -519,11 +488,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           break;
       }
     } catch (error) {
-      const failedUnitOfWork = nextUnitOfWork;
-
       // Clean-up
       ReactCurrentOwner.current = null;
 
+      const failedUnitOfWork = nextUnitOfWork;
       // Reset because it points to the error boundary:
       nextUnitOfWork = null;
       if (!failedUnitOfWork) {
@@ -531,12 +499,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // should always be set while work is being performed.
         throw error;
       }
-      const trappedError = trapError(failedUnitOfWork, error);
-      if (nextTrappedErrors) {
-        nextTrappedErrors.push(trappedError);
-      } else {
-        nextTrappedErrors = [trappedError];
-      }
+      trapError(failedUnitOfWork, error, false);
     }
 
     // If there were any errors, handle them now
@@ -546,21 +509,27 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function handleErrors() : void {
-    // Prevent recursion
-    if (isHandlingErrors) {
+    // Prevent recursion.
+    // TODO: remove the codepath that causes this recursion in the first place.
+    if (activeErrorBoundaries) {
       return;
     }
-    isHandlingErrors = true;
 
+    // Start tracking active boundaries.
+    activeErrorBoundaries = new Set();
+
+    // If we find unhandled errors, we'll only rethrow the first one.
     let firstUncaughtError = null;
 
     // All work created by error boundaries should have Task priority
-    // so that it finishes before this function exits
+    // so that it finishes before this function exits.
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
 
-    // Keep looping until there are no more trapped errors
-    while (true) {
+    // Keep looping until there are no more trapped errors, or until we find
+    // an unhandled error.
+    while (nextTrappedErrors && nextTrappedErrors.length && !firstUncaughtError) {
+      // First, find all error boundaries and notify them about errors.
       while (nextTrappedErrors && nextTrappedErrors.length) {
         const trappedError = nextTrappedErrors.shift();
         const boundary = trappedError.boundary;
@@ -570,35 +539,32 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           continue;
         }
         // Don't visit boundaries twice.
-        if (knownBoundaries.has(boundary)) {
+        if (activeErrorBoundaries.has(boundary)) {
           continue;
         }
         try {
-          knownBoundaries.add(boundary);
-
+          // This error boundary is now active.
+          // We will let it handle the error and retry rendering.
+          // If it fails again, the next error will be propagated to the parent
+          // boundary or rethrown.
+          activeErrorBoundaries.add(boundary);
           // Give error boundary a chance to update its state.
           // Updates will be scheduled with Task priority.
-          acknowledgeErrorInBoundary(boundary, error);
+          const instance = boundary.stateNode;
+          instance.unstable_handleError(error);
 
           // Schedule an update, in case the boundary didn't call setState
-          // on itself
+          // on itself.
           scheduleUpdate(boundary);
         } catch (nextError) {
-          // If an error is thrown, propagate the error to the next boundary
-          const te = trapError(boundary, nextError);
-          if (te.boundary) {
-            // If a boundary is found, push trapped error onto array
-            nextTrappedErrors.push(te);
-          } else {
-            // Otherwise, we'll need to throw
-            firstUncaughtError = firstUncaughtError || te.error;
-          }
+          // If an error is thrown, propagate the error to the parent boundary.
+          trapError(boundary, nextError, false);
         }
       }
 
-
-      // Now that we attempt to flush any work that was scheduled by the boundaries
-      // If this creates errors, they will be pushed to nextTrappedErrors and the loop will continue
+      // Now that we attempt to flush any work that was scheduled by the boundaries.
+      // If this creates errors, they will be pushed to nextTrappedErrors and
+      // the outer loop will continue.
       try {
         performTaskWorkUnsafe(true);
       } catch (error) {
@@ -610,26 +576,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // should always be set while work is being performed.
           throw error;
         }
-        const trappedError = trapError(failedUnitOfWork, error);
-        if (nextTrappedErrors) {
-          nextTrappedErrors.push(trappedError);
-        } else {
-          nextTrappedErrors = [trappedError];
-        }
-      }
-
-
-      if (!nextTrappedErrors ||
-          !nextTrappedErrors.length ||
-          firstUncaughtError) {
-        break;
+        trapError(failedUnitOfWork, error, false);
       }
     }
 
     nextTrappedErrors = null;
-    knownBoundaries.clear();
+    activeErrorBoundaries = null;
     priorityContext = previousPriorityContext;
-    isHandlingErrors = false;
 
     if (firstUncaughtError) {
       // We need to make sure any future root can get scheduled despite these errors.
@@ -646,9 +599,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (maybeErrorBoundary) {
       if (maybeErrorBoundary.tag === ClassComponent) {
         const instance = maybeErrorBoundary.stateNode;
-        if (typeof instance.unstable_handleError === 'function' &&
-            !knownBoundaries.has(maybeErrorBoundary)) {
-          return maybeErrorBoundary;
+        const isErrorBoundary = typeof instance.unstable_handleError === 'function';
+        if (isErrorBoundary) {
+          const isHandlingAnotherError = (
+            activeErrorBoundaries !== null &&
+            activeErrorBoundaries.has(maybeErrorBoundary)
+          );
+          if (!isHandlingAnotherError) {
+            return maybeErrorBoundary;
+          }
         }
       }
       maybeErrorBoundary = maybeErrorBoundary.return;
@@ -656,16 +615,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
-  function trapError(fiber : Fiber, error : any) : TrappedError {
-    return {
+  function trapError(fiber : Fiber, error : any, isUnmounting : boolean) : void {
+    if (isUnmounting && activeErrorBoundaries) {
+      // Ignore errors caused by unmounting during error handling.
+      // This lets error boundaries safely tear down already failed trees.
+      return;
+    }
+
+    if (!nextTrappedErrors) {
+      nextTrappedErrors = [];
+    }
+    nextTrappedErrors.push({
       boundary: findClosestErrorBoundary(fiber),
       error,
-    };
-  }
-
-  function acknowledgeErrorInBoundary(boundary : Fiber, error : any) {
-    const instance = boundary.stateNode;
-    instance.unstable_handleError(error);
+    });
   }
 
   function scheduleWork(root : FiberRoot) {
