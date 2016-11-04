@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type { TrappedError } from 'ReactFiberErrorBoundary';
+import type { TrappedError } from 'ReactFiberScheduler';
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
@@ -24,7 +24,6 @@ var {
   HostComponent,
   HostText,
 } = ReactTypeOfWork;
-var { trapError } = require('ReactFiberErrorBoundary');
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 var {
@@ -33,7 +32,10 @@ var {
   Callback,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
+module.exports = function<T, P, I, TI, C>(
+  config : HostConfig<T, P, I, TI, C>,
+  trapError : (boundary : Fiber, error: Error) => TrappedError
+) {
 
   const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;

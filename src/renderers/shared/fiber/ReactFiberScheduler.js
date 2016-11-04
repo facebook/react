@@ -12,7 +12,6 @@
 
 'use strict';
 
-import type { TrappedError } from 'ReactFiberErrorBoundary';
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig, Deadline } from 'ReactFiberReconciler';
@@ -24,7 +23,6 @@ var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
-var { trapError, acknowledgeErrorInBoundary } = require('ReactFiberErrorBoundary');
 
 var {
   NoWork,
@@ -51,6 +49,7 @@ var {
 
 var {
   HostContainer,
+  ClassComponent,
 } = require('ReactTypeOfWork');
 
 if (__DEV__) {
@@ -59,11 +58,16 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
+export type TrappedError = {
+  boundary: Fiber | null,
+  error: any,
+};
+
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
   const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config);
+    ReactFiberCommitWork(config, trapError);
 
   const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
   const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -88,6 +92,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Keep track of which host environment callbacks are scheduled
   let isAnimationCallbackScheduled : boolean = false;
   let isDeferredCallbackScheduled : boolean = false;
+
+  let nextTrappedErrors : Array<TrappedError> | null = null;
+  let isHandlingErrors : boolean = false;
+  // Boundaries that have been acknowledged
+  let knownBoundaries : Set<Fiber | null> = new Set();
 
   function scheduleAnimationCallback(callback) {
     if (!isAnimationCallbackScheduled) {
@@ -246,10 +255,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    // Now that the tree has been committed, we can handle errors.
     if (allTrappedErrors) {
-      handleErrors(allTrappedErrors);
+      if (nextTrappedErrors) {
+        nextTrappedErrors.push.apply(nextTrappedErrors, allTrappedErrors);
+      } else {
+        nextTrappedErrors = allTrappedErrors;
+      }
     }
+
     performTaskWork();
   }
 
@@ -433,32 +446,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     performAndHandleErrors(AnimationPriority);
   }
 
-  function scheduleErrorBoundaryWork(boundary : Fiber, priority) : FiberRoot {
-    let root = null;
-    let fiber = boundary;
-    while (fiber) {
-      fiber.pendingWorkPriority = priority;
-      if (fiber.alternate) {
-        fiber.alternate.pendingWorkPriority = priority;
-      }
-      if (!fiber.return) {
-        if (fiber.tag === HostContainer) {
-          // We found the root.
-          // Remember it so we can update it.
-          root = ((fiber.stateNode : any) : FiberRoot);
-          break;
-        } else {
-          throw new Error('Invalid root');
-        }
-      }
-      fiber = fiber.return;
-    }
-    if (!root) {
-      throw new Error('Could not find root from the boundary.');
-    }
-    return root;
-  }
-
   function performSynchronousWorkUnsafe() {
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
@@ -512,13 +499,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       switch (priorityLevel) {
         case SynchronousPriority:
           performSynchronousWorkUnsafe();
-          return;
+          break;
         case TaskPriority:
           performTaskWorkUnsafe(false);
-          return;
+          break;
         case AnimationPriority:
           performAnimationWorkUnsafe();
-          return;
+          break;
         case HighPriority:
         case LowPriority:
         case OffscreenPriority:
@@ -527,12 +514,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           } else {
             performDeferredWorkUnsafe(deadline);
           }
-          return;
+          break;
         default:
-          return;
+          break;
       }
     } catch (error) {
       const failedUnitOfWork = nextUnitOfWork;
+
+      // Clean-up
+      ReactCurrentOwner.current = null;
+
       // Reset because it points to the error boundary:
       nextUnitOfWork = null;
       if (!failedUnitOfWork) {
@@ -541,77 +532,135 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         throw error;
       }
       const trappedError = trapError(failedUnitOfWork, error);
-      handleErrors([trappedError]);
+      if (nextTrappedErrors) {
+        nextTrappedErrors.push(trappedError);
+      } else {
+        nextTrappedErrors = [trappedError];
+      }
+    }
+
+    // If there were any errors, handle them now
+    if (nextTrappedErrors) {
+      handleErrors();
     }
   }
 
-  function handleErrors(initialTrappedErrors : Array<TrappedError>) : void {
-    let nextTrappedErrors = initialTrappedErrors;
+  function handleErrors() : void {
+    // Prevent recursion
+    if (isHandlingErrors) {
+      return;
+    }
+    isHandlingErrors = true;
+
     let firstUncaughtError = null;
 
+    // All work created by error boundaries should have Task priority
+    // so that it finishes before this function exits
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
 
-    // In each phase, we will attempt to pass errors to boundaries and re-render them.
-    // If we get more errors, we propagate them to higher boundaries in the next iterations.
-
-    while (nextTrappedErrors) {
-      const trappedErrors = nextTrappedErrors;
-      nextTrappedErrors = null;
-
-      // Pass errors to all affected boundaries.
-      const affectedBoundaries : Set<Fiber> = new Set();
-      trappedErrors.forEach(trappedError => {
+    // Keep looping until there are no more trapped errors
+    while (true) {
+      while (nextTrappedErrors && nextTrappedErrors.length) {
+        const trappedError = nextTrappedErrors.shift();
         const boundary = trappedError.boundary;
         const error = trappedError.error;
         if (!boundary) {
           firstUncaughtError = firstUncaughtError || error;
-          return;
+          continue;
         }
         // Don't visit boundaries twice.
-        if (affectedBoundaries.has(boundary)) {
-          return;
+        if (knownBoundaries.has(boundary)) {
+          continue;
         }
-        // Give error boundary a chance to update its state.
         try {
+          knownBoundaries.add(boundary);
+          // Give error boundary a chance to update its state.
+          // Updates will be scheduled with Task priority.
           acknowledgeErrorInBoundary(boundary, error);
-          affectedBoundaries.add(boundary);
         } catch (nextError) {
-          // If it throws, propagate the error.
-          nextTrappedErrors = nextTrappedErrors || [];
-          nextTrappedErrors.push(trapError(boundary, nextError));
+          // If an error is thrown, propagate the error to the next boundary
+          const te = trapError(boundary, nextError);
+          if (te.boundary) {
+            // If a boundary is found, push trapped error onto array
+            nextTrappedErrors.push(te);
+          } else {
+            // Otherwise, we'll need to throw
+            firstUncaughtError = firstUncaughtError || te.error;
+          }
         }
-      });
+      }
 
-      // We will process an update caused by each error boundary synchronously.
-      affectedBoundaries.forEach(boundary => {
-        scheduleUpdate(boundary);
-        try {
-          nextUnitOfWork = findNextUnitOfWork();
-          performTaskWorkUnsafe(true);
-        } catch (nextError) {
-          // If it throws, propagate the error.
-          nextTrappedErrors = nextTrappedErrors || [];
-          nextTrappedErrors.push(trapError(boundary, nextError));
+
+      // Now that we attempt to flush any work that was scheduled by the boundaries
+      // If this creates errors, they will be pushed to nextTrappedErrors and the loop will continue
+      try {
+        performTaskWorkUnsafe(true);
+      } catch (error) {
+        const failedUnitOfWork = nextUnitOfWork;
+        // Reset because it points to the error boundary:
+        nextUnitOfWork = null;
+        if (!failedUnitOfWork) {
+          // We shouldn't end up here because nextUnitOfWork
+          // should always be set while work is being performed.
+          throw error;
         }
-      });
+        const trappedError = trapError(failedUnitOfWork, error);
+        if (nextTrappedErrors) {
+          nextTrappedErrors.push(trappedError);
+        } else {
+          nextTrappedErrors = [trappedError];
+        }
+      }
+
+
+      if (!nextTrappedErrors ||
+          !nextTrappedErrors.length ||
+          firstUncaughtError) {
+        break;
+      }
     }
 
-    ReactCurrentOwner.current = null;
-
+    nextTrappedErrors = null;
+    knownBoundaries.clear();
     priorityContext = previousPriorityContext;
+    isHandlingErrors = false;
 
-    // Surface the first error uncaught by the boundaries to the user.
     if (firstUncaughtError) {
       // We need to make sure any future root can get scheduled despite these errors.
       // Currently after throwing, nothing gets scheduled because these fields are set.
       // FIXME: this is likely a wrong fix! It's still better than ignoring updates though.
       nextScheduledRoot = null;
       lastScheduledRoot = null;
-
-      // Throw any unhandled errors.
       throw firstUncaughtError;
     }
+  }
+
+  function findClosestErrorBoundary(fiber : Fiber): Fiber | null {
+    let maybeErrorBoundary = fiber.return;
+    while (maybeErrorBoundary) {
+      if (maybeErrorBoundary.tag === ClassComponent) {
+        const instance = maybeErrorBoundary.stateNode;
+        if (typeof instance.unstable_handleError === 'function' &&
+            !knownBoundaries.has(maybeErrorBoundary)) {
+          return maybeErrorBoundary;
+        }
+      }
+      maybeErrorBoundary = maybeErrorBoundary.return;
+    }
+    return null;
+  }
+
+  function trapError(fiber : Fiber, error : any) : TrappedError {
+    return {
+      boundary: findClosestErrorBoundary(fiber),
+      error,
+    };
+  }
+
+  function acknowledgeErrorInBoundary(boundary : Fiber, error : any) {
+    const instance = boundary.stateNode;
+    instance.unstable_handleError(error);
   }
 
   function scheduleWork(root : FiberRoot) {
