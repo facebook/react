@@ -357,7 +357,8 @@ var ReactMount = {
     nextElement,
     container,
     shouldReuseMarkup,
-    context
+    context,
+    callback
   ) {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
@@ -379,6 +380,12 @@ var ReactMount = {
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
     var componentInstance = instantiateReactComponent(nextElement, false);
+
+    if (callback) {
+      componentInstance._pendingCallbacks = [function() {
+        callback.call(componentInstance._renderedComponent.getPublicInstance());
+      }];
+    }
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -529,11 +536,9 @@ var ReactMount = {
       nextWrappedElement,
       container,
       shouldReuseMarkup,
-      nextContext
+      nextContext,
+      callback
     )._renderedComponent.getPublicInstance();
-    if (callback) {
-      callback.call(component);
-    }
     return component;
   },
 

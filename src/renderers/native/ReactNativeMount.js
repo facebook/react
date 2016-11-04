@@ -134,6 +134,12 @@ var ReactNativeMount = {
     var instance = instantiateReactComponent(nextWrappedElement, false);
     ReactNativeMount._instancesByContainerID[containerTag] = instance;
 
+    if (callback) {
+      instance._pendingCallbacks = [function() {
+        callback.call(instance._renderedComponent.getPublicInstance());
+      }];
+    }
+
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
@@ -143,10 +149,7 @@ var ReactNativeMount = {
       instance,
       containerTag
     );
-    var component = instance.getPublicInstance();
-    if (callback) {
-      callback.call(component);
-    }
+    var component = instance._renderedComponent.getPublicInstance();
     return component;
   },
 

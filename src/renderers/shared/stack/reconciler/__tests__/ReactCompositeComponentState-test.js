@@ -11,8 +11,6 @@
 
 'use strict';
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
 var React;
 var ReactDOM;
 
@@ -171,40 +169,22 @@ describe('ReactCompositeComponent-state', () => {
       ['componentDidMount-end', 'orange'],
     ];
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      // The setState callbacks in componentWillMount, and the initial callback
-      // passed to ReactDOM.render, should be flushed right after component
-      // did mount:
-      expected.push(
-        ['setState-sunrise', 'orange'], // 1
-        ['setState-orange', 'orange'], // 2
-        ['initial-callback', 'orange'], // 3
-        ['shouldComponentUpdate-currentState', 'orange'],
-        ['shouldComponentUpdate-nextState', 'yellow'],
-        ['componentWillUpdate-currentState', 'orange'],
-        ['componentWillUpdate-nextState', 'yellow'],
-        ['render', 'yellow'],
-        ['componentDidUpdate-currentState', 'yellow'],
-        ['componentDidUpdate-prevState', 'orange'],
-        ['setState-yellow', 'yellow'],
-      );
-    } else {
-      // There is a bug in the stack reconciler where those callbacks are
-      // enqueued, but aren't called until the next flush.
-      expected.push(
-        ['shouldComponentUpdate-currentState', 'orange'],
-        ['shouldComponentUpdate-nextState', 'yellow'],
-        ['componentWillUpdate-currentState', 'orange'],
-        ['componentWillUpdate-nextState', 'yellow'],
-        ['render', 'yellow'],
-        ['componentDidUpdate-currentState', 'yellow'],
-        ['componentDidUpdate-prevState', 'orange'],
-        ['setState-sunrise', 'yellow'], // 1
-        ['setState-orange', 'yellow'], // 2
-        ['setState-yellow', 'yellow'],
-        ['initial-callback', 'yellow'] // 3
-      );
-    }
+    // The setState callbacks in componentWillMount, and the initial callback
+    // passed to ReactDOM.render, should be flushed right after component
+    // did mount:
+    expected.push(
+      ['setState-sunrise', 'orange'], // 1
+      ['setState-orange', 'orange'], // 2
+      ['initial-callback', 'orange'], // 3
+      ['shouldComponentUpdate-currentState', 'orange'],
+      ['shouldComponentUpdate-nextState', 'yellow'],
+      ['componentWillUpdate-currentState', 'orange'],
+      ['componentWillUpdate-nextState', 'yellow'],
+      ['render', 'yellow'],
+      ['componentDidUpdate-currentState', 'yellow'],
+      ['componentDidUpdate-prevState', 'orange'],
+      ['setState-yellow', 'yellow'],
+    );
 
     expected.push(
       ['componentWillReceiveProps-start', 'yellow'],
