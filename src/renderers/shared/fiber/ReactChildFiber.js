@@ -529,6 +529,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         // unfortunate because it triggers the slow path all the time. We need
         // a better way to communicate whether this was a miss or null,
         // boolean, undefined, etc.
+        if (!oldFiber) {
+          oldFiber = nextOldFiber;
+        }
         break;
       }
       if (shouldTrackSideEffects) {
