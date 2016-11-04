@@ -166,12 +166,13 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     if (typeof newInstance.componentWillMount === 'function') {
       newInstance.componentWillMount();
-      // If we had additional state updates during this life-cycle, let's
-      // process them now.
-      const newUpdateQueue = workInProgress.updateQueue;
-      if (newUpdateQueue) {
-        newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
-      }
+    }
+    // If we had additional state updates, process them now.
+    // They may be from componentWillMount() or from error boundary's setState()
+    // during initial mounting.
+    const newUpdateQueue = workInProgress.updateQueue;
+    if (newUpdateQueue) {
+      newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
     }
     return true;
   }
