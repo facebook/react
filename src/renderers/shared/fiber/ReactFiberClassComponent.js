@@ -49,8 +49,10 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
+      const updateQueue = fiber.updateQueue ?
+        addToQueue(fiber.updateQueue, state) :
+        createUpdateQueue(state);
+      updateQueue.tail.isReplace = true;
       scheduleUpdateQueue(fiber, updateQueue);
     },
     enqueueForceUpdate(instance) {
