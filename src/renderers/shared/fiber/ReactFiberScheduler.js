@@ -156,7 +156,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
-  function commitAllWork(finishedWork : Fiber, ignoreUnmountingErrors : boolean) {
+  function commitAllWork(finishedWork : Fiber) {
     // Commit all the side-effects within a tree.
     // First, we'll perform all the host insertions, updates, deletions and
     // ref unmounts.
@@ -191,13 +191,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           break;
         case Deletion:
         case DeletionAndCallback:
-          // Deletion might cause an error in componentWillUnmount().
-          // We will continue nevertheless and handle those later on.
-          // Note: There is a special case where we completely ignore errors.
-          // It happens when we already caught an error earlier, and the update
-          // is caused by an error boundary trying to render an error message.
-          // In this case, we want to blow away the tree without catching errors.
-          commitDeletion(effectfulFiber, ignoreUnmountingErrors);
+          commitDeletion(effectfulFiber);
           break;
       }
 
@@ -232,6 +226,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       commitLifeCycles(current, finishedWork);
     }
 
+    // The task work includes batched updates and error handling.
     performTaskWork();
   }
 
@@ -253,7 +248,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     workInProgress.pendingWorkPriority = newPriority;
   }
 
-  function completeUnitOfWork(workInProgress : Fiber, ignoreUnmountingErrors : boolean) : ?Fiber {
+  function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
       // Ideally nothing should rely on this, but relying on it here
@@ -325,7 +320,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        commitAllWork(workInProgress, ignoreUnmountingErrors);
+        commitAllWork(workInProgress);
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't
@@ -339,7 +334,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performUnitOfWork(workInProgress : Fiber, ignoreUnmountingErrors : boolean) : ?Fiber {
+  function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -360,7 +355,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
       }
       // If this doesn't spawn new work, complete the current work.
-      next = completeUnitOfWork(workInProgress, ignoreUnmountingErrors);
+      next = completeUnitOfWork(workInProgress);
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
       }
@@ -377,7 +372,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
     while (nextUnitOfWork) {
       if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         if (!nextUnitOfWork) {
           // Find more work. We might have time to complete some more.
           nextUnitOfWork = findNextUnitOfWork();
@@ -399,7 +394,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
            nextPriorityLevel === AnimationPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       if (!nextUnitOfWork) {
         // Keep searching for animation work until there's no more left
         nextUnitOfWork = findNextUnitOfWork();
@@ -419,7 +414,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
            nextPriorityLevel === SynchronousPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
 
       if (!nextUnitOfWork) {
         nextUnitOfWork = findNextUnitOfWork();
@@ -441,12 +436,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performTaskWorkUnsafe(ignoreUnmountingErrors : boolean) {
+  function performTaskWorkUnsafe() {
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
            nextPriorityLevel === TaskPriority) {
       nextUnitOfWork =
-        performUnitOfWork(nextUnitOfWork, ignoreUnmountingErrors);
+        performUnitOfWork(nextUnitOfWork);
 
       if (!nextUnitOfWork) {
         nextUnitOfWork = findNextUnitOfWork();
@@ -470,7 +465,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           performSynchronousWorkUnsafe();
           break;
         case TaskPriority:
-          performTaskWorkUnsafe(false);
+          performTaskWorkUnsafe();
           break;
         case AnimationPriority:
           performAnimationWorkUnsafe();
@@ -555,7 +550,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // If this creates errors, they will be pushed to nextTrappedErrors and
       // the outer loop will continue.
       try {
-        performTaskWorkUnsafe(true);
+        performTaskWorkUnsafe();
       } catch (error) {
         trapError(nextUnitOfWork, error, false);
       }
