@@ -53,21 +53,11 @@ var NESTED_UPDATES = {
   },
 };
 
-var UPDATE_QUEUEING = {
-  initialize: function() {
-    this.callbackQueue.reset();
-  },
-  close: function() {
-    this.callbackQueue.notifyAll();
-  },
-};
-
-var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
+var TRANSACTION_WRAPPERS = [NESTED_UPDATES];
 
 function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
-  this.callbackQueue = CallbackQueue.getPooled();
   this.reconcileTransaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */ true
   );
@@ -83,8 +73,6 @@ Object.assign(
 
     destructor: function() {
       this.dirtyComponentsLength = null;
-      CallbackQueue.release(this.callbackQueue);
-      this.callbackQueue = null;
       ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
       this.reconcileTransaction = null;
     },
@@ -179,7 +167,7 @@ function runBatchedUpdates(transaction) {
 
     if (callbacks) {
       for (var j = 0; j < callbacks.length; j++) {
-        transaction.callbackQueue.enqueue(
+        transaction.reconcileTransaction.getReactMountReady().enqueue(
           callbacks[j],
           component.getPublicInstance()
         );
