@@ -87,9 +87,6 @@ src/renderers/art/__tests__/ReactART-test.js
 * resolves refs before componentDidMount
 * resolves refs before componentDidUpdate
 
-src/renderers/dom/__tests__/ReactDOMProduction-test.js
-* should throw with an error code in production
-
 src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should set style attribute when styles exist
 * should warn when using hyphenated style names

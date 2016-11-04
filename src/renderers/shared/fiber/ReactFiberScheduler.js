@@ -440,6 +440,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performTaskWorkUnsafe() {
+    if (isPerformingTaskWork) {
+      throw new Error('Already performing task work');
+    }
+
     isPerformingTaskWork = true;
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
@@ -472,8 +476,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         case TaskPriority:
           if (!isPerformingTaskWork) {
             performTaskWorkUnsafe();
-          } else {
-            console.log('prevented recursion!');
           }
           break;
         case AnimationPriority:
@@ -495,7 +497,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       trapError(nextUnitOfWork, error, false);
     }
 
-    // If there were any errors, handle them now
+    // If there were errors and we aren't already handling them, handle them now
     if (nextTrappedErrors && !activeErrorBoundaries) {
       handleErrors();
     }
