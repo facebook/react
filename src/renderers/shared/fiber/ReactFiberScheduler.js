@@ -575,9 +575,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
         try {
           knownBoundaries.add(boundary);
+
           // Give error boundary a chance to update its state.
           // Updates will be scheduled with Task priority.
           acknowledgeErrorInBoundary(boundary, error);
+
+          // Schedule an update, in case the boundary didn't call setState
+          // on itself
+          scheduleUpdate(boundary);
         } catch (nextError) {
           // If an error is thrown, propagate the error to the next boundary
           const te = trapError(boundary, nextError);
