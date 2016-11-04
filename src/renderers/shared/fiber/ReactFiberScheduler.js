@@ -488,18 +488,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           break;
       }
     } catch (error) {
-      // Clean-up
-      ReactCurrentOwner.current = null;
-
-      const failedUnitOfWork = nextUnitOfWork;
-      // Reset because it points to the error boundary:
-      nextUnitOfWork = null;
-      if (!failedUnitOfWork) {
-        // We shouldn't end up here because nextUnitOfWork
-        // should always be set while work is being performed.
-        throw error;
-      }
-      trapError(failedUnitOfWork, error, false);
+      trapError(nextUnitOfWork, error, false);
     }
 
     // If there were any errors, handle them now
@@ -568,15 +557,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       try {
         performTaskWorkUnsafe(true);
       } catch (error) {
-        const failedUnitOfWork = nextUnitOfWork;
-        // Reset because it points to the error boundary:
-        nextUnitOfWork = null;
-        if (!failedUnitOfWork) {
-          // We shouldn't end up here because nextUnitOfWork
-          // should always be set while work is being performed.
-          throw error;
-        }
-        trapError(failedUnitOfWork, error, false);
+        trapError(nextUnitOfWork, error, false);
       }
     }
 
@@ -615,7 +596,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
-  function trapError(fiber : Fiber, error : any, isUnmounting : boolean) : void {
+  function trapError(fiber : Fiber | null, error : any, isUnmounting : boolean) : void {
+    // It is no longer valid because we exited the user code.
+    ReactCurrentOwner.current = null;
+
     if (isUnmounting && activeErrorBoundaries) {
       // Ignore errors caused by unmounting during error handling.
       // This lets error boundaries safely tear down already failed trees.
@@ -626,7 +610,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       nextTrappedErrors = [];
     }
     nextTrappedErrors.push({
-      boundary: findClosestErrorBoundary(fiber),
+      boundary: fiber ? findClosestErrorBoundary(fiber) : null,
       error,
     });
   }
