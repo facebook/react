@@ -81,6 +81,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Whether updates should be batched. Only applies when using sync scheduling.
   let shouldBatchUpdates : boolean = false;
 
+  // Need this to prevent recursion while in a Task loop.
+  let isPerformingTaskWork : boolean = false;
+
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
   let nextPriorityLevel : PriorityLevel = NoWork;
@@ -437,6 +440,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performTaskWorkUnsafe() {
+    isPerformingTaskWork = true;
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
            nextPriorityLevel === TaskPriority) {
@@ -450,6 +454,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     if (nextUnitOfWork) {
       scheduleCallbackAtPriority(nextPriorityLevel);
     }
+    isPerformingTaskWork = false;
   }
 
   function performTaskWork() {
@@ -465,7 +470,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           performSynchronousWorkUnsafe();
           break;
         case TaskPriority:
-          performTaskWorkUnsafe();
+          if (!isPerformingTaskWork) {
+            performTaskWorkUnsafe();
+          } else {
+            console.log('prevented recursion!');
+          }
           break;
         case AnimationPriority:
           performAnimationWorkUnsafe();
@@ -487,16 +496,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     // If there were any errors, handle them now
-    if (nextTrappedErrors) {
+    if (nextTrappedErrors && !activeErrorBoundaries) {
       handleErrors();
     }
   }
 
   function handleErrors() : void {
-    // Prevent recursion.
-    // TODO: remove the codepath that causes this recursion in the first place.
     if (activeErrorBoundaries) {
-      return;
+      throw new Error('Already handling errors');
     }
 
     // Start tracking active boundaries.
@@ -552,6 +559,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       try {
         performTaskWorkUnsafe();
       } catch (error) {
+        isPerformingTaskWork = false;
         trapError(nextUnitOfWork, error, false);
       }
     }
