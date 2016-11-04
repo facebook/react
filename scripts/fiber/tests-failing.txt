@@ -568,9 +568,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChild-test.js
 * should warn for duplicated keys with component stack info
 
-src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildReconcile-test.js
-* should insert non-empty children in middle where nulls were
-
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
 * should throw if rendering both HTML and children

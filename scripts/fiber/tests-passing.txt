@@ -1113,6 +1113,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildReconcile-test.js
 * should not insert empty children in the middle
 * should insert one new child in the middle
 * should insert multiple new truthy children in the middle
+* should insert non-empty children in middle where nulls were
 
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
 * should render between nested components and inline children
