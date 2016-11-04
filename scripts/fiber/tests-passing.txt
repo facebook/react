@@ -791,6 +791,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * skips will/DidUpdate when bailing unless an update was already in progress
 * performs batched updates at the end of the batch
 * can nest batchedUpdates
+* propagates an error from a noop error boundary
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
@@ -1016,6 +1017,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentDOMMinima
 * should not render extra nodes for non-interpolated text
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentState-test.js
+* should support setting state
 * should batch unmounts
 
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js

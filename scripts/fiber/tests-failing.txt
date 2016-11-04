@@ -554,9 +554,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedState-test.js
 * should provide up to date values for props
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentState-test.js
-* should support setting state
-
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 * should be able to switch between rendering null and a normal tag
