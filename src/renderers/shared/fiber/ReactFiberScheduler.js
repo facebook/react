@@ -200,7 +200,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (effectfulFiber) {
       if (effectfulFiber.effectTag & (Update | Callback)) {
         const current = effectfulFiber.alternate;
-        const trappedError = commitLifeCycles(current, effectfulFiber);
+
+        // setState in componentDidMount/Update should be synchronous & batched
+        const previousPriorityContext = priorityContext;
+        const previousShouldBatchUpdates = shouldBatchUpdates;
+        priorityContext = SynchronousPriority;
+        shouldBatchUpdates = true;
+        let trappedError;
+        try {
+          trappedError = commitLifeCycles(current, effectfulFiber);
+        } finally {
+          priorityContext = previousPriorityContext;
+          shouldBatchUpdates = previousShouldBatchUpdates;
+
+          // If we've exited the batch, perform any scheduled sync work
+          if (!shouldBatchUpdates) {
+            performSynchronousWork();
+          }
+        }
+
         if (trappedError) {
           allTrappedErrors = allTrappedErrors || [];
           allTrappedErrors.push(trappedError);
