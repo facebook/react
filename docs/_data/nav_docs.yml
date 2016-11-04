@@ -34,6 +34,8 @@
       title: Typechecking With PropTypes
     - id: refs-and-the-dom
       title: Refs and the DOM
+    - id: uncontrolled-components
+      title: Uncontrolled Components
     - id: optimizing-performance
       title: Optimizing Performance
     - id: react-without-es6
@@ -80,4 +82,3 @@
           title: Shallow Compare
         - id: two-way-binding-helpers
           title: Two-way Binding Helpers
-      
