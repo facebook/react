@@ -25,7 +25,7 @@ describe('ReactIncrementalErrorHandling', () => {
     return { type: 'span', children: [], prop };
   }
 
-  it('catches render error in a boundary during mounting', () => {
+  it('catches render error in a boundary during full deferred mounting', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       unstable_handleError(error) {
@@ -48,31 +48,380 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>
     );
-    ReactNoop.flush();
+    ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
   });
 
-  it('propagates an error from a noop error boundary', () => {
-    class NoopBoundary extends React.Component {
-      unstable_handleError() {
-        // Noop
+  it('catches render error in a boundary during partial deferred mounting', () => {
+    var ops = [];
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        ops.push('ErrorBoundary unstable_handleError');
+        this.setState({error});
       }
       render() {
+        if (this.state.error) {
+          ops.push('ErrorBoundary render error');
+          return <span prop={`Caught an error: ${this.state.error.message}.`} />;
+        }
+        ops.push('ErrorBoundary render success');
         return this.props.children;
       }
     }
 
-    function RenderError() {
-      throw new Error('render error');
+    function BrokenRender(props) {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>
+    );
+
+    ReactNoop.flushDeferredPri(15);
+    expect(ops).toEqual([
+      'ErrorBoundary render success',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    ops.length = 0;
+    ReactNoop.flushDeferredPri(10);
+    expect(ops).toEqual([
+      'BrokenRender',
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary render error',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
+  });
+
+  it('catches render error in a boundary during animation mounting', () => {
+    var ops = [];
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        ops.push('ErrorBoundary unstable_handleError');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ops.push('ErrorBoundary render error');
+          return <span prop={`Caught an error: ${this.state.error.message}.`} />;
+        }
+        ops.push('ErrorBoundary render success');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    ReactNoop.performAnimationWork(() => {
+      ReactNoop.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>
+      );
+    });
+
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual([
+      'ErrorBoundary render success',
+      'BrokenRender',
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary render error',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
+  });
+
+  it('catches render error in a boundary during synchronous mounting', () => {
+    var ops = [];
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        ops.push('ErrorBoundary unstable_handleError');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ops.push('ErrorBoundary render error');
+          return <span prop={`Caught an error: ${this.state.error.message}.`} />;
+        }
+        ops.push('ErrorBoundary render success');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>
+      );
+    });
+
+    expect(ops).toEqual([
+      'ErrorBoundary render success',
+      'BrokenRender',
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary render error',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
+  });
+
+  it('catches render error in a boundary during batched mounting', () => {
+    var ops = [];
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        ops.push('ErrorBoundary unstable_handleError');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ops.push('ErrorBoundary render error');
+          return <span prop={`Caught an error: ${this.state.error.message}.`} />;
+        }
+        ops.push('ErrorBoundary render success');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.batchedUpdates(() => {
+        ReactNoop.render(
+          <ErrorBoundary>
+            Before the storm.
+          </ErrorBoundary>
+        );
+        ReactNoop.render(
+          <ErrorBoundary>
+            <BrokenRender />
+          </ErrorBoundary>
+        );
+      });
+    });
+
+    expect(ops).toEqual([
+      'ErrorBoundary render success',
+      'BrokenRender',
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary render error',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
+  });
+
+  it('propagates an error from a noop error boundary during full deferred mounting', () => {
+    var ops = [];
+    class NoopBoundary extends React.Component {
+      unstable_handleError() {
+        ops.push('NoopErrorBoundary unstable_handleError');
+        // Noop
+      }
+      render() {
+        ops.push('NoopErrorBoundary render');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender() {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
     }
 
     ReactNoop.render(
       <NoopBoundary>
-        <RenderError />
+        <BrokenRender />
       </NoopBoundary>
     );
 
-    expect(ReactNoop.flush).toThrow('render error');
+    expect(() => {
+      ReactNoop.flush();
+    }).toThrow('Hello');
+    expect(ops).toEqual([
+      'NoopErrorBoundary render',
+      'BrokenRender',
+      'NoopErrorBoundary unstable_handleError',
+      'NoopErrorBoundary render',
+      'BrokenRender',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('propagates an error from a noop error boundary during partial deferred mounting', () => {
+    var ops = [];
+    class NoopBoundary extends React.Component {
+      unstable_handleError() {
+        ops.push('NoopErrorBoundary unstable_handleError');
+        // Noop
+      }
+      render() {
+        ops.push('NoopErrorBoundary render');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender() {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <NoopBoundary>
+        <BrokenRender />
+      </NoopBoundary>
+    );
+
+    ReactNoop.flushDeferredPri(15);
+    expect(ops).toEqual([
+      'NoopErrorBoundary render',
+    ]);
+
+    ops.length = [];
+    expect(() => {
+      ReactNoop.flushDeferredPri(10);
+    }).toThrow('Hello');
+    expect(ops).toEqual([
+      'BrokenRender',
+      'NoopErrorBoundary unstable_handleError',
+      'NoopErrorBoundary render',
+      'BrokenRender',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('propagates an error from a noop error boundary during animation mounting', () => {
+    var ops = [];
+    class NoopBoundary extends React.Component {
+      unstable_handleError() {
+        ops.push('NoopErrorBoundary unstable_handleError');
+        // Noop
+      }
+      render() {
+        ops.push('NoopErrorBoundary render');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender() {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    ReactNoop.performAnimationWork(() => {
+      ReactNoop.render(
+        <NoopBoundary>
+          <BrokenRender />
+        </NoopBoundary>
+      );
+    });
+
+    expect(() => {
+      ReactNoop.flushAnimationPri();
+    }).toThrow('Hello');
+    expect(ops).toEqual([
+      'NoopErrorBoundary render',
+      'BrokenRender',
+      'NoopErrorBoundary unstable_handleError',
+      'NoopErrorBoundary render',
+      'BrokenRender',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('propagates an error from a noop error boundary during synchronous mounting', () => {
+    var ops = [];
+    class NoopBoundary extends React.Component {
+      unstable_handleError() {
+        ops.push('NoopErrorBoundary unstable_handleError');
+        // Noop
+      }
+      render() {
+        ops.push('NoopErrorBoundary render');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender() {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    expect(() => {
+      ReactNoop.syncUpdates(() => {
+        ReactNoop.render(
+          <NoopBoundary>
+            <BrokenRender />
+          </NoopBoundary>
+        );
+      });
+    }).toThrow('Hello');
+    expect(ops).toEqual([
+      'NoopErrorBoundary render',
+      'BrokenRender',
+      'NoopErrorBoundary unstable_handleError',
+      'NoopErrorBoundary render',
+      'BrokenRender',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('propagates an error from a noop error boundary during batched mounting', () => {
+    var ops = [];
+    class NoopBoundary extends React.Component {
+      unstable_handleError() {
+        ops.push('NoopErrorBoundary unstable_handleError');
+        // Noop
+      }
+      render() {
+        ops.push('NoopErrorBoundary render');
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender() {
+      ops.push('BrokenRender');
+      throw new Error('Hello');
+    }
+
+    expect(() => {
+      ReactNoop.syncUpdates(() => {
+        ReactNoop.batchedUpdates(() => {
+          ReactNoop.render(
+            <NoopBoundary>
+              Before the storm.
+            </NoopBoundary>
+          );
+          ReactNoop.render(
+            <NoopBoundary>
+              <BrokenRender />
+            </NoopBoundary>
+          );
+        });
+      });
+    }).toThrow('Hello');
+    expect(ops).toEqual([
+      'NoopErrorBoundary render',
+      'BrokenRender',
+      'NoopErrorBoundary unstable_handleError',
+      'NoopErrorBoundary render',
+      'BrokenRender',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
   });
 
   it('can schedule updates after uncaught error in render on mount', () => {
