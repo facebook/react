@@ -1465,27 +1465,4 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(4);
   });
-
-  it('propagates an error from a noop error boundary', () => {
-    class NoopBoundary extends React.Component {
-      unstable_handleError() {
-        // Noop
-      }
-      render() {
-        return this.props.children;
-      }
-    }
-
-    function RenderError() {
-      throw new Error('render error');
-    }
-
-    ReactNoop.render(
-      <NoopBoundary>
-        <RenderError />
-      </NoopBoundary>
-    );
-
-    expect(ReactNoop.flush).toThrow('render error');
-  });
 });

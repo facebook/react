@@ -33,7 +33,7 @@ var {
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  trapError : (fiber : Fiber, error: Error, isUnmounting : boolean) => void
+  trapError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => void
 ) {
 
   const updateContainer = config.updateContainer;
