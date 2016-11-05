@@ -575,7 +575,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should flow updates correctly
 * should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
-* should flush updates in the correct order
 * should flush updates in the correct order across roots
 * should queue updates from during mount
 * calls asap callbacks properly

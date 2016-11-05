@@ -1165,6 +1165,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should not reconcile children passed via props
+* should flush updates in the correct order
 * should queue nested updates
 * calls componentWillReceiveProps setState callback properly
 * does not update one component twice in a batch (#2410)

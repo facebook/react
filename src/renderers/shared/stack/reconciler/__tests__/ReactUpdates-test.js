@@ -634,8 +634,8 @@ describe('ReactUpdates', () => {
           'Inner-setState-1',
             'Inner-render-1-1',
             'Inner-didUpdate-1-1',
-          'Inner-callback-1',
-      'Outer-callback-1',
+            'Inner-callback-1',
+        'Outer-callback-1',
 
       'Outer-setState-2',
         'Outer-render-2',
@@ -643,10 +643,10 @@ describe('ReactUpdates', () => {
           'Inner-didUpdate-2-1',
         'Outer-didUpdate-2',
           'Inner-setState-2',
-            'Inner-render-2-2',
-            'Inner-didUpdate-2-2',
+        'Outer-callback-2',
+          'Inner-render-2-2',
+          'Inner-didUpdate-2-2',
           'Inner-callback-2',
-      'Outer-callback-2',
     ]);
     /* eslint-enable indent */
   });
