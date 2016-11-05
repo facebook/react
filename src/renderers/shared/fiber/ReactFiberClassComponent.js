@@ -24,6 +24,11 @@ var {
 var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
+var warning = require('warning');
+var invariant = require('invariant');
+
+
+const isArray = Array.isArray;
 
 module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
@@ -91,6 +96,98 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     return true;
   }
 
+  function getName(workInProgress: Fiber, inst: any): string {
+    const type = workInProgress.type;
+    const constructor = inst && inst.constructor;
+    return (
+      type.displayName || (constructor && constructor.displayName) ||
+      type.name || (constructor && constructor.name) ||
+      'A Component'
+    );
+  }
+
+  function checkClassInstance(workInProgress: Fiber, inst: any) {
+    if (__DEV__) {
+      const name = getName(workInProgress, inst);
+      const renderPresent = inst.render;
+      warning(
+        renderPresent,
+        '%s(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+        name
+      );
+      const noGetInitialStateOnES6 = (
+        !inst.getInitialState ||
+        inst.getInitialState.isReactClassApproved
+      );
+      warning(
+        noGetInitialStateOnES6,
+        'getInitialState was defined on %s, a plain JavaScript class. ' +
+        'This is only supported for classes created using React.createClass. ' +
+        'Did you mean to define a state property instead?',
+        name
+      );
+      const noGetDefaultPropsOnES6 = (
+        !inst.getDefaultProps ||
+        inst.getDefaultProps.isReactClassApproved
+      );
+      warning(
+        noGetDefaultPropsOnES6,
+        'getDefaultProps was defined on %s, a plain JavaScript class. ' +
+        'This is only supported for classes created using React.createClass. ' +
+        'Use a static property to define defaultProps instead.',
+        name
+      );
+      const noInstancePropTypes = !inst.propTypes;
+      warning(
+        noInstancePropTypes,
+        'propTypes was defined as an instance property on %s. Use a static ' +
+        'property to define propTypes instead.',
+        name,
+      );
+      const noInstanceContextTypes = !inst.contextTypes;
+      warning(
+        noInstanceContextTypes,
+        'contextTypes was defined as an instance property on %s. Use a static ' +
+        'property to define contextTypes instead.',
+        name,
+      );
+      const noComponentShouldUpdate = typeof inst.componentShouldUpdate !== 'function';
+      warning(
+        noComponentShouldUpdate,
+        '%s has a method called ' +
+        'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+        'The name is phrased as a question because the function is ' +
+        'expected to return a value.',
+        name
+      );
+      const noComponentDidUnmount = typeof inst.componentDidUnmount !== 'function';
+      warning(
+        noComponentDidUnmount,
+        '%s has a method called ' +
+        'componentDidUnmount(). But there is no such lifecycle method. ' +
+        'Did you mean componentWillUnmount()?',
+        name
+      );
+      const noComponentWillRecieveProps = typeof inst.componentWillRecieveProps !== 'function';
+      warning(
+        noComponentWillRecieveProps,
+        '%s has a method called ' +
+        'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+        name
+      );
+    }
+
+    const instanceState = inst.state;
+    if (instanceState && (typeof instanceState !== 'object' || isArray(instanceState))) {
+      invariant(
+        false,
+        '%s.state: must be set to an object or null',
+        getName(workInProgress, inst)
+      );
+    }
+  }
+
   function adoptClassInstance(workInProgress : Fiber, instance : any) : void {
     instance.updater = updater;
     workInProgress.stateNode = instance;
@@ -102,6 +199,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const instance = new ctor(props);
+    checkClassInstance(workInProgress, instance);
     adoptClassInstance(workInProgress, instance);
     return instance;
   }

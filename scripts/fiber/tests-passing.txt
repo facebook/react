@@ -350,30 +350,40 @@ src/isomorphic/modern/class/__tests__/ReactClassEquivalence-test.js
 
 src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * preserves the name of the class for use in error messages
+* throws if no render function is defined
 * renders a simple stateless component with prop
 * renders based on state using initial values in this.props
 * renders based on state using props in the constructor
 * renders only once when setting state in componentWillMount
+* should throw with non-object in the initial state property
 * should render with null in the initial state property
 * setState through an event handler
 * should not implicitly bind event handlers
 * renders using forceUpdate even when there is no state
 * will call all the normal life cycle methods
+* warns when classic properties are defined on the instance, but does not invoke them.
+* should warn when misspelling shouldComponentUpdate
+* should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
 
 src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * preserves the name of the class for use in error messages
+* throws if no render function is defined
 * renders a simple stateless component with prop
 * renders based on state using initial values in this.props
 * renders based on state using props in the constructor
 * renders only once when setting state in componentWillMount
+* should throw with non-object in the initial state property
 * should render with null in the initial state property
 * setState through an event handler
 * should not implicitly bind event handlers
 * renders using forceUpdate even when there is no state
 * will call all the normal life cycle methods
+* warns when classic properties are defined on the instance, but does not invoke them.
+* should warn when misspelling shouldComponentUpdate
+* should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
@@ -385,15 +395,20 @@ src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * preserves the name of the class for use in error messages
+* throws if no render function is defined
 * renders a simple stateless component with prop
 * renders based on state using initial values in this.props
 * renders based on state using props in the constructor
 * renders only once when setting state in componentWillMount
+* should throw with non-object in the initial state property
 * should render with null in the initial state property
 * setState through an event handler
 * should not implicitly bind event handlers
 * renders using forceUpdate even when there is no state
 * will call all the normal life cycle methods
+* warns when classic properties are defined on the instance, but does not invoke them.
+* should warn when misspelling shouldComponentUpdate
+* should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
@@ -1011,6 +1026,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should silently allow `setState`, not call cb on unmounting components
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting
+* should warn when componentDidUnmount method is defined
 * should skip update when rerendering element in container
 * only renders once if updated in componentWillReceiveProps
 * should allow access to findDOMNode in componentWillUnmount
