@@ -101,6 +101,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let activeErrorBoundaries : Set<Fiber> | null = null;
   let nextTrappedErrors : Array<TrappedError> | null = null;
 
+  // Roots that have uncaught errors and should not be worked on
+  let rootsWithUncaughtErrors : Set<FiberRoot> | null = null;
+
   function scheduleAnimationCallback(callback) {
     if (!isAnimationCallbackScheduled) {
       isAnimationCallbackScheduled = true;
@@ -116,8 +119,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function findNextUnitOfWork() {
-    // Clear out roots with no more work on them.
-    while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
+    // Clear out roots with no more work on them, or if they have uncaught errors
+    while (nextScheduledRoot && (
+      nextScheduledRoot.current.pendingWorkPriority === NoWork ||
+      (rootsWithUncaughtErrors && rootsWithUncaughtErrors.has(nextScheduledRoot))
+    )) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
       // Read the next pointer now.
@@ -539,7 +545,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // If we find unhandled errors, we'll only remember the first one.
     let firstUncaughtError = null;
     // Keep track of which roots have fataled and need to be unscheduled.
-    const rootsWithUncaughtErrors = new Set();
+    rootsWithUncaughtErrors = new Set();
 
     // All work created by error boundaries should have Task priority
     // so that it finishes before this function exits.
@@ -567,7 +573,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             // unusual if we end up here. Since we assume this function always
             // unschedules failed roots, our only resort is to completely
             // unschedule all roots. Otherwise we may get into an infinite loop
-            // trying to resume work and finding the failing but unknown root again. 
+            // trying to resume work and finding the failing but unknown root again.
             nextScheduledRoot = null;
             lastScheduledRoot = null;
           }
@@ -607,14 +613,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    // Unschedule the roots that fataled so that we can later schedule
-    // other updates to the same roots and potentially replace them.
-    if (rootsWithUncaughtErrors.size) {
-      unscheduleWork(rootsWithUncaughtErrors);
-    }
-
     nextTrappedErrors = null;
     activeErrorBoundaries = null;
+    rootsWithUncaughtErrors = null;
     priorityContext = previousPriorityContext;
 
     // Return the error so we can rethrow after handling other roots.
@@ -675,48 +676,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       error,
       root,
     });
-  }
-
-  function unscheduleWork(unscheduledRoots : Set<FiberRoot>) {
-    // New pointers for the new linked list
-    let newNextScheduledRoot = null;
-    let newLastScheduledRoot = null;
-
-    // Search for the first first root that should remain scheduled
-    let root = nextScheduledRoot;
-    while (root) {
-      if (unscheduledRoots.has(root)) {
-        root.isScheduled = false;
-        // Read the next pointer now.
-        // We need to clear it in case this root gets scheduled again later.
-        const next = root.nextScheduledRoot;
-        root.nextScheduledRoot = null;
-        root = next;
-      } else {
-        newNextScheduledRoot = newNextScheduledRoot || root;
-        newLastScheduledRoot = root;
-        break;
-      }
-    }
-
-    // Find the other roots that should remain scheduled
-    while (root) {
-      const next = root.nextScheduledRoot;
-      if (next && unscheduledRoots.has(next)) {
-        // Skip the next root.
-        next.isScheduled = false;
-        // Move forward.
-        root.nextScheduledRoot = next.nextScheduledRoot;
-      } else {
-        // Keep the root and move forward.
-        newLastScheduledRoot = root;
-        root = next;
-      }
-    }
-
-    // We're done filtering
-    nextScheduledRoot = newNextScheduledRoot;
-    lastScheduledRoot = newLastScheduledRoot;
   }
 
   function scheduleWork(root : FiberRoot) {
