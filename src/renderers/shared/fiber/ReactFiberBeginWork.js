@@ -39,6 +39,7 @@ var {
 var {
   NoWork,
   OffscreenPriority,
+  TaskPriority,
 } = require('ReactPriorityLevel');
 var {
   Placement,
@@ -365,9 +366,12 @@ module.exports = function<T, P, I, TI, C>(
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
 
-    if (workInProgress.progressedPriority === priorityLevel) {
+    if (workInProgress.progressedPriority === priorityLevel ||
+        priorityLevel === TaskPriority) {
       // If we have progressed work on this priority level already, we can
       // proceed this that as the child.
+      // We also can reuse the child if we're doing Task work. This avoids
+      // having the error boundaries doing the failed work twice before mount.
       workInProgress.child = workInProgress.progressedChild;
     }
 
