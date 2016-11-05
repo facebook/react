@@ -418,6 +418,50 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
+  it('applies batched updates regardless despite errors in scheduling', () => {
+    ReactNoop.render(<span prop="a:1" />);
+    expect(() => {
+      ReactNoop.batchedUpdates(() => {
+        ReactNoop.render(<span prop="a:2" />);
+        ReactNoop.render(<span prop="a:3" />);
+        throw new Error('Hello');
+      });
+    }).toThrow('Hello');
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span('a:3')]);
+  });
+
+  it('applies nested batched updates despite errors in scheduling', () => {
+    ReactNoop.render(<span prop="a:1" />);
+    expect(() => {
+      ReactNoop.batchedUpdates(() => {
+        ReactNoop.render(<span prop="a:2" />);
+        ReactNoop.render(<span prop="a:3" />);
+        ReactNoop.batchedUpdates(() => {
+          ReactNoop.render(<span prop="a:4" />);
+          ReactNoop.render(<span prop="a:5" />);
+          throw new Error('Hello');
+        });
+      });
+    }).toThrow('Hello');
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span('a:5')]);
+  });
+
+  it('applies sync updates regardless despite errors in scheduling', () => {
+    ReactNoop.render(<span prop="a:1" />);
+    expect(() => {
+      ReactNoop.syncUpdates(() => {
+        ReactNoop.batchedUpdates(() => {
+          ReactNoop.render(<span prop="a:2" />);
+          ReactNoop.render(<span prop="a:3" />);
+          throw new Error('Hello');
+        });
+      });
+    }).toThrow('Hello');
+    expect(ReactNoop.getChildren()).toEqual([span('a:3')]);
+  });
+
   it('can schedule updates after uncaught error in render on mount', () => {
     var ops = [];
 
