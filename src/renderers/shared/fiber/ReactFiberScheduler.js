@@ -101,9 +101,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let activeErrorBoundaries : Set<Fiber> | null = null;
   let nextTrappedErrors : Array<TrappedError> | null = null;
 
-  // Roots that have uncaught errors and should not be worked on
-  let rootsWithUncaughtErrors : Set<FiberRoot> | null = null;
-
   function scheduleAnimationCallback(callback) {
     if (!isAnimationCallbackScheduled) {
       isAnimationCallbackScheduled = true;
@@ -120,10 +117,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function findNextUnitOfWork() {
     // Clear out roots with no more work on them, or if they have uncaught errors
-    while (nextScheduledRoot && (
-      nextScheduledRoot.current.pendingWorkPriority === NoWork ||
-      (rootsWithUncaughtErrors && rootsWithUncaughtErrors.has(nextScheduledRoot))
-    )) {
+    while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
       // Read the next pointer now.
@@ -544,8 +538,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     activeErrorBoundaries = new Set();
     // If we find unhandled errors, we'll only remember the first one.
     let firstUncaughtError = null;
-    // Keep track of which roots have fataled and need to be unscheduled.
-    rootsWithUncaughtErrors = new Set();
 
     // All work created by error boundaries should have Task priority
     // so that it finishes before this function exits.
@@ -563,11 +555,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         const root = trappedError.root;
         if (!boundary) {
           firstUncaughtError = firstUncaughtError || error;
-          if (root) {
-            // Remember to unschedule this particular root since it fataled
-            // and we can't do more work on it. This lets us continue working on
-            // other roots even if one of them fails before rethrowing the error.
-            rootsWithUncaughtErrors.add(root);
+          if (root && root.current) {
+            // Unschedule this particular root since it fataled and we can't do
+            // more work on it. This lets us continue working on other roots
+            // even if one of them fails before rethrowing the error.
+            root.current.pendingWorkPriority = NoWork;
           } else {
             // Normally we should know which root caused the error, so it is
             // unusual if we end up here. Since we assume this function always
@@ -615,7 +607,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     nextTrappedErrors = null;
     activeErrorBoundaries = null;
-    rootsWithUncaughtErrors = null;
     priorityContext = previousPriorityContext;
 
     // Return the error so we can rethrow after handling other roots.
