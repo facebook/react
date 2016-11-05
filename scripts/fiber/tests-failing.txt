@@ -114,6 +114,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn nicely about NaN in style
 * should update styles if initially null
 * should update styles if updated to null multiple times
+* should allow named slot projection on both web components and regular DOM elements
 * should remove attributes
 * should remove properties
 * should properly update custom attributes on custom elements
