@@ -383,6 +383,18 @@ var ReactCompositeComponent = {
       }
     }
 
+    // setState callbacks during willMount should end up here
+    const callbacks = this._pendingCallbacks;
+    if (callbacks) {
+      this._pendingCallbacks = null;
+      for (let i = 0; i < callbacks.length; i++) {
+        transaction.getReactMountReady().enqueue(
+          callbacks[i],
+          inst
+        );
+      }
+    }
+
     return markup;
   },
 

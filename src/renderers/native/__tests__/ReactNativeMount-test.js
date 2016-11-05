@@ -58,4 +58,25 @@ describe('ReactNative', () => {
     expect(UIManager.updateView).toBeCalledWith(3, 'View', { foo: 'bar' });
   });
 
+  it('should be able to create and update a native component', () => {
+    var View = createReactNativeComponentClass({
+      validAttributes: { foo: true },
+      uiViewClassName: 'View',
+    });
+
+    var a;
+    var b;
+    var c = ReactNative.render(
+      <View foo="foo" ref={(v) => a = v} />,
+      11,
+      function() {
+        b = this;
+      }
+    );
+
+    expect(a).toBeTruthy();
+    expect(a).toBe(b);
+    expect(a).toBe(c);
+  });
+
 });
