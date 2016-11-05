@@ -245,6 +245,24 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.display).toEqual('');
     });
 
+    it('should allow named slot projection on both web components and regular DOM elements', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(
+        <my-component>
+          <my-second-component slot="first"></my-second-component>
+          <button slot="second">Hello</button>
+        </my-component>,
+        container
+      );
+
+      var lightDOM = container.firstChild.childNodes;
+
+      expect(lightDOM[0].getAttribute('slot')).toBe('first');
+      expect(lightDOM[1].getAttribute('slot')).toBe('second');
+
+    } );
+
     it('should skip reserved props on web components', () => {
       var container = document.createElement('div');
 
