@@ -18,7 +18,7 @@ You can jump directly to <a href="/react/docs/forms.html#examples">examples</a>.
 
 ## Controlled Components
 
-A **controlled** form component provides a `value` prop. A **controlled** component does not maintain its own internal state; the component renders purely based on props.
+A **controlled** form component does not render based on its own DOM state, instead it renders purely based on props or component state.
 
 ```javascript{5}
 render() {
