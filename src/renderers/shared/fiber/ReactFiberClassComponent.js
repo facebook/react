@@ -227,7 +227,12 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
   function processChildContext(workInProgress : Fiber, instance : any) {
     const Component = workInProgress.type;
-    const currentContext = workInProgress.return && workInProgress.return.childContext;
+    const currentContext = (
+      workInProgress.return &&
+      workInProgress.return.stateNode &&
+      workInProgress.return.stateNode._childContext
+    );
+
     let childContext;
     if (instance.getChildContext) {
       if (__DEV__) {
@@ -270,8 +275,12 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   function processContext(workInProgress : Fiber) {
     const Component = workInProgress.type;
     const contextTypes = Component.contextTypes;
-    const context = workInProgress.return && workInProgress.return.childContext;
-    const maskedContext = maskContext(context, contextTypes);
+    const currentContext = (
+      workInProgress.return &&
+      workInProgress.return.stateNode &&
+      workInProgress.return.stateNode._childContext
+    );
+    const maskedContext = maskContext(currentContext, contextTypes);
     if (__DEV__) {
       if (contextTypes) {
         checkContextTypes(workInProgress, contextTypes, maskedContext, 'context');
@@ -304,9 +313,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     instance.props = props;
     instance.state = state;
-    instance.context = processContext(workInProgress);
-
-    workInProgress.childContext = processChildContext(workInProgress, instance);
+    instance.context = instance.context || processContext(workInProgress);
+    instance._childContext = instance.childContext || processChildContext(workInProgress, instance);
 
     if (typeof instance.componentWillMount === 'function') {
       instance.componentWillMount();
@@ -315,6 +323,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
         instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
+        // instance.context = processContext(workInProgress);
+        instance._childContext = processChildContext(workInProgress, instance);
       }
     }
   }
@@ -322,7 +332,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(workInProgress : Fiber) : boolean {
-    const newContext = processContext(workInProgress);
+    const newContext = workInProgress.memoizedContext;
+    const newChildContext = workInProgress.memoizedChildContext;
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -353,6 +364,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
     newInstance.context = newContext;
+    newInstance._childContext = newChildContext;
     if (typeof newInstance.componentWillMount === 'function') {
       newInstance.componentWillMount();
     }
@@ -362,6 +374,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
       newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
+      // newInstance.context = processContext(workInProgress);
+      newInstance._childContext = processChildContext(workInProgress, newInstance);
     }
     return true;
   }
@@ -369,8 +383,9 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
   function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
     const instance = workInProgress.stateNode;
-    const newContext = processContext(workInProgress);
     const oldProps = workInProgress.memoizedProps || current.memoizedProps;
+    const oldContext = workInProgress.memoizedContext || current.memoizedContext;
+
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
       // If there aren't any new props, then we'll reuse the memoized props.
@@ -378,16 +393,6 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       newProps = oldProps;
       if (!newProps) {
         throw new Error('There should always be pending or memoized props.');
-      }
-    }
-
-    // Note: During these life-cycles, instance.props/instance.state are what
-    // ever the previously attempted to render - not the "current". However,
-    // during componentDidUpdate we pass the "current" props.
-
-    if (oldProps !== newProps) {
-      if (typeof instance.componentWillReceiveProps === 'function') {
-        instance.componentWillReceiveProps(newProps, newContext);
       }
     }
 
@@ -406,8 +411,20 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       newState = previousState;
     }
 
+    let newContext = processContext(workInProgress);
+    // Note: During these life-cycles, instance.props/instance.state are what
+    // ever the previously attempted to render - not the "current". However,
+    // during componentDidUpdate we pass the "current" props.
+
+    if (oldProps !== newProps || oldContext !== newContext) {
+      if (typeof instance.componentWillReceiveProps === 'function') {
+        instance.componentWillReceiveProps(newProps, newContext);
+      }
+    }
+
     if (oldProps === newProps &&
         previousState === newState &&
+        oldContext === newContext &&
         updateQueue && !updateQueue.isForced) {
       return false;
     }
@@ -430,6 +447,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     instance.props = newProps;
     instance.state = newState;
     instance.context = newContext;
+    instance._childContext = processChildContext(workInProgress, instance);
     return true;
   }
 
