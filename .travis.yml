@@ -81,22 +81,7 @@ script:
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
 
       echo 'Testing in fiber mode...'
-      printf '\nmodule.exports.useFiber = true;\n' \
-        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
-      FIBER_TESTS=`\
-        NODE_ENV=test node node_modules/jest/bin/jest --json | \
-        node -e "\
-          var data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')); \
-          console.log(data.numPassedTests + '/' + data.numTotalTests)\
-        "\
-      `
-      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
-      node scripts/facts-tracker/index.js \
-        "fiber-tests" "$FIBER_TESTS"
-
-      # Should consolidate this with the above fiber run
-      echo 'Testing in fiber mode against test records...'
-      scripts/fiber/record-tests
+      scripts/fiber/record-tests --track-facts
       git --no-pager diff scripts/fiber
       FIBER_TESTS_STATUS=$(git status --porcelain scripts/fiber)
       test -z "$FIBER_TESTS_STATUS"

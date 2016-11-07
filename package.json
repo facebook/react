@@ -70,7 +70,8 @@
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
     "uglify-js": "^2.5.0",
-    "uglifyify": "^3.0.1"
+    "uglifyify": "^3.0.1",
+    "yargs": "^6.3.0"
   },
   "devEngines": {
     "node": "4.x || 5.x || 6.x || 7.x",
