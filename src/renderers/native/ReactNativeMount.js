@@ -135,8 +135,9 @@ var ReactNativeMount = {
     ReactNativeMount._instancesByContainerID[containerTag] = instance;
 
     if (callback) {
+      var nonNullCallback = callback;
       instance._pendingCallbacks = [function() {
-        callback.call(instance._renderedComponent.getPublicInstance());
+        nonNullCallback.call(instance._renderedComponent.getPublicInstance());
       }];
     }
 
