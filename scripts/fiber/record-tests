@@ -2,6 +2,7 @@
 
 'use strict';
 
+const child_process = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
@@ -84,7 +85,7 @@ function formatResults(runResults, predicate) {
   return formatted.join('\n\n');
 }
 
-function recordTests() {
+function recordTests(trackFacts) {
   process.env.REACT_DOM_JEST_USE_FIBER = true;
   runJest()
     .then((runResults) => {
@@ -104,11 +105,34 @@ function recordTests() {
         path.join(__dirname, 'tests-failing.txt'),
         failing + '\n'
       );
+
+      if (trackFacts) {
+        const fact = runResults.numPassedTests + '/' + runResults.numTotalTests;
+        // TODO: Shelling out here is silly.
+        child_process.spawnSync(
+          process.execPath,
+          [
+            path.join(__dirname, '../facts-tracker/index.js'),
+            'fiber-tests',
+            fact,
+          ],
+          {
+            stdio: 'inherit',
+          }
+        );
+      }
     });
 }
 
 if (require.main === module) {
-  recordTests();
+  const argv = require('yargs')
+    .demand(0, 0)
+    .boolean('track-facts')
+    .describe('track-facts', 'Use facts-tracker to record passing tests.')
+    .strict()
+    .help()
+    .argv;
+  recordTests(argv.trackFacts);
 }
 
 module.exports = {
