@@ -388,6 +388,7 @@ module.exports = function<T, P, I, TI, C>(
   return {
     commitInsertion,
     commitDeletion,
+    commitNestedUnmounts,
     commitWork,
     commitLifeCycles,
   };

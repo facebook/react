@@ -15,6 +15,7 @@
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { FiberRoot } from 'ReactFiberRoot';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {
@@ -26,6 +27,7 @@ var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactFiberRootErrorPhase = require('ReactFiberRootErrorPhase');
 
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
@@ -52,6 +54,7 @@ const {
   CoroutineComponent,
   YieldComponent,
   Fragment,
+  HostContainer,
 } = ReactTypeOfWork;
 
 const {
@@ -59,6 +62,11 @@ const {
   Placement,
   Deletion,
 } = ReactTypeOfSideEffect;
+
+const {
+  NoError,
+  HardDeletion,
+} = ReactFiberRootErrorPhase;
 
 function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactElement<any>) {
   if (typeof element.ref === 'string') {
@@ -480,12 +488,34 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return null;
   }
 
+  function isFailedErrorBoundary(fiber : Fiber): boolean {
+    // Detect if the return fiber is a failed error boundary. If so, we should
+    // treat the keys as if they don't match to force a remount. For convenience
+    // this check will reset the error boundary flag, so make sure to only call
+    // this once per reconciliation.
+    switch (fiber.tag) {
+      case ClassComponent:
+        if (fiber.stateNode._isFailedErrorBoundary) {
+          delete fiber.stateNode._isFailedErrorBoundary;
+          return true;
+        }
+        return false;
+      case HostContainer:
+        const root : FiberRoot = fiber.stateNode;
+        if (root.errorPhase === HardDeletion) {
+          root.errorPhase = NoError;
+          return true;
+        }
+        return false;
+    }
+    return false;
+  }
+
   function reconcileChildrenArray(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
     newChildren : Array<*>,
     priority : PriorityLevel) : ?Fiber {
-
     // This algorithm can't optimize by searching from boths ends since we
     // don't have backpointers on fibers. I'm trying to see how far we can get
     // with that model. If it ends up not being worth the tradeoffs, we can
@@ -502,21 +532,24 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // In this first iteration, we'll just live with hitting the bad case
     // (adding everything to a Map) in for every insert/move.
 
+    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
+
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;
 
-    let oldFiber = currentFirstChild;
+    // If the parent is an error boundary, setting oldFiber to null ensures
+    // that none of the old fibers are reused, the old children are deleted,
+    // and new fibers are inserted.
+    let oldFiber = returnFiberIsFailedErrorBoundary ? null : currentFirstChild;
     let lastPlacedIndex = 0;
     let newIdx = 0;
     let nextOldFiber = null;
     for (; oldFiber && newIdx < newChildren.length; newIdx++) {
-      if (oldFiber) {
-        if (oldFiber.index > newIdx) {
-          nextOldFiber = oldFiber;
-          oldFiber = null;
-        } else {
-          nextOldFiber = oldFiber.sibling;
-        }
+      if (oldFiber.index > newIdx) {
+        nextOldFiber = oldFiber;
+        oldFiber = null;
+      } else {
+        nextOldFiber = oldFiber.sibling;
       }
       const newFiber = updateSlot(
         returnFiber,
@@ -670,12 +703,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element : ReactElement<any>,
     priority : PriorityLevel
   ) : Fiber {
+    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
     const key = element.key;
     let child = currentFirstChild;
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key && !returnFiberIsFailedErrorBoundary) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -705,12 +739,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     coroutine : ReactCoroutine,
     priority : PriorityLevel
   ) : Fiber {
+    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
     const key = coroutine.key;
     let child = currentFirstChild;
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key && !returnFiberIsFailedErrorBoundary) {
         if (child.tag === CoroutineComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -738,12 +773,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
+    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
     const key = yieldNode.key;
     let child = currentFirstChild;
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key && !returnFiberIsFailedErrorBoundary) {
         if (child.tag === YieldComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);

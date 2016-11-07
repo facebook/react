@@ -13,6 +13,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 
 var ReactInstanceMap = require('ReactInstanceMap');
 
@@ -113,4 +114,19 @@ exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any
     node = node.sibling;
   }
   return null;
+};
+
+exports.getCurrentFiber = function(fiber : Fiber) : Fiber | null {
+  let node = fiber;
+  while (node.return) {
+    node = node.return;
+  }
+  if (node.tag !== HostContainer) {
+    return null;
+  }
+  const root : FiberRoot = node.stateNode;
+  if (root.current === node) {
+    return fiber;
+  }
+  return fiber.alternate || null;
 };

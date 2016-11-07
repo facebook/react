@@ -25,6 +25,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
+var { getCurrentFiber } = require('ReactFiberTreeReflection');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -34,7 +35,6 @@ var {
   ClassComponent,
   FunctionalComponent,
   HostComponent,
-  HostContainer,
   HostText,
 } = ReactTypeOfWork;
 
@@ -213,13 +213,10 @@ var ReactTestUtils = {
     var internalInstance = ReactInstanceMap.get(inst);
     if (internalInstance && typeof internalInstance.tag === 'number') {
       var fiber = internalInstance;
-      var root = fiber;
-      while (root.return) {
-        root = root.return;
+      var current = getCurrentFiber(fiber);
+      if (!current) {
+        return [];
       }
-      var isRootCurrent = root.tag === HostContainer && root.stateNode.current === root;
-      // Make sure we're introspecting the current tree
-      var current = isRootCurrent ? fiber : fiber.alternate;
       return findAllInRenderedFiberTreeInternal(current, test);
     } else {
       return findAllInRenderedStackTreeInternal(internalInstance, test);

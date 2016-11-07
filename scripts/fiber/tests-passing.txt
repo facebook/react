@@ -453,7 +453,6 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod React
 * should handle a simple flow
 * should call lifecycle methods
-* should throw with an error code in production
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render strings as children
@@ -815,6 +814,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * can schedule updates after uncaught error during umounting
 * continues work on other roots despite caught errors
 * continues work on other roots despite uncaught errors
+* force unmounts failed subtree before rerendering
+* force unmounts failed root
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred

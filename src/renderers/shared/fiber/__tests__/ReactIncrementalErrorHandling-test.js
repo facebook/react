@@ -21,6 +21,11 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop = require('ReactNoop');
   });
 
+  function div(...children) {
+    children = children.map(c => typeof c === 'string' ? { text: c } : c);
+    return { type: 'div', children, prop: undefined };
+  }
+
   function span(prop) {
     return { type: 'span', children: [], prop };
   }
@@ -274,5 +279,198 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren('d')).toEqual(null);
     expect(ReactNoop.getChildren('e')).toEqual(null);
     expect(ReactNoop.getChildren('f')).toEqual(null);
+  });
+
+  it('force unmounts failed subtree before rerendering', () => {
+    var ops = [];
+    var barInstance;
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        ops.push('handle error');
+        this.setState({error});
+      }
+      // Shouldn't fire
+      componentWillUnmount() {
+        ops.push('ErrorBoundary unmount');
+      }
+      render() {
+        ops.push('ErrorBoundary render');
+        return (
+          <div>
+            <Foo />
+            {this.state.error ?
+              <span prop={`Caught an error: ${this.state.error.message}.`} /> :
+              <Bar />
+            }
+          </div>
+        );
+      }
+    }
+
+    class Foo extends React.Component {
+      componentWillUnmount() {
+        ops.push('Foo unmount');
+      }
+      render() {
+        ops.push('Foo render');
+        return <span prop="foo" />;
+      }
+    }
+
+    class Bar extends React.Component {
+      state = { fail: false };
+      componentWillUnmount() {
+        ops.push('Bar unmount');
+        throw new Error('should ignore unmount error');
+      }
+      render() {
+        barInstance = this;
+        ops.push('Bar render');
+        if (this.state.fail) {
+          ops.push('Bar error');
+          throw new Error('Render error');
+        }
+        return <span prop="bar" />;
+      }
+    }
+
+
+    ReactNoop.render(
+      <ErrorBoundary />
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'ErrorBoundary render',
+      'Foo render',
+      'Bar render',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo'),
+        span('bar')
+      ),
+    ]);
+
+    ops = [];
+    barInstance.setState({ fail: true });
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'Bar render',
+      'Bar error',
+      'handle error',
+      'ErrorBoundary render',
+      'Foo render',
+      // Foo should be force unmounted. If it's not, that means ErrorBoundary is
+      // incorrectly reusing the old, failed tree.
+      'Foo unmount',
+      'Bar unmount',
+    ]);
+
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo'),
+        span('Caught an error: Render error.'),
+      ),
+    ]);
+  });
+
+  it('force unmounts failed root', () => {
+    var ops = [];
+    var barInstance;
+
+    function Parent(props) {
+      ops.push('Parent render');
+      return (
+        <div>
+          <Foo step={props.step} />
+          <Bar />
+        </div>
+      );
+    }
+
+    class Foo extends React.Component {
+      componentWillUnmount() {
+        ops.push('Foo unmount');
+      }
+      render() {
+        ops.push('Foo render');
+        return <span prop={'foo:' + this.props.step} />;
+      }
+    }
+
+    class Bar extends React.Component {
+      state = { fail: false };
+      componentWillUnmount() {
+        ops.push('Bar unmount');
+        throw new Error('should ignore unmount error');
+      }
+      render() {
+        barInstance = this;
+        ops.push('Bar render');
+        if (this.state.fail) {
+          ops.push('Bar error');
+          throw new Error('Render error');
+        }
+        return <span prop="bar" />;
+      }
+    }
+
+
+    ReactNoop.render(<Parent step="1" />);
+    ReactNoop.flush();
+    const barInstance1 = barInstance;
+
+    expect(ops).toEqual([
+      'Parent render',
+      'Foo render',
+      'Bar render',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo:1'),
+        span('bar')
+      ),
+    ]);
+
+    ops = [];
+    barInstance.setState({ fail: true });
+    expect(() => ReactNoop.flush()).toThrow('Render error');
+
+    expect(ops).toEqual([
+      'Bar render',
+      'Bar error',
+      // Foo and Bar should be soft unmounted
+      'Foo unmount',
+      'Bar unmount',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo:1'),
+        span('bar')
+      ),
+    ]);
+
+    ops = [];
+    ReactNoop.render(<Parent step="2" />);
+    ReactNoop.flush();
+    const barInstance2 = barInstance;
+
+    expect(ops).toEqual([
+      'Parent render',
+      'Foo render',
+      'Bar render',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo:2'),
+        span('bar')
+      ),
+    ]);
+
+    expect(barInstance1 !== barInstance2).toEqual(true);
   });
 });

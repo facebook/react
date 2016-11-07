@@ -48,6 +48,11 @@ var {
 } = require('ReactTypeOfSideEffect');
 
 var {
+  SoftDeletion,
+  HardDeletion,
+} = require('ReactFiberRootErrorPhase');
+
+var {
   HostContainer,
   ClassComponent,
 } = require('ReactTypeOfWork');
@@ -67,8 +72,13 @@ type TrappedError = {
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config, trapError);
+  const {
+    commitInsertion,
+    commitDeletion,
+    commitNestedUnmounts,
+    commitWork,
+    commitLifeCycles,
+  } = ReactFiberCommitWork(config, trapError);
 
   const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
   const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -240,6 +250,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     performTaskWork();
   }
 
+  function commitSoftDelete(finishedWork : Fiber) {
+    let effectfulFiber = finishedWork.firstEffect;
+    while (effectfulFiber) {
+      switch (effectfulFiber.effectTag) {
+        case Deletion:
+        case DeletionAndCallback:
+          commitNestedUnmounts(effectfulFiber);
+          break;
+      }
+      effectfulFiber = effectfulFiber.nextEffect;
+    }
+  }
+
   function resetWorkPriority(workInProgress : Fiber) {
     let newPriority = NoWork;
     // progressedChild is going to be the child set with the highest priority.
@@ -330,7 +353,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        commitAllWork(workInProgress);
+        if (root.errorPhase === SoftDeletion) {
+          // If this root failed with an uncaught error, we do a "soft" delete
+          // without deleting any host nodes.
+          commitSoftDelete(workInProgress);
+          // Change the error phase so that on the next update, the old nodes
+          // are deleted.
+          root.errorPhase = HardDeletion;
+        } else {
+          commitAllWork(workInProgress);
+        }
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't
@@ -558,22 +590,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         const trappedError = nextTrappedErrors.shift();
         const boundary = trappedError.boundary;
         const error = trappedError.error;
-        const root = trappedError.root;
+        let root = trappedError.root;
         if (!boundary) {
           firstUncaughtError = firstUncaughtError || error;
-          if (root && root.current) {
-            // Unschedule this particular root since it fataled and we can't do
-            // more work on it. This lets us continue working on other roots
-            // even if one of them fails before rethrowing the error.
-            root.current.pendingWorkPriority = NoWork;
+          if (root) {
+            // This root failed with an uncaught error.
+            root.errorPhase = SoftDeletion;
+            root.current.pendingProps = [];
+            scheduleWork(root);
           } else {
             // Normally we should know which root caused the error, so it is
-            // unusual if we end up here. Since we assume this function always
-            // unschedules failed roots, our only resort is to completely
-            // unschedule all roots. Otherwise we may get into an infinite loop
-            // trying to resume work and finding the failing but unknown root again.
-            nextScheduledRoot = null;
-            lastScheduledRoot = null;
+            // unusual if we end up here. Our only resort is to unschedule
+            // everything.
+            root = nextScheduledRoot;
+            while (root) {
+              root.errorPhase = SoftDeletion;
+              root.current.pendingProps = [];
+              scheduleWork(root);
+              root = root.nextScheduledRoot;
+            }
           }
           continue;
         }
@@ -587,6 +622,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // If it fails again, the next error will be propagated to the parent
           // boundary or rethrown.
           activeErrorBoundaries.add(boundary);
+
+          // Force the error boundary to unmount its children
+          boundary.stateNode._isFailedErrorBoundary = true;
+
           // Give error boundary a chance to update its state.
           // Updates will be scheduled with Task priority.
           const instance = boundary.stateNode;
