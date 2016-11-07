@@ -14,6 +14,7 @@
 var EventListener = require('EventListener');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
+var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
 
@@ -38,28 +39,27 @@ function findParent(inst) {
 }
 
 // Used to store ancestor hierarchy in top level callback
-function TopLevelCallbackBookKeeping(topLevelType, nativeEvent) {
+function TopLevelCallbackBookKeeping(topLevelType, nativeEvent, targetInst) {
   this.topLevelType = topLevelType;
   this.nativeEvent = nativeEvent;
+  this.targetInst = targetInst;
   this.ancestors = [];
 }
 Object.assign(TopLevelCallbackBookKeeping.prototype, {
   destructor: function() {
     this.topLevelType = null;
     this.nativeEvent = null;
+    this.targetInst = null;
     this.ancestors.length = 0;
   },
 });
 PooledClass.addPoolingTo(
   TopLevelCallbackBookKeeping,
-  PooledClass.twoArgumentPooler
+  PooledClass.threeArgumentPooler
 );
 
 function handleTopLevelImpl(bookKeeping) {
-  var nativeEventTarget = getEventTarget(bookKeeping.nativeEvent);
-  var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
-    nativeEventTarget
-  );
+  var targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
   // It's important that we build the array of ancestors before calling any
@@ -158,14 +158,28 @@ var ReactEventListener = {
       return;
     }
 
+    var nativeEventTarget = getEventTarget(nativeEvent);
+    var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
+      nativeEventTarget
+    );
+
     var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,
-      nativeEvent
+      nativeEvent,
+      targetInst
     );
+
     try {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.
       ReactGenericBatching.batchedUpdates(handleTopLevelImpl, bookKeeping);
+      if (bookKeeping.targetInst) {
+        // Here we wait until all updates have propagated, which is important
+        // when using controlled components within layers:
+        // https://github.com/facebook/react/issues/1698
+        // Then we restore state of any controlled component.
+        ReactControlledComponent.restoreStateIfNeeded(bookKeeping.targetInst);
+      }
     } finally {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }

@@ -13,22 +13,10 @@
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
 
 var warning = require('warning');
 
 var didWarnValueDefaultValue = false;
-
-function forceUpdateIfMounted() {
-  if (this._rootNodeID) {
-    var props = this._currentElement.props;
-    var value = props.value;
-
-    if (value != null) {
-      updateOptions(this, Boolean(props.multiple), value);
-    }
-  }
-}
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -134,7 +122,6 @@ function updateOptions(inst, multiple, propValue) {
 var ReactDOMSelect = {
   getHostProps: function(inst, props) {
     return Object.assign({}, props, {
-      onChange: inst._wrapperState.onChange,
       value: undefined,
     });
   },
@@ -148,7 +135,6 @@ var ReactDOMSelect = {
     inst._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
       listeners: null,
-      onChange: _handleChange.bind(inst),
       wasMultiple: Boolean(props.multiple),
     };
 
@@ -198,17 +184,17 @@ var ReactDOMSelect = {
       }
     }
   },
+
+  restoreControlledState: function(inst) {
+    if (inst._rootNodeID) {
+      var props = inst._currentElement.props;
+      var value = props.value;
+
+      if (value != null) {
+        updateOptions(inst, Boolean(props.multiple), value);
+      }
+    }
+  },
 };
-
-function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue;
-  if (props.onChange) {
-    returnValue = props.onChange.call(undefined, event);
-  }
-
-  ReactUpdates.asap(forceUpdateIfMounted, this);
-  return returnValue;
-}
 
 module.exports = ReactDOMSelect;

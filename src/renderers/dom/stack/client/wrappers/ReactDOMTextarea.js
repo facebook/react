@@ -13,19 +13,11 @@
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
 
 var didWarnValDefaultVal = false;
-
-function forceUpdateIfMounted() {
-  if (this._rootNodeID) {
-    // DOM component is still mounted; update
-    ReactDOMTextarea.updateWrapper(this);
-  }
-}
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and
@@ -58,7 +50,6 @@ var ReactDOMTextarea = {
       value: undefined,
       defaultValue: undefined,
       children: '' + inst._wrapperState.initialValue,
-      onChange: inst._wrapperState.onChange,
     });
 
     return hostProps;
@@ -128,7 +119,6 @@ var ReactDOMTextarea = {
     inst._wrapperState = {
       initialValue: '' + initialValue,
       listeners: null,
-      onChange: _handleChange.bind(inst),
     };
   },
 
@@ -169,16 +159,14 @@ var ReactDOMTextarea = {
       node.value = textContent;
     }
   },
-};
 
-function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue;
-  if (props.onChange) {
-    returnValue = props.onChange.call(undefined, event);
-  }
-  ReactUpdates.asap(forceUpdateIfMounted, this);
-  return returnValue;
-}
+  restoreControlledState: function(inst) {
+    if (inst._rootNodeID) {
+      // DOM component is still mounted; update
+      ReactDOMTextarea.updateWrapper(inst);
+    }
+  },
+
+};
 
 module.exports = ReactDOMTextarea;

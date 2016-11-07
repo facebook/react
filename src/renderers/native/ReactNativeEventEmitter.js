@@ -131,6 +131,8 @@ var ReactNativeEventEmitter = {
         nativeEvent.target
       );
     });
+    // React Native doesn't use ReactControlledComponent but if it did, here's
+    // where it would do it.
   },
 
   /**
