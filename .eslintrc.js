@@ -1,5 +1,7 @@
+'use strict';
+
 const OFF = 0;
-const WARNING = 1;
+// const WARNING = 1;
 const ERROR = 2;
 
 module.exports = {
@@ -13,7 +15,7 @@ module.exports = {
   ],
 
   ecmaFeatures: {
-    modules: false
+    modules: false,
   },
 
   // We're stricter than the default config, mostly. We'll override a few rules
@@ -70,5 +72,9 @@ module.exports = {
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
     'react-internal/warning-and-invariant-args': ERROR,
-  }
+  },
+
+  globals: {
+    expectDev: true,
+  },
 };
