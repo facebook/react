@@ -590,9 +590,6 @@ src/renderers/dom/shared/eventPlugins/__tests__/FallbackCompositionState-test.js
 * extracts when inserted within text
 * extracts when inserted at end of text
 
-src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
-* should skip extraction if no listeners are present
-
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 * does not add a local click to interactive elements
 * adds a local click listener to non-interactive elements
@@ -743,6 +740,7 @@ src/renderers/native/__tests__/ReactNativeEvents-test.js
 
 src/renderers/native/__tests__/ReactNativeMount-test.js
 * should be able to create and render a native component
+* should be able to create and update a native component
 * should be able to create and update a native component
 
 src/renderers/shared/__tests__/ReactDebugTool-test.js
