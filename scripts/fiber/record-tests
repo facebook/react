@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+'use strict';
+
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -14,9 +17,39 @@ const argv = {};
 const root = path.normalize(path.join(__dirname, '..', '..'));
 const testPathPattern = '';
 
+function wrapRunnerFile(runnerPath) {
+  const filename = path.join(
+    os.tmpdir(),
+    'test-runner-' + crypto.randomBytes(8).toString('hex') + '.js'
+  );
+  fs.writeFileSync(
+    filename,
+    `
+      'use strict';
+      var wrap = require(${JSON.stringify(__filename)}).wrapRunner;
+      var original = require(${JSON.stringify(runnerPath)});
+      module.exports = wrap(original);
+    `
+  );
+  return filename;
+}
+
+function wrapRunner(original) {
+  return function runner(config, environment, runtime, testPath) {
+    return original(config, environment, runtime, testPath)
+      .then((results) => {
+        results.failureMessage = null;
+        return results;
+      });
+  };
+}
+
 function runJest() {
   return readConfig(argv, root)
     .then((config) => {
+      config = Object.assign({}, config, {
+        testRunner: wrapRunnerFile(config.testRunner),
+      });
       return createHasteContext(config, {}).then((hasteMap) => {
         const source = new SearchSource(hasteMap, config);
         return source.getTestPaths({testPathPattern})
@@ -51,23 +84,33 @@ function formatResults(runResults, predicate) {
   return formatted.join('\n\n');
 }
 
-process.env.REACT_DOM_JEST_USE_FIBER = true;
-runJest()
-  .then((runResults) => {
-    const passing = formatResults(
-      runResults,
-      (file, test) => test.status === 'passed'
-    );
-    const failing = formatResults(
-      runResults,
-      (file, test) => test.status === 'failed'
-    );
-    fs.writeFileSync(
-      path.join(__dirname, 'tests-passing.txt'),
-      passing + '\n'
-    );
-    fs.writeFileSync(
-      path.join(__dirname, 'tests-failing.txt'),
-      failing + '\n'
-    );
-  });
+function recordTests() {
+  process.env.REACT_DOM_JEST_USE_FIBER = true;
+  runJest()
+    .then((runResults) => {
+      const passing = formatResults(
+        runResults,
+        (file, test) => test.status === 'passed'
+      );
+      const failing = formatResults(
+        runResults,
+        (file, test) => test.status === 'failed'
+      );
+      fs.writeFileSync(
+        path.join(__dirname, 'tests-passing.txt'),
+        passing + '\n'
+      );
+      fs.writeFileSync(
+        path.join(__dirname, 'tests-failing.txt'),
+        failing + '\n'
+      );
+    });
+}
+
+if (require.main === module) {
+  recordTests();
+}
+
+module.exports = {
+  wrapRunner,
+};
