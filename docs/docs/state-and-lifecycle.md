@@ -110,7 +110,7 @@ This lets us use additional features such as local state and lifecycle hooks.
 
 ## Adding Local State to a Class
 
-We will move the `date` from props to state in three steps:
+As [mentioned earlier](https://facebook.github.io/react/docs/components-and-props.html#props-are-read-only), props are immutable thus cannot hold data which changes over time. To hold mutable data, React class components have a field called `state`. As soon as a property in the `state` object changes, React re-renders the UI to reflect the changes in a very efficient manner. We will move the `date` from props to state in three steps:
 
 1) Replace `this.props.date` with `this.state.date` in the `render()` method:
 
