@@ -188,10 +188,7 @@ src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should warn for an improperly cased aria-* prop
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
-* updates a mounted text component in place
-* can be toggled in and out of the markup
-* can reconcile text merged by Node.normalize()
-* can reconcile text arbitrarily split into multiple nodes
+* can reconcile text merged by Node.normalize() alongside other elements
 
 src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
 * does not crash with other react inside

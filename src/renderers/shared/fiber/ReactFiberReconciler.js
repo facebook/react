@@ -49,7 +49,7 @@ export type HostConfig<T, P, I, TI, C> = {
   commitUpdate(instance : I, oldProps : P, newProps : P) : void,
 
   createTextInstance(text : string) : TI,
-  commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
+  commitTextUpdate(textInstance : TI, oldText : string, newText : string, parentInstance: ?Fiber) : void,
 
   appendChild(parentInstance : I, child : I | TI) : void,
   insertBefore(parentInstance : I, child : I | TI, beforeChild : I | TI) : void,
