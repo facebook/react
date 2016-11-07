@@ -13,6 +13,7 @@
 
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
@@ -20,6 +21,9 @@ var SyntheticEvent = require('SyntheticEvent');
 var getActiveElement = require('getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('shallowEqual');
+
+// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
+var DOC_FRAGMENT_TYPE = 11;
 
 var skipSelectionChangeEvent = (
   ExecutionEnvironment.canUseDOM &&
@@ -51,9 +55,10 @@ var activeElementInst = null;
 var lastSelection = null;
 var mouseDown = false;
 
-// Track whether a listener exists for this plugin. If none exist, we do
+// Track whether all listeners exists for this plugin. If none exist, we do
 // not extract events. See #3639.
-var hasListener = false;
+var isListeningToAllDependencies =
+  ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -154,8 +159,13 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget
   ) {
-    if (!hasListener) {
-      return null;
+    if (targetInst) {
+      var containerInfo = targetInst._hostContainerInfo;
+      var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+      var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
+      if (!isListeningToAllDependencies('onSelect', doc)) {
+        return null;
+      }
     }
 
     var targetNode = targetInst ?
@@ -209,11 +219,6 @@ var SelectEventPlugin = {
     return null;
   },
 
-  didPutListener: function(inst, registrationName, listener) {
-    if (registrationName === 'onSelect') {
-      hasListener = true;
-    }
-  },
 };
 
 module.exports = SelectEventPlugin;

@@ -46,6 +46,16 @@ describe('SelectEventPlugin', () => {
     var node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
+    // It seems that .focus() isn't triggering this event in our test
+    // environment so we need to ensure it gets set for this test to be valid.
+    var fakeNativeEvent = new function() {};
+    fakeNativeEvent.target = node;
+    ReactTestUtils.simulateNativeEventOnNode(
+      'topFocus',
+      node,
+      fakeNativeEvent
+    );
+
     var mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
 
