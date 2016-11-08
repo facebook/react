@@ -473,15 +473,17 @@ class Form extends React.Component {
 
   handleChange(event) {
     const value = event.target.value;
-    // Copy the object so we don't mutate the old state.
-    // (This requires an Object.assign polyfill):
-    const checked = Object.assign({}, this.state.checked)
-    if (!checked[value]) {
-      checked[value] = true;
-    } else {
-      checked[value] = false;
-    };
-    this.setState({checked});
+    this.setState((prevState) => {
+      // Copy the object so we don't mutate the old state.
+      // (This requires an Object.assign polyfill):
+      const checked = Object.assign({}, prevState.checked)
+      if (!checked[value]) {
+        checked[value] = true;
+      } else {
+        checked[value] = false;
+      };
+      return {checked};
+    });
   }
 
   handleSubmit(event) {
