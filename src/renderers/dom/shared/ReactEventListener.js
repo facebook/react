@@ -14,7 +14,6 @@
 var EventListener = require('EventListener');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
-var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
 
@@ -172,14 +171,11 @@ var ReactEventListener = {
     try {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.
-      ReactGenericBatching.batchedUpdates(handleTopLevelImpl, bookKeeping);
-      if (bookKeeping.targetInst) {
-        // Here we wait until all updates have propagated, which is important
-        // when using controlled components within layers:
-        // https://github.com/facebook/react/issues/1698
-        // Then we restore state of any controlled component.
-        ReactControlledComponent.restoreStateIfNeeded(bookKeeping.targetInst);
-      }
+      ReactGenericBatching.batchedUpdatesWithControlledTarget(
+        handleTopLevelImpl,
+        bookKeeping,
+        bookKeeping.targetInst
+      );
     } finally {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }
