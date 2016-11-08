@@ -88,9 +88,13 @@ gulp.task('react:modules', function() {
 });
 
 gulp.task('react:extract-errors', function() {
-  return gulp
-    .src(paths.react.src)
-    .pipe(extractErrors(errorCodeOpts));
+  return gulp.src([].concat(
+    paths.react.src
+    // TODO: enable before 15.4.0 release:
+    // paths.reactDOM.src,
+    // paths.reactNative.src,
+    // paths.reactTestRenderer.src
+  )).pipe(extractErrors(errorCodeOpts));
 });
 
 gulp.task('default', ['react:modules']);
