@@ -78,13 +78,28 @@ var removeTouchesAtIndices = function(
   return rippedOut;
 };
 
+/**
+ * `ReactNativeEventEmitter` is used to attach top-level event listeners. For example:
+ *
+ *   ReactNativeEventEmitter.putListener('myID', 'onClick', myFunction);
+ *
+ * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
+ *
+ * @internal
+ */
 var ReactNativeEventEmitter = {
 
   ...ReactEventEmitterMixin,
 
   registrationNames: EventPluginRegistry.registrationNameModules,
 
+  putListener: EventPluginHub.putListener,
+
   getListener: EventPluginHub.getListener,
+
+  deleteListener: EventPluginHub.deleteListener,
+
+  deleteAllListeners: EventPluginHub.deleteAllListeners,
 
   /**
    * Internal version of `receiveEvent` in terms of normalized (non-tag)

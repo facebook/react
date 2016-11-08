@@ -147,6 +147,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should validate against invalid styles
 * should track input values
 * should track textarea values
+* should execute custom event plugin listening behavior
+* should handle null and missing properly with event hooks
 * should warn for children on void elements
 * should support custom elements which extend native elements
 * should warn against children for void elements
@@ -155,6 +157,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn about contentEditable and children
 * should validate against invalid styles
 * should report component containing invalid styles
+* should clean up listeners
 * should clean up input value tracking
 * should clean up input textarea tracking
 * should warn about the `onScroll` issue when unsupported (IE8)
@@ -379,11 +382,13 @@ src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
 * should generate simple markup for self-closing tags
 * should generate simple markup for attribute with `>` symbol
 * should generate comment markup for component returns null
+* should not register event listeners
 * should render composite components
 * should only execute certain lifecycle methods
 * should have the correct mounting behavior
 * should not put checksum and React ID on components
 * should not put checksum and React ID on text components
+* should not register event listeners
 * should only execute certain lifecycle methods
 * allows setState in componentWillMount without using DOM
 * renders components with different batching strategies
@@ -497,9 +502,6 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should enter from the window to the shallowest
 * should leave to the window
 * should leave to the window from the shallowest
-
-src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should prevent non-function listeners, at dispatch
 
 src/renderers/shared/stack/reconciler/__tests__/ReactChildReconciler-test.js
 * warns for duplicated keys
