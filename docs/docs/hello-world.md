@@ -7,6 +7,8 @@ next: introducing-jsx.html
 redirect_from:
   - "docs/index.html"
   - "docs/getting-started.html"
+  - "docs/getting-started-ko-KR.html"
+  - "docs/getting-started-zh-CN.html"
 ---
 
 The easiest way to get started with React is to use [this Hello World example code on CodePen](http://codepen.io/gaearon/pen/ZpvBNJ?editors=0010). You don't need to install anything; you can just open it in another tab and follow along as we go through examples. If you'd rather use a local development environment, check out the [Installation](/react/docs/installation.html) page.

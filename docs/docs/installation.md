@@ -3,6 +3,7 @@ id: installation
 title: Installation
 permalink: docs/installation.html
 redirect_from:
+  - "download.html"
   - "downloads.html"
   - "docs/tooling-integration.html"
   - "docs/package-management.html"

@@ -4,6 +4,8 @@ title: Refs and the DOM
 redirect_from:
   - "docs/working-with-the-browser.html"
   - "docs/more-about-refs.html"
+  - "docs/more-about-refs-ko-KR.html"
+  - "docs/more-about-refs-zh-CN.html"
   - "tips/expose-component-functions.html"
   - "tips/children-undefined.html"
 permalink: docs/refs-and-the-dom.html

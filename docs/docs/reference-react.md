@@ -8,6 +8,9 @@ redirect_from:
   - "docs/reference.html"
   - "docs/clone-with-props.html"
   - "docs/top-level-api.html"
+  - "docs/top-level-api-ja-JP.html"
+  - "docs/top-level-api-ko-KR.html"
+  - "docs/top-level-api-zh-CN.html"
   - "docs/glossary.html"
 ---
 

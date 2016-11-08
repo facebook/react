@@ -4,6 +4,9 @@ title: Lifting State Up
 permalink: docs/lifting-state-up.html
 prev: state-and-lifecycle.html
 next: composition-vs-inheritance.html
+redirect_from:
+  - "docs/flux-overview.html"
+  - "docs/flux-todo-list.html"
 ---
 
 Often, several components need to reflect the same changing data. We recommend lifting the shared state up to their closest common ancestor. Let's see how this works in action.
