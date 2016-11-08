@@ -539,10 +539,7 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
 * can be toggled in and out of the markup
-* can reconcile text merged by Node.normalize()
 * can reconcile text from pre-rendered markup
-* can reconcile text arbitrarily split into multiple nodes
-* can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should dispatch events from outside React tree
