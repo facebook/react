@@ -19,6 +19,7 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
@@ -42,6 +43,7 @@ var warning = require('warning');
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
+var deleteListener = EventPluginHub.deleteListener;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
@@ -203,6 +205,30 @@ function assertValidProps(component, props) {
   );
 }
 
+function enqueuePutListener(inst, registrationName, listener, transaction) {
+  if (transaction instanceof ReactServerRenderingTransaction) {
+    return;
+  }
+  if (__DEV__) {
+    // IE8 has no API for event capturing and the `onScroll` event doesn't
+    // bubble.
+    warning(
+      registrationName !== 'onScroll' || isEventSupported('scroll', true),
+      'This browser doesn\'t support the `onScroll` event'
+    );
+  }
+  var containerInfo = inst._hostContainerInfo;
+  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
+  listenTo(registrationName, doc);
+  transaction.getReactMountReady().enqueue(putListener, {
+    inst: inst,
+    registrationName: registrationName,
+    listener: listener,
+  });
+}
+
+// TODO: This is coming from future #8192. Dedupe this and enqueuePutListener.
 function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
@@ -219,6 +245,15 @@ function ensureListeningTo(inst, registrationName, transaction) {
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
+}
+
+function putListener() {
+  var listenerToPut = this;
+  EventPluginHub.putListener(
+    listenerToPut.inst,
+    listenerToPut.registrationName,
+    listenerToPut.listener
+  );
 }
 
 function inputPostMount() {
@@ -757,7 +792,7 @@ ReactDOMComponent.Mixin = {
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
-          ensureListeningTo(this, propKey, transaction);
+          enqueuePutListener(this, propKey, propValue, transaction);
         }
       } else {
         if (propKey === STYLE) {
@@ -1012,7 +1047,12 @@ ReactDOMComponent.Mixin = {
         }
         this._previousStyleCopy = null;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        // Do nothing for event names.
+        if (lastProps[propKey]) {
+          // Only call deleteListener if there was a listener previously or
+          // else willDeleteListener gets called when there wasn't actually a
+          // listener (e.g., onClick={null})
+          deleteListener(this, propKey);
+        }
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
@@ -1073,7 +1113,9 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          ensureListeningTo(this, propKey, transaction);
+          enqueuePutListener(this, propKey, nextProp, transaction);
+        } else if (lastProp) {
+          deleteListener(this, propKey);
         }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
@@ -1222,6 +1264,7 @@ ReactDOMComponent.Mixin = {
 
     this.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(this);
+    EventPluginHub.deleteAllListeners(this);
     this._rootNodeID = 0;
     this._domID = 0;
     this._wrapperState = null;

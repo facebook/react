@@ -130,7 +130,8 @@ function publishEventForPlugin(
 }
 
 /**
- * Publishes a registration name that is used to identify dispatched events.
+ * Publishes a registration name that is used to identify dispatched events and
+ * can be used with `EventPluginHub.putListener` to register listeners.
  *
  * @param {string} registrationName Registration name to add.
  * @param {object} PluginModule Plugin publishing the event.

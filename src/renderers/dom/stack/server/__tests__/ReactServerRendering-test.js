@@ -85,7 +85,15 @@ describe('ReactServerRendering', () => {
       expect(response).toBe('<!-- react-empty: 1 -->');
     });
 
-    // TODO: Test that listeners are not registered onto any document/container.
+    it('should not register event listeners', () => {
+      var EventPluginHub = require('EventPluginHub');
+      var cb = jest.fn();
+
+      ReactServerRendering.renderToString(
+        <span onClick={cb}>hello world</span>
+      );
+      expect(EventPluginHub.__getListenerBank()).toEqual({});
+    });
 
     it('should render composite components', () => {
       class Parent extends React.Component {
@@ -312,6 +320,16 @@ describe('ReactServerRendering', () => {
       );
 
       expect(response).toBe('<span>hello world</span>');
+    });
+
+    it('should not register event listeners', () => {
+      var EventPluginHub = require('EventPluginHub');
+      var cb = jest.fn();
+
+      ReactServerRendering.renderToStaticMarkup(
+        <span onClick={cb}>hello world</span>
+      );
+      expect(EventPluginHub.__getListenerBank()).toEqual({});
     });
 
     it('should only execute certain lifecycle methods', () => {
