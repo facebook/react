@@ -453,7 +453,6 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod React
 * should handle a simple flow
 * should call lifecycle methods
-* should throw with an error code in production
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render strings as children
@@ -843,18 +842,6 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * splits deferred work on multiple roots
 * works on deferred roots in the order they were scheduled
 * handles interleaved deferred and animation work
-* performs animation work in animation callback
-* schedules deferred work in animation callback
-* schedules deferred work and performs animation work in animation callback
-* performs animation work and schedules deferred work in animation callback
-* performs deferred work in deferred callback if it has time
-* schedules deferred work in deferred callback if it runs out of time
-* performs animated work in deferred callback if it has time
-* performs animated work and deferred work in deferred callback if it has time
-* performs deferred and animated work work in deferred callback if it has time
-* schedules animated work in deferred callback if it runs out of time
-* schedules animated work and deferred work in deferred callback if it runs out of time
-* schedules deferred work and animated work in deferred callback if it runs out of time
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
@@ -875,6 +862,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * calls setState callback even if component bails out
 * calls componentWillUnmount after a deletion, even if nested
 * calls componentDidMount/Update after insertion/update
+* schedules sync updates when inside componentDidMount/Update
 * invokes ref callbacks after insertion/update/unmount
 * supports string refs
 
