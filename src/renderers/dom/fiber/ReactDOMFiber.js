@@ -13,11 +13,9 @@
 'use strict';
 
 import type { HostChildren } from 'ReactFiberReconciler';
-import type { Fiber } from 'ReactFiber';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var warning = require('warning');
 
@@ -90,33 +88,8 @@ var DOMRenderer = ReactFiberReconciler({
     return document.createTextNode(text);
   },
 
-  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string, current: ?Fiber) : void {
-    let nodeValueLen = textInstance.nodeValue.length;
-    let nextSibling : ?Node = textInstance.nextSibling;
-    // The Node may have been split in this case we need to clean up some next sibling nodes
-    while (nextSibling && nodeValueLen < oldText.length) {
-      const currentSibling : Node = nextSibling;
-      nextSibling = currentSibling.nextSibling;
-      nodeValueLen += currentSibling.nodeValue.length;
-      const parentNode = currentSibling.parentElement;
-      if (parentNode) {
-        parentNode.removeChild(currentSibling);
-      }
-    }
+  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
     textInstance.nodeValue = newText;
-    // After a Node#normalize() on a parent, we need to reattach to the tree
-    if (!textInstance.parentNode) {
-      // We may need to go back through different types of work (not necessarily an host node)
-      // That's why, we're going up the stack testing for an HostComponent type of work
-      let parentFiber: ?Fiber = current && current.return;
-      while (parentFiber) {
-        if (parentFiber.tag === ReactTypeOfWork.HostComponent) {
-          (parentFiber.stateNode: Instance).appendChild(textInstance);
-          break;
-        }
-        parentFiber = parentFiber.return;
-      }
-    }
   },
 
   appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
