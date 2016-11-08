@@ -46,6 +46,8 @@
       title: Context
     - id: web-components
       title: Web Components
+    - id: component-lifecycle-in-depth
+      title: Component Lifecycle In Depth
 - title: Reference
   items:
     - id: react-api
