@@ -40,6 +40,32 @@ describe('ReactDOMInput', () => {
     spyOn(console, 'error');
   });
 
+  it('should properly control a value even if no event listener exists', () => {
+    var container = document.createElement('div');
+    var stub = ReactDOM.render(
+      <input type="text" value="lion" />,
+      container
+    );
+
+    document.body.appendChild(container);
+
+    var node = ReactDOM.findDOMNode(stub);
+    expect(console.error.calls.count()).toBe(1);
+
+    // Simulate a native change event
+    setUntrackedValue(node, 'giraffe');
+
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('change', true, true);
+    node.dispatchEvent(nativeEvent);
+
+    expect(node.value).toBe('lion');
+
+    document.body.removeChild(container);
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -454,6 +480,7 @@ describe('ReactDOMInput', () => {
     );
     expect(console.error.calls.count()).toBe(1);
   });
+
 
   it('should have a this value of undefined if bind is not used', () => {
     var unboundInputOnChange = function() {
