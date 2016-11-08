@@ -266,13 +266,12 @@ gulp.task('react:modules', function() {
 });
 
 gulp.task('react:extract-errors', function() {
-  return merge(
-    gulp.src(paths.react.src).pipe(extractErrors(errorCodeOpts)),
-    gulp.src(paths.reactDOM.src).pipe(extractErrors(errorCodeOpts)),
-    gulp.src(paths.reactNative.src).pipe(extractErrors(errorCodeOpts)),
-    gulp.src(paths.reactTestRenderer.src).pipe(extractErrors(errorCodeOpts)),
-    gulp.src(paths.reactNoopRenderer.src).pipe(extractErrors(errorCodeOpts))
-  );
+  return gulp.src([].concat(
+    paths.react.src,
+    paths.reactDOM.src,
+    paths.reactNative.src,
+    paths.reactTestRenderer.src
+  )).pipe(extractErrors(errorCodeOpts));
 });
 
 gulp.task('default', ['react:modules']);
