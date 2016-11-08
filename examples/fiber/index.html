@@ -20,6 +20,40 @@
     <script src="../../build/react.js"></script>
     <script src="../../build/react-dom-fiber.js"></script>
     <script>
+    class Child extends React.Component {
+      render() {
+        return React.DOM.p(null, this.context.foo);
+      }
+    }
+
+    Child.contextTypes = {
+      foo: React.PropTypes.string
+    }
+
+    class Parent extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = { message: 'Hello' };
+      }
+      componentDidMount() {
+        this.timeout = setTimeout(() => {
+          this.setState({ message: 'Another message' });
+        }, 1000);
+      }
+      componentWillUnmount() {
+        clearTimeout(this.interval);
+      }
+      getChildContext() {
+        console.log('getChildContext', this.state);
+        return { foo: this.state.message };
+      }
+      render() {
+        return React.createElement(Child);
+      }
+    }
+    Parent.childContextTypes = {
+      foo: React.PropTypes.string,
+    };
       function ExampleApplication(props) {
         var elapsed = Math.round(props.elapsed  / 100);
         var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
@@ -32,13 +66,11 @@
       // Call React.createFactory instead of directly call ExampleApplication({...}) in React.render
       var ExampleApplicationFactory = React.createFactory(ExampleApplication);
 
-      var start = new Date().getTime();
-      setInterval(function() {
-        ReactDOMFiber.render(
-          ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
-          document.getElementById('container')
-        );
-      }, 50);
+      ReactDOMFiber.render(
+        React.createElement(Parent),
+        //ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
+        document.getElementById('container')
+      );
     </script>
   </body>
 </html>

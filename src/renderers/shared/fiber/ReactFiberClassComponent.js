@@ -27,6 +27,11 @@ var shallowEqual = require('shallowEqual');
 var warning = require('warning');
 var invariant = require('invariant');
 
+let checkReactTypeSpec;
+
+if (__DEV__) {
+  checkReactTypeSpec = require('checkReactTypeSpec');
+}
 
 const isArray = Array.isArray;
 
@@ -74,7 +79,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     },
   };
 
-  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState) {
+  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
     const updateQueue = workInProgress.updateQueue;
     if (oldProps === null || (updateQueue && updateQueue.isForced)) {
       return true;
@@ -82,14 +87,15 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
-      return instance.shouldComponentUpdate(newProps, newState);
+      return instance.shouldComponentUpdate(newProps, newState, newContext);
     }
 
     const type = workInProgress.type;
     if (type.prototype && type.prototype.isPureReactComponent) {
       return (
         !shallowEqual(oldProps, newProps) ||
-        !shallowEqual(instance.state, newState)
+        !shallowEqual(instance.state, newState) ||
+        !shallowEqual(instance.context, newContext)
       );
     }
 
@@ -195,10 +201,100 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     ReactInstanceMap.set(instance, workInProgress);
   }
 
+  function checkContextTypes(workInProgress : Fiber, typeSpecs: {}, values: {}, location: string) {
+    checkReactTypeSpec(
+      typeSpecs,
+      values,
+      location,
+      getName(workInProgress, workInProgress.stateNode),
+      null,
+      null
+    );
+  }
+
+  function maskContext(context: {}, contextTypes: {}): any {
+    if (!contextTypes) {
+      return {};
+    }
+
+    const maskedContext = {};
+    for (let contextName in contextTypes) {
+      maskedContext[contextName] = context[contextName];
+    }
+
+    return maskedContext;
+  }
+
+  function processChildContext(workInProgress : Fiber, instance : any) {
+    const Component = workInProgress.type;
+    const currentContext = (
+      workInProgress.return &&
+      workInProgress.return.stateNode &&
+      workInProgress.return.stateNode._childContext
+    );
+
+    let childContext;
+    if (instance.getChildContext) {
+      if (__DEV__) {
+        // ReactFiberInstrumentation.debugTool.onBeginProcessingChildContext();
+        try {
+          childContext = instance.getChildContext();
+        } finally {
+          // ReactFiberInstrumentation.debugTool.onEndProcessingChildContext();
+        }
+      } else {
+        childContext = instance.getChildContext();
+      }
+    }
+
+    if (childContext) {
+      invariant(
+        typeof Component.childContextTypes === 'object',
+        '%s.getChildContext(): childContextTypes must be defined in order to ' +
+        'use getChildContext().',
+        getName(workInProgress, instance)
+      );
+
+      if (__DEV__) {
+        checkContextTypes(workInProgress, Component.childContextTypes, childContext, 'childContext');
+      }
+
+      for (let name in childContext) {
+        invariant(
+          name in Component.childContextTypes,
+          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+          getName(workInProgress, instance),
+          name
+        );
+      }
+      return Object.assign({}, currentContext, childContext);
+    }
+    return currentContext;
+  }
+
+  function processContext(workInProgress : Fiber) {
+    const Component = workInProgress.type;
+    const contextTypes = Component.contextTypes;
+    const currentContext = (
+      workInProgress.return &&
+      workInProgress.return.stateNode &&
+      workInProgress.return.stateNode._childContext
+    );
+    const maskedContext = maskContext(currentContext, contextTypes);
+    if (__DEV__) {
+      if (contextTypes) {
+        checkContextTypes(workInProgress, contextTypes, maskedContext, 'context');
+      }
+    }
+    return maskedContext;
+  }
+
   function constructClassInstance(workInProgress : Fiber) : any {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
-    const instance = new ctor(props);
+    const context = processContext(workInProgress);
+    const instance = new ctor(props, context);
+
     checkClassInstance(workInProgress, instance);
     adoptClassInstance(workInProgress, instance);
     return instance;
@@ -217,6 +313,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     instance.props = props;
     instance.state = state;
+    instance.context = instance.context || processContext(workInProgress);
+    instance._childContext = instance.childContext || processChildContext(workInProgress, instance);
 
     if (typeof instance.componentWillMount === 'function') {
       instance.componentWillMount();
@@ -225,6 +323,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
         instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
+        // instance.context = processContext(workInProgress);
+        instance._childContext = processChildContext(workInProgress, instance);
       }
     }
   }
@@ -232,6 +332,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(workInProgress : Fiber) : boolean {
+    const newContext = workInProgress.memoizedContext;
+    const newChildContext = workInProgress.memoizedChildContext;
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -242,7 +344,6 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         throw new Error('There should always be pending or memoized props.');
       }
     }
-
     // TODO: Should we deal with a setState that happened after the last
     // componentWillMount and before this componentWillMount? Probably
     // unsupported anyway.
@@ -251,7 +352,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       workInProgress,
       workInProgress.memoizedProps,
       newProps,
-      newState
+      newState,
+      newContext
     )) {
       return false;
     }
@@ -261,7 +363,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const newInstance = constructClassInstance(workInProgress);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
-
+    newInstance.context = newContext;
+    newInstance._childContext = newChildContext;
     if (typeof newInstance.componentWillMount === 'function') {
       newInstance.componentWillMount();
     }
@@ -271,6 +374,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
       newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
+      // newInstance.context = processContext(workInProgress);
+      newInstance._childContext = processChildContext(workInProgress, newInstance);
     }
     return true;
   }
@@ -278,8 +383,9 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
   function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
     const instance = workInProgress.stateNode;
-
     const oldProps = workInProgress.memoizedProps || current.memoizedProps;
+    const oldContext = workInProgress.memoizedContext || current.memoizedContext;
+
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
       // If there aren't any new props, then we'll reuse the memoized props.
@@ -287,16 +393,6 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       newProps = oldProps;
       if (!newProps) {
         throw new Error('There should always be pending or memoized props.');
-      }
-    }
-
-    // Note: During these life-cycles, instance.props/instance.state are what
-    // ever the previously attempted to render - not the "current". However,
-    // during componentDidUpdate we pass the "current" props.
-
-    if (oldProps !== newProps) {
-      if (typeof instance.componentWillReceiveProps === 'function') {
-        instance.componentWillReceiveProps(newProps);
       }
     }
 
@@ -315,8 +411,20 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       newState = previousState;
     }
 
+    let newContext = processContext(workInProgress);
+    // Note: During these life-cycles, instance.props/instance.state are what
+    // ever the previously attempted to render - not the "current". However,
+    // during componentDidUpdate we pass the "current" props.
+
+    if (oldProps !== newProps || oldContext !== newContext) {
+      if (typeof instance.componentWillReceiveProps === 'function') {
+        instance.componentWillReceiveProps(newProps, newContext);
+      }
+    }
+
     if (oldProps === newProps &&
         previousState === newState &&
+        oldContext === newContext &&
         updateQueue && !updateQueue.isForced) {
       return false;
     }
@@ -325,18 +433,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       workInProgress,
       oldProps,
       newProps,
-      newState
+      newState,
+      newContext
     )) {
       // TODO: Should this get the new props/state updated regardless?
       return false;
     }
 
     if (typeof instance.componentWillUpdate === 'function') {
-      instance.componentWillUpdate(newProps, newState);
+      instance.componentWillUpdate(newProps, newState, newContext);
     }
 
     instance.props = newProps;
     instance.state = newState;
+    instance.context = newContext;
+    instance._childContext = processChildContext(workInProgress, instance);
     return true;
   }
 

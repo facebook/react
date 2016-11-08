@@ -129,13 +129,18 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null
         // in the case of an update
-        const { state, props } = workInProgress.stateNode;
+        const { state, props, context, _childContext } = workInProgress.stateNode;
         const updateQueue = workInProgress.updateQueue;
         workInProgress.memoizedState = state;
         workInProgress.memoizedProps = props;
+        workInProgress.memoizedContext = context;
+        workInProgress.memoizedChildContext = _childContext;
+
         if (current) {
           if (current.memoizedProps !== workInProgress.memoizedProps ||
               current.memoizedState !== workInProgress.memoizedState ||
+              current.memoizedContext !== workInProgress.memoizedContext ||
+              current.memoizedChildContext !== workInProgress.memoizedChildContext ||
               updateQueue && updateQueue.isForced) {
             markUpdate(workInProgress);
           }
