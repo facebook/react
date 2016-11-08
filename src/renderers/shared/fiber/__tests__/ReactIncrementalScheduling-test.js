@@ -449,4 +449,142 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:3')]);
   });
+
+  it('schedules sync updates when inside componentDidMount/Update', () => {
+    var instance;
+    var ops = [];
+
+    class Foo extends React.Component {
+      state = { tick: 0 };
+
+      componentDidMount() {
+        ops.push('componentDidMount (before setState): ' + this.state.tick);
+        this.setState({ tick: 1 });
+        // We're in a batch. Update hasn't flushed yet.
+        ops.push('componentDidMount (after setState): ' + this.state.tick);
+      }
+
+      componentDidUpdate() {
+        ops.push('componentDidUpdate: ' + this.state.tick);
+        if (this.state.tick === 2) {
+          ops.push('componentDidUpdate (before setState): ' + this.state.tick);
+          this.setState({ tick: 3 });
+          ops.push('componentDidUpdate (after setState): ' + this.state.tick);
+          // We're in a batch. Update hasn't flushed yet.
+        }
+      }
+
+      render() {
+        ops.push('render: ' + this.state.tick);
+        instance = this;
+        return <span prop={this.state.tick} />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+
+    ReactNoop.flushDeferredPri(20);
+    expect(ops).toEqual([
+      'render: 0',
+      'componentDidMount (before setState): 0',
+      'componentDidMount (after setState): 0',
+      // If the setState inside componentDidMount were deferred, there would be
+      // no more ops. Because it has Task priority, we get these ops, too:
+      'render: 1',
+      'componentDidUpdate: 1',
+    ]);
+
+    ops = [];
+    instance.setState({ tick: 2 });
+    ReactNoop.flushDeferredPri(20);
+
+    expect(ops).toEqual([
+      'render: 2',
+      'componentDidUpdate: 2',
+      'componentDidUpdate (before setState): 2',
+      'componentDidUpdate (after setState): 2',
+      // If the setState inside componentDidUpdate were deferred, there would be
+      // no more ops. Because it has Task priority, we get these ops, too:
+      'render: 3',
+      'componentDidUpdate: 3',
+    ]);
+  });
+
+  it('can opt-in to deferred/animation scheduling inside componentDidMount/Update', () => {
+    var instance;
+    var ops = [];
+
+    class Foo extends React.Component {
+      state = { tick: 0 };
+
+      componentDidMount() {
+        ReactNoop.performAnimationWork(() => {
+          ops.push('componentDidMount (before setState): ' + this.state.tick);
+          this.setState({ tick: 1 });
+          ops.push('componentDidMount (after setState): ' + this.state.tick);
+        });
+      }
+
+      componentDidUpdate() {
+        ReactNoop.performAnimationWork(() => {
+          ops.push('componentDidUpdate: ' + this.state.tick);
+          if (this.state.tick === 2) {
+            ops.push('componentDidUpdate (before setState): ' + this.state.tick);
+            this.setState({ tick: 3 });
+            ops.push('componentDidUpdate (after setState): ' + this.state.tick);
+          }
+        });
+      }
+
+      render() {
+        ops.push('render: ' + this.state.tick);
+        instance = this;
+        return <span prop={this.state.tick} />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+
+    ReactNoop.flushDeferredPri(20);
+    expect(ops).toEqual([
+      'render: 0',
+      'componentDidMount (before setState): 0',
+      'componentDidMount (after setState): 0',
+      // Following items shouldn't appear because they are the result of an
+      // update scheduled with animation priority
+      // 'render: 1',
+      // 'componentDidUpdate: 1',
+    ]);
+
+    ops = [];
+
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual([
+      'render: 1',
+      'componentDidUpdate: 1',
+    ]);
+
+    ops = [];
+    instance.setState({ tick: 2 });
+    ReactNoop.flushDeferredPri(20);
+
+    expect(ops).toEqual([
+      'render: 2',
+      'componentDidUpdate: 2',
+      'componentDidUpdate (before setState): 2',
+      'componentDidUpdate (after setState): 2',
+      // Following items shouldn't appear because they are the result of an
+      // update scheduled with animation priority
+      // 'render: 3',
+      // 'componentDidUpdate: 3',
+    ]);
+
+    ops = [];
+
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual([
+      'render: 3',
+      'componentDidUpdate: 3',
+    ]);
+  });
 });
