@@ -38,7 +38,7 @@ class CustomTextInput extends React.Component {
       <div>
         <input
           type="text"
-          ref={(input) => this.textInput = input} />
+          ref={(input) => { this.textInput = input; }} />
         <input
           type="button"
           value="Focus the text input"
@@ -65,7 +65,7 @@ class AutoFocusTextInput extends React.Component {
   render() {
     return (
       <CustomTextInput
-        ref={(input) => this.textInput = input} />
+        ref={(input) => { this.textInput = input; }} />
     );
   }
 }
@@ -86,7 +86,7 @@ function CustomTextInput(props) {
     <div>
       <input
         type="text"
-        ref={(input) => textInput = input} />
+        ref={(input) => { textInput = input; }} />
       <input
         type="button"
         value="Focus the text input"
