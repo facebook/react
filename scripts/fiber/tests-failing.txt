@@ -526,7 +526,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` on unmounted components
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
-* should warn when shouldComponentUpdate() returns undefined
 * should pass context to children when not owner
 * should pass context when re-rendered for static child
 * should pass context when re-rendered for static child within a composite component

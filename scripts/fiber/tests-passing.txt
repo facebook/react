@@ -1016,6 +1016,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should silently allow `setState`, not call cb on unmounting components
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting
+* should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
 * should skip update when rerendering element in container
 * only renders once if updated in componentWillReceiveProps
