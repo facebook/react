@@ -45,7 +45,7 @@ The component will perform an initial render without any of the network data. Wh
 
 ## Updates
 
-If the props change, we might need to fetch new data for the updated props. The `componentDidUpdate` [lifecycle hook](/react/docs/react-component.html#componentdidupdate) is a good place to achieve this, since we may not need to fetch new data if the props that we're interested in have not changed.
+If the props change, we might need to fetch new data for the updated props. The [`componentDidUpdate` lifecycle hook](/react/docs/react-component.html#componentdidupdate) is a good place to achieve this, since we may not need to fetch new data if the props that we're interested in have not changed.
 
 Building on the previous example, we will pass the username as a prop instead and fetch new gists when it changes:
 
