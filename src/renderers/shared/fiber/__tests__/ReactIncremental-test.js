@@ -1465,4 +1465,52 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(4);
   });
+
+  it('can handle if setState callback throws', () => {
+    var ops = [];
+    var instance;
+
+    class Foo extends React.Component {
+      state = { n: 0 };
+      render() {
+        instance = this;
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    ops = [];
+
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.batchedUpdates(() => {
+        instance.setState({ n: 1 }, () => {
+          throw new Error('Bail!'); 
+        });
+        instance.setState({ n: 2 }, () => ops.push('setState 2'));
+        ReactNoop.batchedUpdates(() => {
+          instance.setState({ n: 3 }, () => ops.push('setState 3'));
+          instance.setState({ n: 4 }, () => {
+            throw new Error('Bail Again!');
+          });
+          instance.setState({ n: 5 }, () => ops.push('setState 5'));
+          ops.push('end inner batchedUpdates');
+        });
+        ops.push('end outer batchedUpdates');
+      });
+      ops.push('end syncUpdates');
+    });
+
+    // ReactNoop.flush() not needed because updates are synchronous
+
+    expect(ops).toEqual([
+      'end inner batchedUpdates',
+      'end outer batchedUpdates',
+      'setState 2',
+      'setState 3',
+      'setState 5',
+      'end syncUpdates',
+    ]);
+    expect(instance.state.n).toEqual(5);
+  });
 });

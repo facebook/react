@@ -76,7 +76,11 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
     if (callback && !node.callbackWasCalled) {
       node.callbackWasCalled = true;
       if (typeof context !== 'undefined') {
-        callback.call(context);
+        try {
+          callback.call(context);
+        } catch (error) {
+          // do something
+        }
       } else {
         callback();
       }
