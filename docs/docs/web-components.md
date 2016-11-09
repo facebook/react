@@ -31,7 +31,7 @@ One common confusion is that Web Components use "class" instead of "className".
 ```javascript
 function BrickFlipbox() {
   return (
-    <brick-flipbox class="demo" ref="foo">
+    <brick-flipbox class="demo">
       <div>front</div>
       <div>back</div>
     </brick-flipbox>
