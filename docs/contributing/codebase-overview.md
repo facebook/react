@@ -82,15 +82,15 @@ For example, a test for [`setInnerHTML.js`](https://github.com/facebook/react/bl
 
 Even though Haste allows us to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.
 
-For example, files inside [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) may import other files in the same folder or any folder below.
+For example, files inside [`src/renderers/dom/stack/client`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client) may import other files in the same folder or any folder below.
 
-However they can't import modules from [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) because it is not a child directory of [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client).
+However they can't import modules from [`src/renderers/dom/stack/server`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/server) because it is not a child directory of [`src/renderers/dom/stack/client`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client).
 
 There is an exception to this rule. Sometimes we *do* need to share functionality between two groups of modules. In this case, we hoist the shared module up to a folder called `shared` inside the closest common ancestor folder of the modules that need to rely on it.
 
-For example, code shared between [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) and [`src/renderers/dom/server`](https://github.com/facebook/react/tree/master/src/renderers/dom/server) lives in [`src/renderers/dom/shared`](https://github.com/facebook/react/tree/master/src/renderers/dom/shared).
+For example, code shared between [`src/renderers/dom/stack/client`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client) and [`src/renderers/dom/stack/server`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/server) lives in [`src/renderers/dom/shared`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/shared).
 
-By the same logic, if [`src/renderers/dom/client`](https://github.com/facebook/react/tree/master/src/renderers/dom/client) needs to share a utility with something in [`src/renderers/native`](https://github.com/facebook/react/tree/master/src/renderers/native), this utility would be in [`src/renderers/shared`](https://github.com/facebook/react/tree/master/src/renderers/shared).
+By the same logic, if [`src/renderers/dom/stack/client`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client) needs to share a utility with something in [`src/renderers/native`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/native), this utility would be in [`src/renderers/shared`](https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/shared).
 
 This convention is not enforced but we check for it during a pull request review.
 
