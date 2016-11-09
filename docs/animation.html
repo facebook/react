@@ -162,8 +162,10 @@
     <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span>
       <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span>
 <span class="hll">      <span class="nx">transitionAppear</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span>
-</span><span class="hll">      <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span><span class="o">&gt;</span>
-</span>      <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+</span><span class="hll">      <span class="nx">transitionAppearTimeout</span><span class="o">=</span><span class="p">{</span><span class="mi">500</span><span class="p">}</span>
+</span>      <span class="nx">transitionEnter</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span>
+      <span class="nx">transitionLeave</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Fading</span> <span class="nx">at</span> <span class="nx">Initial</span> <span class="nx">Mount</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
     <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
   <span class="p">);</span>
 <span class="p">}</span>
@@ -184,6 +186,8 @@
 <p>Note:</p>
 
 <p>The prop <code>transitionAppear</code> was added to <code>ReactCSSTransitionGroup</code> in version <code>0.13</code>. To maintain backwards compatibility, the default value is set to <code>false</code>.</p>
+
+<p>However, the default values of <code>transitionEnter</code> and <code>transitionLeave</code> are <code>true</code> so you must specify <code>transitionEnterTimeout</code> and <code>transitionLeaveTimeout</code> by default. If you don&#39;t need either enter or leave animations, pass <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code>.</p>
 </blockquote>
 <h3><a class="anchor" name="custom-classes"></a>Custom Classes <a class="hash-link" href="#custom-classes">#</a></h3>
 <p>It is also possible to use custom class names for each of the steps in your transitions. Instead of passing a string into transitionName you can pass an object containing either the <code>enter</code> and <code>leave</code> class names, or an object containing the <code>enter</code>, <code>enter-active</code>, <code>leave-active</code>, and <code>leave</code> class names. If only the enter and leave classes are provided, the enter-active and leave-active classes will be determined by appending &#39;-active&#39; to the end of the class name. Here are two examples using custom classes:</p>
