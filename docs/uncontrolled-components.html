@@ -6,11 +6,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Web Components - React</title>
+  <title>Uncontrolled Components - React</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta property="og:title" content="Web Components - React">
+  <meta property="og:title" content="Uncontrolled Components - React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://facebook.github.io/react/docs/web-components.html">
+  <meta property="og:url" content="https://facebook.github.io/react/docs/uncontrolled-components.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -72,54 +72,58 @@
 
     <section class="content wrap documentationContent">
   <div class="inner-content">
-    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/web-components.md" target="_blank">Edit on GitHub</a>
+    <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/uncontrolled-components.md" target="_blank">Edit on GitHub</a>
     <h1>
-      Web Components
+      Uncontrolled Components
     </h1>
     <div class="subHeader"></div>
 
-    <p>React and <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Components</a> are built to solve different problems.  Web Components provide strong encapsulation for reusable components, while React provides a declarative library that keeps the DOM in sync with your data. The two goals are complementary. As a developer, you are free to use React in your Web Components, or to use Web Components in React, or both.</p>
+    <p>In most cases, we recommend using <a href="/react/docs/forms.html">controlled components</a> to implement forms. In a controlled component, form data is handled by a React component. The alternative is uncontrolled components, where form data is handled by the DOM itself.</p>
 
-<p>Most people who use React don&#39;t use Web Components, but you may want to, especially if you are using third-party UI components that are written using Web Components.</p>
-<h2><a class="anchor" name="using-web-components-in-react"></a>Using Web Components in React <a class="hash-link" href="#using-web-components-in-react">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p>To write an uncontrolled component, instead of writing an event handler for every state update, you can <a href="/react/docs/refs-and-the-dom.html">use a ref</a> to get form values from the DOM.</p>
+
+<p>For example, this code accepts a single name in an uncontrolled component:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">NameForm</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;A name was submitted: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+</span>    <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+  <span class="p">}</span>
+
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="o">&lt;</span><span class="nx">x</span><span class="o">-</span><span class="nx">search</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/x-search&gt;!&lt;/div&gt;;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="nx">Name</span><span class="o">:</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/form&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<blockquote>
-<p>Note:</p>
+<p><a href="https://codepen.io/lacker/pen/XNWjOj?editors=0010">Try it on CodePen.</a></p>
 
-<p>Web Components often expose an imperative API. For instance, a <code>video</code> Web Component might expose <code>play()</code> and <code>pause()</code> functions). To access the imperative APIs of a Web Component, you will need to use a ref to interact with the DOM node directly. If you are using third-party Web Components, the best solution is to write a React component that behaves as a wrapper for your Web Component.</p>
-
-<p>Events emitted by a Web Component may not properly propagate through a React render tree.
-You will need to manually attach event handlers to handle these events within your React components.</p>
-</blockquote>
-
-<p>One common confusion is that Web Components use &quot;class&quot; instead of &quot;className&quot;.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">BrickFlipbox</span><span class="p">()</span> <span class="p">{</span>
+<p>Since an uncontrolled component keeps the source of truth in the DOM, it is sometimes easier to integrate React and non-React code when using uncontrolled components. It can also be slightly less code if you want to be quick and dirty. Otherwise, you should usually use controlled components.</p>
+<h3><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h3>
+<p>In the React rendering lifecycle, the <code>value</code> attribute on form elements will override the value in the DOM. With an uncontrolled component, you often want React to specify the initial value, but leave subsequent updates uncontrolled. To handle this case, you can specify a <code>defaultValue</code> attribute instead of <code>value</code>.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">brick</span><span class="o">-</span><span class="nx">flipbox</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">front</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">back</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="o">&lt;</span><span class="err">/brick-flipbox&gt;</span>
+    <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="nx">Name</span><span class="o">:</span>
+      <span class="o">&lt;</span><span class="nx">input</span>
+<span class="hll">        <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span>
+</span>        <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+        <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/form&gt;</span>
   <span class="p">);</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="using-react-in-your-web-components"></a>Using React in your Web Components <a class="hash-link" href="#using-react-in-your-web-components">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
-  <span class="nx">attachedCallback</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">value</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="kr">const</span> <span class="nx">mountPoint</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">);</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">createShadowRoot</span><span class="p">().</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">mountPoint</span><span class="p">);</span>
-
-      <span class="kr">const</span> <span class="nx">name</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">);</span>
-      <span class="kr">const</span> <span class="nx">url</span> <span class="o">=</span> <span class="s1">&#39;https://www.google.com/search?q=&#39;</span> <span class="o">+</span> <span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
-      <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="nx">url</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;, mountPoint);</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-<span class="nb">document</span><span class="p">.</span><span class="nx">registerElement</span><span class="p">(</span><span class="s1">&#39;x-search&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">prototype</span><span class="o">:</span> <span class="nx">proto</span><span class="p">});</span>
 </code></pre></div>
-<p>You can also check out this <a href="https://github.com/facebook/react/tree/master/examples/webcomponents">complete Web Components example on GitHub</a>.</p>
+<p>Likewise, <code>&lt;input type=&quot;checkbox&quot;&gt;</code> and <code>&lt;input type=&quot;radio&quot;&gt;</code> support <code>defaultChecked</code>, and <code>&lt;select&gt;</code> supports <code>defaultValue</code>.</p>
 
 
     <div class="docs-prevnext">
@@ -223,7 +227,7 @@ You will need to manually attach event handlers to handle these events within yo
           </li>
         
           <li>
-            <a href="/react/docs/uncontrolled-components.html">Uncontrolled Components</a>
+            <a href="/react/docs/uncontrolled-components.html" class="active">Uncontrolled Components</a>
             
           </li>
         
@@ -253,7 +257,7 @@ You will need to manually attach event handlers to handle these events within yo
           </li>
         
           <li>
-            <a href="/react/docs/web-components.html" class="active">Web Components</a>
+            <a href="/react/docs/web-components.html">Web Components</a>
             
           </li>
         

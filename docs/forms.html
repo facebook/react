@@ -78,460 +78,145 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>Form components such as <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;option&gt;</code> differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.</p>
-
-<p>There are two types of form components:</p>
-
-<ul>
-<li>Controlled Components</li>
-<li>Uncontrolled Components</li>
-</ul>
-
-<p>You can jump directly to <a href="/react/docs/forms.html#examples">examples</a>.</p>
+    <p>HTML form elements work a little bit differently from other DOM elements in React, because form elements naturally keep some internal state. For example, this form in plain HTML accepts a single name:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;form&gt;</span>
+  Name:
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;submit&quot;</span> <span class="na">value=</span><span class="s">&quot;Submit&quot;</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/form&gt;</span>
+</code></pre></div>
+<p>This form has the default HTML form behavior of browsing to a new page when the user submits the form. If you want this behavior in React, it just works. But in most cases, it&#39;s convenient to have a JavaScript function that handles the submission of the form and has access to the data that the user entered into the form. The standard way to achieve this is with a technique called &quot;controlled components&quot;.</p>
 <h2><a class="anchor" name="controlled-components"></a>Controlled Components <a class="hash-link" href="#controlled-components">#</a></h2>
-<p>A <strong>controlled</strong> form component provides a <code>value</code> prop. A <strong>controlled</strong> component does not maintain its own internal state; the component renders purely based on props.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">input</span>
-      <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
-<span class="hll">      <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span>
-</span>  <span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>If you try to run this example, you will notice that the input doesn&#39;t change as you type. This is because the component has declared the input&#39;s <code>value</code> to always be <code>&quot;Hello!&quot;</code>.</p>
+<p>In HTML, form elements such as <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;select&gt;</code> typically maintain their own state and update it based on user input. In React, mutable state is typically kept in the state property of components, and only updated with <a href="/react/docs/react-component.html#setstate"><code>setState()</code></a>.</p>
 
-<p>To update the value in response to user input, you would use the <code>onChange</code> event to save the new value, then pass that to the <code>value</code> prop of the input:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p>We can combine the two by making the React state be the &quot;single source of truth&quot;. Then the React component that renders a form also controls what happens in that form on subsequent user input. An input form element whose value is controlled by React in this way is called a &quot;controlled component&quot;.</p>
+
+<p>For example, if we want to make the previous example log the name when it is submitted, we can write the form as a controlled component:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">NameForm</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-</span>  <span class="p">}</span>
-
+<span class="hll">  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Text field value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;A name was submitted: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
-          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span>
-<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="nx">Name</span><span class="o">:</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/NRmBmq?editors=0010">Try it on CodePen.</a></p>
+<p><a href="https://codepen.io/lacker/pen/oYNzxY?editors=0010">Try it on CodePen.</a></p>
 
-<p>In this example, we are accepting the value provided by the user and updating the <code>value</code> prop of the <code>&lt;input&gt;</code> component. This pattern makes it easy to implement interfaces that respond to or validate user interactions. For example:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-<span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">140</span><span class="p">)</span>
-</span>    <span class="p">});</span>
-  <span class="p">}</span>
+<p>Since the <code>value</code> attribute is set on our form element, the displayed value will always be <code>this.state.value</code>, making the React state the source of truth. Since <code>handleChange</code> runs on every keystroke to update the React state, the displayed value will update as the user types.</p>
+
+<p>With a controlled component, every state mutation will have an associated handler function. This makes it straightforward to modify or validate user input. For example, if we wanted to enforce that names are written with all uppercase letters, we could write <code>handleChange</code> as:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">toUpperCase</span><span class="p">()});</span>
+</span><span class="p">}</span>
+</code></pre></div><h2><a class="anchor" name="the-textarea-tag"></a>The textarea Tag <a class="hash-link" href="#the-textarea-tag">#</a></h2>
+<p>In HTML, a <code>&lt;textarea&gt;</code> element defines its text by its children:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;textarea&gt;</span>
+  Hello there, this is some text in a text area
+<span class="nt">&lt;/textarea&gt;</span>
 </code></pre></div>
-<p>This would accept user input and truncate the value to the first 140 characters.</p>
-
-<p>Controlled components also let us reset inputs to arbitrary values by setting the state:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClearClick</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-<span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span>
-</span>    <span class="p">});</span>
-  <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="potential-issues-with-checkboxes-and-radio-buttons"></a>Potential Issues With Checkboxes and Radio Buttons <a class="hash-link" href="#potential-issues-with-checkboxes-and-radio-buttons">#</a></h3>
-<p>Be aware that, in an attempt to normalize change handling for checkboxes and radio inputs, React listens to a <code>click</code> browser event to implement the <code>onChange</code> event.</p>
-
-<p>For the most part this behaves as expected, except when calling <code>preventDefault</code> in a <code>change</code> handler. <code>preventDefault</code> stops the browser from visually updating the input, even if <code>checked</code> gets toggled. This can be worked around either by removing the call to <code>preventDefault</code>, or putting the toggle of <code>checked</code> in a <code>setTimeout</code>.</p>
-<h2><a class="anchor" name="uncontrolled-components"></a>Uncontrolled Components <a class="hash-link" href="#uncontrolled-components">#</a></h2>
-<p>Form components that do not provide a <code>value</code> prop are <strong>uncontrolled</strong>.</p>
-
-<p>The example below renders an <code>&lt;input&gt;</code> control with an empty value. Any user input will be immediately reflected by the rendered element.</p>
-
-<p>An <strong>uncontrolled</strong> component manages its own state.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-</code></pre></div>
-<p>If you wanted to listen to updates to the value, you could use the <code>onChange</code> event just like you can with controlled components. However, you would <em>not</em> pass the value you saved to the component.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p>In React, a <code>&lt;textarea&gt;</code> uses a <code>value</code> attribute instead. This way, a form using a <code>&lt;textarea&gt;</code> can be written very similarly to a form that uses a single-line input:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">EssayForm</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Please write an essay about your favorite DOM element.&#39;</span>
+</span><span class="hll">    <span class="p">};</span>
+</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Note: with uncontrolled inputs, you don&#39;t</span>
-    <span class="c1">// have to put the value in the state.</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">}</span>
-
+<span class="hll">  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Text field value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;An essay was submitted: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span>
-          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
-          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span>
-<span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="nx">Name</span><span class="o">:</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/pEBOJR?editors=0010">Try it on CodePen.</a></p>
-
-<p>While this example puts value in the state so we can later read it in <code>handleSubmit()</code>, uncontrolled form components don&#39;t require this. You may completely omit an <code>onChange</code> handler and instead read the input value using <a href="/react/docs/refs-and-the-dom.html">DOM references</a>, an advanced feature discussed later.</p>
-<h3><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h3>
-<p>To initialize an uncontrolled component with a non-empty value, you can supply a <code>defaultValue</code> prop.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
+<p>Notice that <code>this.state.value</code> is initialized in the constructor, so that the text area starts off with some text in it.</p>
+<h2><a class="anchor" name="the-select-tag"></a>The select Tag <a class="hash-link" href="#the-select-tag">#</a></h2>
+<p>In HTML, <code>&lt;select&gt;</code> creates a drop-down list. For example, this HTML creates a drop-down list of flavors:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;select&gt;</span>
+  <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;grapefruit&quot;</span><span class="nt">&gt;</span>Grapefruit<span class="nt">&lt;/option&gt;</span>
+  <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;lime&quot;</span><span class="nt">&gt;</span>Lime<span class="nt">&lt;/option&gt;</span>
+  <span class="nt">&lt;option</span> <span class="na">selected</span> <span class="na">value=</span><span class="s">&quot;coconut&quot;</span><span class="nt">&gt;</span>Coconut<span class="nt">&lt;/option&gt;</span>
+  <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;mango&quot;</span><span class="nt">&gt;</span>Mango<span class="nt">&lt;/option&gt;</span>
+<span class="nt">&lt;/select&gt;</span>
 </code></pre></div>
-<p>Likewise, <code>&lt;input type=&quot;checkbox&quot;&gt;</code> and <code>&lt;input type=&quot;radio&quot;&gt;</code> support <code>defaultChecked</code>, and <code>&lt;select&gt;</code> supports <code>defaultValue</code>.</p>
-<h2><a class="anchor" name="interactive-props"></a>Interactive Props <a class="hash-link" href="#interactive-props">#</a></h2>
-<p>Form components support a few props that are affected via user interactions:</p>
-
-<ul>
-<li><code>value</code>, supported by <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code> components.</li>
-<li><code>checked</code>, supported by <code>&lt;input&gt;</code> components of type <code>checkbox</code> or <code>radio</code>.</li>
-<li><code>selected</code>, supported by <code>&lt;option&gt;</code> components.</li>
-</ul>
-
-<p>In HTML, the value of <code>&lt;textarea&gt;</code> is set via children. In React, you should use <code>value</code> instead.</p>
-
-<p>Form components allow listening for changes by setting a callback to the <code>onChange</code> prop. The <code>onChange</code> prop works across browsers to fire in response to user interactions when:</p>
-
-<ul>
-<li>The <code>value</code> of <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code> changes.</li>
-<li>The <code>checked</code> state of <code>&lt;input&gt;</code> changes.</li>
-<li>The <code>selected</code> state of <code>&lt;option&gt;</code> changes.</li>
-</ul>
-
-<p>Like all DOM events, the <code>onChange</code> prop is supported on all native components and can be used to listen to bubbled change events.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>For <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code>, <code>onChange</code> should generally be used instead of the DOM&#39;s built-in <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/oninput"><code>oninput</code></a> event handler.</p>
-</blockquote>
-<h2><a class="anchor" name="advanced-topics"></a>Advanced Topics <a class="hash-link" href="#advanced-topics">#</a></h2><h3><a class="anchor" name="why-controlled-components"></a>Why Controlled Components? <a class="hash-link" href="#why-controlled-components">#</a></h3>
-<p>Using form components such as <code>&lt;input&gt;</code> in React presents a challenge that is absent when writing traditional form HTML. For example, in HTML:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="na">name=</span><span class="s">&quot;title&quot;</span> <span class="na">value=</span><span class="s">&quot;Untitled&quot;</span> <span class="nt">/&gt;</span>
-</code></pre></div>
-<p>This renders an input <em>initialized</em> with the value, <code>Untitled</code>. When the user updates the input, the node&#39;s <code>value</code> <em>property</em> will change. However, <code>node.getAttribute(&#39;value&#39;)</code> will still return the value used at initialization time, <code>Untitled</code>.</p>
-
-<p>Unlike HTML, React components must represent the state of the view at any point in time and not only at initialization time. For example, in React:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;title&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Untitled&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-</code></pre></div>
-<p>Since this method describes the view at any point in time, the value of the text input should <em>always</em> be <code>Untitled</code>.</p>
-<h3><a class="anchor" name="why-textarea-value"></a>Why Textarea Value? <a class="hash-link" href="#why-textarea-value">#</a></h3>
-<p>In HTML, the value of <code>&lt;textarea&gt;</code> is usually set using its children:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="c">&lt;!-- Don&#39;t do this in React. --&gt;</span>
-  <span class="nt">&lt;textarea</span> <span class="na">name=</span><span class="s">&quot;description&quot;</span><span class="nt">&gt;</span>This is the description.<span class="nt">&lt;/textarea&gt;</span>
-</code></pre></div>
-<p>For HTML, this easily allows developers to supply multiline values. However, since React is JavaScript, we do not have string limitations and can use <code>\n</code> if we want newlines. In a world where we have <code>value</code> and <code>defaultValue</code>, it is ambiguous what role children play. For this reason, you should not use children when setting <code>&lt;textarea&gt;</code> values:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
-</code></pre></div>
-<p>If you <em>do</em> decide to use children, they will behave like <code>defaultValue</code>.</p>
-<h3><a class="anchor" name="why-select-value"></a>Why Select Value? <a class="hash-link" href="#why-select-value">#</a></h3>
-<p>The selected <code>&lt;option&gt;</code> in an HTML <code>&lt;select&gt;</code> is normally specified through that option&#39;s <code>selected</code> attribute. In React we assign the <code>select</code> component a specific value by passing a <code>value</code> prop:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
-</span>    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-  <span class="o">&lt;</span><span class="err">/select&gt;</span>
-</code></pre></div>
-<p>To make an uncontrolled component, <code>defaultValue</code> is used instead.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>You can pass an array into the <code>value</code> attribute, allowing you to select multiple options in a <code>select</code> tag: <code>&lt;select multiple={true} value={[&#39;B&#39;, &#39;C&#39;]}&gt;</code>.</p>
-</blockquote>
-<h3><a class="anchor" name="imperative-operations"></a>Imperative Operations <a class="hash-link" href="#imperative-operations">#</a></h3>
-<p>If you need to imperatively perform an operation, you have to obtain a <a href="/react/docs/more-about-refs.html#the-ref-callback-attribute">reference to the DOM node</a>.
-For instance, if you want to imperatively submit a form, one approach would be to attach a <code>ref</code> to the <code>form</code> element and manually call <code>form.submit()</code>.</p>
-<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2><h3><a class="anchor" name="controlled-input"></a>Controlled Input <a class="hash-link" href="#controlled-input">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p>Note that the Coconut option is initially selected, because of the <code>selected</code> attribute. React, instead of using this <code>selected</code> attribute, uses a <code>value</code> attribute on the root <code>select</code> tag. This is more convenient in a controlled component because you only need to update it in one place. For example:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">FlavorForm</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;coconut&#39;</span><span class="p">};</span>
+</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-</span>  <span class="p">}</span>
-
+<span class="hll">  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
   <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Text field value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Your favorite flavor is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span>
-          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
-          <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;edit me&quot;</span>
-<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
-</span>        <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/JRVaYB?editors=0010">Try it out on CodePen.</a></p>
-<h3><a class="anchor" name="controlled-textarea"></a>Controlled Textarea <a class="hash-link" href="#controlled-textarea">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-</span>  <span class="p">}</span>
-
-  <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Textarea value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">textarea</span>
-          <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span>
-<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
-</span>        <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/NRmLxN?editors=0010">Try it out on CodePen.</a></p>
-<h3><a class="anchor" name="controlled-select"></a>Controlled Select <a class="hash-link" href="#controlled-select">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;B&#39;</span><span class="p">};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-</span>  <span class="p">}</span>
-
-  <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Select value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="nx">Pick</span> <span class="nx">your</span> <span class="nx">favorite</span> <span class="nx">La</span> <span class="nx">Croix</span> <span class="nx">flavor</span><span class="o">:</span>
 <span class="hll">        <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span><span class="o">&gt;</span>
-</span>          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+</span>          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;grapefruit&quot;</span><span class="o">&gt;</span><span class="nx">Grapefruit</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;lime&quot;</span><span class="o">&gt;</span><span class="nx">Lime</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;coconut&quot;</span><span class="o">&gt;</span><span class="nx">Coconut</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+          <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;mango&quot;</span><span class="o">&gt;</span><span class="nx">Mango</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
         <span class="o">&lt;</span><span class="err">/select&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/qawrbr?editors=0010">Try it out on CodePen.</a></p>
-<h3><a class="anchor" name="uncontrolled-radio-button"></a>Uncontrolled Radio Button <a class="hash-link" href="#uncontrolled-radio-button">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;B&#39;</span><span class="p">};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-  <span class="p">}</span>
+<p><a href="https://codepen.io/lacker/pen/QGWKQP?editors=0010">Try it on CodePen.</a></p>
 
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">}</span>
-
-  <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Radio button value is: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">input</span>
-            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span>
-            <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span>
-            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
-<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>          <span class="nx">Option</span> <span class="nx">A</span>
-        <span class="o">&lt;</span><span class="err">/label&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">input</span>
-            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span>
-            <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span>
-            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span>
-<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
-</span><span class="hll">            <span class="nx">defaultChecked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>          <span class="nx">Option</span> <span class="nx">B</span>
-        <span class="o">&lt;</span><span class="err">/label&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">input</span>
-            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;radio&quot;</span>
-            <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;choice&quot;</span>
-            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
-<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>          <span class="nx">Option</span> <span class="nx">C</span>
-        <span class="o">&lt;</span><span class="err">/label&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/ozOPLJ?editors=0010">Try it out on CodePen.</a></p>
-<h3><a class="anchor" name="uncontrolled-checkbox"></a>Uncontrolled Checkbox <a class="hash-link" href="#uncontrolled-checkbox">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">checked</span><span class="o">:</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="o">:</span> <span class="kc">false</span><span class="p">}};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
-    <span class="c1">// Copy the object so we don&#39;t mutate the old state.</span>
-    <span class="c1">// (This requires an Object.assign polyfill):</span>
-    <span class="kr">const</span> <span class="nx">checked</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">checked</span><span class="p">[</span><span class="nx">value</span><span class="p">])</span> <span class="p">{</span>
-      <span class="nx">checked</span><span class="p">[</span><span class="nx">value</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-      <span class="nx">checked</span><span class="p">[</span><span class="nx">value</span><span class="p">]</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="p">};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">checked</span><span class="p">});</span>
-  <span class="p">}</span>
-
-  <span class="nx">handleSubmit</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;Boxes checked: &#39;</span> <span class="o">+</span>
-      <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">A</span> <span class="o">?</span> <span class="s1">&#39;A &#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
-      <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">B</span> <span class="o">?</span> <span class="s1">&#39;B &#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
-      <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">checked</span><span class="p">.</span><span class="nx">C</span> <span class="o">?</span> <span class="s1">&#39;C&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">input</span>
-            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
-            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
-<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>          <span class="nx">Option</span> <span class="nx">A</span>
-        <span class="o">&lt;</span><span class="err">/label&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-          <span class="o">&lt;</span><span class="nx">input</span>
-            <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
-            <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span>
-<span class="hll">            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
-</span><span class="hll">            <span class="nx">defaultChecked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>          <span class="nx">Option</span> <span class="nx">B</span>
-        <span class="o">&lt;</span><span class="err">/label&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span>
-          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
-          <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span>
-<span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>          <span class="nx">Option</span> <span class="nx">C</span>
-        <span class="o">&lt;</span><span class="err">/label&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">br</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-          <span class="nx">Submit</span>
-        <span class="o">&lt;</span><span class="err">/button&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Form</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/rrbkWz?editors=0010">Try it on CodePen.</a></p>
+<p>Overall, this makes it so that <code>&lt;input type=&quot;text&quot;&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;select&gt;</code> all work very similarly - they all accept a <code>value</code> attribute that you can use to implement a controlled component.</p>
+<h2><a class="anchor" name="alternatives-to-controlled-components"></a>Alternatives to Controlled Components <a class="hash-link" href="#alternatives-to-controlled-components">#</a></h2>
+<p>It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out <a href="/react/docs/uncontrolled-components.html">uncontrolled components</a>, an alternative technique for implementing input forms.</p>
 
 
     <div class="docs-prevnext">
@@ -635,6 +320,11 @@ For instance, if you want to imperatively submit a form, one approach would be t
         
           <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/uncontrolled-components.html">Uncontrolled Components</a>
             
           </li>
         
