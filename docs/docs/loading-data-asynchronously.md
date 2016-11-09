@@ -4,7 +4,7 @@ title: Loading Data Asynchronously
 permalink: docs/loading-data-asynchronously.html
 ---
 
-React has no special capabilities for dealing with asynchronous network requests and a 3rd-party library or browser API is needed to perform them. If a component needs to have its UI respond to new data arriving, it has to call `setState` to rerender itself.
+React has no special capabilities for dealing with asynchronous network requests and a third party library or browser API is needed to perform them. If a component needs to have its UI respond to new data arriving, it has to call `setState` to rerender itself.
 
 ## Initial Render
 
