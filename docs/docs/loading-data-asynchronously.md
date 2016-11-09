@@ -8,7 +8,7 @@ React has no special capabilities for dealing with asynchronous network requests
 
 ## Initial Render
 
-Often, the data that a component needs is not available at initial render. We can load data asynchronously in the `componentDidMount` [lifecycle hook](/react/docs/react-component.html#componentdidmount).
+Often, the data that a component needs is not available at initial render. We can load data asynchronously in the [`componentDidMount` lifecycle hook](/react/docs/react-component.html#componentdidmount).
 
 In the following example we use the `fetch` [browser API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to retrieve information about Facebook's Gists on GitHub and store them in the state.
 
