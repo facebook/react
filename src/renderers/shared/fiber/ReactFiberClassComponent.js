@@ -89,7 +89,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
           'boolean value. Make sure to return true or false.',
-          getName(workInProgress, instance) || 'ReactCompositeComponent'
+          getName(workInProgress, instance)
         );
       }
 
