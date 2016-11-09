@@ -43,6 +43,10 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
   }
 }
 
+function normalizeClassName(className) : string {
+  return (className === null) ? '' : className;
+}
+
 var DOMRenderer = ReactFiberReconciler({
 
   updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
@@ -55,7 +59,7 @@ var DOMRenderer = ReactFiberReconciler({
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
     if (typeof props.className !== 'undefined') {
-      domElement.className = props.className;
+      domElement.className = normalizeClassName(props.className);
     }
     if (typeof props.children === 'string') {
       domElement.textContent = props.children;
@@ -75,7 +79,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
     if (typeof newProps.className !== 'undefined') {
-      domElement.className = newProps.className;
+      domElement.className = normalizeClassName(newProps.className);
     }
     if (typeof newProps.children === 'string') {
       domElement.textContent = newProps.children;
