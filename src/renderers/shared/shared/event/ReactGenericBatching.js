@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactControlledComponent = require('ReactControlledComponent');
+
 // Used as a way to call batchedUpdates when we don't know if we're in a Fiber
 // or Stack context. Such as when we're dispatching events or if third party
 // libraries need to call batchedUpdates. Eventually, this API will go away when
@@ -36,6 +38,29 @@ function batchedUpdates(fn, bookkeeping) {
   stackBatchedUpdates(performFiberBatchedUpdates, fn, bookkeeping);
 }
 
+var isBatching = false;
+function batchedUpdatesWithControlledTarget(fn, bookkeeping, target) {
+  if (isBatching) {
+    // TODO: If this target is not the same as the one currently batched,
+    // we'll drop it.
+    batchedUpdates(fn, bookkeeping);
+    return;
+  }
+  isBatching = true;
+  try {
+    batchedUpdates(fn, bookkeeping);
+  } finally {
+    isBatching = false;
+  }
+  if (target) {
+    // Here we wait until all updates have propagated, which is important
+    // when using controlled components within layers:
+    // https://github.com/facebook/react/issues/1698
+    // Then we restore state of any controlled component.
+    ReactControlledComponent.restoreStateIfNeeded(target);
+  }
+}
+
 var ReactGenericBatchingInjection = {
   injectStackBatchedUpdates: function(_batchedUpdates) {
     stackBatchedUpdates = _batchedUpdates;
@@ -47,6 +72,7 @@ var ReactGenericBatchingInjection = {
 
 var ReactGenericBatching = {
   batchedUpdates,
+  batchedUpdatesWithControlledTarget,
   injection: ReactGenericBatchingInjection,
 };
 

@@ -101,10 +101,11 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  ReactGenericBatching.batchedUpdates(runEventInBatch, event);
-  if (activeElementInst) {
-    ReactControlledComponent.restoreStateIfNeeded(activeElementInst);
-  }
+  ReactGenericBatching.batchedUpdatesWithControlledTarget(
+    runEventInBatch,
+    event,
+    activeElementInst
+  );
 }
 
 function runEventInBatch(event) {

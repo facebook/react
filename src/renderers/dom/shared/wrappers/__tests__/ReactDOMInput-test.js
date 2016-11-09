@@ -66,6 +66,72 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
+  it('should control a value in reentrant events', () => {
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var inputEvent = document.createEvent('Event');
+    inputEvent.initEvent('input', true, true);
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var changeEvent = document.createEvent('Event');
+    changeEvent.initEvent('change', true, true);
+
+    class ControlledInputs extends React.Component {
+      state = { value: 'lion' };
+      a = null;
+      b = null;
+      switchedFocus = false;
+      change(newValue) {
+        this.setState({ value: newValue });
+        // Calling focus here will blur the text box which causes a native
+        // change event. Ideally we shouldn't have to fire this ourselves.
+        // I don't know how to simulate a change event on a text box.
+        this.a.dispatchEvent(changeEvent);
+        this.b.focus();
+      }
+      blur(currentValue) {
+        this.switchedFocus = true;
+        // currentValue should be 'giraffe' here because we should not have
+        // restored it on the target yet.
+        this.setState({ value: currentValue });
+      }
+      render() {
+        return (
+          <div>
+            <input
+              type="text"
+              ref={n => this.a = n}
+              value={this.state.value}
+              onChange={e => this.change(e.target.value)}
+              onBlur={e => this.blur(e.target.value)}
+            />
+            <input
+              type="text"
+              ref={n => this.b = n}
+            />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<ControlledInputs />, container);
+
+    // We need it to be in the body to test native event dispatching.
+    document.body.appendChild(container);
+
+    instance.a.focus();
+    // Simulate a native keyup event
+    setUntrackedValue(instance.a, 'giraffe');
+
+    instance.a.dispatchEvent(inputEvent);
+
+    expect(instance.a.value).toBe('giraffe');
+    expect(instance.switchedFocus).toBe(true);
+
+    document.body.removeChild(container);
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);

@@ -253,6 +253,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
+* should control a value in reentrant events
 * should display `defaultValue` of number 0
 * should display "true" for `defaultValue` of `true`
 * should display "false" for `defaultValue` of `false`
