@@ -1206,6 +1206,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * gives a ref to native components
 * warns correctly for refs on SFCs
 * allows an optional createNodeMock function
+* supports unmounting when using refs
 * supports error boundaries
 
 src/shared/utils/__tests__/KeyEscapeUtils-test.js

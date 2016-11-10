@@ -53,20 +53,23 @@ class ReactTestComponent {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
+  _hostContainerInfo: null | Object;
 
   constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
+    this._hostContainerInfo = null;
   }
 
   mountComponent(
     transaction: ReactTestReconcileTransaction,
     nativeParent: null | ReactTestComponent,
-    nativeContainerInfo: ?null,
+    hostContainerInfo: null | Object,
     context: Object,
   ) {
     var element = this._currentElement;
+    this._hostContainerInfo = hostContainerInfo;
     // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.mountChildren(element.props.children, transaction, context);
   }
@@ -83,8 +86,11 @@ class ReactTestComponent {
 
   getPublicInstance(transaction: ReactTestReconcileTransaction): Object {
     var element = this._currentElement;
-    var options = transaction.getTestOptions();
-    return options.createNodeMock(element);
+    var options = this._hostContainerInfo;
+    if (options && options.createNodeMock) {
+      return options.createNodeMock(element);
+    }
+    return {};
   }
 
   toJSON(): ReactTestRendererJSON {

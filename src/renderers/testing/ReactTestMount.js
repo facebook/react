@@ -56,12 +56,14 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
 function mountComponentIntoNode(
     componentInstance,
     transaction,
+    hostParent,
+    hostContainerInfo
   ) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
     null,
-    null,
+    hostContainerInfo,
     emptyObject
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
@@ -79,12 +81,14 @@ function batchedMountComponentIntoNode(
     componentInstance,
     options,
   ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(options);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
     transaction,
+    null,
+    options
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;
@@ -96,7 +100,7 @@ var ReactTestInstance = function(component) {
 ReactTestInstance.prototype.getInstance = function() {
   return this._component._renderedComponent.getPublicInstance();
 };
-ReactTestInstance.prototype.update = function(nextElement) {
+ReactTestInstance.prototype.update = function(nextElement, options) {
   invariant(
     this._component,
     "ReactTestRenderer: .update() can't be called after unmount."
