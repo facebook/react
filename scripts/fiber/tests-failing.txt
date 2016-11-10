@@ -567,20 +567,9 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
-* should batch state when updating state twice
-* should batch state when updating two different state keys
-* should batch state and props together
-* should batch parent/child state updates together
-* should batch child/parent state updates together
-* should support chained state updates
-* should batch forceUpdate together
-* should update children even if parent blocks updates
-* should flow updates correctly
 * should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
-* should flush updates in the correct order across roots
 * should queue updates from during mount
-* does not call render after a component as been deleted
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
