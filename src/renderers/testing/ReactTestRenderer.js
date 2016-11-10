@@ -23,6 +23,7 @@ var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
+var invariant = require('invariant');
 
 import type { ReactElement } from 'ReactElementType';
 import type { ReactInstance } from 'ReactInstanceType';
@@ -65,7 +66,7 @@ class ReactTestComponent {
   mountComponent(
     transaction: ReactTestReconcileTransaction,
     nativeParent: null | ReactTestComponent,
-    hostContainerInfo: null | Object,
+    hostContainerInfo: Object,
     context: Object,
   ) {
     var element = this._currentElement;
@@ -86,11 +87,13 @@ class ReactTestComponent {
 
   getPublicInstance(transaction: ReactTestReconcileTransaction): Object {
     var element = this._currentElement;
-    var options = this._hostContainerInfo;
-    if (options && options.createNodeMock) {
-      return options.createNodeMock(element);
-    }
-    return {};
+    var hostContainerInfo = this._hostContainerInfo;
+    invariant(
+      hostContainerInfo,
+      'hostContainerInfo should be populated before ' +
+      'getPublicInstance is called.'
+    );
+    return hostContainerInfo.createNodeMock(element);
   }
 
   toJSON(): ReactTestRendererJSON {
