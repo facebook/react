@@ -357,7 +357,7 @@ describe('ReactComponentLifeCycle', () => {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount =
           getLifeCycleState(this);
-        this.state.hasWillMountCompleted = true;
+        this.setState({hasWillMountCompleted: true});
       }
 
       componentDidMount() {
@@ -389,9 +389,13 @@ describe('ReactComponentLifeCycle', () => {
         this._testJournal.stateAtStartOfWillUnmount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillUnmount =
           getLifeCycleState(this);
+        // this.setState() can't be used here so this will produce a warning
+        // about setting state directly. We will catch this warning later.
         this.state.hasWillUnmountCompleted = true;
       }
     }
+
+    spyOn(console, 'error');
 
     // A component that is merely "constructed" (as in "constructor") but not
     // yet initialized, or rendered.
@@ -453,6 +457,14 @@ describe('ReactComponentLifeCycle', () => {
     // But the current lifecycle of the component is unmounted.
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
+
+    // This warning about setting this.state directly should have been produced
+    // once when unmounting the component
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: this.state: Setting state directly with this.state is not ' +
+      'recommended. Instead, use this.setState().'
+    );
   });
 
   it('should not throw when updating an auxiliary component', () => {

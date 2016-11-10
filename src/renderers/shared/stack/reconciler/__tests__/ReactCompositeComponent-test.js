@@ -1223,6 +1223,35 @@ describe('ReactCompositeComponent', () => {
     expect(moo.state.amIImmutable).toBe(undefined);
   });
 
+  it('should warn when trying to set state directly using this.state', function() {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          message: undefined,
+        };
+      }
+      changeState() {
+        this.state.message = 'hello';
+        this.forceUpdate();
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    instance.changeState();
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: this.state: Setting state directly with this.state is not ' +
+      'recommended. Instead, use this.setState().'
+    );
+  });
+
   it('should not warn about unmounting during unmounting', () => {
     var container = document.createElement('div');
     var layer = document.createElement('div');
