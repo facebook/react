@@ -509,6 +509,7 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* should handle className
 * should not warn for "0" as a unitless style value
 * should skip reserved props on web components
 * should skip dangerouslySetInnerHTML on web components

@@ -104,7 +104,6 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should bubble onTouchTap
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should handle className
 * should gracefully handle various style value types
 * should update styles when mutating style object
 * should warn when mutating style
