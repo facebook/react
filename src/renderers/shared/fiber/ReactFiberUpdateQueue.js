@@ -74,15 +74,16 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
   while (node) {
     const callback = node.callback;
     if (callback && !node.callbackWasCalled) {
-      node.callbackWasCalled = true;
-      if (typeof context !== 'undefined') {
-        try {
+      try {
+        node.callbackWasCalled = true;
+        if (typeof context !== 'undefined') {
           callback.call(context);
-        } catch (error) {
-          // do something
+        } else {
+          callback();
         }
-      } else {
-        callback();
+      } catch (error) {
+        // can't return the error, as it'll stop the subsequent callbacks
+        node.callbackWasCalled = false;
       }
     }
     node = node.next;
