@@ -135,27 +135,30 @@ var DOMPropertyOperations = {
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
+      var propName = propertyInfo.propertyName;
       if (mutationMethod) {
         mutationMethod(node, value);
-      } else if (shouldIgnoreValue(propertyInfo, value)) {
-        this.deleteValueForProperty(node, name);
-        return;
-      } else if (propertyInfo.mustUseProperty) {
-        // Contrary to `setAttribute`, object properties are properly
-        // `toString`ed by IE8/9.
-        node[propertyInfo.propertyName] = value;
-      } else {
-        var attributeName = propertyInfo.attributeName;
-        var namespace = propertyInfo.attributeNamespace;
-        // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
-        if (namespace) {
-          node.setAttributeNS(namespace, attributeName, '' + value);
-        } else if (propertyInfo.hasBooleanValue ||
-                   (propertyInfo.hasOverloadedBooleanValue && value === true)) {
-          node.setAttribute(attributeName, '');
+      } else if (('' + node[propName]) !== ('' + value)) {
+        if (shouldIgnoreValue(propertyInfo, value)) {
+          this.deleteValueForProperty(node, name);
+          return;
+        } else if (propertyInfo.mustUseProperty) {
+          // Contrary to `setAttribute`, object properties are properly
+          // `toString`ed by IE8/9.
+          node[propName] = value;
         } else {
-          node.setAttribute(attributeName, '' + value);
+          var attributeName = propertyInfo.attributeName;
+          var namespace = propertyInfo.attributeNamespace;
+          // `setAttribute` with objects becomes only `[object]` in IE8/9,
+          // ('' + value) makes it output the correct toString()-value.
+          if (namespace) {
+            node.setAttributeNS(namespace, attributeName, '' + value);
+          } else if (propertyInfo.hasBooleanValue ||
+                    (propertyInfo.hasOverloadedBooleanValue && value === true)) {
+            node.setAttribute(attributeName, '');
+          } else {
+            node.setAttribute(attributeName, '' + value);
+          }
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
