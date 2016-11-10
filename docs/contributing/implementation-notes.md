@@ -576,7 +576,7 @@ class CompositeComponent {
       // Component class
       // Call the lifecycle if necessary
       if (publicInstance.componentWillUpdate) {
-        publicInstance.componentWillUpdate(prevProps);
+        publicInstance.componentWillUpdate(nextProps);
       }
       // Update the props
       publicInstance.props = nextProps;
