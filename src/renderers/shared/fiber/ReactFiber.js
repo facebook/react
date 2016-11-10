@@ -308,7 +308,7 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
     // the current or a workInProgress? When the continuation gets rendered here
     // we don't know if we can reuse that fiber or if we need to clone it.
     // There is probably a clever way to restructure this.
-    fiber = type;
+    fiber = ((type : any) : Fiber);
   } else {
     throw new Error('Unknown component type: ' + typeof type);
   }
