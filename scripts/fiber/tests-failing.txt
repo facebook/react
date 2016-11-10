@@ -593,9 +593,7 @@ src/shared/utils/__tests__/traverseAllChildren-test.js
 * should warn for using maps as children with owner info
 
 src/test/__tests__/ReactTestUtils-test.js
-* traverses children in the correct order
 * should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component
-* can scry with stateless components involved
 * should set the type of the event
