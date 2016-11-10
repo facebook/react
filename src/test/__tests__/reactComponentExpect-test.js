@@ -23,6 +23,135 @@ describe('reactComponentExpect', () => {
     reactComponentExpect = require('reactComponentExpect');
   });
 
+  it('should match composite components', () => {
+    class SomeComponent extends React.Component {
+      state = {y: 2};
+      render() {
+        return (
+          <div className="Hello" />
+        );
+      }
+    }
+
+    var component = ReactTestUtils.renderIntoDocument(<SomeComponent x={1} />);
+    reactComponentExpect(component)
+      .toBePresent()
+      .toBeCompositeComponent()
+      .toBeComponentOfType(SomeComponent)
+      .toBeCompositeComponentWithType(SomeComponent)
+      .scalarPropsEqual({x: 1})
+      .scalarStateEqual({y: 2});
+  });
+
+  it('should match empty DOM components', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <div className="Hello" />
+        );
+      }
+    }
+
+    var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .toBePresent()
+      .toBeDOMComponent()
+      .toBeDOMComponentWithNoChildren()
+      .toBeComponentOfType('div');
+  });
+
+  it('should match non-empty DOM components', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <div className="Hello">
+            <p>1</p>
+            <p>2</p>
+          </div>
+        );
+      }
+    }
+
+    var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .toBePresent()
+      .toBeDOMComponent()
+      .toBeDOMComponentWithChildCount(2)
+      .toBeComponentOfType('div');
+  });
+
+  it('should match DOM component children', () => {
+    class Inner extends React.Component {
+      render() {
+        return <section />;
+      }
+    }
+
+    class Noop extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <div className="Hello">
+            <p>1</p>
+            <Inner foo="bar" />
+            <span>{'Two'}{3}</span>
+            <Noop />
+          </div>
+        );
+      }
+    }
+
+    var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .expectRenderedChildAt(0)
+      .toBePresent()
+      .toBeDOMComponent()
+      .toBeDOMComponentWithNoChildren()
+      .toBeComponentOfType('p');
+
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .expectRenderedChildAt(1)
+      .toBePresent()
+      .toBeCompositeComponentWithType(Inner)
+      .scalarPropsEqual({foo: 'bar'})
+      .expectRenderedChild()
+      .toBeComponentOfType('section')
+      .toBeDOMComponentWithNoChildren();
+
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .expectRenderedChildAt(2)
+      .toBePresent()
+      .toBeDOMComponent()
+      .toBeComponentOfType('span')
+      .toBeDOMComponentWithChildCount(2)
+      .expectRenderedChildAt(0)
+      .toBeTextComponentWithValue('Two');
+
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .expectRenderedChildAt(2)
+      .expectRenderedChildAt(1)
+      .toBeTextComponentWithValue('3');
+
+    reactComponentExpect(component)
+      .expectRenderedChild()
+      .expectRenderedChildAt(3)
+      .toBePresent()
+      .toBeCompositeComponentWithType(Noop)
+      .expectRenderedChild()
+      .toBeEmptyComponent();
+  });
+
   it('should detect text components', () => {
     class SomeComponent extends React.Component {
       render() {
@@ -36,7 +165,6 @@ describe('reactComponentExpect', () => {
     }
 
     var component = ReactTestUtils.renderIntoDocument(<SomeComponent />);
-
     reactComponentExpect(component)
       .expectRenderedChild()
       .expectRenderedChildAt(1)
