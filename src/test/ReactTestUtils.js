@@ -165,6 +165,7 @@ var ReactTestUtils = {
     return (constructor === type);
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElement: function(inst) {
     if (!React.isValidElement(inst)) {
       return false;
@@ -178,6 +179,7 @@ var ReactTestUtils = {
     );
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElementWithType: function(inst, type) {
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance
@@ -188,6 +190,7 @@ var ReactTestUtils = {
              (constructor === type));
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   getRenderedChildOfCompositeComponent: function(inst) {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;

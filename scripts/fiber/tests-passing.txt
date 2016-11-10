@@ -1262,3 +1262,10 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with multiple classes
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
 * should not warn when simulating events with extra properties
+
+src/test/__tests__/reactComponentExpect-test.js
+* should match composite components
+* should match empty DOM components
+* should match non-empty DOM components
+* should match DOM component children
+* should detect text components

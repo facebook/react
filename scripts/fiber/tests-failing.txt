@@ -599,6 +599,3 @@ src/test/__tests__/ReactTestUtils-test.js
 * should change the value of an input field in a component
 * can scry with stateless components involved
 * should set the type of the event
-
-src/test/__tests__/reactComponentExpect-test.js
-* should detect text components
