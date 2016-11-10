@@ -309,12 +309,12 @@ describe('ReactTestRenderer', () => {
   it('supports unmounting when using refs', () => {
     class Foo extends React.Component {
       render() {
-        return <div ref="foo"/>;
+        return <div ref="foo" />;
       }
     }
     const inst = ReactTestRenderer.create(
-      <Foo/>,
-      { createNodeMock: () => 'foo' }
+      <Foo />,
+      {createNodeMock: () => 'foo'}
     );
     expect(() => inst.unmount()).not.toThrow();
   });
@@ -334,7 +334,7 @@ describe('ReactTestRenderer', () => {
     }
     const inst = ReactTestRenderer.create(
       <Foo useDiv={true} />,
-      { createNodeMock }
+      {createNodeMock}
     );
     inst.update(<Foo useDiv={false} />);
     // It's called with 'div' twice (mounting and unmounting)
