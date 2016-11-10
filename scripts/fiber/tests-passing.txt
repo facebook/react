@@ -1155,10 +1155,21 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should allow simple functions to return false
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
+* should batch state when updating state twice
+* should batch state when updating two different state keys
+* should batch state and props together
+* should batch parent/child state updates together
+* should batch child/parent state updates together
+* should support chained state updates
+* should batch forceUpdate together
+* should update children even if parent blocks updates
 * should not reconcile children passed via props
+* should flow updates correctly
 * should flush updates in the correct order
+* should flush updates in the correct order across roots
 * should queue nested updates
 * calls componentWillReceiveProps setState callback properly
+* does not call render after a component as been deleted
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
 * unstable_batchedUpdates should return value from a callback

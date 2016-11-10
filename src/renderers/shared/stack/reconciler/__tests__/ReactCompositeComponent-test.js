@@ -19,7 +19,6 @@ var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactServerRendering;
 var ReactTestUtils;
-var ReactUpdates;
 
 describe('ReactCompositeComponent', () => {
 
@@ -31,7 +30,6 @@ describe('ReactCompositeComponent', () => {
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
     ReactServerRendering = require('ReactServerRendering');
-    ReactUpdates = require('ReactUpdates');
 
     MorphingComponent = class extends React.Component {
       state = {activated: false};
@@ -813,7 +811,7 @@ describe('ReactCompositeComponent', () => {
     expect(childInstance).toBeNull();
 
     expect(parentInstance.state.flag).toBe(false);
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       parentInstance.setState({flag: true});
     });
     expect(parentInstance.state.flag).toBe(true);
@@ -1209,7 +1207,7 @@ describe('ReactCompositeComponent', () => {
 
     // When more than one state update is enqueued, we have the same behavior
     var fifthState = new NotActuallyImmutable('fifth');
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       moo.setState({str: 'fourth'});
       moo.replaceState(fifthState);
     });
@@ -1217,7 +1215,7 @@ describe('ReactCompositeComponent', () => {
 
     // When more than one state update is enqueued, we have the same behavior
     var sixthState = new NotActuallyImmutable('sixth');
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       moo.replaceState(sixthState);
       moo.setState({str: 'seventh'});
     });
