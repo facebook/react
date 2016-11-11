@@ -15,7 +15,6 @@
 var invariant = require('invariant');
 
 import type { ReactInstance } from 'ReactInstanceType';
-import type { Transaction } from 'Transaction';
 
 /**
  * @param {?object} object
@@ -74,7 +73,6 @@ var ReactOwner = {
     component: ReactInstance,
     ref: string,
     owner: ReactInstance,
-    transaction: Transaction,
   ): void {
     invariant(
       isValidOwner(owner),
@@ -83,7 +81,7 @@ var ReactOwner = {
       '`render` method, or you have multiple copies of React loaded ' +
       '(details: https://fb.me/react-refs-must-have-owner).'
     );
-    owner.attachRef(ref, component, transaction);
+    owner.attachRef(ref, component);
   },
 
   /**
