@@ -171,11 +171,7 @@ var ReactEventListener = {
     try {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.
-      ReactGenericBatching.batchedUpdatesWithControlledTarget(
-        handleTopLevelImpl,
-        bookKeeping,
-        bookKeeping.targetInst
-      );
+      ReactGenericBatching.batchedUpdates(handleTopLevelImpl, bookKeeping);
     } finally {
       TopLevelCallbackBookKeeping.release(bookKeeping);
     }

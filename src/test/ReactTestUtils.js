@@ -22,7 +22,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
 
@@ -465,16 +465,14 @@ function makeSimulator(eventType) {
       EventPropagators.accumulateDirectDispatches(event);
     }
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
+      // Normally extractEvent enqueues a state restore, but we'll just always
+      // do that since we we're by-passing it here.
+      ReactControlledComponent.enqueueStateRestore(targetInst);
+
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
     });
-    // Normally extractEvent enqueues a state restore, but we'll just always do
-    // that.
-    ReactControlledComponent.enqueueStateRestore();
-    if (targetInst) {
-      ReactControlledComponent.restoreStateIfNeeded(targetInst);
-    }
   };
 }
 
