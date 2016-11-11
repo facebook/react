@@ -23,6 +23,10 @@ In the forum there's also a category for job posts and a category for discussion
 
 If you need an answer right away, check out the [Reactiflux Discord](https://discord.gg/0ZcbPKXt5bZjGY5n) community. There are usually a number of React experts there who can help out or point you to somewhere you might want to look.
 
+## Freenode IRC
+
+Many developers also hang out in [#reactjs on Freenode](http://irc.lc/freenode/reactjs).
+
 ## Facebook and Twitter
 
 For the latest news about React, [like us on Facebook](https://facebook.com/react) and [follow **@reactjs** on Twitter](https://twitter.com/reactjs). In addition, you can use the [#reactjs](https://twitter.com/hashtag/reactjs) hashtag to see what others are saying or add to the conversation.
