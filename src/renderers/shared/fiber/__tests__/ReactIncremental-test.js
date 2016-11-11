@@ -1509,4 +1509,162 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(3);
   });
+
+  it('merges and masks context', () => {
+    var ops = [];
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          locale: this.props.locale,
+        };
+      }
+      render() {
+        ops.push('Intl ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class Router extends React.Component {
+      static childContextTypes = {
+        route: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          route: this.props.route,
+        };
+      }
+      render() {
+        ops.push('Router ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocale extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+
+      render() {
+        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    class ShowRoute extends React.Component {
+      static contextTypes = {
+        route: React.PropTypes.string,
+      };
+
+      render() {
+        ops.push('ShowRoute ' + JSON.stringify(this.context));
+        return this.context.route;
+      }
+    }
+
+    function ShowBoth(props, context) {
+      ops.push('ShowBoth ' + JSON.stringify(context));
+      return `${context.route} in ${context.locale}`;
+    }
+    ShowBoth.contextTypes = {
+      locale: React.PropTypes.string,
+      route: React.PropTypes.string,
+    };
+
+    class ShowNeither extends React.Component {
+      render() {
+        ops.push('ShowNeither ' + JSON.stringify(this.context));
+        return null;
+      }
+    }
+
+    class Indirection extends React.Component {
+      render() {
+        ops.push('Indirection ' + JSON.stringify(this.context));
+        return [
+          <ShowLocale />,
+          <ShowRoute />,
+          <ShowNeither />,
+          <Intl locale="ru">
+            <ShowBoth />
+          </Intl>,
+          <ShowBoth />,
+        ];
+      }
+    }
+
+    ops.length = [];
+    ReactNoop.render(
+      <Intl locale="fr">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl null',
+      'ShowLocale {"locale":"fr"}',
+      'ShowBoth {"locale":"fr"}',
+    ]);
+
+    ops.length = [];
+    ReactNoop.render(
+      <Intl locale="de">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl null',
+      'ShowLocale {"locale":"de"}',
+      'ShowBoth {"locale":"de"}',
+    ]);
+
+    ops.length = [];
+    ReactNoop.render(
+      <Intl locale="sv">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>
+    );
+    ReactNoop.flushDeferredPri(15);
+    expect(ops).toEqual([
+      'Intl null',
+    ]);
+
+    ops.length = [];
+    ReactNoop.render(
+      <Intl locale="en">
+        <ShowLocale />
+        <Router route="/about">
+          <Indirection />
+        </Router>
+        <ShowBoth />
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl null',
+      'ShowLocale {"locale":"en"}',
+      'Router null',
+      'Indirection null',
+      'ShowLocale {"locale":"en"}',
+      'ShowRoute {"route":"/about"}',
+      'ShowNeither null',
+      'Intl null',
+      'ShowBoth {"locale":"ru","route":"/about"}',
+      'ShowBoth {"locale":"en","route":"/about"}',
+      'ShowBoth {"locale":"en"}',
+    ]);
+  });
 });

@@ -18,6 +18,7 @@ import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
+var { popContextProvider } = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
@@ -120,10 +121,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     switch (workInProgress.tag) {
-      case FunctionalComponent:
+      case FunctionalComponent: {
         transferOutput(workInProgress.child, workInProgress);
         return null;
-      case ClassComponent:
+      }
+      case ClassComponent: {
         transferOutput(workInProgress.child, workInProgress);
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
@@ -148,8 +150,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           workInProgress.callbackList = updateQueue;
           markCallback(workInProgress);
         }
+        const instance = workInProgress.stateNode;
+        if (typeof instance.getChildContext === 'function') {
+          popContextProvider();
+        }
         return null;
-      case HostContainer:
+      }
+      case HostContainer: {
         transferOutput(workInProgress.child, workInProgress);
         // We don't know if a container has updated any children so we always
         // need to update it right now. We schedule this side-effect before
@@ -158,7 +165,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // are invoked.
         markUpdate(workInProgress);
         return null;
-      case HostComponent:
+      }
+      case HostComponent: {
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -200,7 +208,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
         workInProgress.memoizedProps = newProps;
         return null;
-      case HostText:
+      }
+      case HostText: {
         let newText = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -222,25 +231,32 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
         workInProgress.memoizedProps = newText;
         return null;
-      case CoroutineComponent:
+      }
+      case CoroutineComponent: {
         return moveCoroutineToHandlerPhase(current, workInProgress);
-      case CoroutineHandlerPhase:
+      }
+      case CoroutineHandlerPhase: {
         transferOutput(workInProgress.stateNode, workInProgress);
         // Reset the tag to now be a first phase coroutine.
         workInProgress.tag = CoroutineComponent;
         return null;
-      case YieldComponent:
+      }
+      case YieldComponent: {
         // Does nothing.
         return null;
-      case Fragment:
+      }
+      case Fragment: {
         transferOutput(workInProgress.child, workInProgress);
         return null;
+      }
 
       // Error cases
-      case IndeterminateComponent:
+      case IndeterminateComponent: {
         throw new Error('An indeterminate component should have become determinate before completing.');
-      default:
+      }
+      default: {
         throw new Error('Unknown unit of work tag');
+      }
     }
   }
 

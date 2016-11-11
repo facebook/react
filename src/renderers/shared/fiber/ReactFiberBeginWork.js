@@ -23,7 +23,13 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
+
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  getMaskedContext,
+  pushContextProvider,
+  resetContext,
+} = require('ReactFiberContext');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -144,6 +150,7 @@ module.exports = function<T, P, I, TI, C>(
   function updateFunctionalComponent(current, workInProgress) {
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
+    var context = getMaskedContext(workInProgress);
 
     // TODO: Disable this before release, since it is not part of the public API
     // I use this for testing to compare the relative overhead of classes.
@@ -159,9 +166,9 @@ module.exports = function<T, P, I, TI, C>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      nextChildren = fn(props);
+      nextChildren = fn(props, context);
     } else {
-      nextChildren = fn(props);
+      nextChildren = fn(props, context);
     }
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
@@ -182,11 +189,14 @@ module.exports = function<T, P, I, TI, C>(
     } else {
       shouldUpdate = updateClassInstance(current, workInProgress);
     }
+    const instance = workInProgress.stateNode;
+    if (typeof instance.getChildContext === 'function') {
+      pushContextProvider(workInProgress);
+    }
     if (!shouldUpdate) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     // Rerender
-    const instance = workInProgress.stateNode;
     ReactCurrentOwner.current = workInProgress;
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
@@ -249,13 +259,15 @@ module.exports = function<T, P, I, TI, C>(
     }
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
+    var context = getMaskedContext(workInProgress);
+
     var value;
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      value = fn(props);
+      value = fn(props, context);
     } else {
-      value = fn(props);
+      value = fn(props, context);
     }
 
     if (typeof value === 'object' && value && typeof value.render === 'function') {
@@ -355,6 +367,9 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
+    if (!workInProgress.return) {
+      resetContext();
+    }
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
