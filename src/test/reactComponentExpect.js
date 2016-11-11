@@ -157,8 +157,8 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (count > 0) {
         expect(renderedChildren).toBeTruthy();
         expect(Object.keys(renderedChildren).length).toBe(count);
-      } else {
-        expect(renderedChildren).toBeFalsy();
+      } else if (renderedChildren) {
+        expect(Object.keys(renderedChildren).length).toBe(0);
       }
     }
     return this;
