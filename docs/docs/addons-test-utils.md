@@ -53,20 +53,26 @@ Call [`createRenderer()`](#createrenderer) in your tests to create a shallow ren
 
 After `shallowRenderer.render()` has been called, you can use [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput) to get the shallowly rendered output.
 
-You can then begin to assert facts about the output. For example, if your component's render method returns:
+You can then begin to assert facts about the output. For example, if you have the following component:
 
 ```javascript
-<div>
-  <span className="heading">Title</span>
-  <Subcomponent foo="bar" />
-</div>
+function MyComponent() {
+  return (
+    <div>
+      <span className="heading">Title</span>
+      <Subcomponent foo="bar" />
+    </div>
+  );
+}
 ```
 
 Then you can assert:
 
 ```javascript
 const renderer = ReactTestUtils.createRenderer();
-result = renderer.getRenderOutput();
+renderer.render(<MyComponent />);
+const result = renderer.getRenderOutput();
+
 expect(result.type).toBe('div');
 expect(result.props.children).toEqual([
   <span className="heading">Title</span>,
