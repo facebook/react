@@ -100,7 +100,7 @@ var ReactTestInstance = function(component) {
 ReactTestInstance.prototype.getInstance = function() {
   return this._component._renderedComponent.getPublicInstance();
 };
-ReactTestInstance.prototype.update = function(nextElement, options) {
+ReactTestInstance.prototype.update = function(nextElement) {
   invariant(
     this._component,
     "ReactTestRenderer: .update() can't be called after unmount."
