@@ -132,6 +132,60 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
+  it('should control values in reentrant events with different targets', () => {
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var inputEvent = document.createEvent('Event');
+    inputEvent.initEvent('input', true, true);
+
+    class ControlledInputs extends React.Component {
+      state = { value: 'lion' };
+      a = null;
+      b = null;
+      change(newValue) {
+        // This click will change the checkbox's value to false. Then it will
+        // invoke an inner change event. When we finally, flush, we need to
+        // reset the checkbox's value to true since that is its controlled
+        // value.
+        this.b.click();
+      }
+      render() {
+        return (
+          <div>
+            <input
+              type="text"
+              ref={n => this.a = n}
+              value="lion"
+              onChange={e => this.change(e.target.value)}
+            />
+            <input
+              type="checkbox"
+              ref={n => this.b = n}
+              checked={true}
+            />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<ControlledInputs />, container);
+
+    // We need it to be in the body to test native event dispatching.
+    document.body.appendChild(container);
+
+    // Simulate a native keyup event
+    setUntrackedValue(instance.a, 'giraffe');
+    instance.a.dispatchEvent(inputEvent);
+
+    // These should now both have been restored to their controlled value.
+
+    expect(instance.a.value).toBe('lion');
+    expect(instance.b.checked).toBe(true);
+
+    document.body.removeChild(container);
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
