@@ -109,10 +109,11 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     return true;
   }
 
-  function checkClassInstance(workInProgress: Fiber, inst: any) {
+  function checkClassInstance(workInProgress: Fiber) {
+    const instance = workInProgress.stateNode;
     if (__DEV__) {
       const name = getComponentName(workInProgress);
-      const renderPresent = inst.render;
+      const renderPresent = instance.render;
       warning(
         renderPresent,
         '%s(...): No `render` method found on the returned component ' +
@@ -120,8 +121,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         name
       );
       const noGetInitialStateOnES6 = (
-        !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved
+        !instance.getInitialState ||
+        instance.getInitialState.isReactClassApproved
       );
       warning(
         noGetInitialStateOnES6,
@@ -131,8 +132,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         name
       );
       const noGetDefaultPropsOnES6 = (
-        !inst.getDefaultProps ||
-        inst.getDefaultProps.isReactClassApproved
+        !instance.getDefaultProps ||
+        instance.getDefaultProps.isReactClassApproved
       );
       warning(
         noGetDefaultPropsOnES6,
@@ -141,21 +142,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'Use a static property to define defaultProps instead.',
         name
       );
-      const noInstancePropTypes = !inst.propTypes;
+      const noInstancePropTypes = !instance.propTypes;
       warning(
         noInstancePropTypes,
         'propTypes was defined as an instance property on %s. Use a static ' +
         'property to define propTypes instead.',
         name,
       );
-      const noInstanceContextTypes = !inst.contextTypes;
+      const noInstanceContextTypes = !instance.contextTypes;
       warning(
         noInstanceContextTypes,
         'contextTypes was defined as an instance property on %s. Use a static ' +
         'property to define contextTypes instead.',
         name,
       );
-      const noComponentShouldUpdate = typeof inst.componentShouldUpdate !== 'function';
+      const noComponentShouldUpdate = typeof instance.componentShouldUpdate !== 'function';
       warning(
         noComponentShouldUpdate,
         '%s has a method called ' +
@@ -164,7 +165,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'expected to return a value.',
         name
       );
-      const noComponentDidUnmount = typeof inst.componentDidUnmount !== 'function';
+      const noComponentDidUnmount = typeof instance.componentDidUnmount !== 'function';
       warning(
         noComponentDidUnmount,
         '%s has a method called ' +
@@ -172,7 +173,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'Did you mean componentWillUnmount()?',
         name
       );
-      const noComponentWillRecieveProps = typeof inst.componentWillRecieveProps !== 'function';
+      const noComponentWillRecieveProps = typeof instance.componentWillRecieveProps !== 'function';
       warning(
         noComponentWillRecieveProps,
         '%s has a method called ' +
@@ -181,15 +182,15 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       );
     }
 
-    const instanceState = inst.state;
-    if (instanceState && (typeof instanceState !== 'object' || isArray(instanceState))) {
+    const state = instance.state;
+    if (state && (typeof state !== 'object' || isArray(state))) {
       invariant(
         false,
         '%s.state: must be set to an object or null',
         getComponentName(workInProgress)
       );
     }
-    if (typeof inst.getChildContext === 'function') {
+    if (typeof instance.getChildContext === 'function') {
       invariant(
         typeof workInProgress.type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
@@ -211,8 +212,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const props = workInProgress.pendingProps;
     const context = getMaskedContext(workInProgress);
     const instance = new ctor(props, context);
-    checkClassInstance(workInProgress, instance);
     adoptClassInstance(workInProgress, instance);
+    checkClassInstance(workInProgress);
     return instance;
   }
 
@@ -319,21 +320,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     // Compute the next state using the memoized state and the update queue.
     const updateQueue = workInProgress.updateQueue;
-    const previousState = workInProgress.memoizedState;
+    const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
       if (!updateQueue.hasUpdate) {
-        newState = previousState;
+        newState = oldState;
       } else {
-        newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
+        newState = mergeUpdateQueue(updateQueue, instance, oldState, newProps);
       }
     } else {
-      newState = previousState;
+      newState = oldState;
     }
 
     if (oldProps === newProps &&
-        previousState === newState &&
+        oldState === newState &&
         oldContext === newContext &&
         updateQueue && !updateQueue.isForced) {
       return false;
