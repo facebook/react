@@ -25,7 +25,7 @@ If you need an answer right away, check out the [Reactiflux Discord](https://dis
 
 ## Freenode IRC
 
-Many developers also hang out in [#reactjs on Freenode](irc://irc.freenode.net/reactjs).
+Many developers also hang out in [#reactjs on Freenode](http://irc.lc/freenode/reactjs).
 
 ## Facebook and Twitter
 
