@@ -85,7 +85,7 @@ class ReactTestComponent {
     this.updateChildren(nextElement.props.children, transaction, context);
   }
 
-  getPublicInstance(transaction: ReactTestReconcileTransaction): Object {
+  getPublicInstance(): Object {
     var element = this._currentElement;
     var hostContainerInfo = this._hostContainerInfo;
     invariant(

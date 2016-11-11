@@ -49,9 +49,9 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  * Mounts this component and inserts it into the DOM.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {number} rootID ID of the root node.
- * @param {number} containerTag container element to mount into.
  * @param {ReactReconcileTransaction} transaction
+ * @param {Object} hostParent
+ * @param {Object} hostContainerInfo
  */
 function mountComponentIntoNode(
     componentInstance,
