@@ -23,6 +23,7 @@ var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
+var invariant = require('invariant');
 
 import type { ReactElement } from 'ReactElementType';
 import type { ReactInstance } from 'ReactInstanceType';
@@ -53,20 +54,23 @@ class ReactTestComponent {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
+  _hostContainerInfo: null | Object;
 
   constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
+    this._hostContainerInfo = null;
   }
 
   mountComponent(
     transaction: ReactTestReconcileTransaction,
     nativeParent: null | ReactTestComponent,
-    nativeContainerInfo: ?null,
+    hostContainerInfo: Object,
     context: Object,
   ) {
     var element = this._currentElement;
+    this._hostContainerInfo = hostContainerInfo;
     // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.mountChildren(element.props.children, transaction, context);
   }
@@ -81,10 +85,15 @@ class ReactTestComponent {
     this.updateChildren(nextElement.props.children, transaction, context);
   }
 
-  getPublicInstance(transaction: ReactTestReconcileTransaction): Object {
+  getPublicInstance(): Object {
     var element = this._currentElement;
-    var options = transaction.getTestOptions();
-    return options.createNodeMock(element);
+    var hostContainerInfo = this._hostContainerInfo;
+    invariant(
+      hostContainerInfo,
+      'hostContainerInfo should be populated before ' +
+      'getPublicInstance is called.'
+    );
+    return hostContainerInfo.createNodeMock(element);
   }
 
   toJSON(): ReactTestRendererJSON {

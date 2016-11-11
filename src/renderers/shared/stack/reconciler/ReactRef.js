@@ -16,20 +16,18 @@ var ReactOwner = require('ReactOwner');
 
 import type { ReactInstance } from 'ReactInstanceType';
 import type { ReactElement } from 'ReactElementType';
-import type { Transaction } from 'Transaction';
 
 var ReactRef = {};
 
-function attachRef(ref, component, owner, transaction) {
+function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
-    ref(component.getPublicInstance(transaction));
+    ref(component.getPublicInstance());
   } else {
     // Legacy ref
     ReactOwner.addComponentAsRefTo(
       component,
       ref,
       owner,
-      transaction,
     );
   }
 }
@@ -46,14 +44,13 @@ function detachRef(ref, component, owner) {
 ReactRef.attachRefs = function(
   instance: ReactInstance,
   element: ReactElement | string | number | null | false,
-  transaction: Transaction,
 ): void {
   if (element === null || typeof element !== 'object') {
     return;
   }
   var ref = element.ref;
   if (ref != null) {
-    attachRef(ref, instance, element._owner, transaction);
+    attachRef(ref, instance, element._owner);
   }
 };
 
