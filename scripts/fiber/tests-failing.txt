@@ -19,8 +19,7 @@ src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
 * should transition from false to one
 
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
-* should filter out context not in contextTypes
-* should filter context properly in callbacks
+* should pass previous context to lifecycles
 
 src/isomorphic/classic/class/__tests__/ReactBind-test.js
 * Holds reference to instance
@@ -31,23 +30,8 @@ src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
 * works with mixins that have not opted out of autobinding
 * works with mixins that have opted out of autobinding
 
-src/isomorphic/classic/class/__tests__/ReactClass-test.js
-* renders based on context getInitialState
-
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * includes the owner name when passing null, undefined, boolean, or number
-
-src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
-* renders based on context in the constructor
-* supports this.context passed via getChildContext
-
-src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
-* renders based on context in the constructor
-* supports this.context passed via getChildContext
-
-src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
-* renders based on context in the constructor
-* supports this.context passed via getChildContext
 
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should give context for PropType errors in nested components.
@@ -441,11 +425,8 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` on unmounted components
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
-* should pass context to children when not owner
 * should pass context when re-rendered for static child
 * should pass context when re-rendered for static child within a composite component
-* should pass context transitively
-* should pass context when re-rendered
 * unmasked context propagates through updates
 * should trigger componentWillReceiveProps for context changes
 * should update refs if shouldComponentUpdate gives false
@@ -467,10 +448,8 @@ src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
 * should throw if rendering both HTML and children
 
 src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
-* should pass context thru stateless component
 * should warn when stateless component returns array
 * should throw on string refs in pure functions
-* should receive context
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
