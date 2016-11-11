@@ -56,12 +56,14 @@ After `shallowRenderer.render()` has been called, you can use [`shallowRenderer.
 You can then begin to assert facts about the output. For example, if you have the following component:
 
 ```javascript
-const MyComponent = () => (
-  <div>
-    <span className="heading">Title</span>
-    <Subcomponent foo="bar" />
-  </div>
-);
+function MyComponent() {
+  return (
+    <div>
+      <span className="heading">Title</span>
+      <Subcomponent foo="bar" />
+    </div>
+  );
+}
 ```
 
 Then you can assert:
