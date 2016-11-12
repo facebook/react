@@ -1465,4 +1465,48 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(4);
   });
+
+  it('can handle if setState callback throws', () => {
+    var ops = [];
+    var instance;
+
+    class Foo extends React.Component {
+      state = { n: 0 };
+      render() {
+        instance = this;
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    ops = [];
+
+    expect(instance.state.n).toEqual(0);
+
+    // first good callback
+    instance.setState({ n: 1 }, () => ops.push('first good callback'));
+    ReactNoop.flush();
+
+    // callback throws
+    instance.setState({ n: 2 }, () => {
+      throw new Error('Bail');
+    });
+    expect(() => {
+      ReactNoop.flush();
+    }).toThrow('Bail');
+    
+    // should set state to 2 even if callback throws up
+    expect(instance.state.n).toEqual(2);
+
+    // another good callback
+    instance.setState({ n: 3 }, () => ops.push('second good callback'));
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'first good callback',
+      'second good callback',
+    ]);
+    expect(instance.state.n).toEqual(3);
+  });
 });
