@@ -328,7 +328,7 @@ module.exports = function<T, P, I, TI, C>(
             finishedWork.callbackList = null;
           }
         }
-        if (errors.length) errors.forEach(e => trapError(finishedWork, e));
+        if (errors.length) errors.forEach(e => trapError(finishedWork, e, false));
         return;
       }
       case HostContainer: {
@@ -341,7 +341,7 @@ module.exports = function<T, P, I, TI, C>(
           if (callbackErrors) errors = callbackErrors;
         }
 
-        if (errors.length) errors.forEach(e => trapError(rootFiber, e));
+        if (errors.length) errors.forEach(e => trapError(rootFiber, e, false));
         return;
       }
       case HostComponent: {
