@@ -71,6 +71,7 @@ exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) :
 
 exports.callCallbacks = function(queue : UpdateQueue, context : any) {
   let node : ?UpdateQueueNode = queue;
+  let errors = [];
   while (node) {
     const callback = node.callback;
     if (callback && !node.callbackWasCalled) {
@@ -82,12 +83,13 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
           callback();
         }
       } catch (error) {
-        // can't return the error, as it'll stop the subsequent callbacks
+        errors.push(error);
         node.callbackWasCalled = false;
       }
     }
     node = node.next;
   }
+  if (errors.length) return errors;
 };
 
 exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {

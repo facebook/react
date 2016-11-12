@@ -1482,35 +1482,31 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     ops = [];
 
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        instance.setState({ n: 1 }, () => {
-          throw new Error('Bail!'); 
-        });
-        instance.setState({ n: 2 }, () => ops.push('setState 2'));
-        ReactNoop.batchedUpdates(() => {
-          instance.setState({ n: 3 }, () => ops.push('setState 3'));
-          instance.setState({ n: 4 }, () => {
-            throw new Error('Bail Again!');
-          });
-          instance.setState({ n: 5 }, () => ops.push('setState 5'));
-          ops.push('end inner batchedUpdates');
-        });
-        ops.push('end outer batchedUpdates');
-      });
-      ops.push('end syncUpdates');
-    });
+    expect(instance.state.n).toEqual(0);
 
-    // ReactNoop.flush() not needed because updates are synchronous
+    // first good callback
+    instance.setState({ n: 1 }, () => ops.push('first good callback'));
+    ReactNoop.flush();
+
+    // callback throws
+    instance.setState({ n: 2 }, () => {
+      throw new Error('Bail');
+    });
+    expect(() => {
+      ReactNoop.flush();
+    }).toThrow('Bail');
+    
+    // should set state to 2 even if callback throws up
+    expect(instance.state.n).toEqual(2);
+
+    // another good callback
+    instance.setState({ n: 3 }, () => ops.push('second good callback'));
+    ReactNoop.flush();
 
     expect(ops).toEqual([
-      'end inner batchedUpdates',
-      'end outer batchedUpdates',
-      'setState 2',
-      'setState 3',
-      'setState 5',
-      'end syncUpdates',
+      'first good callback',
+      'second good callback',
     ]);
-    expect(instance.state.n).toEqual(5);
+    expect(instance.state.n).toEqual(3);
   });
 });

@@ -300,17 +300,19 @@ module.exports = function<T, P, I, TI, C>(
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
-        let error = null;
+        let errors = [];
         if (finishedWork.effectTag & Update) {
           if (!current) {
             if (typeof instance.componentDidMount === 'function') {
-              error = tryCallComponentDidMount(instance);
+              const error = tryCallComponentDidMount(instance);
+              if (error) errors.push(error);
             }
           } else {
             if (typeof instance.componentDidUpdate === 'function') {
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
-              error = tryCallComponentDidUpdate(instance, prevProps, prevState);
+              const error = tryCallComponentDidUpdate(instance, prevProps, prevState);
+              if (error) errors.push(error);
             }
           }
           attachRef(current, finishedWork, instance);
@@ -321,22 +323,25 @@ module.exports = function<T, P, I, TI, C>(
         }
         if (finishedWork.effectTag & Callback) {
           if (finishedWork.callbackList) {
-            callCallbacks(finishedWork.callbackList, instance);
+            const callbackErrors = callCallbacks(finishedWork.callbackList, instance);
+            if (callbackErrors) errors = [...errors, ...callbackErrors];
             finishedWork.callbackList = null;
           }
         }
-        if (error) {
-          trapError(finishedWork, error, false);
-        }
+        if (errors.length) errors.forEach(e => trapError(finishedWork, e));
         return;
       }
       case HostContainer: {
         const rootFiber = finishedWork.stateNode;
+        let errors = [];
         if (rootFiber.callbackList) {
           const { callbackList } = rootFiber;
           rootFiber.callbackList = null;
-          callCallbacks(callbackList, rootFiber.current.child.stateNode);
+          const callbackErrors = callCallbacks(callbackList, rootFiber.current.child.stateNode);
+          if (callbackErrors) errors = callbackErrors;
         }
+
+        if (errors.length) errors.forEach(e => trapError(rootFiber, e));
         return;
       }
       case HostComponent: {
