@@ -321,7 +321,11 @@ module.exports = function<T, P, I, TI, C>(
         }
         if (finishedWork.effectTag & Callback) {
           if (finishedWork.callbackList) {
-            error = callCallbacks(finishedWork.callbackList, instance);
+            const callbackError = callCallbacks(finishedWork.callbackList, instance);
+            // since we only want to keep the first error
+            if (!error) {
+              error = callbackError;
+            }
             finishedWork.callbackList = null;
           }
         }

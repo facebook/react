@@ -84,7 +84,6 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) : Error | n
         }
       } catch (e) {
         error = e;
-        node.callbackWasCalled = false;
       }
     }
     node = node.next;
