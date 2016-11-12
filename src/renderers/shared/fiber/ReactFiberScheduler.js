@@ -782,27 +782,36 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       priorityLevel = TaskPriority;
     }
 
-    while (true) {
-      if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority >= priorityLevel) {
-        fiber.pendingWorkPriority = priorityLevel;
+    let node = fiber;
+    let shouldContinue = true;
+    while (node && shouldContinue) {
+      // Walk the parent path to the root and update each node's priority. Once
+      // we reach a node whose priority matches (and whose alternate's priority
+      // matches) we can exit safely knowing that the rest of the path is correct.
+      shouldContinue = false;
+      if (node.pendingWorkPriority === NoWork ||
+          node.pendingWorkPriority >= priorityLevel) {
+        // Priority did not match. Update and keep going.
+        shouldContinue = true;
+        node.pendingWorkPriority = priorityLevel;
       }
-      if (fiber.alternate) {
-        if (fiber.alternate.pendingWorkPriority === NoWork ||
-            fiber.alternate.pendingWorkPriority >= priorityLevel) {
-          fiber.alternate.pendingWorkPriority = priorityLevel;
+      if (node.alternate) {
+        if (node.alternate.pendingWorkPriority === NoWork ||
+            node.alternate.pendingWorkPriority >= priorityLevel) {
+          // Priority did not match. Update and keep going.
+          shouldContinue = true;
+          node.alternate.pendingWorkPriority = priorityLevel;
         }
       }
-      if (!fiber.return) {
-        if (fiber.tag === HostContainer) {
-          const root : FiberRoot = (fiber.stateNode : any);
+      if (!node.return) {
+        if (node.tag === HostContainer) {
+          const root : FiberRoot = (node.stateNode : any);
           scheduleWorkAtPriority(root, priorityLevel);
-          return;
         } else {
           throw new Error('Invalid root');
         }
       }
-      fiber = fiber.return;
+      node = node.return;
     }
   }
 
