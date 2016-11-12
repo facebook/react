@@ -185,6 +185,9 @@ function createChainableTypeChecker(validate) {
   var chainedCheckType = checkType.bind(null, false);
   chainedCheckType.isRequired = checkType.bind(null, true);
 
+  chainedCheckType.isReactTypeChecker = true;
+  chainedCheckType.isRequired.isReactTypeChecker = true;
+
   return chainedCheckType;
 }
 
@@ -283,6 +286,16 @@ function createInstanceTypeChecker(expectedClass) {
 function createEnumTypeChecker(expectedValues) {
   if (!Array.isArray(expectedValues)) {
     warning(false, 'Invalid argument supplied to oneOf, expected an instance of array.');
+    return emptyFunction.thatReturnsNull;
+  }
+
+  // Check if the user used oneOf by mistake when they meant to use oneOfType
+  function isPropTypeFunction(prop) {
+    return typeof prop === 'function' && prop.isReactTypeChecker === true;
+  }
+
+  if (expectedValues.every(isPropTypeFunction)) {
+    "development" !== 'production' ? warning(false, 'Invalid argument supplied to oneOf, got an array of PropType functions, expected an array of values. Did you mean to use oneOfType?') : void 0;
     return emptyFunction.thatReturnsNull;
   }
 
