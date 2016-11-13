@@ -69,8 +69,8 @@ describe('ReactClass-spec', () => {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: prop type `prop` is invalid; ' +
       'it must be a function, usually from React.PropTypes.'
     );
@@ -87,8 +87,8 @@ describe('ReactClass-spec', () => {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: context type `prop` is invalid; ' +
       'it must be a function, usually from React.PropTypes.'
     );
@@ -105,8 +105,8 @@ describe('ReactClass-spec', () => {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: child context type `prop` is invalid; ' +
       'it must be a function, usually from React.PropTypes.'
     );
@@ -123,8 +123,8 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: A component has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
@@ -139,8 +139,8 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
@@ -157,8 +157,8 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
       'mean componentWillReceiveProps()?'
     );
@@ -206,20 +206,20 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'createClass(...): `mixins` is now a static property and should ' +
       'be defined inside "statics".'
     );
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'createClass(...): `propTypes` is now a static property and should ' +
       'be defined inside "statics".'
     );
-    expect(console.error.calls.argsFor(2)[0]).toBe(
+    expectDev(console.error.calls.argsFor(2)[0]).toBe(
       'createClass(...): `contextTypes` is now a static property and ' +
       'should be defined inside "statics".'
     );
-    expect(console.error.calls.argsFor(3)[0]).toBe(
+    expectDev(console.error.calls.argsFor(3)[0]).toBe(
       'createClass(...): `childContextTypes` is now a static property and ' +
       'should be defined inside "statics".'
     );
@@ -343,8 +343,8 @@ describe('ReactClass-spec', () => {
     });
 
     expect(() => Component()).toThrow();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
       'factory or JSX instead. See: https://fb.me/react-legacyfactory'
     );

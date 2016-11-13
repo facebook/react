@@ -23,7 +23,7 @@ var ReactTestUtils;
 
 describe('ReactContextValidator', () => {
   function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   beforeEach(() => {
@@ -146,8 +146,8 @@ describe('ReactContextValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed context type: ' +
       'The context `foo` is marked as required in `Component`, but its value ' +
       'is `undefined`.\n' +
@@ -175,7 +175,7 @@ describe('ReactContextValidator', () => {
     );
 
     // Previous call should not error
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
 
     var ComponentInFooNumberContext = React.createClass({
       childContextTypes: {
@@ -195,8 +195,8 @@ describe('ReactContextValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
 
-    expect(console.error.calls.count()).toBe(2);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed context type: ' +
       'Invalid context `foo` of type `number` supplied ' +
       'to `Component`, expected `string`.\n' +
@@ -224,8 +224,8 @@ describe('ReactContextValidator', () => {
     });
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed childContext type: ' +
       'The child context `foo` is marked as required in `Component`, but its ' +
       'value is `undefined`.\n' +
@@ -234,8 +234,8 @@ describe('ReactContextValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
 
-    expect(console.error.calls.count()).toBe(2);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed childContext type: ' +
       'Invalid child context `foo` of type `number` ' +
       'supplied to `Component`, expected `string`.\n' +
@@ -251,7 +251,7 @@ describe('ReactContextValidator', () => {
     );
 
     // Previous calls should not log errors
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
 });

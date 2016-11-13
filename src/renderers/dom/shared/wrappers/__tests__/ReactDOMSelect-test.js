@@ -430,14 +430,14 @@ describe('ReactDOMSelect', () => {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `select` should not be null. ' +
       'Consider using the empty string to clear the component or `undefined` ' +
       'for uncontrolled components.'
     );
 
     ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should refresh state on change', () => {
@@ -464,7 +464,7 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Select elements must be either controlled or uncontrolled ' +
       '(specify either the value prop, or the defaultValue prop, but not ' +
       'both). Decide between using a controlled or uncontrolled select ' +
@@ -479,7 +479,7 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should be able to safely remove select onChange', () => {

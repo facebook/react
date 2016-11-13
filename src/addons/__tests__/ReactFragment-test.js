@@ -75,8 +75,8 @@ describe('ReactFragment', () => {
 
     ReactFragment.create({1: <span />, 2: <span />});
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child objects should have non-numeric keys so ordering is preserved.'
     );
   });
@@ -84,8 +84,8 @@ describe('ReactFragment', () => {
   it('should warn if passing null to createFragment', () => {
     spyOn(console, 'error');
     ReactFragment.create(null);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.addons.createFragment only accepts a single object.'
     );
   });
@@ -93,8 +93,8 @@ describe('ReactFragment', () => {
   it('should warn if passing an array to createFragment', () => {
     spyOn(console, 'error');
     ReactFragment.create([]);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.addons.createFragment only accepts a single object.'
     );
   });
@@ -102,8 +102,8 @@ describe('ReactFragment', () => {
   it('should warn if passing a ReactElement to createFragment', () => {
     spyOn(console, 'error');
     ReactFragment.create(<div />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.addons.createFragment does not accept a ReactElement without a ' +
       'wrapper object.'
     );

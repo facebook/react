@@ -39,8 +39,8 @@ describe('ReactDOMOption', () => {
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(<option>{1} <div /> {2}</option>);
     // only warn once
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain('Only strings and numbers are supported as <option> children.');
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain('Only strings and numbers are supported as <option> children.');
   });
 
   it('should ignore null/undefined/false children without warning', () => {
@@ -50,7 +50,7 @@ describe('ReactDOMOption', () => {
 
     var node = ReactDOM.findDOMNode(stub);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     expect(node.innerHTML).toBe('1  2');
   });
 
