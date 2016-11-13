@@ -49,19 +49,21 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  * Mounts this component and inserts it into the DOM.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {number} rootID ID of the root node.
- * @param {number} containerTag container element to mount into.
  * @param {ReactReconcileTransaction} transaction
+ * @param {Object} hostParent
+ * @param {Object} hostContainerInfo
  */
 function mountComponentIntoNode(
     componentInstance,
     transaction,
+    hostParent,
+    hostContainerInfo
   ) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
     null,
-    null,
+    hostContainerInfo,
     emptyObject
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
@@ -79,12 +81,14 @@ function batchedMountComponentIntoNode(
     componentInstance,
     options,
   ) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(options);
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
     transaction,
+    null,
+    options
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;

@@ -972,6 +972,61 @@ describe('ReactDOMComponent', () => {
       expect(tracker.getValue()).toEqual('foo');
     });
 
+    it('should execute custom event plugin listening behavior', () => {
+      var SimpleEventPlugin = require('SimpleEventPlugin');
+
+      SimpleEventPlugin.didPutListener = jest.fn();
+      SimpleEventPlugin.willDeleteListener = jest.fn();
+
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <div onClick={() => true} />,
+        container
+      );
+
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(1);
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
+    });
+
+    it('should handle null and missing properly with event hooks', () => {
+      var SimpleEventPlugin = require('SimpleEventPlugin');
+
+      SimpleEventPlugin.didPutListener = jest.fn();
+      SimpleEventPlugin.willDeleteListener = jest.fn();
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div onClick={false} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div onClick={null} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(0);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div onClick={() => 'apple'} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(1);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div onClick={() => 'banana'} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(2);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(0);
+
+      ReactDOM.render(<div onClick={null} />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(2);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
+
+      ReactDOM.render(<div />, container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(2);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(2);
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
+    });
+
     it('should warn for children on void elements', () => {
       class X extends React.Component {
         render() {
@@ -1102,6 +1157,31 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('unmountComponent', () => {
+    it('should clean up listeners', () => {
+      var EventPluginHub = require('EventPluginHub');
+      var ReactDOMComponentTree = require('ReactDOMComponentTree');
+
+      var container = document.createElement('div');
+      document.body.appendChild(container);
+
+      var callback = function() {};
+      var instance = <div onClick={callback} />;
+      instance = ReactDOM.render(instance, container);
+
+      var rootNode = ReactDOM.findDOMNode(instance);
+      var inst = ReactDOMComponentTree.getInstanceFromNode(rootNode);
+      expect(
+        EventPluginHub.getListener(inst, 'onClick')
+      ).toBe(callback);
+      expect(rootNode).toBe(ReactDOM.findDOMNode(instance));
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(
+        EventPluginHub.getListener(inst, 'onClick')
+      ).toBe(undefined);
+    });
+
     it('should clean up input value tracking', () => {
       var container = document.createElement('div');
       var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);

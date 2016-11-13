@@ -409,10 +409,6 @@ var ReactDebugTool = {
   },
 };
 
-// TODO remove these when RN/www gets updated
-(ReactDebugTool: any).addDevtool = ReactDebugTool.addHook;
-(ReactDebugTool: any).removeDevtool = ReactDebugTool.removeHook;
-
 ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
 ReactDebugTool.addHook(ReactComponentTreeHook);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';

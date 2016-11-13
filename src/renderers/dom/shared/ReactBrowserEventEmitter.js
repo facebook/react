@@ -163,6 +163,16 @@ function getListeningForDocument(mountAt) {
   return alreadyListeningTo[mountAt[topListenersIDKey]];
 }
 
+/**
+ * `ReactBrowserEventEmitter` is used to attach top-level event listeners. For
+ * example:
+ *
+ *   EventPluginHub.putListener('myID', 'onClick', myFunction);
+ *
+ * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
+ *
+ * @internal
+ */
 var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
 
   /**

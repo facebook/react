@@ -42,7 +42,7 @@ describe('ReactUpdates', () => {
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.setState({x: 1});
       instance.setState({x: 2});
       expect(instance.state.x).toBe(0);
@@ -72,7 +72,7 @@ describe('ReactUpdates', () => {
     expect(instance.state.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.setState({x: 1});
       instance.setState({y: 2});
       expect(instance.state.x).toBe(0);
@@ -105,7 +105,7 @@ describe('ReactUpdates', () => {
     expect(instance.props.x).toBe(0);
     expect(instance.state.y).toBe(0);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       ReactDOM.render(<Component x={1} />, container);
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
@@ -152,7 +152,7 @@ describe('ReactUpdates', () => {
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.setState({x: 1});
       child.setState({y: 2});
       expect(instance.state.x).toBe(0);
@@ -201,7 +201,7 @@ describe('ReactUpdates', () => {
     expect(instance.state.x).toBe(0);
     expect(child.state.y).toBe(0);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       child.setState({y: 2});
       instance.setState({x: 1});
       expect(instance.state.x).toBe(0);
@@ -237,7 +237,7 @@ describe('ReactUpdates', () => {
     expect(instance.state.x).toBe(0);
 
     var innerCallbackRun = false;
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.setState({x: 1}, function() {
         instance.setState({x: 2}, function() {
           expect(this).toBe(instance);
@@ -281,7 +281,7 @@ describe('ReactUpdates', () => {
     expect(instance.state.x).toBe(0);
 
     var callbacksRun = 0;
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.setState({x: 1}, function() {
         callbacksRun++;
       });
@@ -330,14 +330,14 @@ describe('ReactUpdates', () => {
     expect(parentRenderCount).toBe(1);
     expect(childRenderCount).toBe(1);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.setState({x: 1});
     });
 
     expect(parentRenderCount).toBe(1);
     expect(childRenderCount).toBe(1);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       instance.refs.child.setState({x: 1});
     });
 
@@ -465,7 +465,7 @@ describe('ReactUpdates', () => {
     function testUpdates(components, desiredWillUpdates, desiredDidUpdates) {
       var i;
 
-      ReactUpdates.batchedUpdates(function() {
+      ReactDOM.unstable_batchedUpdates(function() {
         for (i = 0; i < components.length; i++) {
           triggerUpdate(components[i]);
         }
@@ -475,7 +475,7 @@ describe('ReactUpdates', () => {
 
       // Try them in reverse order
 
-      ReactUpdates.batchedUpdates(function() {
+      ReactDOM.unstable_batchedUpdates(function() {
         for (i = components.length - 1; i >= 0; i--) {
           triggerUpdate(components[i]);
         }
@@ -519,7 +519,7 @@ describe('ReactUpdates', () => {
     var containerB = document.createElement('div');
 
     // Initial renders aren't batched together yet...
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       ReactDOM.render(<Component text="A1" />, containerA);
       ReactDOM.render(<Component text="B1" />, containerB);
     });
@@ -527,7 +527,7 @@ describe('ReactUpdates', () => {
 
     // ...but updates are! Here only one more transaction is used, which means
     // we only have to initialize and close the wrappers once.
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       ReactDOM.render(<Component text="A2" />, containerA);
       ReactDOM.render(<Component text="B2" />, containerB);
     });
@@ -568,7 +568,7 @@ describe('ReactUpdates', () => {
     a = ReactTestUtils.renderIntoDocument(<A />);
     b = ReactTestUtils.renderIntoDocument(<B />);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});
       b.setState({x: 1});
     });
@@ -679,7 +679,7 @@ describe('ReactUpdates', () => {
 
     expect(updates).toEqual([0, 1, 2]);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       // Simulate update on each component from top to bottom.
       instances.forEach(function(instance) {
         instance.forceUpdate();
@@ -771,7 +771,7 @@ describe('ReactUpdates', () => {
       }
     }
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       ReactTestUtils.renderIntoDocument(
         <div>
           <A />
@@ -837,7 +837,7 @@ describe('ReactUpdates', () => {
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       // B will have scheduled an update but the batching should ensure that its
       // update never fires.
       componentB.setState({updates: 1});

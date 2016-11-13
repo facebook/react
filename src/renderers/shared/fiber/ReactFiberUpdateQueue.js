@@ -69,20 +69,26 @@ exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) :
   return queue;
 };
 
-exports.callCallbacks = function(queue : UpdateQueue, context : any) {
+exports.callCallbacks = function(queue : UpdateQueue, context : any) : Error | null {
   let node : ?UpdateQueueNode = queue;
+  let error = null;
   while (node) {
     const callback = node.callback;
     if (callback && !node.callbackWasCalled) {
-      node.callbackWasCalled = true;
-      if (typeof context !== 'undefined') {
-        callback.call(context);
-      } else {
-        callback();
+      try {
+        node.callbackWasCalled = true;
+        if (typeof context !== 'undefined') {
+          callback.call(context);
+        } else {
+          callback();
+        }
+      } catch (e) {
+        error = e;
       }
     }
     node = node.next;
   }
+  return error;
 };
 
 exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {

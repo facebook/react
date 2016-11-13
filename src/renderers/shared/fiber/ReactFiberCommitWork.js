@@ -321,7 +321,11 @@ module.exports = function<T, P, I, TI, C>(
         }
         if (finishedWork.effectTag & Callback) {
           if (finishedWork.callbackList) {
-            callCallbacks(finishedWork.callbackList, instance);
+            const callbackError = callCallbacks(finishedWork.callbackList, instance);
+            // since we only want to keep the first error
+            if (!error) {
+              error = callbackError;
+            }
             finishedWork.callbackList = null;
           }
         }
@@ -332,10 +336,15 @@ module.exports = function<T, P, I, TI, C>(
       }
       case HostContainer: {
         const rootFiber = finishedWork.stateNode;
+        let error = null;
         if (rootFiber.callbackList) {
           const { callbackList } = rootFiber;
           rootFiber.callbackList = null;
-          callCallbacks(callbackList, rootFiber.current.child.stateNode);
+          error = callCallbacks(callbackList, rootFiber.current.child.stateNode);
+        }
+
+        if (error) {
+          trapError(rootFiber, error, false);
         }
         return;
       }

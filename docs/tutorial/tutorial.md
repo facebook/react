@@ -7,6 +7,9 @@ permalink: /tutorial/tutorial.html
 redirect_from:
   - "docs/tutorial.html"
   - "docs/why-react.html"
+  - "docs/tutorial-ja-JP.html"
+  - "docs/tutorial-ko-KR.html"
+  - "docs/tutorial-zh-CN.html"
 ---
 
 ## What We're Building

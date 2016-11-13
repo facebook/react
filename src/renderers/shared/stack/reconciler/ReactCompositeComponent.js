@@ -1205,10 +1205,10 @@ var ReactCompositeComponent = {
    * @final
    * @private
    */
-  attachRef: function(ref, component, transaction) {
+  attachRef: function(ref, component) {
     var inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
-    var publicComponentInstance = component.getPublicInstance(transaction);
+    var publicComponentInstance = component.getPublicInstance();
     if (__DEV__) {
       var componentName = component && component.getName ?
         component.getName() : 'a component';

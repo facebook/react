@@ -82,7 +82,18 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
-      return instance.shouldComponentUpdate(newProps, newState);
+      const shouldUpdate = instance.shouldComponentUpdate(newProps, newState);
+
+      if (__DEV__) {
+        warning(
+          shouldUpdate !== undefined,
+          '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
+          'boolean value. Make sure to return true or false.',
+          getName(workInProgress, instance)
+        );
+      }
+
+      return shouldUpdate;
     }
 
     const type = workInProgress.type;

@@ -4,6 +4,8 @@ title: Refs and the DOM
 redirect_from:
   - "docs/working-with-the-browser.html"
   - "docs/more-about-refs.html"
+  - "docs/more-about-refs-ko-KR.html"
+  - "docs/more-about-refs-zh-CN.html"
   - "tips/expose-component-functions.html"
   - "tips/children-undefined.html"
 permalink: docs/refs-and-the-dom.html
@@ -36,7 +38,7 @@ class CustomTextInput extends React.Component {
       <div>
         <input
           type="text"
-          ref={(input) => this.textInput = input} />
+          ref={(input) => { this.textInput = input; }} />
         <input
           type="button"
           value="Focus the text input"
@@ -63,7 +65,7 @@ class AutoFocusTextInput extends React.Component {
   render() {
     return (
       <CustomTextInput
-        ref={(input) => this.textInput = input} />
+        ref={(input) => { this.textInput = input; }} />
     );
   }
 }
@@ -84,7 +86,7 @@ function CustomTextInput(props) {
     <div>
       <input
         type="text"
-        ref={(input) => textInput = input} />
+        ref={(input) => { textInput = input; }} />
       <input
         type="button"
         value="Focus the text input"

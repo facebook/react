@@ -209,7 +209,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (effectfulFiber) {
       if (effectfulFiber.effectTag & (Update | Callback)) {
         const current = effectfulFiber.alternate;
-        commitLifeCycles(current, effectfulFiber);
+        const previousPriorityContext = priorityContext;
+        priorityContext = TaskPriority;
+        try {
+          commitLifeCycles(current, effectfulFiber);
+        } finally {
+          priorityContext = previousPriorityContext;
+        }
       }
       const next = effectfulFiber.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.

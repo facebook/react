@@ -806,6 +806,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * skips will/DidUpdate when bailing unless an update was already in progress
 * performs batched updates at the end of the batch
 * can nest batchedUpdates
+* can handle if setState callback throws
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during mounting
@@ -843,18 +844,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * splits deferred work on multiple roots
 * works on deferred roots in the order they were scheduled
 * handles interleaved deferred and animation work
-* performs animation work in animation callback
-* schedules deferred work in animation callback
-* schedules deferred work and performs animation work in animation callback
-* performs animation work and schedules deferred work in animation callback
-* performs deferred work in deferred callback if it has time
-* schedules deferred work in deferred callback if it runs out of time
-* performs animated work in deferred callback if it has time
-* performs animated work and deferred work in deferred callback if it has time
-* performs deferred and animated work work in deferred callback if it has time
-* schedules animated work in deferred callback if it runs out of time
-* schedules animated work and deferred work in deferred callback if it runs out of time
-* schedules deferred work and animated work in deferred callback if it runs out of time
+* schedules sync updates when inside componentDidMount/Update
+* can opt-in to deferred/animation scheduling inside componentDidMount/Update
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
@@ -955,6 +946,9 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should not traverse if enter/leave the same node
 * should determine the first common ancestor correctly
 
+src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
+* should prevent non-function listeners
+
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should be able to inject ordering before plugins
 * should be able to inject plugins before and after ordering
@@ -1023,6 +1017,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should silently allow `setState`, not call cb on unmounting components
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting
+* should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
 * should skip update when rerendering element in container
 * only renders once if updated in componentWillReceiveProps
@@ -1059,6 +1054,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
 * propagates errors on retry on mounting
 * propagates errors inside boundary during componentWillMount
 * propagates errors inside boundary while rendering error state
+* does not register event handlers for unmounted children
 * does not call componentWillUnmount when aborting initial mount
 * resets refs if mounting aborts
 * successfully mounts if no error occurs
@@ -1160,10 +1156,21 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should allow simple functions to return false
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
+* should batch state when updating state twice
+* should batch state when updating two different state keys
+* should batch state and props together
+* should batch parent/child state updates together
+* should batch child/parent state updates together
+* should support chained state updates
+* should batch forceUpdate together
+* should update children even if parent blocks updates
 * should not reconcile children passed via props
+* should flow updates correctly
 * should flush updates in the correct order
+* should flush updates in the correct order across roots
 * should queue nested updates
 * calls componentWillReceiveProps setState callback properly
+* does not call render after a component as been deleted
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
 * unstable_batchedUpdates should return value from a callback
@@ -1211,6 +1218,8 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * gives a ref to native components
 * warns correctly for refs on SFCs
 * allows an optional createNodeMock function
+* supports unmounting when using refs
+* supports updates when using refs
 * supports error boundaries
 
 src/shared/utils/__tests__/KeyEscapeUtils-test.js
@@ -1265,5 +1274,14 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
+* traverses children in the correct order
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
 * should not warn when simulating events with extra properties
+* can scry with stateless components involved
+
+src/test/__tests__/reactComponentExpect-test.js
+* should match composite components
+* should match empty DOM components
+* should match non-empty DOM components
+* should match DOM component children
+* should detect text components

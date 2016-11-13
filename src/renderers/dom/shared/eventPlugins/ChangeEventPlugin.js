@@ -52,7 +52,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore();
+  ReactControlledComponent.enqueueStateRestore(inst);
   EventPropagators.accumulateTwoPhaseDispatches(event);
   return event;
 }
@@ -102,9 +102,6 @@ function manualDispatchChangeEvent(nativeEvent) {
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
   ReactGenericBatching.batchedUpdates(runEventInBatch, event);
-  if (activeElementInst) {
-    ReactControlledComponent.restoreStateIfNeeded(activeElementInst);
-  }
 }
 
 function runEventInBatch(event) {

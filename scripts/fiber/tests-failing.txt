@@ -147,6 +147,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should validate against invalid styles
 * should track input values
 * should track textarea values
+* should execute custom event plugin listening behavior
+* should handle null and missing properly with event hooks
 * should warn for children on void elements
 * should support custom elements which extend native elements
 * should warn against children for void elements
@@ -155,6 +157,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn about contentEditable and children
 * should validate against invalid styles
 * should report component containing invalid styles
+* should clean up listeners
 * should clean up input value tracking
 * should clean up input textarea tracking
 * should warn about the `onScroll` issue when unsupported (IE8)
@@ -250,6 +253,8 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
+* should control a value in reentrant events
+* should control values in reentrant events with different targets
 * should display `defaultValue` of number 0
 * should display "true" for `defaultValue` of `true`
 * should display "false" for `defaultValue` of `false`
@@ -379,11 +384,13 @@ src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
 * should generate simple markup for self-closing tags
 * should generate simple markup for attribute with `>` symbol
 * should generate comment markup for component returns null
+* should not register event listeners
 * should render composite components
 * should only execute certain lifecycle methods
 * should have the correct mounting behavior
 * should not put checksum and React ID on components
 * should not put checksum and React ID on text components
+* should not register event listeners
 * should only execute certain lifecycle methods
 * allows setState in componentWillMount without using DOM
 * renders components with different batching strategies
@@ -498,9 +505,6 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should leave to the window
 * should leave to the window from the shallowest
 
-src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should prevent non-function listeners, at dispatch
-
 src/renderers/shared/stack/reconciler/__tests__/ReactChildReconciler-test.js
 * warns for duplicated keys
 * warns for duplicated keys with component stack info
@@ -523,7 +527,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` on unmounted components
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
-* should warn when shouldComponentUpdate() returns undefined
 * should pass context to children when not owner
 * should pass context when re-rendered for static child
 * should pass context when re-rendered for static child within a composite component
@@ -565,20 +568,9 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
-* should batch state when updating state twice
-* should batch state when updating two different state keys
-* should batch state and props together
-* should batch parent/child state updates together
-* should batch child/parent state updates together
-* should support chained state updates
-* should batch forceUpdate together
-* should update children even if parent blocks updates
-* should flow updates correctly
 * should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
-* should flush updates in the correct order across roots
 * should queue updates from during mount
-* does not call render after a component as been deleted
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
@@ -591,12 +583,7 @@ src/shared/utils/__tests__/traverseAllChildren-test.js
 * should warn for using maps as children with owner info
 
 src/test/__tests__/ReactTestUtils-test.js
-* traverses children in the correct order
 * should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component
-* can scry with stateless components involved
 * should set the type of the event
-
-src/test/__tests__/reactComponentExpect-test.js
-* should detect text components

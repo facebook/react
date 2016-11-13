@@ -233,7 +233,7 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
           }
           return config.returnVal;
         }.bind(null, readableID, nodeConfig);
-      putListener(getInstanceFromNode(id), registrationName, handler);
+      EventPluginHub.putListener(getInstanceFromNode(id), registrationName, handler);
     }
   };
   for (var eventName in eventTestConfig) {
@@ -257,6 +257,9 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
   }
   return runs;
 };
+
+
+
 
 var run = function(config, hierarchyConfig, nativeEventConfig) {
   var max = NA;
@@ -306,30 +309,10 @@ var PARENT_HOST_NODE = { };
 var CHILD_HOST_NODE = { };
 var CHILD_HOST_NODE2 = { };
 
-var GRANDPARENT_INST = {
-  _hostParent: null,
-  _rootNodeID: '1',
-  _hostNode: GRANDPARENT_HOST_NODE,
-  _currentElement: { props: {} },
-};
-var PARENT_INST = {
-  _hostParent: GRANDPARENT_INST,
-  _rootNodeID: '2',
-  _hostNode: PARENT_HOST_NODE,
-  _currentElement: { props: {} },
-};
-var CHILD_INST = {
-  _hostParent: PARENT_INST,
-  _rootNodeID: '3',
-  _hostNode: CHILD_HOST_NODE,
-  _currentElement: { props: {} },
-};
-var CHILD_INST2 = {
-  _hostParent: PARENT_INST,
-  _rootNodeID: '4',
-  _hostNode: CHILD_HOST_NODE2,
-  _currentElement: { props: {} },
-};
+var GRANDPARENT_INST = { _hostParent: null, _rootNodeID: '1', _hostNode: GRANDPARENT_HOST_NODE };
+var PARENT_INST = { _hostParent: GRANDPARENT_INST, _rootNodeID: '2', _hostNode: PARENT_HOST_NODE };
+var CHILD_INST = { _hostParent: PARENT_INST, _rootNodeID: '3', _hostNode: CHILD_HOST_NODE };
+var CHILD_INST2 = { _hostParent: PARENT_INST, _rootNodeID: '4', _hostNode: CHILD_HOST_NODE2 };
 
 GRANDPARENT_HOST_NODE._reactInstance = GRANDPARENT_INST;
 PARENT_HOST_NODE._reactInstance = PARENT_INST;
@@ -356,14 +339,6 @@ function getNodeFromInstance(inst) {
   return inst._hostNode;
 }
 
-function putListener(node, registrationName, handler) {
-  node._currentElement.props[registrationName] = handler;
-}
-
-function deleteAllListeners(node) {
-  node._currentElement.props = {};
-}
-
 describe('ResponderEventPlugin', () => {
 
   beforeEach(() => {
@@ -372,11 +347,6 @@ describe('ResponderEventPlugin', () => {
     EventPluginHub = require('EventPluginHub');
     EventPluginUtils = require('EventPluginUtils');
     ResponderEventPlugin = require('ResponderEventPlugin');
-
-    deleteAllListeners(GRANDPARENT_INST);
-    deleteAllListeners(PARENT_INST);
-    deleteAllListeners(CHILD_INST);
-    deleteAllListeners(CHILD_INST2);
 
     EventPluginUtils.injection.injectComponentTree({
       getInstanceFromNode,

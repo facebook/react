@@ -22,7 +22,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
 
@@ -32,7 +32,9 @@ var invariant = require('invariant');
 var topLevelTypes = EventConstants.topLevelTypes;
 var {
   ClassComponent,
+  FunctionalComponent,
   HostComponent,
+  HostContainer,
   HostText,
 } = ReactTypeOfWork;
 
@@ -80,6 +82,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   }
   if (
     fiber.tag !== ClassComponent &&
+    fiber.tag !== FunctionalComponent &&
     fiber.tag !== HostComponent &&
     fiber.tag !== HostText
   ) {
@@ -165,6 +168,7 @@ var ReactTestUtils = {
     return (constructor === type);
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElement: function(inst) {
     if (!React.isValidElement(inst)) {
       return false;
@@ -178,6 +182,7 @@ var ReactTestUtils = {
     );
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElementWithType: function(inst, type) {
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance
@@ -188,6 +193,7 @@ var ReactTestUtils = {
              (constructor === type));
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   getRenderedChildOfCompositeComponent: function(inst) {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;
@@ -206,7 +212,15 @@ var ReactTestUtils = {
     );
     var internalInstance = ReactInstanceMap.get(inst);
     if (internalInstance && typeof internalInstance.tag === 'number') {
-      return findAllInRenderedFiberTreeInternal(internalInstance, test);
+      var fiber = internalInstance;
+      var root = fiber;
+      while (root.return) {
+        root = root.return;
+      }
+      var isRootCurrent = root.tag === HostContainer && root.stateNode.current === root;
+      // Make sure we're introspecting the current tree
+      var current = isRootCurrent ? fiber : fiber.alternate;
+      return findAllInRenderedFiberTreeInternal(current, test);
     } else {
       return findAllInRenderedStackTreeInternal(internalInstance, test);
     }
@@ -451,16 +465,14 @@ function makeSimulator(eventType) {
       EventPropagators.accumulateDirectDispatches(event);
     }
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
+      // Normally extractEvent enqueues a state restore, but we'll just always
+      // do that since we we're by-passing it here.
+      ReactControlledComponent.enqueueStateRestore(targetInst);
+
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
     });
-    // Normally extractEvent enqueues a state restore, but we'll just always do
-    // that.
-    ReactControlledComponent.enqueueStateRestore();
-    if (targetInst) {
-      ReactControlledComponent.restoreStateIfNeeded(targetInst);
-    }
   };
 }
 

@@ -879,6 +879,26 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
+  it('does not register event handlers for unmounted children', () => {
+    var EventPluginHub = require('EventPluginHub');
+    var container = document.createElement('div');
+    EventPluginHub.putListener = jest.fn();
+    ReactDOM.render(
+      <ErrorBoundary>
+        <button onClick={() => {}}>Click me</button>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container
+    );
+    expect(EventPluginHub.putListener).not.toBeCalled();
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'ErrorBoundary componentWillUnmount',
+    ]);
+  });
+
   it('does not call componentWillUnmount when aborting initial mount', () => {
     var container = document.createElement('div');
     ReactDOM.render(

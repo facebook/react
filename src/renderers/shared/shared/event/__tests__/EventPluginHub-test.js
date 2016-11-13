@@ -14,21 +14,19 @@
 jest.mock('isEventSupported');
 
 describe('EventPluginHub', () => {
-  var React;
-  var ReactTestUtils;
+  var EventPluginHub;
+  var isEventSupported;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
-    React = require('React');
-    ReactTestUtils = require('ReactTestUtils');
+    EventPluginHub = require('EventPluginHub');
+    isEventSupported = require('isEventSupported');
+    isEventSupported.mockReturnValueOnce(false);
   });
 
-  it('should prevent non-function listeners, at dispatch', () => {
-    var node = ReactTestUtils.renderIntoDocument(
-      <div onClick="not a function" />
-    );
+  it('should prevent non-function listeners', () => {
     expect(function() {
-      ReactTestUtils.SimulateNative.click(node);
+      EventPluginHub.putListener(1, 'onClick', 'not a function');
     }).toThrowError(
       'Expected onClick listener to be a function, instead got type string'
     );
