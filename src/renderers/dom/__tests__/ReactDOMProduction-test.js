@@ -178,7 +178,7 @@ describe('ReactDOMProduction', () => {
     expect(function() {
       class Component extends React.Component {
         render() {
-          return ['this is wrong'];
+          return undefined;
         }
       }
 
