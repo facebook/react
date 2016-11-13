@@ -27,19 +27,51 @@ function wrapRunnerFile(runnerPath) {
     filename,
     `
       'use strict';
+      var runnerPath = ${JSON.stringify(runnerPath)};
       var wrap = require(${JSON.stringify(__filename)}).wrapRunner;
-      var original = require(${JSON.stringify(runnerPath)});
-      module.exports = wrap(original);
+      module.exports = wrap(runnerPath);
     `
   );
   return filename;
 }
 
-function wrapRunner(original) {
-  return function runner(config, environment, runtime, testPath) {
-    return original(config, environment, runtime, testPath)
+function wrapRunner(originalPath) {
+  const original = require(originalPath);
+  // Assuming originalPath is .../jest-jasmine2/build/index.js
+  const JasmineReporter = require(
+    path.join(path.dirname(originalPath), 'reporter.js')
+  );
+
+  // For each spec, we store whether there was any expectDev() failure. This
+  // relies on the results being returned in the same order as they are run.
+  const hadDevFailures = [];
+  let environment;
+
+  const oldSpecStarted = JasmineReporter.prototype.specStarted;
+  JasmineReporter.prototype.specStarted = function(result) {
+    oldSpecStarted.apply(this, arguments);
+
+    environment.global.__suppressDevFailures = true;
+    environment.global.__hadDevFailures = false;
+  };
+
+  const oldSpecDone = JasmineReporter.prototype.specDone;
+  JasmineReporter.prototype.specDone = function(result) {
+    oldSpecDone.apply(this, arguments);
+
+    environment.global.__suppressDevFailures = false;
+    hadDevFailures.push(environment.global.__hadDevFailures);
+  };
+
+  return function runner(config, env, runtime, testPath) {
+    environment = env;
+    return original(config, env, runtime, testPath)
       .then((results) => {
         results.failureMessage = null;
+        hadDevFailures.forEach((hadFailures, i) => {
+          results.testResults[i].hadDevFailures = hadFailures;
+        });
+        hadDevFailures.length = 0;
         return results;
       });
   };
@@ -91,7 +123,11 @@ function recordTests(trackFacts) {
     .then((runResults) => {
       const passing = formatResults(
         runResults,
-        (file, test) => test.status === 'passed'
+        (file, test) => test.status === 'passed' && !test.hadDevFailures
+      );
+      const passingExceptDev = formatResults(
+        runResults,
+        (file, test) => test.status === 'passed' && test.hadDevFailures
       );
       const failing = formatResults(
         runResults,
@@ -100,6 +136,10 @@ function recordTests(trackFacts) {
       fs.writeFileSync(
         path.join(__dirname, 'tests-passing.txt'),
         passing + '\n'
+      );
+      fs.writeFileSync(
+        path.join(__dirname, 'tests-passing-except-dev.txt'),
+        passingExceptDev + '\n'
       );
       fs.writeFileSync(
         path.join(__dirname, 'tests-failing.txt'),

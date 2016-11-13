@@ -505,10 +505,6 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should leave to the window
 * should leave to the window from the shallowest
 
-src/renderers/shared/stack/reconciler/__tests__/ReactChildReconciler-test.js
-* warns for duplicated keys
-* warns for duplicated keys with component stack info
-
 src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
 * should throw when supplying a ref outside of render method

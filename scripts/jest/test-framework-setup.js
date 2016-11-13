@@ -58,3 +58,26 @@ env.afterEach(() => {
   expect(console.error).toBeReset();
   expect(console.error).toNotHaveBeenCalled();
 });
+
+function wrapDevMatcher(obj, name) {
+  const original = obj[name];
+  obj[name] = function devMatcher() {
+    try {
+      original.apply(this, arguments);
+    } catch (e) {
+      global.__hadDevFailures = e.stack;
+    }
+  };
+}
+
+const expectDev = function expectDev(actual) {
+  const expectation = expect(actual);
+  if (global.__suppressDevFailures) {
+    Object.keys(expectation).forEach((name) => {
+      wrapDevMatcher(expectation, name);
+      wrapDevMatcher(expectation.not, name);
+    });
+  }
+  return expectation;
+};
+global.expectDev = expectDev;
