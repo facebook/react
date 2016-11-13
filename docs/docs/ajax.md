@@ -127,7 +127,7 @@ request.done(result => {
 
 ## State
 
-We are chaning the view by clicking each button, so we need [state](./state-and-lifecycle.html).
+We want to change the view by clicking each button, so we need [state](./state-and-lifecycle.html).
 We'll initialize our state as an empty list at the beginning, and after fetching the data from
 API, we'll set it to the new list. So in our constructor we'll have:
 
@@ -152,7 +152,7 @@ getRepos(username) {
 
 ## List
 
-Now we have to show our list. For this we create a `List` Component
+Now we have to show our list. For this reason we create a `List` component
 which will accept our list as a property:
 
 ```html
