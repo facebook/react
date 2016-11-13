@@ -250,8 +250,8 @@ describe('ReactElementClone', () => {
 
     React.cloneElement(<div />, null, [<div />, <div />]);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -261,7 +261,7 @@ describe('ReactElementClone', () => {
 
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', () => {
@@ -269,7 +269,7 @@ describe('ReactElementClone', () => {
 
     React.cloneElement(<div />, null, <div />, <div />);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the array contains a non-element', () => {
@@ -277,7 +277,7 @@ describe('ReactElementClone', () => {
 
     React.cloneElement(<div />, null, [{}, {}]);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should check declared prop types after clone', () => {
@@ -304,8 +304,8 @@ describe('ReactElementClone', () => {
       },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`.\n' +

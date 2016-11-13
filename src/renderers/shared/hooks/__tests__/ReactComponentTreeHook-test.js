@@ -1830,8 +1830,8 @@ describe('ReactComponentTreeHook', () => {
 
       spyOn(console, 'error');
       getAddendum(-17);
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
         'Warning: ReactComponentTreeHook: Missing React element for ' +
         'debugID -17 when building stack'
       );

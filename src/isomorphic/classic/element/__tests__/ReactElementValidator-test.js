@@ -20,7 +20,7 @@ var ReactTestUtils;
 
 describe('ReactElementValidator', () => {
   function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   var ComponentClass;
@@ -44,8 +44,8 @@ describe('ReactElementValidator', () => {
 
     Component(null, [Component(), Component()]);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -74,8 +74,8 @@ describe('ReactElementValidator', () => {
       React.createElement(ComponentWrapper)
     );
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop. ' +
       'Check the render method of `InnerClass`. ' +
       'It was passed a child from ComponentWrapper. '
@@ -98,8 +98,8 @@ describe('ReactElementValidator', () => {
     ];
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for more information.\n' +
       '    in div (at **)'
@@ -115,8 +115,8 @@ describe('ReactElementValidator', () => {
     ];
     ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. Check the top-level render call using <div>. See ' +
       'https://fb.me/react-warning-keys for more information.\n' +
@@ -147,8 +147,8 @@ describe('ReactElementValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
       '"key" prop. Check the render method of `Component`. See ' +
       'https://fb.me/react-warning-keys for more information.\n' +
@@ -180,7 +180,7 @@ describe('ReactElementValidator', () => {
       </Wrapper>
     );
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('warns for keys for iterables of elements in rest args', () => {
@@ -201,8 +201,8 @@ describe('ReactElementValidator', () => {
 
     Component(null, iterable);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -213,7 +213,7 @@ describe('ReactElementValidator', () => {
 
     Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warns for iterable elements with keys', () => {
@@ -237,7 +237,7 @@ describe('ReactElementValidator', () => {
 
     Component(null, iterable);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', () => {
@@ -246,7 +246,7 @@ describe('ReactElementValidator', () => {
 
     Component(null, Component(), Component());
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the array contains a non-element', () => {
@@ -255,7 +255,7 @@ describe('ReactElementValidator', () => {
 
     Component(null, [{}, {}]);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   // TODO: These warnings currently come from the composite component, but
@@ -280,7 +280,7 @@ describe('ReactElementValidator', () => {
       },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`.\n' +
@@ -295,29 +295,29 @@ describe('ReactElementValidator', () => {
     React.createElement(null);
     React.createElement(true);
     React.createElement(123);
-    expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
-    expect(console.error.calls.argsFor(2)[0]).toBe(
+    expectDev(console.error.calls.argsFor(2)[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
-    expect(console.error.calls.argsFor(3)[0]).toBe(
+    expectDev(console.error.calls.argsFor(3)[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
     );
     React.createElement('div');
-    expect(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(4);
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {
@@ -334,8 +334,8 @@ describe('ReactElementValidator', () => {
       'or a class/function (for composite components) but got: null. Check ' +
       'the render method of `ParentComp`.'
     );
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components). Check the render method of ' +
@@ -358,8 +358,8 @@ describe('ReactElementValidator', () => {
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`Component`, but its value is `null`.\n' +
       '    in Component'
@@ -383,8 +383,8 @@ describe('ReactElementValidator', () => {
       React.createElement(Component, {prop:null})
     );
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`Component`, but its value is `null`.\n' +
       '    in Component'
@@ -410,15 +410,15 @@ describe('ReactElementValidator', () => {
       React.createElement(Component, {prop: 42})
     );
 
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
       'The prop `prop` is marked as required in `Component`, but its value ' +
       'is `undefined`.\n' +
       '    in Component'
     );
 
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`Component`, expected `string`.\n' +
@@ -430,7 +430,7 @@ describe('ReactElementValidator', () => {
     );
 
     // Should not error for strings
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
   it('should warn if a PropType creator is used as a PropType', () => {
@@ -449,8 +449,8 @@ describe('ReactElementValidator', () => {
       React.createElement(Component, {myProp: {value: 'hi'}})
     );
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: type specification of prop `myProp` is invalid; ' +
       'the type checker function must return `null` or an `Error` but ' +
       'returned a function. You may have forgotten to pass an argument to ' +
@@ -468,14 +468,14 @@ describe('ReactElementValidator', () => {
     });
     var TestFactory = React.createFactory(TestComponent);
     expect(TestFactory.type).toBe(TestComponent);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
       'passing it to createFactory.'
     );
     // Warn once, not again
     expect(TestFactory.type).toBe(TestComponent);
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('does not warn when using DOM node as children', () => {
@@ -492,7 +492,7 @@ describe('ReactElementValidator', () => {
     var node = document.createElement('div');
     // This shouldn't cause a stack overflow or any other problems (#3883)
     ReactTestUtils.renderIntoDocument(<DOMContainer>{node}</DOMContainer>);
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should not enumerate enumerable numbers (#4776)', () => {
@@ -535,8 +535,8 @@ describe('ReactElementValidator', () => {
     spyOn(console, 'error');
     var Foo = undefined;
     void <Foo>{[<div />]}</Foo>;
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
       'boolean, or number. It should be a string (for DOM elements) or a ' +
       'ReactClass (for composite components).'
