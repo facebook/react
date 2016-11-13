@@ -12,17 +12,26 @@ jest.mock('ReactDOMFeatureFlags', () => {
 
 var env = jasmine.getEnv();
 
-var callCount = 0;
 var oldError = console.error;
+var oldWindowOnError = window.onerror;
+
+var callCount = 0;
+var windowCallCount = 0;
 var newError = function() {
   callCount++;
   oldError.apply(this, arguments);
 };
+var newWindowOnError = function() {
+  windowCallCount++;
+  oldWindowOnError.apply(this, arguments);
+}
 
 console.error = newError;
+window.onerror = newWindowOnError;
 
 env.beforeEach(() => {
   callCount = 0;
+  windowCallCount = 0;
   jasmine.addMatchers({
     toBeReset() {
       return {
@@ -42,6 +51,15 @@ env.beforeEach(() => {
     toNotHaveBeenCalled() {
       return {
         compare(actual) {
+          if (actual === newWindowOnError) {
+            return {
+              pass: windowCallCount === 0,
+              message:
+                'Expected test not to trigger a global window error. If the error is expected, mock ' +
+                'it out using spyOn(window, \'onerror\'); and test that the ' +
+                'error occurs.',
+            };
+          }
           return {
             pass: callCount === 0,
             message:
@@ -57,4 +75,5 @@ env.beforeEach(() => {
 env.afterEach(() => {
   expect(console.error).toBeReset();
   expect(console.error).toNotHaveBeenCalled();
+  expect(window.onerror).toNotHaveBeenCalled();
 });
