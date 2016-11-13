@@ -254,7 +254,7 @@ getRepos(username) {
     this._ajaxPromise.abort();
   }
 
-  let url = `https://api.github.com/users/${username}/repos?per_page=100`;
+  let url = `https://api.github.com/users/${username}/repos`;
   let request = $.get(url);
 
   request.done(result => {
