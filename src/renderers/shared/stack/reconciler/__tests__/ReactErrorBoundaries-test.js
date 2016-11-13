@@ -1370,6 +1370,7 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('recovers from componentWillUnmount errors on update', () => {
+    spyOn(window, 'onerror');
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
@@ -1435,6 +1436,7 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('recovers from nested componentWillUnmount errors on update', () => {
+    spyOn(window, 'onerror');
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
