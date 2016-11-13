@@ -405,3 +405,22 @@ describe 'ReactCoffeeScriptClass', ->
     node = ReactDOM.findDOMNode(instance)
     expect(node).toBe container.firstChild
     undefined
+
+  it 'supports Promise for setState method', ->
+    renderCount = 0
+    class Foo extends React.Component
+      constructor: (props) ->
+        @state = bar: props.initialValue
+
+      changeStateAndGetPromise: ->
+        @setState bar: 'bar'
+
+      render: ->
+        renderCount++;
+        div className: @state.bar
+
+    instance = test React.createElement(Foo, initialValue: 'foo'), 'DIV', 'foo'
+    instance.changeStateAndGetPromise()
+    .then ->
+      expect(renderCount).toBe(2);
+    undefined

@@ -54,6 +54,8 @@ ReactComponent.prototype.isReactComponent = {};
  * @param {object|function} partialState Next partial state or function to
  *        produce next partial state to be merged with current state.
  * @param {?function} callback Called after state is updated.
+ * @returns {Promise|undefined} If callback is not a function returns
+ *        the Promise that resolves after state is updated.
  * @final
  * @protected
  */
@@ -68,6 +70,12 @@ ReactComponent.prototype.setState = function(partialState, callback) {
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
     this.updater.enqueueCallback(this, callback, 'setState');
+  } else {
+    return {
+      then: function(resolve) {
+        this.updater.enqueueCallback(this, resolve, 'setState');
+      }.bind(this),
+    };
   }
 };
 

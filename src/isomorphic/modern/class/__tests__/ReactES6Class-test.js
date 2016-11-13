@@ -446,4 +446,26 @@ describe('ReactES6Class', () => {
     expect(node).toBe(container.firstChild);
   });
 
+  it('supports Promise for setState method', () => {
+    var renderCount = 0;
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {bar: props.initialValue};
+      }
+      changeStateAndGetPromise() {
+        return this.setState({bar: 'bar'});
+      }
+      render() {
+        renderCount++;
+        return <div className={this.state.bar} />;
+      }
+    }
+    var instance = test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    instance.changeStateAndGetPromise()
+    .then(function() {
+      expect(renderCount).toBe(2);
+    });
+  });
+
 });
