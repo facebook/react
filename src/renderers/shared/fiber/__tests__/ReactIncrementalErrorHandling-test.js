@@ -378,6 +378,96 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
   });
 
+  it('force unmounts failed subtree before rerendering (fragment)', () => {
+    var ops = [];
+    var barInstance;
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        ops.push('handle error');
+        this.setState({error});
+      }
+      // Shouldn't fire
+      componentWillUnmount() {
+        ops.push('ErrorBoundary unmount');
+      }
+      render() {
+        ops.push('ErrorBoundary render');
+        return [
+          <Foo />,
+          this.state.error ?
+            <span prop={`Caught an error: ${this.state.error.message}.`} /> :
+            <Bar />,
+        ];
+      }
+    }
+
+    class Foo extends React.Component {
+      componentWillUnmount() {
+        ops.push('Foo unmount');
+      }
+      render() {
+        ops.push('Foo render');
+        return <span prop="foo" />;
+      }
+    }
+
+    class Bar extends React.Component {
+      state = { fail: false };
+      componentWillUnmount() {
+        ops.push('Bar unmount');
+        throw new Error('should ignore unmount error');
+      }
+      render() {
+        barInstance = this;
+        ops.push('Bar render');
+        if (this.state.fail) {
+          ops.push('Bar error');
+          throw new Error('Render error');
+        }
+        return <span prop="bar" />;
+      }
+    }
+
+
+    ReactNoop.render(
+      <ErrorBoundary />
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'ErrorBoundary render',
+      'Foo render',
+      'Bar render',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('foo'),
+      span('bar'),
+    ]);
+
+    ops = [];
+    barInstance.setState({ fail: true });
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'Bar render',
+      'Bar error',
+      'handle error',
+      'ErrorBoundary render',
+      'Foo render',
+      // Foo should be force unmounted. If it's not, that means ErrorBoundary is
+      // incorrectly reusing the old, failed tree.
+      'Foo unmount',
+      'Bar unmount',
+    ]);
+
+    expect(ReactNoop.getChildren()).toEqual([
+      span('foo'),
+      span('Caught an error: Render error.'),
+    ]);
+  });
+
   it('force unmounts failed root', () => {
     var ops = [];
     var barInstance;

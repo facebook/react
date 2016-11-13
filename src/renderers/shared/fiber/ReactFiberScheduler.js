@@ -48,6 +48,7 @@ var {
 } = require('ReactTypeOfSideEffect');
 
 var {
+  NoError,
   SoftDeletion,
   HardDeletion,
 } = require('ReactFiberRootErrorPhase');
@@ -70,7 +71,10 @@ type TrappedError = {
 };
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-  const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
+  const {
+    beginWork,
+    beginWorkOnFailedNode,
+  } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
   const {
     commitInsertion,
@@ -387,7 +391,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
-    let next = beginWork(current, workInProgress, nextPriorityLevel);
+    let next;
+    if (activeErrorBoundaries && activeErrorBoundaries.has(workInProgress)) {
+      // This is a failed error boundary.
+      next = beginWorkOnFailedNode(current, workInProgress, nextPriorityLevel);
+    } else if (workInProgress.tag === HostContainer &&
+               workInProgress.stateNode.errorPhase === HardDeletion) {
+      // This is a failed root. Reset the root error phase.
+      workInProgress.stateNode.errorPhase = NoError;
+      next = beginWorkOnFailedNode(current, workInProgress, nextPriorityLevel);
+    } else {
+      // This work has no error. Begin work as normal.
+      next = beginWork(current, workInProgress, nextPriorityLevel);
+    }
+
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
     }

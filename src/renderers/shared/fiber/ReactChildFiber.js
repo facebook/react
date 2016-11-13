@@ -15,7 +15,6 @@
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { FiberRoot } from 'ReactFiberRoot';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {
@@ -27,7 +26,6 @@ var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactFiberRootErrorPhase = require('ReactFiberRootErrorPhase');
 
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
@@ -54,7 +52,6 @@ const {
   CoroutineComponent,
   YieldComponent,
   Fragment,
-  HostContainer,
 } = ReactTypeOfWork;
 
 const {
@@ -62,11 +59,6 @@ const {
   Placement,
   Deletion,
 } = ReactTypeOfSideEffect;
-
-const {
-  NoError,
-  HardDeletion,
-} = ReactFiberRootErrorPhase;
 
 function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactElement<any>) {
   if (typeof element.ref === 'string') {
@@ -97,7 +89,7 @@ function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactEleme
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+function ChildReconciler(shouldClone, shouldTrackSideEffects, forceReplace) {
 
   function deleteChild(
     returnFiber : Fiber,
@@ -386,6 +378,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     newChild : any,
     priority : PriorityLevel
   ) : ?Fiber {
+    if (forceReplace) {
+      return null;
+    }
+
     // Update the fiber if the keys match, otherwise return null.
 
     const key = oldFiber ? oldFiber.key : null;
@@ -451,64 +447,46 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes doesn't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
-      const matchedFiber = existingChildren.get(newIdx) || null;
+      const matchedFiber = forceReplace ? null :
+        existingChildren.get(newIdx) || null;
       return updateTextNode(returnFiber, matchedFiber, '' + newChild, priority);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          const matchedFiber = forceReplace ? null :
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key
+            ) || null;
           return updateElement(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_COROUTINE_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          const matchedFiber = forceReplace ? null :
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key
+            ) || null;
           return updateCoroutine(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_YIELD_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          const matchedFiber = forceReplace ? null :
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key
+            ) || null;
           return updateYield(returnFiber, matchedFiber, newChild, priority);
         }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        const matchedFiber = existingChildren.get(newIdx) || null;
+        const matchedFiber = forceReplace ? null :
+          existingChildren.get(newIdx) || null;
         return updateFragment(returnFiber, matchedFiber, newChild, priority);
       }
     }
 
     return null;
-  }
-
-  function isFailedErrorBoundary(fiber : Fiber): boolean {
-    // Detect if the return fiber is a failed error boundary. If so, we should
-    // treat the keys as if they don't match to force a remount. For convenience
-    // this check will reset the error boundary flag, so make sure to only call
-    // this once per reconciliation.
-    switch (fiber.tag) {
-      case ClassComponent:
-        if (fiber.stateNode._isFailedErrorBoundary) {
-          delete fiber.stateNode._isFailedErrorBoundary;
-          return true;
-        }
-        return false;
-      case HostContainer:
-        const root : FiberRoot = fiber.stateNode;
-        if (root.errorPhase === HardDeletion) {
-          root.errorPhase = NoError;
-          return true;
-        }
-        return false;
-    }
-    return false;
   }
 
   function reconcileChildrenArray(
@@ -532,15 +510,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // In this first iteration, we'll just live with hitting the bad case
     // (adding everything to a Map) in for every insert/move.
 
-    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
-
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;
 
-    // If the parent is an error boundary, setting oldFiber to null ensures
-    // that none of the old fibers are reused, the old children are deleted,
-    // and new fibers are inserted.
-    let oldFiber = returnFiberIsFailedErrorBoundary ? null : currentFirstChild;
+    let oldFiber = currentFirstChild;
     let lastPlacedIndex = 0;
     let newIdx = 0;
     let nextOldFiber = null;
@@ -703,13 +676,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element : ReactElement<any>,
     priority : PriorityLevel
   ) : Fiber {
-    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
     const key = element.key;
     let child = currentFirstChild;
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key && !returnFiberIsFailedErrorBoundary) {
+      if (child.key === key && !forceReplace) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -739,13 +711,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     coroutine : ReactCoroutine,
     priority : PriorityLevel
   ) : Fiber {
-    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
     const key = coroutine.key;
     let child = currentFirstChild;
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key && !returnFiberIsFailedErrorBoundary) {
+      if (child.key === key && !forceReplace) {
         if (child.tag === CoroutineComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -773,13 +744,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
-    const returnFiberIsFailedErrorBoundary = isFailedErrorBoundary(returnFiber);
     const key = yieldNode.key;
     let child = currentFirstChild;
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key && !returnFiberIsFailedErrorBoundary) {
+      if (child.key === key && !forceReplace) {
         if (child.tag === YieldComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -883,11 +853,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-exports.reconcileChildFibers = ChildReconciler(true, true);
+exports.replaceChildFibers = ChildReconciler(true, true, true);
 
-exports.reconcileChildFibersInPlace = ChildReconciler(false, true);
+exports.reconcileChildFibers = ChildReconciler(true, true, false);
 
-exports.mountChildFibersInPlace = ChildReconciler(false, false);
+exports.reconcileChildFibersInPlace = ChildReconciler(false, true, false);
+
+exports.mountChildFibersInPlace = ChildReconciler(false, false, false);
 
 exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) : void {
   if (!workInProgress.child) {
