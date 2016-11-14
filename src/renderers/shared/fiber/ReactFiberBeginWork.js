@@ -27,6 +27,9 @@ var {
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
+  isContextProvider,
+  pushContextProvider,
+  resetContext,
 } = require('ReactFiberContext');
 var {
   IndeterminateComponent,
@@ -195,6 +198,10 @@ module.exports = function<T, P, I, TI, C>(
     ReactCurrentOwner.current = workInProgress;
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
+    // Put context on the stack because we will work on children
+    if (isContextProvider(workInProgress)) {
+      pushContextProvider(workInProgress);
+    }
     return workInProgress.child;
   }
 
@@ -352,6 +359,10 @@ module.exports = function<T, P, I, TI, C>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
+    // Put context on the stack because we will work on children
+    if (isContextProvider(workInProgress)) {
+      pushContextProvider(workInProgress);
+    }
     return workInProgress.child;
   }
 
@@ -362,6 +373,11 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
+    if (!workInProgress.return) {
+      // Don't start new work with context on the stack.
+      resetContext();
+    }
+
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
