@@ -18,14 +18,9 @@ src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
 * should transition from one to null
 * should transition from false to one
 
-src/addons/transitions/__tests__/ReactTransitionGroup-test.js
-* should warn for duplicated keys with component stack info
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should filter context properly in callbacks
-* should check context types
-* should check child context types
 
 src/isomorphic/classic/class/__tests__/ReactBind-test.js
 * Holds reference to instance
@@ -39,12 +34,7 @@ src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
 src/isomorphic/classic/class/__tests__/ReactClass-test.js
 * renders based on context getInitialState
 
-src/isomorphic/classic/element/__tests__/ReactElementClone-test.js
-* should check declared prop types after clone
-
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
-* warns for keys with component stack info
-* should give context for PropType errors in nested components.
 * includes the owner name when passing null, undefined, boolean, or number
 
 src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
@@ -61,7 +51,6 @@ src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should give context for PropType errors in nested components.
-* should warn on invalid context types
 
 src/renderers/art/__tests__/ReactART-test.js
 * should have the correct lifecycle state
@@ -74,11 +63,6 @@ src/renderers/art/__tests__/ReactART-test.js
 
 src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should set style attribute when styles exist
-* should warn when using hyphenated style names
-* should warn when updating hyphenated style names
-* warns when miscapitalizing vendored style names
-* should warn about style having a trailing semicolon
-* should warn about style containing a NaN value
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should store a listener correctly
@@ -107,11 +91,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should handle className
 * should gracefully handle various style value types
 * should update styles when mutating style object
-* should warn when mutating style
-* should warn for unknown prop
-* should group multiple unknown prop warnings together
-* should warn for onDblClick prop
-* should warn nicely about NaN in style
 * should update styles if initially null
 * should update styles if updated to null multiple times
 * should allow named slot projection on both web components and regular DOM elements
@@ -119,8 +98,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should remove properties
 * should properly update custom attributes on custom elements
 * should clear a single style prop when changing `style`
-* should reject attribute key injection attack on markup
-* should reject attribute key injection attack on update
 * should update arbitrary attributes for tags containing dashes
 * should update styles when `style` changes from null to object
 * should empty element when removing innerHTML
@@ -133,17 +110,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should not incur unnecessary DOM mutations for boolean properties
 * should ignore attribute whitelist for elements with the "is: attribute
 * should not update when switching between null/undefined
-* should work error event on <source> element
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
-* should emit a warning once for a named custom component using shady DOM
-* should emit a warning once for an unnamed custom component using shady DOM
 * should treat menuitem as a void element but still create the closing tag
 * should validate against multiple children props
-* should validate against use of innerHTML
 * should validate use of dangerouslySetInnerHTML
 * should validate use of dangerouslySetInnerHTML
-* should warn about contentEditable and children
 * should validate against invalid styles
 * should track input values
 * should track textarea values
@@ -154,38 +126,20 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
 * should validate against multiple children props
-* should warn about contentEditable and children
 * should validate against invalid styles
 * should report component containing invalid styles
 * should clean up listeners
 * should clean up input value tracking
 * should clean up input textarea tracking
-* should warn about the `onScroll` issue when unsupported (IE8)
 * should throw when an invalid tag name is used
 * should throw when an attack vector is used
-* warns on invalid nesting
-* warns on invalid nesting at root
-* warns nicely for table rows
-* gives useful context in warnings
-* should warn about incorrect casing on properties (ssr)
-* should warn about incorrect casing on event handlers (ssr)
-* should warn about incorrect casing on properties
-* should warn about incorrect casing on event handlers
-* should warn about class
-* should warn about props that are no longer supported
 * gives source code refs for unknown prop warning
 * gives source code refs for unknown prop warning for update render
 * gives source code refs for unknown prop warning for exact elements 
 * gives source code refs for unknown prop warning for exact elements in composition 
-* should suggest property name if available
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds instances for nodes
-
-src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
-* should warn for one invalid aria-* prop
-* should warn for many invalid aria-* props
-* should warn for an improperly cased aria-* prop
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
@@ -272,27 +226,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should have the correct target value
 * should control radio buttons
 * should control radio buttons if the tree updates during render
-* should warn with value and no onChange handler and readOnly specified
-* should warn with checked and no onChange handler with readOnly specified
-* should warn if value is null
-* should warn if checked and defaultChecked props are specified
-* should warn if value and defaultValue props are specified
-* should warn if controlled input switches to uncontrolled (value is undefined)
-* should warn if controlled input switches to uncontrolled (value is null)
-* should warn if controlled input switches to uncontrolled with defaultValue
-* should warn if uncontrolled input (value is undefined) switches to controlled
-* should warn if uncontrolled input (value is null) switches to controlled
-* should warn if controlled checkbox switches to uncontrolled (checked is undefined)
-* should warn if controlled checkbox switches to uncontrolled (checked is null)
-* should warn if controlled checkbox switches to uncontrolled with defaultChecked
-* should warn if uncontrolled checkbox (checked is undefined) switches to controlled
-* should warn if uncontrolled checkbox (checked is null) switches to controlled
-* should warn if controlled radio switches to uncontrolled (checked is undefined)
-* should warn if controlled radio switches to uncontrolled (checked is null)
-* should warn if controlled radio switches to uncontrolled with defaultChecked
-* should warn if uncontrolled radio (checked is undefined) switches to controlled
-* should warn if uncontrolled radio (checked is null) switches to controlled
-* should warn if radio checked false changes to become uncontrolled
 * sets type, step, min, max before value always
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
@@ -318,9 +251,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should remember value when switching to uncontrolled
 * should remember updated value when switching to uncontrolled
 * should not control defaultValue if readding options
-* should warn if value is null
 * should refresh state on change
-* should warn if value and defaultValue props are specified
 * should select grandchild options nested inside an optgroup
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
@@ -341,12 +272,9 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should treat children like `defaultValue`
 * should keep value when switching to uncontrolled element if not changed
 * should keep value when switching to uncontrolled element if changed
-* should allow numbers as children
 * should allow booleans as children
 * should allow objects as children
 * should throw with multiple or invalid children
-* should warn if value is null
-* should warn if value and defaultValue are specified
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
@@ -356,15 +284,8 @@ src/renderers/dom/stack/client/__tests__/ReactMount-test.js
 * throws when given a non-node
 * throws when given a string
 * throws when given a factory
-* should account for escaping on a checksum mismatch
-* should warn if render removes React-rendered children
-* should warn if the unmounted node was rendered by another copy of React
 * tracks root instances
 * marks top-level mounts
-
-src/renderers/dom/stack/client/__tests__/ReactMountDestruction-test.js
-* should warn when unmounting a non-container root node
-* should warn when unmounting a non-container, non-root node
 
 src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
 * should be able to adopt server markup
@@ -511,9 +432,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
 * throws usefully when rendering badly-typed elements
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
-* should correctly determine if a component is mounted
-* should correctly determine if a null component is mounted
-* warns if findDOMNode is used inside render
 * should carry through each of the phases of setup
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
@@ -530,10 +448,8 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should pass context when re-rendered
 * unmasked context propagates through updates
 * should trigger componentWillReceiveProps for context changes
-* should disallow nested render calls
 * should update refs if shouldComponentUpdate gives false
 * should support objects with prototypes as state
-* should warn when mutated props are passed
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedState-test.js
 * should provide up to date values for props
@@ -546,20 +462,14 @@ src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * throws when rendering null at the top level
 * preserves the dom node during updates
 
-src/renderers/shared/stack/reconciler/__tests__/ReactMultiChild-test.js
-* should warn for duplicated keys with component stack info
-
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
 * should throw if rendering both HTML and children
-* should reorder keyed text nodes
 
 src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should pass context thru stateless component
-* should warn for childContextTypes on a functional component
 * should warn when stateless component returns array
 * should throw on string refs in pure functions
-* should warn when given a ref
 * should receive context
 * should warn when using non-React functions in JSX
 
@@ -574,9 +484,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * Should increase refs with an increase in divs
-
-src/shared/utils/__tests__/traverseAllChildren-test.js
-* should warn for using maps as children with owner info
 
 src/test/__tests__/ReactTestUtils-test.js
 * should support injected wrapper components as DOM components

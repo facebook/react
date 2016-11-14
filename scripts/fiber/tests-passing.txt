@@ -522,7 +522,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should respect suppressContentEditableWarning
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
-* should not warn when server-side rendering `onScroll`
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
