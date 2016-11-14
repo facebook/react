@@ -1698,4 +1698,62 @@ describe('ReactIncremental', () => {
       'Recurse {"n":0}',
     ]);
   });
+
+  it('provides context when reusing work', () => {
+    var ops = [];
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          locale: this.props.locale,
+        };
+      }
+      render() {
+        ops.push('Intl ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocale extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+
+      render() {
+        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <ShowLocale />
+        <div hidden="true">
+          <ShowLocale />
+          <Intl locale="ru">
+            <ShowLocale />
+          </Intl>
+        </div>
+        <ShowLocale />
+      </Intl>
+    );
+    ReactNoop.flushDeferredPri(40);
+    expect(ops).toEqual([
+      'Intl null',
+      'ShowLocale {"locale":"fr"}',
+      'ShowLocale {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'ShowLocale {"locale":"fr"}',
+      'Intl null',
+      'ShowLocale {"locale":"ru"}',
+    ]);
+  });
 });
