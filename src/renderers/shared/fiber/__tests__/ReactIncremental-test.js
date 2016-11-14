@@ -1667,4 +1667,35 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"en"}',
     ]);
   });
+
+  it('does not leak own context into context provider', () => {
+    var ops = [];
+    class Recurse extends React.Component {
+      static contextTypes = {
+        n: React.PropTypes.number,
+      };
+      static childContextTypes = {
+        n: React.PropTypes.number,
+      };
+      getChildContext() {
+        return {n: (this.context.n || 3) - 1};
+      }
+      render() {
+        ops.push('Recurse ' + JSON.stringify(this.context));
+        if (this.context.n === 0) {
+          return null;
+        }
+        return <Recurse />;
+      }
+    }
+
+    ReactNoop.render(<Recurse />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Recurse {}',
+      'Recurse {"n":2}',
+      'Recurse {"n":1}',
+      'Recurse {"n":0}',
+    ]);
+  });
 });
