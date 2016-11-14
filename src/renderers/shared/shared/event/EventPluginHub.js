@@ -20,11 +20,6 @@ var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
 
 /**
- * Internal store for event listeners
- */
-var listenerBank = {};
-
-/**
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
@@ -51,12 +46,6 @@ var executeDispatchesAndReleaseSimulated = function(e) {
 };
 var executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
-};
-
-var getDictionaryKey = function(inst) {
-  // Prevents V8 performance issue:
-  // https://github.com/facebook/react/pull/7232
-  return '.' + inst._rootNodeID;
 };
 
 /**
@@ -102,87 +91,21 @@ var EventPluginHub = {
   },
 
   /**
-   * Stores `listener` at `listenerBank[registrationName][key]`. Is idempotent.
-   *
-   * @param {object} inst The instance, which is the source of events.
-   * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {function} listener The callback to store.
-   */
-  putListener: function(inst, registrationName, listener) {
-    invariant(
-      typeof listener === 'function',
-      'Expected %s listener to be a function, instead got type %s',
-      registrationName, typeof listener
-    );
-
-    var key = getDictionaryKey(inst);
-    var bankForRegistrationName =
-      listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[key] = listener;
-
-    var PluginModule =
-      EventPluginRegistry.registrationNameModules[registrationName];
-    if (PluginModule && PluginModule.didPutListener) {
-      PluginModule.didPutListener(inst, registrationName, listener);
-    }
-  },
-
-  /**
    * @param {object} inst The instance, which is the source of events.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
    */
   getListener: function(inst, registrationName) {
-    var bankForRegistrationName = listenerBank[registrationName];
-    var key = getDictionaryKey(inst);
-    return bankForRegistrationName && bankForRegistrationName[key];
-  },
-
-  /**
-   * Deletes a listener from the registration bank.
-   *
-   * @param {object} inst The instance, which is the source of events.
-   * @param {string} registrationName Name of listener (e.g. `onClick`).
-   */
-  deleteListener: function(inst, registrationName) {
-    var PluginModule =
-      EventPluginRegistry.registrationNameModules[registrationName];
-    if (PluginModule && PluginModule.willDeleteListener) {
-      PluginModule.willDeleteListener(inst, registrationName);
+    var listener = inst._currentElement.props[registrationName];
+    if (listener !== undefined) {
+      invariant(
+        typeof listener === 'function',
+        'Expected %s listener to be a function, instead got type %s',
+        registrationName,
+        typeof listener
+      );
     }
-
-    var bankForRegistrationName = listenerBank[registrationName];
-    // TODO: This should never be null -- when is it?
-    if (bankForRegistrationName) {
-      var key = getDictionaryKey(inst);
-      delete bankForRegistrationName[key];
-    }
-  },
-
-  /**
-   * Deletes all listeners for the DOM element with the supplied ID.
-   *
-   * @param {object} inst The instance, which is the source of events.
-   */
-  deleteAllListeners: function(inst) {
-    var key = getDictionaryKey(inst);
-    for (var registrationName in listenerBank) {
-      if (!listenerBank.hasOwnProperty(registrationName)) {
-        continue;
-      }
-
-      if (!listenerBank[registrationName][key]) {
-        continue;
-      }
-
-      var PluginModule =
-        EventPluginRegistry.registrationNameModules[registrationName];
-      if (PluginModule && PluginModule.willDeleteListener) {
-        PluginModule.willDeleteListener(inst, registrationName);
-      }
-
-      delete listenerBank[registrationName][key];
-    }
+    return listener;
   },
 
   /**
@@ -258,17 +181,6 @@ var EventPluginHub = {
     );
     // This would be a good time to rethrow if any of the event handlers threw.
     ReactErrorUtils.rethrowCaughtError();
-  },
-
-  /**
-   * These are needed for tests only. Do not use!
-   */
-  __purge: function() {
-    listenerBank = {};
-  },
-
-  __getListenerBank: function() {
-    return listenerBank;
   },
 
 };
