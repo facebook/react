@@ -28,6 +28,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
   isContextProvider,
+  hasContextChanged,
   pushContextProvider,
   resetContext,
 } = require('ReactFiberContext');
@@ -200,7 +201,7 @@ module.exports = function<T, P, I, TI, C>(
     reconcileChildren(current, workInProgress, nextChildren);
     // Put context on the stack because we will work on children
     if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress);
+      pushContextProvider(workInProgress, true);
     }
     return workInProgress.child;
   }
@@ -361,7 +362,7 @@ module.exports = function<T, P, I, TI, C>(
     markChildAsProgressed(current, workInProgress, priorityLevel);
     // Put context on the stack because we will work on children
     if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress);
+      pushContextProvider(workInProgress, false);
     }
     return workInProgress.child;
   }
@@ -398,7 +399,8 @@ module.exports = function<T, P, I, TI, C>(
       workInProgress.memoizedProps !== null &&
       workInProgress.pendingProps === workInProgress.memoizedProps
       )) &&
-      workInProgress.updateQueue === null) {
+      workInProgress.updateQueue === null &&
+      !hasContextChanged()) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 

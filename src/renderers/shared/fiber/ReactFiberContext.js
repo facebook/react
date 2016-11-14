@@ -28,13 +28,14 @@ if (__DEV__) {
 }
 
 let index = -1;
-const stack = [];
+const contextStack : Array<Object> = [];
+const didPerformWorkStack : Array<boolean> = [];
 
 function getUnmaskedContext() {
   if (index === -1) {
     return emptyObject;
   }
-  return stack[index];
+  return contextStack[index];
 }
 
 exports.getMaskedContext = function(fiber : Fiber) {
@@ -59,6 +60,10 @@ exports.getMaskedContext = function(fiber : Fiber) {
   return context;
 };
 
+exports.hasContextChanged = function() : boolean {
+  return index > -1 && didPerformWorkStack[index];
+};
+
 exports.isContextProvider = function(fiber : Fiber) : boolean {
   return (
     fiber.tag === ClassComponent &&
@@ -67,11 +72,12 @@ exports.isContextProvider = function(fiber : Fiber) : boolean {
 };
 
 exports.popContextProvider = function() : void {
-  stack[index] = emptyObject;
+  contextStack[index] = emptyObject;
+  didPerformWorkStack[index] = false;
   index--;
 };
 
-exports.pushContextProvider = function(fiber : Fiber) : void {
+exports.pushContextProvider = function(fiber : Fiber, didPerformWork : boolean) : void {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
   const childContext = instance.getChildContext();
@@ -92,7 +98,8 @@ exports.pushContextProvider = function(fiber : Fiber) : void {
 
   const mergedContext = Object.assign({}, getUnmaskedContext(), childContext);
   index++;
-  stack[index] = mergedContext;
+  contextStack[index] = mergedContext;
+  didPerformWorkStack[index] = didPerformWork;
 };
 
 exports.resetContext = function() : void {
