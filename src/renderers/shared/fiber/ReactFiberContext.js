@@ -19,6 +19,9 @@ var invariant = require('invariant');
 var {
   getComponentName,
 } = require('ReactFiberTreeReflection');
+var {
+  ClassComponent,
+} = require('ReactTypeOfWork');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
@@ -56,12 +59,19 @@ exports.getMaskedContext = function(fiber : Fiber) {
   return context;
 };
 
-exports.popContextProvider = function() {
+exports.isContextProvider = function(fiber : Fiber) : boolean {
+  return (
+    fiber.tag === ClassComponent &&
+    typeof fiber.stateNode.getChildContext === 'function'
+  );
+};
+
+exports.popContextProvider = function() : void {
   stack[index] = emptyObject;
   index--;
 };
 
-exports.pushContextProvider = function(fiber : Fiber) {
+exports.pushContextProvider = function(fiber : Fiber) : void {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
   const childContext = instance.getChildContext();
@@ -85,7 +95,7 @@ exports.pushContextProvider = function(fiber : Fiber) {
   stack[index] = mergedContext;
 };
 
-exports.resetContext = function() {
+exports.resetContext = function() : void {
   index = -1;
 };
 

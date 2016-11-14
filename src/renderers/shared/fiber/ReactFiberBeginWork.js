@@ -27,8 +27,6 @@ var {
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
-  pushContextProvider,
-  resetContext,
 } = require('ReactFiberContext');
 var {
   IndeterminateComponent,
@@ -189,14 +187,11 @@ module.exports = function<T, P, I, TI, C>(
     } else {
       shouldUpdate = updateClassInstance(current, workInProgress);
     }
-    const instance = workInProgress.stateNode;
-    if (typeof instance.getChildContext === 'function') {
-      pushContextProvider(workInProgress);
-    }
     if (!shouldUpdate) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     // Rerender
+    const instance = workInProgress.stateNode;
     ReactCurrentOwner.current = workInProgress;
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
@@ -367,9 +362,6 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
-    if (!workInProgress.return) {
-      resetContext();
-    }
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);

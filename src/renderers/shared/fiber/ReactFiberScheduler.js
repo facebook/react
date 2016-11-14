@@ -25,6 +25,13 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var { cloneFiber } = require('ReactFiber');
 
 var {
+  isContextProvider,
+  pushContextProvider,
+  popContextProvider,
+  resetContext,
+} = require('ReactFiberContext');
+
+var {
   NoWork,
   SynchronousPriority,
   TaskPriority,
@@ -267,6 +274,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
 
+      // We are leaving this subtree, so pop context if any.
+      if (isContextProvider(workInProgress)) {
+        popContextProvider();
+      }
+
       resetWorkPriority(workInProgress);
 
       // The work is now done. We don't need this anymore. This flags
@@ -345,6 +357,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
+    if (!workInProgress.return) {
+      // Don't start new work with context on the stack.
+      resetContext();
+    }
+
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -360,7 +377,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
     }
 
-    if (!next) {
+    if (next) {
+      // There is work deeper in the tree, so push the context if it exists.
+      if (isContextProvider(workInProgress)) {
+        pushContextProvider(workInProgress);
+      }
+    } else {
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
       }
