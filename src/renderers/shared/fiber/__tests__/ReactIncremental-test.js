@@ -1596,7 +1596,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    ops.length = [];
+    ops.length = 0;
     ReactNoop.render(
       <Intl locale="fr">
         <ShowLocale />
@@ -1612,7 +1612,7 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"fr"}',
     ]);
 
-    ops.length = [];
+    ops.length = 0;
     ReactNoop.render(
       <Intl locale="de">
         <ShowLocale />
@@ -1628,7 +1628,7 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"de"}',
     ]);
 
-    ops.length = [];
+    ops.length = 0;
     ReactNoop.render(
       <Intl locale="sv">
         <ShowLocale />
@@ -1642,7 +1642,7 @@ describe('ReactIncremental', () => {
       'Intl null',
     ]);
 
-    ops.length = [];
+    ops.length = 0;
     ReactNoop.render(
       <Intl locale="en">
         <ShowLocale />
