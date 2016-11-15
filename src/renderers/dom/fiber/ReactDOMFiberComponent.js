@@ -20,7 +20,6 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -42,7 +41,6 @@ var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
-var deleteListener = EventPluginHub.deleteListener;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
@@ -204,30 +202,6 @@ function assertValidProps(component, props) {
   );
 }
 
-function enqueuePutListener(inst, registrationName, listener, transaction) {
-  if (transaction instanceof ReactServerRenderingTransaction) {
-    return;
-  }
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      'This browser doesn\'t support the `onScroll` event'
-    );
-  }
-  var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-  listenTo(registrationName, doc);
-  transaction.getReactMountReady().enqueue(putListener, {
-    inst: inst,
-    registrationName: registrationName,
-    listener: listener,
-  });
-}
-
-// TODO: This is coming from future #8192. Dedupe this and enqueuePutListener.
 function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
@@ -244,15 +218,6 @@ function ensureListeningTo(inst, registrationName, transaction) {
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
-}
-
-function putListener() {
-  var listenerToPut = this;
-  EventPluginHub.putListener(
-    listenerToPut.inst,
-    listenerToPut.registrationName,
-    listenerToPut.listener
-  );
 }
 
 function inputPostMount() {
@@ -570,12 +535,7 @@ function updateDOMProperties(
       }
       workInProgress._previousStyleCopy = null;
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
-      if (lastProps[propKey]) {
-        // Only call deleteListener if there was a listener previously or
-        // else willDeleteListener gets called when there wasn't actually a
-        // listener (e.g., onClick={null})
-        deleteListener(workInProgress, propKey);
-      }
+      // Do nothing for deleted listeners.
     } else if (isCustomComponent(workInProgress._tag, lastProps)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
         DOMPropertyOperations.deleteValueForAttribute(
@@ -636,9 +596,7 @@ function updateDOMProperties(
       }
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
-        enqueuePutListener(workInProgress, propKey, nextProp, transaction);
-      } else if (lastProp) {
-        deleteListener(workInProgress, propKey);
+        ensureListeningTo(workInProgress, propKey, transaction);
       }
     } else if (isCustomComponentTag) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
@@ -1081,7 +1039,6 @@ var ReactDOMFiberComponent = {
 
     workInProgress.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(workInProgress);
-    EventPluginHub.deleteAllListeners(workInProgress);
     workInProgress._domID = 0;
     workInProgress._wrapperState = null;
 
