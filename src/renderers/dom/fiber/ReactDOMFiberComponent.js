@@ -99,43 +99,6 @@ function friendlyStringify(obj) {
   return String(obj);
 }
 
-var styleMutationWarning = {};
-
-function checkAndWarnForMutatedStyle(style1, style2, component) {
-  if (style1 == null || style2 == null) {
-    return;
-  }
-  if (shallowEqual(style1, style2)) {
-    return;
-  }
-
-  var componentName = component._tag;
-  var owner = component._currentElement._owner;
-  var ownerName;
-  if (owner) {
-    ownerName = owner.getName();
-  }
-
-  var hash = ownerName + '|' + componentName;
-
-  if (styleMutationWarning.hasOwnProperty(hash)) {
-    return;
-  }
-
-  styleMutationWarning[hash] = true;
-
-  warning(
-    false,
-    '`%s` was passed a style object that has previously been mutated. ' +
-    'Mutating `style` is deprecated. Consider cloning it beforehand. Check ' +
-    'the `render` %s. Previous style: %s. Mutated style: %s.',
-    componentName,
-    owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
-    friendlyStringify(style1),
-    friendlyStringify(style2)
-  );
-}
-
 /**
  * @param {object} component
  * @param {?object} props
@@ -526,14 +489,13 @@ function updateDOMProperties(
       continue;
     }
     if (propKey === STYLE) {
-      var lastStyle = workInProgress._previousStyleCopy;
+      var lastStyle = lastProps[propKey];
       for (styleName in lastStyle) {
         if (lastStyle.hasOwnProperty(styleName)) {
           styleUpdates = styleUpdates || {};
           styleUpdates[styleName] = '';
         }
       }
-      workInProgress._previousStyleCopy = null;
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       // Do nothing for deleted listeners.
     } else if (isCustomComponent(workInProgress._tag, lastProps)) {
@@ -552,7 +514,6 @@ function updateDOMProperties(
   for (propKey in nextProps) {
     var nextProp = nextProps[propKey];
     var lastProp =
-      propKey === STYLE ? workInProgress._previousStyleCopy :
       lastProps != null ? lastProps[propKey] : undefined;
     if (!nextProps.hasOwnProperty(propKey) ||
         nextProp === lastProp ||
@@ -560,18 +521,12 @@ function updateDOMProperties(
       continue;
     }
     if (propKey === STYLE) {
-      if (nextProp) {
-        if (__DEV__) {
-          checkAndWarnForMutatedStyle(
-            workInProgress._previousStyleCopy,
-            workInProgress._previousStyle,
-            workInProgress
-          );
-          workInProgress._previousStyle = nextProp;
+      if (__DEV__) {
+        if (nextProp) {
+          // Freeze the next style object so that we can assume it won't be
+          // mutated. We have already warned for this in the past.
+          Object.freeze(nextProp);
         }
-        nextProp = workInProgress._previousStyleCopy = Object.assign({}, nextProp);
-      } else {
-        workInProgress._previousStyleCopy = null;
       }
       if (lastProp) {
         // Unset styles on `lastProp` but not on `nextProp`.
