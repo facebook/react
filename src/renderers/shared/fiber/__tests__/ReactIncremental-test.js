@@ -1797,23 +1797,41 @@ describe('ReactIncremental', () => {
       state = {x: 0};
       render() {
         statefulInst = this;
-        return [
-          <ShowLocaleClass />,
-          <ShowLocaleFn />,
-        ];
+        return this.props.children;
+      }
+    }
+
+    function IndirectionFn(props, context) {
+      ops.push('IndirectionFn ' + JSON.stringify(context));
+      return props.children;
+    }
+
+    class IndirectionClass extends React.Component {
+      render() {
+        ops.push('IndirectionClass ' + JSON.stringify(this.context));
+        return this.props.children;
       }
     }
 
     ops.length = 0;
     ReactNoop.render(
       <Intl locale="fr">
-        <Stateful />
+        <IndirectionFn>
+          <IndirectionClass>
+            <Stateful>
+              <ShowLocaleClass />
+              <ShowLocaleFn />
+            </Stateful>
+          </IndirectionClass>
+        </IndirectionFn>
       </Intl>
     );
     ReactNoop.flush();
     expect(ops).toEqual([
       'Intl:read null',
       'Intl:provide {"locale":"fr"}',
+      'IndirectionFn null',
+      'IndirectionClass null',
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
@@ -1821,12 +1839,9 @@ describe('ReactIncremental', () => {
     ops.length = 0;
     statefulInst.setState({x: 1});
     ReactNoop.flush();
-    expect(ops).toEqual([
-      // Intl was memoized so we did not need to
-      // either render it or recompute its context.
-      'ShowLocaleClass:read {"locale":"fr"}',
-      'ShowLocaleFn:read {"locale":"fr"}',
-    ]);
+    // All work has been memoized because setState()
+    // happened below the context and could not have affected it.
+    expect(ops).toEqual([]);
   });
 
   it('reads context when setState is above the provider', () => {
@@ -1868,25 +1883,47 @@ describe('ReactIncremental', () => {
       locale: React.PropTypes.string,
     };
 
+    function IndirectionFn(props, context) {
+      ops.push('IndirectionFn ' + JSON.stringify(context));
+      return props.children;
+    }
+
+    class IndirectionClass extends React.Component {
+      render() {
+        ops.push('IndirectionClass ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
     class Stateful extends React.Component {
       state = {locale: 'fr'};
       render() {
         statefulInst = this;
         return (
           <Intl locale={this.state.locale}>
-            <ShowLocaleClass />
-            <ShowLocaleFn />
+            {this.props.children}
           </Intl>
         );
       }
     }
 
     ops.length = 0;
-    ReactNoop.render(<Stateful />);
+    ReactNoop.render(
+      <Stateful>
+        <IndirectionFn>
+          <IndirectionClass>
+            <ShowLocaleClass />
+            <ShowLocaleFn />
+          </IndirectionClass>
+        </IndirectionFn>
+      </Stateful>
+    );
     ReactNoop.flush();
     expect(ops).toEqual([
       'Intl:read null',
       'Intl:provide {"locale":"fr"}',
+      'IndirectionFn null',
+      'IndirectionClass null',
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
@@ -1900,6 +1937,11 @@ describe('ReactIncremental', () => {
       // its child context.
       'Intl:read null',
       'Intl:provide {"locale":"gr"}',
+      // TODO: it's unfortunate that we can't reuse work on
+      // these components even though they don't depend on context.
+      'IndirectionFn null',
+      'IndirectionClass null',
+       // These components depend on context:
       'ShowLocaleClass:read {"locale":"gr"}',
       'ShowLocaleFn:read {"locale":"gr"}',
     ]);
