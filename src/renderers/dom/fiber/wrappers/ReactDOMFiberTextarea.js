@@ -162,10 +162,8 @@ var ReactDOMTextarea = {
   },
 
   restoreControlledState: function(inst) {
-    if (inst._rootNodeID) {
-      // DOM component is still mounted; update
-      ReactDOMTextarea.updateWrapper(inst);
-    }
+    // DOM component is still mounted; update
+    ReactDOMTextarea.updateWrapper(inst);
   },
 
 };

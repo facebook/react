@@ -351,7 +351,6 @@ function trapBubbledEventsLocal() {
   var inst = this;
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
-  invariant(inst._rootNodeID, 'Must be mounted to trap events');
   var node = getNode(inst);
   invariant(
     node,
@@ -736,8 +735,6 @@ function updateDOMChildren(workInProgress, lastProps, nextProps, transaction, co
   }
 }
 
-var globalIdCounter = 1;
-
 var ReactDOMFiberComponent = {
 
 
@@ -763,7 +760,6 @@ var ReactDOMFiberComponent = {
     // workInProgress._tag = tag.toLowerCase();
     // setAndValidateContentChildDev.call(workInProgress, null);
 
-    workInProgress._rootNodeID = globalIdCounter++;
     workInProgress._domID = hostContainerInfo._idCounter++;
     workInProgress._hostParent = hostParent;
     workInProgress._hostContainerInfo = hostContainerInfo;
@@ -1089,7 +1085,6 @@ var ReactDOMFiberComponent = {
     workInProgress.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(workInProgress);
     EventPluginHub.deleteAllListeners(workInProgress);
-    workInProgress._rootNodeID = 0;
     workInProgress._domID = 0;
     workInProgress._wrapperState = null;
 

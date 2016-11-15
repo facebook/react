@@ -256,10 +256,7 @@ var ReactDOMInput = {
   },
 
   restoreControlledState: function(inst) {
-    if (inst._rootNodeID) {
-      // DOM component is still mounted; update
-      ReactDOMInput.updateWrapper(inst);
-    }
+    ReactDOMInput.updateWrapper(inst);
     var props = inst._currentElement.props;
     updateNamedCousins(inst, props);
   },
@@ -304,9 +301,7 @@ function updateNamedCousins(thisInstance, props) {
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      if (otherInstance._rootNodeID) {
-        ReactDOMInput.updateWrapper(otherInstance);
-      }
+      ReactDOMInput.updateWrapper(otherInstance);
     }
   }
 }

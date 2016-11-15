@@ -187,13 +187,11 @@ var ReactDOMSelect = {
   },
 
   restoreControlledState: function(inst) {
-    if (inst._rootNodeID) {
-      var props = inst._currentElement.props;
-      var value = props.value;
+    var props = inst._currentElement.props;
+    var value = props.value;
 
-      if (value != null) {
-        updateOptions(inst, Boolean(props.multiple), value);
-      }
+    if (value != null) {
+      updateOptions(inst, Boolean(props.multiple), value);
     }
   },
 };
