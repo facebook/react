@@ -213,14 +213,14 @@ There are generally two ways for changing data. The first, and most common metho
 
 #### Data change with mutation
 ```javascript
-var player = {score:  1}
-player.score = 2 // same object mutated {score: 2}
+var player = {score: 1, name: "Jeff"}
+player.score = 2 // same object, mutated -> {score: 2, name: "Jeff"}
 ```
 
 #### Data change without mutation
 ```javascript
-var player = {score: 1}
-player = {score: 2} // new object not mutated {score: 2}
+var player = {score: 1, name: "Jeff"}
+player = Object.assign({}, player, {score: 2}) // new object, not mutated {score: 2, name: "Jeff"}
 ```
 
 The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.
