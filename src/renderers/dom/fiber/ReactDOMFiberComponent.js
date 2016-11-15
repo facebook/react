@@ -16,7 +16,6 @@
 
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
@@ -27,13 +26,14 @@ var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
-var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
 var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
+var setInnerHTML = require('setInnerHTML');
+var setTextContent = require('setTextContent');
 var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
@@ -46,13 +46,11 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
+var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
+var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
+var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
 
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
@@ -363,39 +361,6 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-function createInitialChildren(workInProgress, transaction, props, context, lazyTree) {
-  // Intentional use of != to avoid catching zero/false.
-  var innerHTML = props.dangerouslySetInnerHTML;
-  if (innerHTML != null) {
-    if (innerHTML.__html != null) {
-      DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
-    }
-  } else {
-    var contentToUse =
-      CONTENT_TYPES[typeof props.children] ? props.children : null;
-    var childrenToUse = contentToUse != null ? null : props.children;
-    // TODO: Validate that text is allowed as a child of this node
-    if (contentToUse != null) {
-      // Avoid setting textContent when the text is empty. In IE11 setting
-      // textContent on a text area will cause the placeholder to not
-      // show within the textarea until it has been focused and blurred again.
-      // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-      if (contentToUse !== '') {
-        DOMLazyTree.queueText(lazyTree, contentToUse);
-      }
-    } else if (childrenToUse != null) {
-      var mountImages = workInProgress.mountChildren(
-        childrenToUse,
-        transaction,
-        context
-      );
-      for (var i = 0; i < mountImages.length; i++) {
-        DOMLazyTree.queueChild(lazyTree, mountImages[i]);
-      }
-    }
-  }
-}
-
 /**
  * Reconciles the properties by detecting differences in property values and
  * updating the DOM as necessary. This function is probably the single most
@@ -436,15 +401,20 @@ function updateDOMProperties(
           styleUpdates[styleName] = '';
         }
       }
+    } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
+               propKey === CHILDREN) {
+      // TODO: Clear innerHTML. This is currently broken in Fiber because we are
+      // too late to clear everything at this point because new children have
+      // already been inserted.
+    } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+      // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       // Do nothing for deleted listeners.
     } else if (isCustomComponent(workInProgress._tag, lastProps)) {
-      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        DOMPropertyOperations.deleteValueForAttribute(
-          getNode(workInProgress),
-          propKey
-        );
-      }
+      DOMPropertyOperations.deleteValueForAttribute(
+        getNode(workInProgress),
+        propKey
+      );
     } else if (
         DOMProperty.properties[propKey] ||
         DOMProperty.isCustomAttribute(propKey)) {
@@ -489,18 +459,40 @@ function updateDOMProperties(
         // Relies on `updateStylesByID` not mutating `styleUpdates`.
         styleUpdates = nextProp;
       }
+    } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+      if (lastProp && nextProp) {
+        var lastHtml = lastProp[HTML];
+        var nextHtml = nextProp[HTML];
+        if (lastHtml !== nextHtml) {
+          if (nextHtml == null) {
+            // TODO: It might be too late to clear this if we have children
+            // inserted already.
+          } else {
+            setInnerHTML(getNode(workInProgress), '' + nextHtml);
+          }
+        }
+      } else if (nextProp) {
+        var nextHtml = nextProp[HTML];
+        setInnerHTML(getNode(workInProgress), nextProp);
+      }
+    } else if (propKey === CHILDREN) {
+      if (typeof nextProp === 'string') {
+        setTextContent(getNode(workInProgress), nextProp);
+      } else if (typeof nextProp === 'number') {
+        setTextContent(getNode(workInProgress), '' + nextProp);
+      }
+    } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+      // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
         ensureListeningTo(workInProgress, propKey, transaction);
       }
     } else if (isCustomComponentTag) {
-      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        DOMPropertyOperations.setValueForAttribute(
-          getNode(workInProgress),
-          propKey,
-          nextProp
-        );
-      }
+      DOMPropertyOperations.setValueForAttribute(
+        getNode(workInProgress),
+        propKey,
+        nextProp
+      );
     } else if (
         DOMProperty.properties[propKey] ||
         DOMProperty.isCustomAttribute(propKey)) {
@@ -521,55 +513,6 @@ function updateDOMProperties(
       styleUpdates,
       workInProgress
     );
-  }
-}
-
-/**
- * Reconciles the children with the various properties that affect the
- * children content.
- *
- * @param {object} lastProps
- * @param {object} nextProps
- * @param {ReactReconcileTransaction} transaction
- * @param {object} context
- */
-function updateDOMChildren(workInProgress, lastProps, nextProps, transaction, context) {
-  var lastContent =
-    CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
-  var nextContent =
-    CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
-
-  var lastHtml =
-    lastProps.dangerouslySetInnerHTML &&
-    lastProps.dangerouslySetInnerHTML.__html;
-  var nextHtml =
-    nextProps.dangerouslySetInnerHTML &&
-    nextProps.dangerouslySetInnerHTML.__html;
-
-  // Note the use of `!=` which checks for null or undefined.
-  var lastChildren = lastContent != null ? null : lastProps.children;
-  var nextChildren = nextContent != null ? null : nextProps.children;
-
-  // If we're switching from children to content/html or vice versa, remove
-  // the old content
-  var lastHasContentOrHtml = lastContent != null || lastHtml != null;
-  var nextHasContentOrHtml = nextContent != null || nextHtml != null;
-  if (lastChildren != null && nextChildren == null) {
-    workInProgress.updateChildren(null, transaction, context);
-  } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
-    workInProgress.updateTextContent('');
-  }
-
-  if (nextContent != null) {
-    if (lastContent !== nextContent) {
-      workInProgress.updateTextContent('' + nextContent);
-    }
-  } else if (nextHtml != null) {
-    if (lastHtml !== nextHtml) {
-      workInProgress.updateMarkup('' + nextHtml);
-    }
-  } else if (nextChildren != null) {
-    workInProgress.updateChildren(nextChildren, transaction, context);
   }
 }
 
@@ -716,9 +659,6 @@ var ReactDOMFiberComponent = {
       DOMPropertyOperations.setAttributeForRoot(el);
     }
     updateDOMProperties(workInProgress, null, props, transaction, isCustomComponentTag);
-    var lazyTree = DOMLazyTree(el);
-    createInitialChildren(workInProgress, transaction, props, context, lazyTree);
-    mountImage = lazyTree;
 
     switch (workInProgress._tag) {
       case 'input':
@@ -777,7 +717,7 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    return mountImage;
+    return el;
   },
 
 
@@ -827,13 +767,6 @@ var ReactDOMFiberComponent = {
     assertValidProps(workInProgress, nextProps);
     var isCustomComponentTag = isCustomComponent(workInProgress._tag, nextProps);
     updateDOMProperties(workInProgress, lastProps, nextProps, transaction, isCustomComponentTag);
-    updateDOMChildren(
-      workInProgress,
-      lastProps,
-      nextProps,
-      transaction,
-      context
-    );
 
     switch (workInProgress._tag) {
       case 'input':
@@ -901,7 +834,6 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    workInProgress.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(workInProgress);
     workInProgress._wrapperState = null;
   },
