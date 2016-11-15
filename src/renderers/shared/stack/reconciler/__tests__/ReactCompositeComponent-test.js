@@ -15,6 +15,7 @@ var ChildUpdates;
 var MorphingComponent;
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactServerRendering;
@@ -26,6 +27,7 @@ describe('ReactCompositeComponent', () => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
@@ -830,7 +832,10 @@ describe('ReactCompositeComponent', () => {
       }
 
       componentDidUpdate(prevProps, prevState, prevContext) {
-        expect('foo' in prevContext).toBe(true);
+        if (!ReactDOMFeatureFlags.useFiber) {
+          // Fiber does not pass the previous context.
+          expect('foo' in prevContext).toBe(true);
+        }
       }
 
       shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -849,7 +854,10 @@ describe('ReactCompositeComponent', () => {
       }
 
       componentDidUpdate(prevProps, prevState, prevContext) {
-        expect('foo' in prevContext).toBe(false);
+        if (!ReactDOMFeatureFlags.useFiber) {
+          // Fiber does not pass the previous context.
+          expect('foo' in prevContext).toBe(false);
+        }
       }
 
       shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -971,21 +979,16 @@ describe('ReactCompositeComponent', () => {
         };
       }
 
-      onClick = () => {
-        this.setState({
-          foo: 'def',
-        });
-      };
-
       render() {
-        return <div className="parent" onClick={this.onClick}>{this.props.children}</div>;
+        return <div className="parent">{this.props.children}</div>;
       }
     }
 
     var div = document.createElement('div');
 
+    var parentInstance = null;
     ReactDOM.render(
-      <Parent>
+      <Parent ref={inst => parentInstance = inst}>
         <ChildWithoutContext>
           A1
           <GrandChild>A2</GrandChild>
@@ -999,7 +1002,9 @@ describe('ReactCompositeComponent', () => {
       div
     );
 
-    ReactTestUtils.Simulate.click(div.childNodes[0]);
+    parentInstance.setState({
+      foo: 'def',
+    });
 
     expect(propChanges).toBe(0);
     expect(contextChanges).toBe(3); // ChildWithContext, GrandChild x 2

@@ -425,8 +425,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` on unmounted components
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
-* unmasked context propagates through updates
-* should trigger componentWillReceiveProps for context changes
 * should update refs if shouldComponentUpdate gives false
 * should support objects with prototypes as state
 

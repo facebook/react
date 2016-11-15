@@ -42,7 +42,7 @@ exports.getMaskedContext = function(fiber : Fiber) {
   const type = fiber.type;
   const contextTypes = type.contextTypes;
   if (!contextTypes) {
-    return null;
+    return emptyObject;
   }
 
   const unmaskedContext = getUnmaskedContext();

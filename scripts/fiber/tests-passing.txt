@@ -1041,6 +1041,8 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should pass context when re-rendered for static child within a composite component
 * should pass context transitively
 * should pass context when re-rendered
+* unmasked context propagates through updates
+* should trigger componentWillReceiveProps for context changes
 * only renders once if updated in componentWillReceiveProps
 * should allow access to findDOMNode in componentWillUnmount
 * context should be passed down from the parent

@@ -1605,7 +1605,7 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flush();
     expect(ops).toEqual([
-      'Intl null',
+      'Intl {}',
       'ShowLocale {"locale":"fr"}',
       'ShowBoth {"locale":"fr"}',
     ]);
@@ -1621,7 +1621,7 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flush();
     expect(ops).toEqual([
-      'Intl null',
+      'Intl {}',
       'ShowLocale {"locale":"de"}',
       'ShowBoth {"locale":"de"}',
     ]);
@@ -1637,7 +1637,7 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flushDeferredPri(15);
     expect(ops).toEqual([
-      'Intl null',
+      'Intl {}',
     ]);
 
     ops.length = 0;
@@ -1652,14 +1652,14 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flush();
     expect(ops).toEqual([
-      'Intl null',
+      'Intl {}',
       'ShowLocale {"locale":"en"}',
-      'Router null',
-      'Indirection null',
+      'Router {}',
+      'Indirection {}',
       'ShowLocale {"locale":"en"}',
       'ShowRoute {"route":"/about"}',
-      'ShowNeither null',
-      'Intl null',
+      'ShowNeither {}',
+      'Intl {}',
       'ShowBoth {"locale":"ru","route":"/about"}',
       'ShowBoth {"locale":"en","route":"/about"}',
       'ShowBoth {"locale":"en"}',
@@ -1740,7 +1740,7 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flushDeferredPri(40);
     expect(ops).toEqual([
-      'Intl null',
+      'Intl {}',
       'ShowLocale {"locale":"fr"}',
       'ShowLocale {"locale":"fr"}',
     ]);
@@ -1749,7 +1749,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     expect(ops).toEqual([
       'ShowLocale {"locale":"fr"}',
-      'Intl null',
+      'Intl {}',
       'ShowLocale {"locale":"ru"}',
     ]);
   });
@@ -1828,10 +1828,10 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flush();
     expect(ops).toEqual([
-      'Intl:read null',
+      'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
-      'IndirectionFn null',
-      'IndirectionClass null',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
@@ -1920,10 +1920,10 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flush();
     expect(ops).toEqual([
-      'Intl:read null',
+      'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
-      'IndirectionFn null',
-      'IndirectionClass null',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
@@ -1935,12 +1935,12 @@ describe('ReactIncremental', () => {
       // Intl is below setState() so it might have been
       // affected by it. Therefore we re-render and recompute
       // its child context.
-      'Intl:read null',
+      'Intl:read {}',
       'Intl:provide {"locale":"gr"}',
       // TODO: it's unfortunate that we can't reuse work on
       // these components even though they don't depend on context.
-      'IndirectionFn null',
-      'IndirectionClass null',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
        // These components depend on context:
       'ShowLocaleClass:read {"locale":"gr"}',
       'ShowLocaleFn:read {"locale":"gr"}',
