@@ -962,9 +962,6 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should not traverse if enter/leave the same node
 * should determine the first common ancestor correctly
 
-src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should prevent non-function listeners
-
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should be able to inject ordering before plugins
 * should be able to inject plugins before and after ordering
@@ -1077,7 +1074,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
 * propagates errors on retry on mounting
 * propagates errors inside boundary during componentWillMount
 * propagates errors inside boundary while rendering error state
-* does not register event handlers for unmounted children
 * does not call componentWillUnmount when aborting initial mount
 * resets refs if mounting aborts
 * successfully mounts if no error occurs
