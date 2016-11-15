@@ -128,6 +128,10 @@ src/isomorphic/children/__tests__/sliceChildren-test.js
 * should allow static children to be sliced
 * should slice nested children
 
+src/isomorphic/classic/__tests__/ReactContextValidator-test.js
+* should filter out context not in contextTypes
+* should pass next context to lifecycles
+
 src/isomorphic/classic/class/__tests__/ReactBind-test.js
 * warns if you try to bind to this
 * does not warn if you pass an auto-bound method to setState
@@ -149,6 +153,7 @@ src/isomorphic/classic/class/__tests__/ReactClass-test.js
 * should throw if a reserved property is in statics
 * should support statics
 * should work with object getInitialState() return values
+* renders based on context getInitialState
 * should throw with non-object getInitialState() return values
 * should work with a null getInitialState() return value
 * should throw when using legacy factories
@@ -354,6 +359,7 @@ src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * renders a simple stateless component with prop
 * renders based on state using initial values in this.props
 * renders based on state using props in the constructor
+* renders based on context in the constructor
 * renders only once when setting state in componentWillMount
 * should throw with non-object in the initial state property
 * should render with null in the initial state property
@@ -365,6 +371,7 @@ src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * should warn when misspelling shouldComponentUpdate
 * should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
+* supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
 
@@ -374,6 +381,7 @@ src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * renders a simple stateless component with prop
 * renders based on state using initial values in this.props
 * renders based on state using props in the constructor
+* renders based on context in the constructor
 * renders only once when setting state in componentWillMount
 * should throw with non-object in the initial state property
 * should render with null in the initial state property
@@ -385,6 +393,7 @@ src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * should warn when misspelling shouldComponentUpdate
 * should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
+* supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
 
@@ -399,6 +408,7 @@ src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * renders a simple stateless component with prop
 * renders based on state using initial values in this.props
 * renders based on state using props in the constructor
+* renders based on context in the constructor
 * renders only once when setting state in componentWillMount
 * should throw with non-object in the initial state property
 * should render with null in the initial state property
@@ -410,6 +420,7 @@ src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * should warn when misspelling shouldComponentUpdate
 * should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
+* supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
 
@@ -446,6 +457,7 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should not check the default for explicit null
 * should check declared prop types
 * should warn on invalid prop types
+* should warn on invalid context types
 * should warn if getDefaultProps is specificed on the class
 
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
@@ -806,6 +818,11 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * performs batched updates at the end of the batch
 * can nest batchedUpdates
 * can handle if setState callback throws
+* merges and masks context
+* does not leak own context into context provider
+* provides context when reusing work
+* reads context when setState is below the provider
+* reads context when setState is above the provider
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during mounting
@@ -1018,7 +1035,14 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
+* should pass context to children when not owner
 * should skip update when rerendering element in container
+* should pass context when re-rendered for static child
+* should pass context when re-rendered for static child within a composite component
+* should pass context transitively
+* should pass context when re-rendered
+* unmasked context propagates through updates
+* should trigger componentWillReceiveProps for context changes
 * only renders once if updated in componentWillReceiveProps
 * should allow access to findDOMNode in componentWillUnmount
 * context should be passed down from the parent
@@ -1147,9 +1171,11 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
 * should update stateless component
 * should unmount stateless component
+* should pass context thru stateless component
 * should provide a null ref
 * should use correct name in key warning
 * should support default props and prop types
+* should receive context
 * should work with arrow functions
 * should allow simple functions to return null
 * should allow simple functions to return false

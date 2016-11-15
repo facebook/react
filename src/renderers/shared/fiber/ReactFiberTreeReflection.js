@@ -114,3 +114,14 @@ exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any
   }
   return null;
 };
+
+exports.getComponentName = function(fiber: Fiber): string {
+  const type = fiber.type;
+  const instance = fiber.stateNode;
+  const constructor = instance && instance.constructor;
+  return (
+    type.displayName || (constructor && constructor.displayName) ||
+    type.name || (constructor && constructor.name) ||
+    'A Component'
+  );
+};

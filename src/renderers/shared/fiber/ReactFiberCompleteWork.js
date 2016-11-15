@@ -18,6 +18,10 @@ import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
+var {
+  isContextProvider,
+  popContextProvider,
+} = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
@@ -125,6 +129,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       case ClassComponent:
         transferOutput(workInProgress.child, workInProgress);
+        // We are leaving this subtree, so pop context if any.
+        if (isContextProvider(workInProgress)) {
+          popContextProvider();
+        }
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null

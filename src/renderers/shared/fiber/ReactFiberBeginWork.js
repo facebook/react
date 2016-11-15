@@ -23,7 +23,15 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
+
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  getMaskedContext,
+  isContextProvider,
+  hasContextChanged,
+  pushContextProvider,
+  resetContext,
+} = require('ReactFiberContext');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -144,6 +152,7 @@ module.exports = function<T, P, I, TI, C>(
   function updateFunctionalComponent(current, workInProgress) {
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
+    var context = getMaskedContext(workInProgress);
 
     // TODO: Disable this before release, since it is not part of the public API
     // I use this for testing to compare the relative overhead of classes.
@@ -159,9 +168,9 @@ module.exports = function<T, P, I, TI, C>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      nextChildren = fn(props);
+      nextChildren = fn(props, context);
     } else {
-      nextChildren = fn(props);
+      nextChildren = fn(props, context);
     }
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
@@ -190,6 +199,10 @@ module.exports = function<T, P, I, TI, C>(
     ReactCurrentOwner.current = workInProgress;
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
+    // Put context on the stack because we will work on children
+    if (isContextProvider(workInProgress)) {
+      pushContextProvider(workInProgress, true);
+    }
     return workInProgress.child;
   }
 
@@ -249,13 +262,15 @@ module.exports = function<T, P, I, TI, C>(
     }
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
+    var context = getMaskedContext(workInProgress);
+
     var value;
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      value = fn(props);
+      value = fn(props, context);
     } else {
-      value = fn(props);
+      value = fn(props, context);
     }
 
     if (typeof value === 'object' && value && typeof value.render === 'function') {
@@ -345,6 +360,10 @@ module.exports = function<T, P, I, TI, C>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
+    // Put context on the stack because we will work on children
+    if (isContextProvider(workInProgress)) {
+      pushContextProvider(workInProgress, false);
+    }
     return workInProgress.child;
   }
 
@@ -355,6 +374,11 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
+    if (!workInProgress.return) {
+      // Don't start new work with context on the stack.
+      resetContext();
+    }
+
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
@@ -375,7 +399,8 @@ module.exports = function<T, P, I, TI, C>(
       workInProgress.memoizedProps !== null &&
       workInProgress.pendingProps === workInProgress.memoizedProps
       )) &&
-      workInProgress.updateQueue === null) {
+      workInProgress.updateQueue === null &&
+      !hasContextChanged()) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 

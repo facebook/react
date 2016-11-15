@@ -1509,4 +1509,441 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(3);
   });
+
+  it('merges and masks context', () => {
+    var ops = [];
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          locale: this.props.locale,
+        };
+      }
+      render() {
+        ops.push('Intl ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class Router extends React.Component {
+      static childContextTypes = {
+        route: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          route: this.props.route,
+        };
+      }
+      render() {
+        ops.push('Router ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocale extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    class ShowRoute extends React.Component {
+      static contextTypes = {
+        route: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowRoute ' + JSON.stringify(this.context));
+        return this.context.route;
+      }
+    }
+
+    function ShowBoth(props, context) {
+      ops.push('ShowBoth ' + JSON.stringify(context));
+      return `${context.route} in ${context.locale}`;
+    }
+    ShowBoth.contextTypes = {
+      locale: React.PropTypes.string,
+      route: React.PropTypes.string,
+    };
+
+    class ShowNeither extends React.Component {
+      render() {
+        ops.push('ShowNeither ' + JSON.stringify(this.context));
+        return null;
+      }
+    }
+
+    class Indirection extends React.Component {
+      render() {
+        ops.push('Indirection ' + JSON.stringify(this.context));
+        return [
+          <ShowLocale />,
+          <ShowRoute />,
+          <ShowNeither />,
+          <Intl locale="ru">
+            <ShowBoth />
+          </Intl>,
+          <ShowBoth />,
+        ];
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"fr"}',
+      'ShowBoth {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="de">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"de"}',
+      'ShowBoth {"locale":"de"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="sv">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>
+    );
+    ReactNoop.flushDeferredPri(15);
+    expect(ops).toEqual([
+      'Intl {}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="en">
+        <ShowLocale />
+        <Router route="/about">
+          <Indirection />
+        </Router>
+        <ShowBoth />
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"en"}',
+      'Router {}',
+      'Indirection {}',
+      'ShowLocale {"locale":"en"}',
+      'ShowRoute {"route":"/about"}',
+      'ShowNeither {}',
+      'Intl {}',
+      'ShowBoth {"locale":"ru","route":"/about"}',
+      'ShowBoth {"locale":"en","route":"/about"}',
+      'ShowBoth {"locale":"en"}',
+    ]);
+  });
+
+  it('does not leak own context into context provider', () => {
+    var ops = [];
+    class Recurse extends React.Component {
+      static contextTypes = {
+        n: React.PropTypes.number,
+      };
+      static childContextTypes = {
+        n: React.PropTypes.number,
+      };
+      getChildContext() {
+        return {n: (this.context.n || 3) - 1};
+      }
+      render() {
+        ops.push('Recurse ' + JSON.stringify(this.context));
+        if (this.context.n === 0) {
+          return null;
+        }
+        return <Recurse />;
+      }
+    }
+
+    ReactNoop.render(<Recurse />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Recurse {}',
+      'Recurse {"n":2}',
+      'Recurse {"n":1}',
+      'Recurse {"n":0}',
+    ]);
+  });
+
+  it('provides context when reusing work', () => {
+    var ops = [];
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          locale: this.props.locale,
+        };
+      }
+      render() {
+        ops.push('Intl ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocale extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <ShowLocale />
+        <div hidden="true">
+          <ShowLocale />
+          <Intl locale="ru">
+            <ShowLocale />
+          </Intl>
+        </div>
+        <ShowLocale />
+      </Intl>
+    );
+    ReactNoop.flushDeferredPri(40);
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"fr"}',
+      'ShowLocale {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'ShowLocale {"locale":"fr"}',
+      'Intl {}',
+      'ShowLocale {"locale":"ru"}',
+    ]);
+  });
+
+  it('reads context when setState is below the provider', () => {
+    var ops = [];
+    var statefulInst;
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        const childContext = {
+          locale: this.props.locale,
+        };
+        ops.push('Intl:provide ' + JSON.stringify(childContext));
+        return childContext;
+      }
+      render() {
+        ops.push('Intl:read ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocaleClass extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    function ShowLocaleFn(props, context) {
+      ops.push('ShowLocaleFn:read ' + JSON.stringify(context));
+      return context.locale;
+    }
+    ShowLocaleFn.contextTypes = {
+      locale: React.PropTypes.string,
+    };
+
+    class Stateful extends React.Component {
+      state = {x: 0};
+      render() {
+        statefulInst = this;
+        return this.props.children;
+      }
+    }
+
+    function IndirectionFn(props, context) {
+      ops.push('IndirectionFn ' + JSON.stringify(context));
+      return props.children;
+    }
+
+    class IndirectionClass extends React.Component {
+      render() {
+        ops.push('IndirectionClass ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <IndirectionFn>
+          <IndirectionClass>
+            <Stateful>
+              <ShowLocaleClass />
+              <ShowLocaleFn />
+            </Stateful>
+          </IndirectionClass>
+        </IndirectionFn>
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read {}',
+      'Intl:provide {"locale":"fr"}',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    statefulInst.setState({x: 1});
+    ReactNoop.flush();
+    // All work has been memoized because setState()
+    // happened below the context and could not have affected it.
+    expect(ops).toEqual([]);
+  });
+
+  it('reads context when setState is above the provider', () => {
+    var ops = [];
+    var statefulInst;
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        const childContext = {
+          locale: this.props.locale,
+        };
+        ops.push('Intl:provide ' + JSON.stringify(childContext));
+        return childContext;
+      }
+      render() {
+        ops.push('Intl:read ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocaleClass extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    function ShowLocaleFn(props, context) {
+      ops.push('ShowLocaleFn:read ' + JSON.stringify(context));
+      return context.locale;
+    }
+    ShowLocaleFn.contextTypes = {
+      locale: React.PropTypes.string,
+    };
+
+    function IndirectionFn(props, context) {
+      ops.push('IndirectionFn ' + JSON.stringify(context));
+      return props.children;
+    }
+
+    class IndirectionClass extends React.Component {
+      render() {
+        ops.push('IndirectionClass ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class Stateful extends React.Component {
+      state = {locale: 'fr'};
+      render() {
+        statefulInst = this;
+        return (
+          <Intl locale={this.state.locale}>
+            {this.props.children}
+          </Intl>
+        );
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Stateful>
+        <IndirectionFn>
+          <IndirectionClass>
+            <ShowLocaleClass />
+            <ShowLocaleFn />
+          </IndirectionClass>
+        </IndirectionFn>
+      </Stateful>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read {}',
+      'Intl:provide {"locale":"fr"}',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    statefulInst.setState({locale: 'gr'});
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // Intl is below setState() so it might have been
+      // affected by it. Therefore we re-render and recompute
+      // its child context.
+      'Intl:read {}',
+      'Intl:provide {"locale":"gr"}',
+      // TODO: it's unfortunate that we can't reuse work on
+      // these components even though they don't depend on context.
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+       // These components depend on context:
+      'ShowLocaleClass:read {"locale":"gr"}',
+      'ShowLocaleFn:read {"locale":"gr"}',
+    ]);
+  });
 });

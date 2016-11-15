@@ -12,9 +12,6 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * warns for keys with component stack info
 * should give context for PropType errors in nested components.
 
-src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
-* should warn on invalid context types
-
 src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should warn when using hyphenated style names
 * should warn when updating hyphenated style names

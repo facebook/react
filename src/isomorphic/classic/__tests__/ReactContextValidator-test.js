@@ -70,11 +70,10 @@ describe('ReactContextValidator', () => {
     expect(instance.refs.child.context).toEqual({foo: 'abc'});
   });
 
-  it('should filter context properly in callbacks', () => {
+  it('should pass next context to lifecycles', () => {
     var actualComponentWillReceiveProps;
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
-    var actualComponentDidUpdate;
 
     var Parent = React.createClass({
       childContextTypes: {
@@ -113,6 +112,45 @@ describe('ReactContextValidator', () => {
         actualComponentWillUpdate = nextContext;
       },
 
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Parent foo="abc" />, container);
+    ReactDOM.render(<Parent foo="def" />, container);
+    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
+    expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
+    expect(actualComponentWillUpdate).toEqual({foo: 'def'});
+  });
+
+  it('should pass previous context to lifecycles', () => {
+    var actualComponentDidUpdate;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string.isRequired,
+        bar: React.PropTypes.string.isRequired,
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.foo,
+          bar: 'bar',
+        };
+      },
+
+      render: function() {
+        return <Component />;
+      },
+    });
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string,
+      },
+
       componentDidUpdate: function(prevProps, prevState, prevContext) {
         actualComponentDidUpdate = prevContext;
       },
@@ -125,9 +163,6 @@ describe('ReactContextValidator', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
-    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
-    expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
-    expect(actualComponentWillUpdate).toEqual({foo: 'def'});
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
   });
 
