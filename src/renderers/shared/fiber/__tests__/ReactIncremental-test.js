@@ -1547,7 +1547,6 @@ describe('ReactIncremental', () => {
       static contextTypes = {
         locale: React.PropTypes.string,
       };
-
       render() {
         ops.push('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
@@ -1558,7 +1557,6 @@ describe('ReactIncremental', () => {
       static contextTypes = {
         route: React.PropTypes.string,
       };
-
       render() {
         ops.push('ShowRoute ' + JSON.stringify(this.context));
         return this.context.route;
@@ -1721,7 +1719,6 @@ describe('ReactIncremental', () => {
       static contextTypes = {
         locale: React.PropTypes.string,
       };
-
       render() {
         ops.push('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
@@ -1754,6 +1751,154 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"fr"}',
       'Intl null',
       'ShowLocale {"locale":"ru"}',
+    ]);
+  });
+
+  it('reads context when setState is below the provider', () => {
+    var ops = [];
+    var statefulInst;
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        const childContext = {
+          locale: this.props.locale,
+        };
+        ops.push('Intl:provide ' + JSON.stringify(childContext));
+        return childContext;
+      }
+      render() {
+        ops.push('Intl:read ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocaleClass extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    function ShowLocaleFn(props, context) {
+      ops.push('ShowLocaleFn:read ' + JSON.stringify(context));
+      return context.locale;
+    }
+    ShowLocaleFn.contextTypes = {
+      locale: React.PropTypes.string,
+    };
+
+    class Stateful extends React.Component {
+      state = {x: 0};
+      render() {
+        statefulInst = this;
+        return [
+          <ShowLocaleClass />,
+          <ShowLocaleFn />,
+        ];
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <Stateful />
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read null',
+      'Intl:provide {"locale":"fr"}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    statefulInst.setState({x: 1});
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // TODO: we should be able to reuse the previous child context.
+      'Intl:provide {"locale":"fr"}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+  });
+
+  it('reads context when setState is above the provider', () => {
+    var ops = [];
+    var statefulInst;
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        const childContext = {
+          locale: this.props.locale,
+        };
+        ops.push('Intl:provide ' + JSON.stringify(childContext));
+        return childContext;
+      }
+      render() {
+        ops.push('Intl:read ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocaleClass extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    function ShowLocaleFn(props, context) {
+      ops.push('ShowLocaleFn:read ' + JSON.stringify(context));
+      return context.locale;
+    }
+    ShowLocaleFn.contextTypes = {
+      locale: React.PropTypes.string,
+    };
+
+    class Stateful extends React.Component {
+      state = {locale: 'fr'};
+      render() {
+        statefulInst = this;
+        return (
+          <Intl locale={this.state.locale}>
+            <ShowLocaleClass />
+            <ShowLocaleFn />
+          </Intl>
+        );
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(<Stateful />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read null',
+      'Intl:provide {"locale":"fr"}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    statefulInst.setState({locale: 'gr'});
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read null',
+      'Intl:provide {"locale":"gr"}',
+      'ShowLocaleClass:read {"locale":"gr"}',
+      'ShowLocaleFn:read {"locale":"gr"}',
     ]);
   });
 });
