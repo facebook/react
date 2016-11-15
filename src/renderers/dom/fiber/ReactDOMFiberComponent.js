@@ -27,7 +27,6 @@ var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
@@ -37,7 +36,6 @@ var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
-var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
@@ -196,35 +194,6 @@ function textareaPostMount() {
 function optionPostMount() {
   var inst = this;
   ReactDOMFiberOption.postMountWrapper(inst);
-}
-
-var setAndValidateContentChildDev = emptyFunction;
-if (__DEV__) {
-  setAndValidateContentChildDev = function(content) {
-    var hasExistingContent = this._contentDebugID != null;
-    var debugID = this._debugID;
-    // This ID represents the inlined child that has no backing instance:
-    var contentDebugID = -debugID;
-
-    if (content == null) {
-      if (hasExistingContent) {
-        ReactInstrumentation.debugTool.onUnmountComponent(this._contentDebugID);
-      }
-      this._contentDebugID = null;
-      return;
-    }
-
-    validateDOMNesting(null, String(content), this, this._ancestorInfo);
-    this._contentDebugID = contentDebugID;
-    if (hasExistingContent) {
-      ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
-      ReactInstrumentation.debugTool.onUpdateComponent(contentDebugID);
-    } else {
-      ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content, debugID);
-      ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
-      ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
-    }
-  };
 }
 
 // There are so many media events, it makes sense to just
@@ -438,9 +407,6 @@ function createInitialChildren(workInProgress, transaction, props, context, lazy
       // show within the textarea until it has been focused and blurred again.
       // https://github.com/facebook/react/issues/6731#issuecomment-254874553
       if (contentToUse !== '') {
-        if (__DEV__) {
-          setAndValidateContentChildDev.call(workInProgress, contentToUse);
-        }
         DOMLazyTree.queueText(lazyTree, contentToUse);
       }
     } else if (childrenToUse != null) {
@@ -618,30 +584,17 @@ function updateDOMChildren(workInProgress, lastProps, nextProps, transaction, co
     workInProgress.updateChildren(null, transaction, context);
   } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
     workInProgress.updateTextContent('');
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetChildren(workInProgress._debugID, []);
-    }
   }
 
   if (nextContent != null) {
     if (lastContent !== nextContent) {
       workInProgress.updateTextContent('' + nextContent);
-      if (__DEV__) {
-        setAndValidateContentChildDev.call(workInProgress, nextContent);
-      }
     }
   } else if (nextHtml != null) {
     if (lastHtml !== nextHtml) {
       workInProgress.updateMarkup('' + nextHtml);
     }
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetChildren(workInProgress._debugID, []);
-    }
   } else if (nextChildren != null) {
-    if (__DEV__) {
-      setAndValidateContentChildDev.call(workInProgress, null);
-    }
-
     workInProgress.updateChildren(nextChildren, transaction, context);
   }
 }
@@ -669,7 +622,6 @@ var ReactDOMFiberComponent = {
   ) {
     // validateDangerousTag(tag);
     // workInProgress._tag = tag.toLowerCase();
-    // setAndValidateContentChildDev.call(workInProgress, null);
 
     workInProgress._domID = hostContainerInfo._idCounter++;
     workInProgress._hostParent = hostParent;
@@ -748,22 +700,6 @@ var ReactDOMFiberComponent = {
       }
     }
     workInProgress._namespaceURI = namespaceURI;
-
-    if (__DEV__) {
-      var parentInfo;
-      if (hostParent != null) {
-        parentInfo = hostParent._ancestorInfo;
-      } else if (hostContainerInfo._tag) {
-        parentInfo = hostContainerInfo._ancestorInfo;
-      }
-      if (parentInfo) {
-        // parentInfo should always be present except for the top-level
-        // component when server rendering
-        validateDOMNesting(workInProgress._tag, null, workInProgress, parentInfo);
-      }
-      workInProgress._ancestorInfo =
-        validateDOMNesting.updatedAncestorInfo(parentInfo, workInProgress._tag, workInProgress);
-    }
 
     var mountImage;
     var type = workInProgress._currentElement.type;
@@ -996,10 +932,6 @@ var ReactDOMFiberComponent = {
     ReactDOMComponentTree.uncacheNode(workInProgress);
     workInProgress._domID = 0;
     workInProgress._wrapperState = null;
-
-    if (__DEV__) {
-      setAndValidateContentChildDev.call(workInProgress, null);
-    }
   },
 
   restoreControlledState: function(finishedWork : Fiber) {
