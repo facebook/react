@@ -23,7 +23,6 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
@@ -43,7 +42,6 @@ var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
-var Flags = ReactDOMComponentFlags;
 var deleteListener = EventPluginHub.deleteListener;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -891,8 +889,7 @@ var ReactDOMFiberComponent = {
       );
       didWarnShadyDOM = true;
     }
-    ReactDOMComponentTree.precacheNode(workInProgress, el);
-    workInProgress._flags |= Flags.hasCachedChildNodes;
+    ReactDOMComponentTree.precacheFiberNode(workInProgress, el);
     if (!workInProgress._hostParent) {
       DOMPropertyOperations.setAttributeForRoot(el);
     }
