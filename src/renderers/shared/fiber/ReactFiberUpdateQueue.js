@@ -15,7 +15,6 @@
 type UpdateQueueNode = {
   partialState: any,
   callback: ?Function,
-  callbackWasCalled: boolean,
   isReplace: boolean,
   next: ?UpdateQueueNode,
 };
@@ -31,7 +30,6 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
   const queue = {
     partialState,
     callback: null,
-    callbackWasCalled: false,
     isReplace: false,
     next: null,
     isForced: false,
@@ -47,7 +45,6 @@ function addToQueue(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
   const node = {
     partialState,
     callback: null,
-    callbackWasCalled: false,
     isReplace: false,
     next: null,
   };
@@ -74,9 +71,8 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) : Error | n
   let firstError = null;
   while (node) {
     const callback = node.callback;
-    if (callback && !node.callbackWasCalled) {
+    if (callback) {
       try {
-        node.callbackWasCalled = true;
         if (typeof context !== 'undefined') {
           callback.call(context);
         } else {
