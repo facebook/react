@@ -97,14 +97,12 @@ var EventPluginHub = {
    */
   getListener: function(inst, registrationName) {
     var listener = inst._currentElement.props[registrationName];
-    if (listener !== undefined) {
-      invariant(
-        typeof listener === 'function',
-        'Expected %s listener to be a function, instead got type %s',
-        registrationName,
-        typeof listener
-      );
-    }
+    invariant(
+      !listener || typeof listener === 'function',
+      'Expected %s listener to be a function, instead got type %s',
+      registrationName,
+      typeof listener
+    );
     return listener;
   },
 

@@ -33,4 +33,14 @@ describe('EventPluginHub', () => {
       'Expected onClick listener to be a function, instead got type string'
     );
   });
+
+  it('should not prevent null listeners, at dispatch', () => {
+    var node = ReactTestUtils.renderIntoDocument(
+      <div onClick={null} />
+    );
+    expect(function() {
+      ReactTestUtils.SimulateNative.click(node);
+    }).not.toThrow();
+  });
+
 });

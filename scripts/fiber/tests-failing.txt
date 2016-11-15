@@ -423,6 +423,7 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch
+* should not prevent null listeners, at dispatch
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
