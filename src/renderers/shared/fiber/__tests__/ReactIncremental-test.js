@@ -1822,8 +1822,8 @@ describe('ReactIncremental', () => {
     statefulInst.setState({x: 1});
     ReactNoop.flush();
     expect(ops).toEqual([
-      // TODO: we should be able to reuse the previous child context.
-      'Intl:provide {"locale":"fr"}',
+      // Intl was memoized so we did not need to
+      // either render it or recompute its context.
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
@@ -1895,6 +1895,9 @@ describe('ReactIncremental', () => {
     statefulInst.setState({locale: 'gr'});
     ReactNoop.flush();
     expect(ops).toEqual([
+      // Intl is below setState() so it might have been
+      // affected by it. Therefore we re-render and recompute
+      // its child context.
       'Intl:read null',
       'Intl:provide {"locale":"gr"}',
       'ShowLocaleClass:read {"locale":"gr"}',

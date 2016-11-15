@@ -80,23 +80,32 @@ exports.popContextProvider = function() : void {
 exports.pushContextProvider = function(fiber : Fiber, didPerformWork : boolean) : void {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
-  const childContext = instance.getChildContext();
 
-  for (let contextKey in childContext) {
-    invariant(
-      contextKey in childContextTypes,
-      '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-      getComponentName(fiber),
-      contextKey
-    );
-  }
-  if (__DEV__) {
-    const name = getComponentName(fiber);
-    const debugID = 0; // TODO: pass a real ID
-    checkReactTypeSpec(childContextTypes, childContext, 'childContext', name, null, debugID);
+  const memoizedMergedChildContext = instance.__reactInternalMemoizedMergedChildContext;
+  const canReuseMergedChildContext = !didPerformWork && memoizedMergedChildContext != null;
+
+  let mergedContext = null;
+  if (canReuseMergedChildContext) {
+    mergedContext = memoizedMergedChildContext;
+  } else {
+    const childContext = instance.getChildContext();
+    for (let contextKey in childContext) {
+      invariant(
+        contextKey in childContextTypes,
+        '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+        getComponentName(fiber),
+        contextKey
+      );
+    }
+    if (__DEV__) {
+      const name = getComponentName(fiber);
+      const debugID = 0; // TODO: pass a real ID
+      checkReactTypeSpec(childContextTypes, childContext, 'childContext', name, null, debugID);
+    }
+    mergedContext = {...getUnmaskedContext(), ...childContext};
+    instance.__reactInternalMemoizedMergedChildContext = mergedContext;
   }
 
-  const mergedContext = Object.assign({}, getUnmaskedContext(), childContext);
   index++;
   contextStack[index] = mergedContext;
   didPerformWorkStack[index] = didPerformWork;
