@@ -14,8 +14,10 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type { FiberRootErrorPhase } from 'ReactFiberRootErrorPhase';
 
 const { createHostContainerFiber } = require('ReactFiber');
+const { NoError } = require('ReactFiberRootErrorPhase');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -24,6 +26,9 @@ export type FiberRoot = {
   current: Fiber,
   // Determines if this root has already been added to the schedule for work.
   isScheduled: boolean,
+  // When a root fails with an uncaught error, determines the phase of recovery.
+  // Defaults to NoError
+  errorPhase: FiberRootErrorPhase,
   // The work schedule is a linked list.
   nextScheduledRoot: ?FiberRoot,
   // Linked list of callbacks to call after updates are committed.
@@ -38,6 +43,7 @@ exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
     current: uninitializedFiber,
     containerInfo: containerInfo,
     isScheduled: false,
+    errorPhase: NoError,
     nextScheduledRoot: null,
     callbackList: null,
   };

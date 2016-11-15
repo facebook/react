@@ -48,6 +48,12 @@ var {
 } = require('ReactTypeOfSideEffect');
 
 var {
+  NoError,
+  SoftDeletion,
+  HardDeletion,
+} = require('ReactFiberRootErrorPhase');
+
+var {
   HostContainer,
   ClassComponent,
 } = require('ReactTypeOfWork');
@@ -65,10 +71,18 @@ type TrappedError = {
 };
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-  const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
+  const {
+    beginWork,
+    beginWorkOnFailedNode,
+  } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config, trapError);
+  const {
+    commitInsertion,
+    commitDeletion,
+    commitNestedUnmounts,
+    commitWork,
+    commitLifeCycles,
+  } = ReactFiberCommitWork(config, trapError);
 
   const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
   const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -240,6 +254,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     performTaskWork();
   }
 
+  function commitSoftDelete(finishedWork : Fiber) {
+    let effectfulFiber = finishedWork.firstEffect;
+    while (effectfulFiber) {
+      switch (effectfulFiber.effectTag) {
+        case Deletion:
+        case DeletionAndCallback:
+          commitNestedUnmounts(effectfulFiber);
+          break;
+      }
+      effectfulFiber = effectfulFiber.nextEffect;
+    }
+  }
+
   function resetWorkPriority(workInProgress : Fiber) {
     let newPriority = NoWork;
     // progressedChild is going to be the child set with the highest priority.
@@ -330,7 +357,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        commitAllWork(workInProgress);
+        if (root.errorPhase === SoftDeletion) {
+          // If this root failed with an uncaught error, we do a "soft" delete
+          // without deleting any host nodes.
+          commitSoftDelete(workInProgress);
+          // Change the error phase so that on the next update, the old nodes
+          // are deleted.
+          root.errorPhase = HardDeletion;
+        } else {
+          commitAllWork(workInProgress);
+        }
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't
@@ -355,7 +391,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
-    let next = beginWork(current, workInProgress, nextPriorityLevel);
+    let next;
+    if (activeErrorBoundaries && activeErrorBoundaries.has(workInProgress)) {
+      // This is a failed error boundary.
+      next = beginWorkOnFailedNode(current, workInProgress, nextPriorityLevel);
+    } else if (workInProgress.tag === HostContainer &&
+               workInProgress.stateNode.errorPhase === HardDeletion) {
+      // This is a failed root. Reset the root error phase.
+      workInProgress.stateNode.errorPhase = NoError;
+      next = beginWorkOnFailedNode(current, workInProgress, nextPriorityLevel);
+    } else {
+      // This work has no error. Begin work as normal.
+      next = beginWork(current, workInProgress, nextPriorityLevel);
+    }
+
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
     }
@@ -558,22 +607,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         const trappedError = nextTrappedErrors.shift();
         const boundary = trappedError.boundary;
         const error = trappedError.error;
-        const root = trappedError.root;
+        let root = trappedError.root;
         if (!boundary) {
           firstUncaughtError = firstUncaughtError || error;
-          if (root && root.current) {
-            // Unschedule this particular root since it fataled and we can't do
-            // more work on it. This lets us continue working on other roots
-            // even if one of them fails before rethrowing the error.
-            root.current.pendingWorkPriority = NoWork;
+          if (root) {
+            // This root failed with an uncaught error.
+            root.errorPhase = SoftDeletion;
+            root.current.pendingProps = [];
+            scheduleWork(root);
           } else {
             // Normally we should know which root caused the error, so it is
-            // unusual if we end up here. Since we assume this function always
-            // unschedules failed roots, our only resort is to completely
-            // unschedule all roots. Otherwise we may get into an infinite loop
-            // trying to resume work and finding the failing but unknown root again.
-            nextScheduledRoot = null;
-            lastScheduledRoot = null;
+            // unusual if we end up here. Our only resort is to unschedule
+            // everything.
+            root = nextScheduledRoot;
+            while (root) {
+              root.errorPhase = SoftDeletion;
+              root.current.pendingProps = [];
+              scheduleWork(root);
+              root = root.nextScheduledRoot;
+            }
           }
           continue;
         }
@@ -587,6 +639,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // If it fails again, the next error will be propagated to the parent
           // boundary or rethrown.
           activeErrorBoundaries.add(boundary);
+
+          // Force the error boundary to unmount its children
+          boundary.stateNode._isFailedErrorBoundary = true;
+
           // Give error boundary a chance to update its state.
           // Updates will be scheduled with Task priority.
           const instance = boundary.stateNode;
@@ -743,27 +799,36 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       priorityLevel = TaskPriority;
     }
 
-    while (true) {
-      if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority >= priorityLevel) {
-        fiber.pendingWorkPriority = priorityLevel;
+    let node = fiber;
+    let shouldContinue = true;
+    while (node && shouldContinue) {
+      // Walk the parent path to the root and update each node's priority. Once
+      // we reach a node whose priority matches (and whose alternate's priority
+      // matches) we can exit safely knowing that the rest of the path is correct.
+      shouldContinue = false;
+      if (node.pendingWorkPriority === NoWork ||
+          node.pendingWorkPriority >= priorityLevel) {
+        // Priority did not match. Update and keep going.
+        shouldContinue = true;
+        node.pendingWorkPriority = priorityLevel;
       }
-      if (fiber.alternate) {
-        if (fiber.alternate.pendingWorkPriority === NoWork ||
-            fiber.alternate.pendingWorkPriority >= priorityLevel) {
-          fiber.alternate.pendingWorkPriority = priorityLevel;
+      if (node.alternate) {
+        if (node.alternate.pendingWorkPriority === NoWork ||
+            node.alternate.pendingWorkPriority >= priorityLevel) {
+          // Priority did not match. Update and keep going.
+          shouldContinue = true;
+          node.alternate.pendingWorkPriority = priorityLevel;
         }
       }
-      if (!fiber.return) {
-        if (fiber.tag === HostContainer) {
-          const root : FiberRoot = (fiber.stateNode : any);
+      if (!node.return) {
+        if (node.tag === HostContainer) {
+          const root : FiberRoot = (node.stateNode : any);
           scheduleWorkAtPriority(root, priorityLevel);
-          return;
         } else {
           throw new Error('Invalid root');
         }
       }
-      fiber = fiber.return;
+      node = node.return;
     }
   }
 

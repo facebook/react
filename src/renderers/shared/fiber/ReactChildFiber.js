@@ -89,7 +89,7 @@ function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactEleme
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+function ChildReconciler(shouldClone, shouldTrackSideEffects, forceReplace) {
 
   function deleteChild(
     returnFiber : Fiber,
@@ -378,6 +378,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     newChild : any,
     priority : PriorityLevel
   ) : ?Fiber {
+    if (forceReplace) {
+      return null;
+    }
+
     // Update the fiber if the keys match, otherwise return null.
 
     const key = oldFiber ? oldFiber.key : null;
@@ -443,36 +447,41 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes doesn't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
-      const matchedFiber = existingChildren.get(newIdx) || null;
+      const matchedFiber = forceReplace ? null :
+        existingChildren.get(newIdx) || null;
       return updateTextNode(returnFiber, matchedFiber, '' + newChild, priority);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          const matchedFiber = forceReplace ? null :
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key
+            ) || null;
           return updateElement(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_COROUTINE_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          const matchedFiber = forceReplace ? null :
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key
+            ) || null;
           return updateCoroutine(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_YIELD_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          const matchedFiber = forceReplace ? null :
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key
+            ) || null;
           return updateYield(returnFiber, matchedFiber, newChild, priority);
         }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        const matchedFiber = existingChildren.get(newIdx) || null;
+        const matchedFiber = forceReplace ? null :
+          existingChildren.get(newIdx) || null;
         return updateFragment(returnFiber, matchedFiber, newChild, priority);
       }
     }
@@ -485,7 +494,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     currentFirstChild : ?Fiber,
     newChildren : Array<*>,
     priority : PriorityLevel) : ?Fiber {
-
     // This algorithm can't optimize by searching from boths ends since we
     // don't have backpointers on fibers. I'm trying to see how far we can get
     // with that model. If it ends up not being worth the tradeoffs, we can
@@ -510,13 +518,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     let newIdx = 0;
     let nextOldFiber = null;
     for (; oldFiber && newIdx < newChildren.length; newIdx++) {
-      if (oldFiber) {
-        if (oldFiber.index > newIdx) {
-          nextOldFiber = oldFiber;
-          oldFiber = null;
-        } else {
-          nextOldFiber = oldFiber.sibling;
-        }
+      if (oldFiber.index > newIdx) {
+        nextOldFiber = oldFiber;
+        oldFiber = null;
+      } else {
+        nextOldFiber = oldFiber.sibling;
       }
       const newFiber = updateSlot(
         returnFiber,
@@ -675,7 +681,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key && !forceReplace) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -710,7 +716,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key && !forceReplace) {
         if (child.tag === CoroutineComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -743,7 +749,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     while (child) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
-      if (child.key === key) {
+      if (child.key === key && !forceReplace) {
         if (child.tag === YieldComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
@@ -847,11 +853,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-exports.reconcileChildFibers = ChildReconciler(true, true);
+exports.replaceChildFibers = ChildReconciler(true, true, true);
 
-exports.reconcileChildFibersInPlace = ChildReconciler(false, true);
+exports.reconcileChildFibers = ChildReconciler(true, true, false);
 
-exports.mountChildFibersInPlace = ChildReconciler(false, false);
+exports.reconcileChildFibersInPlace = ChildReconciler(false, true, false);
+
+exports.mountChildFibersInPlace = ChildReconciler(false, false, false);
 
 exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) : void {
   if (!workInProgress.child) {
