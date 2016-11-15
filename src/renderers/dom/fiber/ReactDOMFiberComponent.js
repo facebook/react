@@ -495,127 +495,6 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-
-/**
- * Creates markup for the open tag and all attributes.
- *
- * This method has side effects because events get registered.
- *
- * Iterating over object properties is faster than iterating over arrays.
- * @see http://jsperf.com/obj-vs-arr-iteration
- *
- * @private
- * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
- * @param {object} props
- * @return {string} Markup of opening tag.
- */
-function createOpenTagMarkupAndPutListeners(workInProgress, transaction, props) {
-  var ret = '<' + workInProgress._currentElement.type;
-
-  for (var propKey in props) {
-    if (!props.hasOwnProperty(propKey)) {
-      continue;
-    }
-    var propValue = props[propKey];
-    if (propValue == null) {
-      continue;
-    }
-    if (registrationNameModules.hasOwnProperty(propKey)) {
-      if (propValue) {
-        enqueuePutListener(workInProgress, propKey, propValue, transaction);
-      }
-    } else {
-      if (propKey === STYLE) {
-        if (propValue) {
-          if (__DEV__) {
-            // See `_updateDOMProperties`. style block
-            workInProgress._previousStyle = propValue;
-          }
-          propValue = workInProgress._previousStyleCopy = Object.assign({}, props.style);
-        }
-        propValue = CSSPropertyOperations.createMarkupForStyles(propValue, workInProgress);
-      }
-      var markup = null;
-      if (workInProgress._tag != null && isCustomComponent(workInProgress._tag, props)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
-        }
-      } else {
-        markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
-      }
-      if (markup) {
-        ret += ' ' + markup;
-      }
-    }
-  }
-
-  // For static pages, no need to put React ID and checksum. Saves lots of
-  // bytes.
-  if (transaction.renderToStaticMarkup) {
-    return ret;
-  }
-
-  if (!workInProgress._hostParent) {
-    ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
-  }
-  ret += ' ' + DOMPropertyOperations.createMarkupForID(workInProgress._domID);
-  return ret;
-}
-
-/**
- * Creates markup for the content between the tags.
- *
- * @private
- * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
- * @param {object} props
- * @param {object} context
- * @return {string} Content markup.
- */
-function createContentMarkup(workInProgress, transaction, props, context) {
-  var ret = '';
-
-  // Intentional use of != to avoid catching zero/false.
-  var innerHTML = props.dangerouslySetInnerHTML;
-  if (innerHTML != null) {
-    if (innerHTML.__html != null) {
-      ret = innerHTML.__html;
-    }
-  } else {
-    var contentToUse =
-      CONTENT_TYPES[typeof props.children] ? props.children : null;
-    var childrenToUse = contentToUse != null ? null : props.children;
-    if (contentToUse != null) {
-      // TODO: Validate that text is allowed as a child of this node
-      ret = escapeTextContentForBrowser(contentToUse);
-      if (__DEV__) {
-        setAndValidateContentChildDev.call(workInProgress, contentToUse);
-      }
-    } else if (childrenToUse != null) {
-      var mountImages = workInProgress.mountChildren(
-        childrenToUse,
-        transaction,
-        context
-      );
-      ret = mountImages.join('');
-    }
-  }
-  if (newlineEatingTags[workInProgress._tag] && ret.charAt(0) === '\n') {
-    // text/html ignores the first character in these tags if it's a newline
-    // Prefer to break application/xml over text/html (for now) by adding
-    // a newline specifically to get eaten by the parser. (Alternately for
-    // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
-    // \r is normalized out by HTMLTextAreaElement#value.)
-    // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
-    // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
-    // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
-    // See: Parsing of "textarea" "listing" and "pre" elements
-    //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
-    return '\n' + ret;
-  } else {
-    return ret;
-  }
-}
-
 function createInitialChildren(workInProgress, transaction, props, context, lazyTree) {
   // Intentional use of != to avoid catching zero/false.
   var innerHTML = props.dangerouslySetInnerHTML;
@@ -981,60 +860,50 @@ var ReactDOMFiberComponent = {
 
     var mountImage;
     var type = workInProgress._currentElement.type;
-    if (transaction.useCreateElement) {
-      var ownerDocument = hostContainerInfo._ownerDocument;
-      var el;
-      if (namespaceURI === DOMNamespaces.html) {
-        if (workInProgress._tag === 'script') {
-          // Create the script via .innerHTML so its "parser-inserted" flag is
-          // set to true and it does not execute
-          var div = ownerDocument.createElement('div');
-          div.innerHTML = `<${type}></${type}>`;
-          el = div.removeChild(div.firstChild);
-        } else if (props.is) {
-          el = ownerDocument.createElement(type, props.is);
-        } else {
-          // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
-          // See discussion in https://github.com/facebook/react/pull/6896
-          // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-          el = ownerDocument.createElement(type);
-        }
+    var ownerDocument = hostContainerInfo._ownerDocument;
+    var el;
+    if (namespaceURI === DOMNamespaces.html) {
+      if (workInProgress._tag === 'script') {
+        // Create the script via .innerHTML so its "parser-inserted" flag is
+        // set to true and it does not execute
+        var div = ownerDocument.createElement('div');
+        div.innerHTML = `<${type}></${type}>`;
+        el = div.removeChild(div.firstChild);
+      } else if (props.is) {
+        el = ownerDocument.createElement(type, props.is);
       } else {
-        el = ownerDocument.createElementNS(
-          namespaceURI,
-          type
-        );
+        // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
+        // See discussion in https://github.com/facebook/react/pull/6896
+        // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+        el = ownerDocument.createElement(type);
       }
-      var isCustomComponentTag = isCustomComponent(workInProgress._tag, props);
-      if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
-        var owner = workInProgress._currentElement._owner;
-        var name = owner && owner.getName() || 'A component';
-        warning(
-          false,
-          '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
-          name
-        );
-        didWarnShadyDOM = true;
-      }
-      ReactDOMComponentTree.precacheNode(workInProgress, el);
-      workInProgress._flags |= Flags.hasCachedChildNodes;
-      if (!workInProgress._hostParent) {
-        DOMPropertyOperations.setAttributeForRoot(el);
-      }
-      updateDOMProperties(workInProgress, null, props, transaction, isCustomComponentTag);
-      var lazyTree = DOMLazyTree(el);
-      createInitialChildren(workInProgress, transaction, props, context, lazyTree);
-      mountImage = lazyTree;
     } else {
-      var tagOpen = createOpenTagMarkupAndPutListeners(workInProgress, transaction, props);
-      var tagContent = createContentMarkup(workInProgress, transaction, props, context);
-      if (!tagContent && omittedCloseTags[workInProgress._tag]) {
-        mountImage = tagOpen + '/>';
-      } else {
-        mountImage = tagOpen + '>' + tagContent + '</' + type + '>';
-      }
+      el = ownerDocument.createElementNS(
+        namespaceURI,
+        type
+      );
     }
+    var isCustomComponentTag = isCustomComponent(workInProgress._tag, props);
+    if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+      var owner = workInProgress._currentElement._owner;
+      var name = owner && owner.getName() || 'A component';
+      warning(
+        false,
+        '%s is using shady DOM. Using shady DOM with React can ' +
+        'cause things to break subtly.',
+        name
+      );
+      didWarnShadyDOM = true;
+    }
+    ReactDOMComponentTree.precacheNode(workInProgress, el);
+    workInProgress._flags |= Flags.hasCachedChildNodes;
+    if (!workInProgress._hostParent) {
+      DOMPropertyOperations.setAttributeForRoot(el);
+    }
+    updateDOMProperties(workInProgress, null, props, transaction, isCustomComponentTag);
+    var lazyTree = DOMLazyTree(el);
+    createInitialChildren(workInProgress, transaction, props, context, lazyTree);
+    mountImage = lazyTree;
 
     switch (workInProgress._tag) {
       case 'input':
