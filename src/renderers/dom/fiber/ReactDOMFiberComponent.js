@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactDOMFiberComponent
+ * @flow
  */
 
 /* global hasOwnProperty:true */
@@ -24,10 +25,10 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMInput = require('ReactDOMInput');
-var ReactDOMOption = require('ReactDOMOption');
-var ReactDOMSelect = require('ReactDOMSelect');
-var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactDOMFiberInput = require('ReactDOMFiberInput');
+var ReactDOMFiberOption = require('ReactDOMFiberOption');
+var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
+var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
@@ -258,17 +259,17 @@ function putListener() {
 
 function inputPostMount() {
   var inst = this;
-  ReactDOMInput.postMountWrapper(inst);
+  ReactDOMFiberInput.postMountWrapper(inst);
 }
 
 function textareaPostMount() {
   var inst = this;
-  ReactDOMTextarea.postMountWrapper(inst);
+  ReactDOMFiberTextarea.postMountWrapper(inst);
 }
 
 function optionPostMount() {
   var inst = this;
-  ReactDOMOption.postMountWrapper(inst);
+  ReactDOMFiberOption.postMountWrapper(inst);
 }
 
 var setAndValidateContentChildDev = emptyFunction;
@@ -437,7 +438,7 @@ function trapBubbledEventsLocal() {
 }
 
 function postUpdateSelectWrapper() {
-  ReactDOMSelect.postUpdateWrapper(this);
+  ReactDOMFiberSelect.postUpdateWrapper(this);
 }
 
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
@@ -494,48 +495,372 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-var globalIdCounter = 1;
 
 /**
- * Creates a new React class that is idempotent and capable of containing other
- * React components. It accepts event listeners and DOM properties that are
- * valid according to `DOMProperty`.
+ * Creates markup for the open tag and all attributes.
  *
- *  - Event listeners: `onClick`, `onMouseDown`, etc.
- *  - DOM properties: `className`, `name`, `title`, etc.
+ * This method has side effects because events get registered.
  *
- * The `style` property functions differently from the DOM API. It accepts an
- * object mapping of style properties to values.
+ * Iterating over object properties is faster than iterating over arrays.
+ * @see http://jsperf.com/obj-vs-arr-iteration
  *
- * @constructor ReactDOMComponent
- * @extends ReactMultiChild
+ * @private
+ * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+ * @param {object} props
+ * @return {string} Markup of opening tag.
  */
-function ReactDOMComponent(element) {
-  var tag = element.type;
-  validateDangerousTag(tag);
-  this._currentElement = element;
-  this._tag = tag.toLowerCase();
-  this._namespaceURI = null;
-  this._renderedChildren = null;
-  this._previousStyle = null;
-  this._previousStyleCopy = null;
-  this._hostNode = null;
-  this._hostParent = null;
-  this._rootNodeID = 0;
-  this._domID = 0;
-  this._hostContainerInfo = null;
-  this._wrapperState = null;
-  this._topLevelWrapper = null;
-  this._flags = 0;
-  if (__DEV__) {
-    this._ancestorInfo = null;
-    setAndValidateContentChildDev.call(this, null);
+function createOpenTagMarkupAndPutListeners(workInProgress, transaction, props) {
+  var ret = '<' + workInProgress._currentElement.type;
+
+  for (var propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
+      continue;
+    }
+    var propValue = props[propKey];
+    if (propValue == null) {
+      continue;
+    }
+    if (registrationNameModules.hasOwnProperty(propKey)) {
+      if (propValue) {
+        enqueuePutListener(workInProgress, propKey, propValue, transaction);
+      }
+    } else {
+      if (propKey === STYLE) {
+        if (propValue) {
+          if (__DEV__) {
+            // See `_updateDOMProperties`. style block
+            workInProgress._previousStyle = propValue;
+          }
+          propValue = workInProgress._previousStyleCopy = Object.assign({}, props.style);
+        }
+        propValue = CSSPropertyOperations.createMarkupForStyles(propValue, workInProgress);
+      }
+      var markup = null;
+      if (workInProgress._tag != null && isCustomComponent(workInProgress._tag, props)) {
+        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
+        }
+      } else {
+        markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
+      }
+      if (markup) {
+        ret += ' ' + markup;
+      }
+    }
+  }
+
+  // For static pages, no need to put React ID and checksum. Saves lots of
+  // bytes.
+  if (transaction.renderToStaticMarkup) {
+    return ret;
+  }
+
+  if (!workInProgress._hostParent) {
+    ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+  }
+  ret += ' ' + DOMPropertyOperations.createMarkupForID(workInProgress._domID);
+  return ret;
+}
+
+/**
+ * Creates markup for the content between the tags.
+ *
+ * @private
+ * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+ * @param {object} props
+ * @param {object} context
+ * @return {string} Content markup.
+ */
+function createContentMarkup(workInProgress, transaction, props, context) {
+  var ret = '';
+
+  // Intentional use of != to avoid catching zero/false.
+  var innerHTML = props.dangerouslySetInnerHTML;
+  if (innerHTML != null) {
+    if (innerHTML.__html != null) {
+      ret = innerHTML.__html;
+    }
+  } else {
+    var contentToUse =
+      CONTENT_TYPES[typeof props.children] ? props.children : null;
+    var childrenToUse = contentToUse != null ? null : props.children;
+    if (contentToUse != null) {
+      // TODO: Validate that text is allowed as a child of this node
+      ret = escapeTextContentForBrowser(contentToUse);
+      if (__DEV__) {
+        setAndValidateContentChildDev.call(workInProgress, contentToUse);
+      }
+    } else if (childrenToUse != null) {
+      var mountImages = workInProgress.mountChildren(
+        childrenToUse,
+        transaction,
+        context
+      );
+      ret = mountImages.join('');
+    }
+  }
+  if (newlineEatingTags[workInProgress._tag] && ret.charAt(0) === '\n') {
+    // text/html ignores the first character in these tags if it's a newline
+    // Prefer to break application/xml over text/html (for now) by adding
+    // a newline specifically to get eaten by the parser. (Alternately for
+    // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+    // \r is normalized out by HTMLTextAreaElement#value.)
+    // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+    // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+    // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+    // See: Parsing of "textarea" "listing" and "pre" elements
+    //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+    return '\n' + ret;
+  } else {
+    return ret;
   }
 }
 
-ReactDOMComponent.displayName = 'ReactDOMComponent';
+function createInitialChildren(workInProgress, transaction, props, context, lazyTree) {
+  // Intentional use of != to avoid catching zero/false.
+  var innerHTML = props.dangerouslySetInnerHTML;
+  if (innerHTML != null) {
+    if (innerHTML.__html != null) {
+      DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
+    }
+  } else {
+    var contentToUse =
+      CONTENT_TYPES[typeof props.children] ? props.children : null;
+    var childrenToUse = contentToUse != null ? null : props.children;
+    // TODO: Validate that text is allowed as a child of this node
+    if (contentToUse != null) {
+      // Avoid setting textContent when the text is empty. In IE11 setting
+      // textContent on a text area will cause the placeholder to not
+      // show within the textarea until it has been focused and blurred again.
+      // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+      if (contentToUse !== '') {
+        if (__DEV__) {
+          setAndValidateContentChildDev.call(workInProgress, contentToUse);
+        }
+        DOMLazyTree.queueText(lazyTree, contentToUse);
+      }
+    } else if (childrenToUse != null) {
+      var mountImages = workInProgress.mountChildren(
+        childrenToUse,
+        transaction,
+        context
+      );
+      for (var i = 0; i < mountImages.length; i++) {
+        DOMLazyTree.queueChild(lazyTree, mountImages[i]);
+      }
+    }
+  }
+}
 
-ReactDOMComponent.Mixin = {
+/**
+ * Reconciles the properties by detecting differences in property values and
+ * updating the DOM as necessary. This function is probably the single most
+ * critical path for performance optimization.
+ *
+ * TODO: Benchmark whether checking for changed values in memory actually
+ *       improves performance (especially statically positioned elements).
+ * TODO: Benchmark the effects of putting workInProgress at the top since 99% of props
+ *       do not change for a given reconciliation.
+ * TODO: Benchmark areas that can be improved with caching.
+ *
+ * @private
+ * @param {object} lastProps
+ * @param {object} nextProps
+ * @param {?DOMElement} node
+ */
+function updateDOMProperties(
+  workInProgress,
+  lastProps,
+  nextProps,
+  transaction,
+  isCustomComponentTag
+) {
+  var propKey;
+  var styleName;
+  var styleUpdates;
+  for (propKey in lastProps) {
+    if (nextProps.hasOwnProperty(propKey) ||
+       !lastProps.hasOwnProperty(propKey) ||
+       lastProps[propKey] == null) {
+      continue;
+    }
+    if (propKey === STYLE) {
+      var lastStyle = workInProgress._previousStyleCopy;
+      for (styleName in lastStyle) {
+        if (lastStyle.hasOwnProperty(styleName)) {
+          styleUpdates = styleUpdates || {};
+          styleUpdates[styleName] = '';
+        }
+      }
+      workInProgress._previousStyleCopy = null;
+    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      if (lastProps[propKey]) {
+        // Only call deleteListener if there was a listener previously or
+        // else willDeleteListener gets called when there wasn't actually a
+        // listener (e.g., onClick={null})
+        deleteListener(workInProgress, propKey);
+      }
+    } else if (isCustomComponent(workInProgress._tag, lastProps)) {
+      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        DOMPropertyOperations.deleteValueForAttribute(
+          getNode(workInProgress),
+          propKey
+        );
+      }
+    } else if (
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
+      DOMPropertyOperations.deleteValueForProperty(getNode(workInProgress), propKey);
+    }
+  }
+  for (propKey in nextProps) {
+    var nextProp = nextProps[propKey];
+    var lastProp =
+      propKey === STYLE ? workInProgress._previousStyleCopy :
+      lastProps != null ? lastProps[propKey] : undefined;
+    if (!nextProps.hasOwnProperty(propKey) ||
+        nextProp === lastProp ||
+        nextProp == null && lastProp == null) {
+      continue;
+    }
+    if (propKey === STYLE) {
+      if (nextProp) {
+        if (__DEV__) {
+          checkAndWarnForMutatedStyle(
+            workInProgress._previousStyleCopy,
+            workInProgress._previousStyle,
+            workInProgress
+          );
+          workInProgress._previousStyle = nextProp;
+        }
+        nextProp = workInProgress._previousStyleCopy = Object.assign({}, nextProp);
+      } else {
+        workInProgress._previousStyleCopy = null;
+      }
+      if (lastProp) {
+        // Unset styles on `lastProp` but not on `nextProp`.
+        for (styleName in lastProp) {
+          if (lastProp.hasOwnProperty(styleName) &&
+              (!nextProp || !nextProp.hasOwnProperty(styleName))) {
+            styleUpdates = styleUpdates || {};
+            styleUpdates[styleName] = '';
+          }
+        }
+        // Update styles that changed since `lastProp`.
+        for (styleName in nextProp) {
+          if (nextProp.hasOwnProperty(styleName) &&
+              lastProp[styleName] !== nextProp[styleName]) {
+            styleUpdates = styleUpdates || {};
+            styleUpdates[styleName] = nextProp[styleName];
+          }
+        }
+      } else {
+        // Relies on `updateStylesByID` not mutating `styleUpdates`.
+        styleUpdates = nextProp;
+      }
+    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      if (nextProp) {
+        enqueuePutListener(workInProgress, propKey, nextProp, transaction);
+      } else if (lastProp) {
+        deleteListener(workInProgress, propKey);
+      }
+    } else if (isCustomComponentTag) {
+      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        DOMPropertyOperations.setValueForAttribute(
+          getNode(workInProgress),
+          propKey,
+          nextProp
+        );
+      }
+    } else if (
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
+      var node = getNode(workInProgress);
+      // If we're updating to null or undefined, we should remove the property
+      // from the DOM node instead of inadvertently setting to a string. This
+      // brings us in line with the same behavior we have on initial render.
+      if (nextProp != null) {
+        DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
+      } else {
+        DOMPropertyOperations.deleteValueForProperty(node, propKey);
+      }
+    }
+  }
+  if (styleUpdates) {
+    CSSPropertyOperations.setValueForStyles(
+      getNode(workInProgress),
+      styleUpdates,
+      workInProgress
+    );
+  }
+}
+
+/**
+ * Reconciles the children with the various properties that affect the
+ * children content.
+ *
+ * @param {object} lastProps
+ * @param {object} nextProps
+ * @param {ReactReconcileTransaction} transaction
+ * @param {object} context
+ */
+function updateDOMChildren(workInProgress, lastProps, nextProps, transaction, context) {
+  var lastContent =
+    CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
+  var nextContent =
+    CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
+
+  var lastHtml =
+    lastProps.dangerouslySetInnerHTML &&
+    lastProps.dangerouslySetInnerHTML.__html;
+  var nextHtml =
+    nextProps.dangerouslySetInnerHTML &&
+    nextProps.dangerouslySetInnerHTML.__html;
+
+  // Note the use of `!=` which checks for null or undefined.
+  var lastChildren = lastContent != null ? null : lastProps.children;
+  var nextChildren = nextContent != null ? null : nextProps.children;
+
+  // If we're switching from children to content/html or vice versa, remove
+  // the old content
+  var lastHasContentOrHtml = lastContent != null || lastHtml != null;
+  var nextHasContentOrHtml = nextContent != null || nextHtml != null;
+  if (lastChildren != null && nextChildren == null) {
+    workInProgress.updateChildren(null, transaction, context);
+  } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
+    workInProgress.updateTextContent('');
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onSetChildren(workInProgress._debugID, []);
+    }
+  }
+
+  if (nextContent != null) {
+    if (lastContent !== nextContent) {
+      workInProgress.updateTextContent('' + nextContent);
+      if (__DEV__) {
+        setAndValidateContentChildDev.call(workInProgress, nextContent);
+      }
+    }
+  } else if (nextHtml != null) {
+    if (lastHtml !== nextHtml) {
+      workInProgress.updateMarkup('' + nextHtml);
+    }
+    if (__DEV__) {
+      ReactInstrumentation.debugTool.onSetChildren(workInProgress._debugID, []);
+    }
+  } else if (nextChildren != null) {
+    if (__DEV__) {
+      setAndValidateContentChildDev.call(workInProgress, null);
+    }
+
+    workInProgress.updateChildren(nextChildren, transaction, context);
+  }
+}
+
+var globalIdCounter = 1;
+
+var ReactDOMFiberComponent = {
+
 
   /**
    * Generates root tag markup then recurses. This method has side effects and
@@ -549,19 +874,24 @@ ReactDOMComponent.Mixin = {
    * @return {string} The computed markup.
    */
   mountComponent: function(
+    workInProgress : Fiber,
     transaction,
     hostParent,
     hostContainerInfo,
     context
   ) {
-    this._rootNodeID = globalIdCounter++;
-    this._domID = hostContainerInfo._idCounter++;
-    this._hostParent = hostParent;
-    this._hostContainerInfo = hostContainerInfo;
+    // validateDangerousTag(tag);
+    // workInProgress._tag = tag.toLowerCase();
+    // setAndValidateContentChildDev.call(workInProgress, null);
 
-    var props = this._currentElement.props;
+    workInProgress._rootNodeID = globalIdCounter++;
+    workInProgress._domID = hostContainerInfo._idCounter++;
+    workInProgress._hostParent = hostParent;
+    workInProgress._hostContainerInfo = hostContainerInfo;
 
-    switch (this._tag) {
+    var props = workInProgress._currentElement.props;
+
+    switch (workInProgress._tag) {
       case 'audio':
       case 'form':
       case 'iframe':
@@ -570,44 +900,44 @@ ReactDOMComponent.Mixin = {
       case 'object':
       case 'source':
       case 'video':
-        this._wrapperState = {
+        workInProgress._wrapperState = {
           listeners: null,
         };
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
         break;
       case 'input':
-        ReactDOMInput.mountWrapper(this, props, hostParent);
-        props = ReactDOMInput.getHostProps(this, props);
-        transaction.getReactMountReady().enqueue(trackInputValue, this);
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        ReactDOMFiberInput.mountWrapper(workInProgress, props, hostParent);
+        props = ReactDOMFiberInput.getHostProps(workInProgress, props);
+        transaction.getReactMountReady().enqueue(trackInputValue, workInProgress);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(this, 'onChange', transaction);
+        ensureListeningTo(workInProgress, 'onChange', transaction);
         break;
       case 'option':
-        ReactDOMOption.mountWrapper(this, props, hostParent);
-        props = ReactDOMOption.getHostProps(this, props);
+        ReactDOMFiberOption.mountWrapper(workInProgress, props, hostParent);
+        props = ReactDOMFiberOption.getHostProps(workInProgress, props);
         break;
       case 'select':
-        ReactDOMSelect.mountWrapper(this, props, hostParent);
-        props = ReactDOMSelect.getHostProps(this, props);
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        ReactDOMFiberSelect.mountWrapper(workInProgress, props, hostParent);
+        props = ReactDOMFiberSelect.getHostProps(workInProgress, props);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(this, 'onChange', transaction);
+        ensureListeningTo(workInProgress, 'onChange', transaction);
         break;
       case 'textarea':
-        ReactDOMTextarea.mountWrapper(this, props, hostParent);
-        props = ReactDOMTextarea.getHostProps(this, props);
-        transaction.getReactMountReady().enqueue(trackInputValue, this);
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        ReactDOMFiberTextarea.mountWrapper(workInProgress, props, hostParent);
+        props = ReactDOMFiberTextarea.getHostProps(workInProgress, props);
+        transaction.getReactMountReady().enqueue(trackInputValue, workInProgress);
+        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(this, 'onChange', transaction);
+        ensureListeningTo(workInProgress, 'onChange', transaction);
         break;
     }
 
-    assertValidProps(this, props);
+    assertValidProps(workInProgress, props);
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
@@ -625,13 +955,13 @@ ReactDOMComponent.Mixin = {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
-      if (this._tag === 'svg') {
+      if (workInProgress._tag === 'svg') {
         namespaceURI = DOMNamespaces.svg;
-      } else if (this._tag === 'math') {
+      } else if (workInProgress._tag === 'math') {
         namespaceURI = DOMNamespaces.mathml;
       }
     }
-    this._namespaceURI = namespaceURI;
+    workInProgress._namespaceURI = namespaceURI;
 
     if (__DEV__) {
       var parentInfo;
@@ -643,19 +973,19 @@ ReactDOMComponent.Mixin = {
       if (parentInfo) {
         // parentInfo should always be present except for the top-level
         // component when server rendering
-        validateDOMNesting(this._tag, null, this, parentInfo);
+        validateDOMNesting(workInProgress._tag, null, workInProgress, parentInfo);
       }
-      this._ancestorInfo =
-        validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
+      workInProgress._ancestorInfo =
+        validateDOMNesting.updatedAncestorInfo(parentInfo, workInProgress._tag, workInProgress);
     }
 
     var mountImage;
-    var type = this._currentElement.type;
+    var type = workInProgress._currentElement.type;
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
       if (namespaceURI === DOMNamespaces.html) {
-        if (this._tag === 'script') {
+        if (workInProgress._tag === 'script') {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
           var div = ownerDocument.createElement('div');
@@ -675,9 +1005,9 @@ ReactDOMComponent.Mixin = {
           type
         );
       }
-      var isCustomComponentTag = isCustomComponent(this._tag, props);
+      var isCustomComponentTag = isCustomComponent(workInProgress._tag, props);
       if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
-        var owner = this._currentElement._owner;
+        var owner = workInProgress._currentElement._owner;
         var name = owner && owner.getName() || 'A component';
         warning(
           false,
@@ -687,47 +1017,47 @@ ReactDOMComponent.Mixin = {
         );
         didWarnShadyDOM = true;
       }
-      ReactDOMComponentTree.precacheNode(this, el);
-      this._flags |= Flags.hasCachedChildNodes;
-      if (!this._hostParent) {
+      ReactDOMComponentTree.precacheNode(workInProgress, el);
+      workInProgress._flags |= Flags.hasCachedChildNodes;
+      if (!workInProgress._hostParent) {
         DOMPropertyOperations.setAttributeForRoot(el);
       }
-      this._updateDOMProperties(null, props, transaction, isCustomComponentTag);
+      updateDOMProperties(workInProgress, null, props, transaction, isCustomComponentTag);
       var lazyTree = DOMLazyTree(el);
-      this._createInitialChildren(transaction, props, context, lazyTree);
+      createInitialChildren(workInProgress, transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
-      var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
-      var tagContent = this._createContentMarkup(transaction, props, context);
-      if (!tagContent && omittedCloseTags[this._tag]) {
+      var tagOpen = createOpenTagMarkupAndPutListeners(workInProgress, transaction, props);
+      var tagContent = createContentMarkup(workInProgress, transaction, props, context);
+      if (!tagContent && omittedCloseTags[workInProgress._tag]) {
         mountImage = tagOpen + '/>';
       } else {
         mountImage = tagOpen + '>' + tagContent + '</' + type + '>';
       }
     }
 
-    switch (this._tag) {
+    switch (workInProgress._tag) {
       case 'input':
         transaction.getReactMountReady().enqueue(
           inputPostMount,
-          this
+          workInProgress
         );
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,
-            this
+            workInProgress
           );
         }
         break;
       case 'textarea':
         transaction.getReactMountReady().enqueue(
           textareaPostMount,
-          this
+          workInProgress
         );
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,
-            this
+            workInProgress
           );
         }
         break;
@@ -735,7 +1065,7 @@ ReactDOMComponent.Mixin = {
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,
-            this
+            workInProgress
           );
         }
         break;
@@ -743,21 +1073,21 @@ ReactDOMComponent.Mixin = {
         if (props.autoFocus) {
           transaction.getReactMountReady().enqueue(
             AutoFocusUtils.focusDOMComponent,
-            this
+            workInProgress
           );
         }
         break;
       case 'option':
         transaction.getReactMountReady().enqueue(
           optionPostMount,
-          this
+          workInProgress
         );
         break;
       default:
         if (typeof props.onClick === 'function') {
           transaction.getReactMountReady().enqueue(
             trapClickOnNonInteractiveElement,
-            this
+            workInProgress
           );
         }
         break;
@@ -766,161 +1096,6 @@ ReactDOMComponent.Mixin = {
     return mountImage;
   },
 
-  /**
-   * Creates markup for the open tag and all attributes.
-   *
-   * This method has side effects because events get registered.
-   *
-   * Iterating over object properties is faster than iterating over arrays.
-   * @see http://jsperf.com/obj-vs-arr-iteration
-   *
-   * @private
-   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {object} props
-   * @return {string} Markup of opening tag.
-   */
-  _createOpenTagMarkupAndPutListeners: function(transaction, props) {
-    var ret = '<' + this._currentElement.type;
-
-    for (var propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
-        continue;
-      }
-      var propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
-      if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (propValue) {
-          enqueuePutListener(this, propKey, propValue, transaction);
-        }
-      } else {
-        if (propKey === STYLE) {
-          if (propValue) {
-            if (__DEV__) {
-              // See `_updateDOMProperties`. style block
-              this._previousStyle = propValue;
-            }
-            propValue = this._previousStyleCopy = Object.assign({}, props.style);
-          }
-          propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
-        }
-        var markup = null;
-        if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
-          }
-        } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
-        }
-        if (markup) {
-          ret += ' ' + markup;
-        }
-      }
-    }
-
-    // For static pages, no need to put React ID and checksum. Saves lots of
-    // bytes.
-    if (transaction.renderToStaticMarkup) {
-      return ret;
-    }
-
-    if (!this._hostParent) {
-      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
-    }
-    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
-    return ret;
-  },
-
-  /**
-   * Creates markup for the content between the tags.
-   *
-   * @private
-   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {object} props
-   * @param {object} context
-   * @return {string} Content markup.
-   */
-  _createContentMarkup: function(transaction, props, context) {
-    var ret = '';
-
-    // Intentional use of != to avoid catching zero/false.
-    var innerHTML = props.dangerouslySetInnerHTML;
-    if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        ret = innerHTML.__html;
-      }
-    } else {
-      var contentToUse =
-        CONTENT_TYPES[typeof props.children] ? props.children : null;
-      var childrenToUse = contentToUse != null ? null : props.children;
-      if (contentToUse != null) {
-        // TODO: Validate that text is allowed as a child of this node
-        ret = escapeTextContentForBrowser(contentToUse);
-        if (__DEV__) {
-          setAndValidateContentChildDev.call(this, contentToUse);
-        }
-      } else if (childrenToUse != null) {
-        var mountImages = this.mountChildren(
-          childrenToUse,
-          transaction,
-          context
-        );
-        ret = mountImages.join('');
-      }
-    }
-    if (newlineEatingTags[this._tag] && ret.charAt(0) === '\n') {
-      // text/html ignores the first character in these tags if it's a newline
-      // Prefer to break application/xml over text/html (for now) by adding
-      // a newline specifically to get eaten by the parser. (Alternately for
-      // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
-      // \r is normalized out by HTMLTextAreaElement#value.)
-      // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
-      // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
-      // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
-      // See: Parsing of "textarea" "listing" and "pre" elements
-      //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
-      return '\n' + ret;
-    } else {
-      return ret;
-    }
-  },
-
-  _createInitialChildren: function(transaction, props, context, lazyTree) {
-    // Intentional use of != to avoid catching zero/false.
-    var innerHTML = props.dangerouslySetInnerHTML;
-    if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
-      }
-    } else {
-      var contentToUse =
-        CONTENT_TYPES[typeof props.children] ? props.children : null;
-      var childrenToUse = contentToUse != null ? null : props.children;
-      // TODO: Validate that text is allowed as a child of this node
-      if (contentToUse != null) {
-        // Avoid setting textContent when the text is empty. In IE11 setting
-        // textContent on a text area will cause the placeholder to not
-        // show within the textarea until it has been focused and blurred again.
-        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-        if (contentToUse !== '') {
-          if (__DEV__) {
-            setAndValidateContentChildDev.call(this, contentToUse);
-          }
-          DOMLazyTree.queueText(lazyTree, contentToUse);
-        }
-      } else if (childrenToUse != null) {
-        var mountImages = this.mountChildren(
-          childrenToUse,
-          transaction,
-          context
-        );
-        for (var i = 0; i < mountImages.length; i++) {
-          DOMLazyTree.queueChild(lazyTree, mountImages[i]);
-        }
-      }
-    }
-  },
 
   /**
    * Receives a next element and updates the component.
@@ -930,298 +1105,78 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {object} context
    */
-  receiveComponent: function(nextElement, transaction, context) {
-    var prevElement = this._currentElement;
-    this._currentElement = nextElement;
-    this.updateComponent(transaction, prevElement, nextElement, context);
-  },
+  receiveComponent: function(workInProgress : Fiber, nextElement, transaction, context) {
+    var prevElement = workInProgress._currentElement;
+    workInProgress._currentElement = nextElement;
 
-  /**
-   * Updates a DOM component after it has already been allocated and
-   * attached to the DOM. Reconciles the root DOM node, then recurses.
-   *
-   * @param {ReactReconcileTransaction} transaction
-   * @param {ReactElement} prevElement
-   * @param {ReactElement} nextElement
-   * @internal
-   * @overridable
-   */
-  updateComponent: function(transaction, prevElement, nextElement, context) {
     var lastProps = prevElement.props;
-    var nextProps = this._currentElement.props;
+    var nextProps = workInProgress._currentElement.props;
 
-    switch (this._tag) {
+    switch (workInProgress._tag) {
       case 'input':
-        lastProps = ReactDOMInput.getHostProps(this, lastProps);
-        nextProps = ReactDOMInput.getHostProps(this, nextProps);
+        lastProps = ReactDOMFiberInput.getHostProps(workInProgress, lastProps);
+        nextProps = ReactDOMFiberInput.getHostProps(workInProgress, nextProps);
         break;
       case 'option':
-        lastProps = ReactDOMOption.getHostProps(this, lastProps);
-        nextProps = ReactDOMOption.getHostProps(this, nextProps);
+        lastProps = ReactDOMFiberOption.getHostProps(workInProgress, lastProps);
+        nextProps = ReactDOMFiberOption.getHostProps(workInProgress, nextProps);
         break;
       case 'select':
-        lastProps = ReactDOMSelect.getHostProps(this, lastProps);
-        nextProps = ReactDOMSelect.getHostProps(this, nextProps);
+        lastProps = ReactDOMFiberSelect.getHostProps(workInProgress, lastProps);
+        nextProps = ReactDOMFiberSelect.getHostProps(workInProgress, nextProps);
         break;
       case 'textarea':
-        lastProps = ReactDOMTextarea.getHostProps(this, lastProps);
-        nextProps = ReactDOMTextarea.getHostProps(this, nextProps);
+        lastProps = ReactDOMFiberTextarea.getHostProps(workInProgress, lastProps);
+        nextProps = ReactDOMFiberTextarea.getHostProps(workInProgress, nextProps);
         break;
       default:
         if (typeof lastProps.onClick !== 'function' &&
             typeof nextProps.onClick === 'function') {
           transaction.getReactMountReady().enqueue(
             trapClickOnNonInteractiveElement,
-            this
+            workInProgress
           );
         }
         break;
     }
 
-    assertValidProps(this, nextProps);
-    var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction, isCustomComponentTag);
-    this._updateDOMChildren(
+    assertValidProps(workInProgress, nextProps);
+    var isCustomComponentTag = isCustomComponent(workInProgress._tag, nextProps);
+    updateDOMProperties(workInProgress, lastProps, nextProps, transaction, isCustomComponentTag);
+    updateDOMChildren(
+      workInProgress,
       lastProps,
       nextProps,
       transaction,
       context
     );
 
-    switch (this._tag) {
+    switch (workInProgress._tag) {
       case 'input':
         // Update the wrapper around inputs *after* updating props. This has to
-        // happen after `_updateDOMProperties`. Otherwise HTML5 input validations
+        // happen after `updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
-        ReactDOMInput.updateWrapper(this);
+        ReactDOMFiberInput.updateWrapper(workInProgress);
         break;
       case 'textarea':
-        ReactDOMTextarea.updateWrapper(this);
+        ReactDOMFiberTextarea.updateWrapper(workInProgress);
         break;
       case 'select':
         // <select> value update needs to occur after <option> children
         // reconciliation
-        transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, this);
+        transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, workInProgress);
         break;
     }
   },
 
   /**
-   * Reconciles the properties by detecting differences in property values and
-   * updating the DOM as necessary. This function is probably the single most
-   * critical path for performance optimization.
-   *
-   * TODO: Benchmark whether checking for changed values in memory actually
-   *       improves performance (especially statically positioned elements).
-   * TODO: Benchmark the effects of putting this at the top since 99% of props
-   *       do not change for a given reconciliation.
-   * TODO: Benchmark areas that can be improved with caching.
-   *
-   * @private
-   * @param {object} lastProps
-   * @param {object} nextProps
-   * @param {?DOMElement} node
-   */
-  _updateDOMProperties: function(
-    lastProps,
-    nextProps,
-    transaction,
-    isCustomComponentTag
-  ) {
-    var propKey;
-    var styleName;
-    var styleUpdates;
-    for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey) ||
-         lastProps[propKey] == null) {
-        continue;
-      }
-      if (propKey === STYLE) {
-        var lastStyle = this._previousStyleCopy;
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            styleUpdates = styleUpdates || {};
-            styleUpdates[styleName] = '';
-          }
-        }
-        this._previousStyleCopy = null;
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (lastProps[propKey]) {
-          // Only call deleteListener if there was a listener previously or
-          // else willDeleteListener gets called when there wasn't actually a
-          // listener (e.g., onClick={null})
-          deleteListener(this, propKey);
-        }
-      } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.deleteValueForAttribute(
-            getNode(this),
-            propKey
-          );
-        }
-      } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
-      }
-    }
-    for (propKey in nextProps) {
-      var nextProp = nextProps[propKey];
-      var lastProp =
-        propKey === STYLE ? this._previousStyleCopy :
-        lastProps != null ? lastProps[propKey] : undefined;
-      if (!nextProps.hasOwnProperty(propKey) ||
-          nextProp === lastProp ||
-          nextProp == null && lastProp == null) {
-        continue;
-      }
-      if (propKey === STYLE) {
-        if (nextProp) {
-          if (__DEV__) {
-            checkAndWarnForMutatedStyle(
-              this._previousStyleCopy,
-              this._previousStyle,
-              this
-            );
-            this._previousStyle = nextProp;
-          }
-          nextProp = this._previousStyleCopy = Object.assign({}, nextProp);
-        } else {
-          this._previousStyleCopy = null;
-        }
-        if (lastProp) {
-          // Unset styles on `lastProp` but not on `nextProp`.
-          for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = '';
-            }
-          }
-          // Update styles that changed since `lastProp`.
-          for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = nextProp[styleName];
-            }
-          }
-        } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
-          styleUpdates = nextProp;
-        }
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
-          enqueuePutListener(this, propKey, nextProp, transaction);
-        } else if (lastProp) {
-          deleteListener(this, propKey);
-        }
-      } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.setValueForAttribute(
-            getNode(this),
-            propKey,
-            nextProp
-          );
-        }
-      } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
-        var node = getNode(this);
-        // If we're updating to null or undefined, we should remove the property
-        // from the DOM node instead of inadvertently setting to a string. This
-        // brings us in line with the same behavior we have on initial render.
-        if (nextProp != null) {
-          DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
-        } else {
-          DOMPropertyOperations.deleteValueForProperty(node, propKey);
-        }
-      }
-    }
-    if (styleUpdates) {
-      CSSPropertyOperations.setValueForStyles(
-        getNode(this),
-        styleUpdates,
-        this
-      );
-    }
-  },
-
-  /**
-   * Reconciles the children with the various properties that affect the
-   * children content.
-   *
-   * @param {object} lastProps
-   * @param {object} nextProps
-   * @param {ReactReconcileTransaction} transaction
-   * @param {object} context
-   */
-  _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
-    var lastContent =
-      CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
-    var nextContent =
-      CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
-
-    var lastHtml =
-      lastProps.dangerouslySetInnerHTML &&
-      lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml =
-      nextProps.dangerouslySetInnerHTML &&
-      nextProps.dangerouslySetInnerHTML.__html;
-
-    // Note the use of `!=` which checks for null or undefined.
-    var lastChildren = lastContent != null ? null : lastProps.children;
-    var nextChildren = nextContent != null ? null : nextProps.children;
-
-    // If we're switching from children to content/html or vice versa, remove
-    // the old content
-    var lastHasContentOrHtml = lastContent != null || lastHtml != null;
-    var nextHasContentOrHtml = nextContent != null || nextHtml != null;
-    if (lastChildren != null && nextChildren == null) {
-      this.updateChildren(null, transaction, context);
-    } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
-      this.updateTextContent('');
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
-      }
-    }
-
-    if (nextContent != null) {
-      if (lastContent !== nextContent) {
-        this.updateTextContent('' + nextContent);
-        if (__DEV__) {
-          setAndValidateContentChildDev.call(this, nextContent);
-        }
-      }
-    } else if (nextHtml != null) {
-      if (lastHtml !== nextHtml) {
-        this.updateMarkup('' + nextHtml);
-      }
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onSetChildren(this._debugID, []);
-      }
-    } else if (nextChildren != null) {
-      if (__DEV__) {
-        setAndValidateContentChildDev.call(this, null);
-      }
-
-      this.updateChildren(nextChildren, transaction, context);
-    }
-  },
-
-  getHostNode: function() {
-    return getNode(this);
-  },
-
-  /**
-   * Destroys all event registrations for this instance. Does not remove from
+   * Destroys all event registrations for workInProgress instance. Does not remove from
    * the DOM. That must be done by the parent.
    *
    * @internal
    */
   unmountComponent: function(safely, skipLifecycle) {
-    switch (this._tag) {
+    switch (workInProgress._tag) {
       case 'audio':
       case 'form':
       case 'iframe':
@@ -1230,7 +1185,7 @@ ReactDOMComponent.Mixin = {
       case 'object':
       case 'source':
       case 'video':
-        var listeners = this._wrapperState.listeners;
+        var listeners = workInProgress._wrapperState.listeners;
         if (listeners) {
           for (var i = 0; i < listeners.length; i++) {
             listeners[i].remove();
@@ -1239,7 +1194,7 @@ ReactDOMComponent.Mixin = {
         break;
       case 'input':
       case 'textarea':
-        inputValueTracking.stopTracking(this);
+        inputValueTracking.stopTracking(workInProgress);
         break;
       case 'html':
       case 'head':
@@ -1254,50 +1209,45 @@ ReactDOMComponent.Mixin = {
           false,
           '<%s> tried to unmount. Because of cross-browser quirks it is ' +
           'impossible to unmount some top-level components (eg <html>, ' +
-          '<head>, and <body>) reliably and efficiently. To fix this, have a ' +
+          '<head>, and <body>) reliably and efficiently. To fix workInProgress, have a ' +
           'single top-level component that never unmounts render these ' +
           'elements.',
-          this._tag
+          workInProgress._tag
         );
         break;
     }
 
-    this.unmountChildren(safely, skipLifecycle);
-    ReactDOMComponentTree.uncacheNode(this);
-    EventPluginHub.deleteAllListeners(this);
-    this._rootNodeID = 0;
-    this._domID = 0;
-    this._wrapperState = null;
+    workInProgress.unmountChildren(safely, skipLifecycle);
+    ReactDOMComponentTree.uncacheNode(workInProgress);
+    EventPluginHub.deleteAllListeners(workInProgress);
+    workInProgress._rootNodeID = 0;
+    workInProgress._domID = 0;
+    workInProgress._wrapperState = null;
 
     if (__DEV__) {
-      setAndValidateContentChildDev.call(this, null);
+      setAndValidateContentChildDev.call(workInProgress, null);
     }
   },
 
-  restoreControlledState: function() {
-    switch (this._tag) {
+  restoreControlledState: function(finishedWork : Fiber) {
+    switch (finishedWork.type) {
       case 'input':
-        ReactDOMInput.restoreControlledState(this);
+        ReactDOMFiberInput.restoreControlledState(finishedWork);
         return;
       case 'textarea':
-        ReactDOMTextarea.restoreControlledState(this);
+        ReactDOMFiberTextarea.restoreControlledState(finishedWork);
         return;
       case 'select':
-        ReactDOMSelect.restoreControlledState(this);
+        ReactDOMFiberSelect.restoreControlledState(finishedWork);
         return;
     }
   },
 
-  getPublicInstance: function() {
-    return getNode(this);
+  getPublicInstance: function(fiber : Fiber) {
+    // If we add wrappers, this could be something deeper.
+    return fiber.stateNode;
   },
 
 };
 
-Object.assign(
-  ReactDOMComponent.prototype,
-  ReactDOMComponent.Mixin,
-  ReactMultiChild
-);
-
-module.exports = ReactDOMComponent;
+module.exports = ReactDOMFiberComponent;
