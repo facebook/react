@@ -14,7 +14,6 @@
 
 'use strict';
 
-var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
@@ -26,10 +25,10 @@ var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
-var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
 var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var focusNode = require('focusNode');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
@@ -135,10 +134,7 @@ function assertValidProps(component, props) {
   );
 }
 
-function ensureListeningTo(inst, registrationName, transaction) {
-  if (transaction instanceof ReactServerRenderingTransaction) {
-    return;
-  }
+function ensureListeningTo(inst, registrationName) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -151,21 +147,6 @@ function ensureListeningTo(inst, registrationName, transaction) {
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
-}
-
-function inputPostMount() {
-  var inst = this;
-  ReactDOMFiberInput.postMountWrapper(inst);
-}
-
-function textareaPostMount() {
-  var inst = this;
-  ReactDOMFiberTextarea.postMountWrapper(inst);
-}
-
-function optionPostMount() {
-  var inst = this;
-  ReactDOMFiberOption.postMountWrapper(inst);
 }
 
 // There are so many media events, it makes sense to just
@@ -196,11 +177,7 @@ var mediaEvents = {
   topWaiting: 'waiting',
 };
 
-function trackInputValue() {
-  inputValueTracking.track(this);
-}
-
-function trapClickOnNonInteractiveElement() {
+function trapClickOnNonInteractiveElement(inst) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
@@ -210,12 +187,11 @@ function trapClickOnNonInteractiveElement() {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  var node = getNode(this);
+  var node = getNode(inst);
   node.onclick = emptyFunction;
 }
 
-function trapBubbledEventsLocal() {
-  var inst = this;
+function trapBubbledEventsLocal(inst) {
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
   var node = getNode(inst);
@@ -303,10 +279,6 @@ function trapBubbledEventsLocal() {
   }
 }
 
-function postUpdateSelectWrapper() {
-  ReactDOMFiberSelect.postUpdateWrapper(this);
-}
-
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special-case tags.
 
@@ -381,7 +353,6 @@ function updateDOMProperties(
   workInProgress,
   lastProps,
   nextProps,
-  transaction,
   isCustomComponentTag
 ) {
   var propKey;
@@ -485,7 +456,7 @@ function updateDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
-        ensureListeningTo(workInProgress, propKey, transaction);
+        ensureListeningTo(workInProgress, propKey);
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(
@@ -524,7 +495,6 @@ var ReactDOMFiberComponent = {
    * is not idempotent.
    *
    * @internal
-   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {?ReactDOMComponent} the parent component instance
    * @param {?object} info about the host container
    * @param {object} context
@@ -532,7 +502,6 @@ var ReactDOMFiberComponent = {
    */
   mountComponent: function(
     workInProgress : Fiber,
-    transaction,
     hostParent,
     hostContainerInfo,
     context
@@ -557,16 +526,16 @@ var ReactDOMFiberComponent = {
         workInProgress._wrapperState = {
           listeners: null,
         };
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
+        trapBubbledEventsLocal(workInProgress);
         break;
       case 'input':
         ReactDOMFiberInput.mountWrapper(workInProgress, props, hostParent);
         props = ReactDOMFiberInput.getHostProps(workInProgress, props);
-        transaction.getReactMountReady().enqueue(trackInputValue, workInProgress);
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
+        inputValueTracking.track(workInProgress);
+        trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(workInProgress, 'onChange', transaction);
+        ensureListeningTo(workInProgress, 'onChange');
         break;
       case 'option':
         ReactDOMFiberOption.mountWrapper(workInProgress, props, hostParent);
@@ -575,19 +544,19 @@ var ReactDOMFiberComponent = {
       case 'select':
         ReactDOMFiberSelect.mountWrapper(workInProgress, props, hostParent);
         props = ReactDOMFiberSelect.getHostProps(workInProgress, props);
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
+        trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(workInProgress, 'onChange', transaction);
+        ensureListeningTo(workInProgress, 'onChange');
         break;
       case 'textarea':
         ReactDOMFiberTextarea.mountWrapper(workInProgress, props, hostParent);
         props = ReactDOMFiberTextarea.getHostProps(workInProgress, props);
-        transaction.getReactMountReady().enqueue(trackInputValue, workInProgress);
-        transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, workInProgress);
+        inputValueTracking.track(workInProgress);
+        trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(workInProgress, 'onChange', transaction);
+        ensureListeningTo(workInProgress, 'onChange');
         break;
     }
 
@@ -658,61 +627,37 @@ var ReactDOMFiberComponent = {
     if (!workInProgress._hostParent) {
       DOMPropertyOperations.setAttributeForRoot(el);
     }
-    updateDOMProperties(workInProgress, null, props, transaction, isCustomComponentTag);
+    updateDOMProperties(workInProgress, null, props, isCustomComponentTag);
 
     switch (workInProgress._tag) {
       case 'input':
-        transaction.getReactMountReady().enqueue(
-          inputPostMount,
-          workInProgress
-        );
+        ReactDOMFiberInput.postMountWrapper(workInProgress);
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            workInProgress
-          );
+          focusNode(getNode(workInProgress));
         }
         break;
       case 'textarea':
-        transaction.getReactMountReady().enqueue(
-          textareaPostMount,
-          workInProgress
-        );
+        ReactDOMFiberTextarea.postMountWrapper(workInProgress);
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            workInProgress
-          );
+          focusNode(getNode(workInProgress));
         }
         break;
       case 'select':
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            workInProgress
-          );
+          focusNode(getNode(workInProgress));
         }
         break;
       case 'button':
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            workInProgress
-          );
+          focusNode(getNode(workInProgress));
         }
         break;
       case 'option':
-        transaction.getReactMountReady().enqueue(
-          optionPostMount,
-          workInProgress
-        );
+        ReactDOMFiberOption.postMountWrapper(workInProgress);
         break;
       default:
         if (typeof props.onClick === 'function') {
-          transaction.getReactMountReady().enqueue(
-            trapClickOnNonInteractiveElement,
-            workInProgress
-          );
+          trapClickOnNonInteractiveElement(workInProgress);
         }
         break;
     }
@@ -726,10 +671,9 @@ var ReactDOMFiberComponent = {
    *
    * @internal
    * @param {ReactElement} nextElement
-   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {object} context
    */
-  receiveComponent: function(workInProgress : Fiber, nextElement, transaction, context) {
+  receiveComponent: function(workInProgress : Fiber, nextElement, context) {
     var prevElement = workInProgress._currentElement;
     workInProgress._currentElement = nextElement;
 
@@ -756,17 +700,14 @@ var ReactDOMFiberComponent = {
       default:
         if (typeof lastProps.onClick !== 'function' &&
             typeof nextProps.onClick === 'function') {
-          transaction.getReactMountReady().enqueue(
-            trapClickOnNonInteractiveElement,
-            workInProgress
-          );
+          trapClickOnNonInteractiveElement(workInProgress);
         }
         break;
     }
 
     assertValidProps(workInProgress, nextProps);
     var isCustomComponentTag = isCustomComponent(workInProgress._tag, nextProps);
-    updateDOMProperties(workInProgress, lastProps, nextProps, transaction, isCustomComponentTag);
+    updateDOMProperties(workInProgress, lastProps, nextProps, isCustomComponentTag);
 
     switch (workInProgress._tag) {
       case 'input':
@@ -781,7 +722,7 @@ var ReactDOMFiberComponent = {
       case 'select':
         // <select> value update needs to occur after <option> children
         // reconciliation
-        transaction.getReactMountReady().enqueue(postUpdateSelectWrapper, workInProgress);
+        ReactDOMFiberSelect.postUpdateWrapper(workInProgress);
         break;
     }
   },
