@@ -146,9 +146,9 @@ describe('ReactDOMComponent', () => {
 
       style = {background: 'red'};
       var div = document.createElement('div');
-      ReactDOM.render(<span style={style}></span>, div);
+      ReactDOM.render(<span style={style} />, div);
       style.background = 'blue';
-      ReactDOM.render(<span style={style}></span>, div);
+      ReactDOM.render(<span style={style} />, div);
       expectDev(console.error.calls.count()).toBe(2);
     });
 
@@ -202,8 +202,8 @@ describe('ReactDOMComponent', () => {
 
       var style = {fontSize: NaN};
       var div = document.createElement('div');
-      ReactDOM.render(<span style={style}></span>, div);
-      ReactDOM.render(<span style={style}></span>, div);
+      ReactDOM.render(<span style={style} />, div);
+      ReactDOM.render(<span style={style} />, div);
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toEqual(
@@ -250,7 +250,7 @@ describe('ReactDOMComponent', () => {
 
       ReactDOM.render(
         <my-component>
-          <my-second-component slot="first"></my-second-component>
+          <my-second-component slot="first" />
           <button slot="second">Hello</button>
         </my-component>,
         container
@@ -1033,11 +1033,11 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should validate against multiple children props', () => {
-      ReactDOM.render(<div></div>, container);
+      ReactDOM.render(<div />, container);
 
       expect(function() {
         ReactDOM.render(
-          <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>,
+          <div children="" dangerouslySetInnerHTML={{__html: ''}} />,
           container
         );
       }).toThrowError(
@@ -1056,10 +1056,10 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should validate against invalid styles', () => {
-      ReactDOM.render(<div></div>, container);
+      ReactDOM.render(<div />, container);
 
       expect(function() {
-        ReactDOM.render(<div style={1}></div>, container);
+        ReactDOM.render(<div style={1} />, container);
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
         'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
@@ -1070,7 +1070,7 @@ describe('ReactDOMComponent', () => {
     it('should report component containing invalid styles', () => {
       class Animal extends React.Component {
         render() {
-          return <div style={1}></div>;
+          return <div style={1} />;
         }
       }
 

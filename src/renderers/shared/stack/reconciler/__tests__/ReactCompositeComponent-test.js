@@ -60,8 +60,8 @@ describe('ReactCompositeComponent', () => {
       render() {
         var className = this.props.anchorClassOn ? 'anchorClass' : '';
         return this.props.renderAnchor ?
-          <a ref="anch" className={className}></a> :
-          <b></b>;
+          <a ref="anch" className={className} /> :
+          <b />;
       }
     };
   });
@@ -170,7 +170,7 @@ describe('ReactCompositeComponent', () => {
         return this;
       },
       render: function() {
-        return <div></div>;
+        return <div />;
       },
     });
     var instance = <ComponentClass />;

@@ -160,7 +160,7 @@ for (var i = 2; i < process.argv.length; i += 2) {
     fs.appendFileSync(
       path.resolve(cwd, filename),
       currentCommitHash + '\t' + currentTimestamp + '\t' + value + '\n'
-    );    
+    );
   }
 
   console.log(name);

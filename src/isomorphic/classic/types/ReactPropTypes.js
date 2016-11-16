@@ -68,9 +68,11 @@ var warning = require('warning');
 
 var ANONYMOUS = '<<anonymous>>';
 
+var ReactPropTypes;
+
 if (__DEV__) {
   // Keep in sync with production version below
-  var ReactPropTypes = {
+  ReactPropTypes = {
     array: createPrimitiveTypeChecker('array'),
     bool: createPrimitiveTypeChecker('boolean'),
     func: createPrimitiveTypeChecker('function'),
@@ -99,7 +101,7 @@ if (__DEV__) {
   productionTypeChecker.isRequired = productionTypeChecker;
   var getProductionTypeChecker = () => productionTypeChecker;
   // Keep in sync with development version above
-  var ReactPropTypes = {
+  ReactPropTypes = {
     array: productionTypeChecker,
     bool: productionTypeChecker,
     func: productionTypeChecker,

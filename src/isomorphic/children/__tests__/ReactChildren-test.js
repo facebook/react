@@ -399,16 +399,14 @@ describe('ReactChildren', () => {
     // 2. If grouped in an Array, the `key` prop, falling back to array index
 
     var instance = (
-      <div>{
-        [
-          ReactFragment.create({
-            firstHalfKey: [zero, one, two],
-            secondHalfKey: [three, four],
-            keyFive: five,
-          }),
-          null,
-        ]
-      }</div>
+      <div>{[
+        ReactFragment.create({
+          firstHalfKey: [zero, one, two],
+          secondHalfKey: [three, four],
+          keyFive: five,
+        }),
+        null,
+      ]}</div>
     );
     var numberOfChildren = ReactChildren.count(instance.props.children);
     expect(numberOfChildren).toBe(5);

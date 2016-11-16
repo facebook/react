@@ -308,7 +308,7 @@ describe('ReactPropTypes', () => {
       spyOn(console, 'error');
 
       var instance = <Component label={<div />} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expectDev(console.error.calls.count()).toBe(0);
     });
@@ -317,7 +317,7 @@ describe('ReactPropTypes', () => {
       spyOn(console, 'error');
 
       var instance = <Component />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expectDev(console.error.calls.count()).toBe(1);
     });
@@ -851,7 +851,7 @@ describe('ReactPropTypes', () => {
       };
 
       var instance = <Component num={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -868,7 +868,7 @@ describe('ReactPropTypes', () => {
       };
 
       var instance = <Component bla={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -892,7 +892,7 @@ describe('ReactPropTypes', () => {
       };
 
       var instance = <Component num={6} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
       expectDev(console.error.calls.count()).toBe(1);
       expect(
         console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
@@ -919,7 +919,7 @@ describe('ReactPropTypes', () => {
         };
 
         var instance = <Component num={5} />;
-        instance = ReactTestUtils.renderIntoDocument(instance);
+        ReactTestUtils.renderIntoDocument(instance);
         expectDev(console.error.calls.count()).toBe(0);
       }
     );
