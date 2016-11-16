@@ -75,6 +75,9 @@ var DOMRenderer = ReactFiberReconciler({
                typeof props.dangerouslySetInnerHTML.__html === 'string') {
       domElement.innerHTML = props.dangerouslySetInnerHTML.__html;
     }
+    if (typeof props.id === 'string') {
+      domElement.id = props.id;
+    }
     return domElement;
   },
 
@@ -98,6 +101,9 @@ var DOMRenderer = ReactFiberReconciler({
                newProps.dangerouslySetInnerHTML !== null &&
                typeof newProps.dangerouslySetInnerHTML.__html === 'string') {
       domElement.innerHTML = newProps.dangerouslySetInnerHTML.__html;
+    }
+    if (typeof newProps.id === 'string') {
+      domElement.id = newProps.id;
     }
   },
 

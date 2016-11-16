@@ -11,13 +11,6 @@ src/addons/__tests__/renderSubtreeIntoContainer-test.js
 * should update context if it changes due to setState
 * should update context if it changes due to re-render
 
-src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
-* should clean-up silently after the timeout elapses
-* should keep both sets of DOM nodes around
-* should switch transitionLeave from false to true
-* should transition from one to null
-* should transition from false to one
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
@@ -387,17 +380,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is inserted
 * gets reported when a child is removed
-
-src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
-* should traverse two phase across component boundary
-* should traverse two phase at shallowest node
-* should traverse enter/leave to sibling - avoids parent
-* should traverse enter/leave to parent - avoids parent
-* should enter from the window
-* should enter from the window to the shallowest
-* should leave to the window
-* should leave to the window from the shallowest
-* should determine the first common ancestor correctly
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch

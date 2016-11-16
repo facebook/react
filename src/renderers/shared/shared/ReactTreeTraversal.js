@@ -11,29 +11,47 @@
 
 'use strict';
 
+var { HostComponent } = require('ReactTypeOfWork');
+
+function getParent(inst) {
+  if (inst._hostParent !== undefined) {
+    return inst._hostParent;
+  }
+  if (typeof inst.tag === 'number') {
+    do {
+      inst = inst.return;
+      // TODO: If this is a HostContainer we might want to bail out.
+      // That is depending on if we want nested subtrees (layers) to bubble
+      // events to their parent.
+    } while (inst && inst.tag !== HostComponent);
+    return inst;
+  }
+  return null;
+}
+
 /**
  * Return the lowest common ancestor of A and B, or null if they are in
  * different trees.
  */
 function getLowestCommonAncestor(instA, instB) {
   var depthA = 0;
-  for (var tempA = instA; tempA; tempA = tempA._hostParent) {
+  for (var tempA = instA; tempA; tempA = getParent(tempA)) {
     depthA++;
   }
   var depthB = 0;
-  for (var tempB = instB; tempB; tempB = tempB._hostParent) {
+  for (var tempB = instB; tempB; tempB = getParent(tempB)) {
     depthB++;
   }
 
   // If A is deeper, crawl up.
   while (depthA - depthB > 0) {
-    instA = instA._hostParent;
+    instA = getParent(instA);
     depthA--;
   }
 
   // If B is deeper, crawl up.
   while (depthB - depthA > 0) {
-    instB = instB._hostParent;
+    instB = getParent(instB);
     depthB--;
   }
 
@@ -43,8 +61,8 @@ function getLowestCommonAncestor(instA, instB) {
     if (instA === instB) {
       return instA;
     }
-    instA = instA._hostParent;
-    instB = instB._hostParent;
+    instA = getParent(instA);
+    instB = getParent(instB);
   }
   return null;
 }
@@ -57,7 +75,7 @@ function isAncestor(instA, instB) {
     if (instB === instA) {
       return true;
     }
-    instB = instB._hostParent;
+    instB = getParent(instB);
   }
   return false;
 }
@@ -66,7 +84,7 @@ function isAncestor(instA, instB) {
  * Return the parent instance of the passed-in instance.
  */
 function getParentInstance(inst) {
-  return inst._hostParent;
+  return getParent(inst);
 }
 
 /**
@@ -76,7 +94,7 @@ function traverseTwoPhase(inst, fn, arg) {
   var path = [];
   while (inst) {
     path.push(inst);
-    inst = inst._hostParent;
+    inst = getParent(inst);
   }
   var i;
   for (i = path.length; i-- > 0;) {
@@ -99,12 +117,12 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
   var pathFrom = [];
   while (from && from !== common) {
     pathFrom.push(from);
-    from = from._hostParent;
+    from = getParent(from);
   }
   var pathTo = [];
   while (to && to !== common) {
     pathTo.push(to);
-    to = to._hostParent;
+    to = getParent(to);
   }
   var i;
   for (i = 0; i < pathFrom.length; i++) {
