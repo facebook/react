@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "15.4.0-rc.4",
+  "version": "15.4.0",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -15,7 +15,7 @@
   },
   "homepage": "https://facebook.github.io/react/",
   "peerDependencies": {
-    "react": "^15.4.0-rc.4"
+    "react": "^15.4.0"
   },
   "files": [
     "LICENSE",

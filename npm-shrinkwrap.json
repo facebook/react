@@ -1,6 +1,6 @@
 {
   "name": "react-build",
-  "version": "15.4.0-rc.4",
+  "version": "15.4.0",
   "dependencies": {
     "abab": {
       "version": "1.0.3",
