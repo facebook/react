@@ -515,6 +515,8 @@ var ReactDOMFiberComponent = {
       case 'input':
         ReactDOMFiberInput.mountWrapper(workInProgress, props, hostParent);
         props = ReactDOMFiberInput.getHostProps(workInProgress, props);
+        // TODO: Make sure we check if this is still unmounted or do any clean
+        // up necessary since we never stop tracking anymore.
         inputValueTracking.track(workInProgress);
         trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
@@ -709,43 +711,6 @@ var ReactDOMFiberComponent = {
         ReactDOMFiberSelect.postUpdateWrapper(workInProgress);
         break;
     }
-  },
-
-  /**
-   * Destroys all event registrations for workInProgress instance. Does not remove from
-   * the DOM. That must be done by the parent.
-   *
-   * @internal
-   */
-  unmountComponent: function(safely, skipLifecycle) {
-    switch (workInProgress._tag) {
-      case 'input':
-      case 'textarea':
-        inputValueTracking.stopTracking(workInProgress);
-        break;
-      case 'html':
-      case 'head':
-      case 'body':
-        /**
-         * Components like <html> <head> and <body> can't be removed or added
-         * easily in a cross-browser way, however it's valuable to be able to
-         * take advantage of React's reconciliation for styling and <title>
-         * management. So we just document it and throw in dangerous cases.
-         */
-        invariant(
-          false,
-          '<%s> tried to unmount. Because of cross-browser quirks it is ' +
-          'impossible to unmount some top-level components (eg <html>, ' +
-          '<head>, and <body>) reliably and efficiently. To fix workInProgress, have a ' +
-          'single top-level component that never unmounts render these ' +
-          'elements.',
-          workInProgress._tag
-        );
-        break;
-    }
-
-    ReactDOMComponentTree.uncacheNode(workInProgress);
-    workInProgress._wrapperState = null;
   },
 
   restoreControlledState: function(finishedWork : Fiber) {
