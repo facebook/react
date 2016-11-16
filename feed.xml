@@ -7,6 +7,162 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v15.4.0</title>
+				<description>&lt;p&gt;Today we are releasing React 15.4.0.&lt;/p&gt;
+
+&lt;p&gt;We didn&amp;#39;t announce the &lt;a href=&quot;https://github.com/facebook/react/blob/master/CHANGELOG.md#1510-may-20-2016&quot;&gt;previous&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react/blob/master/CHANGELOG.md#1520-july-1-2016&quot;&gt;minor&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react/blob/master/CHANGELOG.md#1530-july-29-2016&quot;&gt;releases&lt;/a&gt; on the blog because most of the changes were bug fixes. However, 15.4.0 is a special release, and we would like to highlight a few notable changes in it.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;separating-react-and-react-dom&quot;&gt;&lt;/a&gt;Separating React and React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#separating-react-and-react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;/react/blog/2015/09/10/react-v0.14-rc1.html#two-packages-react-and-react-dom&quot;&gt;More than a year ago&lt;/a&gt;, we started separating React and React DOM into separate packages. We deprecated &lt;code&gt;React.render()&lt;/code&gt; in favor of &lt;code&gt;ReactDOM.render()&lt;/code&gt; in React 0.14, and removed DOM-specific APIs from &lt;code&gt;React&lt;/code&gt; completely in React 15. However, the React DOM implementation still &lt;a href=&quot;https://www.reddit.com/r/javascript/comments/3m6wyu/found_this_line_in_the_react_codebase_made_me/cvcyo4a/&quot;&gt;secretly lived inside the React package&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In React 15.4.0, we are finally moving React DOM implementation to the React DOM package. The React package will now contain only the renderer-agnostic code such as &lt;code&gt;React.Component&lt;/code&gt; and &lt;code&gt;React.createElement()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This solves a few long-standing issues, such as &lt;a href=&quot;https://github.com/facebook/react/issues/7386&quot;&gt;errors&lt;/a&gt; when you import React DOM in the same file as the &lt;a href=&quot;https://facebook.github.io/jest/blog/2016/07/27/jest-14.html&quot;&gt;snapshot testing&lt;/a&gt; renderer.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;If you only use the official and documented React APIs you won&amp;#39;t need to change anything in your application.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;However, there is a possibility that you imported private APIs from &lt;code&gt;react/lib/*&lt;/code&gt;, or that a package you rely on might use them. We would like to remind you that this was never supported, and that your apps should not rely on internal APIs. The React internals will keep changing as we work to make React better.&lt;/p&gt;
+
+&lt;p&gt;Another thing to watch out for is that React DOM Server is now about the same size as React DOM since it contains its own copy of the React reconciler. We don&amp;#39;t recommend using React DOM Server on the client in most cases.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;profiling-components-with-chrome-timeline&quot;&gt;&lt;/a&gt;Profiling Components with Chrome Timeline &lt;a class=&quot;hash-link&quot; href=&quot;#profiling-components-with-chrome-timeline&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;You can now visualize React components in the Chrome Timeline. This lets you see which components exactly get mounted, updated, and unmounted, how much time they take relative to each other.&lt;/p&gt;
+
+&lt;p&gt;&lt;center&gt;&lt;img src=&quot;/react/img/blog/react-perf-chrome-timeline.png&quot; width=&quot;651&quot; height=&quot;228&quot; alt=&quot;React components in Chrome timeline&quot; /&gt;&lt;/center&gt;&lt;/p&gt;
+
+&lt;p&gt;To use it:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Load your app with &lt;code&gt;?react_perf&lt;/code&gt; in the query string (for example, &lt;code&gt;http://localhost:3000/?react_perf&lt;/code&gt;).&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Open the Chrome DevTools &lt;strong&gt;Timeline&lt;/strong&gt; tab and press &lt;strong&gt;Record&lt;/strong&gt;.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Perform the actions you want to profile. Don&amp;#39;t record more than 20 seconds or Chrome might hang.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Stop recording.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;React events will be grouped under the &lt;strong&gt;User Timing&lt;/strong&gt; label.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.&lt;/p&gt;
+
+&lt;p&gt;Currently Chrome is the only browser supporting this feature, but we use the standard &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API&quot;&gt;User Timing API&lt;/a&gt; so we expect more browsers to add support for it.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;mocking-refs-for-snapshot-testing&quot;&gt;&lt;/a&gt;Mocking Refs for Snapshot Testing &lt;a class=&quot;hash-link&quot; href=&quot;#mocking-refs-for-snapshot-testing&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;If you&amp;#39;re using Jest &lt;a href=&quot;https://facebook.github.io/jest/blog/2016/07/27/jest-14.html&quot;&gt;snapshot testing&lt;/a&gt;, you might have had &lt;a href=&quot;https://github.com/facebook/react/issues/7371&quot;&gt;issues&lt;/a&gt; with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in &lt;code&gt;componentDidMount&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;kr&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;default&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyInput&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;componentDidMount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;focus&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;        &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With snapshot renderer, &lt;code&gt;this.input&lt;/code&gt; will be &lt;code&gt;null&lt;/code&gt; because there is no DOM. React 15.4.0 lets us avoid such crashes by passing a custom &lt;code&gt;createNodeMock&lt;/code&gt; function to the snapshot renderer in an &lt;code&gt;options&lt;/code&gt; argument:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyInput&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;./MyInput&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;renderer&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react-test-renderer&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createNodeMock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;input&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;      &lt;span class=&quot;nx&quot;&gt;focus&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{},&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;it&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;renders correctly&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createNodeMock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;kr&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;renderer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyInput&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/span&gt;  &lt;span class=&quot;nx&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;tree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;toMatchSnapshot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We would like to thank &lt;a href=&quot;https://github.com/Aweary&quot;&gt;Brandon Dail&lt;/a&gt; for implementing this feature.&lt;/p&gt;
+
+&lt;p&gt;You can learn more about snapshot testing in &lt;a href=&quot;https://facebook.github.io/jest/blog/2016/07/27/jest-14.html&quot;&gt;this Jest blog post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;npm install --save react@15.4.0 react-dom@15.4.0&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
+
+&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react.js&quot;&gt;react.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react.min.js&quot;&gt;react.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react-with-addons.js&quot;&gt;react-with-addons.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react-with-addons.min.js&quot;&gt;react-with-addons.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom.js&quot;&gt;react-dom.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom.min.js&quot;&gt;react-dom.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.js&quot;&gt;react-dom-server.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.min.js&quot;&gt;react-dom-server.min.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;15.4.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;React package and browser build no longer &amp;quot;secretly&amp;quot; includes React DOM.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;@sebmarkbage&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7164&quot;&gt;#7164&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/pull/7168&quot;&gt;#7168&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Required PropTypes now fail with specific messages for null and undefined.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/chenglou&quot;&gt;@chenglou&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7291&quot;&gt;#7291&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Improved development performance by freezing children instead of copying.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/keyanzhang&quot;&gt;@keyanzhang&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7455&quot;&gt;#7455&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed occasional test failures when React DOM is used together with shallow renderer.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/goatslacker&quot;&gt;@goatslacker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8097&quot;&gt;#8097&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Added a warning for invalid &lt;code&gt;aria-&lt;/code&gt; attributes.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/jessebeach&quot;&gt;@jessebeach&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7744&quot;&gt;#7744&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Added a warning for using &lt;code&gt;autofocus&lt;/code&gt; rather than &lt;code&gt;autoFocus&lt;/code&gt;.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/hkal&quot;&gt;@hkal&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7694&quot;&gt;#7694&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Removed an unnecessary warning about polyfilling &lt;code&gt;String.prototype.split&lt;/code&gt;.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7629&quot;&gt;#7629&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Clarified the warning about not calling PropTypes manually.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/jedwards1211&quot;&gt;@jedwards1211&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7777&quot;&gt;#7777&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;The unstable &lt;code&gt;batchedUpdates&lt;/code&gt; API now passes the wrapped function&amp;#39;s return value through.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/bgnorlov&quot;&gt;@bgnorlov&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7444&quot;&gt;#7444&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;Fixed a bug with updating text in IE 8.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/mnpenner&quot;&gt;@mnpenner&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7832&quot;&gt;#7832&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-perf&quot;&gt;&lt;/a&gt;React Perf &lt;a class=&quot;hash-link&quot; href=&quot;#react-perf&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;When ReactPerf is started, you can now view the relative time spent in components as a chart in Chrome Timeline.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7549&quot;&gt;#7549&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-test-utils&quot;&gt;&lt;/a&gt;React Test Utils &lt;a class=&quot;hash-link&quot; href=&quot;#react-test-utils&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;If you call &lt;code&gt;Simulate.click()&lt;/code&gt; on a &lt;code&gt;&amp;lt;input disabled onClick={foo} /&amp;gt;&lt;/code&gt; then &lt;code&gt;foo&lt;/code&gt; will get called whereas it didn&amp;#39;t before.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7642&quot;&gt;#7642&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-test-renderer&quot;&gt;&lt;/a&gt;React Test Renderer &lt;a class=&quot;hash-link&quot; href=&quot;#react-test-renderer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Due to packaging changes, it no longer crashes when imported together with React DOM in the same file.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;@sebmarkbage&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7164&quot;&gt;#7164&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/pull/7168&quot;&gt;#7168&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ReactTestRenderer.create()&lt;/code&gt; now accepts &lt;code&gt;{createNodeMock: element =&amp;gt; mock}&lt;/code&gt; as an optional argument so you can mock refs with snapshot testing.&lt;br&gt;
+&lt;small&gt;(&lt;a href=&quot;https://github.com/Aweary&quot;&gt;@Aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7649&quot;&gt;#7649&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/pull/8261&quot;&gt;#8261&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2016-11-16T00:00:00-08:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2016/11/16/react-v15.4.0.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/11/16/react-v15.4.0.html</guid>
+			</item>
+		
+			<item>
 				<title>Our First 50,000 Stars</title>
 				<description>&lt;p&gt;Just three and a half years ago we open sourced a little JavaScript library called React. The journey since that day has been incredibly exciting.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;commemorative-t-shirt&quot;&gt;&lt;/a&gt;Commemorative T-Shirt &lt;a class=&quot;hash-link&quot; href=&quot;#commemorative-t-shirt&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -1319,91 +1475,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-r
 				<pubDate>2016-03-16T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html</guid>
-			</item>
-		
-			<item>
-				<title>React v15.0 Release Candidate</title>
-				<description>&lt;p&gt;Sorry for the small delay in releasing this. As we said, we&amp;#39;ve been busy binge-watching House of Cards. That scene in the last episode where Francis and Claire Underwood &lt;abbr title=&quot;You didn&#39;t think we would actually spoil anything did you?&quot;&gt;████████████████████████████████████&lt;/abbr&gt;. WOW!&lt;/p&gt;
-
-&lt;p&gt;But now we&amp;#39;re ready, so without further ado, we&amp;#39;re shipping a release candidate for React v15 now. As a reminder, &lt;a href=&quot;/react/blog/2016/02/19/new-versioning-scheme.html&quot;&gt;we&amp;#39;re switching to major versions&lt;/a&gt; to indicate that we have been using React in production for a long time. This 15.0 release follows our previous 0.14 version and we&amp;#39;ll continue to follow semver like we&amp;#39;ve been doing since 2013. It&amp;#39;s also worth noting that &lt;a href=&quot;/react/blog/2016/01/12/discontinuing-ie8-support.html&quot;&gt;we no longer actively support Internet Explorer 8&lt;/a&gt;. We believe React will work in its current form there but we will not be prioritizing any efforts to fix new issues that only affect IE8.&lt;/p&gt;
-
-&lt;p&gt;Please try it out before we publish the final release. Let us know if you run into any problems by filing issues on our &lt;a href=&quot;https://github.com/facebook/react&quot;&gt;GitHub repo&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrade-guide&quot;&gt;&lt;/a&gt;Upgrade Guide &lt;a class=&quot;hash-link&quot; href=&quot;#upgrade-guide&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Like always, we have a few breaking changes in this release. We know changes can be painful (the Facebook codebase has over 15,000 React components), so we always try to make changes gradually in order to minimize the pain.&lt;/p&gt;
-
-&lt;p&gt;If your code is free of warnings when running under React 0.14, upgrading should be easy. The bulk of changes in this release are actually behind the scenes, impacting the way that React interacts with the DOM. The other substantial change is that React now supports the full range of SVG elements and attributes. Beyond that we have a large number of incremental improvements and additional warnings aimed to aid developers. We&amp;#39;ve also laid some groundwork in the core to bring you some new capabilities in future releases.&lt;/p&gt;
-
-&lt;p&gt;See the changelog below for more details.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;npm install --save react@15.0.0-rc.1 react-dom@15.0.0-rc.1&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
-
-&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.1.js&quot;&gt;https://fb.me/react-15.0.0-rc.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.1.min.js&quot;&gt;https://fb.me/react-15.0.0-rc.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.1.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.1.min.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.1.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.1.min.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;major-changes&quot;&gt;&lt;/a&gt;Major changes &lt;a class=&quot;hash-link&quot; href=&quot;#major-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;document.createelement-is-in-and-data-reactid-is-out&quot;&gt;&lt;/a&gt;&lt;code&gt;document.createElement&lt;/code&gt; is in and &lt;code&gt;data-reactid&lt;/code&gt; is out &lt;a class=&quot;hash-link&quot; href=&quot;#document.createelement-is-in-and-data-reactid-is-out&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;There were a number of large changes to our interactions with the DOM. One of the most noticeable changes is that we no longer set the &lt;code&gt;data-reactid&lt;/code&gt; attribute for each DOM node. While this will make it much more difficult to know if a website is using React, the advantage is that the DOM is much more lightweight. This change was made possible by us switching to use &lt;code&gt;document.createElement&lt;/code&gt; on initial render. Previously we would generate a large string of HTML and then set &lt;code&gt;node.innerHTML&lt;/code&gt;. At the time, this was decided to be faster than using &lt;code&gt;document.createElement&lt;/code&gt; for the majority of cases and browsers that we supported. Browsers have continued to improve and so overwhelmingly this is no longer true. By using &lt;code&gt;createElement&lt;/code&gt; we can make other parts of React faster. The ids were used to map back from events to the original React component, meaning we had to do a bunch of work on every event, even though we cached this data heavily. As we&amp;#39;ve all experienced, caching and in particularly invalidating caches, can be error prone and we saw many hard to reproduce issues over the years as a result. Now we can build up a direct mapping at render time since we already have a handle on the node.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-more-extra-ltspangts&quot;&gt;&lt;/a&gt;No more extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s &lt;a class=&quot;hash-link&quot; href=&quot;#no-more-extra-ltspangts&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;Another big change with our DOM interaction is how we render text blocks. Previously you may have noticed that React rendered a lot of extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. Eg, in our most basic example on the home page we render &lt;code&gt;&amp;lt;div&amp;gt;Hello {this.props.name}&amp;lt;/div&amp;gt;&lt;/code&gt;, resulting in markup that contained 2 &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. Now we&amp;#39;ll render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. Very few people have depended on the actual markup generated here so it&amp;#39;s likely you are not impacted. However if you were targeting these &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-null-now-uses-comment-nodes&quot;&gt;&lt;/a&gt;Rendering &lt;code&gt;null&lt;/code&gt; now uses comment nodes &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-null-now-uses-comment-nodes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;We&amp;#39;ve also made use of these comment nodes to change what &lt;code&gt;null&lt;/code&gt; renders to. Rendering to &lt;code&gt;null&lt;/code&gt; was a feature we added in React v0.11 and was implemented by rendering &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements. By rendering to comment nodes now, there&amp;#39;s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of &lt;code&gt;:nth-child&lt;/code&gt; selectors. This, along with the other changes mentioned above, have always been considered implementation details of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;improved-svg-support&quot;&gt;&lt;/a&gt;Improved SVG support &lt;a class=&quot;hash-link&quot; href=&quot;#improved-svg-support&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;p&gt;All SVG tags and attributes are now fully supported. (Uncommon SVG tags are not present on the &lt;code&gt;React.DOM&lt;/code&gt; element helper, but JSX and &lt;code&gt;React.createElement&lt;/code&gt; work on all tag names.) All SVG attributes match their original capitalization and hyphenation as defined in the specification (ex: &lt;code&gt;gradientTransform&lt;/code&gt; must be camel-cased but &lt;code&gt;clip-path&lt;/code&gt; should be hyphenated).&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;It&amp;#39;s worth calling out the DOM structure changes above again, in particular the change from &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. In the course of updating the Facebook codebase, we found a very small amount of code that was depending on the markup that React generated. Some of these cases were integration tests like WebDriver which were doing very specific XPath queries to target nodes. Others were simply tests using &lt;code&gt;ReactDOM.renderToStaticMarkup&lt;/code&gt; and comparing markup. Again, there were a very small number of changes that had to be made, but we don&amp;#39;t want anybody to be blindsided. We encourage everybody to run their test suites when upgrading and consider alternative approaches when possible. One approach that will work for some cases is to explicitly use &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s in your &lt;code&gt;render&lt;/code&gt; method.&lt;/p&gt;
-
-&lt;p&gt;These deprecations were introduced in v0.14 with a warning and the APIs are now removed.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Deprecated APIs removed from &lt;code&gt;React&lt;/code&gt;, specifically &lt;code&gt;findDOMNode&lt;/code&gt;, &lt;code&gt;render&lt;/code&gt;, &lt;code&gt;renderToString&lt;/code&gt;, &lt;code&gt;renderToStaticMarkup&lt;/code&gt;, and &lt;code&gt;unmountComponentAtNode&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Deprecated APIs removed from &lt;code&gt;React.addons&lt;/code&gt;, specifically &lt;code&gt;batchedUpdates&lt;/code&gt; and &lt;code&gt;cloneWithProps&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Deprecated APIs removed from component instances, specifically &lt;code&gt;setProps&lt;/code&gt;, &lt;code&gt;replaceProps&lt;/code&gt;, and &lt;code&gt;getDOMNode&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-deprecations-introduced-with-a-warning&quot;&gt;&lt;/a&gt;New deprecations, introduced with a warning &lt;a class=&quot;hash-link&quot; href=&quot;#new-deprecations-introduced-with-a-warning&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Each of these changes will continue to work as before with a new warning until the release of React 16 so you can upgrade your code gradually.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;LinkedStateMixin&lt;/code&gt; and &lt;code&gt;valueLink&lt;/code&gt; are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: &lt;a href=&quot;https://www.npmjs.com/package/react-linked-input&quot;&gt;react-linked-input&lt;/a&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-helpful-warnings&quot;&gt;&lt;/a&gt;New helpful warnings &lt;a class=&quot;hash-link&quot; href=&quot;#new-helpful-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;If you use a minified copy of the &lt;em&gt;development&lt;/em&gt; build, React DOM kindly encourages you to use the faster production build instead.&lt;/li&gt;
-&lt;li&gt;React DOM: When specifying a unit-less CSS value as a string, a future version will not add &lt;code&gt;px&lt;/code&gt; automatically. This version now warns in this case (ex: writing &lt;code&gt;style={{width: &amp;#39;300&amp;#39;}}&lt;/code&gt;. (Unitless &lt;em&gt;number&lt;/em&gt; values like &lt;code&gt;width: 300&lt;/code&gt; are unchanged.)&lt;/li&gt;
-&lt;li&gt;Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.&lt;/li&gt;
-&lt;li&gt;Elements will now warn when attempting to read &lt;code&gt;ref&lt;/code&gt; and &lt;code&gt;key&lt;/code&gt; from the props.&lt;/li&gt;
-&lt;li&gt;React DOM now attempts to warn for mistyped event handlers on DOM elements (ex: &lt;code&gt;onclick&lt;/code&gt; which should be &lt;code&gt;onClick&lt;/code&gt;)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-bug-fixes&quot;&gt;&lt;/a&gt;Notable bug fixes &lt;a class=&quot;hash-link&quot; href=&quot;#notable-bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed multiple small memory leaks&lt;/li&gt;
-&lt;li&gt;Input events are handled more reliably in IE 10 and IE 11; spurious events no longer fire when using a placeholder.&lt;/li&gt;
-&lt;li&gt;React DOM now supports the &lt;code&gt;cite&lt;/code&gt; and &lt;code&gt;profile&lt;/code&gt; HTML attributes.&lt;/li&gt;
-&lt;li&gt;React DOM now supports the &lt;code&gt;onAnimationStart&lt;/code&gt;, &lt;code&gt;onAnimationEnd&lt;/code&gt;, &lt;code&gt;onAnimationIteration&lt;/code&gt;, &lt;code&gt;onTransitionEnd&lt;/code&gt;, and &lt;code&gt;onInvalid&lt;/code&gt; events. Support for &lt;code&gt;onLoad&lt;/code&gt; has been added to &lt;code&gt;object&lt;/code&gt; elements.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Object.is&lt;/code&gt; is used in a number of places to compare values, which leads to fewer false positives, especially involving &lt;code&gt;NaN&lt;/code&gt;. In particular, this affects the &lt;code&gt;shallowCompare&lt;/code&gt; add-on.&lt;/li&gt;
-&lt;li&gt;React DOM now defaults to using DOM attributes instead of properties, which fixes a few edge case bugs. Additionally the nullification of values (ex: &lt;code&gt;href={null}&lt;/code&gt;) now results in the forceful removal, no longer trying to set to the default value used by browsers in the absence of a value.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2016-03-07T00:00:00-08:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/03/07/react-v15-rc1.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/07/react-v15-rc1.html</guid>
 			</item>
 		
 	</channel>
