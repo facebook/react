@@ -174,6 +174,100 @@ class FlavorForm extends React.Component {
 
 Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
 
+## Multi select
+
+In HTML, you can change a `select` tag to multiselect, with `multiple` attribute:
+
+```html
+<select multiple>
+  <option value="grapefruit">Grapefruit</option>
+  <option value="lime">Lime</option>
+  <option value="coconut">Coconut</option>
+  <option value="mango">Mango</option>
+</select>
+```
+
+You can use this feature on React too,
+
+```js{1}
+<select multiple={true} value={this.state.value}>
+  <option value="grapefruit">Grapefruit</option>
+  <option value="lime">Lime</option>
+  <option value="coconut">Coconut</option>
+  <option value="mango">Mango</option>
+</select>
+```
+
+Becareful, as your select tag is multiple, the value **have to be an array**:
+
+```js{3}
+constructor(props) {
+  super(props);
+  this.state = { value: ['lime', 'mango'] };
+}
+```
+
+Now we have a controlled component, so we have to set an `onChange` handler for it:
+
+```html
+<select multiple={true} value={this.state.value} onChange={this.handleChange}>
+```
+
+Writing the `onChange` handler to get current `selected` options is a bit harder
+than the previous ones, we have to loop through the `options`, and get the value
+of selected ones:
+
+```js{3-8}
+  handleChange(event) {
+    var options = event.target.options;
+    var value = [];
+    for (var i = 0, l = options.length; i < l; i++) {
+      if (options[i].selected) {
+        value.push(options[i].value);
+      }
+    }
+    
+    this.setState({ value: value });
+  }
+```
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/yVaojJ?editors=0010)
+
+## Checkbox
+Another form control which you can change it to controlled component, is `checkbox`:
+
+```html
+<input type="checkbox" />
+```
+
+You can change this checkbox to controlled component by setting the `checked` property,
+and consequently set the `onChange` event:
+
+```html
+<input type="checkbox" checked={this.state.value} onChange={this.handleChange} />
+```
+
+And in your JavaScript code:
+
+```js
+constructor(props) {
+  super(props);
+  this.state = { value: true };
+  
+  // ...
+}
+
+handleChange(event) {
+  this.setState({ value: event.target.checked });
+}
+```
+
+As you can see, you can simply get the status of your checkbox, by checking the
+`checked` property of the element (via `event.target`).
+
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/YpGrEK?editors=0010)
+
+ 
+
 ## Alternatives to Controlled Components
 
 It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out [uncontrolled components](/react/docs/uncontrolled-components.html), an alternative technique for implementing input forms.
