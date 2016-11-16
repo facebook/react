@@ -137,9 +137,6 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should listen for both change and input events when supported
 * should only fire events when the value changes for range inputs
 
-src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
-* should set relatedTarget properly in iframe
-
 src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
 * should skip extraction if no listeners are present
 * should extract if an `onSelect` listener is present

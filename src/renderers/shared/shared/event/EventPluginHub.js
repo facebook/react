@@ -96,7 +96,14 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function(inst, registrationName) {
-    var listener = inst._currentElement.props[registrationName];
+    var listener;
+    if (typeof inst.tag === 'number') {
+      // TODO: This is not safe because we might want the *other* Fiber's
+      // props depending on which is the current one.
+      listener = inst.memoizedProps[registrationName];
+    } else {
+      listener = inst._currentElement.props[registrationName];
+    }
     invariant(
       !listener || typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',

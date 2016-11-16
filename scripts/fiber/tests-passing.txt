@@ -605,6 +605,9 @@ src/renderers/dom/shared/eventPlugins/__tests__/BeforeInputEventPlugin-test.js
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should unmount
 
+src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
+* should set relatedTarget properly in iframe
+
 src/renderers/dom/shared/eventPlugins/__tests__/FallbackCompositionState-test.js
 * extracts value via `getText()`
 * extracts when inserted at start of text
