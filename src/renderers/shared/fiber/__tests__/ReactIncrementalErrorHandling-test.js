@@ -54,8 +54,8 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('propagates an error from a noop error boundary', () => {
     class NoopBoundary extends React.Component {
-      unstable_handleError() {
-        // Noop
+      unstable_handleError(error) {
+        throw error;
       }
       render() {
         return this.props.children;
@@ -218,9 +218,7 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([span('a:3')]);
-    // Currently we assume previous tree stays intact for fataled trees.
-    // We may consider tearing it down in the future.
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
+    expect(ReactNoop.getChildren('b')).toEqual([]);
 
     ReactNoop.renderToRootWithID(<span prop="a:4" />, 'a');
     ReactNoop.renderToRootWithID(<BrokenRender />, 'b');
@@ -229,7 +227,7 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([span('a:4')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
+    expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:4')]);
 
     ReactNoop.renderToRootWithID(<span prop="a:5" />, 'a');
@@ -255,9 +253,9 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(() => {
       ReactNoop.flush();
     }).toThrow('Hello');
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:5')]);
+    expect(ReactNoop.getChildren('a')).toEqual([]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:6')]);
-    expect(ReactNoop.getChildren('c')).toEqual([span('c:5')]);
+    expect(ReactNoop.getChildren('c')).toEqual([]);
     expect(ReactNoop.getChildren('d')).toEqual([span('d:6')]);
     expect(ReactNoop.getChildren('e')).toEqual([]);
     expect(ReactNoop.getChildren('f')).toEqual([span('f:6')]);
