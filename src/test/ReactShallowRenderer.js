@@ -46,6 +46,54 @@ class NoopInternalComponent {
   }
 }
 
+const clearShallowRefs = (shallowWrapper) => {
+  shallowWrapper._instance.refs = {};
+
+  shallowWrapper._attachedCallbackRefs.map((cb) => cb(null));
+  shallowWrapper._attachedCallbackRefs = [];
+};
+
+
+const dealWithShallowRefs = (element, shallowWrapper) => {
+  if (!React.isValidElement(element)) {
+    return;
+  }
+
+  attachShallowRef(element, shallowWrapper);
+
+  const children = element.props.children;
+  if (Array.isArray(element.props.children)) {
+    element.props.children.map((child) => {
+      dealWithShallowRefs(child, shallowWrapper);
+    });
+  } else {
+    const child = children;
+    dealWithShallowRefs(child, shallowWrapper);
+  }
+};
+
+const attachShallowRef = (element, shallowWrapper) => {
+  const componentInstance = shallowWrapper._instance;
+
+  switch (typeof element.ref) {
+    case 'function':
+      shallowWrapper._attachedCallbackRefs.push(element.ref);
+      element.ref(element);
+      break;
+    case 'string':
+      if (componentInstance.refs[element.ref]) {
+        throw new Error('The component has 2 string-refs with the same name: ' + element.ref);
+      }
+
+      componentInstance.refs = {
+        ...componentInstance.refs,
+        [element.ref]: element,
+      };
+      break;
+  }
+};
+
+
 var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
@@ -57,15 +105,49 @@ var ShallowComponentWrapper = function(element) {
 Object.assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent, {
-    _constructComponent:
-      ReactCompositeComponent._constructComponentWithoutOwner,
+    _constructComponent: ReactCompositeComponent._constructComponentWithoutOwner,
     _instantiateReactComponent: function(element) {
       return new NoopInternalComponent(element);
     },
     _replaceNodeWithMarkup: function() {},
-    _renderValidatedComponent:
-      ReactCompositeComponent
-        ._renderValidatedComponentWithoutOwnerOrContext,
+    _renderValidatedComponent: ReactCompositeComponent ._renderValidatedComponentWithoutOwnerOrContext,
+    _attachedCallbackRefs: [],
+
+    _updateRenderedComponentWithNextElement: function(...args) {
+      ReactCompositeComponent._updateRenderedComponentWithNextElement.bind(this)(
+        ...args,
+        true /* shallowRendering */
+      );
+    },
+    performInitialMountWithErrorHandling: function(...args) {
+      ReactCompositeComponent.performInitialMountWithErrorHandling.bind(this)(
+        ...args,
+        true /* shallowRendering */
+      );
+    },
+
+    performInitialMount: function(...args) {
+      ReactCompositeComponent.performInitialMount.bind(this)(
+        ...args,
+        true /* shallowRendering */
+      );
+    },
+
+    unmountComponent: function(...args) {
+      ReactCompositeComponent.unmountComponent.bind(this)(
+        ...args,
+        true /* shallowRendering */
+      );
+    },
+    updateComponent: function(...args) {
+      if (this._instance) {
+        clearShallowRefs(this);
+      }
+      ReactCompositeComponent.updateComponent.bind(this)(...args);
+
+      const currentElement = this._renderedComponent._currentElement;
+      dealWithShallowRefs(currentElement, this);
+    },
   }
 );
 
@@ -77,6 +159,7 @@ function _batchedRender(renderer, element, context) {
 
 class ReactShallowRenderer {
   _instance = null;
+
   getMountedInstance() {
     return this._instance ? this._instance._instance : null;
   }
@@ -122,7 +205,8 @@ class ReactShallowRenderer {
       ReactReconciler.unmountComponent(
         this._instance,
         false, /* safely */
-        false /* skipLifecycle */
+        false, /* skipLifecycle */
+        true /* shallowRendering */
       );
     }
   }
@@ -136,9 +220,20 @@ class ReactShallowRenderer {
       );
     } else {
       var instance = new ShallowComponentWrapper(element);
-      ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
+      ReactReconciler.mountComponent(
+        instance,
+        transaction,
+        null,
+        null,
+        context,
+        0,
+        true /* shallowRendering */
+      );
       this._instance = instance;
     }
+
+    const currentElement = this._instance._renderedComponent._currentElement;
+    dealWithShallowRefs(currentElement, this._instance);
   }
 }
 

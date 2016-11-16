@@ -43,7 +43,8 @@ var ReactReconciler = {
     hostParent,
     hostContainerInfo,
     context,
-    parentDebugID // 0 in production and for roots
+    parentDebugID, // 0 in production and for roots
+    shallowRendering
   ) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
@@ -61,9 +62,11 @@ var ReactReconciler = {
       context,
       parentDebugID
     );
-    if (internalInstance._currentElement &&
-        internalInstance._currentElement.ref != null) {
-      transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
+    if (!shallowRendering) {
+      if (internalInstance._currentElement &&
+          internalInstance._currentElement.ref != null) {
+        transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
+      }
     }
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
@@ -89,7 +92,12 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  unmountComponent: function(internalInstance, safely, skipLifecycle) {
+  unmountComponent: function(
+    internalInstance,
+    safely,
+    skipLifecycle,
+    shallowRendering
+  ) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onBeforeUnmountComponent(
@@ -97,7 +105,9 @@ var ReactReconciler = {
         );
       }
     }
-    ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
+    if (!shallowRendering) {
+      ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
+    }
     internalInstance.unmountComponent(safely, skipLifecycle);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
