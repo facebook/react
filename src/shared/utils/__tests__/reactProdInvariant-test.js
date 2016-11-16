@@ -12,13 +12,13 @@
 
 var reactProdInvariant;
 
-describe('reactProdInvariant', function() {
-  beforeEach(function() {
+describe('reactProdInvariant', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     reactProdInvariant = require('reactProdInvariant');
   });
 
-  it('should throw with the correct number of `%s`s in the URL', function() {
+  it('should throw with the correct number of `%s`s in the URL', () => {
     expect(function() {
       reactProdInvariant(124, 'foo', 'bar');
     }).toThrowError(

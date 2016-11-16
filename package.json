@@ -1,8 +1,9 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "15.3.2",
+  "version": "15.4.0-rc.4",
   "devDependencies": {
+    "aliasify": "^2.0.0",
     "art": "^0.10.1",
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
@@ -44,7 +45,7 @@
     "eslint-plugin-react-internal": "file:eslint-rules",
     "fbjs": "^0.8.4",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.27.0",
+    "flow-bin": "^0.31.0",
     "glob": "^6.0.1",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
@@ -57,8 +58,9 @@
     "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest": "^12.1.1",
+    "jest": "^15.1.1",
     "loose-envify": "^1.1.0",
+    "merge-stream": "^1.0.0",
     "object-assign": "^4.1.0",
     "platform": "^1.1.0",
     "run-sequence": "^1.1.4",
@@ -88,14 +90,18 @@
       "/.module-cache/",
       "/react/build/"
     ],
-    "persistModuleRegistryBetweenSpecs": true,
     "rootDir": "",
     "scriptPreprocessor": "scripts/jest/preprocessor.js",
-    "setupEnvScriptFile": "scripts/jest/environment.js",
+    "setupFiles": [
+      "scripts/jest/environment.js"
+    ],
     "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
-    "testFileExtensions": [
-      "coffee",
+    "testRegex": "/__tests__/",
+    "moduleFileExtensions": [
       "js",
+      "json",
+      "node",
+      "coffee",
       "ts"
     ],
     "testPathDirs": [
@@ -105,8 +111,11 @@
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
-    "unmockedModulePathPatterns": [
-      ""
-    ]
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/shared/vendor/third_party/*.js",
+      "!src/test/*.js"
+    ],
+    "timers": "fake"
   }
 }

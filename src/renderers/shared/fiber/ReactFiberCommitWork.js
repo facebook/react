@@ -22,15 +22,28 @@ var {
   HostContainer,
   HostComponent,
 } = ReactTypeOfWork;
+var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
   const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
 
-  function commitWork(finishedWork : Fiber) : void {
+  function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
+        // Clear updates from current fiber. This must go before the callbacks
+        // are reset, in case an update is triggered from inside a callback. Is
+        // this safe? Relies on the assumption that work is only committed if
+        // the update queue is empty.
+        if (finishedWork.alternate) {
+          finishedWork.alternate.updateQueue = null;
+        }
+        if (finishedWork.callbackList) {
+          const { callbackList } = finishedWork;
+          finishedWork.callbackList = null;
+          callCallbacks(callbackList, finishedWork.stateNode);
+        }
         // TODO: Fire componentDidMount/componentDidUpdate, update refs
         return;
       }
@@ -43,14 +56,13 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         return;
       }
       case HostComponent: {
-        if (finishedWork.stateNode == null || !finishedWork.alternate) {
+        if (finishedWork.stateNode == null || !current) {
           throw new Error('This should only be done during updates.');
         }
         // Commit the work prepared earlier.
-        const child = (finishedWork.child : ?Fiber);
+        const child = finishedWork.child;
         const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
         const newProps = finishedWork.memoizedProps;
-        const current = finishedWork.alternate;
         const oldProps = current.memoizedProps;
         const instance : I = finishedWork.stateNode;
         commitUpdate(instance, oldProps, newProps, children);

@@ -6,19 +6,12 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMButton
+ * @flow
+ * @providesModule ReactPropTypesSecret
  */
 
 'use strict';
 
-var DisabledInputUtils = require('DisabledInputUtils');
+const ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
-/**
- * Implements a <button> host component that does not receive mouse events
- * when `disabled` is set.
- */
-var ReactDOMButton = {
-  getHostProps: DisabledInputUtils.getHostProps,
-};
-
-module.exports = ReactDOMButton;
+module.exports = ReactPropTypesSecret;

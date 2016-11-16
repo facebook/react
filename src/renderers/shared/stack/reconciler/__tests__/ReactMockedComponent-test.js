@@ -17,9 +17,9 @@ var ReactTestUtils;
 var AutoMockedComponent;
 var MockedComponent;
 
-describe('ReactMockedComponent', function() {
+describe('ReactMockedComponent', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 

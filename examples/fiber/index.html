@@ -18,7 +18,7 @@
       </p>
     </div>
     <script src="../../build/react.js"></script>
-    <script src="../../build/react-dom.js"></script>
+    <script src="../../build/react-dom-fiber.js"></script>
     <script>
       function ExampleApplication(props) {
         var elapsed = Math.round(props.elapsed  / 100);
@@ -34,7 +34,7 @@
 
       var start = new Date().getTime();
       setInterval(function() {
-        ReactDOM.render(
+        ReactDOMFiber.render(
           ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
           document.getElementById('container')
         );

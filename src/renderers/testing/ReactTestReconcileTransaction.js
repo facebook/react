@@ -16,6 +16,8 @@ var PooledClass = require('PooledClass');
 var Transaction = require('Transaction');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
+import type { TestRendererOptions } from 'ReactTestMount';
+
 /**
  * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks during
  * the performing of the transaction.
@@ -57,9 +59,10 @@ var TRANSACTION_WRAPPERS = [ON_DOM_READY_QUEUEING];
  *
  * @class ReactTestReconcileTransaction
  */
-function ReactTestReconcileTransaction() {
+function ReactTestReconcileTransaction(testOptions: TestRendererOptions) {
   this.reinitializeTransaction();
-  this.reactMountReady = CallbackQueue.getPooled(null);
+  this.testOptions = testOptions;
+  this.reactMountReady = CallbackQueue.getPooled(this);
 }
 
 var Mixin = {
@@ -80,6 +83,13 @@ var Mixin = {
    */
   getReactMountReady: function() {
     return this.reactMountReady;
+  },
+
+  /**
+   * @return {object} the options passed to ReactTestRenderer
+   */
+  getTestOptions: function() {
+    return this.testOptions;
   },
 
   /**
@@ -114,7 +124,7 @@ var Mixin = {
 
 Object.assign(
   ReactTestReconcileTransaction.prototype,
-  Transaction.Mixin,
+  Transaction,
   ReactTestReconcileTransaction,
   Mixin
 );

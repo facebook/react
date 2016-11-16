@@ -10,7 +10,7 @@
 'use strict';
 
 var React = require('react');
-var LinkedValueUtils = require('react/lib/LinkedValueUtils');
+var LinkedValueUtils = require('react-dom/lib/LinkedValueUtils');
 
 class LinkedInput extends React.Component {
   render() {

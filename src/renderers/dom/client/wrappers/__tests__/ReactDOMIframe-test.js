@@ -11,18 +11,18 @@
 
 'use strict';
 
-describe('ReactDOMIframe', function() {
+describe('ReactDOMIframe', () => {
   var React;
   var ReactDOM;
   var ReactTestUtils;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should trigger load events', function() {
+  it('should trigger load events', () => {
     var onLoadSpy = jasmine.createSpy();
     var iframe = React.createElement('iframe', {onLoad: onLoadSpy});
     iframe = ReactTestUtils.renderIntoDocument(iframe);

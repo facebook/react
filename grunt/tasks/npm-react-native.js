@@ -5,6 +5,8 @@ var grunt = require('grunt');
 
 var src = 'packages/react-native-renderer/';
 var dest = 'build/packages/react-native-renderer/';
+var modSrc = 'build/node_modules/react-native/lib';
+var lib = dest + 'lib/';
 
 function buildRelease() {
   if (grunt.file.exists(dest)) {
@@ -14,6 +16,7 @@ function buildRelease() {
   // Copy to build/packages/react-native-renderer
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
+    grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
     grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
   );
   mappings.forEach(function(mapping) {
@@ -32,9 +35,12 @@ function packRelease() {
   var spawnCmd = {
     cmd: 'npm',
     args: ['pack', 'packages/react-native-renderer'],
+    opts: {
+      cwd: 'build/',
+    },
   };
   grunt.util.spawn(spawnCmd, function() {
-    var buildSrc = 'react-native-renderer-' + grunt.config.data.pkg.version + '.tgz';
+    var buildSrc = 'build/react-native-renderer-' + grunt.config.data.pkg.version + '.tgz';
     var buildDest = 'build/packages/react-native-renderer.tgz';
     fs.rename(buildSrc, buildDest, done);
   });

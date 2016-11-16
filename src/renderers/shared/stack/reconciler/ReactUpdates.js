@@ -75,7 +75,7 @@ function ReactUpdatesFlushTransaction() {
 
 Object.assign(
   ReactUpdatesFlushTransaction.prototype,
-  Transaction.Mixin,
+  Transaction,
   {
     getTransactionWrappers: function() {
       return TRANSACTION_WRAPPERS;
@@ -92,7 +92,7 @@ Object.assign(
     perform: function(method, scope, a) {
       // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
       // with this transaction's wrappers around it.
-      return Transaction.Mixin.perform.call(
+      return Transaction.perform.call(
         this,
         this.reconcileTransaction.perform,
         this.reconcileTransaction,
@@ -108,7 +108,7 @@ PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
 
 function batchedUpdates(callback, a, b, c, d, e) {
   ensureInjected();
-  batchingStrategy.batchedUpdates(callback, a, b, c, d, e);
+  return batchingStrategy.batchedUpdates(callback, a, b, c, d, e);
 }
 
 /**
@@ -160,10 +160,7 @@ function runBatchedUpdates(transaction) {
     if (ReactFeatureFlags.logTopLevelRenders) {
       var namedComponent = component;
       // Duck type TopLevelWrapper. This is probably always true.
-      if (
-        component._currentElement.props ===
-        component._renderedComponent._currentElement
-      ) {
+      if (component._currentElement.type.isReactTopLevelWrapper) {
         namedComponent = component._renderedComponent;
       }
       markerName = 'React update: ' + namedComponent.getName();

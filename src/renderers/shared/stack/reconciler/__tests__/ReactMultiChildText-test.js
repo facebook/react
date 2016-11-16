@@ -60,7 +60,7 @@ var expectChildren = function(d, children) {
         openingCommentNode = outerNode.childNodes[mountIndex];
 
         expect(openingCommentNode.nodeType).toBe(8);
-        expect(openingCommentNode.nodeValue).toMatch(' react-text: [0-9]+ ');
+        expect(openingCommentNode.nodeValue).toMatch(/ react-text: [0-9]+ /);
 
         if (child === '') {
           textNode = null;
@@ -94,8 +94,8 @@ var expectChildren = function(d, children) {
  * that single children that are strings are treated as "content" which is much
  * faster to render and update.
  */
-describe('ReactMultiChildText', function() {
-  it('should correctly handle all possible children for render and update', function() {
+describe('ReactMultiChildText', () => {
+  it('should correctly handle all possible children for render and update', () => {
     spyOn(console, 'error');
     testAllPermutations([
       // basic values
@@ -189,7 +189,7 @@ describe('ReactMultiChildText', function() {
     );
   });
 
-  it('should throw if rendering both HTML and children', function() {
+  it('should throw if rendering both HTML and children', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
         <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>
@@ -197,7 +197,7 @@ describe('ReactMultiChildText', function() {
     }).toThrow();
   });
 
-  it('should render between nested components and inline children', function() {
+  it('should render between nested components and inline children', () => {
     ReactTestUtils.renderIntoDocument(<div><h1><span /><span /></h1></div>);
 
     expect(function() {
@@ -213,7 +213,7 @@ describe('ReactMultiChildText', function() {
     }).not.toThrow();
   });
 
-  it('should reorder keyed text nodes', function() {
+  it('should reorder keyed text nodes', () => {
     spyOn(console, 'error');
 
     var container = document.createElement('div');

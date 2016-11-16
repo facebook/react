@@ -13,7 +13,6 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
-var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
@@ -123,11 +122,11 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
   }
 
   if (__DEV__) {
-    ReactInstrumentation.debugTool.onHostOperation(
-      ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
-      'replace text',
-      stringText
-    );
+    ReactInstrumentation.debugTool.onHostOperation({
+      instanceID: ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
+      type: 'replace text',
+      payload: stringText,
+    });
   }
 }
 
@@ -136,19 +135,19 @@ if (__DEV__) {
   dangerouslyReplaceNodeWithMarkup = function(oldChild, markup, prevInstance) {
     Danger.dangerouslyReplaceNodeWithMarkup(oldChild, markup);
     if (prevInstance._debugID !== 0) {
-      ReactInstrumentation.debugTool.onHostOperation(
-        prevInstance._debugID,
-        'replace with',
-        markup.toString()
-      );
+      ReactInstrumentation.debugTool.onHostOperation({
+        instanceID: prevInstance._debugID,
+        type: 'replace with',
+        payload: markup.toString(),
+      });
     } else {
       var nextInstance = ReactDOMComponentTree.getInstanceFromNode(markup.node);
       if (nextInstance._debugID !== 0) {
-        ReactInstrumentation.debugTool.onHostOperation(
-          nextInstance._debugID,
-          'mount',
-          markup.toString()
-        );
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: nextInstance._debugID,
+          type: 'mount',
+          payload: markup.toString(),
+        });
       }
     }
   };
@@ -179,68 +178,68 @@ var DOMChildrenOperations = {
     for (var k = 0; k < updates.length; k++) {
       var update = updates[k];
       switch (update.type) {
-        case ReactMultiChildUpdateTypes.INSERT_MARKUP:
+        case 'INSERT_MARKUP':
           insertLazyTreeChildAt(
             parentNode,
             update.content,
             getNodeAfter(parentNode, update.afterNode)
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
-              parentNodeDebugID,
-              'insert child',
-              {toIndex: update.toIndex, content: update.content.toString()}
-            );
+            ReactInstrumentation.debugTool.onHostOperation({
+              instanceID: parentNodeDebugID,
+              type: 'insert child',
+              payload: {toIndex: update.toIndex, content: update.content.toString()},
+            });
           }
           break;
-        case ReactMultiChildUpdateTypes.MOVE_EXISTING:
+        case 'MOVE_EXISTING':
           moveChild(
             parentNode,
             update.fromNode,
             getNodeAfter(parentNode, update.afterNode)
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
-              parentNodeDebugID,
-              'move child',
-              {fromIndex: update.fromIndex, toIndex: update.toIndex}
-            );
+            ReactInstrumentation.debugTool.onHostOperation({
+              instanceID: parentNodeDebugID,
+              type: 'move child',
+              payload: {fromIndex: update.fromIndex, toIndex: update.toIndex},
+            });
           }
           break;
-        case ReactMultiChildUpdateTypes.SET_MARKUP:
+        case 'SET_MARKUP':
           setInnerHTML(
             parentNode,
             update.content
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
-              parentNodeDebugID,
-              'replace children',
-              update.content.toString()
-            );
+            ReactInstrumentation.debugTool.onHostOperation({
+              instanceID: parentNodeDebugID,
+              type: 'replace children',
+              payload: update.content.toString(),
+            });
           }
           break;
-        case ReactMultiChildUpdateTypes.TEXT_CONTENT:
+        case 'TEXT_CONTENT':
           setTextContent(
             parentNode,
             update.content
           );
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
-              parentNodeDebugID,
-              'replace text',
-              update.content.toString()
-            );
+            ReactInstrumentation.debugTool.onHostOperation({
+              instanceID: parentNodeDebugID,
+              type: 'replace text',
+              payload: update.content.toString(),
+            });
           }
           break;
-        case ReactMultiChildUpdateTypes.REMOVE_NODE:
+        case 'REMOVE_NODE':
           removeChild(parentNode, update.fromNode);
           if (__DEV__) {
-            ReactInstrumentation.debugTool.onHostOperation(
-              parentNodeDebugID,
-              'remove child',
-              {fromIndex: update.fromIndex}
-            );
+            ReactInstrumentation.debugTool.onHostOperation({
+              instanceID: parentNodeDebugID,
+              type: 'remove child',
+              payload: {fromIndex: update.fromIndex},
+            });
           }
           break;
       }

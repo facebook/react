@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactChildren = require('ReactChildren');
+var React = require('React');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMSelect = require('ReactDOMSelect');
 
@@ -23,7 +23,7 @@ function flattenChildren(children) {
 
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  ReactChildren.forEach(children, function(child) {
+  React.Children.forEach(children, function(child) {
     if (child == null) {
       return;
     }

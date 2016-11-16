@@ -19,22 +19,22 @@ function StatelessComponent(props) {
   return <div>{props.name}</div>;
 }
 
-describe('ReactStatelessComponent', function() {
+describe('ReactStatelessComponent', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should render stateless component', function() {
+  it('should render stateless component', () => {
     var el = document.createElement('div');
     ReactDOM.render(<StatelessComponent name="A" />, el);
 
     expect(el.textContent).toBe('A');
   });
 
-  it('should update stateless component', function() {
+  it('should update stateless component', () => {
     class Parent extends React.Component {
       render() {
         return <StatelessComponent {...this.props} />;
@@ -49,7 +49,7 @@ describe('ReactStatelessComponent', function() {
     expect(el.textContent).toBe('B');
   });
 
-  it('should unmount stateless component', function() {
+  it('should unmount stateless component', () => {
     var container = document.createElement('div');
 
     ReactDOM.render(<StatelessComponent name="A" />, container);
@@ -59,7 +59,7 @@ describe('ReactStatelessComponent', function() {
     expect(container.textContent).toBe('');
   });
 
-  it('should pass context thru stateless component', function() {
+  it('should pass context thru stateless component', () => {
     class Child extends React.Component {
       static contextTypes = {
         test: React.PropTypes.string.isRequired,
@@ -119,7 +119,7 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should warn when stateless component returns array', function() {
+  it('should warn when stateless component returns array', () => {
     spyOn(console, 'error');
     function NotAComponent() {
       return [<div />, <div />];
@@ -134,7 +134,7 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should throw on string refs in pure functions', function() {
+  it('should throw on string refs in pure functions', () => {
     function Child() {
       return <div ref="me" />;
     }
@@ -146,7 +146,7 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should warn when given a ref', function() {
+  it('should warn when given a ref', () => {
     spyOn(console, 'error');
 
     class Parent extends React.Component {
@@ -167,7 +167,7 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should provide a null ref', function() {
+  it('should provide a null ref', () => {
     function Child() {
       return <div />;
     }
@@ -176,7 +176,7 @@ describe('ReactStatelessComponent', function() {
     expect(comp).toBe(null);
   });
 
-  it('should use correct name in key warning', function() {
+  it('should use correct name in key warning', () => {
     function Child() {
       return <div>{[<span />]}</div>;
     }
@@ -188,7 +188,7 @@ describe('ReactStatelessComponent', function() {
     expect(console.error.calls.argsFor(0)[0]).toContain('Child');
   });
 
-  it('should support default props and prop types', function() {
+  it('should support default props and prop types', () => {
     function Child(props) {
       return <div>{props.test}</div>;
     }
@@ -207,7 +207,7 @@ describe('ReactStatelessComponent', function() {
     );
   });
 
-  it('should receive context', function() {
+  it('should receive context', () => {
     class Parent extends React.Component {
       static childContextTypes = {
         lang: React.PropTypes.string,
@@ -232,7 +232,7 @@ describe('ReactStatelessComponent', function() {
     expect(el.textContent).toBe('en');
   });
 
-  it('should work with arrow functions', function() {
+  it('should work with arrow functions', () => {
     var Child = function() {
       return <div />;
     };
@@ -243,21 +243,21 @@ describe('ReactStatelessComponent', function() {
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
   });
 
-  it('should allow simple functions to return null', function() {
+  it('should allow simple functions to return null', () => {
     var Child = function() {
       return null;
     };
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
   });
 
-  it('should allow simple functions to return false', function() {
+  it('should allow simple functions to return false', () => {
     function Child() {
       return false;
     }
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
   });
 
-  it('should warn when using non-React functions in JSX', function() {
+  it('should warn when using non-React functions in JSX', () => {
     spyOn(console, 'error');
     function NotAComponent() {
       return [<div />, <div />];

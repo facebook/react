@@ -14,8 +14,8 @@
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 
-describe('ChangeEventPlugin', function() {
-  it('should fire change for checkbox input', function() {
+describe('ChangeEventPlugin', () => {
+  it('should fire change for checkbox input', () => {
     var called = 0;
 
     function cb(e) {

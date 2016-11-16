@@ -14,12 +14,11 @@
 var emptyFunction = require('emptyFunction');
 var LinkPropTypes = require('ReactLink').PropTypes;
 var React = require('React');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';
-var requiredMessage =
-  'Required prop `testProp` was not specified in `testComponent`.';
+var requiredMessage = 'The prop `testProp` is marked as required in ' +
+  '`testComponent`, but its value is `undefined`.';
 
 function typeCheckFail(declaration, value, message) {
   var props = {testProp: value};
@@ -27,7 +26,7 @@ function typeCheckFail(declaration, value, message) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
@@ -41,38 +40,42 @@ function typeCheckPass(declaration, value) {
     props,
     'testProp',
     'testComponent',
-    ReactPropTypeLocations.prop,
+    'prop',
     null,
     ReactPropTypesSecret
   );
   expect(error).toBe(null);
 }
 
-describe('ReactLink', function() {
-  it('should fail if the argument does not implement the Link API', function() {
+describe('ReactLink', () => {
+  it('should fail if the argument does not implement the Link API', () => {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'The prop `testProp.value` is marked as required in `testComponent`, ' +
+        'but its value is `undefined`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: 123},
-      'Required prop `testProp.requestChange` was not specified in `testComponent`.'
+      'The prop `testProp.requestChange` is marked as required in ' +
+        '`testComponent`, but its value is `undefined`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {requestChange: emptyFunction},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'The prop `testProp.value` is marked as required in `testComponent`, ' +
+        'but its value is `undefined`.'
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.any),
       {value: null, requestChange: null},
-      'Required prop `testProp.value` was not specified in `testComponent`.'
+      'The prop `testProp.value` is marked as required in `testComponent`, ' +
+        'but its value is `null`.'
     );
   });
 
-  it('should allow valid links even if no type was specified', function() {
+  it('should allow valid links even if no type was specified', () => {
     typeCheckPass(
       LinkPropTypes.link(),
       {value: 42, requestChange: emptyFunction}
@@ -83,14 +86,14 @@ describe('ReactLink', function() {
     });
   });
 
-  it('should allow no link to be passed at all', function() {
+  it('should allow no link to be passed at all', () => {
     typeCheckPass(
       LinkPropTypes.link(React.PropTypes.string),
       undefined
     );
   });
 
-  it('should allow valid links with correct value format', function() {
+  it('should allow valid links with correct value format', () => {
     typeCheckPass(
       LinkPropTypes.link(React.PropTypes.any),
       {value: 42, requestChange: emptyFunction}
@@ -105,7 +108,7 @@ describe('ReactLink', function() {
     );
   });
 
-  it('should fail if the link`s value type does not match', function() {
+  it('should fail if the link`s value type does not match', () => {
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string),
       {value: 123, requestChange: emptyFunction},
@@ -114,20 +117,22 @@ describe('ReactLink', function() {
     );
   });
 
-  it('should be implicitly optional and not warn without values', function() {
+  it('should be implicitly optional and not warn without values', () => {
     typeCheckPass(LinkPropTypes.link(), null);
     typeCheckPass(LinkPropTypes.link(), undefined);
     typeCheckPass(LinkPropTypes.link(React.PropTypes.string), null);
     typeCheckPass(LinkPropTypes.link(React.PropTypes.string), undefined);
   });
 
-  it('should warn for missing required values', function() {
-    typeCheckFail(LinkPropTypes.link().isRequired, null, requiredMessage);
+  it('should warn for missing required values', () => {
+    var specifiedButIsNullMsg = 'The prop `testProp` is marked as required ' +
+      'in `testComponent`, but its value is `null`.';
+    typeCheckFail(LinkPropTypes.link().isRequired, null, specifiedButIsNullMsg);
     typeCheckFail(LinkPropTypes.link().isRequired, undefined, requiredMessage);
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string).isRequired,
       null,
-      requiredMessage
+      specifiedButIsNullMsg
     );
     typeCheckFail(
       LinkPropTypes.link(React.PropTypes.string).isRequired,
@@ -136,7 +141,7 @@ describe('ReactLink', function() {
     );
   });
 
-  it('should be compatible with React.PropTypes.oneOfType', function() {
+  it('should be compatible with React.PropTypes.oneOfType', () => {
     typeCheckPass(
       React.PropTypes.oneOfType([LinkPropTypes.link(React.PropTypes.number)]),
       {value: 123, requestChange: emptyFunction}

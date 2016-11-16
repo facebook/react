@@ -15,14 +15,14 @@ var React;
 var ReactDOM;
 var ReactDOMServer;
 
-describe('ReactDOMTextComponent', function() {
-  beforeEach(function() {
+describe('ReactDOMTextComponent', () => {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
   });
 
-  it('updates a mounted text component in place', function() {
+  it('updates a mounted text component in place', () => {
     var el = document.createElement('div');
     var inst = ReactDOM.render(<div><span />{'foo'}{'bar'}</div>, el);
 
@@ -40,7 +40,7 @@ describe('ReactDOMTextComponent', function() {
     expect(bar.data).toBe('qux');
   });
 
-  it('can be toggled in and out of the markup', function() {
+  it('can be toggled in and out of the markup', () => {
     var el = document.createElement('div');
     var inst = ReactDOM.render(<div>{'foo'}<div />{'bar'}</div>, el);
 
@@ -63,7 +63,7 @@ describe('ReactDOMTextComponent', function() {
     expect(childNodes[5].data).toBe('bar');
   });
 
-  it('can reconcile text merged by Node.normalize()', function() {
+  it('can reconcile text merged by Node.normalize()', () => {
     var el = document.createElement('div');
     var inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}</div>, el);
 
@@ -75,7 +75,7 @@ describe('ReactDOMTextComponent', function() {
     expect(container.textContent).toBe('barbazqux');
   });
 
-  it('can reconcile text from pre-rendered markup', function() {
+  it('can reconcile text from pre-rendered markup', () => {
     var el = document.createElement('div');
     var reactEl = <div>{'foo'}{'bar'}{'baz'}</div>;
     el.innerHTML = ReactDOMServer.renderToString(reactEl);
@@ -90,7 +90,7 @@ describe('ReactDOMTextComponent', function() {
     expect(el.textContent).toBe('');
   });
 
-  it('can reconcile text arbitrarily split into multiple nodes', function() {
+  it('can reconcile text arbitrarily split into multiple nodes', () => {
     var el = document.createElement('div');
     var inst = ReactDOM.render(<div><span />{'foobarbaz'}</div>, el);
 

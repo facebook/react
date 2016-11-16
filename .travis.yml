@@ -28,8 +28,8 @@ script:
 
         GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
         echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
-        git config --global user.name "Travis CI"
-        git config --global user.email "travis@reactjs.org"
+        git config --global user.name "$GITHUB_USER_NAME"
+        git config --global user.email "$GITHUB_USER_EMAIL"
 
         git clone --branch gh-pages --depth=50 \
           https://reactjs-bot@github.com/facebook/react.git \
@@ -71,20 +71,40 @@ script:
       fi
     elif [ "$TEST_TYPE" = test ]; then
       set -e
-      # Disabling coverage because it's broken:
-      # https://travis-ci.org/facebook/react/jobs/128163922
-      if false; then
-        ./node_modules/.bin/grunt jest:coverage
-        cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
-      else
-        ./node_modules/.bin/grunt jest:normal
-      fi
+      ./node_modules/.bin/grunt jest:coverage
+      cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
+
       echo 'Testing in server-render (HTML generation) mode...'
       printf '\nmodule.exports.useCreateElement = false;\n' \
         >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
       ./node_modules/.bin/grunt jest:normal
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
+
+      echo 'Testing in fiber mode...'
+      printf '\nmodule.exports.useFiber = true;\n' \
+        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      FIBER_TESTS=`\
+        NODE_ENV=test node node_modules/jest/bin/jest --json | \
+        node -e "\
+          var data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')); \
+          console.log(data.numPassedTests + '/' + data.numTotalTests)\
+        "\
+      `
+      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
+      node scripts/facts-tracker/index.js \
+        "fiber-tests" "$FIBER_TESTS"
+
       ./node_modules/.bin/gulp react:extract-errors
+    elif [ "$TEST_TYPE" = flow ]; then
+      set -e
+      ./node_modules/.bin/grunt flow
+
+      ALL_FILES=`find src -name '*.js' | grep -v umd/ | grep -v __tests__ | grep -v __mocks__`
+      COUNT_ALL_FILES=`echo "$ALL_FILES" | wc -l`
+      COUNT_WITH_FLOW=`grep '@flow' $ALL_FILES | perl -pe 's/:.+//' | wc -l`
+      node scripts/facts-tracker/index.js \
+        "flow-files" "$COUNT_WITH_FLOW/$COUNT_ALL_FILES"
+
     else
       ./node_modules/.bin/grunt $TEST_TYPE
     fi

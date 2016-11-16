@@ -11,15 +11,23 @@
 
 'use strict';
 
-var ReactDOM = require('ReactDOM');
-var ReactDOMServer = require('ReactDOMServer');
 var ReactWithAddons = require('ReactWithAddons');
 
-
-// `version` will be added here by ReactIsomorphic.
+// `version` will be added here by the React module.
 var ReactWithAddonsUMDEntry = Object.assign({
-  __SECRET_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactDOM,
-  __SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactDOMServer,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    ReactCurrentOwner: require('ReactCurrentOwner'),
+  },
 }, ReactWithAddons);
+
+if (__DEV__) {
+  Object.assign(
+    ReactWithAddonsUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    {
+      // ReactComponentTreeHook should not be included in production.
+      ReactComponentTreeHook: require('ReactComponentTreeHook'),
+    }
+  );
+}
 
 module.exports = ReactWithAddonsUMDEntry;

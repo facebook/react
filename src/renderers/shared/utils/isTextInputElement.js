@@ -33,7 +33,7 @@ var supportedInputTypes: {[key: string]: true | void} = {
   'week': true,
 };
 
-function isTextInputElement(elem: ?HTMLElement): bool {
+function isTextInputElement(elem: ?HTMLElement): boolean {
   var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
 
   if (nodeName === 'input') {

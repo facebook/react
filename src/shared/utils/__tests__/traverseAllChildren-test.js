@@ -11,13 +11,13 @@
 
 'use strict';
 
-describe('traverseAllChildren', function() {
+describe('traverseAllChildren', () => {
   var traverseAllChildren;
   var React;
   var ReactFragment;
   var ReactTestUtils;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
@@ -29,7 +29,7 @@ describe('traverseAllChildren', function() {
     return ReactFragment.create(obj);
   }
 
-  it('should support identity for simple', function() {
+  it('should support identity for simple', () => {
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().and.callFake(function(context, kid, key, index) {
@@ -49,7 +49,7 @@ describe('traverseAllChildren', function() {
     expect(traverseContext.length).toEqual(1);
   });
 
-  it('should treat single arrayless child as being in array', function() {
+  it('should treat single arrayless child as being in array', () => {
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().and.callFake(function(context, kid, key, index) {
@@ -67,7 +67,7 @@ describe('traverseAllChildren', function() {
     expect(traverseContext.length).toEqual(1);
   });
 
-  it('should treat single child in array as expected', function() {
+  it('should treat single child in array as expected', () => {
     spyOn(console, 'error');
     var traverseContext = [];
     var traverseFn =
@@ -90,7 +90,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should be called for each child', function() {
+  it('should be called for each child', () => {
     var zero = <div key="keyZero" />;
     var one = null;
     var two = <div key="keyTwo" />;
@@ -133,7 +133,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should traverse children of different kinds', function() {
+  it('should traverse children of different kinds', () => {
     var div = <div key="divNode" />;
     var span = <span key="spanNode" />;
     var a = <a key="aNode" />;
@@ -192,7 +192,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should be called for each child in nested structure', function() {
+  it('should be called for each child in nested structure', () => {
     var zero = <div key="keyZero" />;
     var one = null;
     var two = <div key="keyTwo" />;
@@ -252,7 +252,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should retain key across two mappings', function() {
+  it('should retain key across two mappings', () => {
     var zeroForceKey = <div key="keyZero" />;
     var oneForceKey = <div key="keyOne" />;
     var traverseContext = [];
@@ -282,7 +282,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should be called for each child in an iterable without keys', function() {
+  it('should be called for each child in an iterable without keys', () => {
     spyOn(console, 'error');
     var threeDivIterable = {
       '@@iterator': function() {
@@ -336,7 +336,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should be called for each child in an iterable with keys', function() {
+  it('should be called for each child in an iterable with keys', () => {
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
@@ -384,7 +384,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should use keys from entry iterables', function() {
+  it('should use keys from entry iterables', () => {
     spyOn(console, 'error');
 
     var threeDivEntryIterable = {
@@ -442,7 +442,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should not enumerate enumerable numbers (#4776)', function() {
+  it('should not enumerate enumerable numbers (#4776)', () => {
     /*eslint-disable no-extend-native */
     Number.prototype['@@iterator'] = function() {
       throw new Error('number iterator called');
@@ -483,7 +483,7 @@ describe('traverseAllChildren', function() {
     }
   });
 
-  it('should allow extension of native prototypes', function() {
+  it('should allow extension of native prototypes', () => {
     /*eslint-disable no-extend-native */
     String.prototype.key = 'react';
     Number.prototype.key = 'rocks';
@@ -516,7 +516,7 @@ describe('traverseAllChildren', function() {
     delete Number.prototype.key;
   });
 
-  it('should throw on object', function() {
+  it('should throw on object', () => {
     expect(function() {
       traverseAllChildren({a: 1, b: 2}, function() {}, null);
     }).toThrowError(
@@ -527,7 +527,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should throw on regex', function() {
+  it('should throw on regex', () => {
     // Really, we care about dates (#4840) but those have nondeterministic
     // serialization (timezones) so let's test a regex instead:
     expect(function() {
@@ -539,7 +539,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should warn for using maps as children with owner info', function() {
+  it('should warn for using maps as children with owner info', () => {
     spyOn(console, 'error');
 
     class Parent extends React.Component {

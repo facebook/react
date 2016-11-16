@@ -5,6 +5,8 @@ var grunt = require('grunt');
 
 var src = 'packages/react-test-renderer/';
 var dest = 'build/packages/react-test-renderer/';
+var modSrc = 'build/node_modules/react-test-renderer/lib';
+var lib = dest + 'lib/';
 
 function buildRelease() {
   if (grunt.file.exists(dest)) {
@@ -14,6 +16,7 @@ function buildRelease() {
   // Copy to build/packages/react-native-renderer
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
+    grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
     grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
   );
   mappings.forEach(function(mapping) {
@@ -32,9 +35,12 @@ function packRelease() {
   var spawnCmd = {
     cmd: 'npm',
     args: ['pack', 'packages/react-test-renderer'],
+    opts: {
+      cwd: 'build/',
+    },
   };
   grunt.util.spawn(spawnCmd, function() {
-    var buildSrc = 'react-test-renderer-' + grunt.config.data.pkg.version + '.tgz';
+    var buildSrc = 'build/react-test-renderer-' + grunt.config.data.pkg.version + '.tgz';
     var buildDest = 'build/packages/react-test-renderer.tgz';
     fs.rename(buildSrc, buildDest, done);
   });

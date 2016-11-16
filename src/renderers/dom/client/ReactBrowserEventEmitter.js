@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
@@ -241,23 +240,22 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     var dependencies =
       EventPluginRegistry.registrationNameDependencies[registrationName];
 
-    var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (!(
             isListening.hasOwnProperty(dependency) &&
             isListening[dependency]
           )) {
-        if (dependency === topLevelTypes.topWheel) {
+        if (dependency === 'topWheel') {
           if (isEventSupported('wheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              topLevelTypes.topWheel,
+              'topWheel',
               'wheel',
               mountAt
             );
           } else if (isEventSupported('mousewheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              topLevelTypes.topWheel,
+              'topWheel',
               'mousewheel',
               mountAt
             );
@@ -265,37 +263,37 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              topLevelTypes.topWheel,
+              'topWheel',
               'DOMMouseScroll',
               mountAt
             );
           }
-        } else if (dependency === topLevelTypes.topScroll) {
+        } else if (dependency === 'topScroll') {
 
           if (isEventSupported('scroll', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              topLevelTypes.topScroll,
+              'topScroll',
               'scroll',
               mountAt
             );
           } else {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              topLevelTypes.topScroll,
+              'topScroll',
               'scroll',
               ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
             );
           }
-        } else if (dependency === topLevelTypes.topFocus ||
-            dependency === topLevelTypes.topBlur) {
+        } else if (dependency === 'topFocus' ||
+            dependency === 'topBlur') {
 
           if (isEventSupported('focus', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              topLevelTypes.topFocus,
+              'topFocus',
               'focus',
               mountAt
             );
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              topLevelTypes.topBlur,
+              'topBlur',
               'blur',
               mountAt
             );
@@ -303,20 +301,20 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             // IE has `focusin` and `focusout` events which bubble.
             // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              topLevelTypes.topFocus,
+              'topFocus',
               'focusin',
               mountAt
             );
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              topLevelTypes.topBlur,
+              'topBlur',
               'focusout',
               mountAt
             );
           }
 
           // to make sure blur and focus event listeners are only attached once
-          isListening[topLevelTypes.topBlur] = true;
-          isListening[topLevelTypes.topFocus] = true;
+          isListening.topBlur = true;
+          isListening.topFocus = true;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
             dependency,

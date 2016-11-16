@@ -11,7 +11,6 @@
 
 'use strict';
 
-var DisabledInputUtils = require('DisabledInputUtils');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactUpdates = require('ReactUpdates');
@@ -146,7 +145,7 @@ function updateOptions(inst, multiple, propValue) {
  */
 var ReactDOMSelect = {
   getHostProps: function(inst, props) {
-    return Object.assign({}, DisabledInputUtils.getHostProps(inst, props), {
+    return Object.assign({}, props, {
       onChange: inst._wrapperState.onChange,
       value: undefined,
     });

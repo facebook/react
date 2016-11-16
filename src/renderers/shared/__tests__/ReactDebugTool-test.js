@@ -11,10 +11,10 @@
 
 'use strict';
 
-describe('ReactDebugTool', function() {
+describe('ReactDebugTool', () => {
   var ReactDebugTool;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     ReactDebugTool = require('ReactDebugTool');
   });

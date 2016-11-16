@@ -15,15 +15,15 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('ReactClass-spec', function() {
+describe('ReactClass-spec', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should throw when `render` is not specified', function() {
+  it('should throw when `render` is not specified', () => {
     expect(function() {
       React.createClass({});
     }).toThrowError(
@@ -31,7 +31,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should copy `displayName` onto the Constructor', function() {
+  it('should copy `displayName` onto the Constructor', () => {
     var TestComponent = React.createClass({
       render: function() {
         return <div />;
@@ -42,7 +42,7 @@ describe('ReactClass-spec', function() {
       .toBe('TestComponent');
   });
 
-  it('should copy prop types onto the Constructor', function() {
+  it('should copy prop types onto the Constructor', () => {
     var propValidator = jest.fn();
     var TestComponent = React.createClass({
       propTypes: {
@@ -58,7 +58,7 @@ describe('ReactClass-spec', function() {
       .toBe(propValidator);
   });
 
-  it('should warn on invalid prop types', function() {
+  it('should warn on invalid prop types', () => {
     spyOn(console, 'error');
     React.createClass({
       displayName: 'Component',
@@ -76,7 +76,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should warn on invalid context types', function() {
+  it('should warn on invalid context types', () => {
     spyOn(console, 'error');
     React.createClass({
       displayName: 'Component',
@@ -94,7 +94,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should throw on invalid child context types', function() {
+  it('should throw on invalid child context types', () => {
     spyOn(console, 'error');
     React.createClass({
       displayName: 'Component',
@@ -112,7 +112,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should warn when mispelling shouldComponentUpdate', function() {
+  it('should warn when mispelling shouldComponentUpdate', () => {
     spyOn(console, 'error');
 
     React.createClass({
@@ -147,7 +147,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should warn when mispelling componentWillReceiveProps', function() {
+  it('should warn when mispelling componentWillReceiveProps', () => {
     spyOn(console, 'error');
     React.createClass({
       componentWillRecieveProps: function() {
@@ -164,7 +164,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should throw if a reserved property is in statics', function() {
+  it('should throw if a reserved property is in statics', () => {
     expect(function() {
       React.createClass({
         statics: {
@@ -189,7 +189,7 @@ describe('ReactClass-spec', function() {
 
   // TODO: Consider actually moving these to statics or drop this unit test.
 
-  xit('should warn when using deprecated non-static spec keys', function() {
+  xit('should warn when using deprecated non-static spec keys', () => {
     spyOn(console, 'error');
     React.createClass({
       mixins: [{}],
@@ -225,7 +225,7 @@ describe('ReactClass-spec', function() {
     );
   });
 
-  it('should support statics', function() {
+  it('should support statics', () => {
     var Component = React.createClass({
       statics: {
         abc: 'def',
@@ -255,7 +255,7 @@ describe('ReactClass-spec', function() {
     expect(Component.pqr()).toBe(Component);
   });
 
-  it('should work with object getInitialState() return values', function() {
+  it('should work with object getInitialState() return values', () => {
     var Component = React.createClass({
       getInitialState: function() {
         return {
@@ -271,7 +271,7 @@ describe('ReactClass-spec', function() {
     expect(instance.state.occupation).toEqual('clown');
   });
 
-  it('renders based on context getInitialState', function() {
+  it('renders based on context getInitialState', () => {
     var Foo = React.createClass({
       contextTypes: {
         className: React.PropTypes.string,
@@ -301,7 +301,7 @@ describe('ReactClass-spec', function() {
     expect(container.firstChild.className).toBe('foo');
   });
 
-  it('should throw with non-object getInitialState() return values', function() {
+  it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
       var Component = React.createClass({
         getInitialState: function() {
@@ -320,7 +320,7 @@ describe('ReactClass-spec', function() {
     });
   });
 
-  it('should work with a null getInitialState() return value', function() {
+  it('should work with a null getInitialState() return value', () => {
     var Component = React.createClass({
       getInitialState: function() {
         return null;
@@ -334,7 +334,7 @@ describe('ReactClass-spec', function() {
     ).not.toThrow();
   });
 
-  it('should throw when using legacy factories', function() {
+  it('should throw when using legacy factories', () => {
     spyOn(console, 'error');
     var Component = React.createClass({
       render() {

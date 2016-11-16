@@ -14,14 +14,14 @@
 var React;
 var ReactDOM;
 
-describe('ReactErrorBoundaries', function() {
+describe('ReactErrorBoundaries', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     ReactDOM = require('ReactDOM');
     React = require('React');
   });
 
-  it('does not register event handlers for unmounted children', function() {
+  it('does not register event handlers for unmounted children', () => {
     class Angry extends React.Component {
       render() {
         throw new Error('Please, do not render me.');
@@ -57,7 +57,7 @@ describe('ReactErrorBoundaries', function() {
     expect(EventPluginHub.putListener).not.toBeCalled();
   });
 
-  it('renders an error state', function() {
+  it('renders an error state', () => {
     var log = [];
     class Angry extends React.Component {
       render() {
@@ -112,7 +112,7 @@ describe('ReactErrorBoundaries', function() {
     ]);
   });
 
-  it('will catch exceptions in componentWillUnmount', function() {
+  it('will catch exceptions in componentWillUnmount', () => {
     class ErrorBoundary extends React.Component {
       constructor() {
         super();
@@ -158,7 +158,7 @@ describe('ReactErrorBoundaries', function() {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('expect uneventful render to succeed', function() {
+  it('expect uneventful render to succeed', () => {
     var log = [];
     class Boundary extends React.Component {
       constructor(props) {
@@ -191,7 +191,7 @@ describe('ReactErrorBoundaries', function() {
     ]);
   });
 
-  it('correctly handles composite siblings', function() {
+  it('correctly handles composite siblings', () => {
     class ErrorBoundary extends React.Component {
       constructor() {
         super();
@@ -226,7 +226,7 @@ describe('ReactErrorBoundaries', function() {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('catches errors from children', function() {
+  it('catches errors from children', () => {
     var log = [];
 
     class Box extends React.Component {

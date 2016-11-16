@@ -23,9 +23,9 @@ var ReactUpdates;
 
 var reactComponentExpect;
 
-describe('ReactCompositeComponent', function() {
+describe('ReactCompositeComponent', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
@@ -69,7 +69,7 @@ describe('ReactCompositeComponent', function() {
     };
   });
 
-  it('should support module pattern components', function() {
+  it('should support module pattern components', () => {
     function Child({test}) {
       return {
         render() {
@@ -84,7 +84,7 @@ describe('ReactCompositeComponent', function() {
     expect(el.textContent).toBe('test');
   });
 
-  it('should support rendering to different child types over time', function() {
+  it('should support rendering to different child types over time', () => {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -123,7 +123,7 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Parent />, container);
   });
 
-  it('should react to state changes from callbacks', function() {
+  it('should react to state changes from callbacks', () => {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -137,7 +137,7 @@ describe('ReactCompositeComponent', function() {
       .toBeDOMComponentWithTag('b');
   });
 
-  it('should rewire refs when rendering to different child types', function() {
+  it('should rewire refs when rendering to different child types', () => {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -148,7 +148,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
   });
 
-  it('should not cache old DOM nodes when switching constructors', function() {
+  it('should not cache old DOM nodes when switching constructors', () => {
     var container = document.createElement('div');
     var instance = ReactDOM.render(
       <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
@@ -169,7 +169,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.getAnchor().className).toBe('');
   });
 
-  it('should auto bind methods and values correctly', function() {
+  it('should auto bind methods and values correctly', () => {
     spyOn(console, 'error');
 
     var ComponentClass = React.createClass({
@@ -215,7 +215,7 @@ describe('ReactCompositeComponent', function() {
 
   });
 
-  it('should not pass this to getDefaultProps', function() {
+  it('should not pass this to getDefaultProps', () => {
     var Component = React.createClass({
       getDefaultProps: function() {
         expect(this.render).not.toBeDefined();
@@ -228,7 +228,7 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.renderIntoDocument(<Component />);
   });
 
-  it('should use default values for undefined props', function() {
+  it('should use default values for undefined props', () => {
     class Component extends React.Component {
       static defaultProps = {prop: 'testKey'};
 
@@ -250,7 +250,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance3).scalarPropsEqual({prop: null});
   });
 
-  it('should not mutate passed-in props object', function() {
+  it('should not mutate passed-in props object', () => {
     class Component extends React.Component {
       static defaultProps = {prop: 'testKey'};
 
@@ -269,7 +269,7 @@ describe('ReactCompositeComponent', function() {
     expect(inputProps.prop).not.toBeDefined();
   });
 
-  it('should warn about `forceUpdate` on unmounted components', function() {
+  it('should warn about `forceUpdate` on unmounted components', () => {
     spyOn(console, 'error');
 
     var container = document.createElement('div');
@@ -301,7 +301,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should warn about `setState` on unmounted components', function() {
+  it('should warn about `setState` on unmounted components', () => {
     spyOn(console, 'error');
 
     var container = document.createElement('div');
@@ -345,7 +345,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should silently allow `setState`, not call cb on unmounting components', function() {
+  it('should silently allow `setState`, not call cb on unmounting components', () => {
     var cbCalled = false;
     var container = document.createElement('div');
     document.body.appendChild(container);
@@ -374,7 +374,7 @@ describe('ReactCompositeComponent', function() {
   });
 
 
-  it('should warn about `setState` in render', function() {
+  it('should warn about `setState` in render', () => {
     spyOn(console, 'error');
 
     var container = document.createElement('div');
@@ -422,7 +422,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance2.state.value).toBe(1);
   });
 
-  it('should warn about `setState` in getChildContext', function() {
+  it('should warn about `setState` in getChildContext', () => {
     spyOn(console, 'error');
 
     var container = document.createElement('div');
@@ -454,7 +454,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should cleanup even if render() fatals', function() {
+  it('should cleanup even if render() fatals', () => {
     class BadComponent extends React.Component {
       render() {
         throw new Error();
@@ -472,7 +472,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactCurrentOwner.current).toBe(null);
   });
 
-  it('should call componentWillUnmount before unmounting', function() {
+  it('should call componentWillUnmount before unmounting', () => {
     var container = document.createElement('div');
     var innerUnmounted = false;
 
@@ -502,7 +502,7 @@ describe('ReactCompositeComponent', function() {
     expect(innerUnmounted).toBe(true);
   });
 
-  it('should warn when shouldComponentUpdate() returns undefined', function() {
+  it('should warn when shouldComponentUpdate() returns undefined', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
@@ -527,7 +527,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should warn when componentDidUnmount method is defined', function() {
+  it('should warn when componentDidUnmount method is defined', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
@@ -549,7 +549,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should pass context to children when not owner', function() {
+  it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
         return <Child><Grandchild /></Child>;
@@ -586,7 +586,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
   });
 
-  it('should skip update when rerendering element in container', function() {
+  it('should skip update when rerendering element in container', () => {
     class Parent extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
@@ -610,7 +610,7 @@ describe('ReactCompositeComponent', function() {
     expect(childRenders).toBe(1);
   });
 
-  it('should pass context when re-rendered for static child', function() {
+  it('should pass context when re-rendered for static child', () => {
     var parentInstance = null;
     var childInstance = null;
 
@@ -667,7 +667,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
   });
 
-  it('should pass context when re-rendered for static child within a composite component', function() {
+  it('should pass context when re-rendered for static child within a composite component', () => {
     class Parent extends React.Component {
       static childContextTypes = {
         flag: ReactPropTypes.bool,
@@ -723,7 +723,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: false});
   });
 
-  it('should pass context transitively', function() {
+  it('should pass context transitively', () => {
     var childInstance = null;
     var grandchildInstance = null;
 
@@ -784,7 +784,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
   });
 
-  it('should pass context when re-rendered', function() {
+  it('should pass context when re-rendered', () => {
     var parentInstance = null;
     var childInstance = null;
 
@@ -838,7 +838,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
   });
 
-  it('unmasked context propagates through updates', function() {
+  it('unmasked context propagates through updates', () => {
     class Leaf extends React.Component {
       static contextTypes = {
         foo: ReactPropTypes.string.isRequired,
@@ -909,7 +909,7 @@ describe('ReactCompositeComponent', function() {
     expect(div.children[0].id).toBe('aliens');
   });
 
-  it('should trigger componentWillReceiveProps for context changes', function() {
+  it('should trigger componentWillReceiveProps for context changes', () => {
     var contextChanges = 0;
     var propChanges = 0;
 
@@ -1024,7 +1024,7 @@ describe('ReactCompositeComponent', function() {
     expect(contextChanges).toBe(3); // ChildWithContext, GrandChild x 2
   });
 
-  it('should disallow nested render calls', function() {
+  it('should disallow nested render calls', () => {
     spyOn(console, 'error');
 
     class Inner extends React.Component {
@@ -1050,7 +1050,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('only renders once if updated in componentWillReceiveProps', function() {
+  it('only renders once if updated in componentWillReceiveProps', () => {
     var renders = 0;
 
     class Component extends React.Component {
@@ -1076,7 +1076,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.state.updated).toBe(true);
   });
 
-  it('should update refs if shouldComponentUpdate gives false', function() {
+  it('should update refs if shouldComponentUpdate gives false', () => {
     class Static extends React.Component {
       shouldComponentUpdate() {
         return false;
@@ -1119,7 +1119,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactDOM.findDOMNode(comp.refs.static1).textContent).toBe('A');
   });
 
-  it('should allow access to findDOMNode in componentWillUnmount', function() {
+  it('should allow access to findDOMNode in componentWillUnmount', () => {
     var a = null;
     var b = null;
 
@@ -1146,7 +1146,7 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
-  it('context should be passed down from the parent', function() {
+  it('context should be passed down from the parent', () => {
     class Parent extends React.Component {
       static childContextTypes = {
         foo: ReactPropTypes.string,
@@ -1177,7 +1177,7 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Parent><Component /></Parent>, div);
   });
 
-  it('should replace state', function() {
+  it('should replace state', () => {
     var Moo = React.createClass({
       getInitialState: function() {
         return {x: 1};
@@ -1193,7 +1193,7 @@ describe('ReactCompositeComponent', function() {
     expect(moo.state.y).toBe(2);
   });
 
-  it('should support objects with prototypes as state', function() {
+  it('should support objects with prototypes as state', () => {
     var NotActuallyImmutable = function(str) {
       this.str = str;
     };
@@ -1242,7 +1242,7 @@ describe('ReactCompositeComponent', function() {
     expect(moo.state.amIImmutable).toBe(undefined);
   });
 
-  it('should not warn about unmounting during unmounting', function() {
+  it('should not warn about unmounting during unmounting', () => {
     var container = document.createElement('div');
     var layer = document.createElement('div');
 
@@ -1270,7 +1270,7 @@ describe('ReactCompositeComponent', function() {
     ReactDOM.render(<Outer />, container);
   });
 
-  it('should warn when mutated props are passed', function() {
+  it('should warn when mutated props are passed', () => {
     spyOn(console, 'error');
 
     var container = document.createElement('div');
@@ -1298,7 +1298,7 @@ describe('ReactCompositeComponent', function() {
 
   });
 
-  it('should only call componentWillUnmount once', function() {
+  it('should only call componentWillUnmount once', () => {
     var app;
     var count = 0;
 

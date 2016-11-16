@@ -16,10 +16,10 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('SyntheticEvent', function() {
+describe('SyntheticEvent', () => {
   var createEvent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     SyntheticEvent = require('SyntheticEvent');
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -31,7 +31,7 @@ describe('SyntheticEvent', function() {
     };
   });
 
-  it('should normalize `target` from the nativeEvent', function() {
+  it('should normalize `target` from the nativeEvent', () => {
     var target = document.createElement('div');
     var syntheticEvent = createEvent({srcElement: target});
 
@@ -39,7 +39,7 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.type).toBe(undefined);
   });
 
-  it('should be able to `preventDefault`', function() {
+  it('should be able to `preventDefault`', () => {
     var nativeEvent = {};
     var syntheticEvent = createEvent(nativeEvent);
 
@@ -52,14 +52,14 @@ describe('SyntheticEvent', function() {
     expect(nativeEvent.returnValue).toBe(false);
   });
 
-  it('should be prevented if nativeEvent is prevented', function() {
+  it('should be prevented if nativeEvent is prevented', () => {
     expect(
       createEvent({defaultPrevented: true}).isDefaultPrevented()
     ).toBe(true);
     expect(createEvent({returnValue: false}).isDefaultPrevented()).toBe(true);
   });
 
-  it('should be able to `stopPropagation`', function() {
+  it('should be able to `stopPropagation`', () => {
     var nativeEvent = {};
     var syntheticEvent = createEvent(nativeEvent);
 
@@ -70,7 +70,7 @@ describe('SyntheticEvent', function() {
     expect(nativeEvent.cancelBubble).toBe(true);
   });
 
-  it('should be able to `persist`', function() {
+  it('should be able to `persist`', () => {
     var syntheticEvent = createEvent({});
 
     expect(syntheticEvent.isPersistent()).toBe(false);
@@ -78,7 +78,7 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.isPersistent()).toBe(true);
   });
 
-  it('should be nullified if the synthetic event has called destructor and log warnings', function() {
+  it('should be nullified if the synthetic event has called destructor and log warnings', () => {
     spyOn(console, 'error');
     var target = document.createElement('div');
     var syntheticEvent = createEvent({srcElement: target});
@@ -98,7 +98,7 @@ describe('SyntheticEvent', function() {
     );
   });
 
-  it('should warn when setting properties of a destructored synthetic event', function() {
+  it('should warn when setting properties of a destructored synthetic event', () => {
     spyOn(console, 'error');
     var target = document.createElement('div');
     var syntheticEvent = createEvent({srcElement: target});
@@ -114,7 +114,7 @@ describe('SyntheticEvent', function() {
     );
   });
 
-  it('should warn if the synthetic event has been released when calling `preventDefault`', function() {
+  it('should warn if the synthetic event has been released when calling `preventDefault`', () => {
     spyOn(console, 'error');
     var syntheticEvent = createEvent({});
     SyntheticEvent.release(syntheticEvent);
@@ -129,7 +129,7 @@ describe('SyntheticEvent', function() {
     );
   });
 
-  it('should warn if the synthetic event has been released when calling `stopPropagation`', function() {
+  it('should warn if the synthetic event has been released when calling `stopPropagation`', () => {
     spyOn(console, 'error');
     var syntheticEvent = createEvent({});
     SyntheticEvent.release(syntheticEvent);
@@ -147,7 +147,7 @@ describe('SyntheticEvent', function() {
   // TODO: reenable this test. We are currently silencing these warnings when
   // using TestUtils.Simulate to avoid spurious warnings that result from the
   // way we simulate events.
-  xit('should properly log warnings when events simulated with rendered components', function() {
+  xit('should properly log warnings when events simulated with rendered components', () => {
     spyOn(console, 'error');
     var event;
     var element = document.createElement('div');
@@ -171,7 +171,7 @@ describe('SyntheticEvent', function() {
     );
   });
 
-  it('should warn if Proxy is supported and the synthetic event is added a property', function() {
+  it('should warn if Proxy is supported and the synthetic event is added a property', () => {
     spyOn(console, 'error');
     var syntheticEvent = createEvent({});
     syntheticEvent.foo = 'bar';

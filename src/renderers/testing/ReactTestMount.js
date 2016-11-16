@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
+var React = require('React');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
@@ -19,6 +19,18 @@ var emptyObject = require('emptyObject');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
+
+import type { ReactElement } from 'ReactElementType';
+
+export type TestRendererOptions = {
+  createNodeMock: (element: ReactElement) => any,
+};
+
+var defaultTestOptions = {
+  createNodeMock: function() {
+    return null;
+  },
+};
 
 /**
  * Temporary (?) hack so that we can store all top-level pending updates on
@@ -31,26 +43,29 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounts this component and inserts it into the DOM.
  *
  * @param {ReactComponent} componentInstance The instance to mount.
- * @param {number} rootID ID of the root node.
- * @param {number} containerTag container element to mount into.
  * @param {ReactReconcileTransaction} transaction
+ * @param {Object} hostParent
+ * @param {Object} hostContainerInfo
  */
 function mountComponentIntoNode(
     componentInstance,
-    transaction) {
+    transaction,
+    hostParent,
+    hostContainerInfo
+  ) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
     null,
-    null,
+    hostContainerInfo,
     emptyObject
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
@@ -65,13 +80,17 @@ function mountComponentIntoNode(
  * @param {number} containerTag container element to mount into.
  */
 function batchedMountComponentIntoNode(
-    componentInstance) {
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+    componentInstance,
+    options,
+  ) {
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   var image = transaction.perform(
     mountComponentIntoNode,
     null,
     componentInstance,
-    transaction
+    transaction,
+    null,
+    options
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;
@@ -88,14 +107,9 @@ ReactTestInstance.prototype.update = function(nextElement) {
     this._component,
     "ReactTestRenderer: .update() can't be called after unmount."
   );
-  var nextWrappedElement = new ReactElement(
+  var nextWrappedElement = React.createElement(
     TopLevelWrapper,
-    null,
-    null,
-    null,
-    null,
-    null,
-    nextElement
+    { child: nextElement }
   );
   var component = this._component;
   ReactUpdates.batchedUpdates(function() {
@@ -140,16 +154,12 @@ ReactTestInstance.prototype.toJSON = function() {
 var ReactTestMount = {
 
   render: function(
-    nextElement: ReactElement<any>
+    nextElement: ReactElement<any>,
+    options?: TestRendererOptions,
   ): ReactTestInstance {
-    var nextWrappedElement = new ReactElement(
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      {child: nextElement},
     );
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
@@ -157,10 +167,10 @@ var ReactTestMount = {
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
     // according to the current batching strategy.
-
     ReactUpdates.batchedUpdates(
       batchedMountComponentIntoNode,
-      instance
+      instance,
+      Object.assign({}, defaultTestOptions, options),
     );
     return new ReactTestInstance(instance);
   },

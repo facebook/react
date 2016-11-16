@@ -15,15 +15,15 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('ReactCompositeComponentNestedState-state', function() {
+describe('ReactCompositeComponentNestedState-state', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should provide up to date values for props', function() {
+  it('should provide up to date values for props', () => {
     class ParentComponent extends React.Component {
       state = {color: 'blue'};
 

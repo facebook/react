@@ -15,15 +15,15 @@ var React;
 var ReactTestUtils;
 var reactComponentExpect;
 
-describe('reactComponentExpect', function() {
+describe('reactComponentExpect', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
   });
 
-  it('should detect text components', function() {
+  it('should detect text components', () => {
     class SomeComponent extends React.Component {
       render() {
         return (

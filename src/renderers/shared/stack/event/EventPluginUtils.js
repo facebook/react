@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
 var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('invariant');
@@ -52,21 +51,19 @@ var injection = {
   },
 };
 
-var topLevelTypes = EventConstants.topLevelTypes;
-
 function isEndish(topLevelType) {
-  return topLevelType === topLevelTypes.topMouseUp ||
-         topLevelType === topLevelTypes.topTouchEnd ||
-         topLevelType === topLevelTypes.topTouchCancel;
+  return topLevelType === 'topMouseUp' ||
+         topLevelType === 'topTouchEnd' ||
+         topLevelType === 'topTouchCancel';
 }
 
 function isMoveish(topLevelType) {
-  return topLevelType === topLevelTypes.topMouseMove ||
-         topLevelType === topLevelTypes.topTouchMove;
+  return topLevelType === 'topMouseMove' ||
+         topLevelType === 'topTouchMove';
 }
 function isStartish(topLevelType) {
-  return topLevelType === topLevelTypes.topMouseDown ||
-         topLevelType === topLevelTypes.topTouchStart;
+  return topLevelType === 'topMouseDown' ||
+         topLevelType === 'topTouchStart';
 }
 
 

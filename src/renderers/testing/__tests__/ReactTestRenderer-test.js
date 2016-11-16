@@ -14,9 +14,9 @@
 var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
 
-describe('ReactTestRenderer', function() {
+describe('ReactTestRenderer', () => {
 
-  it('renders a simple component', function() {
+  it('renders a simple component', () => {
     function Link() {
       return <a role="link" />;
     }
@@ -28,7 +28,7 @@ describe('ReactTestRenderer', function() {
     });
   });
 
-  it('renders a top-level empty component', function() {
+  it('renders a top-level empty component', () => {
     function Empty() {
       return null;
     }
@@ -36,7 +36,7 @@ describe('ReactTestRenderer', function() {
     expect(renderer.toJSON()).toEqual(null);
   });
 
-  it('exposes a type flag', function() {
+  it('exposes a type flag', () => {
     function Link() {
       return <a role="link" />;
     }
@@ -52,7 +52,7 @@ describe('ReactTestRenderer', function() {
     }
   });
 
-  it('renders some basics with an update', function() {
+  it('renders some basics with an update', () => {
     var renders = 0;
 
     class Component extends React.Component {
@@ -89,7 +89,7 @@ describe('ReactTestRenderer', function() {
     expect(renders).toBe(6);
   });
 
-  it('exposes the instance', function() {
+  it('exposes the instance', () => {
     class Mouse extends React.Component {
       constructor() {
         super();
@@ -119,7 +119,7 @@ describe('ReactTestRenderer', function() {
     });
   });
 
-  it('updates types', function() {
+  it('updates types', () => {
     var renderer = ReactTestRenderer.create(<div>mouse</div>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
@@ -135,7 +135,7 @@ describe('ReactTestRenderer', function() {
     });
   });
 
-  it('updates children', function() {
+  it('updates children', () => {
     var renderer = ReactTestRenderer.create(
       <div>
         <span key="a">A</span>
@@ -171,7 +171,7 @@ describe('ReactTestRenderer', function() {
     });
   });
 
-  it('does the full lifecycle', function() {
+  it('does the full lifecycle', () => {
     var log = [];
     class Log extends React.Component {
       render() {
@@ -200,25 +200,25 @@ describe('ReactTestRenderer', function() {
     ]);
   });
 
-  it('gives a ref to native components', function() {
+  it('gives a ref to native components', () => {
     var log = [];
     ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
     expect(log).toEqual([null]);
   });
 
-  it('warns correctly for refs on SFCs', function() {
+  it('warns correctly for refs on SFCs', () => {
     spyOn(console, 'error');
     function Bar() {
-      return <div>Hello, world</div>
+      return <div>Hello, world</div>;
     }
     class Foo extends React.Component {
       render() {
-        return <Bar ref="foo" />
+        return <Bar ref="foo" />;
       }
     }
     class Baz extends React.Component {
       render() {
-        return <div ref="baz" />
+        return <div ref="baz" />;
       }
     }
     ReactTestRenderer.create(<Baz />);
@@ -231,7 +231,117 @@ describe('ReactTestRenderer', function() {
     );
   });
 
-  it('supports error boundaries', function() {
+  it('allows an optional createNodeMock function', () => {
+    var mockDivInstance = { appendChild: () => {} };
+    var mockInputInstance = { focus: () => {} };
+    var mockListItemInstance = { click: () => {} };
+    var mockAnchorInstance = { hover: () => {} };
+    var log = [];
+    class Foo extends React.Component {
+      componentDidMount() {
+        log.push(this.refs.bar);
+      }
+      render() {
+        return (
+          <a ref="bar">Hello, world</a>
+        );
+      }
+    }
+    function createNodeMock(element) {
+      switch (element.type) {
+        case 'div':
+          return mockDivInstance;
+        case 'input':
+          return mockInputInstance;
+        case 'li':
+          return mockListItemInstance;
+        case 'a':
+          return mockAnchorInstance;
+        default:
+          return {};
+      }
+    }
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+      {createNodeMock}
+    );
+    ReactTestRenderer.create(
+      <input ref={(r) => log.push(r)} />,
+      {createNodeMock},
+    );
+    ReactTestRenderer.create(
+      <div>
+        <span>
+          <ul>
+            <li ref={(r) => log.push(r)} />
+          </ul>
+          <ul>
+            <li ref={(r) => log.push(r)} />
+            <li ref={(r) => log.push(r)} />
+          </ul>
+        </span>
+      </div>,
+      {createNodeMock, foobar: true},
+    );
+    ReactTestRenderer.create(
+      <Foo />,
+      {createNodeMock},
+    );
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+    );
+    ReactTestRenderer.create(
+      <div ref={(r) => log.push(r)} />,
+      {}
+    );
+    expect(log).toEqual([
+      mockDivInstance,
+      mockInputInstance,
+      mockListItemInstance,
+      mockListItemInstance,
+      mockListItemInstance,
+      mockAnchorInstance,
+      null,
+      null,
+    ]);
+  });
+
+  it('supports unmounting when using refs', () => {
+    class Foo extends React.Component {
+      render() {
+        return <div ref="foo" />;
+      }
+    }
+    const inst = ReactTestRenderer.create(
+      <Foo />,
+      {createNodeMock: () => 'foo'}
+    );
+    expect(() => inst.unmount()).not.toThrow();
+  });
+
+  it('supports updates when using refs', () => {
+    const log = [];
+    const createNodeMock = element => {
+      log.push(element.type);
+      return element.type;
+    };
+    class Foo extends React.Component {
+      render() {
+        return this.props.useDiv
+          ? <div ref="foo" />
+          : <span ref="foo" />;
+      }
+    }
+    const inst = ReactTestRenderer.create(
+      <Foo useDiv={true} />,
+      {createNodeMock}
+    );
+    inst.update(<Foo useDiv={false} />);
+    // It's called with 'div' twice (mounting and unmounting)
+    expect(log).toEqual(['div', 'div', 'span']);
+  });
+
+  it('supports error boundaries', () => {
     var log = [];
     class Angry extends React.Component {
       render() {

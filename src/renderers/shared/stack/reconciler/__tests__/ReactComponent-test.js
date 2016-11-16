@@ -15,18 +15,14 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-function normalizeCodeLocInfo(str) {
-  return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-}
-
-describe('ReactComponent', function() {
-  beforeEach(function() {
+describe('ReactComponent', () => {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should throw on invalid render targets', function() {
+  it('should throw on invalid render targets', () => {
     var container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
@@ -42,40 +38,56 @@ describe('ReactComponent', function() {
     );
   });
 
-  it('should throw when supplying a ref outside of render method', function() {
+  it('should throw when supplying a ref outside of render method', () => {
     var instance = <div ref="badDiv" />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
-  it('should warn when children are mutated before render', function() {
+  it('should warn when children are mutated during render', () => {
     spyOn(console, 'error');
-    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
-    var element = <div>{children}</div>;
-    children[1] = <p key={1} />; // Mutation is illegal
-    ReactTestUtils.renderIntoDocument(element);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Component\'s children should not be mutated.\n    in div (at **)'
-    );
-  });
-
-  it('should warn when children are mutated', function() {
-    spyOn(console, 'error');
-    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    ReactTestUtils.renderIntoDocument(<Wrapper>{children}</Wrapper>);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Component\'s children should not be mutated.\n    in Wrapper (at **)'
-    );
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(
+        <Wrapper>
+          <span key={0}/>
+          <span key={1}/>
+          <span key={2}/>
+        </Wrapper>
+      );
+    }).toThrowError(/Cannot assign to read only property.*/);
   });
 
-  it('should support refs on owned components', function() {
+  it('should warn when children are mutated during update', () => {
+    spyOn(console, 'error');
+
+    class Wrapper extends React.Component {
+      componentDidMount() {
+        this.props.children[1] = <p key={1} />; // Mutation is illegal
+        this.forceUpdate();
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(
+        <Wrapper>
+          <span key={0}/>
+          <span key={1}/>
+          <span key={2}/>
+        </Wrapper>
+      );
+    }).toThrowError(/Cannot assign to read only property.*/);
+  });
+
+  it('should support refs on owned components', () => {
     var innerObj = {};
     var outerObj = {};
 
@@ -106,7 +118,7 @@ describe('ReactComponent', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should not have refs on unmounted components', function() {
+  it('should not have refs on unmounted components', () => {
     class Parent extends React.Component {
       render() {
         return <Child><div ref="test" /></Child>;
@@ -127,7 +139,7 @@ describe('ReactComponent', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should support new-style refs', function() {
+  it('should support new-style refs', () => {
     var innerObj = {};
     var outerObj = {};
 
@@ -166,7 +178,7 @@ describe('ReactComponent', function() {
     expect(mounted).toBe(true);
   });
 
-  it('should support new-style refs with mixed-up owners', function() {
+  it('should support new-style refs with mixed-up owners', () => {
     class Wrapper extends React.Component {
       getTitle = () => {
         return this.props.title;
@@ -209,7 +221,7 @@ describe('ReactComponent', function() {
     expect(mounted).toBe(true);
   });
 
-  it('should call refs at the correct time', function() {
+  it('should call refs at the correct time', () => {
     var log = [];
 
     class Inner extends React.Component {
@@ -298,7 +310,7 @@ describe('ReactComponent', function() {
     /* eslint-enable indent */
   });
 
-  it('fires the callback after a component is rendered', function() {
+  it('fires the callback after a component is rendered', () => {
     var callback = jest.fn();
     var container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
@@ -309,7 +321,7 @@ describe('ReactComponent', function() {
     expect(callback.mock.calls.length).toBe(3);
   });
 
-  it('throws usefully when rendering badly-typed elements', function() {
+  it('throws usefully when rendering badly-typed elements', () => {
     spyOn(console, 'error');
 
     var X = undefined;

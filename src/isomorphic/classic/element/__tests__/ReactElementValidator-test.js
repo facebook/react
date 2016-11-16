@@ -18,14 +18,14 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-describe('ReactElementValidator', function() {
+describe('ReactElementValidator', () => {
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   var ComponentClass;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -38,7 +38,7 @@ describe('ReactElementValidator', function() {
     });
   });
 
-  it('warns for keys for arrays of elements in rest args', function() {
+  it('warns for keys for arrays of elements in rest args', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -50,7 +50,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('warns for keys for arrays of elements with owner info', function() {
+  it('warns for keys for arrays of elements with owner info', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -82,7 +82,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('warns for keys for arrays with no owner or parent info', function() {
+  it('warns for keys for arrays with no owner or parent info', () => {
     spyOn(console, 'error');
 
     var Anonymous = React.createClass({
@@ -106,7 +106,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('warns for keys for arrays of elements with no owner info', function() {
+  it('warns for keys for arrays of elements with no owner info', () => {
     spyOn(console, 'error');
 
     var divs = [
@@ -124,7 +124,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('warns for keys with component stack info', function() {
+  it('warns for keys with component stack info', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -159,7 +159,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('does not warn for keys when passing children down', function() {
+  it('does not warn for keys when passing children down', () => {
     spyOn(console, 'error');
 
     var Wrapper = React.createClass({
@@ -183,7 +183,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('warns for keys for iterables of elements in rest args', function() {
+  it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -207,7 +207,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('does not warns for arrays of elements with keys', function() {
+  it('does not warns for arrays of elements with keys', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -216,7 +216,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warns for iterable elements with keys', function() {
+  it('does not warns for iterable elements with keys', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -240,7 +240,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warn when the element is directly in rest args', function() {
+  it('does not warn when the element is directly in rest args', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -249,7 +249,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warn when the array contains a non-element', function() {
+  it('does not warn when the array contains a non-element', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
@@ -289,7 +289,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('gives a helpful error when passing null, undefined, boolean, or number', function() {
+  it('gives a helpful error when passing null, undefined, boolean, or number', () => {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
@@ -320,7 +320,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(4);
   });
 
-  it('includes the owner name when passing null, undefined, boolean, or number', function() {
+  it('includes the owner name when passing null, undefined, boolean, or number', () => {
     spyOn(console, 'error');
     var ParentComp = React.createClass({
       render: function() {
@@ -343,7 +343,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('should check default prop values', function() {
+  it('should check default prop values', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -360,13 +360,13 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `Component`.\n' +
+      'Warning: Failed prop type: The prop `prop` is marked as required in ' +
+      '`Component`, but its value is `null`.\n' +
       '    in Component'
     );
   });
 
-  it('should not check the default for explicit null', function() {
+  it('should not check the default for explicit null', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -385,13 +385,13 @@ describe('ReactElementValidator', function() {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `Component`.\n' +
+      'Warning: Failed prop type: The prop `prop` is marked as required in ' +
+      '`Component`, but its value is `null`.\n' +
       '    in Component'
     );
   });
 
-  it('should check declared prop types', function() {
+  it('should check declared prop types', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -413,7 +413,8 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(2);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
-      'Required prop `prop` was not specified in `Component`.\n' +
+      'The prop `prop` is marked as required in `Component`, but its value ' +
+      'is `undefined`.\n' +
       '    in Component'
     );
 
@@ -432,7 +433,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(2);
   });
 
-  it('should warn if a PropType creator is used as a PropType', function() {
+  it('should warn if a PropType creator is used as a PropType', () => {
     spyOn(console, 'error');
 
     var Component = React.createClass({
@@ -458,7 +459,7 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('should warn when accessing .type on an element factory', function() {
+  it('should warn when accessing .type on an element factory', () => {
     spyOn(console, 'error');
     var TestComponent = React.createClass({
       render: function() {
@@ -477,7 +478,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(1);
   });
 
-  it('does not warn when using DOM node as children', function() {
+  it('does not warn when using DOM node as children', () => {
     spyOn(console, 'error');
     var DOMContainer = React.createClass({
       render: function() {
@@ -494,7 +495,7 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.count()).toBe(0);
   });
 
-  it('should not enumerate enumerable numbers (#4776)', function() {
+  it('should not enumerate enumerable numbers (#4776)', () => {
     /*eslint-disable no-extend-native */
     Number.prototype['@@iterator'] = function() {
       throw new Error('number iterator called');
@@ -514,7 +515,7 @@ describe('ReactElementValidator', function() {
     }
   });
 
-  it('does not blow up with inlined children', function() {
+  it('does not blow up with inlined children', () => {
     // We don't suggest this since it silences all sorts of warnings, but we
     // shouldn't blow up either.
 
@@ -530,7 +531,7 @@ describe('ReactElementValidator', function() {
     void <div>{[child]}</div>;
   });
 
-  it('does not blow up on key warning with undefined type', function() {
+  it('does not blow up on key warning with undefined type', () => {
     spyOn(console, 'error');
     var Foo = undefined;
     void <Foo>{[<div />]}</Foo>;

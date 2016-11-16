@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactInvalidSetStateWarningHook
+ * @flow
  */
 
 'use strict';
@@ -25,13 +26,13 @@ if (__DEV__) {
 }
 
 var ReactInvalidSetStateWarningHook = {
-  onBeginProcessingChildContext() {
+  onBeginProcessingChildContext(): void {
     processingChildContext = true;
   },
-  onEndProcessingChildContext() {
+  onEndProcessingChildContext(): void {
     processingChildContext = false;
   },
-  onSetState() {
+  onSetState(): void {
     warnInvalidSetState();
   },
 };

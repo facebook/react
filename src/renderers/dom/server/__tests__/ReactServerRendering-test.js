@@ -22,8 +22,8 @@ var ReactServerRendering;
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
 
-describe('ReactServerRendering', function() {
-  beforeEach(function() {
+describe('ReactServerRendering', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -40,41 +40,41 @@ describe('ReactServerRendering', function() {
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
-  describe('renderToString', function() {
-    it('should generate simple markup', function() {
+  describe('renderToString', () => {
+    it('should generate simple markup', () => {
       var response = ReactServerRendering.renderToString(
         <span>hello world</span>
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
-      );
+      ));
     });
 
-    it('should generate simple markup for self-closing tags', function() {
+    it('should generate simple markup for self-closing tags', () => {
       var response = ReactServerRendering.renderToString(
         <img />
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      );
+      ));
     });
 
-    it('should generate simple markup for attribute with `>` symbol', function() {
+    it('should generate simple markup for attribute with `>` symbol', () => {
       var response = ReactServerRendering.renderToString(
         <img data-attr=">" />
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      );
+      ));
     });
 
-    it('should generate comment markup for component returns null', function() {
+    it('should generate comment markup for component returns null', () => {
       class NullComponent extends React.Component {
         render() {
           return null;
@@ -85,7 +85,7 @@ describe('ReactServerRendering', function() {
       expect(response).toBe('<!-- react-empty: 1 -->');
     });
 
-    it('should not register event listeners', function() {
+    it('should not register event listeners', () => {
       var EventPluginHub = require('EventPluginHub');
       var cb = jest.fn();
 
@@ -95,7 +95,7 @@ describe('ReactServerRendering', function() {
       expect(EventPluginHub.__getListenerBank()).toEqual({});
     });
 
-    it('should render composite components', function() {
+    it('should render composite components', () => {
       class Parent extends React.Component {
         render() {
           return <div><Child name="child" /></div>;
@@ -111,7 +111,7 @@ describe('ReactServerRendering', function() {
       var response = ReactServerRendering.renderToString(
         <Parent />
       );
-      expect(response).toMatch(
+      expect(response).toMatch(new RegExp(
         '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
           ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
@@ -120,10 +120,10 @@ describe('ReactServerRendering', function() {
             '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
           '</span>' +
         '</div>'
-      );
+      ));
     });
 
-    it('should only execute certain lifecycle methods', function() {
+    it('should only execute certain lifecycle methods', () => {
       function runTest() {
         var lifecycle = [];
 
@@ -172,14 +172,14 @@ describe('ReactServerRendering', function() {
           <TestComponent />
         );
 
-        expect(response).toMatch(
+        expect(response).toMatch(new RegExp(
           '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
             ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
             '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
             '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
           '</span>'
-        );
+        ));
         expect(lifecycle).toEqual(
           ['getInitialState', 'componentWillMount', 'render']
         );
@@ -192,7 +192,7 @@ describe('ReactServerRendering', function() {
       runTest();
     });
 
-    it('should have the correct mounting behavior', function() {
+    it('should have the correct mounting behavior', () => {
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -275,7 +275,7 @@ describe('ReactServerRendering', function() {
       expect(numClicks).toEqual(2);
     });
 
-    it('should throw with silly args', function() {
+    it('should throw with silly args', () => {
       expect(
         ReactServerRendering.renderToString.bind(
           ReactServerRendering,
@@ -287,8 +287,8 @@ describe('ReactServerRendering', function() {
     });
   });
 
-  describe('renderToStaticMarkup', function() {
-    it('should not put checksum and React ID on components', function() {
+  describe('renderToStaticMarkup', () => {
+    it('should not put checksum and React ID on components', () => {
       class NestedComponent extends React.Component {
         render() {
           return <div>inner text</div>;
@@ -308,7 +308,7 @@ describe('ReactServerRendering', function() {
       expect(response).toBe('<span><div>inner text</div></span>');
     });
 
-    it('should not put checksum and React ID on text components', function() {
+    it('should not put checksum and React ID on text components', () => {
       class TestComponent extends React.Component {
         render() {
           return <span>{'hello'} {'world'}</span>;
@@ -322,17 +322,17 @@ describe('ReactServerRendering', function() {
       expect(response).toBe('<span>hello world</span>');
     });
 
-    it('should not register event listeners', function() {
+    it('should not register event listeners', () => {
       var EventPluginHub = require('EventPluginHub');
       var cb = jest.fn();
 
-      ReactServerRendering.renderToString(
+      ReactServerRendering.renderToStaticMarkup(
         <span onClick={cb}>hello world</span>
       );
       expect(EventPluginHub.__getListenerBank()).toEqual({});
     });
 
-    it('should only execute certain lifecycle methods', function() {
+    it('should only execute certain lifecycle methods', () => {
       function runTest() {
         var lifecycle = [];
 
@@ -394,7 +394,7 @@ describe('ReactServerRendering', function() {
       runTest();
     });
 
-    it('should throw with silly args', function() {
+    it('should throw with silly args', () => {
       expect(
         ReactServerRendering.renderToStaticMarkup.bind(
           ReactServerRendering,
@@ -405,7 +405,7 @@ describe('ReactServerRendering', function() {
       );
     });
 
-    it('allows setState in componentWillMount without using DOM', function() {
+    it('allows setState in componentWillMount without using DOM', () => {
       class Component extends React.Component {
         componentWillMount() {
           this.setState({text: 'hello, world'});
@@ -426,7 +426,7 @@ describe('ReactServerRendering', function() {
       expect(markup.indexOf('hello, world') >= 0).toBe(true);
     });
 
-    it('renders components with different batching strategies', function() {
+    it('renders components with different batching strategies', () => {
       class StaticComponent extends React.Component {
         render() {
           const staticContent = ReactServerRendering.renderToStaticMarkup(
@@ -460,7 +460,7 @@ describe('ReactServerRendering', function() {
     });
   });
 
-  it('warns with a no-op when an async setState is triggered', function() {
+  it('warns with a no-op when an async setState is triggered', () => {
     class Foo extends React.Component {
       componentWillMount() {
         this.setState({text: 'hello'});
@@ -486,7 +486,7 @@ describe('ReactServerRendering', function() {
     expect(markup).toBe('<div>hello</div>');
   });
 
-  it('warns with a no-op when an async replaceState is triggered', function() {
+  it('warns with a no-op when an async replaceState is triggered', () => {
     var Bar = React.createClass({
       componentWillMount: function() {
         this.replaceState({text: 'hello'});
@@ -512,7 +512,7 @@ describe('ReactServerRendering', function() {
     expect(markup).toBe('<div>hello</div>');
   });
 
-  it('warns with a no-op when an async forceUpdate is triggered', function() {
+  it('warns with a no-op when an async forceUpdate is triggered', () => {
     class Baz extends React.Component {
       componentWillMount() {
         this.forceUpdate();
@@ -539,37 +539,20 @@ describe('ReactServerRendering', function() {
     expect(markup).toBe('<div></div>');
   });
 
-  it('warns when children are mutated before render', function() {
-    function normalizeCodeLocInfo(str) {
-      return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-    }
-
+  it('should warn when children are mutated during render', () => {
     spyOn(console, 'error');
-    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
-    var element = <div>{children}</div>;
-    children[1] = <p key={1} />; // Mutation is illegal
-    ReactServerRendering.renderToString(element);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Component\'s children should not be mutated.\n    in div (at **)'
-    );
-  });
-
-  it('should warn when children are mutated', function() {
-    function normalizeCodeLocInfo(str) {
-      return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-    }
-
-    spyOn(console, 'error');
-    var children = [<span key={0} />, <span key={1} />, <span key={2} />];
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    ReactServerRendering.renderToString(<Wrapper>{children}</Wrapper>);
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Component\'s children should not be mutated.\n    in Wrapper (at **)'
-    );
+    expect(() => {
+      ReactServerRendering.renderToStaticMarkup(
+        <Wrapper>
+          <span key={0}/>
+          <span key={1}/>
+          <span key={2}/>
+        </Wrapper>
+      );
+    }).toThrowError(/Cannot assign to read only property.*/);
   });
 });

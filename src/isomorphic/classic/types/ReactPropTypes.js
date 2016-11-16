@@ -145,9 +145,10 @@ function createChainableTypeChecker(validate) {
             false,
             'You are manually calling a React.PropTypes validation ' +
             'function for the `%s` prop on `%s`. This is deprecated ' +
-            'and will not work in the next major version. You may be ' +
-            'seeing this warning due to a third-party PropTypes library. ' +
-            'See https://fb.me/react-warning-dont-call-proptypes for details.',
+            'and will not work in production with the next major version. ' +
+            'You may be seeing this warning due to a third-party PropTypes ' +
+            'library. See https://fb.me/react-warning-dont-call-proptypes ' +
+            'for details.',
             propFullName,
             componentName
           );
@@ -158,9 +159,15 @@ function createChainableTypeChecker(validate) {
     if (props[propName] == null) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
+        if (props[propName] === null) {
+          return new PropTypeError(
+            `The ${locationName} \`${propFullName}\` is marked as required ` +
+            `in \`${componentName}\`, but its value is \`null\`.`
+          );
+        }
         return new PropTypeError(
-          `Required ${locationName} \`${propFullName}\` was not specified in ` +
-          `\`${componentName}\`.`
+          `The ${locationName} \`${propFullName}\` is marked as required in ` +
+          `\`${componentName}\`, but its value is \`undefined\`.`
         );
       }
       return null;

@@ -1,6 +1,6 @@
 {
   "name": "react-native-renderer",
-  "version": "15.3.2",
+  "version": "15.4.0-rc.4",
   "description": "React package for use inside react-native.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -14,12 +14,17 @@
   },
   "homepage": "https://facebook.github.io/react-native/",
   "dependencies": {
-    "react": "^15.3.2"
+    "fbjs": "^0.8.1",
+    "object-assign": "^4.1.0"
+  },
+  "peerDependencies": {
+    "react": "^15.4.0-rc.4"
   },
   "files": [
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js"
+    "index.js",
+    "lib/"
   ]
 }

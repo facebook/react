@@ -13,9 +13,6 @@
 
 'use strict';
 
-jest
-  .unmock('ReactART');
-
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
@@ -51,9 +48,9 @@ function testDOMNodeStructure(domNode, expectedStructure) {
   }
 }
 
-describe('ReactART', function() {
+describe('ReactART', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     ARTCurrentMode.setCurrent(ARTSVGMode);
 
     Group = ReactART.Group;
@@ -99,7 +96,7 @@ describe('ReactART', function() {
     };
   });
 
-  it('should have the correct lifecycle state', function() {
+  it('should have the correct lifecycle state', () => {
     var instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     var group = instance.refs.group;
@@ -107,7 +104,7 @@ describe('ReactART', function() {
     expect(typeof group.indicate).toBe('function');
   });
 
-  it('should render a reasonable SVG structure in SVG mode', function() {
+  it('should render a reasonable SVG structure in SVG mode', () => {
     var instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -138,7 +135,7 @@ describe('ReactART', function() {
     testDOMNodeStructure(realNode, expectedStructure);
   });
 
-  it('should be able to reorder components', function() {
+  it('should be able to reorder components', () => {
     var container = document.createElement('div');
     var instance = ReactDOM.render(<TestComponent flipped={false} />, container);
 
@@ -182,7 +179,7 @@ describe('ReactART', function() {
     testDOMNodeStructure(realNode, expectedNewStructure);
   });
 
-  it('should be able to reorder many components', function() {
+  it('should be able to reorder many components', () => {
     var container = document.createElement('div');
 
     class Component extends React.Component {
@@ -210,7 +207,7 @@ describe('ReactART', function() {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('renders composite with lifecycle inside group', function() {
+  it('renders composite with lifecycle inside group', () => {
     var mounted = false;
 
     class CustomShape extends React.Component {
@@ -233,7 +230,7 @@ describe('ReactART', function() {
     expect(mounted).toBe(true);
   });
 
-  it('resolves refs before componentDidMount', function() {
+  it('resolves refs before componentDidMount', () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;
@@ -262,7 +259,7 @@ describe('ReactART', function() {
     expect(ref.constructor).toBe(CustomShape);
   });
 
-  it('resolves refs before componentDidUpdate', function() {
+  it('resolves refs before componentDidUpdate', () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;

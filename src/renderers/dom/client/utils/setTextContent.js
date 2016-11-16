@@ -40,6 +40,10 @@ var setTextContent = function(node, text) {
 if (ExecutionEnvironment.canUseDOM) {
   if (!('textContent' in document.documentElement)) {
     setTextContent = function(node, text) {
+      if (node.nodeType === 3) {
+        node.nodeValue = text;
+        return;
+      }
       setInnerHTML(node, escapeTextContentForBrowser(text));
     };
   }

@@ -11,8 +11,7 @@
 
 'use strict';
 
-var ReactPropTypes = require('ReactPropTypes');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var React = require('React');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
@@ -84,7 +83,7 @@ var propTypes = {
       'set either `onChange` or `readOnly`.'
     );
   },
-  onChange: ReactPropTypes.func,
+  onChange: React.PropTypes.func,
 };
 
 var loggedTypeFailures = {};
@@ -110,7 +109,7 @@ var LinkedValueUtils = {
           props,
           propName,
           tagName,
-          ReactPropTypeLocations.prop,
+          'prop',
           null,
           ReactPropTypesSecret
         );

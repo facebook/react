@@ -11,22 +11,20 @@
 
 'use strict';
 
-jest
-  .unmock('EventPluginHub')
-  .mock('isEventSupported');
+jest.mock('isEventSupported');
 
-describe('EventPluginHub', function() {
+describe('EventPluginHub', () => {
   var EventPluginHub;
   var isEventSupported;
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     EventPluginHub = require('EventPluginHub');
     isEventSupported = require('isEventSupported');
     isEventSupported.mockReturnValueOnce(false);
   });
 
-  it('should prevent non-function listeners', function() {
+  it('should prevent non-function listeners', () => {
     expect(function() {
       EventPluginHub.putListener(1, 'onClick', 'not a function');
     }).toThrowError(

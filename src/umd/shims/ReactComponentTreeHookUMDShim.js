@@ -6,11 +6,13 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
-* @providesModule renderSubtreeIntoContainer
-*/
+ * @providesModule ReactComponentTreeHookUMDShim
+ */
+
+/* globals React */
 
 'use strict';
 
-var ReactMount = require('ReactMount');
+var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-module.exports = ReactMount.renderSubtreeIntoContainer;
+module.exports = ReactInternals.ReactComponentTreeHook;

@@ -14,7 +14,7 @@
 
 type ReactNodeType = 0 | 1 | 2;
 
-var ReactElement = require('ReactElement');
+var React = require('React');
 
 var invariant = require('invariant');
 
@@ -26,7 +26,7 @@ var ReactNodeTypes = {
   getType: function(node: ReactElement<any>): ReactNodeType {
     if (node === null || node === false) {
       return ReactNodeTypes.EMPTY;
-    } else if (ReactElement.isValidElement(node)) {
+    } else if (React.isValidElement(node)) {
       if (typeof node.type === 'function') {
         return ReactNodeTypes.COMPOSITE;
       } else {

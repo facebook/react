@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactErrorUtils
+ * @flow
  */
 
 'use strict';
@@ -16,19 +17,22 @@ var caughtError = null;
 /**
  * Call a function while guarding against errors that happens within it.
  *
- * @param {?String} name of the guard to use for logging or debugging
+ * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
  * @param {*} a First argument
  * @param {*} b Second argument
  */
-function invokeGuardedCallback(name, func, a, b) {
+function invokeGuardedCallback<A>(
+  name: string,
+  func: (a: A) => void,
+  a: A,
+): void {
   try {
-    return func(a, b);
+    func(a);
   } catch (x) {
     if (caughtError === null) {
       caughtError = x;
     }
-    return undefined;
   }
 }
 
@@ -64,11 +68,16 @@ if (__DEV__) {
       typeof document !== 'undefined' &&
       typeof document.createEvent === 'function') {
     var fakeNode = document.createElement('react');
-    ReactErrorUtils.invokeGuardedCallback = function(name, func, a, b) {
-      var boundFunc = func.bind(null, a, b);
+    ReactErrorUtils.invokeGuardedCallback = function<A>(
+      name: string,
+      func: (a: A) => void,
+      a: A,
+    ): void {
+      var boundFunc = func.bind(null, a);
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');
+      // $FlowFixMe https://github.com/facebook/flow/issues/2336
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);

@@ -6,17 +6,16 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactPropTypeLocations
+ * @providesModule getNextDebugID
+ * @flow
  */
 
 'use strict';
 
-var keyMirror = require('keyMirror');
+var nextDebugID = 1;
 
-var ReactPropTypeLocations = keyMirror({
-  prop: null,
-  context: null,
-  childContext: null,
-});
+function getNextDebugID(): number {
+  return nextDebugID++;
+}
 
-module.exports = ReactPropTypeLocations;
+module.exports = getNextDebugID;

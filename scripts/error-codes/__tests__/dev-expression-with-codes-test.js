@@ -25,7 +25,7 @@ function compare(input, output) {
 
 var oldEnv;
 
-describe('dev-expression', function() {
+describe('dev-expression', () => {
   beforeEach(() => {
     oldEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = '';

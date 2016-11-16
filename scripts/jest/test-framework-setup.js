@@ -1,5 +1,9 @@
 'use strict';
 
+// We want to globally mock this but jest doesn't let us do that by default
+// for a file that already exists. So we have to explicitly mock it.
+jest.mock('ReactDOM');
+
 var env = jasmine.getEnv();
 
 var callCount = 0;

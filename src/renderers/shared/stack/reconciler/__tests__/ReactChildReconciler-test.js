@@ -17,19 +17,19 @@
 var React;
 var ReactTestUtils;
 
-describe('ReactChildReconciler', function() {
+describe('ReactChildReconciler', () => {
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('warns for duplicated keys', function() {
+  it('warns for duplicated keys', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
@@ -46,7 +46,7 @@ describe('ReactChildReconciler', function() {
     );
   });
 
-  it('warns for duplicated keys with component stack info', function() {
+  it('warns for duplicated keys with component stack info', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {

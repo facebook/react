@@ -17,8 +17,8 @@ var ReactTestUtils;
 
 var TestComponent;
 
-describe('refs-destruction', function() {
-  beforeEach(function() {
+describe('refs-destruction', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
 
     React = require('React');
@@ -40,7 +40,7 @@ describe('refs-destruction', function() {
     };
   });
 
-  it('should remove refs when destroying the parent', function() {
+  it('should remove refs when destroying the parent', () => {
     var container = document.createElement('div');
     var testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
@@ -50,7 +50,7 @@ describe('refs-destruction', function() {
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
   });
 
-  it('should remove refs when destroying the child', function() {
+  it('should remove refs when destroying the child', () => {
     var container = document.createElement('div');
     var testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
@@ -60,7 +60,7 @@ describe('refs-destruction', function() {
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
   });
 
-  it('should not error when destroying child with ref asynchronously', function() {
+  it('should not error when destroying child with ref asynchronously', () => {
     class Modal extends React.Component {
       componentDidMount() {
         this.div = document.createElement('div');

@@ -13,12 +13,12 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
+var React = require('React');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactElement = require('ReactElement');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
@@ -100,7 +100,7 @@ function mountComponentIntoNode(
 ) {
   var markerName;
   if (ReactFeatureFlags.logTopLevelRenders) {
-    var wrappedElement = wrapperInstance._currentElement.props;
+    var wrappedElement = wrapperInstance._currentElement.props.child;
     var type = wrappedElement.type;
     markerName = 'React mount: ' + (
       typeof type === 'string' ? type :
@@ -275,9 +275,9 @@ if (__DEV__) {
   TopLevelWrapper.displayName = 'TopLevelWrapper';
 }
 TopLevelWrapper.prototype.render = function() {
-  // this.props is actually a ReactElement
-  return this.props;
+  return this.props.child;
 };
+TopLevelWrapper.isReactTopLevelWrapper = true;
 
 /**
  * Mounting is the process of initializing a React component by creating its
@@ -423,7 +423,7 @@ var ReactMount = {
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     ReactUpdateQueue.validateCallback(callback, 'ReactDOM.render');
     invariant(
-      ReactElement.isValidElement(nextElement),
+      React.isValidElement(nextElement),
       'ReactDOM.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
@@ -450,14 +450,9 @@ var ReactMount = {
       'for your app.'
     );
 
-    var nextWrappedElement = ReactElement(
+    var nextWrappedElement = React.createElement(
       TopLevelWrapper,
-      null,
-      null,
-      null,
-      null,
-      null,
-      nextElement
+      { child: nextElement }
     );
 
     var nextContext;
@@ -472,7 +467,7 @@ var ReactMount = {
 
     if (prevComponent) {
       var prevWrappedElement = prevComponent._currentElement;
-      var prevElement = prevWrappedElement.props;
+      var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
         var updatedCallback = callback && function() {
@@ -734,11 +729,11 @@ var ReactMount = {
     if (__DEV__) {
       var hostNode = ReactDOMComponentTree.getInstanceFromNode(container.firstChild);
       if (hostNode._debugID !== 0) {
-        ReactInstrumentation.debugTool.onHostOperation(
-          hostNode._debugID,
-          'mount',
-          markup.toString()
-        );
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: hostNode._debugID,
+          type: 'mount',
+          payload: markup.toString(),
+        });
       }
     }
   },

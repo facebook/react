@@ -175,7 +175,7 @@ var Mixin = {
 };
 
 
-Object.assign(ReactReconcileTransaction.prototype, Transaction.Mixin, Mixin);
+Object.assign(ReactReconcileTransaction.prototype, Transaction, Mixin);
 
 PooledClass.addPoolingTo(ReactReconcileTransaction);
 

@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactTestRenderer
+ * @flow
  */
 
 'use strict';
@@ -19,8 +20,19 @@ var ReactHostComponent = require('ReactHostComponent');
 var ReactTestMount = require('ReactTestMount');
 var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
+var ReactTestTextComponent = require('ReactTestTextComponent');
+var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
+var invariant = require('invariant');
 
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
+import type { ReactElement } from 'ReactElementType';
+import type { ReactInstance } from 'ReactInstanceType';
+
+type ReactTestRendererJSON = {
+  type: string,
+  props: { [propName: string]: string },
+  children: null | Array<string | ReactTestRendererJSON>,
+  $$typeof?: any
+}
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -37,86 +49,79 @@ function getRenderedHostOrTextFromComponent(component) {
   return component;
 }
 
+class ReactTestComponent {
+  _currentElement: ReactElement;
+  _renderedChildren: null | Object;
+  _topLevelWrapper: null | ReactInstance;
+  _hostContainerInfo: null | Object;
 
-// =============================================================================
-
-var ReactTestComponent = function(element) {
-  this._currentElement = element;
-  this._renderedChildren = null;
-  this._topLevelWrapper = null;
-};
-ReactTestComponent.prototype.mountComponent = function(
-  transaction,
-  nativeParent,
-  nativeContainerInfo,
-  context
-) {
-  var element = this._currentElement;
-  this.mountChildren(element.props.children, transaction, context);
-};
-ReactTestComponent.prototype.receiveComponent = function(
-  nextElement,
-  transaction,
-  context
-) {
-  this._currentElement = nextElement;
-  this.updateChildren(nextElement.props.children, transaction, context);
-};
-ReactTestComponent.prototype.getHostNode = function() {};
-ReactTestComponent.prototype.getPublicInstance = function() {
-  // I can't say this makes a ton of sense but it seems better than throwing.
-  // Maybe we'll revise later if someone has a good use case.
-  return null;
-};
-ReactTestComponent.prototype.unmountComponent = function() {};
-ReactTestComponent.prototype.toJSON = function() {
-  var {children, ...props} = this._currentElement.props;
-  var childrenJSON = [];
-  for (var key in this._renderedChildren) {
-    var inst = this._renderedChildren[key];
-    inst = getRenderedHostOrTextFromComponent(inst);
-    var json = inst.toJSON();
-    if (json !== undefined) {
-      childrenJSON.push(json);
-    }
+  constructor(element: ReactElement) {
+    this._currentElement = element;
+    this._renderedChildren = null;
+    this._topLevelWrapper = null;
+    this._hostContainerInfo = null;
   }
-  var object = {
-    type: this._currentElement.type,
-    props: props,
-    children: childrenJSON.length ? childrenJSON : null,
-  };
-  Object.defineProperty(object, '$$typeof', {
-    value: Symbol.for('react.test.json'),
-  });
-  return object;
-};
+
+  mountComponent(
+    transaction: ReactTestReconcileTransaction,
+    nativeParent: null | ReactTestComponent,
+    hostContainerInfo: Object,
+    context: Object,
+  ) {
+    var element = this._currentElement;
+    this._hostContainerInfo = hostContainerInfo;
+    // $FlowFixMe https://github.com/facebook/flow/issues/1805
+    this.mountChildren(element.props.children, transaction, context);
+  }
+
+  receiveComponent(
+    nextElement: ReactElement,
+    transaction: ReactTestReconcileTransaction,
+    context: Object,
+  ) {
+    this._currentElement = nextElement;
+    // $FlowFixMe https://github.com/facebook/flow/issues/1805
+    this.updateChildren(nextElement.props.children, transaction, context);
+  }
+
+  getPublicInstance(): Object {
+    var element = this._currentElement;
+    var hostContainerInfo = this._hostContainerInfo;
+    invariant(
+      hostContainerInfo,
+      'hostContainerInfo should be populated before ' +
+      'getPublicInstance is called.'
+    );
+    return hostContainerInfo.createNodeMock(element);
+  }
+
+  toJSON(): ReactTestRendererJSON {
+    var {children, ...props} = this._currentElement.props;
+    var childrenJSON = [];
+    for (var key in this._renderedChildren) {
+      var inst = this._renderedChildren[key];
+      inst = getRenderedHostOrTextFromComponent(inst);
+      var json = inst.toJSON();
+      if (json !== undefined) {
+        childrenJSON.push(json);
+      }
+    }
+    var object: ReactTestRendererJSON = {
+      type: this._currentElement.type,
+      props: props,
+      children: childrenJSON.length ? childrenJSON : null,
+    };
+    Object.defineProperty(object, '$$typeof', {
+      value: Symbol.for('react.test.json'),
+    });
+    return object;
+  }
+
+  getHostNode(): void {}
+  unmountComponent(): void {}
+}
+
 Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
-
-// =============================================================================
-
-var ReactTestTextComponent = function(element) {
-  this._currentElement = element;
-};
-ReactTestTextComponent.prototype.mountComponent = function() {};
-ReactTestTextComponent.prototype.receiveComponent = function(nextElement) {
-  this._currentElement = nextElement;
-};
-ReactTestTextComponent.prototype.getHostNode = function() {};
-ReactTestTextComponent.prototype.unmountComponent = function() {};
-ReactTestTextComponent.prototype.toJSON = function() {
-  return this._currentElement;
-};
-
-// =============================================================================
-
-var ReactTestEmptyComponent = function(element) {
-  this._currentElement = null;
-};
-ReactTestEmptyComponent.prototype.mountComponent = function() {};
-ReactTestEmptyComponent.prototype.receiveComponent = function() {};
-ReactTestEmptyComponent.prototype.getHostNode = function() {};
-ReactTestEmptyComponent.prototype.unmountComponent = function() {};
-ReactTestEmptyComponent.prototype.toJSON = function() {};
 
 // =============================================================================
 
@@ -138,10 +143,8 @@ ReactComponentEnvironment.injection.injectEnvironment({
 
 var ReactTestRenderer = {
   create: ReactTestMount.render,
-
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
-  unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
   /* eslint-enable camelcase */
 };
 

@@ -88,7 +88,7 @@ var Mixin = {
 
 Object.assign(
   ReactServerRenderingTransaction.prototype,
-  Transaction.Mixin,
+  Transaction,
   Mixin
 );
 

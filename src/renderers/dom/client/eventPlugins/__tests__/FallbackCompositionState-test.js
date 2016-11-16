@@ -11,12 +11,12 @@
 
 'use strict';
 
-describe('FallbackCompositionState', function() {
+describe('FallbackCompositionState', () => {
   var FallbackCompositionState;
 
   var TEXT = 'Hello world';
 
-  beforeEach(function() {
+  beforeEach(() => {
     FallbackCompositionState = require('FallbackCompositionState');
   });
 
@@ -48,7 +48,7 @@ describe('FallbackCompositionState', function() {
     FallbackCompositionState.release(composition);
   }
 
-  it('extracts value via `getText()`', function() {
+  it('extracts value via `getText()`', () => {
     var composition = FallbackCompositionState.getPooled(getInput());
     expect(composition.getText()).toBe(TEXT);
     FallbackCompositionState.release(composition);
@@ -62,30 +62,30 @@ describe('FallbackCompositionState', function() {
     FallbackCompositionState.release(composition);
   });
 
-  describe('Extract fallback data inserted at collapsed cursor', function() {
-    it('extracts when inserted at start of text', function() {
+  describe('Extract fallback data inserted at collapsed cursor', () => {
+    it('extracts when inserted at start of text', () => {
       assertExtractedData('XXXHello world', 'XXX');
     });
 
-    it('extracts when inserted within text', function() {
+    it('extracts when inserted within text', () => {
       assertExtractedData('Hello XXXworld', 'XXX');
     });
 
-    it('extracts when inserted at end of text', function() {
+    it('extracts when inserted at end of text', () => {
       assertExtractedData('Hello worldXXX', 'XXX');
     });
   });
 
-  describe('Extract fallback data for non-collapsed range', function() {
-    it('extracts when inserted at start of text', function() {
+  describe('Extract fallback data for non-collapsed range', () => {
+    it('extracts when inserted at start of text', () => {
       assertExtractedData('XXX world', 'XXX');
     });
 
-    it('extracts when inserted within text', function() {
+    it('extracts when inserted within text', () => {
       assertExtractedData('HelXXXrld', 'XXX');
     });
 
-    it('extracts when inserted at end of text', function() {
+    it('extracts when inserted at end of text', () => {
       assertExtractedData('Hello XXX', 'XXX');
     });
   });

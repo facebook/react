@@ -16,9 +16,9 @@ var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
 // TODO: Test render and all stock methods.
-describe('autobinding', function() {
+describe('autobinding', () => {
 
-  it('Holds reference to instance', function() {
+  it('Holds reference to instance', () => {
 
     var mouseDidEnter = jest.fn();
     var mouseDidLeave = jest.fn();
@@ -94,7 +94,7 @@ describe('autobinding', function() {
     expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
   });
 
-  it('works with mixins', function() {
+  it('works with mixins', () => {
     var mouseDidClick = jest.fn();
 
     var TestMixin = {
@@ -120,7 +120,7 @@ describe('autobinding', function() {
     expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
   });
 
-  it('warns if you try to bind to this', function() {
+  it('warns if you try to bind to this', () => {
     spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({
@@ -140,7 +140,7 @@ describe('autobinding', function() {
     );
   });
 
-  it('does not warn if you pass an auto-bound method to setState', function() {
+  it('does not warn if you pass an auto-bound method to setState', () => {
     spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({

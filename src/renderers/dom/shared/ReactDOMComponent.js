@@ -19,11 +19,9 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInput = require('ReactDOMInput');
@@ -38,7 +36,6 @@ var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
-var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
@@ -52,8 +49,8 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
-var STYLE = keyOf({style: null});
-var HTML = keyOf({__html: null});
+var STYLE = 'style';
+var HTML = '__html';
 var RESERVED_PROPS = {
   children: null,
   dangerouslySetInnerHTML: null,
@@ -326,7 +323,7 @@ function trapBubbledEventsLocal() {
     case 'object':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topLoad,
+          'topLoad',
           'load',
           node
         ),
@@ -341,7 +338,7 @@ function trapBubbledEventsLocal() {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
             ReactBrowserEventEmitter.trapBubbledEvent(
-              EventConstants.topLevelTypes[event],
+              event,
               mediaEvents[event],
               node
             )
@@ -352,7 +349,7 @@ function trapBubbledEventsLocal() {
     case 'source':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topError,
+          'topError',
           'error',
           node
         ),
@@ -361,12 +358,12 @@ function trapBubbledEventsLocal() {
     case 'img':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topError,
+          'topError',
           'error',
           node
         ),
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topLoad,
+          'topLoad',
           'load',
           node
         ),
@@ -375,12 +372,12 @@ function trapBubbledEventsLocal() {
     case 'form':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topReset,
+          'topReset',
           'reset',
           node
         ),
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topSubmit,
+          'topSubmit',
           'submit',
           node
         ),
@@ -391,7 +388,7 @@ function trapBubbledEventsLocal() {
     case 'textarea':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
-          EventConstants.topLevelTypes.topInvalid,
+          'topInvalid',
           'invalid',
           node
         ),
@@ -538,9 +535,6 @@ ReactDOMComponent.Mixin = {
           listeners: null,
         };
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
-        break;
-      case 'button':
-        props = ReactDOMButton.getHostProps(this, props, hostParent);
         break;
       case 'input':
         ReactDOMInput.mountWrapper(this, props, hostParent);
@@ -882,10 +876,6 @@ ReactDOMComponent.Mixin = {
     var nextProps = this._currentElement.props;
 
     switch (this._tag) {
-      case 'button':
-        lastProps = ReactDOMButton.getHostProps(this, lastProps);
-        nextProps = ReactDOMButton.getHostProps(this, nextProps);
-        break;
       case 'input':
         lastProps = ReactDOMInput.getHostProps(this, lastProps);
         nextProps = ReactDOMInput.getHostProps(this, nextProps);

@@ -22,9 +22,9 @@ require('InitializeJavaScriptAppEngine');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
 var RCTEventEmitter = require('RCTEventEmitter');
+var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
 var ReactHostComponent = require('ReactHostComponent');
@@ -83,7 +83,7 @@ function inject() {
     // Can't import View at the top because it depends on React to make its composite
     var View = require('View');
     return new ReactSimpleEmptyComponent(
-      ReactElement.createElement(View, {
+      React.createElement(View, {
         collapsable: true,
         style: { position: 'absolute' },
       }),

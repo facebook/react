@@ -11,22 +11,26 @@
 
 'use strict';
 
+var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactReconciler = require('ReactReconciler');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
+if (__DEV__) {
+  var checkReactTypeSpec = require('checkReactTypeSpec');
+}
+
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+
+import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var CompositeTypes = {
   ImpureClass: 0,
@@ -46,7 +50,7 @@ StatelessComponent.prototype.render = function() {
 function warnIfInvalidElement(Component, element) {
   if (__DEV__) {
     warning(
-      element === null || element === false || ReactElement.isValidElement(element),
+      element === null || element === false || React.isValidElement(element),
       '%s(...): A valid React element (or null) must be returned. You may have ' +
       'returned undefined, an array or some other invalid object.',
       Component.displayName || Component.name || 'Component'
@@ -122,7 +126,7 @@ var nextMountID = 1;
 /**
  * @lends {ReactCompositeComponent.prototype}
  */
-var ReactCompositeComponentMixin = {
+var ReactCompositeComponent = {
 
   /**
    * Base constructor for all composite component.
@@ -209,7 +213,7 @@ var ReactCompositeComponentMixin = {
       invariant(
         inst === null ||
         inst === false ||
-        ReactElement.isValidElement(inst),
+        React.isValidElement(inst),
         '%s(...): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
         Component.displayName || Component.name || 'Component'
@@ -614,7 +618,7 @@ var ReactCompositeComponentMixin = {
         this._checkContextTypes(
           Component.contextTypes,
           maskedContext,
-          ReactPropTypeLocations.context
+          'context'
         );
       }
     }
@@ -655,7 +659,7 @@ var ReactCompositeComponentMixin = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          ReactPropTypeLocations.childContext
+          'childContext'
         );
       }
       for (var name in childContext) {
@@ -679,15 +683,21 @@ var ReactCompositeComponentMixin = {
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
    */
-  _checkContextTypes: function(typeSpecs, values, location) {
-    checkReactTypeSpec(
-      typeSpecs,
-      values,
-      location,
-      this.getName(),
-      null,
-      this._debugID
-    );
+  _checkContextTypes: function(
+    typeSpecs,
+    values,
+    location: ReactPropTypeLocations,
+  ) {
+    if (__DEV__) {
+      checkReactTypeSpec(
+        typeSpecs,
+        values,
+        location,
+        this.getName(),
+        null,
+        this._debugID
+      );
+    }
   },
 
   receiveComponent: function(nextElement, transaction, nextContext) {
@@ -1028,58 +1038,58 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
-    var renderedComponent;
+    var renderedElement;
 
     if (__DEV__) {
-      renderedComponent = measureLifeCyclePerf(
+      renderedElement = measureLifeCyclePerf(
         () => inst.render(),
         this._debugID,
         'render'
       );
     } else {
-      renderedComponent = inst.render();
+      renderedElement = inst.render();
     }
 
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (renderedComponent === undefined &&
+      if (renderedElement === undefined &&
           inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
-        renderedComponent = null;
+        renderedElement = null;
       }
     }
 
-    return renderedComponent;
+    return renderedElement;
   },
 
   /**
    * @private
    */
   _renderValidatedComponent: function() {
-    var renderedComponent;
+    var renderedElement;
     if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
       ReactCurrentOwner.current = this;
       try {
-        renderedComponent =
+        renderedElement =
           this._renderValidatedComponentWithoutOwnerOrContext();
       } finally {
         ReactCurrentOwner.current = null;
       }
     } else {
-      renderedComponent =
+      renderedElement =
         this._renderValidatedComponentWithoutOwnerOrContext();
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
-      renderedComponent === null || renderedComponent === false ||
-      ReactElement.isValidElement(renderedComponent),
+      renderedElement === null || renderedElement === false ||
+      React.isValidElement(renderedElement),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'
     );
 
-    return renderedComponent;
+    return renderedElement;
   },
 
   /**
@@ -1158,12 +1168,6 @@ var ReactCompositeComponentMixin = {
 
   // Stub
   _instantiateReactComponent: null,
-
-};
-
-var ReactCompositeComponent = {
-
-  Mixin: ReactCompositeComponentMixin,
 
 };
 

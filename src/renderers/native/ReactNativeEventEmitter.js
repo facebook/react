@@ -11,7 +11,6 @@
  */
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
@@ -20,8 +19,6 @@ var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactUpdates = require('ReactUpdates');
 
 var warning = require('warning');
-
-var topLevelTypes = EventConstants.topLevelTypes;
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -186,8 +183,8 @@ var ReactNativeEventEmitter = {
     changedIndices: Array<number>
   ) {
     var changedTouches =
-      eventTopLevelType === topLevelTypes.topTouchEnd ||
-      eventTopLevelType === topLevelTypes.topTouchCancel ?
+      eventTopLevelType === 'topTouchEnd' ||
+      eventTopLevelType === 'topTouchCancel' ?
       removeTouchesAtIndices(touches, changedIndices) :
       touchSubsequence(touches, changedIndices);
 

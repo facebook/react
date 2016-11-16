@@ -11,8 +11,6 @@
 
 'use strict';
 
-var keyOf = require('keyOf');
-
 /**
  * Module that is injectable into `EventPluginHub`, that specifies a
  * deterministic ordering of `EventPlugin`s. A convenient way to reason about
@@ -23,13 +21,13 @@ var keyOf = require('keyOf');
  * preventing default on events is convenient in `SimpleEventPlugin` handlers.
  */
 var DefaultEventPluginOrder = [
-  keyOf({ResponderEventPlugin: null}),
-  keyOf({SimpleEventPlugin: null}),
-  keyOf({TapEventPlugin: null}),
-  keyOf({EnterLeaveEventPlugin: null}),
-  keyOf({ChangeEventPlugin: null}),
-  keyOf({SelectEventPlugin: null}),
-  keyOf({BeforeInputEventPlugin: null}),
+  'ResponderEventPlugin',
+  'SimpleEventPlugin',
+  'TapEventPlugin',
+  'EnterLeaveEventPlugin',
+  'ChangeEventPlugin',
+  'SelectEventPlugin',
+  'BeforeInputEventPlugin',
 ];
 
 module.exports = DefaultEventPluginOrder;

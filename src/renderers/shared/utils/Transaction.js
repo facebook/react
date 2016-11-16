@@ -7,11 +7,14 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule Transaction
+ * @flow
  */
 
 'use strict';
 
 var invariant = require('invariant');
+
+var OBSERVED_ERROR = {};
 
 /**
  * `Transaction` creates a black box that is able to wrap any method such that
@@ -74,7 +77,7 @@ var invariant = require('invariant');
  *
  * @class Transaction
  */
-var Mixin = {
+var TransactionImpl = {
   /**
    * Sets up this instance so that it is prepared for collecting metrics. Does
    * so such that this setup method may be used on an instance that is already
@@ -82,7 +85,7 @@ var Mixin = {
    * That can be useful if you decide to make your subclass of this mixin a
    * "PooledClass".
    */
-  reinitializeTransaction: function() {
+  reinitializeTransaction: function(): void {
     this.transactionWrappers = this.getTransactionWrappers();
     if (this.wrapperInitData) {
       this.wrapperInitData.length = 0;
@@ -100,7 +103,7 @@ var Mixin = {
    */
   getTransactionWrappers: null,
 
-  isInTransaction: function() {
+  isInTransaction: function(): boolean {
     return !!this._isInTransaction;
   },
 
@@ -121,7 +124,13 @@ var Mixin = {
    *
    * @return {*} Return value from `method`.
    */
-  perform: function(method, scope, a, b, c, d, e, f) {
+  perform: function<
+    A, B, C, D, E, F, G,
+    T: (a: A, b: B, c: C, d: D, e: E, f: F) => G // eslint-disable-line space-before-function-paren
+  >(
+    method: T, scope: any,
+    a: A, b: B, c: C, d: D, e: E, f: F,
+  ): G {
     invariant(
       !this.isInTransaction(),
       'Transaction.perform(...): Cannot initialize a transaction when there ' +
@@ -160,7 +169,7 @@ var Mixin = {
     return ret;
   },
 
-  initializeAll: function(startIndex) {
+  initializeAll: function(startIndex: number): void {
     var transactionWrappers = this.transactionWrappers;
     for (var i = startIndex; i < transactionWrappers.length; i++) {
       var wrapper = transactionWrappers[i];
@@ -169,12 +178,12 @@ var Mixin = {
         // OBSERVED_ERROR state before overwriting it with the real return value
         // of initialize -- if it's still set to OBSERVED_ERROR in the finally
         // block, it means wrapper.initialize threw.
-        this.wrapperInitData[i] = Transaction.OBSERVED_ERROR;
+        this.wrapperInitData[i] = OBSERVED_ERROR;
         this.wrapperInitData[i] = wrapper.initialize ?
           wrapper.initialize.call(this) :
           null;
       } finally {
-        if (this.wrapperInitData[i] === Transaction.OBSERVED_ERROR) {
+        if (this.wrapperInitData[i] === OBSERVED_ERROR) {
           // The initializer for wrapper i threw an error; initialize the
           // remaining wrappers but silence any exceptions from them to ensure
           // that the first error is the one to bubble up.
@@ -193,7 +202,7 @@ var Mixin = {
    * (`close`rs that correspond to initializers that failed will not be
    * invoked).
    */
-  closeAll: function(startIndex) {
+  closeAll: function(startIndex: number): void {
     invariant(
       this.isInTransaction(),
       'Transaction.closeAll(): Cannot close transaction when none are open.'
@@ -209,7 +218,7 @@ var Mixin = {
         // close -- if it's still set to true in the finally block, it means
         // wrapper.close threw.
         errorThrown = true;
-        if (initData !== Transaction.OBSERVED_ERROR && wrapper.close) {
+        if (initData !== OBSERVED_ERROR && wrapper.close) {
           wrapper.close.call(this, initData);
         }
         errorThrown = false;
@@ -229,15 +238,6 @@ var Mixin = {
   },
 };
 
-var Transaction = {
+export type Transaction = typeof TransactionImpl;
 
-  Mixin: Mixin,
-
-  /**
-   * Token to look for to determine if an error occurred.
-   */
-  OBSERVED_ERROR: {},
-
-};
-
-module.exports = Transaction;
+module.exports = TransactionImpl;

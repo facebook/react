@@ -15,13 +15,10 @@
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { TypeOfWork } from 'ReactTypeOfWork';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
-
-var {
-  LowPriority,
-} = require('ReactPriorityLevel');
 
 type Deadline = {
   timeRemaining : () => number
@@ -40,12 +37,12 @@ export type HostConfig<T, P, I, C> = {
   updateContainer(containerInfo : C, children : HostChildren<I>) : void;
 
   createInstance(type : T, props : P, children : HostChildren<I>) : I,
-  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : bool,
+  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : boolean,
   commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : void,
   deleteInstance(instance : I) : void,
 
-  scheduleHighPriCallback(callback : () => void) : void,
-  scheduleLowPriCallback(callback : (deadline : Deadline) => void) : void
+  scheduleAnimationCallback(callback : () => void) : void,
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void
 
 };
 
@@ -55,6 +52,7 @@ export type Reconciler<C> = {
   mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
   updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
   unmountContainer(container : OpaqueNode) : void,
+  performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(container : OpaqueNode) : (C | null),
@@ -62,7 +60,7 @@ export type Reconciler<C> = {
 
 module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconciler<C> {
 
-  var { scheduleLowPriWork } = ReactFiberScheduler(config);
+  var { scheduleWork, performWithPriority } = ReactFiberScheduler(config);
 
   return {
 
@@ -70,10 +68,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       const root = createFiberRoot(containerInfo);
       const container = root.current;
       // TODO: Use pending work/state instead of props.
+      // TODO: This should not override the pendingWorkPriority if there is
+      // higher priority work in the subtree.
       container.pendingProps = element;
-      container.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(root);
+      scheduleWork(root);
 
       // It may seem strange that we don't return the root here, but that will
       // allow us to have containers that are in the middle of the tree instead
@@ -86,9 +85,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       const root : FiberRoot = (container.stateNode : any);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = element;
-      root.current.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(root);
+      scheduleWork(root);
     },
 
     unmountContainer(container : OpaqueNode) : void {
@@ -96,10 +94,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconci
       const root : FiberRoot = (container.stateNode : any);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = [];
-      root.current.pendingWorkPriority = LowPriority;
 
-      scheduleLowPriWork(root);
+      scheduleWork(root);
     },
+
+    performWithPriority,
 
     getPublicRootInstance(container : OpaqueNode) : (C | null) {
       return null;

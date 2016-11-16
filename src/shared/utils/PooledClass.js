@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule PooledClass
+ * @flow
  */
 
 'use strict';
@@ -90,6 +91,8 @@ var standardReleaser = function(instance) {
 var DEFAULT_POOL_SIZE = 10;
 var DEFAULT_POOLER = oneArgumentPooler;
 
+type Pooler = any;
+
 /**
  * Augments `CopyConstructor` to be a poolable class, augmenting only the class
  * itself (statically) not adding any prototypical fields. Any CopyConstructor
@@ -99,8 +102,16 @@ var DEFAULT_POOLER = oneArgumentPooler;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-var addPoolingTo = function(CopyConstructor, pooler) {
-  var NewKlass = CopyConstructor;
+var addPoolingTo = function<T>(
+  CopyConstructor: Class<T>,
+  pooler: Pooler,
+): Class<T> & {
+  getPooled(/* arguments of the constructor */): T;
+  release(): void;
+} {
+  // Casting as any so that flow ignores the actual implementation and trusts
+  // it to match the type we declared
+  var NewKlass = (CopyConstructor: any);
   NewKlass.instancePool = [];
   NewKlass.getPooled = pooler || DEFAULT_POOLER;
   if (!NewKlass.poolSize) {
@@ -112,11 +123,11 @@ var addPoolingTo = function(CopyConstructor, pooler) {
 
 var PooledClass = {
   addPoolingTo: addPoolingTo,
-  oneArgumentPooler: oneArgumentPooler,
-  twoArgumentPooler: twoArgumentPooler,
-  threeArgumentPooler: threeArgumentPooler,
-  fourArgumentPooler: fourArgumentPooler,
-  fiveArgumentPooler: fiveArgumentPooler,
+  oneArgumentPooler: (oneArgumentPooler: Pooler),
+  twoArgumentPooler: (twoArgumentPooler: Pooler),
+  threeArgumentPooler: (threeArgumentPooler: Pooler),
+  fourArgumentPooler: (fourArgumentPooler: Pooler),
+  fiveArgumentPooler: (fiveArgumentPooler: Pooler),
 };
 
 module.exports = PooledClass;

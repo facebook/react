@@ -118,7 +118,6 @@ if (__DEV__) {
       Date.now,
       Function.prototype.bind,
       Object.keys,
-      String.prototype.split,
       String.prototype.trim,
     ];
 
@@ -139,9 +138,11 @@ if (__DEV__) {
   var ReactInstrumentation = require('ReactInstrumentation');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
 
   ReactInstrumentation.debugTool.addHook(ReactDOMUnknownPropertyHook);
   ReactInstrumentation.debugTool.addHook(ReactDOMNullInputValuePropHook);
+  ReactInstrumentation.debugTool.addHook(ReactDOMInvalidARIAHook);
 }
 
 module.exports = ReactDOM;

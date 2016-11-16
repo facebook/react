@@ -11,8 +11,6 @@
 
 'use strict';
 
-var keyMirror = require('keyMirror');
-
 var React;
 var ReactDOM;
 var ReactInstanceMap;
@@ -68,25 +66,24 @@ var POST_WILL_UNMOUNT_STATE = {
 /**
  * Every React component is in one of these life cycles.
  */
-var ComponentLifeCycle = keyMirror({
+type ComponentLifeCycle =
   /**
    * Mounted components have a DOM node representation and are capable of
    * receiving new props.
    */
-  MOUNTED: null,
+  'MOUNTED' |
   /**
    * Unmounted components are inactive and cannot receive new props.
    */
-  UNMOUNTED: null,
-});
+  'UNMOUNTED';
 
-function getLifeCycleState(instance) {
+function getLifeCycleState(instance): ComponentLifeCycle {
   var internalInstance = ReactInstanceMap.get(instance);
   // Once a component gets mounted, it has an internal instance, once it
   // gets unmounted, it loses that internal instance.
   return internalInstance ?
-         ComponentLifeCycle.MOUNTED :
-         ComponentLifeCycle.UNMOUNTED;
+         'MOUNTED' :
+         'UNMOUNTED';
 }
 
 /**
@@ -96,8 +93,8 @@ function getLifeCycleState(instance) {
  * is *reused*, then that won't be the case and things will appear to work in
  * some cases. Better to just block all updates in initialization.
  */
-describe('ReactComponentLifeCycle', function() {
-  beforeEach(function() {
+describe('ReactComponentLifeCycle', () => {
+  beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -105,7 +102,7 @@ describe('ReactComponentLifeCycle', function() {
     ReactInstanceMap = require('ReactInstanceMap');
   });
 
-  it('should not reuse an instance when it has been unmounted', function() {
+  it('should not reuse an instance when it has been unmounted', () => {
     var container = document.createElement('div');
 
     class StatefulComponent extends React.Component {
@@ -129,7 +126,7 @@ describe('ReactComponentLifeCycle', function() {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', function() {
+  it('it should fire onDOMReady when already in onDOMReady', () => {
     var _testJournal = [];
 
     class Child extends React.Component {
@@ -180,7 +177,7 @@ describe('ReactComponentLifeCycle', function() {
 
   // You could assign state here, but not access members of it, unless you
   // had provided a getInitialState method.
-  it('throws when accessing state in componentWillMount', function() {
+  it('throws when accessing state in componentWillMount', () => {
     class StatefulComponent extends React.Component {
       componentWillMount() {
         void this.state.yada;
@@ -199,7 +196,7 @@ describe('ReactComponentLifeCycle', function() {
     }).toThrow();
   });
 
-  it('should allow update state inside of componentWillMount', function() {
+  it('should allow update state inside of componentWillMount', () => {
     class StatefulComponent extends React.Component {
       componentWillMount() {
         this.setState({stateField: 'something'});
@@ -218,7 +215,7 @@ describe('ReactComponentLifeCycle', function() {
     }).not.toThrow();
   });
 
-  it('should not allow update state inside of getInitialState', function() {
+  it('should not allow update state inside of getInitialState', () => {
     spyOn(console, 'error');
 
     class StatefulComponent extends React.Component {
@@ -246,7 +243,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should correctly determine if a component is mounted', function() {
+  it('should correctly determine if a component is mounted', () => {
     spyOn(console, 'error');
     var Component = React.createClass({
       componentWillMount: function() {
@@ -272,7 +269,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should correctly determine if a null component is mounted', function() {
+  it('should correctly determine if a null component is mounted', () => {
     spyOn(console, 'error');
     var Component = React.createClass({
       componentWillMount: function() {
@@ -298,7 +295,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('isMounted should return false when unmounted', function() {
+  it('isMounted should return false when unmounted', () => {
     var Component = React.createClass({
       render: function() {
         return <div/>;
@@ -315,7 +312,7 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.isMounted()).toBe(false);
   });
 
-  it('warns if findDOMNode is used inside render', function() {
+  it('warns if findDOMNode is used inside render', () => {
     spyOn(console, 'error');
     var Component = React.createClass({
       getInitialState: function() {
@@ -339,7 +336,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should carry through each of the phases of setup', function() {
+  it('should carry through each of the phases of setup', () => {
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -407,30 +404,30 @@ describe('ReactComponentLifeCycle', function() {
       GET_INIT_STATE_RETURN_VAL
     );
     expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
-      .toBe(ComponentLifeCycle.UNMOUNTED);
+      .toBe('UNMOUNTED');
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(
       instance._testJournal.returnedFromGetInitialState
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
-      .toBe(ComponentLifeCycle.MOUNTED);
+      .toBe('MOUNTED');
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount)
       .toEqual(DID_MOUNT_STATE);
     expect(instance._testJournal.lifeCycleAtStartOfDidMount).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
     // render
     expect(instance._testJournal.stateInInitialRender)
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
-    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
+    expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     // Now *update the component*
     instance.forceUpdate();
@@ -439,10 +436,10 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance._testJournal.stateInLaterRender)
       .toEqual(NEXT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInLaterRender).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
-    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
+    expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     ReactDOM.unmountComponentAtNode(container);
 
@@ -450,15 +447,15 @@ describe('ReactComponentLifeCycle', function() {
       .toEqual(WILL_UNMOUNT_STATE);
     // componentWillUnmount called right before unmount.
     expect(instance._testJournal.lifeCycleAtStartOfWillUnmount).toBe(
-      ComponentLifeCycle.MOUNTED
+      'MOUNTED'
     );
 
     // But the current lifecycle of the component is unmounted.
-    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.UNMOUNTED);
+    expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
-  it('should not throw when updating an auxiliary component', function() {
+  it('should not throw when updating an auxiliary component', () => {
     class Tooltip extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
@@ -506,7 +503,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should allow state updates in componentDidMount', function() {
+  it('should allow state updates in componentDidMount', () => {
     /**
      * calls setState in an componentDidMount.
      */
@@ -533,7 +530,7 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state.stateField).toBe('goodbye');
   });
 
-  it('should call nested lifecycle methods in the right order', function() {
+  it('should call nested lifecycle methods in the right order', () => {
     var log;
     var logger = function(msg) {
       return function() {
