@@ -125,7 +125,7 @@ class MyComponent extends React.Component {
 }
 
 MyComponent.propTypes = {
-  children: React.PropTypes.element.isRequired
+  children: React.PropTypes.node.isRequired
 };
 ```
 
