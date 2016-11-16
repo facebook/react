@@ -580,9 +580,6 @@ var ReactDOMFiberComponent = {
       didWarnShadyDOM = true;
     }
     ReactDOMComponentTree.precacheFiberNode(workInProgress, el);
-    if (!workInProgress._hostParent) {
-      DOMPropertyOperations.setAttributeForRoot(el);
-    }
     updateDOMProperties(workInProgress, null, props, isCustomComponentTag);
 
     switch (workInProgress._tag) {
