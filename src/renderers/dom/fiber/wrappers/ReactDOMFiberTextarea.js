@@ -119,7 +119,6 @@ var ReactDOMTextarea = {
 
     inst._wrapperState = {
       initialValue: '' + initialValue,
-      listeners: null,
     };
   },
 

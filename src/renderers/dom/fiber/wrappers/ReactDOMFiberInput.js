@@ -123,7 +123,6 @@ var ReactDOMInput = {
     inst._wrapperState = {
       initialChecked: props.checked != null ? props.checked : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
-      listeners: null,
     };
 
     if (__DEV__) {

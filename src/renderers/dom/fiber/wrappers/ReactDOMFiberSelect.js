@@ -135,7 +135,6 @@ var ReactDOMSelect = {
     var value = props.value;
     inst._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
-      listeners: null,
       wasMultiple: Boolean(props.multiple),
     };
 

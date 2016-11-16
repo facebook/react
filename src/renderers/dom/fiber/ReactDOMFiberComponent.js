@@ -200,81 +200,68 @@ function trapBubbledEventsLocal(inst) {
     'trapBubbledEvent(...): Requires node to be rendered.'
   );
 
+  // TODO: Make sure that we check isMounted before firing any of these events.
   switch (inst._tag) {
     case 'iframe':
     case 'object':
-      inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topLoad',
-          'load',
-          node
-        ),
-      ];
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topLoad',
+        'load',
+        node
+      );
       break;
     case 'video':
     case 'audio':
-
-      inst._wrapperState.listeners = [];
       // Create listener for each media event
       for (var event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
-          inst._wrapperState.listeners.push(
-            ReactBrowserEventEmitter.trapBubbledEvent(
-              event,
-              mediaEvents[event],
-              node
-            )
+          ReactBrowserEventEmitter.trapBubbledEvent(
+            event,
+            mediaEvents[event],
+            node
           );
         }
       }
       break;
     case 'source':
-      inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topError',
-          'error',
-          node
-        ),
-      ];
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topError',
+        'error',
+        node
+      );
       break;
     case 'img':
-      inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topError',
-          'error',
-          node
-        ),
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topLoad',
-          'load',
-          node
-        ),
-      ];
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topError',
+        'error',
+        node
+      );
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topLoad',
+        'load',
+        node
+      );
       break;
     case 'form':
-      inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topReset',
-          'reset',
-          node
-        ),
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topSubmit',
-          'submit',
-          node
-        ),
-      ];
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topReset',
+        'reset',
+        node
+      );
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topSubmit',
+        'submit',
+        node
+      );
       break;
     case 'input':
     case 'select':
     case 'textarea':
-      inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topInvalid',
-          'invalid',
-          node
-        ),
-      ];
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topInvalid',
+        'invalid',
+        node
+      );
       break;
   }
 }
@@ -523,9 +510,6 @@ var ReactDOMFiberComponent = {
       case 'object':
       case 'source':
       case 'video':
-        workInProgress._wrapperState = {
-          listeners: null,
-        };
         trapBubbledEventsLocal(workInProgress);
         break;
       case 'input':
@@ -735,21 +719,6 @@ var ReactDOMFiberComponent = {
    */
   unmountComponent: function(safely, skipLifecycle) {
     switch (workInProgress._tag) {
-      case 'audio':
-      case 'form':
-      case 'iframe':
-      case 'img':
-      case 'link':
-      case 'object':
-      case 'source':
-      case 'video':
-        var listeners = workInProgress._wrapperState.listeners;
-        if (listeners) {
-          for (var i = 0; i < listeners.length; i++) {
-            listeners[i].remove();
-          }
-        }
-        break;
       case 'input':
       case 'textarea':
         inputValueTracking.stopTracking(workInProgress);
