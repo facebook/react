@@ -187,7 +187,7 @@ In HTML, you can change a `select` tag to multiselect, with `multiple` attribute
 </select>
 ```
 
-You can use this feature on React too,
+You can use this feature on React too:
 
 ```js{1}
 <select multiple={true} value={this.state.value}>
@@ -198,7 +198,7 @@ You can use this feature on React too,
 </select>
 ```
 
-Becareful, as your select tag is multiple, the value **have to be an array**:
+Becareful, as your select tag is multiple, the value **must be an array**:
 
 ```js{3}
 constructor(props) {
@@ -233,7 +233,7 @@ of selected ones:
 [Try it on CodePen.](http://codepen.io/dashtinejad/pen/yVaojJ?editors=0010)
 
 ## Checkbox
-Another form control which you can change it to controlled component, is `checkbox`:
+Another form control which you can change it to a controlled component, is `checkbox`:
 
 ```html
 <input type="checkbox" />
@@ -248,7 +248,7 @@ and consequently set the `onChange` event:
 
 And in your JavaScript code:
 
-```js
+```js{9}
 constructor(props) {
   super(props);
   this.state = { value: true };
@@ -283,7 +283,7 @@ React will take control of their state, and so, whenever one of them is checked,
 the other ones will be unchecked. Like the checkbox input, you make a radio button
 as a controlled component by setting the `checked` attribute of it:
 
-```html
+```html{2-4}
 <input type="radio"
   checked={this.state.value === 'grapefruit'}
   onChange={this.handleChange}
@@ -293,7 +293,7 @@ as a controlled component by setting the `checked` attribute of it:
 
 And the `handleChange` method is the easy part:
 
-```js
+```js{2}
 handleChange(event) {
   this.setState({ value: event.target.value });
 }
