@@ -15,9 +15,12 @@
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var warning = require('warning');
+
+var { precacheFiberNode } = ReactDOMComponentTree;
 
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
@@ -51,8 +54,14 @@ var DOMRenderer = ReactFiberReconciler({
     recursivelyAppendChildren(container, children);
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
-    const domElement = document.createElement(type);
+  createInstance(
+    type : string,
+    props : Props,
+    children : HostChildren<Instance | TextInstance>,
+    internalInstanceHandle : Object
+  ) : Instance {
+    const domElement : Instance = document.createElement(type);
+    precacheFiberNode(internalInstanceHandle, domElement);
     recursivelyAppendChildren(domElement, children);
     if (typeof props.className !== 'undefined') {
       domElement.className = props.className;
@@ -61,6 +70,13 @@ var DOMRenderer = ReactFiberReconciler({
       domElement.textContent = props.children;
     } else if (typeof props.children === 'number') {
       domElement.textContent = props.children.toString();
+    } else if (typeof props.dangerouslySetInnerHTML === 'object' &&
+               props.dangerouslySetInnerHTML !== null &&
+               typeof props.dangerouslySetInnerHTML.__html === 'string') {
+      domElement.innerHTML = props.dangerouslySetInnerHTML.__html;
+    }
+    if (typeof props.id === 'string') {
+      domElement.id = props.id;
     }
     return domElement;
   },
@@ -81,11 +97,20 @@ var DOMRenderer = ReactFiberReconciler({
       domElement.textContent = newProps.children;
     } else if (typeof newProps.children === 'number') {
       domElement.textContent = newProps.children.toString();
+    } else if (typeof newProps.dangerouslySetInnerHTML === 'object' &&
+               newProps.dangerouslySetInnerHTML !== null &&
+               typeof newProps.dangerouslySetInnerHTML.__html === 'string') {
+      domElement.innerHTML = newProps.dangerouslySetInnerHTML.__html;
+    }
+    if (typeof newProps.id === 'string') {
+      domElement.id = newProps.id;
     }
   },
 
-  createTextInstance(text : string) : TextInstance {
-    return document.createTextNode(text);
+  createTextInstance(text : string, internalInstanceHandle : Object) : TextInstance {
+    var textNode : TextInstance = document.createTextNode(text);
+    precacheFiberNode(internalInstanceHandle, textNode);
+    return textNode;
   },
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {

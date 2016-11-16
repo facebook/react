@@ -75,8 +75,13 @@ src/addons/__tests__/update-test.js
 src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
 * should warn if timeouts aren't specified
 * should not warn if timeouts is zero
+* should clean-up silently after the timeout elapses
+* should keep both sets of DOM nodes around
+* should switch transitionLeave from false to true
 * should work with no children
 * should work with a null child
+* should transition from one to null
+* should transition from false to one
 * should use transition-type specific names when they're provided
 * should clear transition timeouts when unmounted
 * should handle unmounted elements properly
@@ -525,6 +530,9 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should skip reserved props on web components
 * should skip dangerouslySetInnerHTML on web components
 * should clear all the styles when removing `style`
+* should transition from string content to innerHTML
+* should transition from innerHTML to string content
+* should transition from children to innerHTML in nested el
 * handles multiple child updates without interference
 * should generate the correct markup with className
 * should escape style names and values
@@ -537,6 +545,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
+* finds instances for nodes
 
 src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
 * should update innerHTML and preserve whitespace
@@ -554,7 +563,9 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should dispatch events from outside React tree
-* should not fire duplicate events for a React DOM tree
+* should propagate events one level down
+* should propagate events two levels down
+* should not get confused by disappearing elements
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 * should escape boolean to string
@@ -593,6 +604,9 @@ src/renderers/dom/shared/eventPlugins/__tests__/BeforeInputEventPlugin-test.js
 
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should unmount
+
+src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
+* should set relatedTarget properly in iframe
 
 src/renderers/dom/shared/eventPlugins/__tests__/FallbackCompositionState-test.js
 * extracts value via `getText()`
@@ -679,7 +693,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should not render name attribute if it is not supplied
 * should not render name attribute if it is not supplied for SSR
 * should not set a value for submit buttons unnecessarily
-* should have a this value of undefined if bind is not used
 * should update defaultValue to empty string
 * should not warn if radio value changes but never becomes controlled
 * should not warn if radio value changes but never becomes uncontrolled
@@ -687,6 +700,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
 * should ignore null/undefined/false children without warning
+* should be able to use dangerouslySetInnerHTML on option
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not throw with `defaultValue` and without children
@@ -694,7 +708,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
-* should be able to safely remove select onChange
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should not render value as an attribute
@@ -958,8 +971,16 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 
 src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should not traverse when traversing outside DOM
+* should traverse two phase across component boundary
+* should traverse two phase at shallowest node
 * should not traverse when enter/leaving outside DOM
 * should not traverse if enter/leave the same node
+* should traverse enter/leave to sibling - avoids parent
+* should traverse enter/leave to parent - avoids parent
+* should enter from the window
+* should enter from the window to the shallowest
+* should leave to the window
+* should leave to the window from the shallowest
 * should determine the first common ancestor correctly
 
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
@@ -1297,7 +1318,6 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with multiple classes
 * traverses children in the correct order
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
-* should not warn when simulating events with extra properties
 * can scry with stateless components involved
 
 src/test/__tests__/reactComponentExpect-test.js
