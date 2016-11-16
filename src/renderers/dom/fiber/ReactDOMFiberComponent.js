@@ -29,13 +29,11 @@ var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 
 var emptyFunction = require('emptyFunction');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var focusNode = require('focusNode');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
 var didWarnShadyDOM = false;
@@ -43,9 +41,6 @@ var didWarnShadyDOM = false;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
-
-// For quickly matching children type, to test if can be treated as content.
-var CONTENT_TYPES = {'string': true, 'number': true};
 
 var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
@@ -286,18 +281,12 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
-var newlineEatingTags = {
-  'listing': true,
-  'pre': true,
-  'textarea': true,
-};
-
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
 var voidElementTags = {
   'menuitem': true,
-  ...omittedCloseTags
+  ...omittedCloseTags,
 };
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
@@ -412,20 +401,19 @@ function updateDOMProperties(
         styleUpdates = nextProp;
       }
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      if (lastProp && nextProp) {
-        var lastHtml = lastProp[HTML];
-        var nextHtml = nextProp[HTML];
-        if (lastHtml !== nextHtml) {
-          if (nextHtml == null) {
-            // TODO: It might be too late to clear this if we have children
-            // inserted already.
-          } else {
+      var nextHtml = nextProp ? nextProp[HTML] : undefined;
+      var lastHtml = lastProp ? lastProp[HTML] : undefined;
+      if (nextHtml) {
+        if (lastHtml) {
+          if (lastHtml !== nextHtml) {
             setInnerHTML(getNode(workInProgress), '' + nextHtml);
           }
+        } else {
+          setInnerHTML(getNode(workInProgress), nextHtml);
         }
-      } else if (nextProp) {
-        var nextHtml = nextProp[HTML];
-        setInnerHTML(getNode(workInProgress), nextProp);
+      } else {
+        // TODO: It might be too late to clear this if we have children
+        // inserted already.
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === 'string') {
@@ -555,7 +543,6 @@ var ReactDOMFiberComponent = {
     }
     workInProgress._namespaceURI = namespaceURI;
 
-    var mountImage;
     var type = workInProgress._currentElement.type;
     var ownerDocument = hostContainerInfo._ownerDocument;
     var el;
