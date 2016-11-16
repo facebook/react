@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var React = require('React');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMSelect = require('ReactDOMSelect');
@@ -46,7 +48,7 @@ function flattenChildren(children) {
  * Implements an <option> host component that warns when `selected` is set.
  */
 var ReactDOMOption = {
-  mountWrapper: function(inst, props, hostParent) {
+  mountWrapper: function(inst : Fiber, props : Object, hostParent : Fiber) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(
@@ -97,7 +99,7 @@ var ReactDOMOption = {
     inst._wrapperState = {selected: selected};
   },
 
-  postMountWrapper: function(inst) {
+  postMountWrapper: function(inst : Fiber) {
     // value="" should make a value attribute (#6219)
     var props = inst._currentElement.props;
     if (props.value != null) {
@@ -106,7 +108,7 @@ var ReactDOMOption = {
     }
   },
 
-  getHostProps: function(inst, props) {
+  getHostProps: function(inst : Fiber, props : Object) {
     var hostProps = Object.assign({selected: undefined, children: undefined}, props);
 
     // Read state only from initial mount because <select> updates value

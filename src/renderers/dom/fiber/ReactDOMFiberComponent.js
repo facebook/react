@@ -14,6 +14,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
@@ -68,11 +70,7 @@ function getDeclarationErrorAddendum(internalInstance) {
   return '';
 }
 
-/**
- * @param {object} component
- * @param {?object} props
- */
-function assertValidProps(component, props) {
+function assertValidProps(component : Fiber, props : ?Object) {
   if (!props) {
     return;
   }
@@ -297,9 +295,10 @@ var newlineEatingTags = {
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
-var voidElementTags = Object.assign({
+var voidElementTags = {
   'menuitem': true,
-}, omittedCloseTags);
+  ...omittedCloseTags
+};
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -330,18 +329,13 @@ function isCustomComponent(tagName, props) {
  * TODO: Benchmark the effects of putting workInProgress at the top since 99% of props
  *       do not change for a given reconciliation.
  * TODO: Benchmark areas that can be improved with caching.
- *
- * @private
- * @param {object} lastProps
- * @param {object} nextProps
- * @param {?DOMElement} node
  */
 function updateDOMProperties(
-  workInProgress,
-  lastProps,
-  nextProps,
-  isCustomComponentTag
-) {
+  workInProgress : Fiber,
+  lastProps : null | Object,
+  nextProps : Object,
+  isCustomComponentTag : boolean
+) : void {
   var propKey;
   var styleName;
   var styleUpdates;
@@ -476,23 +470,12 @@ function updateDOMProperties(
 
 var ReactDOMFiberComponent = {
 
-
-  /**
-   * Generates root tag markup then recurses. This method has side effects and
-   * is not idempotent.
-   *
-   * @internal
-   * @param {?ReactDOMComponent} the parent component instance
-   * @param {?object} info about the host container
-   * @param {object} context
-   * @return {string} The computed markup.
-   */
   mountComponent: function(
     workInProgress : Fiber,
-    hostParent,
-    hostContainerInfo,
-    context
-  ) {
+    hostParent : Fiber,
+    hostContainerInfo : Object,
+    context : Object
+  ) : Element {
     // validateDangerousTag(tag);
     // workInProgress._tag = tag.toLowerCase();
 
@@ -651,20 +634,12 @@ var ReactDOMFiberComponent = {
     return el;
   },
 
-
-  /**
-   * Receives a next element and updates the component.
-   *
-   * @internal
-   * @param {ReactElement} nextElement
-   * @param {object} context
-   */
-  receiveComponent: function(workInProgress : Fiber, nextElement, context) {
-    var prevElement = workInProgress._currentElement;
-    workInProgress._currentElement = nextElement;
-
-    var lastProps = prevElement.props;
-    var nextProps = workInProgress._currentElement.props;
+  receiveComponent: function(
+    workInProgress : Fiber,
+    nextProps : Object,
+    context : Object
+  ) {
+    var lastProps = workInProgress.memoizedProps;
 
     switch (workInProgress._tag) {
       case 'input':

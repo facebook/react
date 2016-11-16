@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
@@ -36,7 +38,7 @@ var didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getHostProps: function(inst, props) {
+  getHostProps: function(inst : Fiber, props : Object) {
     invariant(
       props.dangerouslySetInnerHTML == null,
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
@@ -56,7 +58,7 @@ var ReactDOMTextarea = {
     return hostProps;
   },
 
-  mountWrapper: function(inst, props) {
+  mountWrapper: function(inst : Fiber, props : Object) {
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
@@ -122,7 +124,7 @@ var ReactDOMTextarea = {
     };
   },
 
-  updateWrapper: function(inst) {
+  updateWrapper: function(inst : Fiber) {
     var props = inst._currentElement.props;
 
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
@@ -145,7 +147,7 @@ var ReactDOMTextarea = {
     }
   },
 
-  postMountWrapper: function(inst) {
+  postMountWrapper: function(inst : Fiber) {
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
@@ -160,7 +162,7 @@ var ReactDOMTextarea = {
     }
   },
 
-  restoreControlledState: function(inst) {
+  restoreControlledState: function(inst : Fiber) {
     // DOM component is still mounted; update
     ReactDOMTextarea.updateWrapper(inst);
   },

@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
@@ -33,7 +35,6 @@ var valuePropNames = ['value', 'defaultValue'];
 
 /**
  * Validation function for `value` and `defaultValue`.
- * @private
  */
 function checkSelectPropTypes(inst, props) {
   var owner = inst._currentElement._owner;
@@ -69,13 +70,7 @@ function checkSelectPropTypes(inst, props) {
   }
 }
 
-/**
- * @param {ReactDOMComponent} inst
- * @param {boolean} multiple
- * @param {*} propValue A stringable (with `multiple`, a list of stringables).
- * @private
- */
-function updateOptions(inst, multiple, propValue) {
+function updateOptions(inst : Fiber, multiple : boolean, propValue : string | Array<string>) {
   var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
 
   if (multiple) {
@@ -121,13 +116,13 @@ function updateOptions(inst, multiple, propValue) {
  * selected.
  */
 var ReactDOMSelect = {
-  getHostProps: function(inst, props) {
+  getHostProps: function(inst : Fiber, props : Object) {
     return Object.assign({}, props, {
       value: undefined,
     });
   },
 
-  mountWrapper: function(inst, props) {
+  mountWrapper: function(inst : Fiber, props : Object) {
     if (__DEV__) {
       checkSelectPropTypes(inst, props);
     }
@@ -155,13 +150,13 @@ var ReactDOMSelect = {
     }
   },
 
-  getSelectValueContext: function(inst) {
+  getSelectValueContext: function(inst : Fiber) {
     // ReactDOMOption looks at this initial value so the initial generated
     // markup has correct `selected` attributes
     return inst._wrapperState.initialValue;
   },
 
-  postUpdateWrapper: function(inst) {
+  postUpdateWrapper: function(inst : Fiber) {
     var props = inst._currentElement.props;
 
     // After the initial mount, we control selected-ness manually so don't pass
@@ -185,7 +180,7 @@ var ReactDOMSelect = {
     }
   },
 
-  restoreControlledState: function(inst) {
+  restoreControlledState: function(inst : Fiber) {
     var props = inst._currentElement.props;
     var value = props.value;
 

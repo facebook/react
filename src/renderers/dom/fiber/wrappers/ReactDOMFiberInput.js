@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -43,10 +45,10 @@ function isControlled(props) {
  * The rendered element will be initialized as unchecked (or `defaultChecked`)
  * with an empty value (or `defaultValue`).
  *
- * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
+ * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = {
-  getHostProps: function(inst, props) {
+  getHostProps: function(inst : Fiber, props : Object) {
     var value = props.value;
     var checked = props.checked;
 
@@ -71,7 +73,7 @@ var ReactDOMInput = {
     return hostProps;
   },
 
-  mountWrapper: function(inst, props) {
+  mountWrapper: function(inst : Fiber, props : Object) {
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
@@ -130,7 +132,7 @@ var ReactDOMInput = {
     }
   },
 
-  updateWrapper: function(inst) {
+  updateWrapper: function(inst : Fiber) {
     var props = inst._currentElement.props;
 
     if (__DEV__) {
@@ -204,7 +206,7 @@ var ReactDOMInput = {
     }
   },
 
-  postMountWrapper: function(inst) {
+  postMountWrapper: function(inst : Fiber) {
     var props = inst._currentElement.props;
 
     // This is in postMount because we need access to the DOM node, which is not
@@ -254,7 +256,7 @@ var ReactDOMInput = {
     }
   },
 
-  restoreControlledState: function(inst) {
+  restoreControlledState: function(inst : Fiber) {
     ReactDOMInput.updateWrapper(inst);
     var props = inst._currentElement.props;
     updateNamedCousins(inst, props);
