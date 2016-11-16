@@ -525,6 +525,9 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should skip reserved props on web components
 * should skip dangerouslySetInnerHTML on web components
 * should clear all the styles when removing `style`
+* should transition from string content to innerHTML
+* should transition from innerHTML to string content
+* should transition from children to innerHTML in nested el
 * handles multiple child updates without interference
 * should generate the correct markup with className
 * should escape style names and values
@@ -537,6 +540,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
+* finds instances for nodes
 
 src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
 * should update innerHTML and preserve whitespace
@@ -554,7 +558,9 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should dispatch events from outside React tree
-* should not fire duplicate events for a React DOM tree
+* should propagate events one level down
+* should propagate events two levels down
+* should not get confused by disappearing elements
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 * should escape boolean to string
@@ -679,7 +685,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should not render name attribute if it is not supplied
 * should not render name attribute if it is not supplied for SSR
 * should not set a value for submit buttons unnecessarily
-* should have a this value of undefined if bind is not used
 * should update defaultValue to empty string
 * should not warn if radio value changes but never becomes controlled
 * should not warn if radio value changes but never becomes uncontrolled
@@ -687,6 +692,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
 * should ignore null/undefined/false children without warning
+* should be able to use dangerouslySetInnerHTML on option
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not throw with `defaultValue` and without children
@@ -694,7 +700,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
-* should be able to safely remove select onChange
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should not render value as an attribute
@@ -960,7 +965,6 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should not traverse when traversing outside DOM
 * should not traverse when enter/leaving outside DOM
 * should not traverse if enter/leave the same node
-* should determine the first common ancestor correctly
 
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should be able to inject ordering before plugins
@@ -1297,7 +1301,6 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with multiple classes
 * traverses children in the correct order
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
-* should not warn when simulating events with extra properties
 * can scry with stateless components involved
 
 src/test/__tests__/reactComponentExpect-test.js

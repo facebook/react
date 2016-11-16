@@ -85,10 +85,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should update arbitrary attributes for tags containing dashes
 * should update styles when `style` changes from null to object
 * should empty element when removing innerHTML
-* should transition from string content to innerHTML
-* should transition from innerHTML to string content
 * should transition from innerHTML to children in nested el
-* should transition from children to innerHTML in nested el
 * should not incur unnecessary DOM mutations for attributes
 * should not incur unnecessary DOM mutations for string properties
 * should not incur unnecessary DOM mutations for boolean properties
@@ -119,9 +116,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements 
 * gives source code refs for unknown prop warning for exact elements in composition 
 
-src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
-* finds instances for nodes
-
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
 * can reconcile text merged by Node.normalize()
@@ -134,10 +128,8 @@ src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
 * does not when event fired on unmounted tree
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
-* should propagate events one level down
-* should propagate events two levels down
-* should not get confused by disappearing elements
 * should batch between handlers from different roots
+* should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/inputValueTracking-test.js
 * should return tracker from node
@@ -207,6 +199,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should have the correct target value
 * should control radio buttons
 * should control radio buttons if the tree updates during render
+* should have a this value of undefined if bind is not used
 * sets type, step, min, max before value always
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
@@ -214,7 +207,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should ignore and warn invalid children types
-* should be able to use dangerouslySetInnerHTML on option
 * should set attribute for empty value
 * should allow ignoring `value` on option
 
@@ -233,6 +225,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should remember updated value when switching to uncontrolled
 * should not control defaultValue if readding options
 * should refresh state on change
+* should be able to safely remove select onChange
 * should select grandchild options nested inside an optgroup
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
@@ -404,6 +397,7 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should enter from the window to the shallowest
 * should leave to the window
 * should leave to the window from the shallowest
+* should determine the first common ancestor correctly
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch
@@ -463,4 +457,5 @@ src/test/__tests__/ReactTestUtils-test.js
 * should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component
+* should not warn when simulating events with extra properties
 * should set the type of the event

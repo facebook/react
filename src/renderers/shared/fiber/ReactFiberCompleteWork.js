@@ -197,7 +197,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           }
           const child = workInProgress.child;
           const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
-          const instance = createInstance(workInProgress.type, newProps, children);
+          const instance = createInstance(workInProgress.type, newProps, children, workInProgress);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;
@@ -223,7 +223,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               return null;
             }
           }
-          const textInstance = createTextInstance(newText);
+          const textInstance = createTextInstance(newText, workInProgress);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = textInstance;
           workInProgress.output = textInstance;
