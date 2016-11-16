@@ -253,7 +253,7 @@ constructor(props) {
   super(props);
   this.state = { value: true };
   
-  // ...
+  this.handleChange = this.handleChange.bind(this);
 }
 
 handleChange(event) {
@@ -266,7 +266,39 @@ As you can see, you can simply get the status of your checkbox, by checking the
 
 [Try it on CodePen.](http://codepen.io/dashtinejad/pen/YpGrEK?editors=0010)
 
- 
+## Radio Buttons
+
+You can use `radio` buttons, in a replace of `select` tag. If you remember, you
+group them with `name` attribute:
+
+```html
+<input type="radio" name="fruit" value="grapefruit" /> Grapefruit
+<input type="radio" name="fruit" value="lime" /> Lime
+<input type="radio" name="fruit" checked value="coconut" /> Coconut
+<input type="radio" name="fruit" value="mango" /> Mango
+```
+
+However, in React, there is no need for `name` attribute, because 
+React will take control of their state, and so, whenever one of them is checked,
+the other ones will be unchecked. Like the checkbox input, you make a radio button
+as a controlled component by setting the `checked` attribute of it:
+
+```html
+<input type="radio"
+  checked={this.state.value === 'grapefruit'}
+  onChange={this.handleChange}
+  value="grapefruit"
+/> Grapefruit
+```
+
+And the `handleChange` method is the easy part:
+
+```js
+handleChange(event) {
+  this.setState({ value: event.target.value });
+}
+```
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/qqaPyG?editors=0010)
 
 ## Alternatives to Controlled Components
 
