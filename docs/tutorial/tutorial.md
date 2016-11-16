@@ -209,18 +209,24 @@ Square no longer keeps its own state; it receives its value from its parent `Boa
 
 In the previous code example, I suggest using the `.slice()` operator to copy the `squares` array prior to making changes and to prevent mutating the existing array. Let's talk about what this means and why it is an important concept to learn.
 
-There are generally two ways for changing data. The first, and most common method in past, has been to *mutate* the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.
+There are generally two ways for changing data. The first method is to *mutate* the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.
 
 #### Data change with mutation
 ```javascript
-var player = {score:  1}
-player.score = 2 // same object mutated {score: 2}
+var player = {score: 1, name: 'Jeff'};
+player.score = 2;
+// Now player is {score: 2, name: 'Jeff'}
 ```
 
 #### Data change without mutation
 ```javascript
-var player = {score: 1}
-player = {...player, score: 2} // new object not mutated {score: 2}
+var player = {score: 1, name: 'Jeff'};
+
+var newPlayer = Object.assign({}, player, {score: 2});
+// Now player is unchanged, but newPlayer is {score: 2, name: 'Jeff'}
+
+// Or if you are using object spread, you can write:
+// var newPlayer = {score: 2, ...player};
 ```
 
 The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.
