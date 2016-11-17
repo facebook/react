@@ -180,6 +180,9 @@ describe('ReactDOMProduction', () => {
     expect(function() {
       class Component extends React.Component {
         render() {
+          // FIXME: undefined is a valid return type in Fiber, at least in the
+          // current implementation. It's treated as empty. I don't know why we
+          // sometimes get false positives.
           return undefined;
         }
       }

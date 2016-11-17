@@ -61,6 +61,10 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
+var {
+  unwindContext,
+} = require('ReactFiberContext');
+
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 }
@@ -555,10 +559,23 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             break;
         }
       } catch (error) {
-        const boundary = captureError(nextUnitOfWork, error, false);
+        const failedWork = nextUnitOfWork;
+        const boundary = captureError(failedWork, error, false);
         if (boundary) {
           // The boundary failed to complete. Complete it as if rendered null.
           beginFailedWork(boundary.alternate, boundary, priorityLevel);
+
+          // The next unit of work is now the boundary that captured the error.
+          // Conceptually, we're unwinding the stack. We need to unwind the
+          // context stack, too, from the failed work to the boundary that
+          // captured the error.
+          // TODO: If we set the memoized props in beginWork instead of
+          // completeWork, rather than unwind the stack, we can just restart
+          // from the root. Can't do that until then because without memoized
+          // props, the nodes higher up in the tree will rerender unnecessarily.
+          if (failedWork) {
+            unwindContext(failedWork, boundary);
+          }
           nextUnitOfWork = completeUnitOfWork(boundary);
         }
         // We were interupted by an error. Continue performing work.
@@ -581,7 +598,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     ReactCurrentOwner.current = null;
 
     // Ignore this error if it's the result of unmounting a failed boundary
-    if (failedWork && isUnmounting && capturedErrors && capturedErrors.has(failedWork)) {
+    if (failedWork &&
+        isUnmounting &&
+        capturedErrors &&
+        capturedErrors.has(failedWork)) {
       return null;
     }
 
@@ -605,12 +625,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     if (boundary) {
-      // Add to the collection of captured errors
+      // Add to the collection of captured errors. This is stored as a global
+      // map of errors keyed by the boundaries that capture them. We mostly
+      // use this Map as a Set; it's a Map only to avoid adding a field to Fiber
+      // to store the error.
       if (!capturedErrors) {
         capturedErrors = new Map();
       }
       // Ensure that neither this boundary nor its alternate has captured an
-      // error already
+      // error already.
       if (!capturedErrors.has(boundary) &&
           !(boundary.alternate && capturedErrors.has(boundary.alternate))) {
         capturedErrors.set(boundary, error);
@@ -627,6 +650,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function commitErrorHandling(effectfulFiber : Fiber) {
     let error;
     if (capturedErrors) {
+      // Get the error associated with the fiber being commited.
       error = capturedErrors.get(effectfulFiber);
       capturedErrors.delete(effectfulFiber);
     }
@@ -638,6 +662,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       case ClassComponent:
         const instance = effectfulFiber.stateNode;
         try {
+          // Allow the boundary to handle the error, usually by scheduling
+          // an update to itself
           instance.unstable_handleError(error);
         } catch (e) {
           captureError(effectfulFiber, e, false);
@@ -645,6 +671,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return;
       case HostContainer:
         if (!firstUncaughtError) {
+          // If this is the host container, we treat it as a no-op error
+          // boundary. We'll throw the first uncaught error once it's safe to
+          // do so, at the end of the batch.
           firstUncaughtError = error;
         }
         return;

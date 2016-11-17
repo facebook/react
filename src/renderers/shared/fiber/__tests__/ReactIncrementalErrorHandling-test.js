@@ -274,6 +274,66 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren('f')).toEqual(null);
   });
 
+  it('unwinds the context stack correctly on error', () => {
+    class Provider extends React.Component {
+      static childContextTypes = { message: React.PropTypes.string };
+      static contextTypes = { message: React.PropTypes.string };
+      getChildContext() {
+        return {
+          message: (this.context.message || '') + this.props.message,
+        };
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function Connector(props, context) {
+      return <span prop={context.message} />;
+    }
+
+    Connector.contextTypes = {
+      message: React.PropTypes.string,
+    };
+
+    function BadRender() {
+      throw new Error('render error');
+    }
+
+    class Boundary extends React.Component {
+      state = { error: null };
+      unstable_handleError(error) {
+        this.setState({ error });
+      }
+      render() {
+        return (
+          <Provider message="b">
+            <Provider message="c">
+              <Provider message="d">
+                <Provider message="e">
+                  {!this.state.error && <BadRender />}
+                </Provider>
+              </Provider>
+            </Provider>
+          </Provider>
+        );
+      }
+    }
+
+    ReactNoop.render(
+      <Provider message="a">
+        <Boundary />
+        <Connector />
+      </Provider>
+    );
+    ReactNoop.flush();
+
+    // If the context stack does not unwind, span will get 'abcde'
+    expect(ReactNoop.getChildren()).toEqual([
+      span('a'),
+    ]);
+  });
+
   it('catches reconciler errors in a boundary during mounting', () => {
     spyOn(console, 'error');
 
@@ -289,7 +349,6 @@ describe('ReactIncrementalErrorHandling', () => {
         return this.props.children;
       }
     }
-
     const InvalidType = undefined;
     const brokenElement = <InvalidType />;
     function BrokenRender(props) {
