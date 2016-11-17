@@ -450,12 +450,11 @@ var ReactDOMFiberComponent = {
     return tag === 'svg' || tag === 'foreignobject';
   },
 
-  mountComponent: function(
-    internalInstanceHandle : Object,
+  createElement: function(
     tag : string,
-    rootContainerElement : Element,
     props : Object,
-    context : Object
+    rootContainerElement : Element,
+    internalInstanceHandle : Object
   ) : Element {
     // TODO:
     // validateDangerousTag(tag);
@@ -503,6 +502,19 @@ var ReactDOMFiberComponent = {
         tag
       );
     }
+
+    ReactDOMComponentTree.precacheFiberNode(internalInstanceHandle, domElement);
+
+    return domElement;
+  },
+
+  setInitialProperties: function(
+    domElement : Element,
+    tag : string,
+    props : Object,
+    rootContainerElement : Element
+  ) : void {
+
     var isCustomComponentTag = isCustomComponent(tag, props);
     if (__DEV__) {
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
@@ -563,7 +575,6 @@ var ReactDOMFiberComponent = {
 
     assertValidProps(tag, props);
 
-    ReactDOMComponentTree.precacheFiberNode(internalInstanceHandle, domElement);
     updateDOMProperties(
       domElement,
       rootContainerElement,
@@ -607,18 +618,15 @@ var ReactDOMFiberComponent = {
         }
         break;
     }
-
-    return domElement;
   },
 
-  receiveComponent: function(
+  updateProperties(
     domElement : Element,
-    rootContainerElement : Element,
     tag : string,
     lastProps : Object,
     nextProps : Object,
-    context : Object
-  ) {
+    rootContainerElement : Element
+  ) : void {
     switch (tag) {
       case 'input':
         lastProps = ReactDOMFiberInput.getHostProps(domElement, lastProps);
@@ -674,7 +682,7 @@ var ReactDOMFiberComponent = {
     }
   },
 
-  restoreControlledState: function(domElement : Element, tag : string, props : Object) {
+  restoreControlledState(domElement : Element, tag : string, props : Object) : void {
     switch (tag) {
       case 'input':
         ReactDOMFiberInput.restoreControlledState(domElement, props);
