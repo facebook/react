@@ -65,6 +65,39 @@ These methods are called when an instance of a component is being created and in
 - [`render()`](#render)
 - [`componentDidMount()`](#componentdidmount)
 
+The execution of these methods is important. They would be executed in the above order. Consider this example:
+
+```js{4,8,12,16}
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    console.log('constructor');
+  }
+
+  componentWillMount() {
+    console.log('componentWillMount');
+  }
+
+  componentDidMount() {
+    console.log('componentDidMount');
+  }
+  
+  render() {
+    console.log('render');
+    return <h1>Mounting</h1>;
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+![React Component Lifecycle - Mounting Phase](/react/img/docs/component-lifecycle-in-depth/mounting-phase-console.png)
+
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/zoGdgG?editors=0011) 
+
 #### Updating
 
 An update can be caused by changes to props or state. These methods are called when a component is being re-rendered:
@@ -188,6 +221,55 @@ Note that React may call this method even if the props have not changed, so make
 
 `componentWillReceiveProps()` is not invoked if you just call `this.setState()`
 
+```javascript{15,25-28}
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { totalClicks: 0 };
+  }
+
+  incrementClick() {
+    this.setState({ totalClicks: this.state.totalClicks + 1 });
+  }
+  
+  render() {
+    return <div>
+      <h1>componentWillReceiveProps</h1>
+      <button onClick={this.incrementClick.bind(this)}>Click</button>
+      <Message clicks={this.state.totalClicks} />
+    </div>;
+  }
+}
+
+class Message extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    console.log('componentWillReceiveProps()');
+    console.log(this.props, nextProps);
+  }
+
+  render() {
+    return <div>Your total click is {this.props.clicks}.</div>;
+  }
+}
+```
+
+![React Component Lifecycle - componentWillReceiveProps](/react/img/docs/component-lifecycle-in-depth/componentwillreceiveprops.png)
+
+> Note
+>
+> The method `componentWillReceiveProps` won't be called at mounting phase.
+> Even you are passing props to your component.
+
+So in the above example,
+the component get rendered 4 times (one in the mounting phase, and three in the updating phase),
+and so, `componentWillReceiveProps` executed three times.
+
+[Try it on CodePen.](https://codepen.io/dashtinejad/pen/mOygpw?editors=0011)
+
 * * *
 
 ### `shouldComponentUpdate()`
@@ -205,6 +287,55 @@ Returning `false` does not prevent child components from re-rendering when *thei
 Currently, if `shouldComponentUpdate()` returns `false`, then [`componentWillUpdate()`](#componentwillupdate), [`render()`](#render), and [`componentDidUpdate()`](#componentdidupdate) will not be invoked. Note that in the future React may treat `shouldComponentUpdate()` as a hint rather than a strict directive, and returning `false` may still result in a re-rendering of the component.
 
 If you determine a specific component is slow after profiling, you may change it to inherit from [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
+
+```js{15,22,23,27,31}
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { totalClicks: 0 };
+  }
+
+  incrementClick() {
+    this.setState({ totalClicks: this.state.totalClicks + 1 });
+  }
+  
+  render() {
+    return <div>
+      <h1>Component's Lifecycle</h1>
+      <button onClick={this.incrementClick.bind(this)}>Click</button>
+      <Message clicks={this.state.totalClicks} />
+    </div>;
+  }
+}
+
+class Message extends React.Component {
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log('shouldComponentUpdate()');
+    return nextProps.clicks !== 7;
+  }
+
+  componentWillUpdate() {
+    console.log('componentWillUpdate()');
+  }
+
+  componentDidUpdate() {
+    console.log('componentDidUpdate()');
+  }
+
+  render() {
+    console.log('render()');
+    return <div>Your total clicks is: <b>{this.props.clicks}</b></div>;
+  }
+}
+```
+
+Clicking the button, will increase total number of clicks.
+When it reaches `7`, the `shouldComponentUpdate` method will return false,
+and so, the render will not be invoked.
+
+![React Component Lifecycle - shouldComponentUpdate](/react/img/docs/component-lifecycle-in-depth/shouldcomponentupdate-1.png) ![React Component Lifecycle - shouldComponentUpdate](/react/img/docs/component-lifecycle-in-depth/shouldcomponentupdate-2.png)
+
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/MbwEBK?editors=0011)
 
 * * *
 
@@ -246,7 +377,7 @@ Use this as an opportunity to operate on the DOM when the component has been upd
 componentWillUnmount()
 ```
 
-`componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in `componentDidMount`.
+`componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in `componentDidMount`
 
 As discussed in [Conditional Rendering](/react/docs/conditional-rendering.html), a React component
 could be included in its parent's `render()` method or not. So, consider this basic component, which
