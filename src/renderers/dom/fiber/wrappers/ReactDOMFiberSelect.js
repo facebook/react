@@ -68,13 +68,14 @@ function checkSelectPropTypes(inst, props) {
   }
 }
 
-function updateOptions(inst : Fiber, multiple : boolean, propValue : string | Array<string>) {
+function updateOptions(inst : Fiber, multiple : boolean, propValue : any) {
   var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
 
   if (multiple) {
+    let selectedValues = (propValue : Array<string>);
     let selectedValue = {};
-    for (let i = 0; i < propValue.length; i++) {
-      selectedValue['' + propValue[i]] = true;
+    for (let i = 0; i < selectedValues.length; i++) {
+      selectedValue['' + selectedValues[i]] = true;
     }
     for (let i = 0; i < options.length; i++) {
       var selected = selectedValue.hasOwnProperty(options[i].value);
@@ -85,7 +86,7 @@ function updateOptions(inst : Fiber, multiple : boolean, propValue : string | Ar
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    let selectedValue = '' + propValue;
+    let selectedValue = '' + (propValue : string);
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
