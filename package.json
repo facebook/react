@@ -95,7 +95,6 @@
     "flow": "flow"
   },
   "jest": {
-    "cacheDirectory": "node_modules/.jest-cache",
     "modulePathIgnorePatterns": [
       "/.module-cache/",
       "/react/build/"
