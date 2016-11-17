@@ -4,68 +4,7 @@ title: Component Lifecycle In Depth
 permalink: docs/component-lifecycle-in-depth.html
 ---
 
-What is Component Lifecycle? This is a fundamental question.
-Whenever React serve a component, it runs multiple component methods
-in **specific order**. 
 
-This order of executions, their behaviours 
-and anything else related to these methods, called Component Lifecycle.
-
-## Core Lifecycle
-There are different methods in component's lifecycle. React group them in **three core category**:
-
-- **Mounting**: This phase occurs when a component is being inserted into the DOM.
-- **Updating**: This phase occurs when a component is being re-rendered.
-- **Unmounting**: This phase occurs when a component is being removed from the DOM.
-
-```
-             LIFECYCLE
------------------||-----------------
-|                ||                |
-|   -------------\/-------------   |
-|   |         MOUNTING         |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |         UPDATING         |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |        UNMOUNTING        |   |
-|   -------------||-------------   |
-|                ||                |
------------------\/-----------------
-```
-
-
-## Mounting
-This phase occurs when a component is being inserted into the DOM. These methods will execute only once
-(except `render` which will be invoked on updating phase also).
-
-```
-              MOUNTING
------------------||-----------------
-|                ||                |
-|   -------------\/-------------   |
-|   |       constructor        |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |    componentWillMount    |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |          render          |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |    componentDidMount     |   |
-|   -------------||-------------   |
-|                ||                |
------------------\/-----------------
-```
-
-Remember that methods prefixed with `will` are called right before `render`, and methods prefixed with `did` are called right after `render`.
 
 ### constructor
 
@@ -79,7 +18,11 @@ Otherwise you will get an error.
 
 ![React Component Lifecycle - Constructor missing super](/react/img/docs/component-lifecycle-in-depth/missing-super.png)
 
-The `constructor` method is a good place for initializing state or bind methods. If you don't need them,
+> Note
+>
+> Be sure to call `super()` before using `this` in the constructor. Otherwise you will get an error.
+
+The `constructor` method is a good place for initializing state or binding methods. If you don't need them,
 you don't need to implement a constructor for your React component.
 
 ### componentWillMount
@@ -384,58 +327,4 @@ This phase occurs when a component is being removed from the DOM. Currently, thi
 
 ### componentWillUnmount
 
-As discussed in [Conditional Rendering](/react/docs/conditional-rendering.html), a React component
-could be included in its parent's `render()` method or not. So, consider this basic component, which
-we'll use it as a child component:
 
-```javascript{2-4}
-class Child extends React.Component {
-  componentWillUnmount() {
-    console.log('componentWillUnmount()');
-  }
-
-  render() {
-    return <div>Hello World</div>;
-  }
-}
-```
-
-As you can see, we declared `componentWillUnmount` method. Whenever this component
-is being removed from DOM, this method will run by React. Now, see the parent component,
-which will render the child component based on a flag, which is controlled by user. 
-
-```javascript{16-19,26}
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { isShowingChild: true };
-  }
-
-  showChild() {
-    this.setState({ isShowingChild: true });
-  }
-
-  hideChild() {
-    this.setState({ isShowingChild: false });
-  }
-  
-  render() {
-    let child = '';
-    if (this.state.isShowingChild) {
-      child = <Child />;
-    }
-
-    return <div>
-      <h1>Unmounting</h1>
-      <button onClick={this.showChild.bind(this)}>Show Child</button>
-      <button onClick={this.hideChild.bind(this)}>Hide Child</button>
-
-      {child}
-    </div>;
-  }
-}
-```
-
-![React Component Lifecycle - componentwillunmount](/react/img/docs/component-lifecycle-in-depth/componentwillunmount.png)
-
-[Try it on CodePen](https://codepen.io/dashtinejad/pen/NbPegM/?editors=0011).

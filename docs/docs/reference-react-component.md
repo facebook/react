@@ -37,6 +37,25 @@ If you don't use ES6 yet, you may use the [`React.createClass`](/react/docs/reac
 
 Each component has several "lifecycle methods" that you can override to run code at particular times in the process. Methods prefixed with **`will`** are called right before something happens, and methods prefixed with **`did`** are called right after something happens.
 
+```
+             LIFECYCLE
+-----------------||-----------------
+|                ||                |
+|   -------------\/-------------   |
+|   |         MOUNTING         |   |
+|   -------------||-------------   |
+|                ||                |
+|   -------------\/-------------   |
+|   |         UPDATING         |   |
+|   -------------||-------------   |
+|                ||                |
+|   -------------\/-------------   |
+|   |        UNMOUNTING        |   |
+|   -------------||-------------   |
+|                ||                |
+-----------------\/-----------------
+```
+
 #### Mounting
 
 These methods are called when an instance of a component is being created and inserted into the DOM:
@@ -61,6 +80,10 @@ An update can be caused by changes to props or state. These methods are called w
 This method is called when a component is being removed from the DOM:
 
 - [`componentWillUnmount()`](#componentwillunmount)
+
+
+
+
 
 ### Other APIs
 
@@ -223,7 +246,63 @@ Use this as an opportunity to operate on the DOM when the component has been upd
 componentWillUnmount()
 ```
 
-`componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in `componentDidMount`
+`componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in `componentDidMount`.
+
+As discussed in [Conditional Rendering](/react/docs/conditional-rendering.html), a React component
+could be included in its parent's `render()` method or not. So, consider this basic component, which
+we'll use it as a child component:
+
+```javascript{2-4}
+class Child extends React.Component {
+  componentWillUnmount() {
+    console.log('componentWillUnmount()');
+  }
+
+  render() {
+    return <div>Hello World</div>;
+  }
+}
+```
+
+As you can see, we declared `componentWillUnmount` method. Whenever this component
+is being removed from DOM, this method will run by React. Now, see the parent component,
+which will render the child component based on a flag, which is controlled by user. 
+
+```javascript{16-19,26}
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { isShowingChild: true };
+  }
+
+  showChild() {
+    this.setState({ isShowingChild: true });
+  }
+
+  hideChild() {
+    this.setState({ isShowingChild: false });
+  }
+  
+  render() {
+    let child = '';
+    if (this.state.isShowingChild) {
+      child = <Child />;
+    }
+
+    return <div>
+      <h1>Unmounting</h1>
+      <button onClick={this.showChild.bind(this)}>Show Child</button>
+      <button onClick={this.hideChild.bind(this)}>Hide Child</button>
+
+      {child}
+    </div>;
+  }
+}
+```
+
+![React Component Lifecycle - componentwillunmount](/react/img/docs/component-lifecycle-in-depth/componentwillunmount.png)
+
+[Try it on CodePen.](https://codepen.io/dashtinejad/pen/NbPegM/?editors=0011)
 
 * * *
 
