@@ -120,7 +120,7 @@ function assertValidProps(component : Fiber, props : ?Object) {
   );
 }
 
-function ensureListeningTo(inst, registrationName) {
+function ensureListeningTo(rootContainerElement, registrationName) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -129,9 +129,8 @@ function ensureListeningTo(inst, registrationName) {
       'This browser doesn\'t support the `onScroll` event'
     );
   }
-  var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
+  var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
+  var doc = isDocumentFragment ? rootContainerElement : rootContainerElement.ownerDocument;
   listenTo(registrationName, doc);
 }
 
@@ -314,6 +313,7 @@ function isCustomComponent(tagName, props) {
  */
 function updateDOMProperties(
   workInProgress : Fiber,
+  rootContainerElement : Element,
   lastProps : null | Object,
   nextProps : Object,
   isCustomComponentTag : boolean
@@ -418,7 +418,7 @@ function updateDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
-        ensureListeningTo(workInProgress, propKey);
+        ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(
@@ -451,18 +451,20 @@ function updateDOMProperties(
 
 var ReactDOMFiberComponent = {
 
+  // TODO: Use this to keep track of changes to the host context and use this
+  // to determine whether we switch to svg and back.
+  isNewHostContainer: function(tag : string) {
+    return tag === 'svg' || tag === 'foreignobject';
+  },
+
   mountComponent: function(
     workInProgress : Fiber,
+    rootContainerElement : Element,
     props : Object,
-    hostParent : Fiber,
-    hostContainerInfo : Object,
     context : Object
   ) : Element {
     // validateDangerousTag(tag);
     // workInProgress._tag = tag.toLowerCase();
-
-    workInProgress._hostParent = hostParent;
-    workInProgress._hostContainerInfo = hostContainerInfo;
 
     switch (workInProgress._tag) {
       case 'audio':
@@ -476,7 +478,7 @@ var ReactDOMFiberComponent = {
         trapBubbledEventsLocal(workInProgress);
         break;
       case 'input':
-        ReactDOMFiberInput.mountWrapper(workInProgress, props, hostParent);
+        ReactDOMFiberInput.mountWrapper(workInProgress, props);
         props = ReactDOMFiberInput.getHostProps(workInProgress, props);
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
@@ -484,28 +486,28 @@ var ReactDOMFiberComponent = {
         trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(workInProgress, 'onChange');
+        ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'option':
-        ReactDOMFiberOption.mountWrapper(workInProgress, props, hostParent);
+        ReactDOMFiberOption.mountWrapper(workInProgress, props);
         props = ReactDOMFiberOption.getHostProps(workInProgress, props);
         break;
       case 'select':
-        ReactDOMFiberSelect.mountWrapper(workInProgress, props, hostParent);
+        ReactDOMFiberSelect.mountWrapper(workInProgress, props);
         props = ReactDOMFiberSelect.getHostProps(workInProgress, props);
         trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(workInProgress, 'onChange');
+        ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.mountWrapper(workInProgress, props, hostParent);
+        ReactDOMFiberTextarea.mountWrapper(workInProgress, props);
         props = ReactDOMFiberTextarea.getHostProps(workInProgress, props);
         inputValueTracking.track(workInProgress);
         trapBubbledEventsLocal(workInProgress);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(workInProgress, 'onChange');
+        ensureListeningTo(rootContainerElement, 'onChange');
         break;
     }
 
@@ -513,17 +515,10 @@ var ReactDOMFiberComponent = {
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var namespaceURI;
-    var parentTag;
-    if (hostParent != null) {
-      namespaceURI = hostParent._namespaceURI;
-      parentTag = hostParent._tag;
-    } else if (hostContainerInfo._tag) {
-      namespaceURI = hostContainerInfo._namespaceURI;
-      parentTag = hostContainerInfo._tag;
-    }
+    var namespaceURI = rootContainerElement.namespaceURI;
     if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject') {
+        namespaceURI === DOMNamespaces.svg &&
+        rootContainerElement.tagName === 'foreignObject') {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
@@ -532,11 +527,11 @@ var ReactDOMFiberComponent = {
       } else if (workInProgress._tag === 'math') {
         namespaceURI = DOMNamespaces.mathml;
       }
+      // TODO: Make this a new root container element.
     }
-    workInProgress._namespaceURI = namespaceURI;
 
     var type = workInProgress._currentElement.type;
-    var ownerDocument = hostContainerInfo._ownerDocument;
+    var ownerDocument = rootContainerElement.ownerDocument;
     var el;
     if (namespaceURI === DOMNamespaces.html) {
       if (workInProgress._tag === 'script') {
@@ -572,7 +567,7 @@ var ReactDOMFiberComponent = {
       }
     }
     ReactDOMComponentTree.precacheFiberNode(workInProgress, el);
-    updateDOMProperties(workInProgress, null, props, isCustomComponentTag);
+    updateDOMProperties(workInProgress, rootContainerElement, null, props, isCustomComponentTag);
 
     switch (workInProgress._tag) {
       case 'input':
@@ -612,6 +607,7 @@ var ReactDOMFiberComponent = {
 
   receiveComponent: function(
     workInProgress : Fiber,
+    rootContainerElement : Element,
     nextProps : Object,
     context : Object
   ) {
@@ -644,7 +640,7 @@ var ReactDOMFiberComponent = {
 
     assertValidProps(workInProgress, nextProps);
     var isCustomComponentTag = isCustomComponent(workInProgress._tag, nextProps);
-    updateDOMProperties(workInProgress, lastProps, nextProps, isCustomComponentTag);
+    updateDOMProperties(workInProgress, rootContainerElement, lastProps, nextProps, isCustomComponentTag);
 
     switch (workInProgress._tag) {
       case 'input':
