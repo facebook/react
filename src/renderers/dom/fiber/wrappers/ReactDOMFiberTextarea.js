@@ -12,10 +12,13 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
+type TextAreaWithWrapperState = HTMLTextAreaElement & {
+  _wrapperState: {
+    initialValue: string,
+  }
+};
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
@@ -39,7 +42,8 @@ var didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getHostProps: function(inst : Fiber, props : Object) {
+  getHostProps: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     invariant(
       props.dangerouslySetInnerHTML == null,
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
@@ -53,13 +57,14 @@ var ReactDOMTextarea = {
     var hostProps = Object.assign({}, props, {
       value: undefined,
       defaultValue: undefined,
-      children: '' + inst._wrapperState.initialValue,
+      children: '' + node._wrapperState.initialValue,
     });
 
     return hostProps;
   },
 
-  mountWrapper: function(inst : Fiber, props : Object) {
+  mountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
@@ -120,13 +125,13 @@ var ReactDOMTextarea = {
       initialValue = defaultValue;
     }
 
-    inst._wrapperState = {
+    node._wrapperState = {
       initialValue: '' + initialValue,
     };
   },
 
-  updateWrapper: function(inst : Fiber, props : Object) {
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+  updateWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     var value = props.value;
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
@@ -146,24 +151,24 @@ var ReactDOMTextarea = {
     }
   },
 
-  postMountWrapper: function(inst : Fiber, props : Object) {
+  postMountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var textContent = node.textContent;
 
     // Only set node.value if textContent is equal to the expected
     // initial value. In IE10/IE11 there is a bug where the placeholder attribute
     // will populate textContent as well.
     // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
-    if (textContent === inst._wrapperState.initialValue) {
+    if (textContent === node._wrapperState.initialValue) {
       node.value = textContent;
     }
   },
 
-  restoreControlledState: function(inst : Fiber, props : Object) {
+  restoreControlledState: function(element : Element, props : Object) {
     // DOM component is still mounted; update
-    ReactDOMTextarea.updateWrapper(inst, props);
+    ReactDOMTextarea.updateWrapper(element, props);
   },
 
 };

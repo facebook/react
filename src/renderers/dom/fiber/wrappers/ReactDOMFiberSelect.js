@@ -12,10 +12,14 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
+type SelectWithWrapperState = HTMLSelectElement & {
+  _wrapperState: {
+    initialValue: ?string,
+    wasMultiple: boolean
+  }
+};
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var getCurrentOwnerName = require('getCurrentOwnerName');
 var warning = require('warning');
@@ -35,7 +39,7 @@ var valuePropNames = ['value', 'defaultValue'];
 /**
  * Validation function for `value` and `defaultValue`.
  */
-function checkSelectPropTypes(inst, props) {
+function checkSelectPropTypes(props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
@@ -68,8 +72,9 @@ function checkSelectPropTypes(inst, props) {
   }
 }
 
-function updateOptions(inst : Fiber, multiple : boolean, propValue : any) {
-  var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
+function updateOptions(node : HTMLSelectElement, multiple : boolean, propValue : any) {
+  type IndexableHTMLOptionsCollection = HTMLOptionsCollection & { [key:number]: HTMLOptionElement };
+  var options : IndexableHTMLOptionsCollection = node.options;
 
   if (multiple) {
     let selectedValues = (propValue : Array<string>);
@@ -115,19 +120,20 @@ function updateOptions(inst : Fiber, multiple : boolean, propValue : any) {
  * selected.
  */
 var ReactDOMSelect = {
-  getHostProps: function(inst : Fiber, props : Object) {
+  getHostProps: function(element : Element, props : Object) {
     return Object.assign({}, props, {
       value: undefined,
     });
   },
 
-  mountWrapper: function(inst : Fiber, props : Object) {
+  mountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : SelectWithWrapperState);
     if (__DEV__) {
-      checkSelectPropTypes(inst, props);
+      checkSelectPropTypes(props);
     }
 
     var value = props.value;
-    inst._wrapperState = {
+    node._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
       wasMultiple: Boolean(props.multiple),
     };
@@ -149,33 +155,35 @@ var ReactDOMSelect = {
     }
   },
 
-  postUpdateWrapper: function(inst : Fiber, props : Object) {
+  postUpdateWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : SelectWithWrapperState);
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down
-    inst._wrapperState.initialValue = undefined;
+    node._wrapperState.initialValue = undefined;
 
-    var wasMultiple = inst._wrapperState.wasMultiple;
-    inst._wrapperState.wasMultiple = Boolean(props.multiple);
+    var wasMultiple = node._wrapperState.wasMultiple;
+    node._wrapperState.wasMultiple = Boolean(props.multiple);
 
     var value = props.value;
     if (value != null) {
-      updateOptions(inst, Boolean(props.multiple), value);
+      updateOptions(node, Boolean(props.multiple), value);
     } else if (wasMultiple !== Boolean(props.multiple)) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(inst, Boolean(props.multiple), props.defaultValue);
+        updateOptions(node, Boolean(props.multiple), props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(inst, Boolean(props.multiple), props.multiple ? [] : '');
+        updateOptions(node, Boolean(props.multiple), props.multiple ? [] : '');
       }
     }
   },
 
-  restoreControlledState: function(inst : Fiber, props : Object) {
+  restoreControlledState: function(element : Element, props : Object) {
+    var node = ((element : any) : SelectWithWrapperState);
     var value = props.value;
 
     if (value != null) {
-      updateOptions(inst, Boolean(props.multiple), value);
+      updateOptions(node, Boolean(props.multiple), value);
     }
   },
 };

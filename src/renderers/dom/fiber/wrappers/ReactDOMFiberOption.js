@@ -12,10 +12,7 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-
 var React = require('React');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var warning = require('warning');
 var didWarnInvalidOptionChildren = false;
@@ -47,7 +44,7 @@ function flattenChildren(children) {
  * Implements an <option> host component that warns when `selected` is set.
  */
 var ReactDOMOption = {
-  mountWrapper: function(inst : Fiber, props : Object) {
+  mountWrapper: function(element : Element, props : Object) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(
@@ -58,15 +55,14 @@ var ReactDOMOption = {
     }
   },
 
-  postMountWrapper: function(inst : Fiber, props : Object) {
+  postMountWrapper: function(element : Element, props : Object) {
     // value="" should make a value attribute (#6219)
     if (props.value != null) {
-      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-      node.setAttribute('value', props.value);
+      element.setAttribute('value', props.value);
     }
   },
 
-  getHostProps: function(inst : Fiber, props : Object) {
+  getHostProps: function(element : Element, props : Object) {
     var hostProps = Object.assign({children: undefined}, props);
 
     var content = flattenChildren(props.children);

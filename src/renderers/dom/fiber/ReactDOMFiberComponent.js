@@ -14,8 +14,6 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
@@ -39,7 +37,6 @@ var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
-var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
@@ -162,7 +159,7 @@ var mediaEvents = {
   topWaiting: 'waiting',
 };
 
-function trapClickOnNonInteractiveElement(inst) {
+function trapClickOnNonInteractiveElement(node : any) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
@@ -172,20 +169,16 @@ function trapClickOnNonInteractiveElement(inst) {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  var node = getNode(inst);
   node.onclick = emptyFunction;
 }
 
-function trapBubbledEventsLocal(inst, tag) {
+function trapBubbledEventsLocal(node : Element, tag : string) {
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
-  var node = getNode(inst);
-  invariant(
-    node,
-    'trapBubbledEvent(...): Requires node to be rendered.'
-  );
 
   // TODO: Make sure that we check isMounted before firing any of these events.
+  // TODO: Inline these below since we're calling this from an equivalent
+  // switch statement.
   switch (tag) {
     case 'iframe':
     case 'object':
@@ -307,12 +300,12 @@ function isCustomComponent(tagName, props) {
  *
  * TODO: Benchmark whether checking for changed values in memory actually
  *       improves performance (especially statically positioned elements).
- * TODO: Benchmark the effects of putting workInProgress at the top since 99% of props
+ * TODO: Benchmark the effects of putting this at the top since 99% of props
  *       do not change for a given reconciliation.
  * TODO: Benchmark areas that can be improved with caching.
  */
 function updateDOMProperties(
-  workInProgress : Fiber,
+  domElement : Element,
   rootContainerElement : Element,
   lastProps : null | Object,
   nextProps : Object,
@@ -347,13 +340,13 @@ function updateDOMProperties(
       // Do nothing for deleted listeners.
     } else if (wasCustomComponentTag) {
       DOMPropertyOperations.deleteValueForAttribute(
-        getNode(workInProgress),
+        domElement,
         propKey
       );
     } else if (
         DOMProperty.properties[propKey] ||
         DOMProperty.isCustomAttribute(propKey)) {
-      DOMPropertyOperations.deleteValueForProperty(getNode(workInProgress), propKey);
+      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
     }
   }
   for (propKey in nextProps) {
@@ -400,10 +393,10 @@ function updateDOMProperties(
       if (nextHtml) {
         if (lastHtml) {
           if (lastHtml !== nextHtml) {
-            setInnerHTML(getNode(workInProgress), '' + nextHtml);
+            setInnerHTML(domElement, '' + nextHtml);
           }
         } else {
-          setInnerHTML(getNode(workInProgress), nextHtml);
+          setInnerHTML(domElement, nextHtml);
         }
       } else {
         // TODO: It might be too late to clear this if we have children
@@ -411,9 +404,9 @@ function updateDOMProperties(
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === 'string') {
-        setTextContent(getNode(workInProgress), nextProp);
+        setTextContent(domElement, nextProp);
       } else if (typeof nextProp === 'number') {
-        setTextContent(getNode(workInProgress), '' + nextProp);
+        setTextContent(domElement, '' + nextProp);
       }
     } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
       // Noop
@@ -423,29 +416,28 @@ function updateDOMProperties(
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(
-        getNode(workInProgress),
+        domElement,
         propKey,
         nextProp
       );
     } else if (
         DOMProperty.properties[propKey] ||
         DOMProperty.isCustomAttribute(propKey)) {
-      var node = getNode(workInProgress);
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
       if (nextProp != null) {
-        DOMPropertyOperations.setValueForProperty(node, propKey, nextProp);
+        DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
       } else {
-        DOMPropertyOperations.deleteValueForProperty(node, propKey);
+        DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
       }
     }
   }
   if (styleUpdates) {
     CSSPropertyOperations.setValueForStyles(
-      getNode(workInProgress),
+      domElement,
       styleUpdates,
-      workInProgress
+      null // TODO: Change CSSPropertyOperations to use getCurrentOwnerName.
     );
   }
 }
@@ -459,7 +451,7 @@ var ReactDOMFiberComponent = {
   },
 
   mountComponent: function(
-    workInProgress : Fiber,
+    internalInstanceHandle : Object,
     tag : string,
     rootContainerElement : Element,
     props : Object,
@@ -468,53 +460,6 @@ var ReactDOMFiberComponent = {
     // TODO:
     // validateDangerousTag(tag);
     // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
-
-    switch (tag) {
-      case 'audio':
-      case 'form':
-      case 'iframe':
-      case 'img':
-      case 'link':
-      case 'object':
-      case 'source':
-      case 'video':
-        trapBubbledEventsLocal(workInProgress);
-        break;
-      case 'input':
-        ReactDOMFiberInput.mountWrapper(workInProgress, props);
-        props = ReactDOMFiberInput.getHostProps(workInProgress, props);
-        // TODO: Make sure we check if this is still unmounted or do any clean
-        // up necessary since we never stop tracking anymore.
-        inputValueTracking.track(workInProgress);
-        trapBubbledEventsLocal(workInProgress);
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
-        break;
-      case 'option':
-        ReactDOMFiberOption.mountWrapper(workInProgress, props);
-        props = ReactDOMFiberOption.getHostProps(workInProgress, props);
-        break;
-      case 'select':
-        ReactDOMFiberSelect.mountWrapper(workInProgress, props);
-        props = ReactDOMFiberSelect.getHostProps(workInProgress, props);
-        trapBubbledEventsLocal(workInProgress);
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
-        break;
-      case 'textarea':
-        ReactDOMFiberTextarea.mountWrapper(workInProgress, props);
-        props = ReactDOMFiberTextarea.getHostProps(workInProgress, props);
-        inputValueTracking.track(workInProgress);
-        trapBubbledEventsLocal(workInProgress);
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
-        break;
-    }
-
-    assertValidProps(tag, props);
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
@@ -534,7 +479,7 @@ var ReactDOMFiberComponent = {
     }
 
     var ownerDocument = rootContainerElement.ownerDocument;
-    var el;
+    var domElement : Element;
     if (namespaceURI === DOMNamespaces.html) {
       if (tag === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
@@ -543,24 +488,24 @@ var ReactDOMFiberComponent = {
         div.innerHTML = '<script></script>';
         // This is guaranteed to yield a script element.
         var firstChild = ((div.firstChild : any) : Element);
-        el = div.removeChild(firstChild);
+        domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        el = ownerDocument.createElement(tag, props.is);
+        domElement = ownerDocument.createElement(tag, props.is);
       } else {
         // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
         // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-        el = ownerDocument.createElement(tag);
+        domElement = ownerDocument.createElement(tag);
       }
     } else {
-      el = ownerDocument.createElementNS(
+      domElement = ownerDocument.createElementNS(
         namespaceURI,
         tag
       );
     }
     var isCustomComponentTag = isCustomComponent(tag, props);
     if (__DEV__) {
-      if (isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+      if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
@@ -570,9 +515,57 @@ var ReactDOMFiberComponent = {
         didWarnShadyDOM = true;
       }
     }
-    ReactDOMComponentTree.precacheFiberNode(workInProgress, el);
+
+    switch (tag) {
+      case 'audio':
+      case 'form':
+      case 'iframe':
+      case 'img':
+      case 'link':
+      case 'object':
+      case 'source':
+      case 'video':
+        trapBubbledEventsLocal(domElement, tag);
+        break;
+      case 'input':
+        ReactDOMFiberInput.mountWrapper(domElement, props);
+        props = ReactDOMFiberInput.getHostProps(domElement, props);
+        // TODO: Make sure we check if this is still unmounted or do any clean
+        // up necessary since we never stop tracking anymore.
+        inputValueTracking.track(domElement);
+        trapBubbledEventsLocal(domElement, tag);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(rootContainerElement, 'onChange');
+        break;
+      case 'option':
+        ReactDOMFiberOption.mountWrapper(domElement, props);
+        props = ReactDOMFiberOption.getHostProps(domElement, props);
+        break;
+      case 'select':
+        ReactDOMFiberSelect.mountWrapper(domElement, props);
+        props = ReactDOMFiberSelect.getHostProps(domElement, props);
+        trapBubbledEventsLocal(domElement, tag);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(rootContainerElement, 'onChange');
+        break;
+      case 'textarea':
+        ReactDOMFiberTextarea.mountWrapper(domElement, props);
+        props = ReactDOMFiberTextarea.getHostProps(domElement, props);
+        inputValueTracking.track(domElement); // TODO
+        trapBubbledEventsLocal(domElement, tag);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(rootContainerElement, 'onChange');
+        break;
+    }
+
+    assertValidProps(tag, props);
+
+    ReactDOMComponentTree.precacheFiberNode(internalInstanceHandle, domElement);
     updateDOMProperties(
-      workInProgress,
+      domElement,
       rootContainerElement,
       null,
       props,
@@ -580,72 +573,73 @@ var ReactDOMFiberComponent = {
       isCustomComponentTag
     );
 
+    // TODO: All these autoFocus won't work because the component is not in the
+    // DOM yet. We need a special effect to handle this.
     switch (tag) {
       case 'input':
-        ReactDOMFiberInput.postMountWrapper(workInProgress, props);
+        ReactDOMFiberInput.postMountWrapper(domElement, props);
         if (props.autoFocus) {
-          focusNode(getNode(workInProgress));
+          focusNode(domElement);
         }
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.postMountWrapper(workInProgress, props);
+        ReactDOMFiberTextarea.postMountWrapper(domElement, props);
         if (props.autoFocus) {
-          focusNode(getNode(workInProgress));
+          focusNode(domElement);
         }
         break;
       case 'select':
         if (props.autoFocus) {
-          focusNode(getNode(workInProgress));
+          focusNode(domElement);
         }
         break;
       case 'button':
         if (props.autoFocus) {
-          focusNode(getNode(workInProgress));
+          focusNode(domElement);
         }
         break;
       case 'option':
-        ReactDOMFiberOption.postMountWrapper(workInProgress, props);
+        ReactDOMFiberOption.postMountWrapper(domElement, props);
         break;
       default:
         if (typeof props.onClick === 'function') {
-          trapClickOnNonInteractiveElement(workInProgress);
+          trapClickOnNonInteractiveElement(domElement);
         }
         break;
     }
 
-    return el;
+    return domElement;
   },
 
   receiveComponent: function(
-    workInProgress : Fiber,
+    domElement : Element,
     rootContainerElement : Element,
     tag : string,
+    lastProps : Object,
     nextProps : Object,
     context : Object
   ) {
-    var lastProps = workInProgress.memoizedProps;
-
     switch (tag) {
       case 'input':
-        lastProps = ReactDOMFiberInput.getHostProps(workInProgress, lastProps);
-        nextProps = ReactDOMFiberInput.getHostProps(workInProgress, nextProps);
+        lastProps = ReactDOMFiberInput.getHostProps(domElement, lastProps);
+        nextProps = ReactDOMFiberInput.getHostProps(domElement, nextProps);
         break;
       case 'option':
-        lastProps = ReactDOMFiberOption.getHostProps(workInProgress, lastProps);
-        nextProps = ReactDOMFiberOption.getHostProps(workInProgress, nextProps);
+        lastProps = ReactDOMFiberOption.getHostProps(domElement, lastProps);
+        nextProps = ReactDOMFiberOption.getHostProps(domElement, nextProps);
         break;
       case 'select':
-        lastProps = ReactDOMFiberSelect.getHostProps(workInProgress, lastProps);
-        nextProps = ReactDOMFiberSelect.getHostProps(workInProgress, nextProps);
+        lastProps = ReactDOMFiberSelect.getHostProps(domElement, lastProps);
+        nextProps = ReactDOMFiberSelect.getHostProps(domElement, nextProps);
         break;
       case 'textarea':
-        lastProps = ReactDOMFiberTextarea.getHostProps(workInProgress, lastProps);
-        nextProps = ReactDOMFiberTextarea.getHostProps(workInProgress, nextProps);
+        lastProps = ReactDOMFiberTextarea.getHostProps(domElement, lastProps);
+        nextProps = ReactDOMFiberTextarea.getHostProps(domElement, nextProps);
         break;
       default:
         if (typeof lastProps.onClick !== 'function' &&
             typeof nextProps.onClick === 'function') {
-          trapClickOnNonInteractiveElement(workInProgress);
+          trapClickOnNonInteractiveElement(domElement);
         }
         break;
     }
@@ -654,7 +648,7 @@ var ReactDOMFiberComponent = {
     var wasCustomComponentTag = isCustomComponent(tag, lastProps);
     var isCustomComponentTag = isCustomComponent(tag, nextProps);
     updateDOMProperties(
-      workInProgress,
+      domElement,
       rootContainerElement,
       lastProps,
       nextProps,
@@ -667,36 +661,31 @@ var ReactDOMFiberComponent = {
         // Update the wrapper around inputs *after* updating props. This has to
         // happen after `updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
-        ReactDOMFiberInput.updateWrapper(workInProgress, nextProps);
+        ReactDOMFiberInput.updateWrapper(domElement, nextProps);
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.updateWrapper(workInProgress, nextProps);
+        ReactDOMFiberTextarea.updateWrapper(domElement, nextProps);
         break;
       case 'select':
         // <select> value update needs to occur after <option> children
         // reconciliation
-        ReactDOMFiberSelect.postUpdateWrapper(workInProgress, nextProps);
+        ReactDOMFiberSelect.postUpdateWrapper(domElement, nextProps);
         break;
     }
   },
 
-  restoreControlledState: function(finishedWork : Fiber, props : Object) {
-    switch (finishedWork.type) {
+  restoreControlledState: function(domElement : Element, tag : string, props : Object) {
+    switch (tag) {
       case 'input':
-        ReactDOMFiberInput.restoreControlledState(finishedWork, props);
+        ReactDOMFiberInput.restoreControlledState(domElement, props);
         return;
       case 'textarea':
-        ReactDOMFiberTextarea.restoreControlledState(finishedWork, props);
+        ReactDOMFiberTextarea.restoreControlledState(domElement, props);
         return;
       case 'select':
-        ReactDOMFiberSelect.restoreControlledState(finishedWork, props);
+        ReactDOMFiberSelect.restoreControlledState(domElement, props);
         return;
     }
-  },
-
-  getPublicInstance: function(fiber : Fiber) {
-    // If we add wrappers, this could be something deeper.
-    return fiber.stateNode;
   },
 
 };
