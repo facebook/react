@@ -31,7 +31,7 @@ We can combine the two by making the React state be the "single source of truth"
 
 For example, if we want to make the previous example log the name when it is submitted, we can write the form as a controlled component:
 
-```javascript{4,10-12,23}
+```javascript{4,10-12,24}
 class NameForm extends React.Component {
   constructor(props) {
     super(props);
@@ -64,7 +64,7 @@ class NameForm extends React.Component {
 }
 ```
 
-[Try it on CodePen.](https://codepen.io/lacker/pen/oYNzxY?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/VmmPgp?editors=0010)
 
 Since the `value` attribute is set on our form element, the displayed value will always be `this.state.value`, making the React state the source of truth. Since `handleChange` runs on every keystroke to update the React state, the displayed value will update as the user types.
 
@@ -88,7 +88,7 @@ In HTML, a `<textarea>` element defines its text by its children:
 
 In React, a `<textarea>` uses a `value` attribute instead. This way, a form using a `<textarea>` can be written very similarly to a form that uses a single-line input:
 
-```javascript{4-6,12-14,25}
+```javascript{4-6,12-14,26}
 class EssayForm extends React.Component {
   constructor(props) {
     super(props);
@@ -140,7 +140,7 @@ In HTML, `<select>` creates a drop-down list. For example, this HTML creates a d
 
 Note that the Coconut option is initially selected, because of the `selected` attribute. React, instead of using this `selected` attribute, uses a `value` attribute on the root `select` tag. This is more convenient in a controlled component because you only need to update it in one place. For example:
 
-```javascript{4,10-12,23}
+```javascript{4,10-12,24}
 class FlavorForm extends React.Component {
   constructor(props) {
     super(props);
@@ -178,7 +178,7 @@ class FlavorForm extends React.Component {
 }
 ```
 
-[Try it on CodePen.](https://codepen.io/lacker/pen/QGWKQP?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/JbbEzX?editors=0010)
 
 Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
 

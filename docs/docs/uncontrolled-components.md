@@ -10,7 +10,7 @@ To write an uncontrolled component, instead of writing an event handler for ever
 
 For example, this code accepts a single name in an uncontrolled component:
 
-```javascript{8,16}
+```javascript{8,17}
 class NameForm extends React.Component {
   constructor(props) {
     super(props);
@@ -25,8 +25,10 @@ class NameForm extends React.Component {
   render() {
     return (
       <form onSubmit={this.handleSubmit}>
-        Name:
-        <input type="text" ref={(input) => this.input = input} />
+        <label>
+          Name:
+          <input type="text" ref={(input) => this.input = input} />
+        </label>
         <input type="submit" value="Submit" />
       </form>
     );
@@ -34,7 +36,7 @@ class NameForm extends React.Component {
 }
 ```
 
-[Try it on CodePen.](https://codepen.io/lacker/pen/XNWjOj?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/WooRWa?editors=0010)
 
 Since an uncontrolled component keeps the source of truth in the DOM, it is sometimes easier to integrate React and non-React code when using uncontrolled components. It can also be slightly less code if you want to be quick and dirty. Otherwise, you should usually use controlled components.
 
@@ -42,15 +44,17 @@ Since an uncontrolled component keeps the source of truth in the DOM, it is some
 
 In the React rendering lifecycle, the `value` attribute on form elements will override the value in the DOM. With an uncontrolled component, you often want React to specify the initial value, but leave subsequent updates uncontrolled. To handle this case, you can specify a `defaultValue` attribute instead of `value`.
 
-```javascript{6}
+```javascript{7}
 render() {
   return (
     <form onSubmit={this.handleSubmit}>
-      Name:
-      <input
-        defaultValue="Bob"
-        type="text"
-        ref={(input) => this.input = input} />
+      <label>
+        Name:
+        <input
+          defaultValue="Bob"
+          type="text"
+          ref={(input) => this.input = input} />
+      </label>
       <input type="submit" value="Submit" />
     </form>
   );
