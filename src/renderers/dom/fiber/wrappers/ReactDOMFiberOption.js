@@ -16,7 +16,6 @@ import type { Fiber } from 'ReactFiber';
 
 var React = require('React');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMSelect = require('ReactDOMSelect');
 
 var warning = require('warning');
 var didWarnInvalidOptionChildren = false;
@@ -48,7 +47,7 @@ function flattenChildren(children) {
  * Implements an <option> host component that warns when `selected` is set.
  */
 var ReactDOMOption = {
-  mountWrapper: function(inst : Fiber, props : Object, hostParent : Fiber) {
+  mountWrapper: function(inst : Fiber, props : Object) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(
@@ -57,46 +56,6 @@ var ReactDOMOption = {
         'setting `selected` on <option>.'
       );
     }
-
-    // Look up whether this option is 'selected'
-    var selectValue = null;
-    if (hostParent != null) {
-      var selectParent = hostParent;
-
-      if (selectParent._tag === 'optgroup') {
-        selectParent = selectParent._hostParent;
-      }
-
-      if (selectParent != null && selectParent._tag === 'select') {
-        selectValue = ReactDOMSelect.getSelectValueContext(selectParent);
-      }
-    }
-
-    // If the value is null (e.g., no specified value or after initial mount)
-    // or missing (e.g., for <datalist>), we don't change props.selected
-    var selected = null;
-    if (selectValue != null) {
-      var value;
-      if (props.value != null) {
-        value = props.value + '';
-      } else {
-        value = flattenChildren(props.children);
-      }
-      selected = false;
-      if (Array.isArray(selectValue)) {
-        // multiple
-        for (var i = 0; i < selectValue.length; i++) {
-          if ('' + selectValue[i] === value) {
-            selected = true;
-            break;
-          }
-        }
-      } else {
-        selected = ('' + selectValue === value);
-      }
-    }
-
-    inst._wrapperState = {selected: selected};
   },
 
   postMountWrapper: function(inst : Fiber, props : Object) {
@@ -108,13 +67,7 @@ var ReactDOMOption = {
   },
 
   getHostProps: function(inst : Fiber, props : Object) {
-    var hostProps = Object.assign({selected: undefined, children: undefined}, props);
-
-    // Read state only from initial mount because <select> updates value
-    // manually; we need the initial state only for server rendering
-    if (inst._wrapperState.selected != null) {
-      hostProps.selected = inst._wrapperState.selected;
-    }
+    var hostProps = Object.assign({children: undefined}, props);
 
     var content = flattenChildren(props.children);
 

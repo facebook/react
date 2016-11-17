@@ -148,12 +148,6 @@ var ReactDOMSelect = {
     }
   },
 
-  getSelectValueContext: function(inst : Fiber) {
-    // ReactDOMOption looks at this initial value so the initial generated
-    // markup has correct `selected` attributes
-    return inst._wrapperState.initialValue;
-  },
-
   postUpdateWrapper: function(inst : Fiber, props : Object) {
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down
