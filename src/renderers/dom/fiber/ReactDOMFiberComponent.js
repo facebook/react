@@ -61,17 +61,17 @@ function getDeclarationErrorAddendum() {
   return '';
 }
 
-function assertValidProps(component : Fiber, props : ?Object) {
+function assertValidProps(tag : string, props : ?Object) {
   if (!props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
-  if (voidElementTags[component._tag]) {
+  if (voidElementTags[tag]) {
     invariant(
       props.children == null && props.dangerouslySetInnerHTML == null,
       '%s is a void element tag and must neither have `children` nor ' +
       'use `dangerouslySetInnerHTML`.%s',
-      component._tag,
+      tag,
       getDeclarationErrorAddendum()
     );
   }
@@ -116,7 +116,7 @@ function assertValidProps(component : Fiber, props : ?Object) {
     'The `style` prop expects a mapping from style properties to values, ' +
     'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
     'using JSX.%s',
-     getDeclarationErrorAddendum(component)
+     getDeclarationErrorAddendum()
   );
 }
 
@@ -176,7 +176,7 @@ function trapClickOnNonInteractiveElement(inst) {
   node.onclick = emptyFunction;
 }
 
-function trapBubbledEventsLocal(inst) {
+function trapBubbledEventsLocal(inst, tag) {
   // If a component renders to null or if another component fatals and causes
   // the state of the tree to be corrupted, `node` here can be null.
   var node = getNode(inst);
@@ -186,7 +186,7 @@ function trapBubbledEventsLocal(inst) {
   );
 
   // TODO: Make sure that we check isMounted before firing any of these events.
-  switch (inst._tag) {
+  switch (tag) {
     case 'iframe':
     case 'object':
       ReactBrowserEventEmitter.trapBubbledEvent(
@@ -316,7 +316,8 @@ function updateDOMProperties(
   rootContainerElement : Element,
   lastProps : null | Object,
   nextProps : Object,
-  isCustomComponentTag : boolean
+  wasCustomComponentTag : boolean,
+  isCustomComponentTag : boolean,
 ) : void {
   var propKey;
   var styleName;
@@ -344,7 +345,7 @@ function updateDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       // Do nothing for deleted listeners.
-    } else if (isCustomComponent(workInProgress._tag, lastProps)) {
+    } else if (wasCustomComponentTag) {
       DOMPropertyOperations.deleteValueForAttribute(
         getNode(workInProgress),
         propKey
@@ -459,14 +460,16 @@ var ReactDOMFiberComponent = {
 
   mountComponent: function(
     workInProgress : Fiber,
+    tag : string,
     rootContainerElement : Element,
     props : Object,
     context : Object
   ) : Element {
+    // TODO:
     // validateDangerousTag(tag);
-    // workInProgress._tag = tag.toLowerCase();
+    // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
 
-    switch (workInProgress._tag) {
+    switch (tag) {
       case 'audio':
       case 'form':
       case 'iframe':
@@ -511,7 +514,7 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    assertValidProps(workInProgress, props);
+    assertValidProps(tag, props);
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
@@ -522,39 +525,38 @@ var ReactDOMFiberComponent = {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
-      if (workInProgress._tag === 'svg') {
+      if (tag === 'svg') {
         namespaceURI = DOMNamespaces.svg;
-      } else if (workInProgress._tag === 'math') {
+      } else if (tag === 'math') {
         namespaceURI = DOMNamespaces.mathml;
       }
       // TODO: Make this a new root container element.
     }
 
-    var type = workInProgress._currentElement.type;
     var ownerDocument = rootContainerElement.ownerDocument;
     var el;
     if (namespaceURI === DOMNamespaces.html) {
-      if (workInProgress._tag === 'script') {
+      if (tag === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
         var div = ownerDocument.createElement('div');
-        div.innerHTML = `<${type}></${type}>`;
+        div.innerHTML = `<${tag}></${tag}>`;
         el = div.removeChild(div.firstChild);
       } else if (props.is) {
-        el = ownerDocument.createElement(type, props.is);
+        el = ownerDocument.createElement(tag, props.is);
       } else {
         // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
         // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-        el = ownerDocument.createElement(type);
+        el = ownerDocument.createElement(tag);
       }
     } else {
       el = ownerDocument.createElementNS(
         namespaceURI,
-        type
+        tag
       );
     }
-    var isCustomComponentTag = isCustomComponent(workInProgress._tag, props);
+    var isCustomComponentTag = isCustomComponent(tag, props);
     if (__DEV__) {
       if (isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
         warning(
@@ -567,9 +569,16 @@ var ReactDOMFiberComponent = {
       }
     }
     ReactDOMComponentTree.precacheFiberNode(workInProgress, el);
-    updateDOMProperties(workInProgress, rootContainerElement, null, props, isCustomComponentTag);
+    updateDOMProperties(
+      workInProgress,
+      rootContainerElement,
+      null,
+      props,
+      false,
+      isCustomComponentTag
+    );
 
-    switch (workInProgress._tag) {
+    switch (tag) {
       case 'input':
         ReactDOMFiberInput.postMountWrapper(workInProgress, props);
         if (props.autoFocus) {
@@ -608,12 +617,13 @@ var ReactDOMFiberComponent = {
   receiveComponent: function(
     workInProgress : Fiber,
     rootContainerElement : Element,
+    tag : string,
     nextProps : Object,
     context : Object
   ) {
     var lastProps = workInProgress.memoizedProps;
 
-    switch (workInProgress._tag) {
+    switch (tag) {
       case 'input':
         lastProps = ReactDOMFiberInput.getHostProps(workInProgress, lastProps);
         nextProps = ReactDOMFiberInput.getHostProps(workInProgress, nextProps);
@@ -638,11 +648,19 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    assertValidProps(workInProgress, nextProps);
-    var isCustomComponentTag = isCustomComponent(workInProgress._tag, nextProps);
-    updateDOMProperties(workInProgress, rootContainerElement, lastProps, nextProps, isCustomComponentTag);
+    assertValidProps(tag, nextProps);
+    var wasCustomComponentTag = isCustomComponent(tag, lastProps);
+    var isCustomComponentTag = isCustomComponent(tag, nextProps);
+    updateDOMProperties(
+      workInProgress,
+      rootContainerElement,
+      lastProps,
+      nextProps,
+      wasCustomComponentTag,
+      isCustomComponentTag
+    );
 
-    switch (workInProgress._tag) {
+    switch (tag) {
       case 'input':
         // Update the wrapper around inputs *after* updating props. This has to
         // happen after `updateDOMProperties`. Otherwise HTML5 input validations
