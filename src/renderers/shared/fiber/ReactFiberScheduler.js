@@ -41,19 +41,7 @@ var {
   PlacementAndUpdate,
   Deletion,
   Callback,
-  PlacementAndCallback,
-  UpdateAndCallback,
-  PlacementAndUpdateAndCallback,
-  DeletionAndCallback,
   Err,
-  PlacementAndErr,
-  UpdateAndErr,
-  PlacementAndUpdateAndErr,
-  DeletionAndErr,
-  PlacementAndCallbackAndErr,
-  UpdateAndCallbackAndErr,
-  PlacementAndUpdateAndCallbackAndErr,
-  DeletionAndCallbackAndErr,
 } = require('ReactTypeOfSideEffect');
 
 var {
@@ -178,44 +166,37 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
     while (effectfulFiber) {
-      switch (effectfulFiber.effectTag) {
-        case Placement:
-        case PlacementAndCallback:
-        case PlacementAndErr:
-        case PlacementAndCallbackAndErr: {
+      // The following switch statement is only concerned about placement,
+      // updates, and deletions. To avoid needing to add a case for every
+      // possible bitmap value, we remove the secondary effects from the
+      // effect tag and switch on that value.
+      let primaryEffectTag = effectfulFiber.effectTag & ~(Callback | Err);
+      switch (primaryEffectTag) {
+        case Placement: {
           commitPlacement(effectfulFiber);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag ^= Placement;
+          effectfulFiber.effectTag &= ~Placement;
           break;
         }
-        case PlacementAndUpdate:
-        case PlacementAndUpdateAndCallback:
-        case PlacementAndUpdateAndErr:
-        case PlacementAndUpdateAndCallbackAndErr: {
+        case PlacementAndUpdate: {
           // Placement
           commitPlacement(effectfulFiber);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag ^= Placement;
+          effectfulFiber.effectTag &= ~Placement;
 
           // Update
           const current = effectfulFiber.alternate;
           commitWork(current, effectfulFiber);
           break;
         }
-        case Update:
-        case UpdateAndErr:
-        case UpdateAndCallback:
-        case UpdateAndCallbackAndErr: {
+        case Update: {
           const current = effectfulFiber.alternate;
           commitWork(current, effectfulFiber);
           break;
         }
-        case Deletion:
-        case DeletionAndCallback:
-        case DeletionAndErr:
-        case DeletionAndCallbackAndErr: {
+        case Deletion: {
           commitDeletion(effectfulFiber);
           break;
         }
