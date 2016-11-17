@@ -453,6 +453,7 @@ var ReactDOMFiberComponent = {
 
   mountComponent: function(
     workInProgress : Fiber,
+    props : Object,
     hostParent : Fiber,
     hostContainerInfo : Object,
     context : Object
@@ -462,8 +463,6 @@ var ReactDOMFiberComponent = {
 
     workInProgress._hostParent = hostParent;
     workInProgress._hostContainerInfo = hostContainerInfo;
-
-    var props = workInProgress._currentElement.props;
 
     switch (workInProgress._tag) {
       case 'audio':
@@ -577,13 +576,13 @@ var ReactDOMFiberComponent = {
 
     switch (workInProgress._tag) {
       case 'input':
-        ReactDOMFiberInput.postMountWrapper(workInProgress);
+        ReactDOMFiberInput.postMountWrapper(workInProgress, props);
         if (props.autoFocus) {
           focusNode(getNode(workInProgress));
         }
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.postMountWrapper(workInProgress);
+        ReactDOMFiberTextarea.postMountWrapper(workInProgress, props);
         if (props.autoFocus) {
           focusNode(getNode(workInProgress));
         }
@@ -599,7 +598,7 @@ var ReactDOMFiberComponent = {
         }
         break;
       case 'option':
-        ReactDOMFiberOption.postMountWrapper(workInProgress);
+        ReactDOMFiberOption.postMountWrapper(workInProgress, props);
         break;
       default:
         if (typeof props.onClick === 'function') {
@@ -652,29 +651,29 @@ var ReactDOMFiberComponent = {
         // Update the wrapper around inputs *after* updating props. This has to
         // happen after `updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
-        ReactDOMFiberInput.updateWrapper(workInProgress);
+        ReactDOMFiberInput.updateWrapper(workInProgress, nextProps);
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.updateWrapper(workInProgress);
+        ReactDOMFiberTextarea.updateWrapper(workInProgress, nextProps);
         break;
       case 'select':
         // <select> value update needs to occur after <option> children
         // reconciliation
-        ReactDOMFiberSelect.postUpdateWrapper(workInProgress);
+        ReactDOMFiberSelect.postUpdateWrapper(workInProgress, nextProps);
         break;
     }
   },
 
-  restoreControlledState: function(finishedWork : Fiber) {
+  restoreControlledState: function(finishedWork : Fiber, props : Object) {
     switch (finishedWork.type) {
       case 'input':
-        ReactDOMFiberInput.restoreControlledState(finishedWork);
+        ReactDOMFiberInput.restoreControlledState(finishedWork, props);
         return;
       case 'textarea':
-        ReactDOMFiberTextarea.restoreControlledState(finishedWork);
+        ReactDOMFiberTextarea.restoreControlledState(finishedWork, props);
         return;
       case 'select':
-        ReactDOMFiberSelect.restoreControlledState(finishedWork);
+        ReactDOMFiberSelect.restoreControlledState(finishedWork, props);
         return;
     }
   },

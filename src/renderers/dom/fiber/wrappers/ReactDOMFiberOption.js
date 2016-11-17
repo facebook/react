@@ -99,9 +99,8 @@ var ReactDOMOption = {
     inst._wrapperState = {selected: selected};
   },
 
-  postMountWrapper: function(inst : Fiber) {
+  postMountWrapper: function(inst : Fiber, props : Object) {
     // value="" should make a value attribute (#6219)
-    var props = inst._currentElement.props;
     if (props.value != null) {
       var node = ReactDOMComponentTree.getNodeFromInstance(inst);
       node.setAttribute('value', props.value);

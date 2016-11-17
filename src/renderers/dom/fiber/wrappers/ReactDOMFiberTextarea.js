@@ -125,9 +125,7 @@ var ReactDOMTextarea = {
     };
   },
 
-  updateWrapper: function(inst : Fiber) {
-    var props = inst._currentElement.props;
-
+  updateWrapper: function(inst : Fiber, props : Object) {
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = props.value;
     if (value != null) {
@@ -148,7 +146,7 @@ var ReactDOMTextarea = {
     }
   },
 
-  postMountWrapper: function(inst : Fiber) {
+  postMountWrapper: function(inst : Fiber, props : Object) {
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
@@ -163,9 +161,9 @@ var ReactDOMTextarea = {
     }
   },
 
-  restoreControlledState: function(inst : Fiber) {
+  restoreControlledState: function(inst : Fiber, props : Object) {
     // DOM component is still mounted; update
-    ReactDOMTextarea.updateWrapper(inst);
+    ReactDOMTextarea.updateWrapper(inst, props);
   },
 
 };

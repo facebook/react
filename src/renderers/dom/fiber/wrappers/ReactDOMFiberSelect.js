@@ -154,9 +154,7 @@ var ReactDOMSelect = {
     return inst._wrapperState.initialValue;
   },
 
-  postUpdateWrapper: function(inst : Fiber) {
-    var props = inst._currentElement.props;
-
+  postUpdateWrapper: function(inst : Fiber, props : Object) {
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down
     inst._wrapperState.initialValue = undefined;
@@ -178,8 +176,7 @@ var ReactDOMSelect = {
     }
   },
 
-  restoreControlledState: function(inst : Fiber) {
-    var props = inst._currentElement.props;
+  restoreControlledState: function(inst : Fiber, props : Object) {
     var value = props.value;
 
     if (value != null) {

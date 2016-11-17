@@ -113,7 +113,7 @@ var ReactDOMInput = {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnValueDefaultValue = true;
@@ -131,9 +131,7 @@ var ReactDOMInput = {
     }
   },
 
-  updateWrapper: function(inst : Fiber) {
-    var props = inst._currentElement.props;
-
+  updateWrapper: function(inst : Fiber, props : Object) {
     if (__DEV__) {
       var controlled = isControlled(props);
 
@@ -204,9 +202,7 @@ var ReactDOMInput = {
     }
   },
 
-  postMountWrapper: function(inst : Fiber) {
-    var props = inst._currentElement.props;
-
+  postMountWrapper: function(inst : Fiber, props : Object) {
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
@@ -254,9 +250,8 @@ var ReactDOMInput = {
     }
   },
 
-  restoreControlledState: function(inst : Fiber) {
-    ReactDOMInput.updateWrapper(inst);
-    var props = inst._currentElement.props;
+  restoreControlledState: function(inst : Fiber, props : Object) {
+    ReactDOMInput.updateWrapper(inst, props);
     updateNamedCousins(inst, props);
   },
 };
@@ -292,6 +287,7 @@ function updateNamedCousins(thisInstance, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
+      // TODO: Ensure that otherInstance is the current Fiber instead of wip.
       invariant(
         otherInstance,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
@@ -300,7 +296,7 @@ function updateNamedCousins(thisInstance, props) {
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      ReactDOMInput.updateWrapper(otherInstance);
+      ReactDOMInput.updateWrapper(otherInstance, otherInstance.memoizedProps);
     }
   }
 }
