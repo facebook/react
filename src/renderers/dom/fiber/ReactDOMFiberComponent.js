@@ -30,6 +30,7 @@ var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 
 var emptyFunction = require('emptyFunction');
 var focusNode = require('focusNode');
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
@@ -52,15 +53,10 @@ var HTML = '__html';
 var DOC_FRAGMENT_TYPE = 11;
 
 
-function getDeclarationErrorAddendum(internalInstance) {
-  if (internalInstance) {
-    var owner = internalInstance._currentElement._owner || null;
-    if (owner) {
-      var name = owner.getName();
-      if (name) {
-        return ' This DOM node was rendered by `' + name + '`.';
-      }
-    }
+function getDeclarationErrorAddendum() {
+  var ownerName = getCurrentOwnerName();
+  if (ownerName) {
+    return ' This DOM node was rendered by `' + ownerName + '`.';
   }
   return '';
 }
@@ -76,10 +72,7 @@ function assertValidProps(component : Fiber, props : ?Object) {
       '%s is a void element tag and must neither have `children` nor ' +
       'use `dangerouslySetInnerHTML`.%s',
       component._tag,
-      component._currentElement._owner ?
-        ' Check the render method of ' +
-        component._currentElement._owner.getName() + '.' :
-        ''
+      getDeclarationErrorAddendum()
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -568,16 +561,16 @@ var ReactDOMFiberComponent = {
       );
     }
     var isCustomComponentTag = isCustomComponent(workInProgress._tag, props);
-    if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
-      var owner = workInProgress._currentElement._owner;
-      var name = owner && owner.getName() || 'A component';
-      warning(
-        false,
-        '%s is using shady DOM. Using shady DOM with React can ' +
-        'cause things to break subtly.',
-        name
-      );
-      didWarnShadyDOM = true;
+    if (__DEV__) {
+      if (isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+        warning(
+          false,
+          '%s is using shady DOM. Using shady DOM with React can ' +
+          'cause things to break subtly.',
+          getCurrentOwnerName() || 'A component'
+        );
+        didWarnShadyDOM = true;
+      }
     }
     ReactDOMComponentTree.precacheFiberNode(workInProgress, el);
     updateDOMProperties(workInProgress, null, props, isCustomComponentTag);

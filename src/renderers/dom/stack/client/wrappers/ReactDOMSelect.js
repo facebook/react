@@ -39,7 +39,7 @@ function checkSelectPropTypes(inst, props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    owner
+    owner ? owner.getName() : null
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {

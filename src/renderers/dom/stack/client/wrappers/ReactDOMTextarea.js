@@ -57,10 +57,11 @@ var ReactDOMTextarea = {
 
   mountWrapper: function(inst, props) {
     if (__DEV__) {
+      var owner = inst._currentElement._owner;
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        inst._currentElement._owner
+        owner ? owner.getName() : null
       );
       if (
         props.value !== undefined &&

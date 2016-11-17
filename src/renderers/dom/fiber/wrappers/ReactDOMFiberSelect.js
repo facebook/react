@@ -17,16 +17,15 @@ import type { Fiber } from 'ReactFiber';
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var warning = require('warning');
 
 var didWarnValueDefaultValue = false;
 
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
+function getDeclarationErrorAddendum() {
+  var ownerName = getCurrentOwnerName();
+  if (ownerName) {
+    return ' Check the render method of `' + ownerName + '`.';
   }
   return '';
 }
@@ -37,11 +36,10 @@ var valuePropNames = ['value', 'defaultValue'];
  * Validation function for `value` and `defaultValue`.
  */
 function checkSelectPropTypes(inst, props) {
-  var owner = inst._currentElement._owner;
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    owner
+    getCurrentOwnerName()
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {
@@ -56,7 +54,7 @@ function checkSelectPropTypes(inst, props) {
         'The `%s` prop supplied to <select> must be an array if ' +
         '`multiple` is true.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum()
       );
     } else if (!props.multiple && isArray) {
       warning(
@@ -64,7 +62,7 @@ function checkSelectPropTypes(inst, props) {
         'The `%s` prop supplied to <select> must be a scalar ' +
         'value if `multiple` is false.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum()
       );
     }
   }

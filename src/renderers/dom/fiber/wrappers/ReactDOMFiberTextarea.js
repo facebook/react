@@ -17,6 +17,7 @@ import type { Fiber } from 'ReactFiber';
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -63,7 +64,7 @@ var ReactDOMTextarea = {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        inst._currentElement._owner
+        getCurrentOwnerName()
       );
       if (
         props.value !== undefined &&

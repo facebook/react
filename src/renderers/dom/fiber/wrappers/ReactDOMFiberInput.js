@@ -18,6 +18,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -78,10 +79,8 @@ var ReactDOMInput = {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
-        inst._currentElement._owner
+        getCurrentOwnerName()
       );
-
-      var owner = inst._currentElement._owner;
 
       if (
         props.checked !== undefined &&
@@ -96,7 +95,7 @@ var ReactDOMInput = {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnCheckedDefaultChecked = true;
@@ -137,7 +136,6 @@ var ReactDOMInput = {
 
     if (__DEV__) {
       var controlled = isControlled(props);
-      var owner = inst._currentElement._owner;
 
       if (!inst._wrapperState.controlled && controlled && !didWarnUncontrolledToControlled) {
         warning(
@@ -146,7 +144,7 @@ var ReactDOMInput = {
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnUncontrolledToControlled = true;
@@ -158,7 +156,7 @@ var ReactDOMInput = {
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnControlledToUncontrolled = true;
