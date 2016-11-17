@@ -328,7 +328,7 @@ describe('ReactComponent', () => {
     expect(callback.mock.calls.length).toBe(3);
   });
 
-  xit('throws usefully when rendering badly-typed elements', () => {
+  it('throws usefully when rendering badly-typed elements', () => {
     spyOn(console, 'error');
 
     var X = undefined;

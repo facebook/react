@@ -558,9 +558,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             unwindContext(failedWork, boundary);
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
+
+          // We were interupted by an error. Continue performing work.
+          shouldContinue = true;
         }
-        // We were interupted by an error. Continue performing work.
-        shouldContinue = true;
       } finally {
         shouldBatchUpdates = prevShouldBatchUpdates;
       }
