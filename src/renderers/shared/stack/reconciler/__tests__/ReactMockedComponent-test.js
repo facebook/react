@@ -32,7 +32,7 @@ describe('ReactMockedComponent', () => {
   it('should allow an implicitly mocked component to be rendered without warnings', () => {
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should allow an implicitly mocked component to be updated', () => {

@@ -60,6 +60,7 @@
     "gzip-js": "~0.3.2",
     "jest": "^15.1.1",
     "jest-config": "^15.1.1",
+    "jest-jasmine2": "^15.1.1",
     "jest-runtime": "^15.1.1",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",

@@ -19,7 +19,7 @@ var ReactTestUtils;
 
 describe('ReactChildReconciler', () => {
   function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   beforeEach(() => {
@@ -40,8 +40,8 @@ describe('ReactChildReconciler', () => {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child keys must be unique; when two children share a key, only the first child will be used.'
     );
   });
@@ -69,8 +69,8 @@ describe('ReactChildReconciler', () => {
 
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +

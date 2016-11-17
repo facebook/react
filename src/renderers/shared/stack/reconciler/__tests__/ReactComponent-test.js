@@ -348,7 +348,7 @@ describe('ReactComponent', () => {
     );
 
     // One warning for each element creation
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
 });

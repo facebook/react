@@ -85,15 +85,7 @@ describe('ReactServerRendering', () => {
       expect(response).toBe('<!-- react-empty: 1 -->');
     });
 
-    it('should not register event listeners', () => {
-      var EventPluginHub = require('EventPluginHub');
-      var cb = jest.fn();
-
-      ReactServerRendering.renderToString(
-        <span onClick={cb}>hello world</span>
-      );
-      expect(EventPluginHub.__getListenerBank()).toEqual({});
-    });
+    // TODO: Test that listeners are not registered onto any document/container.
 
     it('should render composite components', () => {
       class Parent extends React.Component {
@@ -265,7 +257,7 @@ describe('ReactServerRendering', () => {
       spyOn(console, 'error');
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expect(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.count()).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -320,16 +312,6 @@ describe('ReactServerRendering', () => {
       );
 
       expect(response).toBe('<span>hello world</span>');
-    });
-
-    it('should not register event listeners', () => {
-      var EventPluginHub = require('EventPluginHub');
-      var cb = jest.fn();
-
-      ReactServerRendering.renderToStaticMarkup(
-        <span onClick={cb}>hello world</span>
-      );
-      expect(EventPluginHub.__getListenerBank()).toEqual({});
     });
 
     it('should only execute certain lifecycle methods', () => {
@@ -476,8 +458,8 @@ describe('ReactServerRendering', () => {
     spyOn(console, 'error');
     ReactServerRendering.renderToString(<Foo />);
     jest.runOnlyPendingTimers();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: setState(...): Can only update a mounting component.' +
       ' This usually means you called setState() outside componentWillMount() on the server.' +
       ' This is a no-op. Please check the code for the Foo component.'
@@ -502,8 +484,8 @@ describe('ReactServerRendering', () => {
     spyOn(console, 'error');
     ReactServerRendering.renderToString(<Bar />);
     jest.runOnlyPendingTimers();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: replaceState(...): Can only update a mounting component. ' +
       'This usually means you called replaceState() outside componentWillMount() on the server. ' +
       'This is a no-op. Please check the code for the Bar component.'
@@ -529,8 +511,8 @@ describe('ReactServerRendering', () => {
     spyOn(console, 'error');
     ReactServerRendering.renderToString(<Baz />);
     jest.runOnlyPendingTimers();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
       'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
       'This is a no-op. Please check the code for the Baz component.'

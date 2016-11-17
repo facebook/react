@@ -14,17 +14,11 @@
 var NativeMethodsMixin = require('NativeMethodsMixin');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactMultiChild = require('ReactMultiChild');
 var UIManager = require('UIManager');
 
 var deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-
-var registrationNames = ReactNativeEventEmitter.registrationNames;
-var putListener = ReactNativeEventEmitter.putListener;
-var deleteListener = ReactNativeEventEmitter.deleteListener;
-var deleteAllListeners = ReactNativeEventEmitter.deleteAllListeners;
 
 type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object;
@@ -57,7 +51,6 @@ ReactNativeBaseComponent.Mixin = {
 
   unmountComponent: function(safely, skipLifecycle) {
     ReactNativeComponentTree.uncacheNode(this);
-    deleteAllListeners(this);
     this.unmountChildren(safely, skipLifecycle);
     this._rootNodeID = 0;
   },
@@ -123,42 +116,7 @@ ReactNativeBaseComponent.Mixin = {
       );
     }
 
-    this._reconcileListenersUponUpdate(
-      prevElement.props,
-      nextElement.props
-    );
     this.updateChildren(nextElement.props.children, transaction, context);
-  },
-
-  /**
-   * @param {object} initialProps Native component props.
-   */
-  _registerListenersUponCreation: function(initialProps) {
-    for (var key in initialProps) {
-      // NOTE: The check for `!props[key]`, is only possible because this method
-      // registers listeners the *first* time a component is created.
-      if (registrationNames[key] && initialProps[key]) {
-        var listener = initialProps[key];
-        putListener(this, key, listener);
-      }
-    }
-  },
-
-  /**
-   * Reconciles event listeners, adding or removing if necessary.
-   * @param {object} prevProps Native component props including events.
-   * @param {object} nextProps Next native component props including events.
-   */
-  _reconcileListenersUponUpdate: function(prevProps, nextProps) {
-    for (var key in nextProps) {
-      if (registrationNames[key] && (nextProps[key] !== prevProps[key])) {
-        if (nextProps[key]) {
-          putListener(this, key, nextProps[key]);
-        } else {
-          deleteListener(this, key);
-        }
-      }
-    }
   },
 
   /**
@@ -207,7 +165,6 @@ ReactNativeBaseComponent.Mixin = {
 
     ReactNativeComponentTree.precacheNode(this, tag);
 
-    this._registerListenersUponCreation(this._currentElement.props);
     this.initializeChildren(
       this._currentElement.props.children,
       tag,

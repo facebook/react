@@ -183,8 +183,8 @@ describe('ReactMultiChildText', () => {
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Warning: Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -244,6 +244,6 @@ describe('ReactMultiChildText', () => {
     expect(childNodes[5]).toBe(alpha3);
 
     // Using Maps as children gives a single warning
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 });

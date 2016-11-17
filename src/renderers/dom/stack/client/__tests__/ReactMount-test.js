@@ -134,12 +134,12 @@ describe('ReactMount', () => {
 
     spyOn(console, 'error');
     ReactMount.render(<div />, container);
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
 
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     ReactMount.render(<div />, container);
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
   it('should not warn if mounting into non-empty node', () => {
@@ -148,7 +148,7 @@ describe('ReactMount', () => {
 
     spyOn(console, 'error');
     ReactMount.render(<div />, container);
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should warn when mounting into document.body', () => {
@@ -158,8 +158,8 @@ describe('ReactMount', () => {
 
     ReactMount.render(<div />, iFrame.contentDocument.body);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Rendering components directly into document.body is discouraged'
     );
   });
@@ -175,8 +175,8 @@ describe('ReactMount', () => {
       <div>This markup contains an nbsp entity: &nbsp; client text</div>,
       div
     );
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       ' (client) nbsp entity: &nbsp; client text</div>\n' +
       ' (server) nbsp entity: &nbsp; server text</div>'
     );
@@ -220,8 +220,8 @@ describe('ReactMount', () => {
     spyOn(console, 'error');
     var rootNode = container.firstChild;
     ReactDOM.render(<span />, rootNode);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: render(...): Replacing React-rendered children with a new ' +
       'root component. If you intended to update the children of this node, ' +
       'you should instead have the existing children update their state and ' +
@@ -246,15 +246,15 @@ describe('ReactMount', () => {
 
     spyOn(console, 'error');
     ReactDOMOther.unmountComponentAtNode(container);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: unmountComponentAtNode(): The node you\'re attempting to unmount ' +
       'was rendered by another copy of React.'
     );
 
     // Don't throw a warning if the correct React copy unmounts the node
     ReactDOM.unmountComponentAtNode(container);
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('passes the correct callback context', () => {

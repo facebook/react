@@ -15,6 +15,7 @@ var ChildUpdates;
 var MorphingComponent;
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactServerRendering;
@@ -26,6 +27,7 @@ describe('ReactCompositeComponent', () => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
@@ -184,11 +186,11 @@ describe('ReactCompositeComponent', () => {
       mountedInstance.methodAutoBound();
     }).not.toThrow();
 
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
     var explicitlyBound = mountedInstance.methodToBeExplicitlyBound.bind(
       mountedInstance
     );
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
     var autoBound = mountedInstance.methodAutoBound;
 
     var context = {};
@@ -269,13 +271,13 @@ describe('ReactCompositeComponent', () => {
     instance = ReactDOM.render(instance, container);
     instance.forceUpdate();
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
 
     ReactDOM.unmountComponentAtNode(container);
 
     instance.forceUpdate();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounted or ' +
       'mounting component. This usually means you called forceUpdate() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +
@@ -309,7 +311,7 @@ describe('ReactCompositeComponent', () => {
 
     instance.setState({value: 1});
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
 
     expect(renders).toBe(2);
 
@@ -318,8 +320,8 @@ describe('ReactCompositeComponent', () => {
 
     expect(renders).toBe(2);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
       'unmounted component. This is a no-op. Please check the code for the ' +
@@ -377,12 +379,12 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
 
     var instance = ReactDOM.render(<Component />, container);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot update during an existing state ' +
       'transition (such as within `render` or another component\'s ' +
       'constructor). Render methods should be a pure function of props and ' +
@@ -426,12 +428,12 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     var instance = ReactDOM.render(<Component />, container);
     expect(renderPasses).toBe(2);
     expect(instance.state.value).toBe(1);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot call setState() inside getChildContext()'
     );
   });
@@ -502,8 +504,8 @@ describe('ReactCompositeComponent', () => {
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     instance.setState({bogus: true});
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
       'boolean value. Make sure to return true or false.'
     );
@@ -523,8 +525,8 @@ describe('ReactCompositeComponent', () => {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component has a method called ' +
       'componentDidUnmount(). But there is no such lifecycle method. ' +
       'Did you mean componentWillUnmount()?'
@@ -830,7 +832,10 @@ describe('ReactCompositeComponent', () => {
       }
 
       componentDidUpdate(prevProps, prevState, prevContext) {
-        expect('foo' in prevContext).toBe(true);
+        if (!ReactDOMFeatureFlags.useFiber) {
+          // Fiber does not pass the previous context.
+          expect('foo' in prevContext).toBe(true);
+        }
       }
 
       shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -849,7 +854,10 @@ describe('ReactCompositeComponent', () => {
       }
 
       componentDidUpdate(prevProps, prevState, prevContext) {
-        expect('foo' in prevContext).toBe(false);
+        if (!ReactDOMFeatureFlags.useFiber) {
+          // Fiber does not pass the previous context.
+          expect('foo' in prevContext).toBe(false);
+        }
       }
 
       shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -971,21 +979,16 @@ describe('ReactCompositeComponent', () => {
         };
       }
 
-      onClick = () => {
-        this.setState({
-          foo: 'def',
-        });
-      };
-
       render() {
-        return <div className="parent" onClick={this.onClick}>{this.props.children}</div>;
+        return <div className="parent">{this.props.children}</div>;
       }
     }
 
     var div = document.createElement('div');
 
+    var parentInstance = null;
     ReactDOM.render(
-      <Parent>
+      <Parent ref={inst => parentInstance = inst}>
         <ChildWithoutContext>
           A1
           <GrandChild>A2</GrandChild>
@@ -999,7 +1002,9 @@ describe('ReactCompositeComponent', () => {
       div
     );
 
-    ReactTestUtils.Simulate.click(div.childNodes[0]);
+    parentInstance.setState({
+      foo: 'def',
+    });
 
     expect(propChanges).toBe(0);
     expect(contextChanges).toBe(3); // ChildWithContext, GrandChild x 2
@@ -1022,8 +1027,8 @@ describe('ReactCompositeComponent', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Outer />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: _renderNewRootComponent(): Render methods should ' +
       'be a pure function of props and state; triggering nested component ' +
       'updates from render is not allowed. If necessary, trigger nested ' +
@@ -1267,12 +1272,12 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
 
     ReactDOM.render(<Foo idx="qwe" />, container);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Foo(...): When calling super() in `Foo`, make sure to pass ' +
       'up the same props that your component\'s constructor was passed.'
     );

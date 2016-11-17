@@ -18,6 +18,10 @@ import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
+var {
+  isContextProvider,
+  popContextProvider,
+} = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
@@ -125,6 +129,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       case ClassComponent:
         transferOutput(workInProgress.child, workInProgress);
+        // We are leaving this subtree, so pop context if any.
+        if (isContextProvider(workInProgress)) {
+          popContextProvider();
+        }
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null
@@ -189,7 +197,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           }
           const child = workInProgress.child;
           const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
-          const instance = createInstance(workInProgress.type, newProps, children);
+          const instance = createInstance(workInProgress.type, newProps, children, workInProgress);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;
@@ -215,7 +223,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               return null;
             }
           }
-          const textInstance = createTextInstance(newText);
+          const textInstance = createTextInstance(newText, workInProgress);
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = textInstance;
           workInProgress.output = textInstance;

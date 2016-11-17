@@ -897,6 +897,7 @@ describe('ReactUpdates', () => {
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
+    console.log('xxx', expect().toThrowError);
     expect(() => component.setState({}, 'no')).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'

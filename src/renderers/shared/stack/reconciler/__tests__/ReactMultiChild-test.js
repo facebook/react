@@ -13,7 +13,7 @@
 
 describe('ReactMultiChild', () => {
   function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   var React;
@@ -185,8 +185,8 @@ describe('ReactMultiChild', () => {
         container
       );
 
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: flattenChildren(...): ' +
         'Encountered two children with the same key, `1`. ' +
         'Child keys must be unique; when two children share a key, ' +
