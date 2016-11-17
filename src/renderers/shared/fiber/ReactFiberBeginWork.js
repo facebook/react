@@ -13,6 +13,7 @@
 'use strict';
 
 import type { ReactCoroutine } from 'ReactCoroutine';
+import type { ReactPortal } from 'ReactPortal';
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -297,6 +298,11 @@ module.exports = function<T, P, I, TI, C>(
     reconcileChildren(current, workInProgress, coroutine.children);
   }
 
+  function updatePortalComponent(current, workInProgress) {
+    var portal = (workInProgress.pendingProps : ReactPortal);
+    reconcileChildren(current, workInProgress, portal.children);
+  }
+
   /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
@@ -439,6 +445,10 @@ module.exports = function<T, P, I, TI, C>(
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case Portal:
+        updatePortalComponent(current, workInProgress);
+        // TODO: is this right?
+        return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
         return workInProgress.child;

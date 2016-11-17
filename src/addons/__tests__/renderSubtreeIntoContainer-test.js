@@ -77,7 +77,7 @@ describe('renderSubtreeIntoContainer', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Parent />);
-    // expect(portalContainer.firstChild.innerHTML).toBe('bar');
+    expect(portalContainer.firstChild.innerHTML).toBe('bar');
   });
 
   it('should throw if parentComponent is invalid', () => {

@@ -35,6 +35,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 var {
   Update,
@@ -241,6 +242,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // Does nothing.
         return null;
       case Fragment:
+        transferOutput(workInProgress.child, workInProgress);
+        return null;
+      case Portal:
         transferOutput(workInProgress.child, workInProgress);
         return null;
 
