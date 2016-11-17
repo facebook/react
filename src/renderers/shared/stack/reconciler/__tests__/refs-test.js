@@ -273,4 +273,14 @@ describe('ref swapping', () => {
     testRefCall();
     __DEV__ = originalDev;
   });
+
+  it('coerces numbers to strings', () => {
+    class A extends React.Component {
+      render() {
+        return <div ref={1} />;
+      }
+    }
+    const a = ReactTestUtils.renderIntoDocument(<A />);
+    expect(a.refs[1].nodeName).toBe('DIV');
+  });
 });
