@@ -207,6 +207,28 @@ componentDidMount()
 
 `componentDidMount()` is invoked immediately after a component is mounted. Initialization that requires DOM nodes should go here. If you need to load data from a remote endpoint, this is a good place to instantiate the network request. Setting state in this method will trigger a re-rendering.
 
+If you need to access your element, you can use `ReactDOM.findDOMNode(this)`:
+
+```js{7}
+class App extends React.Component {
+  render() {
+    return <h1>Hello World</h1>;
+  }
+  
+  componentDidMount() {
+    var elem = ReactDOM.findDOMNode(this);
+    console.log(elem);
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+);
+```
+
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/PbbwMr?editors=0011)
+
 * * *
 
 ### `componentWillReceiveProps()`
