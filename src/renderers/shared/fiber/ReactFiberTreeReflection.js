@@ -112,6 +112,8 @@ exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any
     }
     node = node.sibling;
   }
+  // Flow needs the return null here, but ESLint complains about it.
+  // eslint-disable-next-line no-unreachable
   return null;
 };
 

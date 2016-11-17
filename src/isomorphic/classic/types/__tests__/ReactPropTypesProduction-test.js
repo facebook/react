@@ -212,7 +212,7 @@ describe('ReactPropTypesProduction', function() {
       });
 
       var instance = <Component num={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy).not.toBeCalled();
     });

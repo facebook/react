@@ -504,7 +504,7 @@ describe('ReactServerRendering', () => {
       }
 
       render() {
-        return <div onClick={() => {}}></div>;
+        return <div onClick={() => {}} />;
       }
     }
 

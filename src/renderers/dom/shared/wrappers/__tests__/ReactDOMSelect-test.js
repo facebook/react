@@ -50,7 +50,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should not throw with `defaultValue` and without children', () => {
-    var stub = <select defaultValue="dummy"></select>;
+    var stub = <select defaultValue="dummy" />;
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(stub);
@@ -126,7 +126,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should not throw with `value` and without children', () => {
-    var stub = <select value="dummy" onChange={noop}></select>;
+    var stub = <select value="dummy" onChange={noop} />;
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(stub);
