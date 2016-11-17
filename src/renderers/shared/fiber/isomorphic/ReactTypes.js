@@ -14,7 +14,9 @@
 
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 
-export type ReactNode = ReactElement<any> | ReactCoroutine | ReactYield | ReactText | ReactFragment;
+import type { ReactPortal } from 'ReactPortal';
+
+export type ReactNode = ReactElement<any> | ReactCoroutine | ReactYield | ReactText | ReactFragment | ReactPortal;
 
 export type ReactFragment = ReactEmpty | Iterable<ReactNode>;
 

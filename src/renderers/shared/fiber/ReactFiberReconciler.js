@@ -77,8 +77,11 @@ export type Reconciler<C, I, TI> = {
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
 
-  // Use for findDOMNode/findHostNode. Legacy API.
+  // Used for findDOMNode/findHostNode. Legacy API.
   findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null,
+
+  // Used for cross-renderer portals.
+  getImplementation(): any, // TODO
 };
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
@@ -172,6 +175,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       }
       return fiber.stateNode;
     },
+
+    getImplementation() {
+      return {
+        // TODO
+      };
+    }
 
   };
 

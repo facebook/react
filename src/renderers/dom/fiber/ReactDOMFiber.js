@@ -13,8 +13,10 @@
 'use strict';
 
 import type { HostChildren } from 'ReactFiberReconciler';
+import type { ReactNodeList } from 'ReactTypes';
 
 var ReactControlledComponent = require('ReactControlledComponent');
+var ReactPortal = require('ReactPortal');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -177,6 +179,10 @@ var ReactDOM = {
       return component;
     }
     return DOMRenderer.findHostInstance(component);
+  },
+
+  unstable_createPortal(children: ReactNodeList, container : DOMContainerElement, key : ?string = null) {
+    return ReactPortal.createPortal(children, container, DOMRenderer.getImplementation(), key);
   },
 
   unstable_batchedUpdates<A>(fn : () => A) : A {

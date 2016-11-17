@@ -43,6 +43,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 var {
   NoWork,
