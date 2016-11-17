@@ -384,7 +384,6 @@ src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
-* should throw when supplying a ref outside of render method
 * throws usefully when rendering badly-typed elements
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js

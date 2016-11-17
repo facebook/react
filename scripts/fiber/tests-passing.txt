@@ -1019,6 +1019,7 @@ src/renderers/shared/shared/event/eventPlugins/__tests__/ResponderEventPlugin-te
 * should cancel correctly
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
+* should throw when supplying a ref outside of render method
 * should warn when children are mutated during render
 * should warn when children are mutated during update
 * should support refs on owned components
@@ -1234,6 +1235,7 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * always has a value for this.refs
 * ref called correctly for stateless component when __DEV__ = false
 * ref called correctly for stateless component when __DEV__ = true
+* coerces numbers to strings
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null

@@ -60,16 +60,16 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
-function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactElement<any>) {
-  if (typeof element.ref === 'string') {
+function coerceRef(current: ?Fiber, element: ReactElement<any>) {
+  let mixedRef = element.ref;
+  if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
       const ownerFiber : ?Fiber = (element._owner : any);
       if (ownerFiber && ownerFiber.tag === ClassComponent) {
-        const stringRef = element.ref;
+        const stringRef = String(mixedRef);
         // Check if previous string ref matches new string ref
         if (current && current.ref && current.ref._stringRef === stringRef) {
-          workInProgress.ref = current.ref;
-          return;
+          return current.ref;
         }
         const inst = ownerFiber.stateNode;
         const ref = function(value) {
@@ -77,12 +77,11 @@ function transferRef(current: ?Fiber, workInProgress: Fiber, element: ReactEleme
           refs[stringRef] = value;
         };
         ref._stringRef = stringRef;
-        workInProgress.ref = ref;
+        return ref;
       }
     }
-  } else {
-    workInProgress.ref = element.ref;
   }
+  return mixedRef;
 }
 
 // This wrapper function exists because I expect to clone the code in each path
@@ -244,13 +243,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (current == null || current.type !== element.type) {
       // Insert
       const created = createFiberFromElement(element, priority);
-      transferRef(current, created, element);
+      created.ref = coerceRef(current, element);
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
-      transferRef(current, existing, element);
+      existing.ref = coerceRef(current, element);
       existing.pendingProps = element.props;
       existing.return = returnFiber;
       return existing;
@@ -342,7 +341,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           const created = createFiberFromElement(newChild, priority);
-          transferRef(null, created, newChild);
+          created.ref = coerceRef(null, newChild);
           created.return = returnFiber;
           return created;
         }
@@ -679,7 +678,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
-          transferRef(child, existing, element);
+          existing.ref = coerceRef(child, element);
           existing.pendingProps = element.props;
           existing.return = returnFiber;
           return existing;
@@ -694,7 +693,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     const created = createFiberFromElement(element, priority);
-    transferRef(currentFirstChild, created, element);
+    created.ref = coerceRef(currentFirstChild, element);
     created.return = returnFiber;
     return created;
   }
