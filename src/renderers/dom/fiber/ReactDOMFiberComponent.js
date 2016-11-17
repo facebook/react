@@ -540,8 +540,10 @@ var ReactDOMFiberComponent = {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
         var div = ownerDocument.createElement('div');
-        div.innerHTML = `<${tag}></${tag}>`;
-        el = div.removeChild(div.firstChild);
+        div.innerHTML = '<script></script>';
+        // This is guaranteed to yield a script element.
+        var firstChild = ((div.firstChild : any) : Element);
+        el = div.removeChild(firstChild);
       } else if (props.is) {
         el = ownerDocument.createElement(tag, props.is);
       } else {
