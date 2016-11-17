@@ -31,19 +31,49 @@ cd hello-world
 npm start
 ```
 
-Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses Webpack, Babel and ESLint under the hood, but configures them for you.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
 
 ## Adding React to an Existing Application
 
-### Using npm
+You don't need to rewrite your app to start using React.
 
-We recommend using React from npm with a bundler like [Browserify](http://browserify.org/) or [webpack](https://webpack.github.io/). If you use npm for client package management, you can install React with:
+We recommend adding React to a small part of your application, such an individual widget, so you can see if it works well for your use case.
+
+While React [can be used](/react/docs/react-without-es6.html) without a build pipeline, we recommend setting it up so you can be more productive. A modern build pipeline typically consists of:
+
+* A **package manager**, such as [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/). It lets you take advantage of a vast ecosystem of third-party packages, and easily install or update them.
+* A **bundler**, such as [webpack](https://webpack.github.io/) or [Browserify](http://browserify.org/). It lets you write modular code and bundle it together into small packages to optimize load time.
+* A **compiler** such as [Babel](http://babeljs.io/). It lets you write modern JavaScript code that still works in older browsers.
+
+### Installing React
+
+We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/) for managing front-end dependencies. If you're new to package managers, [Yarn documentation](https://yarnpkg.com/en/docs/getting-started) is a good place to get started.
+
+To install React with Yarn, run:
+
+```bash
+yarn add react react-dom
+```
+
+To install React with npm, run:
 
 ```bash
 npm install --save react react-dom
 ```
 
-and import it from your code with something like:
+Both yarn and npm work with the npm registry.
+
+### Enabling ES6 and JSX
+
+We recommend using React with [Babel](http://babeljs.io/) to let you use ES6 and JSX in your JavaScript code. ES6 is a set of modern JavaScript features that make development easier, and JSX is an extension to the JavaScript language that works nicely with React.
+
+The [Babel setup instructions](https://babeljs.io/docs/setup/) explain how to configure Babel in many different build environments. Make sure you install [`babel-preset-react`](http://babeljs.io/docs/plugins/preset-react/#basic-setup-with-the-cli-) and [`babel-preset-es2015`](http://babeljs.io/docs/plugins/preset-es2015/#basic-setup-with-the-cli-) and enable them in your [`.babelrc` configuration](http://babeljs.io/docs/usage/babelrc/), and you're good to go.
+
+### Hello World with ES6 and JSX
+
+We recommend using a bundler like [webpack](https://webpack.github.io/) or [Browserify](http://browserify.org/) so you can write modular code and bundle it together into small packages to optimize load time.
+
+The smallest React example looks like this:
 
 ```js
 import React from 'react';
@@ -55,28 +85,42 @@ ReactDOM.render(
 );
 ```
 
-This code renders into an HTML element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file. When you use React in this way, you should be transpiling your JavaScript using Babel with the `es2015` and `react` presets. To use React in production mode, set the environment variable `NODE_ENV` to `"production"`.
+This code renders into a DOM element with the id of `root` so you need `<div id="root"></div>` somewhere in your HTML file.
 
-If you use Bower, React is available via the `react` package.
+Similarly, you can render a React component inside a DOM element somewhere inside your existing app written with any other JavaScript UI library.
 
-### Enabling ES6 and JSX
+### Development and Production Versions
 
-We recommend using React with Babel to let you use ES6 and JSX in your JavaScript code. ES6 is a set of modern JavaScript features that make development easier, and JSX is an extension to the JavaScript language that works nicely with React. The [Babel setup instructions](https://babeljs.io/docs/setup/) explain how to configure Babel in many different build environments. Make sure you install `babel-preset-react` and `babel-preset-es2015` and enable them in your `.babelrc`, and you're good to go.
+By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.
+
+#### Create React App
+
+If you use [Create React App](https://github.com/facebookincubator/create-react-app), `npm run build` will create an optimized build of your app in the `build` folder.
+
+#### Webpack
+
+Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
+
+#### Browserify
+
+Run Browserify with `NODE_ENV` environment variable set to `production` and use [UglifyJS](https://github.com/mishoo/UglifyJS) as the last build step so that development-only code gets stripped out.
 
 ### Using a CDN
 
-If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide UMD distributions in `dist` folders, which are hosted on a CDN:
+If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide single-file distributions in `dist` folders, which are hosted on a CDN:
 
 ```html
 <script src="https://unpkg.com/react@15/dist/react.js"></script>
 <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
 ```
 
-To load a specific version of `react` and `react-dom`, replace `15` with the version number.
-
-Minified production versions of React are available at:
+The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:
 
 ```html
 <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
 <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
 ```
+
+To load a specific version of `react` and `react-dom`, replace `15` with the version number.
+
+If you use Bower, React is available via the `react` package.
