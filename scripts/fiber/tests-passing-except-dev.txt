@@ -27,7 +27,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn for unknown prop
 * should group multiple unknown prop warnings together
 * should warn for onDblClick prop
-* should work error event on <source> element
 * should emit a warning once for a named custom component using shady DOM
 * should not warn when server-side rendering `onScroll`
 * warns on invalid nesting
@@ -48,17 +47,8 @@ src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should warn if value is null
-* should warn if controlled input switches to uncontrolled (value is undefined)
 * should warn if controlled input switches to uncontrolled (value is null)
-* should warn if controlled input switches to uncontrolled with defaultValue
 * should warn if uncontrolled input (value is null) switches to controlled
-* should warn if controlled checkbox switches to uncontrolled (checked is undefined)
-* should warn if controlled checkbox switches to uncontrolled (checked is null)
-* should warn if controlled checkbox switches to uncontrolled with defaultChecked
-* should warn if controlled radio switches to uncontrolled (checked is undefined)
-* should warn if controlled radio switches to uncontrolled (checked is null)
-* should warn if controlled radio switches to uncontrolled with defaultChecked
-* should warn if radio checked false changes to become uncontrolled
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should warn if value is null

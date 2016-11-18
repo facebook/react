@@ -531,6 +531,7 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should stop after first dispatch if stopPropagation
 * should invoke handlers that were removed while bubbling
 * should not invoke newly inserted handlers while bubbling
+* should not onTouchTap from when dragging beyond threshold
 * should listen to events only once
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
@@ -567,6 +568,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should generate the correct markup with className
 * should escape style names and values
 * should handle dangerouslySetInnerHTML
+* should work error event on <source> element
 * should not duplicate uppercased selfclosing tags
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
@@ -613,6 +615,10 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can be toggled in and out of the markup
 * can reconcile text from pre-rendered markup
 
+src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
+* does not crash with other react inside
+* does not crash with other react outside
+
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should dispatch events from outside React tree
 * should propagate events one level down
@@ -638,6 +644,7 @@ src/renderers/dom/shared/__tests__/inputValueTracking-test.js
 * should update value if it changed and return result
 * should track value and return true when updating untracked instance
 * should return tracker from node
+* should stop tracking
 
 src/renderers/dom/shared/__tests__/quoteAttributeValueForBrowser-test.js
 * should escape boolean to string
@@ -655,8 +662,14 @@ src/renderers/dom/shared/eventPlugins/__tests__/BeforeInputEventPlugin-test.js
 * extract onBeforeInput from fallback objects
 
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
+* should fire change for checkbox input
 * should catch setting the value programmatically
+* should not fire change when setting the value programmatically
 * should unmount
+* should only fire change for checked radio button once
+* should deduplicate input value change events
+* should listen for both change and input events when supported
+* should only fire events when the value changes for range inputs
 
 src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
 * should set relatedTarget properly in iframe
@@ -670,7 +683,24 @@ src/renderers/dom/shared/eventPlugins/__tests__/FallbackCompositionState-test.js
 * extracts when inserted within text
 * extracts when inserted at end of text
 
+src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
+* should skip extraction if no listeners are present
+* should extract if an `onSelect` listener is present
+
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
+* A non-interactive tags click when disabled
+* should forward clicks when it starts out not disabled
+* should forward clicks when it becomes not disabled
+* should work correctly if the listener is changed
+* should forward clicks when it starts out not disabled
+* should forward clicks when it becomes not disabled
+* should work correctly if the listener is changed
+* should forward clicks when it starts out not disabled
+* should forward clicks when it becomes not disabled
+* should work correctly if the listener is changed
+* should forward clicks when it starts out not disabled
+* should forward clicks when it becomes not disabled
+* should work correctly if the listener is changed
 * does not add a local click to interactive elements
 * adds a local click listener to non-interactive elements
 
@@ -738,6 +768,9 @@ src/renderers/dom/shared/utils/__tests__/getNodeForCharacterOffset-test.js
 src/renderers/dom/shared/utils/__tests__/setInnerHTML-test.js
 * sets innerHTML on it
 
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
+* should trigger load events
+
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
 * should control values in reentrant events with different targets
@@ -745,6 +778,8 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * only assigns defaultValue if it changes
 * should display "true" for `defaultValue` of `true`
 * should display "false" for `defaultValue` of `false`
+* should update `defaultValue` for uncontrolled input
+* should update `defaultValue` for uncontrolled date/time input
 * should take `defaultValue` when changing to uncontrolled input
 * should render defaultValue for SSR
 * should render value for SSR
@@ -759,23 +794,36 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
+* should have the correct target value
 * should not set a value for submit buttons unnecessarily
 * should control radio buttons
 * should control radio buttons if the tree updates during render
 * should warn with value and no onChange handler and readOnly specified
 * should have a this value of undefined if bind is not used
 * should warn with checked and no onChange handler with readOnly specified
+* should update defaultValue to empty string
 * should warn if checked and defaultChecked props are specified
 * should warn if value and defaultValue props are specified
+* should warn if controlled input switches to uncontrolled (value is undefined)
+* should warn if controlled input switches to uncontrolled with defaultValue
 * should warn if uncontrolled input (value is undefined) switches to controlled
+* should warn if controlled checkbox switches to uncontrolled (checked is undefined)
+* should warn if controlled checkbox switches to uncontrolled (checked is null)
+* should warn if controlled checkbox switches to uncontrolled with defaultChecked
 * should warn if uncontrolled checkbox (checked is undefined) switches to controlled
 * should warn if uncontrolled checkbox (checked is null) switches to controlled
+* should warn if controlled radio switches to uncontrolled (checked is undefined)
+* should warn if controlled radio switches to uncontrolled (checked is null)
+* should warn if controlled radio switches to uncontrolled with defaultChecked
 * should warn if uncontrolled radio (checked is undefined) switches to controlled
 * should warn if uncontrolled radio (checked is null) switches to controlled
 * should not warn if radio value changes but never becomes controlled
 * should not warn if radio value changes but never becomes uncontrolled
+* should warn if radio checked false changes to become uncontrolled
+* sets type, step, min, max before value always
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
+* resets value of date/time input to fix bugs in iOS Safari
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
@@ -787,6 +835,8 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not throw with `defaultValue` and without children
 * should not throw with `value` and without children
+* should reset child options selected when they are changed and `value` is set
+* should remember updated value when switching to uncontrolled
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
@@ -799,15 +849,23 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should display `defaultValue` of number 0
 * should display "false" for `defaultValue` of `false`
 * should display "foobar" for `defaultValue` of `objToString`
+* should set defaultValue
 * should not render value as an attribute
 * should display `value` of number 0
+* should update defaultValue to empty string
+* should allow setting `value` to `giraffe`
 * should render defaultValue for SSR
 * should render value for SSR
+* should allow setting `value` to `true`
+* should allow setting `value` to `false`
+* should allow setting `value` to `objToString`
 * should take updates to `defaultValue` for uncontrolled textarea
 * should take updates to children in lieu of `defaultValue` for uncontrolled textarea
+* should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
 * should treat children like `defaultValue`
 * should keep value when switching to uncontrolled element if not changed
+* should keep value when switching to uncontrolled element if changed
 * should allow numbers as children
 * should allow booleans as children
 * should allow objects as children
@@ -1090,6 +1148,7 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch
+* should not prevent null listeners, at dispatch
 
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should be able to inject ordering before plugins

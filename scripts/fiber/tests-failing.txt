@@ -42,7 +42,6 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should have mouse enter simulated by test utils
 * should infer onTouchTap from a touchStart/End
 * should infer onTouchTap from when dragging below threshold
-* should not onTouchTap from when dragging beyond threshold
 * should bubble onTouchTap
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
@@ -66,65 +65,28 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
 src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
-* does not crash with other react inside
-* does not crash with other react outside
 * does not when event fired on unmounted tree
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should batch between handlers from different roots
 * should not fire duplicate events for a React DOM tree
 
-src/renderers/dom/shared/__tests__/inputValueTracking-test.js
-* should stop tracking
-
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
-* should fire change for checkbox input
-* should not fire change when setting the value programmatically
 * should not fire change when setting checked programmatically
-* should only fire change for checked radio button once
-* should deduplicate input value change events
-* should listen for both change and input events when supported
-* should only fire events when the value changes for range inputs
-
-src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
-* should skip extraction if no listeners are present
-* should extract if an `onSelect` listener is present
 
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
-* A non-interactive tags click when disabled
 * A non-interactive tags clicks bubble when disabled
-* should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
-* should trigger load events
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
-* should update `defaultValue` for uncontrolled input
-* should update `defaultValue` for uncontrolled date/time input
-* should have the correct target value
-* should update defaultValue to empty string
-* sets type, step, min, max before value always
-* resets value of date/time input to fix bugs in iOS Safari
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should allow ignoring `value` on option
@@ -136,24 +98,12 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should allow setting `value`
 * should allow setting `value` with multiple
 * should not select other options automatically
-* should reset child options selected when they are changed and `value` is set
 * should allow setting `value` with `objectToString`
 * should allow switching to multiple
 * should allow switching from multiple
 * should remember value when switching to uncontrolled
-* should remember updated value when switching to uncontrolled
 * should not control defaultValue if readding options
 * should select grandchild options nested inside an optgroup
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should set defaultValue
-* should update defaultValue to empty string
-* should allow setting `value` to `giraffe`
-* should allow setting `value` to `true`
-* should allow setting `value` to `false`
-* should allow setting `value` to `objToString`
-* should not incur unnecessary DOM mutations
-* should keep value when switching to uncontrolled element if changed
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
@@ -286,9 +236,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is inserted
 * gets reported when a child is removed
-
-src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should not prevent null listeners, at dispatch
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
