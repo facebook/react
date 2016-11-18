@@ -162,7 +162,7 @@ Please note that the syntax above is **experimental** and the syntax may change,
 If you'd rather play it safe, you have a few options:
 
 * Bind methods in the constructor.
-* Use arrow functions, e.g. `onClick={(e) => this.handleClick(e)})`.
+* Use arrow functions, e.g. `onClick={(e) => this.handleClick(e)}`.
 * Keep using `React.createClass()`.
 
 ## Mixins
