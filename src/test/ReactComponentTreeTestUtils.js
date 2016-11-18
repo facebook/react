@@ -35,7 +35,7 @@ function expectTree(rootID, expectedTree, parentPath) {
   function expectEqual(actual, expected, name) {
     // Get Jasmine to print descriptive error messages.
     // We pass path so that we know where the mismatch occurred.
-    expect({
+    expectDev({
       path,
       [name]: actual,
     }).toEqual({

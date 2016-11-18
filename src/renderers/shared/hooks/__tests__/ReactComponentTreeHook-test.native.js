@@ -78,11 +78,11 @@ describe('ReactComponentTreeHook', () => {
       var rootDisplayNames = ReactComponentTreeTestUtils.getRootDisplayNames();
       var registeredDisplayNames = ReactComponentTreeTestUtils.getRegisteredDisplayNames();
       if (!expectedTree) {
-        expect(rootDisplayNames).toEqual([]);
-        expect(registeredDisplayNames).toEqual([]);
+        expectDev(rootDisplayNames).toEqual([]);
+        expectDev(registeredDisplayNames).toEqual([]);
       } else if (andStayMounted) {
-        expect(rootDisplayNames).toContain('Wrapper');
-        expect(registeredDisplayNames).toContain('Wrapper');
+        expectDev(rootDisplayNames).toContain('Wrapper');
+        expectDev(registeredDisplayNames).toContain('Wrapper');
       }
     }
 
@@ -1664,35 +1664,35 @@ describe('ReactComponentTreeHook', () => {
   it('reports update counts', () => {
     ReactNative.render(<View />, 1);
     var viewID = ReactComponentTreeHook.getRootIDs()[0];
-    expect(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
 
     ReactNative.render(<Image />, 1);
     var imageID = ReactComponentTreeHook.getRootIDs()[0];
-    expect(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(0);
 
     ReactNative.render(<Image />, 1);
-    expect(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(1);
+    expectDev(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(1);
 
     ReactNative.render(<Image />, 1);
-    expect(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(2);
+    expectDev(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(2);
 
     ReactNative.unmountComponentAtNode(1);
-    expect(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(viewID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(imageID)).toEqual(0);
   });
 
   it('does not report top-level wrapper as a root', () => {
     ReactNative.render(<View><Image /></View>, 1);
-    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['View']);
+    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['View']);
 
     ReactNative.render(<View><Text /></View>, 1);
-    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['View']);
+    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['View']);
 
     ReactNative.unmountComponentAtNode(1);
-    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
+    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 });
