@@ -159,7 +159,7 @@ var mediaEvents = {
   topWaiting: 'waiting',
 };
 
-function trapClickOnNonInteractiveElement(node : any) {
+function trapClickOnNonInteractiveElement(node : HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
@@ -496,7 +496,7 @@ var ReactDOMFiberComponent = {
         var div = ownerDocument.createElement('div');
         div.innerHTML = '<script></script>';
         // This is guaranteed to yield a script element.
-        var firstChild = ((div.firstChild : any) : Element);
+        var firstChild = ((div.firstChild : any) : HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
         domElement = ownerDocument.createElement(tag, props.is);
@@ -622,7 +622,8 @@ var ReactDOMFiberComponent = {
         break;
       default:
         if (typeof props.onClick === 'function') {
-          trapClickOnNonInteractiveElement(domElement);
+          // TODO: This cast may not be sound for SVG, MathML or custom elements.
+          trapClickOnNonInteractiveElement(((domElement : any) : HTMLElement));
         }
         break;
     }
@@ -655,7 +656,8 @@ var ReactDOMFiberComponent = {
       default:
         if (typeof lastProps.onClick !== 'function' &&
             typeof nextProps.onClick === 'function') {
-          trapClickOnNonInteractiveElement(domElement);
+          // TODO: This cast may not be sound for SVG, MathML or custom elements.
+          trapClickOnNonInteractiveElement(((domElement : any) : HTMLElement));
         }
         break;
     }
