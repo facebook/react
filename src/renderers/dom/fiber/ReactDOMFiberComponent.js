@@ -554,7 +554,7 @@ var ReactDOMFiberComponent = {
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode(domElement);
+        inputValueTracking.trackNode((domElement : any));
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
@@ -575,7 +575,7 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.mountWrapper(domElement, rawProps);
         props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
-        inputValueTracking.trackNode(domElement);
+        inputValueTracking.trackNode((domElement : any));
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.

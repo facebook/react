@@ -7,12 +7,26 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule inputValueTracking
+ * @flow
  */
 
 'use strict';
+
+import type { Fiber } from 'ReactFiber';
+import type { ReactInstance } from 'ReactInstanceType';
+
+type ValueTracker = {
+  getValue() : string,
+  setValue(value : string) : void,
+  stopTracking() : void
+};
+type WrapperState = { _wrapperState: { valueTracker: ?ValueTracker } };
+type ElementWithWrapperState = Element & WrapperState;
+type InstanceWithWrapperState = ReactInstance & WrapperState;
+
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-function isCheckable(elem) {
+function isCheckable(elem : any) {
   var type = elem.type;
   var nodeName = elem.nodeName;
   return (
@@ -21,18 +35,18 @@ function isCheckable(elem) {
   );
 }
 
-function getTracker(inst) {
+function getTracker(inst : any) {
   if (typeof inst.tag === 'number') {
     inst = inst.stateNode;
   }
   return inst._wrapperState.valueTracker;
 }
 
-function attachTracker(inst, tracker) {
+function attachTracker(inst : InstanceWithWrapperState, tracker : ?ValueTracker) {
   inst._wrapperState.valueTracker = tracker;
 }
 
-function detachTracker(inst) {
+function detachTracker(inst : InstanceWithWrapperState) {
   delete inst._wrapperState.valueTracker;
 }
 
@@ -46,7 +60,7 @@ function getValueFromNode(node) {
   return value;
 }
 
-function trackValueOnNode(node) {
+function trackValueOnNode(node : any, inst : any) : ?ValueTracker {
   var valueField = isCheckable(node) ? 'checked' : 'value';
   var descriptor = Object.getOwnPropertyDescriptor(
     node.constructor.prototype,
@@ -96,35 +110,39 @@ function trackValueOnNode(node) {
 
 var inputValueTracking = {
   // exposed for testing
-  _getTrackerFromNode(node) {
+  _getTrackerFromNode(node : ElementWithWrapperState) {
     return getTracker(
       ReactDOMComponentTree.getInstanceFromNode(node)
     );
   },
 
-  trackNode: function(node) {
+  trackNode: function(node : ElementWithWrapperState) {
     if (node._wrapperState.valueTracker) {
       return;
     }
-    node._wrapperState.valueTracker = trackValueOnNode(node);
+    node._wrapperState.valueTracker = trackValueOnNode(node, node);
   },
 
-  track: function(inst) {
+  track: function(inst : InstanceWithWrapperState) {
     if (getTracker(inst)) {
       return;
     }
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    attachTracker(inst, trackValueOnNode(node));
+    attachTracker(inst, trackValueOnNode(node, inst));
   },
 
-  updateValueIfChanged(inst) {
+  updateValueIfChanged(inst : InstanceWithWrapperState | Fiber) {
     if (!inst) {
       return false;
     }
     var tracker = getTracker(inst);
 
     if (!tracker) {
-      inputValueTracking.track(inst);
+      if (typeof (inst : any).tag === 'number') {
+        inputValueTracking.trackNode((inst : any).stateNode);
+      } else {
+        inputValueTracking.track((inst : any));
+      }
       return true;
     }
 
@@ -141,7 +159,7 @@ var inputValueTracking = {
     return false;
   },
 
-  stopTracking(inst) {
+  stopTracking(inst : InstanceWithWrapperState | Fiber) {
     var tracker = getTracker(inst);
     if (tracker) {
       tracker.stopTracking();
