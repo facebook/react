@@ -14,6 +14,7 @@
 
 import type { HostChildren } from 'ReactFiberReconciler';
 
+var ReactControlledComponent = require('ReactControlledComponent');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -21,6 +22,9 @@ var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMInjection = require('ReactDOMInjection');
 
 ReactDOMInjection.inject();
+ReactControlledComponent.injection.injectFiberControlledHostComponent(
+  ReactDOMFiberComponent
+);
 
 var warning = require('warning');
 

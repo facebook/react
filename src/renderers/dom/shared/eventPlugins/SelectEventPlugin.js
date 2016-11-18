@@ -22,9 +22,6 @@ var getActiveElement = require('getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('shallowEqual');
 
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
-
 var skipSelectionChangeEvent = (
   ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
@@ -159,13 +156,13 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget
   ) {
-    if (targetInst) {
-      var containerInfo = targetInst._hostContainerInfo;
-      var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-      var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-      if (!isListeningToAllDependencies('onSelect', doc)) {
-        return null;
-      }
+    var doc = nativeEventTarget.window === nativeEventTarget ?
+      nativeEventTarget.document :
+      nativeEventTarget.nodeType === 9 ?
+      nativeEventTarget :
+      nativeEventTarget.ownerDocument;
+    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
+      return null;
     }
 
     var targetNode = targetInst ?
