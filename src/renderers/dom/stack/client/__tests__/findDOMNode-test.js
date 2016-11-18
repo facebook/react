@@ -54,7 +54,7 @@ describe('findDOMNode', () => {
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => ReactDOM.findDOMNode(inst)).toThrowError(
-      'findDOMNode was called on an unmounted component.'
+      'Unable to find node on an unmounted component.'
     );
   });
 

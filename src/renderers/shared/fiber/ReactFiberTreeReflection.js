@@ -16,6 +16,8 @@ import type { Fiber } from 'ReactFiber';
 
 var ReactInstanceMap = require('ReactInstanceMap');
 
+var invariant = require('invariant');
+
 var {
   HostContainer,
   HostComponent,
@@ -27,18 +29,22 @@ var {
   Placement,
 } = require('ReactTypeOfSideEffect');
 
-function isFiberMounted(fiber : Fiber) : boolean {
+var MOUNTING = 1;
+var MOUNTED = 2;
+var UNMOUNTED = 3;
+
+function isFiberMounted(fiber : Fiber) : number {
   let node = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
     if ((node.effectTag & Placement) !== NoEffect) {
-      return false;
+      return MOUNTING;
     }
     while (node.return) {
       node = node.return;
       if ((node.effectTag & Placement) !== NoEffect) {
-        return false;
+        return MOUNTING;
       }
     }
   } else {
@@ -49,10 +55,11 @@ function isFiberMounted(fiber : Fiber) : boolean {
   if (node.tag === HostContainer) {
     // TODO: Check if this was a nested HostContainer when used with
     // renderContainerIntoSubtree.
-    return true;
+    return MOUNTED;
   }
-  // If we didn't hit the root, that means that we're in an disconnected tree.
-  return false;
+  // If we didn't hit the root, that means that we're in an disconnected tree
+  // that has been unmounted.
+  return UNMOUNTED;
 }
 
 exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
@@ -60,17 +67,18 @@ exports.isMounted = function(component : ReactComponent<any, any, any>) : boolea
   if (!fiber) {
     return false;
   }
-  return isFiberMounted(fiber);
+  return isFiberMounted(fiber) === MOUNTED;
 };
 
-exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any>) : Fiber | null {
-  let parent = ReactInstanceMap.get(component);
-  if (!parent) {
-    return null;
-  }
-
-  if (!isFiberMounted(parent)) {
-    // First check if this node itself is mounted.
+exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
+  // First check if this node itself is mounted.
+  const state = isFiberMounted(parent, true);
+  if (state === UNMOUNTED) {
+    invariant(
+      false,
+      'Unable to find node on an unmounted component.'
+    );
+  } else if (state === MOUNTING) {
     return null;
   }
 

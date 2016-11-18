@@ -24,6 +24,7 @@ import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactInstanceMap = require('ReactInstanceMap');
 var {
   AnimationPriority,
 } = require('ReactPriorityLevel');
@@ -209,7 +210,8 @@ var ReactNoop = {
     if (component.tag === TERMINAL_TAG || component.tag === TEXT_TAG) {
       return component;
     }
-    return NoopRenderer.findHostInstance(component);
+    const inst = ReactInstanceMap.get(component);
+    return inst ? NoopRenderer.findHostInstance(inst) : null;
   },
 
   flushAnimationPri() {
