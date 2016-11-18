@@ -25,7 +25,7 @@ dependencies:
     - sudo apt-get update -qq
     - sudo apt-get install -y -qq yarn
   post:
-    - npm ls --depth=0
+    # - npm ls --depth=0
   cache_directories:
     - vendor/bundle
     - .grunt # Show size comparisons between builds
