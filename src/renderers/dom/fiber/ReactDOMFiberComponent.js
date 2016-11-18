@@ -519,11 +519,11 @@ var ReactDOMFiberComponent = {
   setInitialProperties(
     domElement : Element,
     tag : string,
-    props : Object,
+    rawProps : Object,
     rootContainerElement : Element
   ) : void {
 
-    var isCustomComponentTag = isCustomComponent(tag, props);
+    var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
@@ -536,6 +536,7 @@ var ReactDOMFiberComponent = {
       }
     }
 
+    var props : Object;
     switch (tag) {
       case 'audio':
       case 'form':
@@ -546,10 +547,11 @@ var ReactDOMFiberComponent = {
       case 'source':
       case 'video':
         trapBubbledEventsLocal(domElement, tag);
+        props = rawProps;
         break;
       case 'input':
-        ReactDOMFiberInput.mountWrapper(domElement, props);
-        props = ReactDOMFiberInput.getHostProps(domElement, props);
+        ReactDOMFiberInput.mountWrapper(domElement, rawProps);
+        props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
         inputValueTracking.trackNode(domElement);
@@ -559,26 +561,28 @@ var ReactDOMFiberComponent = {
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'option':
-        ReactDOMFiberOption.mountWrapper(domElement, props);
-        props = ReactDOMFiberOption.getHostProps(domElement, props);
+        ReactDOMFiberOption.mountWrapper(domElement, rawProps);
+        props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
         break;
       case 'select':
-        ReactDOMFiberSelect.mountWrapper(domElement, props);
-        props = ReactDOMFiberSelect.getHostProps(domElement, props);
+        ReactDOMFiberSelect.mountWrapper(domElement, rawProps);
+        props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.mountWrapper(domElement, props);
-        props = ReactDOMFiberTextarea.getHostProps(domElement, props);
+        ReactDOMFiberTextarea.mountWrapper(domElement, rawProps);
+        props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
         inputValueTracking.trackNode(domElement);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
+      default:
+        props = rawProps;
     }
 
     assertValidProps(tag, props);
@@ -596,13 +600,13 @@ var ReactDOMFiberComponent = {
     // DOM yet. We need a special effect to handle this.
     switch (tag) {
       case 'input':
-        ReactDOMFiberInput.postMountWrapper(domElement, props);
+        ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         if (props.autoFocus) {
           focusNode(domElement);
         }
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.postMountWrapper(domElement, props);
+        ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         if (props.autoFocus) {
           focusNode(domElement);
         }
@@ -618,7 +622,7 @@ var ReactDOMFiberComponent = {
         }
         break;
       case 'option':
-        ReactDOMFiberOption.postMountWrapper(domElement, props);
+        ReactDOMFiberOption.postMountWrapper(domElement, rawProps);
         break;
       default:
         if (typeof props.onClick === 'function') {
@@ -632,28 +636,32 @@ var ReactDOMFiberComponent = {
   updateProperties(
     domElement : Element,
     tag : string,
-    lastProps : Object,
-    nextProps : Object,
+    lastRawProps : Object,
+    nextRawProps : Object,
     rootContainerElement : Element
   ) : void {
+    var lastProps : Object;
+    var nextProps : Object;
     switch (tag) {
       case 'input':
-        lastProps = ReactDOMFiberInput.getHostProps(domElement, lastProps);
-        nextProps = ReactDOMFiberInput.getHostProps(domElement, nextProps);
+        lastProps = ReactDOMFiberInput.getHostProps(domElement, lastRawProps);
+        nextProps = ReactDOMFiberInput.getHostProps(domElement, nextRawProps);
         break;
       case 'option':
-        lastProps = ReactDOMFiberOption.getHostProps(domElement, lastProps);
-        nextProps = ReactDOMFiberOption.getHostProps(domElement, nextProps);
+        lastProps = ReactDOMFiberOption.getHostProps(domElement, lastRawProps);
+        nextProps = ReactDOMFiberOption.getHostProps(domElement, nextRawProps);
         break;
       case 'select':
-        lastProps = ReactDOMFiberSelect.getHostProps(domElement, lastProps);
-        nextProps = ReactDOMFiberSelect.getHostProps(domElement, nextProps);
+        lastProps = ReactDOMFiberSelect.getHostProps(domElement, lastRawProps);
+        nextProps = ReactDOMFiberSelect.getHostProps(domElement, nextRawProps);
         break;
       case 'textarea':
-        lastProps = ReactDOMFiberTextarea.getHostProps(domElement, lastProps);
-        nextProps = ReactDOMFiberTextarea.getHostProps(domElement, nextProps);
+        lastProps = ReactDOMFiberTextarea.getHostProps(domElement, lastRawProps);
+        nextProps = ReactDOMFiberTextarea.getHostProps(domElement, nextRawProps);
         break;
       default:
+        lastProps = lastRawProps;
+        nextProps = nextRawProps;
         if (typeof lastProps.onClick !== 'function' &&
             typeof nextProps.onClick === 'function') {
           // TODO: This cast may not be sound for SVG, MathML or custom elements.
@@ -679,15 +687,15 @@ var ReactDOMFiberComponent = {
         // Update the wrapper around inputs *after* updating props. This has to
         // happen after `updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
-        ReactDOMFiberInput.updateWrapper(domElement, nextProps);
+        ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.updateWrapper(domElement, nextProps);
+        ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
         break;
       case 'select':
         // <select> value update needs to occur after <option> children
         // reconciliation
-        ReactDOMFiberSelect.postUpdateWrapper(domElement, nextProps);
+        ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
         break;
     }
   },
