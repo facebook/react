@@ -952,7 +952,7 @@ describe('ReactDOMInput', () => {
 
     ReactTestUtils.renderIntoDocument(<input value="0" type="range" min="0" max="100" step="1" />);
     expect(log).toEqual([
-      'set data-reactroot',
+      ...(ReactDOMFeatureFlags.useFiber ? [] : ['set data-reactroot']),
       'set type',
       'set step',
       'set min',
@@ -1019,7 +1019,7 @@ describe('ReactDOMInput', () => {
 
     ReactTestUtils.renderIntoDocument(<input type="date" defaultValue="1980-01-01" />);
     expect(log).toEqual([
-      'node.setAttribute("data-reactroot", "")',
+      ...(ReactDOMFeatureFlags.useFiber ? [] : ['node.setAttribute("data-reactroot", "")']),
       'node.setAttribute("type", "date")',
       'node.setAttribute("value", "1980-01-01")',
       'node.value = ""',
