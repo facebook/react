@@ -143,6 +143,10 @@ export type Fiber = {
 
 };
 
+if (__DEV__) {
+  var debugCounter = 0;
+}
+
 // This is a constructor of a POJO instead of a constructor function for a few
 // reasons:
 // 1) Nobody should add any instance methods on this. Instance methods can be
@@ -157,7 +161,7 @@ export type Fiber = {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
-  return {
+  var fiber = {
 
     // Instance
 
@@ -200,6 +204,10 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     alternate: null,
 
   };
+  if (__DEV__) {
+    (fiber : any)._debugID = debugCounter++;
+  }
+  return fiber;
 };
 
 function shouldConstruct(Component) {

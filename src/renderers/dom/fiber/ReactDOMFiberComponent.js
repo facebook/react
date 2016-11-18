@@ -33,7 +33,7 @@ var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var inputValueTracking = require('inputValueTracking');
+// var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
@@ -434,10 +434,19 @@ function updateDOMProperties(
     }
   }
   if (styleUpdates) {
+    var componentPlaceholder = null;
+    if (__DEV__) {
+      // HACK
+      var internalInstance = ReactDOMComponentTree.getInstanceFromNode(domElement);
+      componentPlaceholder = {
+        _currentElement: { type: internalInstance.type, props: internalInstance.memoizedProps },
+        _debugID: internalInstance._debugID,
+      };
+    }
     CSSPropertyOperations.setValueForStyles(
       domElement,
       styleUpdates,
-      null // TODO: Change CSSPropertyOperations to use getCurrentOwnerName.
+      componentPlaceholder // TODO: Change CSSPropertyOperations to use getCurrentOwnerName.
     );
   }
 }
@@ -453,11 +462,10 @@ var ReactDOMFiberComponent = {
   createElement: function(
     tag : string,
     props : Object,
-    rootContainerElement : Element,
-    internalInstanceHandle : Object
+    rootContainerElement : Element
   ) : Element {
+    validateDangerousTag(tag);
     // TODO:
-    // validateDangerousTag(tag);
     // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
 
     // We create tags in the namespace of their parent container, except HTML
@@ -503,8 +511,6 @@ var ReactDOMFiberComponent = {
       );
     }
 
-    ReactDOMComponentTree.precacheFiberNode(internalInstanceHandle, domElement);
-
     return domElement;
   },
 
@@ -544,7 +550,7 @@ var ReactDOMFiberComponent = {
         props = ReactDOMFiberInput.getHostProps(domElement, props);
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.track(domElement);
+        //inputValueTracking.track(domElement); // TODO
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
@@ -565,7 +571,7 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.mountWrapper(domElement, props);
         props = ReactDOMFiberTextarea.getHostProps(domElement, props);
-        inputValueTracking.track(domElement); // TODO
+        //inputValueTracking.track(domElement); // TODO
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.

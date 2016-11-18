@@ -250,7 +250,6 @@ src/isomorphic/classic/element/__tests__/ReactElementClone-test.js
 
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * warns for keys for arrays of elements in rest args
-* warns for keys for arrays of elements with owner info
 * warns for keys for arrays with no owner or parent info
 * warns for keys for arrays of elements with no owner info
 * does not warn for keys when passing children down
@@ -450,7 +449,6 @@ src/isomorphic/modern/element/__tests__/ReactJSXElement-test.js
 
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * warns for keys for arrays of elements in children position
-* warns for keys for arrays of elements with owner info
 * warns for keys for iterables of elements in rest args
 * does not warns for arrays of elements with keys
 * does not warns for iterable elements with keys
@@ -495,6 +493,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should trim values
 * should not append `px` to styles that might need a number
 * should create vendor-prefixed markup correctly
+* should set style attribute when styles exist
 * should not set style attribute when no styles exist
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
@@ -523,25 +522,67 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should support custom attributes
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
+* should listen to events only once
+* should work with event plugins without dependencies
+* should work with event plugins with dependencies
 * should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* should handle className
+* should gracefully handle various style value types
 * should not warn for "0" as a unitless style value
+* should warn nicely about NaN in style
+* should update styles if initially null
+* should update styles if updated to null multiple times
+* should allow named slot projection on both web components and regular DOM elements
 * should skip reserved props on web components
 * should skip dangerouslySetInnerHTML on web components
+* should remove attributes
+* should remove properties
+* should properly update custom attributes on custom elements
+* should clear a single style prop when changing `style`
+* should reject attribute key injection attack on markup
+* should reject attribute key injection attack on update
+* should update arbitrary attributes for tags containing dashes
 * should clear all the styles when removing `style`
+* should update styles when `style` changes from null to object
 * should transition from string content to innerHTML
 * should transition from innerHTML to string content
 * should transition from children to innerHTML in nested el
+* should not incur unnecessary DOM mutations for attributes
+* should not incur unnecessary DOM mutations for string properties
+* should not incur unnecessary DOM mutations for boolean properties
+* should ignore attribute whitelist for elements with the "is: attribute
+* should not update when switching between null/undefined
 * handles multiple child updates without interference
 * should generate the correct markup with className
 * should escape style names and values
 * should handle dangerouslySetInnerHTML
 * should not duplicate uppercased selfclosing tags
+* should warn against children for void elements
+* should warn against dangerouslySetInnerHTML for void elements
+* should emit a warning once for an unnamed custom component using shady DOM
+* should treat menuitem as a void element but still create the closing tag
+* should validate against multiple children props
+* should validate against use of innerHTML
+* should validate use of dangerouslySetInnerHTML
+* should validate use of dangerouslySetInnerHTML
 * should allow {__html: null}
+* should warn about contentEditable and children
 * should respect suppressContentEditableWarning
+* should validate against invalid styles
+* should support custom elements which extend native elements
+* should warn against children for void elements
+* should warn against dangerouslySetInnerHTML for void elements
+* should validate against multiple children props
+* should warn about contentEditable and children
+* should validate against invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
+* should warn about the `onScroll` issue when unsupported (IE8)
+* should throw when an invalid tag name is used
+* should throw when an attack vector is used
+* should warn about props that are no longer supported
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
@@ -686,21 +727,44 @@ src/renderers/dom/shared/utils/__tests__/setInnerHTML-test.js
 * sets innerHTML on it
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should display `defaultValue` of number 0
 * only assigns defaultValue if it changes
+* should display "true" for `defaultValue` of `true`
+* should display "false" for `defaultValue` of `false`
+* should take `defaultValue` when changing to uncontrolled input
 * should render defaultValue for SSR
 * should render value for SSR
+* should render name attribute if it is supplied
 * should render name attribute if it is supplied for SSR
 * should not render name attribute if it is not supplied
 * should not render name attribute if it is not supplied for SSR
+* should display "foobar" for `defaultValue` of `objToString`
+* should display `value` of number 0
+* should allow setting `value` to `true`
+* should allow setting `value` to `false`
+* should allow setting `value` to `objToString`
+* should not incur unnecessary DOM mutations
 * should not set a value for submit buttons unnecessarily
-* should update defaultValue to empty string
+* should warn with value and no onChange handler and readOnly specified
+* should warn with checked and no onChange handler with readOnly specified
+* should warn if checked and defaultChecked props are specified
+* should warn if value and defaultValue props are specified
+* should warn if uncontrolled input (value is undefined) switches to controlled
+* should warn if uncontrolled checkbox (checked is undefined) switches to controlled
+* should warn if uncontrolled checkbox (checked is null) switches to controlled
+* should warn if uncontrolled radio (checked is undefined) switches to controlled
+* should warn if uncontrolled radio (checked is null) switches to controlled
 * should not warn if radio value changes but never becomes controlled
 * should not warn if radio value changes but never becomes uncontrolled
+* sets value properly with type coming later in props
+* does not raise a validation warning when it switches types
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
+* should ignore and warn invalid children types
 * should ignore null/undefined/false children without warning
 * should be able to use dangerouslySetInnerHTML on option
+* should set attribute for empty value
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not throw with `defaultValue` and without children
@@ -708,13 +772,27 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
+* should warn if value and defaultValue props are specified
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
+* should allow setting `defaultValue`
+* should display `defaultValue` of number 0
+* should display "false" for `defaultValue` of `false`
+* should display "foobar" for `defaultValue` of `objToString`
 * should not render value as an attribute
-* should update defaultValue to empty string
+* should display `value` of number 0
 * should render defaultValue for SSR
 * should render value for SSR
+* should take updates to `defaultValue` for uncontrolled textarea
+* should take updates to children in lieu of `defaultValue` for uncontrolled textarea
+* should treat children like `defaultValue`
+* should keep value when switching to uncontrolled element if not changed
+* should allow numbers as children
+* should allow booleans as children
+* should allow objects as children
+* should throw with multiple or invalid children
 * should unmount
+* should warn if value and defaultValue are specified
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * allows a DOM element to be used with a string
@@ -964,6 +1042,12 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets ignored for composite roots that return null
+* gets recorded during an update
+* gets ignored if the styles are shallowly equal
+* gets recorded during an update
+* gets recorded as a removal during an update
+* gets recorded during an update
+* gets recorded during an update
 * gets ignored if new text is equal
 * gets ignored if new text is equal
 * gets ignored if the type has not changed
@@ -982,6 +1066,9 @@ src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
 * should leave to the window
 * should leave to the window from the shallowest
 * should determine the first common ancestor correctly
+
+src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
+* should prevent non-function listeners, at dispatch
 
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should be able to inject ordering before plugins
@@ -1175,6 +1262,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildReconcile-test.js
 * should insert non-empty children in middle where nulls were
 
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
+* should throw if rendering both HTML and children
 * should render between nested components and inline children
 
 src/renderers/shared/stack/reconciler/__tests__/ReactStateSetters-test.js
@@ -1191,7 +1279,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should unmount stateless component
 * should pass context thru stateless component
 * should provide a null ref
-* should use correct name in key warning
 * should support default props and prop types
 * should receive context
 * should work with arrow functions
