@@ -318,7 +318,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (
       current == null ||
       current.tag !== Portal ||
-      current.pendingProps.container !== portal.container
+      current.stateNode.containerInfo !== portal.containerInfo ||
+      current.stateNode.implementation !== portal.implementation
     ) {
       // Insert
       const created = createFiberFromPortal(portal, priority);
@@ -327,7 +328,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
-      existing.pendingProps = portal;
+      existing.pendingProps = portal.children;
       existing.return = returnFiber;
       return existing;
     }
@@ -825,10 +826,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        if (child.tag === Portal) {
+        if (
+          child.tag === Portal &&
+          child.stateNode.containerInfo === portal.containerInfo &&
+          child.stateNode.implementation === portal.implementation
+          ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
-          existing.pendingProps = portal;
+          existing.pendingProps = portal.children;
           existing.return = returnFiber;
           return existing;
         } else {

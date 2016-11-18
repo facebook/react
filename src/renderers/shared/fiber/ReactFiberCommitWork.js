@@ -294,9 +294,7 @@ module.exports = function<T, P, I, TI, C>(
       }
       case Portal: {
         const children = finishedWork.output;
-        const containerInfo : C = finishedWork.memoizedProps.container;
-        // const root : FiberRoot = finishedWork.stateNode;
-        // const containerInfo : C = root.containerInfo;
+        const containerInfo : C = finishedWork.stateNode.containerInfo;
         updateContainer(containerInfo, children);
         return;
       }

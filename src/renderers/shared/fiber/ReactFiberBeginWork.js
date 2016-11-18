@@ -299,8 +299,7 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function updatePortalComponent(current, workInProgress) {
-    var portal = (workInProgress.pendingProps : ReactPortal);
-    reconcileChildren(current, workInProgress, portal.children);
+    reconcileChildren(current, workInProgress, workInProgress.pendingProps);
   }
 
   /*

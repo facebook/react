@@ -23,13 +23,13 @@ var REACT_PORTAL_TYPE =
 export type ReactPortal = {
   $$typeof: Symbol | number,
   key: null | string,
-  container: any,
+  containerInfo: any,
   children : ReactNodeList,
 };
 
 exports.createPortal = function<T>(
   children : ReactNodeList,
-  container : any,
+  containerInfo : any,
   implementation: any,
   key : ?string = null
 ) : ReactPortal {
@@ -38,7 +38,7 @@ exports.createPortal = function<T>(
     $$typeof: REACT_PORTAL_TYPE,
     key: key == null ? null : '' + key,
     children,
-    container,
+    containerInfo,
     implementation
   };
 };
