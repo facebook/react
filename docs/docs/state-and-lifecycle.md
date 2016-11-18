@@ -309,6 +309,18 @@ ReactDOM.render(
 
 Now the clock ticks every second.
 
+Let's quickly recap what's going on and the order in which the methods are called:
+
+1) When the `Clock` component is passed to `ReactDOM.render()`, it calls the constructor of the Clock class and initializes the state.
+
+2) Then the component's render method is called and the output is rendered to DOM.
+
+3) After that the `componentDidMount()` method runs which sets up the interval at which the `tick()` method is called.
+
+4) The `tick()` method being called every second is responsible for changing the state which in turn triggers the `render()` method to update the component.
+
+5) Finally, when this cycle stops, `componentWillUnmount()` method is called and the memory for that component is freed.
+
 ## Using State Correctly
 
 There are three things you should know about `setState()`.
@@ -328,6 +340,8 @@ Instead, use `setState()`:
 // Correct
 this.setState({comment: 'Hello'});
 ```
+
+The only place where you can assign `this.state()` is the constructor.
 
 ### State Updates May Be Asynchronous
 
