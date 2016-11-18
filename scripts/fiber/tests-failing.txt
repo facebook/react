@@ -38,9 +38,6 @@ src/renderers/art/__tests__/ReactART-test.js
 * resolves refs before componentDidMount
 * resolves refs before componentDidUpdate
 
-src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should set style attribute when styles exist
-
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should store a listener correctly
 * should retrieve a listener correctly
@@ -59,51 +56,19 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should infer onTouchTap from a touchStart/End
 * should infer onTouchTap from when dragging below threshold
 * should not onTouchTap from when dragging beyond threshold
-* should listen to events only once
-* should work with event plugins without dependencies
-* should work with event plugins with dependencies
 * should bubble onTouchTap
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should handle className
-* should gracefully handle various style value types
 * should update styles when mutating style object
-* should update styles if initially null
-* should update styles if updated to null multiple times
-* should allow named slot projection on both web components and regular DOM elements
-* should remove attributes
-* should remove properties
-* should properly update custom attributes on custom elements
-* should clear a single style prop when changing `style`
-* should update arbitrary attributes for tags containing dashes
-* should update styles when `style` changes from null to object
+* should warn when mutating style
 * should empty element when removing innerHTML
 * should transition from innerHTML to children in nested el
-* should not incur unnecessary DOM mutations for attributes
-* should not incur unnecessary DOM mutations for string properties
-* should not incur unnecessary DOM mutations for boolean properties
-* should ignore attribute whitelist for elements with the "is: attribute
-* should not update when switching between null/undefined
-* should warn against children for void elements
-* should warn against dangerouslySetInnerHTML for void elements
-* should treat menuitem as a void element but still create the closing tag
-* should validate against multiple children props
-* should validate use of dangerouslySetInnerHTML
-* should validate use of dangerouslySetInnerHTML
-* should validate against invalid styles
 * should track input values
 * should track textarea values
 * should warn for children on void elements
-* should support custom elements which extend native elements
-* should warn against children for void elements
-* should warn against dangerouslySetInnerHTML for void elements
-* should validate against multiple children props
-* should validate against invalid styles
 * should report component containing invalid styles
 * should clean up input value tracking
 * should clean up input textarea tracking
-* should throw when an invalid tag name is used
-* should throw when an attack vector is used
 * gives source code refs for unknown prop warning
 * gives source code refs for unknown prop warning for update render
 * gives source code refs for unknown prop warning for exact elements 
@@ -172,32 +137,18 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
 * should control a value in reentrant events
 * should control values in reentrant events with different targets
-* should display `defaultValue` of number 0
-* should display "true" for `defaultValue` of `true`
-* should display "false" for `defaultValue` of `false`
 * should update `defaultValue` for uncontrolled input
 * should update `defaultValue` for uncontrolled date/time input
-* should take `defaultValue` when changing to uncontrolled input
-* should render name attribute if it is supplied
-* should display "foobar" for `defaultValue` of `objToString`
-* should display `value` of number 0
-* should allow setting `value` to `true`
-* should allow setting `value` to `false`
-* should allow setting `value` to `objToString`
-* should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
 * should have the correct target value
 * should control radio buttons
 * should control radio buttons if the tree updates during render
 * should have a this value of undefined if bind is not used
+* should update defaultValue to empty string
 * sets type, step, min, max before value always
-* sets value properly with type coming later in props
-* does not raise a validation warning when it switches types
 * resets value of date/time input to fix bugs in iOS Safari
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
-* should ignore and warn invalid children types
-* should set attribute for empty value
 * should allow ignoring `value` on option
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
@@ -219,26 +170,15 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should select grandchild options nested inside an optgroup
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should allow setting `defaultValue`
-* should display `defaultValue` of number 0
-* should display "false" for `defaultValue` of `false`
-* should display "foobar" for `defaultValue` of `objToString`
 * should set defaultValue
-* should display `value` of number 0
+* should update defaultValue to empty string
 * should allow setting `value` to `giraffe`
 * should allow setting `value` to `true`
 * should allow setting `value` to `false`
 * should allow setting `value` to `objToString`
-* should take updates to `defaultValue` for uncontrolled textarea
-* should take updates to children in lieu of `defaultValue` for uncontrolled textarea
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
-* should treat children like `defaultValue`
-* should keep value when switching to uncontrolled element if not changed
 * should keep value when switching to uncontrolled element if changed
-* should allow booleans as children
-* should allow objects as children
-* should throw with multiple or invalid children
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
@@ -356,15 +296,9 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded for composite roots
 * gets recorded when a native is mounted deeply instead of null
 * gets recorded during mount
-* gets recorded during an update
-* gets ignored if the styles are shallowly equal
 * gets recorded during mount
-* gets recorded during an update
-* gets recorded as a removal during an update
 * gets recorded during mount
-* gets recorded during an update
 * gets recorded during mount
-* gets recorded during an update
 * gets recorded during an update from text content
 * gets recorded during an update from html
 * gets recorded during an update from children
@@ -379,7 +313,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is removed
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should prevent non-function listeners, at dispatch
 * should not prevent null listeners, at dispatch
 
 src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
@@ -412,7 +345,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
-* should throw if rendering both HTML and children
 
 src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should warn when stateless component returns array

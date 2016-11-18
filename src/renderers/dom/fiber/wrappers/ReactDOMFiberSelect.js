@@ -6,24 +6,30 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMSelect
+ * @providesModule ReactDOMFiberSelect
+ * @flow
  */
 
 'use strict';
 
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
+type SelectWithWrapperState = HTMLSelectElement & {
+  _wrapperState: {
+    initialValue: ?string,
+    wasMultiple: boolean
+  }
+};
 
+var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
+
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var warning = require('warning');
 
 var didWarnValueDefaultValue = false;
 
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
+function getDeclarationErrorAddendum() {
+  var ownerName = getCurrentOwnerName();
+  if (ownerName) {
+    return ' Check the render method of `' + ownerName + '`.';
   }
   return '';
 }
@@ -32,14 +38,12 @@ var valuePropNames = ['value', 'defaultValue'];
 
 /**
  * Validation function for `value` and `defaultValue`.
- * @private
  */
-function checkSelectPropTypes(inst, props) {
-  var owner = inst._currentElement._owner;
+function checkSelectPropTypes(props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    owner ? owner.getName() : null
+    getCurrentOwnerName()
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {
@@ -54,7 +58,7 @@ function checkSelectPropTypes(inst, props) {
         'The `%s` prop supplied to <select> must be an array if ' +
         '`multiple` is true.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum()
       );
     } else if (!props.multiple && isArray) {
       warning(
@@ -62,25 +66,21 @@ function checkSelectPropTypes(inst, props) {
         'The `%s` prop supplied to <select> must be a scalar ' +
         'value if `multiple` is false.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum()
       );
     }
   }
 }
 
-/**
- * @param {ReactDOMComponent} inst
- * @param {boolean} multiple
- * @param {*} propValue A stringable (with `multiple`, a list of stringables).
- * @private
- */
-function updateOptions(inst, multiple, propValue) {
-  var options = ReactDOMComponentTree.getNodeFromInstance(inst).options;
+function updateOptions(node : HTMLSelectElement, multiple : boolean, propValue : any) {
+  type IndexableHTMLOptionsCollection = HTMLOptionsCollection & { [key:number]: HTMLOptionElement };
+  var options : IndexableHTMLOptionsCollection = node.options;
 
   if (multiple) {
+    let selectedValues = (propValue : Array<string>);
     let selectedValue = {};
-    for (let i = 0; i < propValue.length; i++) {
-      selectedValue['' + propValue[i]] = true;
+    for (let i = 0; i < selectedValues.length; i++) {
+      selectedValue['' + selectedValues[i]] = true;
     }
     for (let i = 0; i < options.length; i++) {
       var selected = selectedValue.hasOwnProperty(options[i].value);
@@ -91,7 +91,7 @@ function updateOptions(inst, multiple, propValue) {
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    let selectedValue = '' + propValue;
+    let selectedValue = '' + (propValue : string);
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
@@ -120,21 +120,21 @@ function updateOptions(inst, multiple, propValue) {
  * selected.
  */
 var ReactDOMSelect = {
-  getHostProps: function(inst, props) {
+  getHostProps: function(element : Element, props : Object) {
     return Object.assign({}, props, {
       value: undefined,
     });
   },
 
-  mountWrapper: function(inst, props) {
+  mountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : SelectWithWrapperState);
     if (__DEV__) {
-      checkSelectPropTypes(inst, props);
+      checkSelectPropTypes(props);
     }
 
     var value = props.value;
-    inst._wrapperState = {
+    node._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
-      listeners: null,
       wasMultiple: Boolean(props.multiple),
     };
 
@@ -155,44 +155,35 @@ var ReactDOMSelect = {
     }
   },
 
-  getSelectValueContext: function(inst) {
-    // ReactDOMOption looks at this initial value so the initial generated
-    // markup has correct `selected` attributes
-    return inst._wrapperState.initialValue;
-  },
-
-  postUpdateWrapper: function(inst) {
-    var props = inst._currentElement.props;
-
+  postUpdateWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : SelectWithWrapperState);
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down
-    inst._wrapperState.initialValue = undefined;
+    node._wrapperState.initialValue = undefined;
 
-    var wasMultiple = inst._wrapperState.wasMultiple;
-    inst._wrapperState.wasMultiple = Boolean(props.multiple);
+    var wasMultiple = node._wrapperState.wasMultiple;
+    node._wrapperState.wasMultiple = Boolean(props.multiple);
 
     var value = props.value;
     if (value != null) {
-      updateOptions(inst, Boolean(props.multiple), value);
+      updateOptions(node, Boolean(props.multiple), value);
     } else if (wasMultiple !== Boolean(props.multiple)) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(inst, Boolean(props.multiple), props.defaultValue);
+        updateOptions(node, Boolean(props.multiple), props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(inst, Boolean(props.multiple), props.multiple ? [] : '');
+        updateOptions(node, Boolean(props.multiple), props.multiple ? [] : '');
       }
     }
   },
 
-  restoreControlledState: function(inst) {
-    if (inst._rootNodeID) {
-      var props = inst._currentElement.props;
-      var value = props.value;
+  restoreControlledState: function(element : Element, props : Object) {
+    var node = ((element : any) : SelectWithWrapperState);
+    var value = props.value;
 
-      if (value != null) {
-        updateOptions(inst, Boolean(props.multiple), value);
-      }
+    if (value != null) {
+      updateOptions(node, Boolean(props.multiple), value);
     }
   },
 };

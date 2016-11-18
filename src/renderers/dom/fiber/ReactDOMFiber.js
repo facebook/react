@@ -17,9 +17,18 @@ import type { HostChildren } from 'ReactFiberReconciler';
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMInjection = require('ReactDOMInjection');
+
+ReactDOMInjection.inject();
 
 var warning = require('warning');
 
+var {
+  createElement,
+  setInitialProperties,
+  updateProperties,
+} = ReactDOMFiberComponent;
 var { precacheFiberNode } = ReactDOMComponentTree;
 
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
@@ -60,24 +69,12 @@ var DOMRenderer = ReactFiberReconciler({
     children : HostChildren<Instance | TextInstance>,
     internalInstanceHandle : Object
   ) : Instance {
-    const domElement : Instance = document.createElement(type);
+    const root = document.body; // HACK
+
+    const domElement : Instance = createElement(type, props, root);
     precacheFiberNode(internalInstanceHandle, domElement);
     recursivelyAppendChildren(domElement, children);
-    if (typeof props.className !== 'undefined') {
-      domElement.className = props.className;
-    }
-    if (typeof props.children === 'string') {
-      domElement.textContent = props.children;
-    } else if (typeof props.children === 'number') {
-      domElement.textContent = props.children.toString();
-    } else if (typeof props.dangerouslySetInnerHTML === 'object' &&
-               props.dangerouslySetInnerHTML !== null &&
-               typeof props.dangerouslySetInnerHTML.__html === 'string') {
-      domElement.innerHTML = props.dangerouslySetInnerHTML.__html;
-    }
-    if (typeof props.id === 'string') {
-      domElement.id = props.id;
-    }
+    setInitialProperties(domElement, type, props, root);
     return domElement;
   },
 
@@ -90,21 +87,9 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
-    if (typeof newProps.className !== 'undefined') {
-      domElement.className = newProps.className;
-    }
-    if (typeof newProps.children === 'string') {
-      domElement.textContent = newProps.children;
-    } else if (typeof newProps.children === 'number') {
-      domElement.textContent = newProps.children.toString();
-    } else if (typeof newProps.dangerouslySetInnerHTML === 'object' &&
-               newProps.dangerouslySetInnerHTML !== null &&
-               typeof newProps.dangerouslySetInnerHTML.__html === 'string') {
-      domElement.innerHTML = newProps.dangerouslySetInnerHTML.__html;
-    }
-    if (typeof newProps.id === 'string') {
-      domElement.id = newProps.id;
-    }
+    var type = domElement.tagName.toLowerCase(); // HACK
+    var root = document.body; // HACK
+    updateProperties(domElement, type, oldProps, newProps, root);
   },
 
   createTextInstance(text : string, internalInstanceHandle : Object) : TextInstance {

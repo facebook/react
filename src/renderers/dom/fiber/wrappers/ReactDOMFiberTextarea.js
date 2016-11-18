@@ -6,14 +6,21 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMTextarea
+ * @providesModule ReactDOMFiberTextarea
+ * @flow
  */
 
 'use strict';
 
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
+type TextAreaWithWrapperState = HTMLTextAreaElement & {
+  _wrapperState: {
+    initialValue: string,
+  }
+};
 
+var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
+
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -35,7 +42,8 @@ var didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getHostProps: function(inst, props) {
+  getHostProps: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     invariant(
       props.dangerouslySetInnerHTML == null,
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
@@ -49,19 +57,19 @@ var ReactDOMTextarea = {
     var hostProps = Object.assign({}, props, {
       value: undefined,
       defaultValue: undefined,
-      children: '' + inst._wrapperState.initialValue,
+      children: '' + node._wrapperState.initialValue,
     });
 
     return hostProps;
   },
 
-  mountWrapper: function(inst, props) {
+  mountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     if (__DEV__) {
-      var owner = inst._currentElement._owner;
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        owner ? owner.getName() : null
+        getCurrentOwnerName()
       );
       if (
         props.value !== undefined &&
@@ -117,16 +125,13 @@ var ReactDOMTextarea = {
       initialValue = defaultValue;
     }
 
-    inst._wrapperState = {
+    node._wrapperState = {
       initialValue: '' + initialValue,
-      listeners: null,
     };
   },
 
-  updateWrapper: function(inst) {
-    var props = inst._currentElement.props;
-
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+  updateWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     var value = props.value;
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
@@ -146,26 +151,24 @@ var ReactDOMTextarea = {
     }
   },
 
-  postMountWrapper: function(inst) {
+  postMountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : TextAreaWithWrapperState);
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var textContent = node.textContent;
 
     // Only set node.value if textContent is equal to the expected
     // initial value. In IE10/IE11 there is a bug where the placeholder attribute
     // will populate textContent as well.
     // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
-    if (textContent === inst._wrapperState.initialValue) {
+    if (textContent === node._wrapperState.initialValue) {
       node.value = textContent;
     }
   },
 
-  restoreControlledState: function(inst) {
-    if (inst._rootNodeID) {
-      // DOM component is still mounted; update
-      ReactDOMTextarea.updateWrapper(inst);
-    }
+  restoreControlledState: function(element : Element, props : Object) {
+    // DOM component is still mounted; update
+    ReactDOMTextarea.updateWrapper(element, props);
   },
 
 };

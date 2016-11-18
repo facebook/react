@@ -13,7 +13,6 @@
 
 var React = require('React');
 
-var getComponentName = require('getComponentName');
 var warning = require('warning');
 
 var hasReadOnlyValue = {
@@ -60,12 +59,9 @@ var propTypes = {
 };
 
 var loggedTypeFailures = {};
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = getComponentName(owner);
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
+function getDeclarationErrorAddendum(ownerName) {
+  if (ownerName) {
+    return ' Check the render method of `' + ownerName + '`.';
   }
   return '';
 }
@@ -75,7 +71,7 @@ function getDeclarationErrorAddendum(owner) {
  * this outside of the ReactDOM controlled form components.
  */
 var ReactControlledValuePropTypes = {
-  checkPropTypes: function(tagName, props, owner) {
+  checkPropTypes: function(tagName, props, ownerName) {
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error = propTypes[propName](
@@ -90,7 +86,7 @@ var ReactControlledValuePropTypes = {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum(owner);
+        var addendum = getDeclarationErrorAddendum(ownerName);
         warning(false, 'Failed form propType: %s%s', error.message, addendum);
       }
     }

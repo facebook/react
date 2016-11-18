@@ -6,15 +6,25 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMInput
+ * @providesModule ReactDOMFiberInput
+ * @flow
  */
 
 'use strict';
+
+type InputWithWrapperState = HTMLInputElement & {
+  _wrapperState: {
+    initialValue: ?string,
+    initialChecked: ?boolean,
+    controlled?: boolean
+  }
+};
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
+var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -42,10 +52,11 @@ function isControlled(props) {
  * The rendered element will be initialized as unchecked (or `defaultChecked`)
  * with an empty value (or `defaultValue`).
  *
- * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
+ * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = {
-  getHostProps: function(inst, props) {
+  getHostProps: function(element : Element, props : Object) {
+    var node = ((element : any) : InputWithWrapperState);
     var value = props.value;
     var checked = props.checked;
 
@@ -63,20 +74,19 @@ var ReactDOMInput = {
     }, props, {
       defaultChecked: undefined,
       defaultValue: undefined,
-      value: value != null ? value : inst._wrapperState.initialValue,
-      checked: checked != null ? checked : inst._wrapperState.initialChecked,
+      value: value != null ? value : node._wrapperState.initialValue,
+      checked: checked != null ? checked : node._wrapperState.initialChecked,
     });
 
     return hostProps;
   },
 
-  mountWrapper: function(inst, props) {
+  mountWrapper: function(element : Element, props : Object) {
     if (__DEV__) {
-      var owner = inst._currentElement._owner;
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
-        owner ? owner.getName() : null
+        getCurrentOwnerName()
       );
 
       if (
@@ -92,7 +102,7 @@ var ReactDOMInput = {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnCheckedDefaultChecked = true;
@@ -110,7 +120,7 @@ var ReactDOMInput = {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnValueDefaultValue = true;
@@ -118,44 +128,42 @@ var ReactDOMInput = {
     }
 
     var defaultValue = props.defaultValue;
-    inst._wrapperState = {
+    var node = ((element : any) : InputWithWrapperState);
+    node._wrapperState = {
       initialChecked: props.checked != null ? props.checked : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
-      listeners: null,
     };
 
     if (__DEV__) {
-      inst._wrapperState.controlled = isControlled(props);
+      node._wrapperState.controlled = isControlled(props);
     }
   },
 
-  updateWrapper: function(inst) {
-    var props = inst._currentElement.props;
-
+  updateWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : InputWithWrapperState);
     if (__DEV__) {
       var controlled = isControlled(props);
-      var owner = inst._currentElement._owner;
 
-      if (!inst._wrapperState.controlled && controlled && !didWarnUncontrolledToControlled) {
+      if (!node._wrapperState.controlled && controlled && !didWarnUncontrolledToControlled) {
         warning(
           false,
           '%s is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnUncontrolledToControlled = true;
       }
-      if (inst._wrapperState.controlled && !controlled && !didWarnControlledToUncontrolled) {
+      if (node._wrapperState.controlled && !controlled && !didWarnControlledToUncontrolled) {
         warning(
           false,
           '%s is changing a controlled input of type %s to be uncontrolled. ' +
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
+          getCurrentOwnerName() || 'A component',
           props.type
         );
         didWarnControlledToUncontrolled = true;
@@ -165,13 +173,12 @@ var ReactDOMInput = {
     var checked = props.checked;
     if (checked != null) {
       DOMPropertyOperations.setValueForProperty(
-        ReactDOMComponentTree.getNodeFromInstance(inst),
+        node,
         'checked',
         checked || false
       );
     }
 
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
     var value = props.value;
     if (value != null) {
 
@@ -203,12 +210,8 @@ var ReactDOMInput = {
     }
   },
 
-  postMountWrapper: function(inst) {
-    var props = inst._currentElement.props;
-
-    // This is in postMount because we need access to the DOM node, which is not
-    // available until after the component has mounted.
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+  postMountWrapper: function(element : Element, props : Object) {
+    var node = ((element : any) : InputWithWrapperState);
 
     // Detach value from defaultValue. We won't do anything if we're working on
     // submit or reset inputs as those values & defaultValues are linked. They
@@ -253,24 +256,20 @@ var ReactDOMInput = {
     }
   },
 
-  restoreControlledState: function(inst) {
-    if (inst._rootNodeID) {
-      // DOM component is still mounted; update
-      ReactDOMInput.updateWrapper(inst);
-    }
-    var props = inst._currentElement.props;
-    updateNamedCousins(inst, props);
+  restoreControlledState: function(element : Element, props : Object) {
+    var node = ((element : any) : InputWithWrapperState);
+    ReactDOMInput.updateWrapper(node, props);
+    updateNamedCousins(node, props);
   },
 };
 
-function updateNamedCousins(thisInstance, props) {
+function updateNamedCousins(rootNode, props) {
   var name = props.name;
   if (props.type === 'radio' && name != null) {
-    var rootNode = ReactDOMComponentTree.getNodeFromInstance(thisInstance);
-    var queryRoot = rootNode;
+    var queryRoot : Element = rootNode;
 
     while (queryRoot.parentNode) {
-      queryRoot = queryRoot.parentNode;
+      queryRoot = ((queryRoot.parentNode : any) : Element);
     }
 
     // If `rootNode.form` was non-null, then we could try `form.elements`,
@@ -284,7 +283,7 @@ function updateNamedCousins(thisInstance, props) {
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
 
     for (var i = 0; i < group.length; i++) {
-      var otherNode = group[i];
+      var otherNode = ((group[i] : any) : HTMLInputElement);
       if (otherNode === rootNode ||
           otherNode.form !== rootNode.form) {
         continue;
@@ -294,6 +293,7 @@ function updateNamedCousins(thisInstance, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
+      // TODO: Ensure that otherInstance is the current Fiber instead of wip.
       invariant(
         otherInstance,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
@@ -302,9 +302,7 @@ function updateNamedCousins(thisInstance, props) {
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      if (otherInstance._rootNodeID) {
-        ReactDOMInput.updateWrapper(otherInstance);
-      }
+      ReactDOMInput.updateWrapper(otherNode, otherInstance.memoizedProps);
     }
   }
 }
