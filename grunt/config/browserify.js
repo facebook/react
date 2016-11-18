@@ -87,9 +87,9 @@ function wrapperify(src) {
 
   // <script>
   } else {
-    var global = global || this;
+    var g = typeof global == 'undefined' ? this : global;
     
-    f(global.React);
+    f(g.React);
   }
 })(function(React) {
   ${src}
