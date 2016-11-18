@@ -138,11 +138,16 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass next context to lifecycles
 
 src/isomorphic/classic/class/__tests__/ReactBind-test.js
+* Holds reference to instance
+* works with mixins
 * warns if you try to bind to this
 * does not warn if you pass an auto-bound method to setState
 
 src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
+* should work with manual binding
 * should not hold reference to instance
+* works with mixins that have not opted out of autobinding
+* works with mixins that have opted out of autobinding
 * does not warn if you try to bind to this
 * does not warn if you pass an manually bound method to setState
 
@@ -522,6 +527,10 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should support custom attributes
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
+* should support stopPropagation()
+* should stop after first dispatch if stopPropagation
+* should invoke handlers that were removed while bubbling
+* should not invoke newly inserted handlers while bubbling
 * should listen to events only once
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
@@ -571,6 +580,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn about contentEditable and children
 * should respect suppressContentEditableWarning
 * should validate against invalid styles
+* should track input values
+* should track textarea values
 * should support custom elements which extend native elements
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
@@ -626,7 +637,7 @@ src/renderers/dom/shared/__tests__/inputValueTracking-test.js
 * should coerce value to a string
 * should update value if it changed and return result
 * should track value and return true when updating untracked instance
-* should stop tracking
+* should return tracker from node
 
 src/renderers/dom/shared/__tests__/quoteAttributeValueForBrowser-test.js
 * should escape boolean to string
@@ -644,6 +655,7 @@ src/renderers/dom/shared/eventPlugins/__tests__/BeforeInputEventPlugin-test.js
 * extract onBeforeInput from fallback objects
 
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
+* should catch setting the value programmatically
 * should unmount
 
 src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
@@ -727,6 +739,8 @@ src/renderers/dom/shared/utils/__tests__/setInnerHTML-test.js
 * sets innerHTML on it
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should properly control a value even if no event listener exists
+* should control values in reentrant events with different targets
 * should display `defaultValue` of number 0
 * only assigns defaultValue if it changes
 * should display "true" for `defaultValue` of `true`
@@ -744,8 +758,12 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `false`
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
+* should properly control a value of number `0`
 * should not set a value for submit buttons unnecessarily
+* should control radio buttons
+* should control radio buttons if the tree updates during render
 * should warn with value and no onChange handler and readOnly specified
+* should have a this value of undefined if bind is not used
 * should warn with checked and no onChange handler with readOnly specified
 * should warn if checked and defaultChecked props are specified
 * should warn if value and defaultValue props are specified
@@ -772,7 +790,9 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
+* should refresh state on change
 * should warn if value and defaultValue props are specified
+* should be able to safely remove select onChange
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should allow setting `defaultValue`
@@ -785,6 +805,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should render value for SSR
 * should take updates to `defaultValue` for uncontrolled textarea
 * should take updates to children in lieu of `defaultValue` for uncontrolled textarea
+* should properly control a value of number `0`
 * should treat children like `defaultValue`
 * should keep value when switching to uncontrolled element if not changed
 * should allow numbers as children
@@ -1130,6 +1151,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
 * should support rendering to different child types over time
+* should react to state changes from callbacks
 * should rewire refs when rendering to different child types
 * should not cache old DOM nodes when switching constructors
 * should auto bind methods and values correctly
@@ -1406,8 +1428,12 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
 * traverses children in the correct order
+* should change the value of an input field
+* should change the value of an input field in a component
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
+* should not warn when simulating events with extra properties
 * can scry with stateless components involved
+* should set the type of the event
 
 src/test/__tests__/reactComponentExpect-test.js
 * should match composite components

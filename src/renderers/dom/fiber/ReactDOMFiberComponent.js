@@ -33,7 +33,7 @@ var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-// var inputValueTracking = require('inputValueTracking');
+var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
@@ -552,7 +552,7 @@ var ReactDOMFiberComponent = {
         props = ReactDOMFiberInput.getHostProps(domElement, props);
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        //inputValueTracking.track(domElement); // TODO
+        inputValueTracking.trackNode(domElement);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
@@ -573,7 +573,7 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.mountWrapper(domElement, props);
         props = ReactDOMFiberTextarea.getHostProps(domElement, props);
-        //inputValueTracking.track(domElement); // TODO
+        inputValueTracking.trackNode(domElement);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.

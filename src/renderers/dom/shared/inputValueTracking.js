@@ -22,6 +22,9 @@ function isCheckable(elem) {
 }
 
 function getTracker(inst) {
+  if (typeof inst.tag === 'number') {
+    inst = inst.stateNode;
+  }
   return inst._wrapperState.valueTracker;
 }
 
@@ -43,6 +46,54 @@ function getValueFromNode(node) {
   return value;
 }
 
+function trackValueOnNode(node) {
+  var valueField = isCheckable(node) ? 'checked' : 'value';
+  var descriptor = Object.getOwnPropertyDescriptor(
+    node.constructor.prototype,
+    valueField
+  );
+
+  var currentValue = '' + node[valueField];
+
+  // if someone has already defined a value or Safari, then bail
+  // and don't track value will cause over reporting of changes,
+  // but it's better then a hard failure
+  // (needed for certain tests that spyOn input values and Safari)
+  if (
+    node.hasOwnProperty(valueField) ||
+    typeof descriptor.get !== 'function' ||
+    typeof descriptor.set !== 'function'
+  ) {
+    return;
+  }
+
+  Object.defineProperty(node, valueField, {
+    enumerable: descriptor.enumerable,
+    configurable: true,
+    get: function() {
+      return descriptor.get.call(this);
+    },
+    set: function(value) {
+      currentValue = '' + value;
+      descriptor.set.call(this, value);
+    },
+  });
+
+  var tracker = {
+    getValue() {
+      return currentValue;
+    },
+    setValue(value) {
+      currentValue = '' + value;
+    },
+    stopTracking() {
+      detachTracker(inst);
+      delete node[valueField];
+    },
+  };
+  return tracker;
+}
+
 var inputValueTracking = {
   // exposed for testing
   _getTrackerFromNode(node) {
@@ -51,56 +102,19 @@ var inputValueTracking = {
     );
   },
 
+  trackNode: function(node) {
+    if (node._wrapperState.valueTracker) {
+      return;
+    }
+    node._wrapperState.valueTracker = trackValueOnNode(node);
+  },
+
   track: function(inst) {
     if (getTracker(inst)) {
       return;
     }
-
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    var valueField = isCheckable(node) ? 'checked' : 'value';
-    var descriptor = Object.getOwnPropertyDescriptor(
-      node.constructor.prototype,
-      valueField
-    );
-
-    var currentValue = '' + node[valueField];
-
-    // if someone has already defined a value or Safari, then bail
-    // and don't track value will cause over reporting of changes,
-    // but it's better then a hard failure
-    // (needed for certain tests that spyOn input values and Safari)
-    if (
-      node.hasOwnProperty(valueField) ||
-      typeof descriptor.get !== 'function' ||
-      typeof descriptor.set !== 'function'
-    ) {
-      return;
-    }
-
-    Object.defineProperty(node, valueField, {
-      enumerable: descriptor.enumerable,
-      configurable: true,
-      get: function() {
-        return descriptor.get.call(this);
-      },
-      set: function(value) {
-        currentValue = '' + value;
-        descriptor.set.call(this, value);
-      },
-    });
-
-    attachTracker(inst, {
-      getValue() {
-        return currentValue;
-      },
-      setValue(value) {
-        currentValue = '' + value;
-      },
-      stopTracking() {
-        detachTracker(inst);
-        delete node[valueField];
-      },
-    });
+    attachTracker(inst, trackValueOnNode(node));
   },
 
   updateValueIfChanged(inst) {

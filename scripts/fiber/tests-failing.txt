@@ -14,15 +14,6 @@ src/addons/__tests__/renderSubtreeIntoContainer-test.js
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
-src/isomorphic/classic/class/__tests__/ReactBind-test.js
-* Holds reference to instance
-* works with mixins
-
-src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
-* should work with manual binding
-* works with mixins that have not opted out of autobinding
-* works with mixins that have opted out of autobinding
-
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * includes the owner name when passing null, undefined, boolean, or number
 
@@ -47,11 +38,7 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should bubble simply
 * should continue bubbling if an error is thrown
 * should set currentTarget
-* should support stopPropagation()
-* should stop after first dispatch if stopPropagation
 * should not stopPropagation if false is returned
-* should invoke handlers that were removed while bubbling
-* should not invoke newly inserted handlers while bubbling
 * should have mouse enter simulated by test utils
 * should infer onTouchTap from a touchStart/End
 * should infer onTouchTap from when dragging below threshold
@@ -63,8 +50,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn when mutating style
 * should empty element when removing innerHTML
 * should transition from innerHTML to children in nested el
-* should track input values
-* should track textarea values
 * should warn for children on void elements
 * should report component containing invalid styles
 * should clean up input value tracking
@@ -90,11 +75,10 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/inputValueTracking-test.js
-* should return tracker from node
+* should stop tracking
 
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should fire change for checkbox input
-* should catch setting the value programmatically
 * should not fire change when setting the value programmatically
 * should not fire change when setting checked programmatically
 * should only fire change for checked radio button once
@@ -134,16 +118,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
 * should trigger load events
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
-* should properly control a value even if no event listener exists
 * should control a value in reentrant events
-* should control values in reentrant events with different targets
 * should update `defaultValue` for uncontrolled input
 * should update `defaultValue` for uncontrolled date/time input
-* should properly control a value of number `0`
 * should have the correct target value
-* should control radio buttons
-* should control radio buttons if the tree updates during render
-* should have a this value of undefined if bind is not used
 * should update defaultValue to empty string
 * sets type, step, min, max before value always
 * resets value of date/time input to fix bugs in iOS Safari
@@ -165,8 +143,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should remember value when switching to uncontrolled
 * should remember updated value when switching to uncontrolled
 * should not control defaultValue if readding options
-* should refresh state on change
-* should be able to safely remove select onChange
 * should select grandchild options nested inside an optgroup
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
@@ -177,7 +153,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should allow setting `value` to `false`
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
-* should properly control a value of number `0`
 * should keep value when switching to uncontrolled element if changed
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
@@ -324,7 +299,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should not thrash a server rendered layout with client side one
-* should react to state changes from callbacks
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should warn about `setState` in render
@@ -365,7 +339,3 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 
 src/test/__tests__/ReactTestUtils-test.js
 * should support injected wrapper components as DOM components
-* should change the value of an input field
-* should change the value of an input field in a component
-* should not warn when simulating events with extra properties
-* should set the type of the event

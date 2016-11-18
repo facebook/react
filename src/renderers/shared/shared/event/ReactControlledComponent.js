@@ -36,7 +36,13 @@ function restoreStateOfTarget(internalInstance) {
       'Fiber needs to be injected to handle a fiber target for controlled ' +
       'events.'
     );
-    fiberHostComponent.restoreControlledState(internalInstance);
+    // TODO: Ensure that this instance is the current one. Props needs to be correct.
+    fiberHostComponent.restoreControlledState(
+      internalInstance.stateNode,
+      internalInstance.type,
+      internalInstance.memoizedProps
+    );
+    return;
   }
   invariant(
     typeof internalInstance.restoreControlledState === 'function',
