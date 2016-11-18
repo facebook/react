@@ -28,7 +28,7 @@ dependencies:
   post:
     # - npm ls --depth=0
   cache_directories:
-    - docs/vendor/bundle
+    - vendor/bundle
     - .grunt # Show size comparisons between builds
     - ~/react-gh-pages # docs checkout
     - ~/.yarn-cache
