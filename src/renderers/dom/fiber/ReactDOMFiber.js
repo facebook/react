@@ -16,23 +16,20 @@ import type { Fiber } from 'ReactFiber';
 import type { HostChildren } from 'ReactFiberReconciler';
 import type { ReactNodeList } from 'ReactTypes';
 
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
 var warning = require('warning');
-
-ReactDOMInjection.inject();
-ReactControlledComponent.injection.injectFiberControlledHostComponent(
-  ReactDOMFiberComponent
-);
 
 var {
   createElement,
@@ -73,7 +70,23 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
   }
 }
 
+let eventsEnabled : ?boolean = null;
+let selectionInformation : ?mixed = null;
+
 var DOMRenderer = ReactFiberReconciler({
+
+  prepareForCommit() : void {
+    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
+    ReactBrowserEventEmitter.setEnabled(false);
+    selectionInformation = ReactInputSelection.getSelectionInformation();
+  },
+
+  resetAfterCommit() : void {
+    ReactInputSelection.restoreSelection(selectionInformation);
+    selectionInformation = null;
+    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+    eventsEnabled = null;
+  },
 
   updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
     // TODO: Containers should update similarly to other parents.
