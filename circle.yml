@@ -44,5 +44,5 @@ deployment:
   staging:
     branch: /.*/
     commands:
-      - ./scripts/circleci/upload_build.sh
+      # - ./scripts/circleci/upload_build.sh
       - ./scripts/circleci/build_gh_pages.sh
