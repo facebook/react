@@ -19,7 +19,7 @@ var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
 describe('renderSubtreeIntoContainer', () => {
 
-  fit('should pass context when rendering subtree elsewhere', () => {
+  it('should pass context when rendering subtree elsewhere', () => {
     var portalContainer = document.createElement('div');
 
     class Component extends React.Component {
@@ -80,44 +80,47 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portalContainer.firstChild.innerHTML).toBe('bar');
   });
 
-  it('should throw if parentComponent is invalid', () => {
-    var portalContainer = document.createElement('div');
+  if (!ReactDOMFeatureFlags.useFiber) {
+    // This test is only relevant for imperative API
+    it('should throw if parentComponent is invalid', () => {
+      var portalContainer = document.createElement('div');
 
-    class Component extends React.Component {
-      static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.foo}</div>;
-      }
-    }
-
-    // ESLint is confused here and thinks Parent is unused, presumably because
-    // it is only used inside of the class body?
-    // eslint-disable-next-line no-unused-vars
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-      };
-
-      getChildContext() {
-        return {
-          foo: 'bar',
+      class Component extends React.Component {
+        static contextTypes = {
+          foo: React.PropTypes.string.isRequired,
         };
+
+        render() {
+          return <div>{this.context.foo}</div>;
+        }
       }
 
-      render() {
-        return null;
-      }
+      // ESLint is confused here and thinks Parent is unused, presumably because
+      // it is only used inside of the class body?
+      // eslint-disable-next-line no-unused-vars
+      class Parent extends React.Component {
+        static childContextTypes = {
+          foo: React.PropTypes.string.isRequired,
+        };
 
-      componentDidMount() {
-        expect(function() {
-          renderSubtreeIntoContainer(<Parent />, <Component />, portalContainer);
-        }).toThrowError('parentComponentmust be a valid React Component');
+        getChildContext() {
+          return {
+            foo: 'bar',
+          };
+        }
+
+        render() {
+          return null;
+        }
+
+        componentDidMount() {
+          expect(function() {
+            renderSubtreeIntoContainer(<Parent />, <Component />, portalContainer);
+          }).toThrowError('parentComponentmust be a valid React Component');
+        }
       }
-    }
-  });
+    });
+  }
 
   it('should update context if it changes due to setState', () => {
     var container = document.createElement('div');
@@ -135,33 +138,61 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
-      };
-
-      state = {
-        bar: 'initial',
-      };
-
-      getChildContext() {
-        return {
-          foo: this.state.bar,
-          getFoo: () => this.state.bar,
+    let Parent;
+    if (ReactDOMFeatureFlags.useFiber) {
+      Parent = class extends React.Component {
+        static childContextTypes = {
+          foo: React.PropTypes.string.isRequired,
+          getFoo: React.PropTypes.func.isRequired,
         };
-      }
 
-      render() {
-        return null;
-      }
+        state = {
+          bar: 'initial',
+        };
 
-      componentDidMount() {
-        renderSubtreeIntoContainer(this, <Component />, portalContainer);
-      }
+        getChildContext() {
+          return {
+            foo: this.state.bar,
+            getFoo: () => this.state.bar,
+          };
+        }
 
-      componentDidUpdate() {
-        renderSubtreeIntoContainer(this, <Component />, portalContainer);
+        render() {
+          return ReactDOM.unstable_createPortal(
+            <Component />,
+            portalContainer
+          );
+        }
+      }
+    } else {
+      Parent = class extends React.Component {
+        static childContextTypes = {
+          foo: React.PropTypes.string.isRequired,
+          getFoo: React.PropTypes.func.isRequired,
+        };
+
+        state = {
+          bar: 'initial',
+        };
+
+        getChildContext() {
+          return {
+            foo: this.state.bar,
+            getFoo: () => this.state.bar,
+          };
+        }
+
+        render() {
+          return null;
+        }
+
+        componentDidMount() {
+          renderSubtreeIntoContainer(this, <Component />, portalContainer);
+        }
+
+        componentDidUpdate() {
+          renderSubtreeIntoContainer(this, <Component />, portalContainer);
+        }
       }
     }
 
@@ -187,30 +218,54 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
-      };
-
-      getChildContext() {
-        return {
-          foo: this.props.bar,
-          getFoo: () => this.props.bar,
+    let Parent;
+    if (ReactDOMFeatureFlags.useFiber) {
+      Parent = class extends React.Component {
+        static childContextTypes = {
+          foo: React.PropTypes.string.isRequired,
+          getFoo: React.PropTypes.func.isRequired,
         };
-      }
 
-      render() {
-        return null;
-      }
+        getChildContext() {
+          return {
+            foo: this.props.bar,
+            getFoo: () => this.props.bar,
+          };
+        }
 
-      componentDidMount() {
-        renderSubtreeIntoContainer(this, <Component />, portalContainer);
+        render() {
+          return ReactDOM.unstable_createPortal(
+            <Component />,
+            portalContainer
+          );
+        }
       }
+    } else {
+      Parent = class extends React.Component {
+        static childContextTypes = {
+          foo: React.PropTypes.string.isRequired,
+          getFoo: React.PropTypes.func.isRequired,
+        };
 
-      componentDidUpdate() {
-        renderSubtreeIntoContainer(this, <Component />, portalContainer);
-      }
+        getChildContext() {
+          return {
+            foo: this.props.bar,
+            getFoo: () => this.props.bar,
+          };
+        }
+
+        render() {
+          return null;
+        }
+
+        componentDidMount() {
+          renderSubtreeIntoContainer(this, <Component />, portalContainer);
+        }
+
+        componentDidUpdate() {
+          renderSubtreeIntoContainer(this, <Component />, portalContainer);
+        }
+      }      
     }
 
     ReactDOM.render(<Parent bar="initial" />, container);

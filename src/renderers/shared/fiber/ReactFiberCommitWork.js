@@ -22,6 +22,7 @@ var {
   HostContainer,
   HostComponent,
   HostText,
+  Portal,
 } = ReactTypeOfWork;
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
@@ -291,6 +292,14 @@ module.exports = function<T, P, I, TI, C>(
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }
+      case Portal: {
+        const children = finishedWork.output;
+        const containerInfo : C = finishedWork.memoizedProps.container;
+        // const root : FiberRoot = finishedWork.stateNode;
+        // const containerInfo : C = root.containerInfo;
+        updateContainer(containerInfo, children);
+        return;
+      }
       default:
         throw new Error('This unit of work tag should not have side-effects.');
     }
@@ -350,6 +359,10 @@ module.exports = function<T, P, I, TI, C>(
         return;
       }
       case HostText: {
+        // We have no life-cycles associated with text.
+        return;
+      }
+      case Portal: {
         // We have no life-cycles associated with text.
         return;
       }
