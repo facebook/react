@@ -12,6 +12,7 @@ machine:
     version: 2.2.3
   environment:
     COMMIT_RANGE: echo CIRCLE_COMPARE_URL | cut -d/ -f7
+    TRAVIS_REPO_SLUG: zpao/react
 
 dependencies:
   override:
@@ -37,6 +38,7 @@ test:
     # - ./node_modules/.bin/grunt lint
     - ./node_modules/.bin/grunt jest:normal
     # - ./scripts/circleci/set_feature_flag.sh && ./node_modules/.bin/grunt jest:normal
+    - ./scripts/circleci/flow.sh
   pre:
     # - ./node_modules/.bin/grunt build
 
