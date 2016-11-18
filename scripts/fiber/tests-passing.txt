@@ -831,18 +831,31 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should ignore null/undefined/false children without warning
 * should be able to use dangerouslySetInnerHTML on option
 * should set attribute for empty value
+* should allow ignoring `value` on option
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
+* should allow setting `defaultValue`
 * should not throw with `defaultValue` and without children
+* should not control when using `defaultValue`
+* should allow setting `defaultValue` with multiple
+* should allow setting `value`
 * should not throw with `value` and without children
+* should allow setting `value` with multiple
+* should not select other options automatically
 * should reset child options selected when they are changed and `value` is set
+* should allow setting `value` with `objectToString`
+* should allow switching to multiple
+* should allow switching from multiple
+* should remember value when switching to uncontrolled
 * should remember updated value when switching to uncontrolled
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
+* should not control defaultValue if readding options
 * should refresh state on change
 * should warn if value and defaultValue props are specified
 * should be able to safely remove select onChange
+* should select grandchild options nested inside an optgroup
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should allow setting `defaultValue`

@@ -88,23 +88,6 @@ src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
 
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
-* should allow ignoring `value` on option
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
-* should allow setting `defaultValue`
-* should not control when using `defaultValue`
-* should allow setting `defaultValue` with multiple
-* should allow setting `value`
-* should allow setting `value` with multiple
-* should not select other options automatically
-* should allow setting `value` with `objectToString`
-* should allow switching to multiple
-* should allow switching from multiple
-* should remember value when switching to uncontrolled
-* should not control defaultValue if readding options
-* should select grandchild options nested inside an optgroup
-
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
 * throws in render() if the update callback is not a function

@@ -153,6 +153,13 @@ var ReactDOMSelect = {
       );
       didWarnValueDefaultValue = true;
     }
+
+    node.multiple = Boolean(props.multiple);
+    if (value != null) {
+      updateOptions(node, Boolean(props.multiple), value);
+    } else if (props.defaultValue != null) {
+      updateOptions(node, Boolean(props.multiple), props.defaultValue);
+    }
   },
 
   postUpdateWrapper: function(element : Element, props : Object) {
