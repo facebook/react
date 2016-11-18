@@ -27,10 +27,10 @@ dependencies:
   post:
     # - npm ls --depth=0
   cache_directories:
-    - vendor/bundle
+    - docs/vendor/bundle
     - .grunt # Show size comparisons between builds
-    - $HOME/react-gh-pages # docs checkout
-    - "~/.yarn-cache"
+    - ~/react-gh-pages # docs checkout
+    - ~/.yarn-cache
 
 test:
   override:
