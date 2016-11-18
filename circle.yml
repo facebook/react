@@ -16,6 +16,7 @@ machine:
 dependencies:
   override:
     - bundle install --gemfile=docs/Gemfile --deployment --path=vendor/bundle --jobs=3 --retry=3
+    - yarn install
   pre:
     - echo $COMMIT_RANGE
     # install yarn
