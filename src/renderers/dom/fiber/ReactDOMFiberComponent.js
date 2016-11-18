@@ -455,11 +455,13 @@ var ReactDOMFiberComponent = {
 
   // TODO: Use this to keep track of changes to the host context and use this
   // to determine whether we switch to svg and back.
-  isNewHostContainer: function(tag : string) {
+  // TODO: Does this need to check the current namespace? In case these tags
+  // happen to be valid in some other namespace.
+  isNewHostContainer(tag : string) {
     return tag === 'svg' || tag === 'foreignobject';
   },
 
-  createElement: function(
+  createElement(
     tag : string,
     props : Object,
     rootContainerElement : Element
@@ -514,7 +516,7 @@ var ReactDOMFiberComponent = {
     return domElement;
   },
 
-  setInitialProperties: function(
+  setInitialProperties(
     domElement : Element,
     tag : string,
     props : Object,
