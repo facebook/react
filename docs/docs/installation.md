@@ -47,7 +47,7 @@ While React [can be used](/react/docs/react-without-es6.html) without a build pi
 
 ### Installing React
 
-We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/) for managing front-end dependencies. If you're new to package managers, [Yarn documentation](https://yarnpkg.com/en/docs/getting-started) is a good place to get started.
+We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/) for managing front-end dependencies. If you're new to package managers, the [Yarn documentation](https://yarnpkg.com/en/docs/getting-started) is a good place to get started.
 
 To install React with Yarn, run:
 
@@ -61,7 +61,7 @@ To install React with npm, run:
 npm install --save react react-dom
 ```
 
-Both yarn and npm work with the npm registry.
+Both Yarn and npm download packages from the [npm registry](http://npmjs.com/).
 
 ### Enabling ES6 and JSX
 
