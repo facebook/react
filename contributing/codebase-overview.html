@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -137,15 +137,15 @@
 <h3><a class="anchor" name="shared-code"></a>Shared Code <a class="hash-link" href="#shared-code">#</a></h3>
 <p>Even though Haste allows us to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.</p>
 
-<p>For example, files inside <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> may import other files in the same folder or any folder below.</p>
+<p>For example, files inside <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client"><code>src/renderers/dom/stack/client</code></a> may import other files in the same folder or any folder below.</p>
 
-<p>However they can&#39;t import modules from <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/server"><code>src/renderers/dom/server</code></a> because it is not a child directory of <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a>.</p>
+<p>However they can&#39;t import modules from <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/server"><code>src/renderers/dom/stack/server</code></a> because it is not a child directory of <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client"><code>src/renderers/dom/stack/client</code></a>.</p>
 
 <p>There is an exception to this rule. Sometimes we <em>do</em> need to share functionality between two groups of modules. In this case, we hoist the shared module up to a folder called <code>shared</code> inside the closest common ancestor folder of the modules that need to rely on it.</p>
 
-<p>For example, code shared between <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> and <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/server"><code>src/renderers/dom/server</code></a> lives in <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/shared"><code>src/renderers/dom/shared</code></a>.</p>
+<p>For example, code shared between <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client"><code>src/renderers/dom/stack/client</code></a> and <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/server"><code>src/renderers/dom/stack/server</code></a> lives in <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/shared"><code>src/renderers/dom/shared</code></a>.</p>
 
-<p>By the same logic, if <a href="https://github.com/facebook/react/tree/master/src/renderers/dom/client"><code>src/renderers/dom/client</code></a> needs to share a utility with something in <a href="https://github.com/facebook/react/tree/master/src/renderers/native"><code>src/renderers/native</code></a>, this utility would be in <a href="https://github.com/facebook/react/tree/master/src/renderers/shared"><code>src/renderers/shared</code></a>.</p>
+<p>By the same logic, if <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client"><code>src/renderers/dom/stack/client</code></a> needs to share a utility with something in <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/native"><code>src/renderers/native</code></a>, this utility would be in <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/shared"><code>src/renderers/shared</code></a>.</p>
 
 <p>This convention is not enforced but we check for it during a pull request review.</p>
 <h3><a class="anchor" name="warnings-and-invariants"></a>Warnings and Invariants <a class="hash-link" href="#warnings-and-invariants">#</a></h3>

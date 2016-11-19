@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -90,7 +90,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>Web Components often expose an imperative API. For instance, a <code>video</code> Web Component might expose <code>play()</code> and <code>pause()</code> functions). To access the imperative APIs of a Web Component, you will need to use a ref to interact with the DOM node directly. If you are using third-party Web Components, the best solution is to write a React component that behaves as a wrapper for your Web Component.</p>
+<p>Web Components often expose an imperative API. For instance, a <code>video</code> Web Component might expose <code>play()</code> and <code>pause()</code> functions. To access the imperative APIs of a Web Component, you will need to use a ref to interact with the DOM node directly. If you are using third-party Web Components, the best solution is to write a React component that behaves as a wrapper for your Web Component.</p>
 
 <p>Events emitted by a Web Component may not properly propagate through a React render tree.
 You will need to manually attach event handlers to handle these events within your React components.</p>
@@ -99,7 +99,7 @@ You will need to manually attach event handlers to handle these events within yo
 <p>One common confusion is that Web Components use &quot;class&quot; instead of &quot;className&quot;.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">BrickFlipbox</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">brick</span><span class="o">-</span><span class="nx">flipbox</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">brick</span><span class="o">-</span><span class="nx">flipbox</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span><span class="o">&gt;</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">front</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">back</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="o">&lt;</span><span class="err">/brick-flipbox&gt;</span>

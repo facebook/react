@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -112,7 +112,7 @@
 </code></pre></div>
 <p><a href="http://codepen.io/gaearon/pen/PGEjdG?editors=0010">Try it on CodePen.</a></p>
 
-<p>We wrapped JSX in parentheses and split it over multiple lines for readability. This also helps avoid the pitfalls of <a href="http://stackoverflow.com/q/2846283">automatic semicolon insertion</a>.</p>
+<p>We split JSX over multiple lines for readability. While it isn&#39;t mandatory, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of <a href="http://stackoverflow.com/q/2846283">automatic semicolon insertion</a>.</p>
 <h3><a class="anchor" name="jsx-is-an-expression-too"></a>JSX is an Expression Too <a class="hash-link" href="#jsx-is-an-expression-too">#</a></h3>
 <p>After compilation, JSX expressions become regular JavaScript objects.</p>
 
@@ -154,7 +154,7 @@
 <span class="c1">// This is safe:</span>
 <span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">title</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
 </code></pre></div>
-<p>By default, React DOM escapes any values embedded in JSX before rendering them.</p>
+<p>By default, React DOM <a href="http://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html">escapes</a> any values embedded in JSX before rendering them. Thus it ensures that you can never inject anything that&#39;s not explicitly written in your application. Everything is converted to a string before being rendered. This helps prevent <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS (cross-site-scripting)</a> attacks.</p>
 <h3><a class="anchor" name="jsx-represents-objects"></a>JSX Represents Objects <a class="hash-link" href="#jsx-represents-objects">#</a></h3>
 <p>Babel compiles JSX down to <code>React.createElement()</code> calls.</p>
 

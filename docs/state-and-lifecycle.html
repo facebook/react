@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -332,6 +332,18 @@
 <p><a href="http://codepen.io/gaearon/pen/amqdNA?editors=0010">Try it on CodePen.</a></p>
 
 <p>Now the clock ticks every second.</p>
+
+<p>Let&#39;s quickly recap what&#39;s going on and the order in which the methods are called:</p>
+
+<p>1) When <code>&lt;Clock /&gt;</code> is passed to <code>ReactDOM.render()</code>, React calls the constructor of the <code>Clock</code> component. Since <code>Clock</code> needs to display the current time, it initializes <code>this.state</code> with an object including the current time. We will later update this state.</p>
+
+<p>2) React then calls the <code>Clock</code> component&#39;s <code>render()</code> method. This is how React learns what should be displayed on the screen. React then updates the DOM to match the <code>Clock</code>&#39;s render output.</p>
+
+<p>3) When the <code>Clock</code> output is inserted in the DOM, React calls the <code>componentDidMount()</code> lifecycle hook. Inside it, the <code>Clock</code> component asks the browser to set up a timer to call <code>tick()</code> once a second.</p>
+
+<p>4) Every second the browser calls the <code>tick()</code> method. Inside it, the <code>Clock</code> component schedules a UI update by calling <code>setState()</code> with an object containing the current time. Thanks to the <code>setState()</code> call, React knows the state has changed, and calls <code>render()</code> method again to learn what should be on the screen. This time, <code>this.state.date</code> in the <code>render()</code> method will be different, and so the render output will include the updated time. React updates the DOM accordingly.</p>
+
+<p>5) If the <code>Clock</code> component is ever removed from the DOM, React calls the <code>componentWillUnmount()</code> lifecycle hook so the timer is stopped.</p>
 <h2><a class="anchor" name="using-state-correctly"></a>Using State Correctly <a class="hash-link" href="#using-state-correctly">#</a></h2>
 <p>There are three things you should know about <code>setState()</code>.</p>
 <h3><a class="anchor" name="do-not-modify-state-directly"></a>Do Not Modify State Directly <a class="hash-link" href="#do-not-modify-state-directly">#</a></h3>
@@ -342,7 +354,9 @@
 <p>Instead, use <code>setState()</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Correct</span>
 <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">comment</span><span class="o">:</span> <span class="s1">&#39;Hello&#39;</span><span class="p">});</span>
-</code></pre></div><h3><a class="anchor" name="state-updates-may-be-asynchronous"></a>State Updates May Be Asynchronous <a class="hash-link" href="#state-updates-may-be-asynchronous">#</a></h3>
+</code></pre></div>
+<p>The only place where you can assign <code>this.state</code> is the constructor.</p>
+<h3><a class="anchor" name="state-updates-may-be-asynchronous"></a>State Updates May Be Asynchronous <a class="hash-link" href="#state-updates-may-be-asynchronous">#</a></h3>
 <p>React may batch multiple <code>setState()</code> calls into a single update for performance.</p>
 
 <p>Because <code>this.props</code> and <code>this.state</code> may be updated asynchronously, you should not rely on their values for calculating the next state.</p>

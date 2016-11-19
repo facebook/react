@@ -64,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -128,7 +128,7 @@
 
 <p>Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.</p>
 
-<p>Currently Chrome is the only browser supporting this feature, but we use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API">User Timing API</a> so we expect more browsers to add support for it.</p>
+<p>Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API">User Timing API</a> so we expect more browsers to add support for it.</p>
 <h3><a class="anchor" name="mocking-refs-for-snapshot-testing"></a>Mocking Refs for Snapshot Testing <a class="hash-link" href="#mocking-refs-for-snapshot-testing">#</a></h3>
 <p>If you&#39;re using Jest <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">snapshot testing</a>, you might have had <a href="https://github.com/facebook/react/issues/7371">issues</a> with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in <code>componentDidMount</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
@@ -173,29 +173,33 @@
 
 <hr>
 <h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
-<p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:</p>
+<p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
-<ul>
-<li><code>npm install --save react@15.4.0 react-dom@15.4.0</code></li>
-</ul>
+<p>To install React with Yarn, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react@15.4.0 react-dom@15.4.0
+</code></pre></div>
+<p>To install React with npm, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react@15.4.0 react-dom@15.4.0
+</code></pre></div>
+<p>We recommend using a bundler like <a href="https://webpack.github.io/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
 
-<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the <code>NODE_ENV</code> environment variable to <code>production</code> to use the production build of React which does not include the development warnings and runs significantly faster.</p>
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to <a href="/react/docs/installation.html#development-and-production-versions">compile it in production mode</a>.</p>
 
-<p>If you can’t use <code>npm</code> yet, we provide pre-built browser builds for your convenience, which are also available in the <code>react</code> package on bower.</p>
+<p>In case you don&#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can <a href="/react/docs/installation.html#using-a-cdn">include as script tags</a> on your page:</p>
 
 <ul>
 <li><strong>React</strong><br>
-Dev build with warnings: <a href="https://unpkg.com/react@15.4.0/dist/react.js">react.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react@15.4.0/dist/react.min.js">react.min.js</a><br></li>
+Dev build with warnings: <a href="https://unpkg.com/react@15.4.0/dist/react.js">react/dist/react.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react@15.4.0/dist/react.min.js">react/dist/react.min.js</a><br></li>
 <li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://unpkg.com/react@15.4.0/dist/react-with-addons.js">react-with-addons.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react@15.4.0/dist/react-with-addons.min.js">react-with-addons.min.js</a><br></li>
+Dev build with warnings: <a href="https://unpkg.com/react@15.4.0/dist/react-with-addons.js">react/dist/react-with-addons.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react@15.4.0/dist/react-with-addons.min.js">react/dist/react-with-addons.min.js</a><br></li>
 <li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom.js">react-dom.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom.min.js">react-dom.min.js</a><br></li>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom.js">react-dom/dist/react-dom.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom.min.js">react-dom/dist/react-dom.min.js</a><br></li>
 <li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br>
-Dev build with warnings: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.js">react-dom-server.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.min.js">react-dom-server.min.js</a></li>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.js">react-dom/dist/react-dom-server.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.min.js">react-dom/dist/react-dom-server.min.js</a></li>
 </ul>
 
 <p>We&#39;ve also published version <code>15.4.0</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>

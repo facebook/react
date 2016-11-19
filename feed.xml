@@ -40,7 +40,7 @@
 
 &lt;p&gt;Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.&lt;/p&gt;
 
-&lt;p&gt;Currently Chrome is the only browser supporting this feature, but we use the standard &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API&quot;&gt;User Timing API&lt;/a&gt; so we expect more browsers to add support for it.&lt;/p&gt;
+&lt;p&gt;Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API&quot;&gt;User Timing API&lt;/a&gt; so we expect more browsers to add support for it.&lt;/p&gt;
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;mocking-refs-for-snapshot-testing&quot;&gt;&lt;/a&gt;Mocking Refs for Snapshot Testing &lt;a class=&quot;hash-link&quot; href=&quot;#mocking-refs-for-snapshot-testing&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;If you&amp;#39;re using Jest &lt;a href=&quot;https://facebook.github.io/jest/blog/2016/07/27/jest-14.html&quot;&gt;snapshot testing&lt;/a&gt;, you might have had &lt;a href=&quot;https://github.com/facebook/react/issues/7371&quot;&gt;issues&lt;/a&gt; with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in &lt;code&gt;componentDidMount&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
@@ -85,29 +85,33 @@
 
 &lt;hr&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
+&lt;p&gt;We recommend using &lt;a href=&quot;https://yarnpkg.com/&quot;&gt;Yarn&lt;/a&gt; or &lt;a href=&quot;https://www.npmjs.com/&quot;&gt;npm&lt;/a&gt; for managing front-end dependencies. If you&amp;#39;re new to package managers, the &lt;a href=&quot;https://yarnpkg.com/en/docs/getting-started&quot;&gt;Yarn documentation&lt;/a&gt; is a good place to get started.&lt;/p&gt;
 
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;npm install --save react@15.4.0 react-dom@15.4.0&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;To install React with Yarn, run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;yarn add react@15.4.0 react-dom@15.4.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To install React with npm, run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;npm install --save react@15.4.0 react-dom@15.4.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We recommend using a bundler like &lt;a href=&quot;https://webpack.github.io/&quot;&gt;webpack&lt;/a&gt; or &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; so you can write modular code and bundle it together into small packages to optimize load time.&lt;/p&gt;
 
-&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
+&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to &lt;a href=&quot;/react/docs/installation.html#development-and-production-versions&quot;&gt;compile it in production mode&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+&lt;p&gt;In case you don&amp;#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can &lt;a href=&quot;/react/docs/installation.html#using-a-cdn&quot;&gt;include as script tags&lt;/a&gt; on your page:&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react.js&quot;&gt;react.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react.min.js&quot;&gt;react.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react.js&quot;&gt;react/dist/react.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react.min.js&quot;&gt;react/dist/react.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react-with-addons.js&quot;&gt;react-with-addons.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react-with-addons.min.js&quot;&gt;react-with-addons.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react-with-addons.js&quot;&gt;react/dist/react-with-addons.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.4.0/dist/react-with-addons.min.js&quot;&gt;react/dist/react-with-addons.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom.js&quot;&gt;react-dom.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom.min.js&quot;&gt;react-dom.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom.js&quot;&gt;react-dom/dist/react-dom.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom.min.js&quot;&gt;react-dom/dist/react-dom.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.js&quot;&gt;react-dom-server.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.min.js&quot;&gt;react-dom-server.min.js&lt;/a&gt;&lt;/li&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.js&quot;&gt;react-dom/dist/react-dom-server.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.min.js&quot;&gt;react-dom/dist/react-dom-server.min.js&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;15.4.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;

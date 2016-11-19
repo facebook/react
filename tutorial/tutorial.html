@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -327,11 +327,17 @@
 <h2><a class="anchor" name="why-immutability-is-important"></a>Why Immutability Is Important <a class="hash-link" href="#why-immutability-is-important">#</a></h2>
 <p>In the previous code example, I suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changes and to prevent mutating the existing array. Let&#39;s talk about what this means and why it is an important concept to learn.</p>
 
-<p>There are generally two ways for changing data. The first, and most common method in past, has been to <em>mutate</em> the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.</p>
-<h4><a class="anchor" name="data-change-with-mutation"></a>Data change with mutation <a class="hash-link" href="#data-change-with-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span>  <span class="mi">1</span><span class="p">}</span>
-<span class="nx">player</span><span class="p">.</span><span class="nx">score</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1">// same object mutated {score: 2}</span>
-</code></pre></div><h4><a class="anchor" name="data-change-without-mutation"></a>Data change without mutation <a class="hash-link" href="#data-change-without-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">}</span>
-<span class="nx">player</span> <span class="o">=</span> <span class="p">{...</span><span class="nx">player</span><span class="p">,</span> <span class="nx">score</span><span class="o">:</span> <span class="mi">2</span><span class="p">}</span> <span class="c1">// new object not mutated {score: 2}</span>
+<p>There are generally two ways for changing data. The first method is to <em>mutate</em> the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.</p>
+<h4><a class="anchor" name="data-change-with-mutation"></a>Data change with mutation <a class="hash-link" href="#data-change-with-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>
+<span class="nx">player</span><span class="p">.</span><span class="nx">score</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="c1">// Now player is {score: 2, name: &#39;Jeff&#39;}</span>
+</code></pre></div><h4><a class="anchor" name="data-change-without-mutation"></a>Data change without mutation <a class="hash-link" href="#data-change-without-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">newPlayer</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="nx">player</span><span class="p">,</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">2</span><span class="p">});</span>
+<span class="c1">// Now player is unchanged, but newPlayer is {score: 2, name: &#39;Jeff&#39;}</span>
+
+<span class="c1">// Or if you are using object spread, you can write:</span>
+<span class="c1">// var newPlayer = {score: 2, ...player};</span>
 </code></pre></div>
 <p>The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.</p>
 <h4><a class="anchor" name="tracking-changes"></a>Tracking Changes <a class="hash-link" href="#tracking-changes">#</a></h4>
@@ -430,7 +436,7 @@
   <span class="p">...</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Then remove the constructor and change <code>Board</code> so that it takes <code>squares</code> via props and has its own <code>onClick</code> prop specified by <code>Game</code>, like the transformation we made for <code>Square</code> and <code>Board</code> earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:</p>
+<p>Then remove the constructor from <code>Board</code> and change <code>Board</code> so that it takes <code>squares</code> via props and has its own <code>onClick</code> prop specified by <code>Game</code>, like the transformation we made for <code>Square</code> earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
 <p><code>Game</code>&#39;s <code>render</code> should look at the most recent history entry and can take over calculating the game status:</p>

@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://facebook.github.io/react-native/">React Native</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
       </ul>
     </div>
   </div>
@@ -97,27 +97,33 @@
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="nx">Name</span><span class="o">:</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+          <span class="nx">Name</span><span class="o">:</span>
+<span class="hll">          <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="err">/label&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><a href="https://codepen.io/lacker/pen/XNWjOj?editors=0010">Try it on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/WooRWa?editors=0010">Try it on CodePen.</a></p>
 
 <p>Since an uncontrolled component keeps the source of truth in the DOM, it is sometimes easier to integrate React and non-React code when using uncontrolled components. It can also be slightly less code if you want to be quick and dirty. Otherwise, you should usually use controlled components.</p>
+
+<p>If it&#39;s still not clear which type of component you should use for a particular situation, you might find <a href="http://goshakkk.name/controlled-vs-uncontrolled-inputs-react/">this article on controlled versus uncontrolled inputs</a> to be helpful.</p>
 <h3><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h3>
 <p>In the React rendering lifecycle, the <code>value</code> attribute on form elements will override the value in the DOM. With an uncontrolled component, you often want React to specify the initial value, but leave subsequent updates uncontrolled. To handle this case, you can specify a <code>defaultValue</code> attribute instead of <code>value</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
     <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-      <span class="nx">Name</span><span class="o">:</span>
-      <span class="o">&lt;</span><span class="nx">input</span>
-<span class="hll">        <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span>
-</span>        <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
-        <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">label</span><span class="o">&gt;</span>
+        <span class="nx">Name</span><span class="o">:</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+<span class="hll">          <span class="nx">defaultValue</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span>
+</span>          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
+          <span class="nx">ref</span><span class="o">=</span><span class="p">{(</span><span class="nx">input</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">input</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/label&gt;</span>
       <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Submit&quot;</span> <span class="o">/&gt;</span>
     <span class="o">&lt;</span><span class="err">/form&gt;</span>
   <span class="p">);</span>
