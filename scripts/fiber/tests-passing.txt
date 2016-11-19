@@ -44,7 +44,10 @@ src/addons/__tests__/ReactFragment-test.js
 * should warn if passing a ReactElement to createFragment
 
 src/addons/__tests__/renderSubtreeIntoContainer-test.js
+* should pass context when rendering subtree elsewhere
 * should throw if parentComponent is invalid
+* should update context if it changes due to setState
+* should update context if it changes due to re-render
 
 src/addons/__tests__/update-test.js
 * pushes

@@ -23,7 +23,6 @@ var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 var warning = require('warning');
 
 ReactDOMInjection.inject();
@@ -37,7 +36,7 @@ var ReactDOM = {
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
-  unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
+  unstable_renderSubtreeIntoContainer: ReactMount.renderSubtreeIntoContainer,
   /* eslint-enable camelcase */
 };
 

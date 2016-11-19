@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -30,6 +31,7 @@ var {
   isContextProvider,
   hasContextChanged,
   pushContextProvider,
+  pushTopLevelContextObject,
   resetContext,
 } = require('ReactFiberContext');
 var {
@@ -411,11 +413,21 @@ module.exports = function<T, P, I, TI, C>(
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
         return updateClassComponent(current, workInProgress);
-      case HostContainer:
+      case HostContainer: {
+        const root = (workInProgress.stateNode : FiberRoot);
+        if (root.pendingContext) {
+          pushTopLevelContextObject(
+            root.pendingContext,
+            root.pendingContext !== root.context
+          );
+        } else {
+          pushTopLevelContextObject(root.context, false);
+        }
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return workInProgress.child;
+      }
       case HostComponent:
         if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
           config.beginUpdate(workInProgress.stateNode);
