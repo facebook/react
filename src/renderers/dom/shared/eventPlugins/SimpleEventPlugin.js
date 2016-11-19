@@ -266,7 +266,6 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEventTarget
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
-
     return event;
   },
 
