@@ -96,7 +96,7 @@ describe('SimpleEventPlugin', function() {
   it('does not trigger captured click events when target is a disabled element', function() {
     var element = ReactTestUtils.renderIntoDocument(
       <div onClickCapture={onClick}>
-        <button disabled={true}></button>
+        <button disabled={true} />
       </div>
     );
     var button = ReactDOM.findDOMNode(element).querySelector('button');

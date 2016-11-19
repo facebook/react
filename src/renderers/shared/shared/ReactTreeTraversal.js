@@ -111,10 +111,9 @@ function shouldIgnoreElement(inst) {
 }
 
 function traverseTwoPhase(inst, fn, arg) {
-  // Do not traverse an tree that originates with a disabled
-  // element
+  // Do not traverse an tree that originates with a disabled element
   if (shouldIgnoreElement(inst)) {
-    return
+    return false;
   }
 
   var path = [];
@@ -128,7 +127,7 @@ function traverseTwoPhase(inst, fn, arg) {
   // walking from parent to child
   for (i = path.length; i-- > 0;) {
     // Are we currently, our about to be, within a disabled tree
-    disabled = disabled || shouldIgnoreElement(path[i])
+    disabled = disabled || shouldIgnoreElement(path[i]);
     // If so, remove the current element from traversion if it
     // is interactive
     if (disabled && isInteractive(path[i])) {
