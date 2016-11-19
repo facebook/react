@@ -111,7 +111,6 @@ var DOMPropertyOperations = {
       }
       return name.toLowerCase() + '=' + quoteAttributeValueForBrowser(value);
     }
-    return null;
   },
 
   /**
