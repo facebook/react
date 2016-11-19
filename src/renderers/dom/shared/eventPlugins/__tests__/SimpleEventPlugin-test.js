@@ -58,6 +58,78 @@ describe('SimpleEventPlugin', function() {
     expect(onClick.mock.calls.length).toBe(1);
   });
 
+  it('clicking a child of a disabled element does not register a click', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <button onClick={onClick} disabled={true}><span /></button>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(0);
+  });
+
+  it('triggers click events for children of disabled elements', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <button disabled={true}><span onClick={onClick} /></button>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  it('triggers parent captured click events when target is a child of a disabled elements', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <div onClickCapture={onClick}>
+        <button disabled={true}><span /></button>
+      </div>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  it('does not trigger captured click events when target is a disabled element', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <div onClickCapture={onClick}>
+        <button disabled={true}></button>
+      </div>
+    );
+    var button = ReactDOM.findDOMNode(element).querySelector('button');
+
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(button);
+    expect(onClick.mock.calls.length).toBe(0);
+  });
+
+  it('triggers captured click events for children of disabled elements', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <button disabled={true}><span onClickCapture={onClick} /></button>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  it('buttons inside of disabled fieldsets do not click', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <fieldset disabled={true}>
+        <button onClick={onClick} />
+      </fieldset>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('button');
+
+    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(0);
+  });
+
   ['button', 'input', 'select', 'textarea'].forEach(function(tagName) {
 
     describe(tagName, function() {

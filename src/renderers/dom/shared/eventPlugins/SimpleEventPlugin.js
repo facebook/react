@@ -140,17 +140,15 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 
 function isInteractive(tag) {
   return (
-    tag === 'button' || tag === 'input' ||
-    tag === 'select' || tag === 'textarea'
+    tag === 'BUTTON' || tag === 'INPUT' ||
+    tag === 'SELECT' || tag === 'TEXTAREA'
   );
 }
 
-function shouldPreventMouseEvent(inst) {
-  if (inst) {
-    var disabled = inst._currentElement && inst._currentElement.props.disabled;
-
-    if (disabled) {
-      return isInteractive(inst._tag);
+function shouldPreventMouseEvent(node) {
+  if (node) {
+    if (node.disabled) {
+      return isInteractive(node.tagName)
     }
   }
 
@@ -233,7 +231,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topMouseMove':
       case 'topMouseUp':
         // Disabled elements should not respond to mouse events
-        if (shouldPreventMouseEvent(targetInst)) {
+        if (shouldPreventMouseEvent(nativeEventTarget)) {
           return null;
         }
         /* falls through */
@@ -290,6 +288,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEventTarget
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
+
     return event;
   },
 

@@ -90,13 +90,46 @@ function getParentInstance(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
+
+function isInteractive(inst) {
+  var tag = inst._tag;
+  return (
+    tag === 'button' || tag === 'input' ||
+    tag === 'select' || tag === 'textarea' ||
+    tag === 'fieldset'
+  );
+}
+
+function shouldIgnoreElement(inst) {
+  if (inst && inst._currentElement) {
+    if (inst._currentElement.props.disabled) {
+      return isInteractive(inst);
+    }
+  }
+
+  return false;
+}
+
 function traverseTwoPhase(inst, fn, arg) {
   var path = [];
   while (inst) {
     path.push(inst);
     inst = getParent(inst);
   }
+
   var i;
+  var disabledParent = false;
+  // walking from parent to child
+  for (i = path.length; i-- > 0;) {
+    // Check to see if we are within a disabled tree
+    disabledParent = disabledParent || shouldIgnoreElement(path[i])
+    // If we are within a disabled tree, and the current element
+    // is active, remove the item from the tree
+    if (disabledParent && isInteractive(path[i])) {
+      path.splice(i, 1);
+    }
+  }
+
   for (i = path.length; i-- > 0;) {
     fn(path[i], 'captured', arg);
   }
