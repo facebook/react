@@ -280,7 +280,7 @@ var ReactDOMInput = {
 
 function _handleBlur(event) {
   var props = this._currentElement.props;
-  var value = LinkedValueUtils.getValue(props);
+  var value = props.value
 
   if (value != null) {
     DOMPropertyOperations.setValueForProperty(
