@@ -138,23 +138,6 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   topLevelEventsToDispatchConfig[topEvent] = type;
 });
 
-function isInteractive(tag) {
-  return (
-    tag === 'BUTTON' || tag === 'INPUT' ||
-    tag === 'SELECT' || tag === 'TEXTAREA'
-  );
-}
-
-function shouldPreventMouseEvent(node) {
-  if (node) {
-    if (node.disabled) {
-      return isInteractive(node.tagName)
-    }
-  }
-
-  return false;
-}
-
 var SimpleEventPlugin: PluginModule<MouseEvent> = {
 
   eventTypes: eventTypes,
@@ -230,11 +213,6 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // Disabled elements should not respond to mouse events
-        if (shouldPreventMouseEvent(nativeEventTarget)) {
-          return null;
-        }
-        /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
       case 'topContextMenu':
