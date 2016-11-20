@@ -16,7 +16,6 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTreeTraversal = require('ReactTreeTraversal');
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
@@ -33,9 +32,9 @@ function findParent(inst) {
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
   do {
-    root = inst
-    inst = ReactTreeTraversal.getParentInstance(inst)
-  } while(inst)
+    root = inst;
+    inst = ReactTreeTraversal.getParentInstance(inst);
+  } while (inst);
 
   var rootNode = ReactDOMComponentTree.getNodeFromInstance(root);
   var container = rootNode.parentNode;

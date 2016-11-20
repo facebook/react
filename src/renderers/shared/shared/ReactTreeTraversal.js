@@ -105,7 +105,7 @@ function isInteractive(inst) {
 function shouldIgnoreElement(inst) {
   if (inst && isInteractive(inst)) {
     if (ReactDOMFeatureFlags.useFiber) {
-      return inst.stateNode.disabled
+      return inst.stateNode.disabled;
     } else if (inst._currentElement) {
       return inst._currentElement.props.disabled;
     }
