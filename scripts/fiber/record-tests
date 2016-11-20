@@ -8,8 +8,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const SearchSource = require('jest').SearchSource;
-const TestRunner = require('jest').TestRunner;
+const SearchSource = require('jest-cli').SearchSource;
+const TestRunner = require('jest-cli').TestRunner;
+const TestWatcher = require('jest-cli/build/TestWatcher');
 
 const createHasteContext = require('jest-runtime').createHasteContext;
 const readConfig = require('jest-config').readConfig;
@@ -95,7 +96,8 @@ function runJest() {
                 getTestSummary: () => 'You did it!'
               }
             );
-            return runner.runTests(data.paths);
+            const watcher = new TestWatcher({isWatchMode: false});
+            return runner.runTests(data.paths, watcher);
           });
       });
     });
