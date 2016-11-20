@@ -132,7 +132,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
-* should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
 * should queue updates from during mount
 * marks top-level updates
