@@ -29,11 +29,19 @@ function findParent(inst) {
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
-  while (inst._hostParent) {
-    inst = inst._hostParent;
+  var container;
+  if (typeof inst.tag === 'number') {
+    while (inst.return) {
+      inst = inst.return;
+    }
+    container = inst.stateNode.containerInfo;
+  } else {
+    while (inst._hostParent) {
+      inst = inst._hostParent;
+    }
+    var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
+    container = rootNode.parentNode;
   }
-  var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
-  var container = rootNode.parentNode;
   return ReactDOMComponentTree.getClosestInstanceFromNode(container);
 }
 

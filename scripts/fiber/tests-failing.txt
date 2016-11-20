@@ -64,14 +64,11 @@ src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should batch between handlers from different roots
-* should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should not fire change when setting checked programmatically
 
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
-* A non-interactive tags clicks bubble when disabled
-* triggers parent captured click events when target is a child of a disabled elements
 * should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
 * should work correctly if the listener is changed

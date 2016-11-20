@@ -631,6 +631,7 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should propagate events one level down
 * should propagate events two levels down
 * should not get confused by disappearing elements
+* should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 * should escape boolean to string
@@ -696,8 +697,10 @@ src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
 
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 * A non-interactive tags click when disabled
+* A non-interactive tags clicks bubble when disabled
 * does not register a click when clicking a child of a disabled element
 * triggers click events for children of disabled elements
+* triggers parent captured click events when target is a child of a disabled elements
 * triggers captured click events for children of disabled elements
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
