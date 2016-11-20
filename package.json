@@ -9,6 +9,7 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
+    "babel-jest": "17.0.2",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
@@ -61,10 +62,10 @@
     "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest": "^15.1.1",
-    "jest-config": "^15.1.1",
-    "jest-jasmine2": "^15.1.1",
-    "jest-runtime": "^15.1.1",
+    "jest-cli": "17.0.2",
+    "jest-config": "^17.0.2",
+    "jest-jasmine2": "^17.0.2",
+    "jest-runtime": "^17.0.2",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.0",
@@ -98,7 +99,9 @@
       "/react/build/"
     ],
     "rootDir": "",
-    "scriptPreprocessor": "scripts/jest/preprocessor.js",
+    "transform": {
+      ".*": "scripts/jest/preprocessor.js"
+    },
     "setupFiles": [
       "scripts/jest/environment.js"
     ],
