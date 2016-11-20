@@ -72,12 +72,30 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.fontFamily).toEqual('');
     });
 
-    // TODO: (poshannessy) deprecate this pattern.
-    it('should update styles when mutating style object', () => {
-      // not actually used. Just to suppress the style mutation warning
-      spyOn(console, 'error');
-
-      var styles = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
+    it('should not update styles when mutating a proxy style object', () => {
+      var styleStore = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
+      // We use a proxy style object so that we can mutate it even if it is
+      // frozen in DEV.
+      var styles = {
+        get display() {
+          return styleStore.display;
+        },
+        set display(v) {
+          styleStore.display = v;
+        },
+        get fontFamily() {
+          return styleStore.fontFamily;
+        },
+        set fontFamily(v) {
+          styleStore.fontFamily = v;
+        },
+        get lineHeight() {
+          return styleStore.lineHeight;
+        },
+        set lineHeight(v) {
+          styleStore.lineHeight = v;
+        },
+      };
       var container = document.createElement('div');
       ReactDOM.render(<div style={styles} />, container);
 
@@ -88,23 +106,23 @@ describe('ReactDOMComponent', () => {
       styles.display = 'block';
 
       ReactDOM.render(<div style={styles} />, container);
-      expect(stubStyle.display).toEqual('block');
+      expect(stubStyle.display).toEqual('none');
       expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
       styles.fontFamily = 'Helvetica';
 
       ReactDOM.render(<div style={styles} />, container);
-      expect(stubStyle.display).toEqual('block');
-      expect(stubStyle.fontFamily).toEqual('Helvetica');
+      expect(stubStyle.display).toEqual('none');
+      expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
       styles.lineHeight = 0.5;
 
       ReactDOM.render(<div style={styles} />, container);
-      expect(stubStyle.display).toEqual('block');
-      expect(stubStyle.fontFamily).toEqual('Helvetica');
-      expect(stubStyle.lineHeight).toEqual('0.5');
+      expect(stubStyle.display).toEqual('none');
+      expect(stubStyle.fontFamily).toEqual('Arial');
+      expect(stubStyle.lineHeight).toEqual('1.2');
 
       ReactDOM.render(<div style={undefined} />, container);
       expect(stubStyle.display).toBe('');
@@ -112,9 +130,7 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.lineHeight).toBe('');
     });
 
-    it('should warn when mutating style', () => {
-      spyOn(console, 'error');
-
+    it('should throw when mutating style objectsd', () => {
       var style = {border: '1px solid black'};
 
       class App extends React.Component {
@@ -125,31 +141,8 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var stub = ReactTestUtils.renderIntoDocument(<App />);
-      style.position = 'absolute';
-      stub.setState({style: style});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: `div` was passed a style object that has previously been ' +
-        'mutated. Mutating `style` is deprecated. Consider cloning it ' +
-        'beforehand. Check the `render` of `App`. Previous style: ' +
-        '{border: "1px solid black"}. Mutated style: ' +
-        '{border: "1px solid black", position: "absolute"}.'
-      );
-
-      style = {background: 'red'};
-      stub = ReactTestUtils.renderIntoDocument(<App />);
-      style.background = 'green';
-      stub.setState({style: {background: 'green'}});
-      // already warned once for the same component and owner
-      expectDev(console.error.calls.count()).toBe(1);
-
-      style = {background: 'red'};
-      var div = document.createElement('div');
-      ReactDOM.render(<span style={style} />, div);
-      style.background = 'blue';
-      ReactDOM.render(<span style={style} />, div);
-      expectDev(console.error.calls.count()).toBe(2);
+      ReactTestUtils.renderIntoDocument(<App />);
+      expectDev(() => style.position = 'absolute').toThrow();
     });
 
     it('should warn for unknown prop', () => {
