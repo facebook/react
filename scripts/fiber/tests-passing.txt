@@ -686,6 +686,7 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should fire change for checkbox input
 * should catch setting the value programmatically
 * should not fire change when setting the value programmatically
+* should not fire change when setting checked programmatically
 * should unmount
 * should only fire change for checked radio button once
 * should deduplicate input value change events
