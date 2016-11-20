@@ -16,7 +16,8 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
-
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactTreeTraversal = require('ReactTreeTraversal');
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
 
@@ -26,13 +27,17 @@ var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
  * other). If React trees are not nested, returns null.
  */
 function findParent(inst) {
+  var root;
+
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
-  while (inst._hostParent) {
-    inst = inst._hostParent;
-  }
-  var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
+  do {
+    root = inst
+    inst = ReactTreeTraversal.getParentInstance(inst)
+  } while(inst)
+
+  var rootNode = ReactDOMComponentTree.getNodeFromInstance(root);
   var container = rootNode.parentNode;
   return ReactDOMComponentTree.getClosestInstanceFromNode(container);
 }

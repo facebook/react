@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var { HostComponent } = require('ReactTypeOfWork');
 
 function getParent(inst) {
@@ -92,7 +93,8 @@ function getParentInstance(inst) {
  */
 
 function isInteractive(inst) {
-  var tag = inst._tag;
+  var tag = ReactDOMFeatureFlags.useFiber ? inst.type : inst._tag;
+
   return (
     tag === 'button' || tag === 'input' ||
     tag === 'select' || tag === 'textarea' ||
@@ -101,9 +103,11 @@ function isInteractive(inst) {
 }
 
 function shouldIgnoreElement(inst) {
-  if (inst && inst._currentElement) {
-    if (inst._currentElement.props.disabled) {
-      return isInteractive(inst);
+  if (inst && isInteractive(inst)) {
+    if (ReactDOMFeatureFlags.useFiber) {
+      return inst.stateNode.disabled
+    } else if (inst._currentElement) {
+      return inst._currentElement.props.disabled;
     }
   }
 
