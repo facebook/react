@@ -24,21 +24,6 @@ src/renderers/art/__tests__/ReactART-test.js
 * resolves refs before componentDidMount
 * resolves refs before componentDidUpdate
 
-src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
-* should store a listener correctly
-* should retrieve a listener correctly
-* should clear all handlers when asked to
-* should invoke a simple handler registered on a node
-* should not invoke handlers if ReactBrowserEventEmitter is disabled
-* should bubble simply
-* should continue bubbling if an error is thrown
-* should set currentTarget
-* should not stopPropagation if false is returned
-* should have mouse enter simulated by test utils
-* should infer onTouchTap from a touchStart/End
-* should infer onTouchTap from when dragging below threshold
-* should bubble onTouchTap
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should update styles when mutating style object
 * should warn when mutating style

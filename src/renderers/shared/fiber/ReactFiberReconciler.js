@@ -54,7 +54,7 @@ export type HostConfig<T, P, I, TI, C> = {
 
   createInstance(type : T, props : P, children : HostChildren<I | TI>, internalInstanceHandle : OpaqueNode) : I,
   prepareUpdate(instance : I, oldProps : P, newProps : P) : boolean,
-  commitUpdate(instance : I, oldProps : P, newProps : P) : void,
+  commitUpdate(instance : I, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
   createTextInstance(text : string, internalInstanceHandle : OpaqueNode) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,

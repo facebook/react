@@ -293,7 +293,6 @@ function updateNamedCousins(rootNode, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
-      // TODO: Ensure that otherInstance is the current Fiber instead of wip.
       invariant(
         otherInstance,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +

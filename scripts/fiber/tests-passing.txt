@@ -534,14 +534,27 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should support custom attributes
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
+* should store a listener correctly
+* should retrieve a listener correctly
+* should clear all handlers when asked to
+* should invoke a simple handler registered on a node
+* should not invoke handlers if ReactBrowserEventEmitter is disabled
+* should bubble simply
+* should continue bubbling if an error is thrown
+* should set currentTarget
 * should support stopPropagation()
 * should stop after first dispatch if stopPropagation
+* should not stopPropagation if false is returned
 * should invoke handlers that were removed while bubbling
 * should not invoke newly inserted handlers while bubbling
+* should have mouse enter simulated by test utils
+* should infer onTouchTap from a touchStart/End
+* should infer onTouchTap from when dragging below threshold
 * should not onTouchTap from when dragging beyond threshold
 * should listen to events only once
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
+* should bubble onTouchTap
 * should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
@@ -1160,12 +1173,6 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets ignored for composite roots that return null
-* gets recorded during an update
-* gets ignored if the styles are shallowly equal
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during an update
-* gets recorded during an update
 * gets ignored if new text is equal
 * gets ignored if new text is equal
 * gets ignored if the type has not changed
