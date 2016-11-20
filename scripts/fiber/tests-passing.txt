@@ -640,6 +640,7 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
 * does not crash with other react inside
 * does not crash with other react outside
+* does not when event fired on unmounted tree
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should dispatch events from outside React tree

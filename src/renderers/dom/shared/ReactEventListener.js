@@ -16,33 +16,38 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+
+var { HostContainer } = ReactTypeOfWork;
 
 /**
  * Find the deepest React component completely containing the root of the
  * passed-in instance (for use when entire React trees are nested within each
  * other). If React trees are not nested, returns null.
  */
-function findParent(inst) {
+function findRootContainerNode(inst) {
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
-  var container;
   if (typeof inst.tag === 'number') {
     while (inst.return) {
       inst = inst.return;
     }
-    container = inst.stateNode.containerInfo;
+    if (inst.tag !== HostContainer) {
+      // This can happen if we're in a detached tree.
+      return null;
+    }
+    return inst.stateNode.containerInfo;
   } else {
     while (inst._hostParent) {
       inst = inst._hostParent;
     }
     var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
-    container = rootNode.parentNode;
+    return rootNode.parentNode;
   }
-  return ReactDOMComponentTree.getClosestInstanceFromNode(container);
 }
 
 // Used to store ancestor hierarchy in top level callback
@@ -74,8 +79,18 @@ function handleTopLevelImpl(bookKeeping) {
   // inconsistencies with ReactMount's node cache. See #1105.
   var ancestor = targetInst;
   do {
+    if (!ancestor) {
+      bookKeeping.ancestors.push(ancestor);
+      break;
+    }
+    var root = findRootContainerNode(ancestor);
+    if (!root) {
+      break;
+    }
     bookKeeping.ancestors.push(ancestor);
-    ancestor = ancestor && findParent(ancestor);
+    ancestor = ReactDOMComponentTree.getClosestInstanceFromNode(
+      root
+    );
   } while (ancestor);
 
   for (var i = 0; i < bookKeeping.ancestors.length; i++) {

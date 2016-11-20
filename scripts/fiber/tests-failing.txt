@@ -42,9 +42,6 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
-src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
-* does not when event fired on unmounted tree
-
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should batch between handlers from different roots
 
