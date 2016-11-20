@@ -837,6 +837,8 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should set className to empty string instead of null
 * should remove property properly for boolean properties
 * should remove property properly even with different name
+* should update an empty attribute to zero
+* should always assign the value attribute for non-inputs
 * should remove attributes for normal properties
 * should not remove attributes for special properties
 * should not leave all options selected when deleting multiple
@@ -1409,6 +1411,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
+* should properly transition from an empty value to 0
 * should have the correct target value
 * should not set a value for submit buttons unnecessarily
 * should control radio buttons
