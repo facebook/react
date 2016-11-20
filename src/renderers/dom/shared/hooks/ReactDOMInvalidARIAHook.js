@@ -112,7 +112,7 @@ function validateProperty(tagName, name, debugID) {
         'Unknown ARIA attribute %s. Did you mean %s?%s',
         name,
         lowerCasedName,
-        getStackAddendum(debugID)
+        getStackAddendum(debugID),
       );
       return true;
     }

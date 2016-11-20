@@ -14,7 +14,6 @@
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMNamespaces = require('DOMNamespaces');
-var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -271,10 +270,7 @@ function setInitialDOMProperties(
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
@@ -315,10 +311,7 @@ function updateDOMProperties(
       } else {
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
@@ -403,7 +396,7 @@ var ReactDOMFiberComponent = {
         // $FlowIssue `createElement` should be updated for Web Components
         domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
-        // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+        // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
         // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
         domElement = ownerDocument.createElement(type);
@@ -460,7 +453,6 @@ var ReactDOMFiberComponent = {
       case 'object':
       case 'source':
       case 'video':
-      case 'details':
         trapBubbledEventsLocal(domElement, tag);
         props = rawProps;
         break;

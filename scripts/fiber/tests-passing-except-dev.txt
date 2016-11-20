@@ -1,5 +1,246 @@
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* should not warn for "0" as a unitless style value
+* should warn nicely about NaN in style
+* should work error event on <source> element
+* should warn about contentEditable and children
+* should respect suppressContentEditableWarning
+* should warn about contentEditable and children
+* should warn about incorrect casing on properties (ssr)
+* should warn about incorrect casing on event handlers (ssr)
+* should warn about incorrect casing on properties
+* should warn about incorrect casing on event handlers
+* gives source code refs for unknown prop warning
 * gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition (ssr)
+* should suggest property name if available
 * should suggest property name if available (ssr)
+
+src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
+* should allow valid aria-* props
+* should warn for one invalid aria-* prop
+* should warn for many invalid aria-* props
+* should warn for an improperly cased aria-* prop
+
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders a div with inline styles with server string render
+* renders a div with inline styles with server stream render
+* renders a div with inline styles with clean client render
+* renders a div with inline styles with client render on top of good server markup
+* renders a div with inline styles with client render on top of bad server markup
+* renders a self-closing tag as a child with client render on top of good server markup
+* renders simple numbers with server string render
+* renders simple numbers with server stream render
+* renders simple numbers with clean client render
+* renders simple strings with server string render
+* renders simple strings with server stream render
+* renders simple strings with clean client render
+* renders string prop with true value with server string render
+* renders string prop with true value with server stream render
+* renders string prop with true value with clean client render
+* renders string prop with true value with client render on top of bad server markup
+* renders string prop with false value with server string render
+* renders string prop with false value with server stream render
+* renders string prop with false value with clean client render
+* renders string prop with false value with client render on top of bad server markup
+* renders unknown data- attributes with server string render
+* renders unknown data- attributes with server stream render
+* renders unknown data- attributes with clean client render
+* renders a div with text with client render on top of good server markup
+* renders a div with text with flanking whitespace with client render on top of good server markup
+* renders a div with an empty text child with client render on top of good server markup
+* renders a div with multiple empty text children with client render on top of good server markup
+* renders a div with multiple whitespace children with client render on top of good server markup
+* renders a div with text sibling to a node with client render on top of good server markup
+* renders a non-standard element with text with client render on top of good server markup
+* renders a leading blank child with a text sibling with client render on top of good server markup
+* renders a trailing blank child with a text sibling with client render on top of good server markup
+* renders an element with two text children with client render on top of good server markup
+* renders a number as single child with client render on top of good server markup
+* renders zero as single child with client render on top of good server markup
+* renders an element with number and text children with client render on top of good server markup
+* renders false single child as blank with client render on top of good server markup
+* renders a null component children as empty with client render on top of good server markup
+* renders null children as blank with client render on top of good server markup
+* renders false children as blank with client render on top of good server markup
+* renders null and false children together as blank with client render on top of good server markup
+* renders only null and false children as blank with client render on top of good server markup
+* renders a div with dangerouslySetInnerHTML with client render on top of good server markup
+* renders a newline-eating tag with content not starting with \n with client render on top of good server markup
+* renders a newline-eating tag with content starting with \n with client render on top of good server markup
+* renders a normal tag with content starting with \n with client render on top of good server markup
+* renders stateless components with client render on top of good server markup
+* renders ES6 class components with client render on top of good server markup
+* renders factory components with client render on top of good server markup
+* renders single child hierarchies of components with client render on top of good server markup
+* renders multi-child hierarchies of components with client render on top of good server markup
+* renders a div with a child with server string render
+* renders a div with a child with server stream render
+* renders a div with a child with clean client render
+* renders a div with multiple children with server string render
+* renders a div with multiple children with server stream render
+* renders a div with multiple children with clean client render
+* renders a div with multiple children separated by whitespace with server string render
+* renders a div with multiple children separated by whitespace with server stream render
+* renders a div with multiple children separated by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with server string render
+* renders a div with a single child surrounded by whitespace with server stream render
+* renders a div with a single child surrounded by whitespace with clean client render
+* renders >,<, and & as single child with client render on top of good server markup
+* renders >,<, and & as multiple children with client render on top of good server markup
+* renders an input with a value and an onChange with server string render
+* renders an input with a value and an onChange with server stream render
+* renders an input with a value and an onChange with clean client render
+* renders an input with a value and an onChange with client render on top of good server markup
+* renders an input with a value and an onChange with client render on top of bad server markup
+* renders an input with a value and readOnly with server string render
+* renders an input with a value and readOnly with server stream render
+* renders an input with a value and readOnly with clean client render
+* renders an input with a value and readOnly with client render on top of bad server markup
+* renders an input with a value and no onChange/readOnly with server string render
+* renders an input with a value and no onChange/readOnly with server stream render
+* renders an input with a value and no onChange/readOnly with clean client render
+* renders an input with a value and no onChange/readOnly with client render on top of good server markup
+* renders an input with a value and no onChange/readOnly with client render on top of bad server markup
+* renders an input with a defaultValue with server string render
+* renders an input with a defaultValue with server stream render
+* renders an input value overriding defaultValue with server string render
+* renders an input value overriding defaultValue with server stream render
+* renders an input value overriding defaultValue with clean client render
+* renders an input value overriding defaultValue with client render on top of bad server markup
+* renders an input value overriding defaultValue no matter the prop order with server string render
+* renders an input value overriding defaultValue no matter the prop order with server stream render
+* renders an input value overriding defaultValue no matter the prop order with clean client render
+* renders an input value overriding defaultValue no matter the prop order with client render on top of bad server markup
+* renders a checkbox that is checked with an onChange with server string render
+* renders a checkbox that is checked with an onChange with server stream render
+* renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with an onChange with client render on top of bad server markup
+* renders a checkbox that is checked with readOnly with server string render
+* renders a checkbox that is checked with readOnly with server stream render
+* renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that is checked with readOnly with client render on top of bad server markup
+* renders a checkbox that is checked and no onChange/readOnly with server string render
+* renders a checkbox that is checked and no onChange/readOnly with server stream render
+* renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox that is checked and no onChange/readOnly with client render on top of bad server markup
+* renders a checkbox with defaultChecked with server string render
+* renders a checkbox with defaultChecked with server stream render
+* renders a checkbox with defaultChecked with clean client render
+* renders a checkbox with defaultChecked with client render on top of bad server markup
+* renders a checkbox checked overriding defaultChecked with server string render
+* renders a checkbox checked overriding defaultChecked with server stream render
+* renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with client render on top of bad server markup
+* renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with server stream render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of bad server markup
+* renders a textarea with a value and an onChange with server string render
+* renders a textarea with a value and an onChange with server stream render
+* renders a textarea with a value and an onChange with clean client render
+* renders a textarea with a value and an onChange with client render on top of good server markup
+* renders a textarea with a value and an onChange with client render on top of bad server markup
+* renders a textarea with a value and readOnly with server string render
+* renders a textarea with a value and readOnly with server stream render
+* renders a textarea with a value and readOnly with clean client render
+* renders a textarea with a value and readOnly with client render on top of bad server markup
+* renders a textarea with a value and no onChange/readOnly with server string render
+* renders a textarea with a value and no onChange/readOnly with server stream render
+* renders a textarea with a value and no onChange/readOnly with clean client render
+* renders a textarea with a value and no onChange/readOnly with client render on top of good server markup
+* renders a textarea with a value and no onChange/readOnly with client render on top of bad server markup
+* renders a textarea value overriding defaultValue with clean client render
+* renders a textarea value overriding defaultValue with client render on top of bad server markup
+* renders a textarea value overriding defaultValue no matter the prop order with clean client render
+* renders a textarea value overriding defaultValue no matter the prop order with client render on top of bad server markup
+* renders a select with a value and an onChange with server string render
+* renders a select with a value and an onChange with server stream render
+* renders a select with a value and an onChange with clean client render
+* renders a select with a value and an onChange with client render on top of bad server markup
+* renders a select with a value and readOnly with server string render
+* renders a select with a value and readOnly with server stream render
+* renders a select with a value and readOnly with clean client render
+* renders a select with a value and readOnly with client render on top of bad server markup
+* renders a select with a multiple values and an onChange with server string render
+* renders a select with a multiple values and an onChange with server stream render
+* renders a select with a multiple values and an onChange with clean client render
+* renders a select with a multiple values and an onChange with client render on top of bad server markup
+* renders a select with a multiple values and readOnly with server string render
+* renders a select with a multiple values and readOnly with server stream render
+* renders a select with a multiple values and readOnly with clean client render
+* renders a select with a multiple values and readOnly with client render on top of bad server markup
+* renders a select with a value and no onChange/readOnly with server string render
+* renders a select with a value and no onChange/readOnly with server stream render
+* renders a select with a value and no onChange/readOnly with clean client render
+* renders a select with a value and no onChange/readOnly with client render on top of bad server markup
+* renders a select with a defaultValue with client render on top of bad server markup
+* renders a select value overriding defaultValue with client render on top of bad server markup
+* renders a select value overriding defaultValue no matter the prop order with client render on top of bad server markup
+* renders a controlled text input with clean client render
+* renders a controlled text input with client render on top of good server markup
+* renders a controlled text input with client render on top of bad server markup
+* renders a controlled textarea with clean client render
+* renders a controlled textarea with client render on top of good server markup
+* renders a controlled textarea with client render on top of bad server markup
+* renders a controlled checkbox with clean client render
+* renders a controlled checkbox with client render on top of bad server markup
+* renders a controlled select with clean client render
+* renders a controlled select with client render on top of good server markup
+* renders a controlled select with client render on top of bad server markup
+* should not blow away user-entered text on successful reconnect to a controlled input
+* should not blow away user-selected value on successful reconnect to an controlled select
+* renders class child with context with client render on top of good server markup
+* renders stateless child with context with client render on top of good server markup
+* renders class child with wrong context with server string render
+* renders class child with wrong context with server stream render
+* renders class child with wrong context with clean client render
+* renders stateless child with wrong context with server string render
+* renders stateless child with wrong context with server stream render
+* renders stateless child with wrong context with clean client render
+* renders with context passed through to a grandchild with client render on top of good server markup
+* renders a child context overriding a parent context with client render on top of good server markup
+* renders a child context merged with a parent context with server string render
+* renders a child context merged with a parent context with server stream render
+* renders a child context merged with a parent context with clean client render
+* renders a child context merged with a parent context with client render on top of bad server markup
+* renders with a call to componentWillMount before getChildContext with client render on top of good server markup
+* should error reconnecting missing attributes
+* should error reconnecting missing style attribute
+* should error reconnecting added style attribute
+* should error reconnecting empty style attribute
+* should error reconnecting added style values
+* should error reconnecting different style values
+* should reconnect number and string versions of a number
+* should error reconnecting reordered style values
+* should reconnect a div with a number and string version of number
+* can distinguish an empty component from an empty text component
+
+src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
+* should give helpful errors on state desync
+
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should properly control a value even if no event listener exists
+* should warn with value and no onChange handler and readOnly specified
+* should warn with checked and no onChange handler with readOnly specified
+* should warn if value is null
+* should warn if checked and defaultChecked props are specified
+* should warn if value and defaultValue props are specified
+* should warn if controlled input switches to uncontrolled (value is undefined)
+* should warn if controlled input switches to uncontrolled (value is null)
+* should warn if controlled input switches to uncontrolled with defaultValue
+* should warn if uncontrolled input (value is undefined) switches to controlled
+* should warn if uncontrolled input (value is null) switches to controlled
+* should warn if controlled checkbox switches to uncontrolled (checked is undefined)
+* should warn if controlled checkbox switches to uncontrolled (checked is null)
+* should warn if controlled checkbox switches to uncontrolled with defaultChecked
+* should warn if uncontrolled checkbox (checked is undefined) switches to controlled
+* should warn if uncontrolled checkbox (checked is null) switches to controlled
+* should warn if controlled radio switches to uncontrolled (checked is undefined)
+* should warn if controlled radio switches to uncontrolled (checked is null)
+* should warn if controlled radio switches to uncontrolled with defaultChecked
+* should warn if uncontrolled radio (checked is undefined) switches to controlled
+* should warn if uncontrolled radio (checked is null) switches to controlled
+* should not warn if radio value changes but never becomes controlled
+* should not warn if radio value changes but never becomes uncontrolled
+* should warn if radio checked false changes to become uncontrolled
