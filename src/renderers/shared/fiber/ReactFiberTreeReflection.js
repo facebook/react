@@ -85,6 +85,12 @@ exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
 
   let didTryOtherTree = false;
 
+  // If the component doesn't have a child we first check the alternate to see
+  // if it has any and if so, if those were just recently inserted.
+  if (!parent.child && parent.alternate) {
+    parent = parent.alternate;
+  }
+
   // Next we'll drill down this component to find the first HostComponent/Text.
   let node : Fiber = parent;
   while (true) {

@@ -121,9 +121,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedSta
 
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
-* should be able to switch between rendering null and a normal tag
-* should be able to switch in a list of children
-* should distinguish between a script placeholder and an actual script tag
 * throws when rendering null at the top level
 * preserves the dom node during updates
 

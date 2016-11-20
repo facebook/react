@@ -1298,6 +1298,9 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentState-tes
 
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should not produce child DOM nodes for null and false
+* should be able to switch between rendering null and a normal tag
+* should be able to switch in a list of children
+* should distinguish between a script placeholder and an actual script tag
 * should have findDOMNode return null when multiple layers of composite components render to the same null placeholder
 * works when switching components
 * does not break when updating during mount
