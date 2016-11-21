@@ -16,9 +16,9 @@ var MorphingComponent;
 var React;
 var ReactDOM;
 var ReactDOMFeatureFlags;
+var ReactDOMServer;
 var ReactCurrentOwner;
 var ReactPropTypes;
-var ReactServerRendering;
 var ReactTestUtils;
 
 describe('ReactCompositeComponent', () => {
@@ -28,10 +28,10 @@ describe('ReactCompositeComponent', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+    ReactDOMServer = require('ReactDOMServer');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
-    ReactServerRendering = require('ReactServerRendering');
 
     MorphingComponent = class extends React.Component {
       state = {activated: false};
@@ -108,7 +108,7 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    var markup = ReactServerRendering.renderToString(<Parent />);
+    var markup = ReactDOMServer.renderToString(<Parent />);
     var container = document.createElement('div');
     container.innerHTML = markup;
 
