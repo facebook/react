@@ -145,4 +145,5 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/test/__tests__/ReactTestUtils-test.js
+* traverses children in the correct order
 * should support injected wrapper components as DOM components
