@@ -78,7 +78,7 @@ export type Reconciler<C, I, TI> = {
   getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
 
   // Use for findDOMNode/findHostNode. Legacy API.
-  findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null,
+  findHostInstance(component : Fiber) : I | TI | null,
 };
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
@@ -165,12 +165,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       return containerFiber.child.stateNode;
     },
 
-    findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null {
-      const fiber = findCurrentHostFiber(component);
-      if (!fiber) {
+    findHostInstance(fiber : Fiber) : I | TI | null {
+      const hostFiber = findCurrentHostFiber(fiber);
+      if (!hostFiber) {
         return null;
       }
-      return fiber.stateNode;
+      return hostFiber.stateNode;
     },
 
   };

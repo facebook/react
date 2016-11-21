@@ -908,6 +908,8 @@ src/renderers/dom/stack/client/__tests__/ReactMountDestruction-test.js
 src/renderers/dom/stack/client/__tests__/findDOMNode-test.js
 * findDOMNode should return null if passed null
 * findDOMNode should find dom element
+* findDOMNode should reject random objects
+* findDOMNode should reject unmounted objects with render func
 * findDOMNode should not throw an error when called within a component that is not mounted
 
 src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js

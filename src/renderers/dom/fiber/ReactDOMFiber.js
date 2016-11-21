@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
 import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactControlledComponent = require('ReactControlledComponent');
@@ -21,11 +22,7 @@ var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMInjection = require('ReactDOMInjection');
 
-ReactDOMInjection.inject();
-ReactControlledComponent.injection.injectFiberControlledHostComponent(
-  ReactDOMFiberComponent
-);
-
+var findDOMNode = require('findDOMNode');
 var warning = require('warning');
 
 var {
@@ -34,6 +31,14 @@ var {
   updateProperties,
 } = ReactDOMFiberComponent;
 var { precacheFiberNode } = ReactDOMComponentTree;
+
+ReactDOMInjection.inject();
+ReactControlledComponent.injection.injectFiberControlledHostComponent(
+  ReactDOMFiberComponent
+);
+findDOMNode._injectFiber(function(fiber: Fiber) {
+  return DOMRenderer.findHostInstance(fiber);
+});
 
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
@@ -167,17 +172,7 @@ var ReactDOM = {
     }
   },
 
-  findDOMNode(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
-    if (componentOrElement == null) {
-      return null;
-    }
-    // Unsound duck typing.
-    const component = (componentOrElement : any);
-    if (component.nodeType === 1) {
-      return component;
-    }
-    return DOMRenderer.findHostInstance(component);
-  },
+  findDOMNode: findDOMNode,
 
   unstable_batchedUpdates<A>(fn : () => A) : A {
     return DOMRenderer.batchedUpdates(fn);

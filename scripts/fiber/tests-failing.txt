@@ -108,10 +108,6 @@ src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
 
-src/renderers/dom/stack/client/__tests__/findDOMNode-test.js
-* findDOMNode should reject random objects
-* findDOMNode should reject unmounted objects with render func
-
 src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
 * should generate simple markup
 * should generate simple markup for self-closing tags
