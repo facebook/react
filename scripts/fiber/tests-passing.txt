@@ -36,6 +36,7 @@ scripts/error-codes/__tests__/invertObject-test.js
 
 src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
 * provides a default shouldComponentUpdate implementation
+* does not do a deep comparison
 
 src/addons/__tests__/ReactFragment-test.js
 * warns for numeric keys on objects as children
