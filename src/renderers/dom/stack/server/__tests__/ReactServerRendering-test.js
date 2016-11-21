@@ -14,6 +14,7 @@
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactDOMServer;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
@@ -27,6 +28,7 @@ describe('ReactDOMServer', () => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -241,7 +243,17 @@ describe('ReactDOMServer', () => {
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
-      expect(element.innerHTML).toBe(lastMarkup);
+
+      var expectedMarkup = lastMarkup;
+      if (ReactDOMFeatureFlags.useFiber) {
+        var reactMetaData = /\s+data-react[a-z-]+=\"[^\"]*\"/g;
+        var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
+        expectedMarkup =
+          expectedMarkup
+          .replace(reactMetaData, '')
+          .replace(reactComments, '');
+      }
+      expect(element.innerHTML).toBe(expectedMarkup);
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);

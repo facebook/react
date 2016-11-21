@@ -919,8 +919,23 @@ src/renderers/dom/stack/client/__tests__/findDOMNode-test.js
 * findDOMNode should not throw an error when called within a component that is not mounted
 
 src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
+* should generate simple markup
+* should generate simple markup for self-closing tags
+* should generate simple markup for attribute with `>` symbol
+* should generate comment markup for component returns null
+* should render composite components
+* should only execute certain lifecycle methods
 * should throw with silly args
+* should not put checksum and React ID on components
+* should not put checksum and React ID on text components
+* should only execute certain lifecycle methods
 * should throw with silly args
+* allows setState in componentWillMount without using DOM
+* renders components with different batching strategies
+* warns with a no-op when an async setState is triggered
+* warns with a no-op when an async replaceState is triggered
+* warns with a no-op when an async forceUpdate is triggered
+* should warn when children are mutated during render
 
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example
@@ -1231,6 +1246,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
 * should support rendering to different child types over time
+* should not thrash a server rendered layout with client side one
 * should react to state changes from callbacks
 * should rewire refs when rendering to different child types
 * should not cache old DOM nodes when switching constructors

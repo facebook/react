@@ -65,6 +65,9 @@ src/renderers/dom/stack/client/__tests__/ReactMountDestruction-test.js
 * should warn when unmounting a non-container root node
 * should warn when unmounting a non-container, non-root node
 
+src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
+* should have the correct mounting behavior
+
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
 * uses displayName, name, or ReactComponent for modern components

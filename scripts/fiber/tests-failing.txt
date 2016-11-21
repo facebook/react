@@ -108,24 +108,6 @@ src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
 
-src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
-* should generate simple markup
-* should generate simple markup for self-closing tags
-* should generate simple markup for attribute with `>` symbol
-* should generate comment markup for component returns null
-* should render composite components
-* should only execute certain lifecycle methods
-* should have the correct mounting behavior
-* should not put checksum and React ID on components
-* should not put checksum and React ID on text components
-* should only execute certain lifecycle methods
-* allows setState in componentWillMount without using DOM
-* renders components with different batching strategies
-* warns with a no-op when an async setState is triggered
-* warns with a no-op when an async replaceState is triggered
-* warns with a no-op when an async forceUpdate is triggered
-* should warn when children are mutated during render
-
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste
 * should count no-op update in child as waste
@@ -150,7 +132,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
-* should not thrash a server rendered layout with client side one
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should warn about `setState` in render
