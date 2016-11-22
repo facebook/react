@@ -1351,31 +1351,30 @@ typeof Set === 'function' && isNative(Set) &&
 // Set.prototype.keys
 Set.prototype != null && typeof Set.prototype.keys === 'function' && isNative(Set.prototype.keys);
 
-var setItem, getItem, removeItem, getItemIDs, addRoot, removeRoot, getRootIDs;
 if (canUseCollections) {
   var itemMap = new Map();
   var rootIDSet = new Set();
 
-  setItem = function (id, item) {
+  var setItem = function (id, item) {
     itemMap.set(id, item);
   };
-  getItem = function (id) {
+  var getItem = function (id) {
     return itemMap.get(id);
   };
-  removeItem = function (id) {
+  var removeItem = function (id) {
     itemMap['delete'](id);
   };
-  getItemIDs = function () {
+  var getItemIDs = function () {
     return Array.from(itemMap.keys());
   };
 
-  addRoot = function (id) {
+  var addRoot = function (id) {
     rootIDSet.add(id);
   };
-  removeRoot = function (id) {
+  var removeRoot = function (id) {
     rootIDSet['delete'](id);
   };
-  getRootIDs = function () {
+  var getRootIDs = function () {
     return Array.from(rootIDSet.keys());
   };
 } else {
@@ -1391,31 +1390,31 @@ if (canUseCollections) {
     return parseInt(key.substr(1), 10);
   };
 
-  setItem = function (id, item) {
+  var setItem = function (id, item) {
     var key = getKeyFromID(id);
     itemByKey[key] = item;
   };
-  getItem = function (id) {
+  var getItem = function (id) {
     var key = getKeyFromID(id);
     return itemByKey[key];
   };
-  removeItem = function (id) {
+  var removeItem = function (id) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  getItemIDs = function () {
+  var getItemIDs = function () {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
-  addRoot = function (id) {
+  var addRoot = function (id) {
     var key = getKeyFromID(id);
     rootByKey[key] = true;
   };
-  removeRoot = function (id) {
+  var removeRoot = function (id) {
     var key = getKeyFromID(id);
     delete rootByKey[key];
   };
-  getRootIDs = function () {
+  var getRootIDs = function () {
     return Object.keys(rootByKey).map(getIDFromKey);
   };
 }
