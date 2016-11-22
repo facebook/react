@@ -696,18 +696,17 @@ src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
 
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 * A non-interactive tags click when disabled
+* does not register a click when clicking a child of a disabled element
+* triggers click events for children of disabled elements
+* triggers captured click events for children of disabled elements
 * should forward clicks when it starts out not disabled
-* should forward clicks when it becomes not disabled
-* should work correctly if the listener is changed
+* should not forward clicks when it starts out disabled
 * should forward clicks when it starts out not disabled
-* should forward clicks when it becomes not disabled
-* should work correctly if the listener is changed
+* should not forward clicks when it starts out disabled
 * should forward clicks when it starts out not disabled
-* should forward clicks when it becomes not disabled
-* should work correctly if the listener is changed
+* should not forward clicks when it starts out disabled
 * should forward clicks when it starts out not disabled
-* should forward clicks when it becomes not disabled
-* should work correctly if the listener is changed
+* should not forward clicks when it starts out disabled
 * does not add a local click to interactive elements
 * adds a local click listener to non-interactive elements
 

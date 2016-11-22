@@ -71,14 +71,19 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 * A non-interactive tags clicks bubble when disabled
-* should not forward clicks when it starts out disabled
+* triggers parent captured click events when target is a child of a disabled elements
+* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should not forward clicks when it starts out disabled
+* should work correctly if the listener is changed
+* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should not forward clicks when it starts out disabled
+* should work correctly if the listener is changed
+* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
-* should not forward clicks when it starts out disabled
+* should work correctly if the listener is changed
+* should forward clicks when it becomes not disabled
 * should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
