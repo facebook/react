@@ -15,6 +15,9 @@ var UIManager = require('UIManager');
 var ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
     if (to !== null) {
+      if (typeof to.tag === 'number') {
+        to = to.stateNode;
+      }
       UIManager.setJSResponder(
         to._rootNodeID,
         blockNativeResponder
