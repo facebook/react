@@ -61,6 +61,7 @@ function isFiberMounted(fiber : Fiber) : number {
   // that has been unmounted.
   return UNMOUNTED;
 }
+exports.isFiberMounted = isFiberMounted;
 
 exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
   var fiber : ?Fiber = ReactInstanceMap.get(component);

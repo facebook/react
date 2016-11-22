@@ -17,6 +17,10 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
+var {
+  findCurrentUnmaskedContext,
+  processChildContext,
+} = require('ReactFiberContext');
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
@@ -27,6 +31,8 @@ if (__DEV__) {
 }
 
 var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
+
+var getContextForSubtree = require('getContextForSubtree');
 
 export type Deadline = {
   timeRemaining : () => number
@@ -64,8 +70,8 @@ export type HostConfig<T, P, I, TI, C> = {
 };
 
 export type Reconciler<C, I, TI> = {
-  mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
-  updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
+  mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>) : OpaqueNode,
+  updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>) : void,
   unmountContainer(container : OpaqueNode) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
   /* eslint-disable no-undef */
@@ -81,6 +87,10 @@ export type Reconciler<C, I, TI> = {
   findHostInstance(component : Fiber) : I | TI | null,
 };
 
+getContextForSubtree._injectFiber(function(fiber : Fiber) {
+  return processChildContext(fiber, findCurrentUnmaskedContext(fiber));
+});
+
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
 
   var {
@@ -92,8 +102,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : C, callback: ?Function) : OpaqueNode {
-      const root = createFiberRoot(containerInfo);
+    mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
+      const context = getContextForSubtree(parentComponent);
+      const root = createFiberRoot(containerInfo, context);
       const container = root.current;
       if (callback) {
         const queue = createUpdateQueue(null);
@@ -117,7 +128,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       return container;
     },
 
-    updateContainer(element : ReactElement<any>, container : OpaqueNode, callback: ?Function) : void {
+    updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       if (callback) {
@@ -127,6 +138,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
         addCallbackToQueue(queue, callback);
         root.callbackList = queue;
       }
+      root.pendingContext = getContextForSubtree(parentComponent);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = element;
 

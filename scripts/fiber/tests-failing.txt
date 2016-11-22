@@ -6,11 +6,6 @@ src/addons/__tests__/ReactFragment-test.js
 * should throw if a plain object even if it is in an owner
 * should throw if a plain object looks like an old element
 
-src/addons/__tests__/renderSubtreeIntoContainer-test.js
-* should pass context when rendering subtree elsewhere
-* should update context if it changes due to setState
-* should update context if it changes due to re-render
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
