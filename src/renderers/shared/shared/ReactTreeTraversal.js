@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var { HostComponent } = require('ReactTypeOfWork');
 
 function getParent(inst) {
@@ -90,13 +91,54 @@ function getParentInstance(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
+
+function isInteractive(inst) {
+  var tag = ReactDOMFeatureFlags.useFiber ? inst.type : inst._tag;
+
+  return (
+    tag === 'button' || tag === 'input' ||
+    tag === 'select' || tag === 'textarea' ||
+    tag === 'fieldset'
+  );
+}
+
+function shouldIgnoreElement(inst) {
+  if (inst && isInteractive(inst)) {
+    if (ReactDOMFeatureFlags.useFiber) {
+      return inst.stateNode.disabled;
+    } else if (inst._currentElement) {
+      return inst._currentElement.props.disabled;
+    }
+  }
+
+  return false;
+}
+
 function traverseTwoPhase(inst, fn, arg) {
+  // Do not traverse an tree that originates with a disabled element
+  if (shouldIgnoreElement(inst)) {
+    return false;
+  }
+
   var path = [];
   while (inst) {
     path.push(inst);
     inst = getParent(inst);
   }
+
   var i;
+  var disabled = false;
+  // walking from parent to child
+  for (i = path.length; i-- > 0;) {
+    // Are we currently, our about to be, within a disabled tree
+    disabled = disabled || shouldIgnoreElement(path[i]);
+    // If so, remove the current element from traversion if it
+    // is interactive
+    if (disabled && isInteractive(path[i])) {
+      path.splice(i, 1);
+    }
+  }
+
   for (i = path.length; i-- > 0;) {
     fn(path[i], 'captured', arg);
   }
