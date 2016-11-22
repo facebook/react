@@ -24,7 +24,6 @@ var ReactDOMInjection = require('ReactDOMInjection');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
-var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -35,9 +34,6 @@ ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent
 );
 
-var {
-  Portal,
-} = ReactTypeOfWork;
 var {
   createElement,
   setInitialProperties,
@@ -72,11 +68,7 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
     /* As a result of the refinement issue this type isn't known. */
     let node : any = child;
     do {
-      // TODO: this is an implementation detail leaking into the renderer.
-      // Once we move output traversal to complete phase, we won't need this.
-      if (node.tag !== Portal) {
-        recursivelyAppendChildren(parent, node.output);
-      }
+      recursivelyAppendChildren(parent, node.output);
     } while (node = node.sibling);
   }
 }

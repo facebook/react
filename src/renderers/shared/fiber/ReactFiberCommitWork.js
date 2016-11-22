@@ -298,7 +298,7 @@ module.exports = function<T, P, I, TI, C>(
         return;
       }
       case Portal: {
-        const children = finishedWork.output;
+        const children = finishedWork.child;
         const containerInfo : C = finishedWork.stateNode.containerInfo;
         updateContainer(containerInfo, children);
         return;

@@ -64,11 +64,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // If we have a single result, we just pass that through as the output to
     // avoid unnecessary traversal. When we have multiple output, we just pass
     // the linked list of fibers that has the individual output values.
-    if (!child || child.tag === Portal) {
-      returnFiber.output = null;
-    } else {
-      returnFiber.output = child.sibling ? child : child.output;
-    }
+    returnFiber.output = (child && !child.sibling) ? child.output : child;
     returnFiber.memoizedProps = returnFiber.pendingProps;
   }
 
@@ -257,8 +253,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         transferOutput(workInProgress.child, workInProgress);
         return null;
       case Portal:
-        transferOutput(workInProgress.child, workInProgress);
         markUpdate(workInProgress);
+        workInProgress.output = null;
+        workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
 
       // Error cases
