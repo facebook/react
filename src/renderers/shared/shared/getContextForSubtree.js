@@ -10,8 +10,6 @@
  * @flow
  */
 
-import type { Fiber } from 'ReactFiber';
-
 const ReactInstanceMap = require('ReactInstanceMap');
 
 const emptyObject = require('emptyObject');
