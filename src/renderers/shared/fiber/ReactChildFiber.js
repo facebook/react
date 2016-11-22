@@ -13,6 +13,7 @@
 'use strict';
 
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+import type { ReactPortal } from 'ReactPortal';
 import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -21,6 +22,9 @@ var {
   REACT_COROUTINE_TYPE,
   REACT_YIELD_TYPE,
 } = require('ReactCoroutine');
+var {
+  REACT_PORTAL_TYPE,
+} = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
@@ -37,6 +41,7 @@ const {
   createFiberFromText,
   createFiberFromCoroutine,
   createFiberFromYield,
+  createFiberFromPortal,
 } = ReactFiber;
 
 const {
@@ -52,6 +57,7 @@ const {
   CoroutineComponent,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 
 const {
@@ -303,6 +309,31 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
   }
 
+  function updatePortal(
+    returnFiber : Fiber,
+    current : ?Fiber,
+    portal : ReactPortal,
+    priority : PriorityLevel
+  ) : Fiber {
+    if (
+      current == null ||
+      current.tag !== Portal ||
+      current.stateNode.containerInfo !== portal.containerInfo ||
+      current.stateNode.implementation !== portal.implementation
+    ) {
+      // Insert
+      const created = createFiberFromPortal(portal, priority);
+      created.return = returnFiber;
+      return created;
+    } else {
+      // Update
+      const existing = useFiber(current, priority);
+      existing.pendingProps = portal.children;
+      existing.return = returnFiber;
+      return existing;
+    }
+  }
+
   function updateFragment(
     returnFiber : Fiber,
     current : ?Fiber,
@@ -356,6 +387,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const reifiedYield = createReifiedYield(newChild);
           const created = createFiberFromYield(newChild, priority);
           created.output = reifiedYield;
+          created.return = returnFiber;
+          return created;
+        }
+
+        case REACT_PORTAL_TYPE: {
+          const created = createFiberFromPortal(newChild, priority);
           created.return = returnFiber;
           return created;
         }
@@ -467,6 +504,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             newChild.key === null ? newIdx : newChild.key
           ) || null;
           return updateYield(returnFiber, matchedFiber, newChild, priority);
+        }
+
+        case REACT_PORTAL_TYPE: {
+          const matchedFiber = existingChildren.get(
+            newChild.key === null ? newIdx : newChild.key
+          ) || null;
+          return updatePortal(returnFiber, matchedFiber, newChild, priority);
         }
       }
 
@@ -769,6 +813,43 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return created;
   }
 
+  function reconcileSinglePortal(
+    returnFiber : Fiber,
+    currentFirstChild : ?Fiber,
+    portal : ReactPortal,
+    priority : PriorityLevel
+  ) : Fiber {
+    const key = portal.key;
+    let child = currentFirstChild;
+    while (child) {
+      // TODO: If key === null and child.key === null, then this only applies to
+      // the first item in the list.
+      if (child.key === key) {
+        if (
+          child.tag === Portal &&
+          child.stateNode.containerInfo === portal.containerInfo &&
+          child.stateNode.implementation === portal.implementation
+        ) {
+          deleteRemainingChildren(returnFiber, child.sibling);
+          const existing = useFiber(child, priority);
+          existing.pendingProps = portal.children;
+          existing.return = returnFiber;
+          return existing;
+        } else {
+          deleteRemainingChildren(returnFiber, child);
+          break;
+        }
+      } else {
+        deleteChild(returnFiber, child);
+      }
+      child = child.sibling;
+    }
+
+    const created = createFiberFromPortal(portal, priority);
+    created.return = returnFiber;
+    return created;
+  }
+
   // This API will tag the children with the side-effect of the reconciliation
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
@@ -812,6 +893,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
         case REACT_YIELD_TYPE:
           return placeSingleChild(reconcileSingleYield(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            priority
+          ));
+
+        case REACT_PORTAL_TYPE:
+          return placeSingleChild(reconcileSinglePortal(
             returnFiber,
             currentFirstChild,
             newChild,

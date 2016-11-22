@@ -14,6 +14,7 @@
 
 import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+import type { ReactPortal } from 'ReactPortal';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -29,6 +30,7 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 
 var {
@@ -336,5 +338,16 @@ exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priority
 exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiber(YieldComponent, yieldNode.key);
   fiber.pendingProps = {};
+  return fiber;
+};
+
+exports.createFiberFromPortal = function(portal : ReactPortal, priorityLevel : PriorityLevel) : Fiber {
+  const fiber = createFiber(Portal, portal.key);
+  fiber.pendingProps = portal.children;
+  fiber.pendingWorkPriority = priorityLevel;
+  fiber.stateNode = {
+    containerInfo: portal.containerInfo,
+    implementation: portal.implementation,
+  };
   return fiber;
 };

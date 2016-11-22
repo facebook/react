@@ -14,6 +14,7 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { HostChildren } from 'ReactFiberReconciler';
+import type { ReactNodeList } from 'ReactTypes';
 
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -22,6 +23,8 @@ var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactPortal = require('ReactPortal');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -32,6 +35,9 @@ ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent
 );
 
+var {
+  Portal,
+} = ReactTypeOfWork;
 var {
   createElement,
   setInitialProperties,
@@ -66,7 +72,11 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
     /* As a result of the refinement issue this type isn't known. */
     let node : any = child;
     do {
-      recursivelyAppendChildren(parent, node.output);
+      // TODO: this is an implementation detail leaking into the renderer.
+      // Once we move output traversal to complete phase, we won't need this.
+      if (node.tag !== Portal) {
+        recursivelyAppendChildren(parent, node.output);
+      }
     } while (node = node.sibling);
   }
 }
@@ -191,6 +201,11 @@ var ReactDOM = {
   },
 
   findDOMNode: findDOMNode,
+
+  unstable_createPortal(children: ReactNodeList, container : DOMContainerElement, key : ?string = null) {
+    // TODO: pass ReactDOM portal implementation as third argument
+    return ReactPortal.createPortal(children, container, null, key);
+  },
 
   unstable_batchedUpdates<A>(fn : () => A) : A {
     return DOMRenderer.batchedUpdates(fn);

@@ -36,6 +36,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 var {
   Update,
@@ -63,7 +64,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // If we have a single result, we just pass that through as the output to
     // avoid unnecessary traversal. When we have multiple output, we just pass
     // the linked list of fibers that has the individual output values.
-    returnFiber.output = (child && !child.sibling) ? child.output : child;
+    if (!child || child.tag === Portal) {
+      returnFiber.output = null;
+    } else {
+      returnFiber.output = child.sibling ? child : child.output;
+    }
     returnFiber.memoizedProps = returnFiber.pendingProps;
   }
 
@@ -250,6 +255,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       case Fragment:
         transferOutput(workInProgress.child, workInProgress);
+        return null;
+      case Portal:
+        transferOutput(workInProgress.child, workInProgress);
+        markUpdate(workInProgress);
         return null;
 
       // Error cases
