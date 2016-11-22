@@ -11,3 +11,9 @@
  */
 
 'use strict';
+
+var findNodeHandle = require('findNodeHandle');
+
+findNodeHandle._injectFiber(function(fiber: Fiber) {
+  return NativeRenderer.findHostInstance(fiber)._rootNodeID;
+});
