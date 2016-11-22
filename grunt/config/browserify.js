@@ -74,7 +74,12 @@ function simpleBannerify(src) {
 // variable. So we write a wrapper around the UMD bundle that browserify creates,
 // and define a React variable that will require across Webpack-boundaries or fall
 // back to the global, just like it would previously.
+// Additionally, we're going to modify the original UMD wrapper a bit, replacing
+// the define([], f) call with f(). This allows our additional wrapper to work
+// so we can define() there without issue (AMD was causing issues). If you
+// think this is all a bit insane, you are absolutely correct.
 function wrapperify(src) {
+  src = src.replace('define([],f)', 'return f()');
   return `
 ;(function(f) {
   // CommonJS
@@ -83,7 +88,7 @@ function wrapperify(src) {
 
   // RequireJS
   } else if (typeof define === "function" && define.amd) {
-    require(['react'], f);
+    define(['react'], f);
 
   // <script>
   } else {
@@ -103,7 +108,7 @@ function wrapperify(src) {
     f(g.React)
   }
 })(function(React) {
-  ${src}
+  return ${src}
 });
 `;
 }
