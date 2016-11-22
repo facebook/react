@@ -45,6 +45,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 var {
   NoWork,
@@ -298,6 +299,10 @@ module.exports = function<T, P, I, TI, C>(
     reconcileChildren(current, workInProgress, coroutine.children);
   }
 
+  function updatePortalComponent(current, workInProgress) {
+    reconcileChildren(current, workInProgress, workInProgress.pendingProps);
+  }
+
   /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
@@ -450,6 +455,10 @@ module.exports = function<T, P, I, TI, C>(
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case Portal:
+        updatePortalComponent(current, workInProgress);
+        // TODO: is this right?
+        return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
         return workInProgress.child;

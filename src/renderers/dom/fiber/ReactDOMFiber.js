@@ -14,6 +14,7 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { HostChildren } from 'ReactFiberReconciler';
+import type { ReactNodeList } from 'ReactTypes';
 
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -22,6 +23,7 @@ var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactPortal = require('ReactPortal');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -191,6 +193,11 @@ var ReactDOM = {
   },
 
   findDOMNode: findDOMNode,
+
+  unstable_createPortal(children: ReactNodeList, container : DOMContainerElement, key : ?string = null) {
+    // TODO: pass ReactDOM portal implementation as third argument
+    return ReactPortal.createPortal(children, container, null, key);
+  },
 
   unstable_batchedUpdates<A>(fn : () => A) : A {
     return DOMRenderer.batchedUpdates(fn);

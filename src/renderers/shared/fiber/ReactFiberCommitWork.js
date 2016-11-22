@@ -22,6 +22,7 @@ var {
   HostContainer,
   HostComponent,
   HostText,
+  Portal,
 } = ReactTypeOfWork;
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
@@ -253,6 +254,11 @@ module.exports = function<T, P, I, TI, C>(
         detachRef(current);
         return;
       }
+      case Portal: {
+        const containerInfo : C = current.stateNode.containerInfo;
+        updateContainer(containerInfo, null);
+        return;
+      }
     }
   }
 
@@ -289,6 +295,12 @@ module.exports = function<T, P, I, TI, C>(
         const newText : string = finishedWork.memoizedProps;
         const oldText : string = current.memoizedProps;
         commitTextUpdate(textInstance, oldText, newText);
+        return;
+      }
+      case Portal: {
+        const children = finishedWork.child;
+        const containerInfo : C = finishedWork.stateNode.containerInfo;
+        updateContainer(containerInfo, children);
         return;
       }
       default:
@@ -351,6 +363,10 @@ module.exports = function<T, P, I, TI, C>(
       }
       case HostText: {
         // We have no life-cycles associated with text.
+        return;
+      }
+      case Portal: {
+        // We have no life-cycles associated with portals.
         return;
       }
       default:
