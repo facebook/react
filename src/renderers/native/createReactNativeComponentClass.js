@@ -12,7 +12,10 @@
 
 'use strict';
 
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeBaseComponent = require('ReactNativeBaseComponent');
+var NativeMethodsMixin = require('NativeMethodsMixin');
+var React = require('React');
 
 // See also ReactNativeBaseComponent
 type ReactNativeBaseComponentViewConfig = {
@@ -28,19 +31,35 @@ type ReactNativeBaseComponentViewConfig = {
 var createReactNativeComponentClass = function(
   viewConfig: ReactNativeBaseComponentViewConfig
 ): ReactClass<any> {
-  var Constructor = function(element) {
-    this._currentElement = element;
-    this._topLevelWrapper = null;
-    this._hostParent = null;
-    this._hostContainerInfo = null;
-    this._rootNodeID = 0;
-    this._renderedChildren = null;
-  };
-  Constructor.displayName = viewConfig.uiViewClassName;
-  Constructor.viewConfig = viewConfig;
-  Constructor.propTypes = viewConfig.propTypes;
-  Constructor.prototype = new ReactNativeBaseComponent(viewConfig);
-  Constructor.prototype.constructor = Constructor;
+  var Constructor;
+  if (ReactNativeFeatureFlags.useFiber) {
+    Constructor = React.createClass({
+      displayName: viewConfig.uiViewClassName,
+      propTypes: viewConfig.propTypes,
+      viewConfig: viewConfig,
+      statics: {
+        viewConfig: viewConfig,
+      },
+      mixins: [NativeMethodsMixin],
+      render() {
+        return React.createElement(viewConfig.uiViewClassName, this.props);
+      }
+    });
+  } else {
+    Constructor = function(element) {
+      this._currentElement = element;
+      this._topLevelWrapper = null;
+      this._hostParent = null;
+      this._hostContainerInfo = null;
+      this._rootNodeID = 0;
+      this._renderedChildren = null;
+    };
+    Constructor.prototype = new ReactNativeBaseComponent(viewConfig);
+    Constructor.prototype.constructor = Constructor;
+    Constructor.displayName = viewConfig.uiViewClassName;
+    Constructor.viewConfig = viewConfig;
+    Constructor.propTypes = viewConfig.propTypes;
+  }
 
   return ((Constructor: any): ReactClass<any>);
 };
