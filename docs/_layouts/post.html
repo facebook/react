@@ -4,8 +4,9 @@ sectionid: blog
 ---
 
 <section class="content wrap blogContent">
-  {% include nav_blog.html %}
+
   <div class="inner-content">
     {% include blog_post.html isPermalink="true" page=page content=content %}
   </div>
+  {% include nav_blog.html %}
 </section>

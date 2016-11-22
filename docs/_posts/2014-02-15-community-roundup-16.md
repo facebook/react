@@ -9,7 +9,7 @@ There have been many posts recently covering the <i>why</i> and <i>how</i> of Re
 ## React in a nutshell
 Got five minutes to pitch React to your coworkers? John Lynch ([@johnrlynch](https://twitter.com/johnrlynch)) put together [this excellent and refreshing slideshow](http://slid.es/johnlynch/reactjs):
 
-<iframe src="//slid.es/johnlynch/reactjs/embed" width="576" height="420" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<iframe src="//slid.es/johnlynch/reactjs/embed" width="100%" height="420" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 
 

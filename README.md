@@ -13,11 +13,11 @@ React is a JavaScript library for building user interfaces.
 We have several examples [on the website](https://facebook.github.io/react/). Here is the first one to get you started:
 
 ```js
-var HelloMessage = React.createClass({
-  render: function() {
+class HelloMessage extends React.Component {
+  render() {
     return <div>Hello {this.props.name}</div>;
   }
-});
+}
 
 ReactDOM.render(
   <HelloMessage name="John" />,
@@ -35,12 +35,12 @@ The fastest way to get started is to serve JavaScript from a CDN. We're using [u
 
 ```html
 <!-- The core React library -->
-<script src="https://unpkg.com/react@15.3.2/dist/react.js"></script>
+<script src="https://unpkg.com/react@15.4.0/dist/react.js"></script>
 <!-- The ReactDOM Library -->
-<script src="https://unpkg.com/react-dom@15.3.2/dist/react-dom.js"></script>
+<script src="https://unpkg.com/react-dom@15.4.0/dist/react-dom.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.3.2.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.4.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 

@@ -4,6 +4,7 @@ title: How to Contribute
 layout: contributing
 permalink: contributing/how-to-contribute.html
 next: codebase-overview.html
+redirect_from: "tips/introduction.html"
 ---
 
 React is one of Facebook's first open source projects that is both under very active development and is also being used to ship code to everybody on [facebook.com](https://www.facebook.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and answers some questions that you may have.
@@ -26,7 +27,7 @@ If you send a pull request, please do it against the `master` branch. We maintai
 
 React follows [semantic versioning](http://semver.org/). We release patch versions for bugfixes, minor versions for new features, and major versions for any breaking changes. When we make breaking changes, we also introduce deprecation warnings in a minor version so that our users learn about the upcoming changes and migrate their code in advance.
 
-We tag every pull request with a label marking whether the change should go in the next [patch](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-patch), [minor](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-minor), or a [major](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-major) version. We release new patch versions every few weeks, minor versions every few months, and major versions one or two times a year. 
+We tag every pull request with a label marking whether the change should go in the next [patch](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-patch), [minor](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-minor), or a [major](https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-major) version. We release new patch versions every few weeks, minor versions every few months, and major versions one or two times a year.
 
 Every significant change is documented in the [changelog file](https://github.com/facebook/react/blob/master/CHANGELOG.md).
 
@@ -38,7 +39,7 @@ We are using [GitHub Issues](https://github.com/facebook/react/issues) for our p
 
 #### Reporting New Issues
 
-The best way to get your bug fixed is to provide a reduced test case. This [JSFiddle template](https://jsfiddle.net/reactjs/69z2wepo/) is a great starting point. 
+The best way to get your bug fixed is to provide a reduced test case. This [JSFiddle template](https://jsfiddle.net/reactjs/69z2wepo/) is a great starting point.
 
 #### Security Bugs
 
@@ -80,7 +81,8 @@ The core team is monitoring for pull requests. We will review your pull request 
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
-6. If you haven't already, complete the CLA.
+6. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
+7. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
@@ -104,6 +106,7 @@ Then, you can run several commands:
 * `npm test` runs the complete test suite.
 * `npm test -- --watch` runs an interactive test watcher.
 * `npm test <pattern>` runs tests with matching filenames.
+* `npm run flow` runs the [Flow](https://flowtype.org/) typechecks.
 * `npm run build` creates a `build` folder with all the packages.
 
 We recommend running `npm test` (or its variations above) to make sure you don't introduce any regressions as you work on your change. However it can be handy to try your build of React in a real project.
@@ -116,8 +119,6 @@ If you want to try your changes in your existing React project, you may copy `bu
 
 ```sh
 cd your_project
-rm -rf node_modules/react
-rm -rf node_modules/react-dom
 npm link ~/path_to_your_react_clone/build/packages/react
 npm link ~/path_to_your_react_clone/build/packages/react-dom
 ```
@@ -144,16 +145,18 @@ However, there are still some styles that the linter cannot pick up. If you are 
 * Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
-### License
+### Introductory Video
 
-By contributing to React, you agree that your contributions will be licensed under its BSD license.
+You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
 
 ### Meeting Notes
 
 React team meets once a week to discuss the development of React, future plans, and priorities. You can find the meeting notes in a [dedicated repository](https://github.com/reactjs/core-notes/).
 
+### License
+
+By contributing to React, you agree that your contributions will be licensed under its BSD license.
+
 ### What Next?
 
-You may be interested in watching [this short video](https://www.youtube.com/watch?v=wUpPsEcGsg8) (26 mins) which gives an introduction on how to contribute to React.
-
-Read the next sections to learn more about [understanding the codebase](/react/contributing/codebase-overview.html), and the [design principles](/react/contributing/design-principles.html) guiding the development of React.
+Read the [next section](/react/contributing/codebase-overview.html) to learn how the codebase is organized.

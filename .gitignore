@@ -15,7 +15,7 @@ docs/code
 docs/_site
 docs/.sass-cache
 docs/js/*
-docs/downloads
+docs/downloads/*.zip
 docs/vendor/bundle
 examples/shared/*.js
 examples/**/bundle.js

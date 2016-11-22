@@ -90,8 +90,14 @@ var ReactPlayground = React.createClass({
 
   getDefaultProps: function() {
     return {
-      transformer: function(code) {
-        return babel.transform(code).code;
+      transformer: function(code, options) {
+        var presets = ['react'];
+        if (!options || !options.skipES2015Transform) {
+          presets.push('es2015');
+        }
+        return Babel.transform(code, {
+          presets
+        }).code;
       },
       editorTabTitle: 'Live JSX Editor',
       showCompiledJSTab: true,
@@ -115,15 +121,15 @@ var ReactPlayground = React.createClass({
     this.setState({mode: mode});
   },
 
-  compileCode: function() {
-    return this.props.transformer(this.state.code);
+  compileCode: function(options) {
+    return this.props.transformer(this.state.code, options);
   },
 
   render: function() {
     var isJS = this.state.mode === this.MODES.JS;
     var compiledCode = '';
     try {
-      compiledCode = this.compileCode();
+      compiledCode = this.compileCode({skipES2015Transform: true});
     } catch (err) {}
 
     var JSContent =
@@ -201,13 +207,15 @@ var ReactPlayground = React.createClass({
     } catch (e) { }
 
     try {
-      var compiledCode = this.compileCode();
+      var compiledCode;
       if (this.props.renderCode) {
+        compiledCode = this.compileCode({skipES2015Transform: true});
         ReactDOM.render(
           <CodeMirrorEditor codeText={compiledCode} readOnly={true} />,
           mountNode
         );
       } else {
+        compiledCode = this.compileCode({skipES2015Transform: false});
         eval(compiledCode);
       }
     } catch (err) {

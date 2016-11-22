@@ -28,7 +28,7 @@ React is only one-piece of your web application stack. [Mark Lussier](https://gi
 
 ## React Rails Tutorial
 
-[Selem Delul](http://selem.im) bundled the [React Tutorial](/react/docs/tutorial.html) into a rails app. This is a good example on how to get started with a rails project.
+[Selem Delul](http://selem.im) bundled the [React Tutorial](/react/tutorial/tutorial.html) into a rails app. This is a good example on how to get started with a rails project.
 
 > ```
 git clone https://github.com/necrodome/react-rails-tutorial
