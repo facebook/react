@@ -88,10 +88,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Need this to prevent recursion while in a Task loop.
   let isPerformingTaskWork : boolean = false;
 
-  // We'll only prepare/reset on the outermost commit even when a setState
-  // callback causes another synchronous rerender
-  let isCommitting : boolean = false;
-
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
   let nextPriorityLevel : PriorityLevel = NoWork;
