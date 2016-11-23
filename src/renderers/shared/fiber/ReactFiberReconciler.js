@@ -19,6 +19,7 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
   findCurrentUnmaskedContext,
+  isContextProvider,
   processChildContext,
 } = require('ReactFiberContext');
 var { createFiberRoot } = require('ReactFiberRoot');
@@ -91,7 +92,10 @@ export type Reconciler<C, I, TI> = {
 };
 
 getContextForSubtree._injectFiber(function(fiber : Fiber) {
-  return processChildContext(fiber, findCurrentUnmaskedContext(fiber));
+  const parentContext = findCurrentUnmaskedContext(fiber);
+  return isContextProvider(fiber) ?
+    processChildContext(fiber, parentContext) :
+    parentContext;
 });
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
