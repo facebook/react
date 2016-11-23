@@ -101,7 +101,6 @@ var NativeRenderer = ReactFiberReconciler({
       viewConfig.validAttributes
     );
     UIManager.createView(node._rootNodeID, type, root, attributes);
-
     if (typeof props.children === 'string' || typeof props.children === 'number') {
       // create text node
       const textTag = ReactNativeTagHandles.allocateTag();
@@ -187,24 +186,56 @@ var NativeRenderer = ReactFiberReconciler({
     }
   },
 
-  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
-    parentInstance.children.push(child._rootNodeID);
-    UIManager.manageChildren(
-      parentInstance._rootNodeID,
-      [],
-      [],
-      [child._rootNodeID],
-      [parentInstance.children.length - 1 ],
-      []
-    );
+  appendChild(parent: Instance, child : Instance | TextInstance) : void {
+    if (parent.children.includes(child._rootNodeID)) {
+      // TODO: is this really needed?
+      // this is needed when changing order of a list like this:
+      // ['Hello', 'Foo', 'Bar'] -> ['Bar', 'Foo', 'Hello']
+      const children = parent.children;
+      const childIndex = children.indexOf(child._rootNodeID);
+      children.splice(childIndex, 1);
+      children.push(child._rootNodeID);
+      UIManager.manageChildren(
+        parent._rootNodeID,
+        [childIndex],
+        [children.length - 1],
+        [],
+        [],
+        []
+      );
+    } else {
+      parent.children.push(child._rootNodeID);
+      UIManager.manageChildren(
+        parent._rootNodeID,
+        [],
+        [],
+        [child._rootNodeID],
+        [parent.children.length - 1 ],
+        []
+      );
+    }
   },
 
   insertBefore(
-    parentInstance : Instance,
+    parent : Instance,
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
-  ) : void {
-    console.log('insert before');
+  ) : void {;
+    const children = parent.children;
+    const beforeIndex = children.indexOf(beforeChild._rootNodeID) - 1;
+    const childIndex = children.indexOf(child._rootNodeID);
+    console.log(children);
+    children.splice(childIndex, 1);
+    children.splice(beforeIndex, 0, child._rootNodeID);
+    console.log(children);
+    UIManager.manageChildren(
+      parent._rootNodeID,
+      [childIndex],
+      [beforeIndex],
+      [],
+      [],
+      []
+    );
   },
 
   removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
