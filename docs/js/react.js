@@ -1,5 +1,5 @@
  /**
-  * React v15.4.0
+  * React v15.4.1
   */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.React = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
@@ -1351,30 +1351,38 @@ typeof Set === 'function' && isNative(Set) &&
 // Set.prototype.keys
 Set.prototype != null && typeof Set.prototype.keys === 'function' && isNative(Set.prototype.keys);
 
+var setItem;
+var getItem;
+var removeItem;
+var getItemIDs;
+var addRoot;
+var removeRoot;
+var getRootIDs;
+
 if (canUseCollections) {
   var itemMap = new Map();
   var rootIDSet = new Set();
 
-  var setItem = function (id, item) {
+  setItem = function (id, item) {
     itemMap.set(id, item);
   };
-  var getItem = function (id) {
+  getItem = function (id) {
     return itemMap.get(id);
   };
-  var removeItem = function (id) {
+  removeItem = function (id) {
     itemMap['delete'](id);
   };
-  var getItemIDs = function () {
+  getItemIDs = function () {
     return Array.from(itemMap.keys());
   };
 
-  var addRoot = function (id) {
+  addRoot = function (id) {
     rootIDSet.add(id);
   };
-  var removeRoot = function (id) {
+  removeRoot = function (id) {
     rootIDSet['delete'](id);
   };
-  var getRootIDs = function () {
+  getRootIDs = function () {
     return Array.from(rootIDSet.keys());
   };
 } else {
@@ -1390,31 +1398,31 @@ if (canUseCollections) {
     return parseInt(key.substr(1), 10);
   };
 
-  var setItem = function (id, item) {
+  setItem = function (id, item) {
     var key = getKeyFromID(id);
     itemByKey[key] = item;
   };
-  var getItem = function (id) {
+  getItem = function (id) {
     var key = getKeyFromID(id);
     return itemByKey[key];
   };
-  var removeItem = function (id) {
+  removeItem = function (id) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  var getItemIDs = function () {
+  getItemIDs = function () {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
-  var addRoot = function (id) {
+  addRoot = function (id) {
     var key = getKeyFromID(id);
     rootByKey[key] = true;
   };
-  var removeRoot = function (id) {
+  removeRoot = function (id) {
     var key = getKeyFromID(id);
     delete rootByKey[key];
   };
-  var getRootIDs = function () {
+  getRootIDs = function () {
     return Object.keys(rootByKey).map(getIDFromKey);
   };
 }
@@ -3073,7 +3081,7 @@ module.exports = ReactUMDEntry;
 
 'use strict';
 
-module.exports = '15.4.0';
+module.exports = '15.4.1';
 },{}],20:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
