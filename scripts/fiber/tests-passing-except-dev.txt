@@ -162,6 +162,8 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 * warns if findDOMNode is used inside render
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
+* should warn about `forceUpdate` on unmounted components
+* should warn about `setState` on unmounted components
 * should disallow nested render calls
 * should warn when mutated props are passed
 

@@ -92,8 +92,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
-* should warn about `forceUpdate` on unmounted components
-* should warn about `setState` on unmounted components
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false

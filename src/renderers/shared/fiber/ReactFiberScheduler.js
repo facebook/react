@@ -760,7 +760,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           scheduleWorkAtPriority(root, priorityLevel);
           return;
         } else {
-          throw new Error('Invalid root');
+          // TODO: Warn about setting state on an unmounted component.
+          return;
         }
       }
       fiber = fiber.return;

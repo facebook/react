@@ -427,6 +427,7 @@ describe('ReactCompositeComponent', () => {
         return <div />;
       }
     }
+    Component.childContextTypes = {};
 
     expectDev(console.error.calls.count()).toBe(0);
     var instance = ReactDOM.render(<Component />, container);
