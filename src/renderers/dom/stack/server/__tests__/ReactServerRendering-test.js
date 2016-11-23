@@ -246,7 +246,7 @@ describe('ReactDOMServer', () => {
 
       var expectedMarkup = lastMarkup;
       if (ReactDOMFeatureFlags.useFiber) {
-        var reactMetaData = /\s+data-react[a-z-]+=\"[^\"]*\"/g;
+        var reactMetaData = /\s+data-react[a-z-]+="[^"]*"/g;
         var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
         expectedMarkup =
           expectedMarkup
