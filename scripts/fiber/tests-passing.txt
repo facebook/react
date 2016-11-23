@@ -48,6 +48,7 @@ src/addons/__tests__/renderSubtreeIntoContainer-test.js
 * should throw if parentComponent is invalid
 * should update context if it changes due to setState
 * should update context if it changes due to re-render
+* should render portal with non-context-provider parent
 
 src/addons/__tests__/update-test.js
 * pushes
