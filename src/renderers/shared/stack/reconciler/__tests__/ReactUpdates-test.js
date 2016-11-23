@@ -13,6 +13,7 @@
 
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactTestUtils;
 var ReactUpdates;
 
@@ -20,6 +21,7 @@ describe('ReactUpdates', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
     ReactUpdates = require('ReactUpdates');
   });
@@ -506,6 +508,9 @@ describe('ReactUpdates', () => {
   });
 
   it('should share reconcile transaction across different roots', () => {
+    if (ReactDOMFeatureFlags.useFiber) {
+      return;
+    }
     var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
     spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
 

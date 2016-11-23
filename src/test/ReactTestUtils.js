@@ -22,6 +22,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
@@ -34,9 +35,12 @@ var {
   ClassComponent,
   FunctionalComponent,
   HostComponent,
-  HostContainer,
   HostText,
 } = ReactTypeOfWork;
+var {
+  NoEffect,
+  Placement,
+} = ReactTypeOfSideEffect;
 
 function Event(suffix) {}
 
@@ -87,6 +91,12 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     fiber.tag !== HostText
   ) {
     return [];
+  }
+  if ((fiber.effectTag & Placement) !== NoEffect || !fiber.return) {
+    // If any node along the way was deleted, or is an insertion, that means
+    // that we're actually in a work in progress to update this component with
+    // a different component. We need to look in the "current" fiber instead.
+    return null;
   }
   var publicInst = fiber.stateNode;
   var ret = publicInst && test(publicInst) ? [publicInst] : [];
@@ -213,14 +223,20 @@ var ReactTestUtils = {
     var internalInstance = ReactInstanceMap.get(inst);
     if (internalInstance && typeof internalInstance.tag === 'number') {
       var fiber = internalInstance;
-      var root = fiber;
-      while (root.return) {
-        root = root.return;
+      if (!fiber.child && fiber.alternate) {
+        // When we don't have children, we try the alternate first to see if it
+        // has any current children first.
+        fiber = fiber.alternate;
       }
-      var isRootCurrent = root.tag === HostContainer && root.stateNode.current === root;
-      // Make sure we're introspecting the current tree
-      var current = isRootCurrent ? fiber : fiber.alternate;
-      return findAllInRenderedFiberTreeInternal(current, test);
+      var results = findAllInRenderedFiberTreeInternal(fiber, test);
+      if (results === null) {
+        // Null is a sentinel that indicates that this was the wrong fiber.
+        results = findAllInRenderedFiberTreeInternal(fiber.alternate, test);
+        if (results === null) {
+          throw new Error('This should never happen.');
+        }
+      }
+      return results;
     } else {
       return findAllInRenderedStackTreeInternal(internalInstance, test);
     }

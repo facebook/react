@@ -104,9 +104,17 @@ var DOMRenderer = ReactFiberReconciler({
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
+  commitUpdate(
+    domElement : Instance,
+    oldProps : Props,
+    newProps : Props,
+    internalInstanceHandle : Object
+  ) : void {
     var type = domElement.tagName.toLowerCase(); // HACK
     var root = document.body; // HACK
+    // Update the internal instance handle so that we know which props are
+    // the current ones.
+    precacheFiberNode(internalInstanceHandle, domElement);
     updateProperties(domElement, type, oldProps, newProps, root);
   },
 

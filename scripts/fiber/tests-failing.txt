@@ -24,24 +24,7 @@ src/renderers/art/__tests__/ReactART-test.js
 * resolves refs before componentDidMount
 * resolves refs before componentDidUpdate
 
-src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
-* should store a listener correctly
-* should retrieve a listener correctly
-* should clear all handlers when asked to
-* should invoke a simple handler registered on a node
-* should not invoke handlers if ReactBrowserEventEmitter is disabled
-* should bubble simply
-* should continue bubbling if an error is thrown
-* should set currentTarget
-* should not stopPropagation if false is returned
-* should have mouse enter simulated by test utils
-* should infer onTouchTap from a touchStart/End
-* should infer onTouchTap from when dragging below threshold
-* should bubble onTouchTap
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should update styles when mutating style object
-* should warn when mutating style
 * should empty element when removing innerHTML
 * should transition from innerHTML to children in nested el
 * should warn for children on void elements
@@ -59,31 +42,8 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
-src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
-* does not when event fired on unmounted tree
-
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should batch between handlers from different roots
-* should not fire duplicate events for a React DOM tree
-
-src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
-* should not fire change when setting checked programmatically
-
-src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
-* A non-interactive tags clicks bubble when disabled
-* triggers parent captured click events when target is a child of a disabled elements
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
@@ -137,18 +97,13 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
-* should support objects with prototypes as state
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedState-test.js
 * should provide up to date values for props
 
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
-* should be able to switch between rendering null and a normal tag
-* should be able to switch in a list of children
-* should distinguish between a script placeholder and an actual script tag
 * throws when rendering null at the top level
-* preserves the dom node during updates
 
 src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
@@ -159,7 +114,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
-* should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
 * should queue updates from during mount
 * marks top-level updates
@@ -171,4 +125,5 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/test/__tests__/ReactTestUtils-test.js
+* traverses children in the correct order
 * should support injected wrapper components as DOM components

@@ -534,19 +534,34 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should support custom attributes
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
+* should store a listener correctly
+* should retrieve a listener correctly
+* should clear all handlers when asked to
+* should invoke a simple handler registered on a node
+* should not invoke handlers if ReactBrowserEventEmitter is disabled
+* should bubble simply
+* should continue bubbling if an error is thrown
+* should set currentTarget
 * should support stopPropagation()
 * should stop after first dispatch if stopPropagation
+* should not stopPropagation if false is returned
 * should invoke handlers that were removed while bubbling
 * should not invoke newly inserted handlers while bubbling
+* should have mouse enter simulated by test utils
+* should infer onTouchTap from a touchStart/End
+* should infer onTouchTap from when dragging below threshold
 * should not onTouchTap from when dragging beyond threshold
 * should listen to events only once
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
+* should bubble onTouchTap
 * should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should handle className
 * should gracefully handle various style value types
+* should not update styles when mutating a proxy style object
+* should throw when mutating style objectsd
 * should not warn for "0" as a unitless style value
 * should warn nicely about NaN in style
 * should update styles if initially null
@@ -625,12 +640,14 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
 * does not crash with other react inside
 * does not crash with other react outside
+* does not when event fired on unmounted tree
 
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should dispatch events from outside React tree
 * should propagate events one level down
 * should propagate events two levels down
 * should not get confused by disappearing elements
+* should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 * should escape boolean to string
@@ -672,6 +689,7 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should fire change for checkbox input
 * should catch setting the value programmatically
 * should not fire change when setting the value programmatically
+* should not fire change when setting checked programmatically
 * should unmount
 * should only fire change for checked radio button once
 * should deduplicate input value change events
@@ -696,17 +714,31 @@ src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
 
 src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 * A non-interactive tags click when disabled
+* A non-interactive tags clicks bubble when disabled
 * does not register a click when clicking a child of a disabled element
 * triggers click events for children of disabled elements
+* triggers parent captured click events when target is a child of a disabled elements
 * triggers captured click events for children of disabled elements
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * does not add a local click to interactive elements
 * adds a local click listener to non-interactive elements
 
@@ -1157,12 +1189,6 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets ignored for composite roots that return null
-* gets recorded during an update
-* gets ignored if the styles are shallowly equal
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during an update
-* gets recorded during an update
 * gets ignored if new text is equal
 * gets ignored if new text is equal
 * gets ignored if the type has not changed
@@ -1271,6 +1297,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * should allow access to findDOMNode in componentWillUnmount
 * context should be passed down from the parent
 * should replace state
+* should support objects with prototypes as state
 * should not warn about unmounting during unmounting
 * should only call componentWillUnmount once
 
@@ -1285,9 +1312,13 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentState-tes
 
 src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
 * should not produce child DOM nodes for null and false
+* should be able to switch between rendering null and a normal tag
+* should be able to switch in a list of children
+* should distinguish between a script placeholder and an actual script tag
 * should have findDOMNode return null when multiple layers of composite components render to the same null placeholder
 * works when switching components
 * does not break when updating during mount
+* preserves the dom node during updates
 
 src/renderers/shared/stack/reconciler/__tests__/ReactErrorBoundaries-test.js
 * does not swallow exceptions on mounting without boundaries
@@ -1414,6 +1445,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should update children even if parent blocks updates
 * should not reconcile children passed via props
 * should flow updates correctly
+* should share reconcile transaction across different roots
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
 * should queue nested updates
@@ -1523,7 +1555,6 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
-* traverses children in the correct order
 * should change the value of an input field
 * should change the value of an input field in a component
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
