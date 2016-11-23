@@ -1294,6 +1294,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
 * unmasked context propagates through updates
 * should trigger componentWillReceiveProps for context changes
 * only renders once if updated in componentWillReceiveProps
+* only renders once if updated in componentWillReceiveProps when batching
 * should allow access to findDOMNode in componentWillUnmount
 * context should be passed down from the parent
 * should replace state
@@ -1449,6 +1450,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
 * should queue nested updates
+* should queue updates from during mount
 * calls componentWillReceiveProps setState callback properly
 * does not call render after a component as been deleted
 * does not update one component twice in a batch (#2410)
