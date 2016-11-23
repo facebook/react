@@ -45,20 +45,6 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should batch between handlers from different roots
 
-src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
 

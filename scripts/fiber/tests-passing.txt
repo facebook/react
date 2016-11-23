@@ -721,12 +721,24 @@ src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
 * triggers captured click events for children of disabled elements
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * should forward clicks when it starts out not disabled
 * should not forward clicks when it starts out disabled
+* should forward clicks when it becomes not disabled
+* should not forward clicks when it becomes disabled
+* should work correctly if the listener is changed
 * does not add a local click to interactive elements
 * adds a local click listener to non-interactive elements
 
