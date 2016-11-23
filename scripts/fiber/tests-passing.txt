@@ -1560,6 +1560,7 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
+* should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering

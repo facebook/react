@@ -167,11 +167,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-        // We don't know if a container has updated any children so we always
-        // need to update it right now. We schedule this side-effect before
-        // all the other side-effects in the subtree. We need to schedule it
-        // before so that the entire tree is up-to-date before the life-cycles
-        // are invoked.
+        // TODO: Only mark this as an update if we have any pending callbacks
+        // on it.
         markUpdate(workInProgress);
         return null;
       }
@@ -253,6 +250,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         transferOutput(workInProgress.child, workInProgress);
         return null;
       case Portal:
+        // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.output = null;
         workInProgress.memoizedProps = workInProgress.pendingProps;

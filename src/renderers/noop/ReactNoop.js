@@ -67,10 +67,6 @@ function flattenChildren(children : HostChildren<Instance | TextInstance>) {
 
 var NoopRenderer = ReactFiberReconciler({
 
-  updateContainer(containerInfo : Container, children : HostChildren<Instance | TextInstance>) : void {
-    containerInfo.children = flattenChildren(children);
-  },
-
   createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
     const inst = {
       tag: TERMINAL_TAG,
@@ -104,7 +100,7 @@ var NoopRenderer = ReactFiberReconciler({
     textInstance.text = newText;
   },
 
-  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -113,7 +109,7 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   insertBefore(
-    parentInstance : Instance,
+    parentInstance : Instance | Container,
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
   ) : void {
@@ -128,7 +124,7 @@ var NoopRenderer = ReactFiberReconciler({
     parentInstance.children.splice(beforeIndex, 0, child);
   },
 
-  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     const index = parentInstance.children.indexOf(child);
     if (index === -1) {
       throw new Error('This child does not exist.');

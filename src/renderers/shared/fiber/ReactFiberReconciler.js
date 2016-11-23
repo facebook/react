@@ -47,12 +47,6 @@ type OpaqueNode = Fiber;
 
 export type HostConfig<T, P, I, TI, C> = {
 
-  // TODO: We don't currently have a quick way to detect that children didn't
-  // reorder so we host will always need to check the set. We should make a flag
-  // or something so that it can bailout easily.
-
-  updateContainer(containerInfo : C, children : HostChildren<I | TI>) : void,
-
   createInstance(type : T, props : P, children : HostChildren<I | TI>, internalInstanceHandle : OpaqueNode) : I,
   prepareUpdate(instance : I, oldProps : P, newProps : P) : boolean,
   commitUpdate(instance : I, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
@@ -60,9 +54,9 @@ export type HostConfig<T, P, I, TI, C> = {
   createTextInstance(text : string, internalInstanceHandle : OpaqueNode) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
-  appendChild(parentInstance : I, child : I | TI) : void,
-  insertBefore(parentInstance : I, child : I | TI, beforeChild : I | TI) : void,
-  removeChild(parentInstance : I, child : I | TI) : void,
+  appendChild(parentInstance : I | C, child : I | TI) : void,
+  insertBefore(parentInstance : I | C, child : I | TI, beforeChild : I | TI) : void,
+  removeChild(parentInstance : I | C, child : I | TI) : void,
 
   scheduleAnimationCallback(callback : () => void) : void,
   scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,

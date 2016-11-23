@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -37,7 +36,6 @@ module.exports = function<T, P, I, TI, C>(
   trapError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => void
 ) {
 
-  const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
   const commitTextUpdate = config.commitTextUpdate;
 
@@ -68,20 +66,28 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function getHostParent(fiber : Fiber) : ?I {
+  function getHostParent(fiber : Fiber) : null | I | C {
     let parent = fiber.return;
     while (parent) {
       switch (parent.tag) {
         case HostComponent:
           return parent.stateNode;
         case HostContainer:
-          // TODO: Currently we use the updateContainer feature to update these,
-          // but we should be able to handle this case too.
-          return null;
+          return parent.stateNode.containerInfo;
+        case Portal:
+          return parent.stateNode.containerInfo;
       }
       parent = parent.return;
     }
     return null;
+  }
+
+  function isHostParent(fiber : Fiber) : boolean {
+    return (
+      fiber.tag === HostComponent ||
+      fiber.tag === HostContainer ||
+      fiber.tag === Portal
+    );
   }
 
   function getHostSibling(fiber : Fiber) : ?I {
@@ -93,7 +99,7 @@ module.exports = function<T, P, I, TI, C>(
     siblings: while (true) {
       // If we didn't find anything, let's try the next sibling.
       while (!node.sibling) {
-        if (!node.return || node.return.tag === HostComponent) {
+        if (!node.return || isHostParent(node.return)) {
           // If we pop out of the root or hit the parent the fiber we are the
           // last sibling.
           return null;
@@ -142,6 +148,10 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           appendChild(parent, node.stateNode);
         }
+      } else if (node.tag === Portal) {
+        // If the insertion itself is a portal, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
       } else if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
         node = node.child;
@@ -200,6 +210,18 @@ module.exports = function<T, P, I, TI, C>(
         // node from the tree.
         if (parent) {
           removeChild(parent, node.stateNode);
+        }
+      } else if (node.tag === Portal) {
+        // If this is a portal, then the parent is actually the portal itself.
+        // We need to keep track of which parent we're removing from.
+        // TODO: This uses a recursive call. We can get rid of that by mutating
+        // the parent binding and restoring it by searching for the host parent
+        // again when we pop past a portal.
+        const portalParent = node.stateNode.containerInfo;
+        let child = node.child;
+        while (child) {
+          unmountHostComponents(portalParent, child);
+          child = child.sibling;
         }
       } else {
         commitUnmount(node);
@@ -260,11 +282,6 @@ module.exports = function<T, P, I, TI, C>(
         detachRef(current);
         return;
       }
-      case Portal: {
-        const containerInfo : C = current.stateNode.containerInfo;
-        updateContainer(containerInfo, null);
-        return;
-      }
     }
   }
 
@@ -272,14 +289,6 @@ module.exports = function<T, P, I, TI, C>(
     switch (finishedWork.tag) {
       case ClassComponent: {
         detachRefIfNeeded(current, finishedWork);
-        return;
-      }
-      case HostContainer: {
-        // TODO: Attach children to root container.
-        const children = finishedWork.output;
-        const root : FiberRoot = finishedWork.stateNode;
-        const containerInfo : C = root.containerInfo;
-        updateContainer(containerInfo, children);
         return;
       }
       case HostComponent: {
@@ -303,10 +312,10 @@ module.exports = function<T, P, I, TI, C>(
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }
+      case HostContainer: {
+        return;
+      }
       case Portal: {
-        const children = finishedWork.child;
-        const containerInfo : C = finishedWork.stateNode.containerInfo;
-        updateContainer(containerInfo, children);
         return;
       }
       default:
