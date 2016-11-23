@@ -23,9 +23,6 @@ var validateDOMTag = emptyFunction;
 //
 if (__DEV__) {
   // https://www.w3.org/TR/SVG11/eltindex.html
-  //
-  // NOTE: We lowercase all elements here to match the behaviour in
-  // ReactDOMComponent
   var svgTags = [
     'a', 'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateColor',
     'animateMotion', 'animateTransform', 'circle', 'clipPath', 'color-profile',
@@ -40,17 +37,17 @@ if (__DEV__) {
     'mask', 'metadata', 'missing-glyph', 'mpath', 'path', 'pattern', 'polygon', 'polyline',
     'radialGradient', 'rect', 'script', 'set', 'stop', 'style', 'svg', 'switch',
     'symbol', 'text', 'textPath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern',
-  ].map(e => e.toLowerCase());
+  ];
 
   var UnknownConstructor = typeof window.HTMLGenericElement !== 'undefined'
     ? window.HTMLGenericElement
     : window.HTMLUnknownElement;
 
-  validateDOMTag = function(tag, parentInfo) {
+  validateDOMTag = function(instance, parentInfo) {
     var knownTag = null;
 
-    if (parentInfo.svgTagInScope || tag === 'svg') {
-      knownTag = !(svgTags.indexOf(tag) === -1);
+    if ((parentInfo && parentInfo.svgTagInScope) || instance._tag === 'svg') {
+      knownTag = !(svgTags.indexOf(instance._originalTag) === -1);
     } else {
       /**
        * This will also handle custom elements instead of checking whether the tag
@@ -58,14 +55,14 @@ if (__DEV__) {
        *
        * https://www.w3.org/TR/custom-elements/#custom-elements-api
        */
-      knownTag = !(document.createElement(tag) instanceof UnknownConstructor);
+      knownTag = !(document.createElement(instance._tag) instanceof UnknownConstructor);
     }
 
     warning(
       knownTag,
-      'Warning: The tag <%s> is unrecognized in this browser. If you meant to' +
+      'The tag <%s> is unrecognized in this browser. If you meant to' +
       ' render a React component, start its name with an uppercase letter.',
-      tag
+      instance._originalTag
     );
   };
 }
