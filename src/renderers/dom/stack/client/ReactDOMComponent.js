@@ -254,7 +254,7 @@ if (__DEV__) {
     }
 
     validateDOMNesting(null, String(content), this, this._ancestorInfo);
-    validateDOMTag(this._tag, this._ancestorInfo)
+    validateDOMTag(this._tag, this._ancestorInfo);
 
     this._contentDebugID = contentDebugID;
     if (hasExistingContent) {
@@ -612,7 +612,7 @@ ReactDOMComponent.Mixin = {
         // parentInfo should always be present except for the top-level
         // component when server rendering
         validateDOMNesting(this._tag, null, this, parentInfo);
-        validateDOMTag(this._tag, parentInfo)
+        validateDOMTag(this._tag, parentInfo);
       }
       this._ancestorInfo =
         validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);

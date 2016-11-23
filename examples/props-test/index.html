@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Deep props</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+  </head>
+  <body>
+    <h1>Basic Click Counter Example with JSX</h1>
+    <div id="container"></div>
+    <script src="../../build/react.js"></script>
+    <script src="../../build/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script type="text/babel">
+      class DeepProps extends React.Component {
+        static defaultProps = {
+          object: {
+            default: 'defaultKey'
+          }
+        }
+
+        render () {
+          return <pre>{JSON.stringify(this.props, null, 2)}</pre>
+        }
+      }
+
+      ReactDOM.render(
+        <DeepProps object={{ inserted: 'inserted' }} />,
+        document.getElementById('container')
+      );
+    </script>
+  </body>
+</html>

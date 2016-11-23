@@ -30,7 +30,7 @@ if (__DEV__) {
     'a', 'altGlyph', 'altGlyphDef', 'altGlyphItem', 'animate', 'animateColor',
     'animateMotion', 'animateTransform', 'circle', 'clipPath', 'color-profile',
     'cursor', 'defs', 'desc', 'ellipse', 'feBlend', 'feColorMatrix', 'feComponentTransfer',
-    'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', ,
+    'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
     'feDistantLight', 'feFlood', 'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR',
     'feGaussianBlur', 'feImage', 'feMerge', 'feMergeNode', 'feMorphology',
     'feOffset', 'fePointLight', 'feSpecularLighting', 'feSpotLight', 'feTile',
@@ -39,12 +39,12 @@ if (__DEV__) {
     'glyph', 'glyphRef', 'hkern', 'image', 'line', 'linearGradient', 'marker',
     'mask', 'metadata', 'missing-glyph', 'mpath', 'path', 'pattern', 'polygon', 'polyline',
     'radialGradient', 'rect', 'script', 'set', 'stop', 'style', 'svg', 'switch',
-    'symbol', 'text', 'textPath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern'
+    'symbol', 'text', 'textPath', 'title', 'tref', 'tspan', 'use', 'view', 'vkern',
   ].map(e => e.toLowerCase());
 
-  var UnknownConstructor = typeof HTMLGenericElement !== "undefined"
-    ? HTMLGenericElement
-    : HTMLUnknownElement;
+  var UnknownConstructor = typeof window.HTMLGenericElement !== 'undefined'
+    ? window.HTMLGenericElement
+    : window.HTMLUnknownElement;
 
   validateDOMTag = function(tag, parentInfo) {
     var knownTag = null;
@@ -58,7 +58,7 @@ if (__DEV__) {
        *
        * https://www.w3.org/TR/custom-elements/#custom-elements-api
        */
-      knownTag = !(document.createElement(tag) instanceof UnknownConstructor)
+      knownTag = !(document.createElement(tag) instanceof UnknownConstructor);
     }
 
     warning(
@@ -67,7 +67,7 @@ if (__DEV__) {
       ' render a React component, start its name with an uppercase letter.',
       tag
     );
-  }
+  };
 }
 
 module.exports = validateDOMTag;
