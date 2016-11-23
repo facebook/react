@@ -113,7 +113,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should queue mount-ready handlers across different roots
-* should queue updates from during mount
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function

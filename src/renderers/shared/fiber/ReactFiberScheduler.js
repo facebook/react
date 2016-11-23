@@ -784,10 +784,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     try {
       return fn();
     } finally {
-      shouldBatchUpdates = prev;
-      // If we've exited the batch, perform any scheduled task work
-      if (!shouldBatchUpdates) {
-        performTaskWork();
+      // If we're exiting the batch, perform any scheduled task work
+      try {
+        if (!prev) {
+          performTaskWork();
+        }
+      } finally {
+        shouldBatchUpdates = prev;
       }
     }
   }

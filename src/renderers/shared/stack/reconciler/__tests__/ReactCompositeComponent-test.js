@@ -1045,7 +1045,9 @@ describe('ReactCompositeComponent', () => {
 
       componentWillReceiveProps(props) {
         expect(props.update).toBe(1);
+        expect(renders).toBe(1);
         this.setState({updated: true});
+        expect(renders).toBe(1);
       }
 
       render() {
@@ -1059,6 +1061,36 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(1);
     expect(instance.state.updated).toBe(false);
     ReactDOM.render(<Component update={1} />, container);
+    expect(renders).toBe(2);
+    expect(instance.state.updated).toBe(true);
+  });
+
+  it('only renders once if updated in componentWillReceiveProps when batching', () => {
+    var renders = 0;
+
+    class Component extends React.Component {
+      state = {updated: false};
+
+      componentWillReceiveProps(props) {
+        expect(props.update).toBe(1);
+        expect(renders).toBe(1);
+        this.setState({updated: true});
+        expect(renders).toBe(1);
+      }
+
+      render() {
+        renders++;
+        return <div />;
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<Component update={0} />, container);
+    expect(renders).toBe(1);
+    expect(instance.state.updated).toBe(false);
+    ReactDOM.unstable_batchedUpdates(() => {
+      ReactDOM.render(<Component update={1} />, container);
+    });
     expect(renders).toBe(2);
     expect(instance.state.updated).toBe(true);
   });
