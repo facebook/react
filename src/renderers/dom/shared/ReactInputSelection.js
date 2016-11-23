@@ -66,7 +66,27 @@ var ReactInputSelection = {
           priorSelectionRange
         );
       }
+
+      // Focusing a node can change the scroll position, which is undesirable
+      const ancestors = [];
+      let ancestor = priorFocusedElem;
+      while ((ancestor = ancestor.parentNode)) {
+        if (ancestor.nodeType === 1) {
+          ancestors.push({
+            element: ancestor,
+            left: ancestor.scrollLeft,
+            top: ancestor.scrollTop,
+          });
+        }
+      }
+
       focusNode(priorFocusedElem);
+
+      for (let i = 0; i < ancestors.length; i++) {
+        const ancestor = ancestors[i];
+        ancestor.element.scrollLeft = ancestor.left;
+        ancestor.element.scrollTop = ancestor.top;
+      }
     }
   },
 
