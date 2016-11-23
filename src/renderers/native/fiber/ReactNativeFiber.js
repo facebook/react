@@ -69,7 +69,7 @@ var NativeRenderer = ReactFiberReconciler({
     if (children && children.parentTag !== container) {
       const tempNode = { _rootNodeID: 0, children: [] };
       recursivelyAppendChildren(tempNode, children);
-      // clear current children UIManager.removeSubview
+      UIManager.removeSubviewsFromContainerWithID(container);
       UIManager.setChildren(container, tempNode.children);
       children.parentTag = container;
     }
