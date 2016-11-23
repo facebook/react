@@ -224,10 +224,8 @@ var NativeRenderer = ReactFiberReconciler({
     const children = parent.children;
     const beforeIndex = children.indexOf(beforeChild._rootNodeID) - 1;
     const childIndex = children.indexOf(child._rootNodeID);
-    console.log(children);
     children.splice(childIndex, 1);
     children.splice(beforeIndex, 0, child._rootNodeID);
-    console.log(children);
     UIManager.manageChildren(
       parent._rootNodeID,
       [childIndex],
@@ -298,8 +296,6 @@ var ReactNative = {
         callback
       );
     }
-    // console.log(root);
-    // is this correct?
     _instancesByContainerID[containerTag] = root;
 
     return NativeRenderer.getPublicRootInstance(root);
