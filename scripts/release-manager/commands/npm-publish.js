@@ -16,7 +16,7 @@ const glob = require('glob');
 module.exports = function(vorpal, app) {
   vorpal
     .command('npm-publish')
-    .description('Update the version of React, useful while publishing')
+    .description('After you\'ve run grunt release, publishes the npm packages')
     .action(function(args) {
       return new Promise((resolve, reject) => {
         const currentVersion = app.getReactVersion();
@@ -32,6 +32,7 @@ module.exports = function(vorpal, app) {
           {
             type: 'confirm',
             message: 'Did you run `grunt build` or `grunt release` and bump the version number?',
+            default: false,
             name: 'checklist',
           },
         ]).then((answers) => {
