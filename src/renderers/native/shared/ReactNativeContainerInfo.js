@@ -14,6 +14,7 @@
 function ReactNativeContainerInfo(tag: number) {
   var info = {
     _tag: tag,
+    children: [],
   };
   return info;
 }

@@ -19,6 +19,7 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var ReactNativeInjection = require('ReactNativeInjection');
+var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var UIManager = require('UIManager');
 var findNodeHandle = require('findNodeHandle');
@@ -34,17 +35,17 @@ findNodeHandle._injectFiber(function(fiber: Fiber) {
 });
 
 type Container = {
+  children: Array<number>;
   _tag: number;
 };
+
 type Props = { [key: any]: any };
 
 type Instance = {
-  parentTag?: number;
   _rootNodeID: number;
   children: Array<number>;
 };
 type TextInstance = {
-  parentTag?: number;
   _rootNodeID: number;
 };
 
@@ -65,13 +66,17 @@ function recursivelyAppendChildren(parent : Instance, child : HostChildren<Insta
 
 var NativeRenderer = ReactFiberReconciler({
 
-  updateContainer(container : number, children : HostChildren<Instance | TextInstance>) : void {
-    if (children && children.parentTag !== container) {
-      const tempNode = { _rootNodeID: 0, children: [] };
-      recursivelyAppendChildren(tempNode, children);
-      UIManager.removeSubviewsFromContainerWithID(container);
-      UIManager.setChildren(container, tempNode.children);
-      children.parentTag = container;
+  updateContainer(container: Container, children : HostChildren<Instance | TextInstance>) : void {
+    const tempNode = { _rootNodeID: 0, children: [] };
+    recursivelyAppendChildren(tempNode, children);
+    const shouldUpdate = !(
+      container.children.length === tempNode.children.length && container.children.every((tag, i) => tempNode.children[i] === tag)
+    );
+    if (shouldUpdate) {
+      container.children = tempNode.children;
+      // TODO: what if some views only was moved?
+      UIManager.removeSubviewsFromContainerWithID(container._tag);
+      UIManager.setChildren(container._tag, tempNode.children);
     }
   },
 
@@ -234,7 +239,11 @@ var ReactNative = {
 
     let root;
     if (!_instancesByContainerID[containerTag]) {
-      root = NativeRenderer.mountContainer(element, containerTag, callback);
+      root = NativeRenderer.mountContainer(
+        element,
+        ReactNativeContainerInfo(containerTag),
+        callback
+      );
     } else {
       NativeRenderer.updateContainer(
         element,
