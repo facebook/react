@@ -66,7 +66,7 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function getHostParent(fiber : Fiber) : null | I | C {
+  function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
     while (parent) {
       switch (parent.tag) {
@@ -79,7 +79,7 @@ module.exports = function<T, P, I, TI, C>(
       }
       parent = parent.return;
     }
-    return null;
+    throw new Error('Expected to find a host parent.');
   }
 
   function isHostParent(fiber : Fiber) : boolean {
@@ -134,9 +134,6 @@ module.exports = function<T, P, I, TI, C>(
   function commitInsertion(finishedWork : Fiber) : void {
     // Recursively insert all host nodes into the parent.
     const parent = getHostParent(finishedWork);
-    if (!parent) {
-      return;
-    }
     const before = getHostSibling(finishedWork);
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
@@ -208,9 +205,7 @@ module.exports = function<T, P, I, TI, C>(
         commitNestedUnmounts(node);
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
-        if (parent) {
-          removeChild(parent, node.stateNode);
-        }
+        removeChild(parent, node.stateNode);
       } else if (node.tag === Portal) {
         // If this is a portal, then the parent is actually the portal itself.
         // We need to keep track of which parent we're removing from.
