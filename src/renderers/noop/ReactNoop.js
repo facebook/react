@@ -156,8 +156,23 @@ var NoopRenderer = ReactFiberReconciler({
     scheduledDeferredCallback = callback;
   },
 
+  prepareForCommit() : void {
+    if (isCommitting) {
+      throw new Error('Double prepare before commit');
+    }
+    isCommitting = true;
+  },
+
+  resetAfterCommit() : void {
+    if (!isCommitting) {
+      throw new Error('Double reset after commit');
+    }
+    isCommitting = false;
+  },
+
 });
 
+var isCommitting = false;
 var rootContainers = new Map();
 var roots = new Map();
 var DEFAULT_ROOT_ID = '<default>';
@@ -254,6 +269,8 @@ var ReactNoop = {
   batchedUpdates: NoopRenderer.batchedUpdates,
 
   syncUpdates: NoopRenderer.syncUpdates,
+
+  isCommitting: () => isCommitting,
 
   // Logs the current state of the tree.
   dumpTree(rootID : string = DEFAULT_ROOT_ID) {

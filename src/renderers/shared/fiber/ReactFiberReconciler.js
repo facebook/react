@@ -66,6 +66,9 @@ export type HostConfig<T, P, I, TI, C> = {
   scheduleAnimationCallback(callback : () => void) : void,
   scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
 
+  prepareForCommit() : void,
+  resetAfterCommit() : void,
+
   useSyncScheduling ?: boolean,
 };
 
