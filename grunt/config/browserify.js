@@ -63,7 +63,7 @@ function simpleBannerify(src) {
 }
 
 // What is happening here???
-// I'm glad you asked. It became really to make our bundle splitting work.
+// I'm glad you asked. It became really hard to make our bundle splitting work.
 // Everything is fine in node and when bundling with those packages, but when
 // using our pre-packaged files, the splitting didn't work. Specifically due to
 // the UMD wrappers defining their own require and creating their own encapsulated
@@ -71,19 +71,38 @@ function simpleBannerify(src) {
 // be smart and looks for top-level requires (even when aliasing to a bundle),
 // but since we didn't have those, we couldn't require 'react' from 'react-dom'.
 // But we are already shimming in some modules that look for a global React
-// variable. So we write a wrapper around the UMD bundle that browserify creates,
-// and define a React variable that will require across Webpack-boundaries or fall
-// back to the global, just like it would previously.
+// variable. So we replace the UMD wrapper that browserify creates with out own,
+// in 2 steps.
+// 1. We swap out the browserify UMD with a plain function call. This ensures
+// that the internal wrapper doesn't interact with the external state. By the
+// time we're in the internal wrapper it doesn't matter what the external wrapper
+// detected. Browserify insulates its CommonJS system inside closures so can just
+// call that function and return it.
+// 2. We put our own UMD wrapper around that fixed internal function, ensuring
+// React is in scope. This outer wrapper is essentially the same UMD wrapper
+// browserify would create, just handling the scope issue.
+// Is this insane? Yes.
+// Does it work? Yes.
+// Should it go away ASAP? Yes.
 function wrapperify(src) {
+  var toReplace =
+    `function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.${this.data.standalone} = f()}}`;
+  if (src.indexOf(toReplace) === -1) {
+    throw new Error('wrapperify failed to find code to replace');
+  }
+  src = src.replace(
+    toReplace,
+    `function(f){return f()}`
+  );
   return `
 ;(function(f) {
   // CommonJS
   if (typeof exports === "object" && typeof module !== "undefined") {
-    f(require('react'));
+    module.exports = f(require('react'));
 
   // RequireJS
   } else if (typeof define === "function" && define.amd) {
-    require(['react'], f);
+    define(['react'], f);
 
   // <script>
   } else {
@@ -100,10 +119,10 @@ function wrapperify(src) {
       // see https://github.com/facebook/react/issues/3037
       g = this;
     }
-    f(g.React)
+    g.${this.data.standalone} = f(g.React);
   }
 })(function(React) {
-  ${src}
+  return ${src}
 });
 `;
 }

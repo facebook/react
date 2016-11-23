@@ -311,7 +311,7 @@ var CHILD_ID2 = '.0.0.1';
 
 var idToInstance = {};
 [GRANDPARENT_ID, PARENT_ID, CHILD_ID, CHILD_ID2].forEach(function(id) {
-  idToInstance[id] = {_rootNodeID: id};
+  idToInstance[id] = {_rootNodeID: id, _currentElement: {}};
 });
 
 var three = {
