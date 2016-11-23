@@ -14,26 +14,28 @@
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
+var ReactDOMServer;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
-var ReactServerRendering;
 
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
 
-describe('ReactServerRendering', () => {
+describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
 
     ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
-    ReactServerRendering = require('ReactServerRendering');
+    ReactDOMServer = require('ReactDOMServer');
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
@@ -42,7 +44,7 @@ describe('ReactServerRendering', () => {
 
   describe('renderToString', () => {
     it('should generate simple markup', () => {
-      var response = ReactServerRendering.renderToString(
+      var response = ReactDOMServer.renderToString(
         <span>hello world</span>
       );
       expect(response).toMatch(new RegExp(
@@ -53,7 +55,7 @@ describe('ReactServerRendering', () => {
     });
 
     it('should generate simple markup for self-closing tags', () => {
-      var response = ReactServerRendering.renderToString(
+      var response = ReactDOMServer.renderToString(
         <img />
       );
       expect(response).toMatch(new RegExp(
@@ -64,7 +66,7 @@ describe('ReactServerRendering', () => {
     });
 
     it('should generate simple markup for attribute with `>` symbol', () => {
-      var response = ReactServerRendering.renderToString(
+      var response = ReactDOMServer.renderToString(
         <img data-attr=">" />
       );
       expect(response).toMatch(new RegExp(
@@ -81,7 +83,7 @@ describe('ReactServerRendering', () => {
         }
       }
 
-      var response = ReactServerRendering.renderToString(<NullComponent />);
+      var response = ReactDOMServer.renderToString(<NullComponent />);
       expect(response).toBe('<!-- react-empty: 1 -->');
     });
 
@@ -100,7 +102,7 @@ describe('ReactServerRendering', () => {
         }
       }
 
-      var response = ReactServerRendering.renderToString(
+      var response = ReactDOMServer.renderToString(
         <Parent />
       );
       expect(response).toMatch(new RegExp(
@@ -160,7 +162,7 @@ describe('ReactServerRendering', () => {
           }
         }
 
-        var response = ReactServerRendering.renderToString(
+        var response = ReactDOMServer.renderToString(
           <TestComponent />
         );
 
@@ -233,7 +235,7 @@ describe('ReactServerRendering', () => {
       expect(element.innerHTML).toEqual('');
 
       ExecutionEnvironment.canUseDOM = false;
-      lastMarkup = ReactServerRendering.renderToString(
+      lastMarkup = ReactDOMServer.renderToString(
         <TestComponent name="x" />
       );
       ExecutionEnvironment.canUseDOM = true;
@@ -241,7 +243,17 @@ describe('ReactServerRendering', () => {
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
-      expect(element.innerHTML).toBe(lastMarkup);
+
+      var expectedMarkup = lastMarkup;
+      if (ReactDOMFeatureFlags.useFiber) {
+        var reactMetaData = /\s+data-react[a-z-]+=\"[^\"]*\"/g;
+        var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
+        expectedMarkup =
+          expectedMarkup
+          .replace(reactMetaData, '')
+          .replace(reactComments, '');
+      }
+      expect(element.innerHTML).toBe(expectedMarkup);
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
@@ -269,8 +281,8 @@ describe('ReactServerRendering', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactServerRendering.renderToString.bind(
-          ReactServerRendering,
+        ReactDOMServer.renderToString.bind(
+          ReactDOMServer,
           'not a component'
         )
       ).toThrowError(
@@ -293,7 +305,7 @@ describe('ReactServerRendering', () => {
         }
       }
 
-      var response = ReactServerRendering.renderToStaticMarkup(
+      var response = ReactDOMServer.renderToStaticMarkup(
         <TestComponent />
       );
 
@@ -307,7 +319,7 @@ describe('ReactServerRendering', () => {
         }
       }
 
-      var response = ReactServerRendering.renderToStaticMarkup(
+      var response = ReactDOMServer.renderToStaticMarkup(
         <TestComponent />
       );
 
@@ -359,7 +371,7 @@ describe('ReactServerRendering', () => {
           }
         }
 
-        var response = ReactServerRendering.renderToStaticMarkup(
+        var response = ReactDOMServer.renderToStaticMarkup(
           <TestComponent />
         );
 
@@ -378,8 +390,8 @@ describe('ReactServerRendering', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactServerRendering.renderToStaticMarkup.bind(
-          ReactServerRendering,
+        ReactDOMServer.renderToStaticMarkup.bind(
+          ReactDOMServer,
           'not a component'
         )
       ).toThrowError(
@@ -402,7 +414,7 @@ describe('ReactServerRendering', () => {
         // We shouldn't ever be calling this on the server
         throw new Error('Browser reconcile transaction should not be used');
       };
-      var markup = ReactServerRendering.renderToString(
+      var markup = ReactDOMServer.renderToString(
         <Component />
       );
       expect(markup.indexOf('hello, world') >= 0).toBe(true);
@@ -411,7 +423,7 @@ describe('ReactServerRendering', () => {
     it('renders components with different batching strategies', () => {
       class StaticComponent extends React.Component {
         render() {
-          const staticContent = ReactServerRendering.renderToStaticMarkup(
+          const staticContent = ReactDOMServer.renderToStaticMarkup(
             <div>
               <img src="foo-bar.jpg" />
             </div>
@@ -431,8 +443,8 @@ describe('ReactServerRendering', () => {
       }
 
       expect(
-        ReactServerRendering.renderToString.bind(
-          ReactServerRendering,
+        ReactDOMServer.renderToString.bind(
+          ReactDOMServer,
           <div>
             <StaticComponent />
             <Component />
@@ -456,7 +468,7 @@ describe('ReactServerRendering', () => {
     }
 
     spyOn(console, 'error');
-    ReactServerRendering.renderToString(<Foo />);
+    ReactDOMServer.renderToString(<Foo />);
     jest.runOnlyPendingTimers();
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
@@ -464,7 +476,7 @@ describe('ReactServerRendering', () => {
       ' This usually means you called setState() outside componentWillMount() on the server.' +
       ' This is a no-op. Please check the code for the Foo component.'
     );
-    var markup = ReactServerRendering.renderToStaticMarkup(<Foo />);
+    var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
   });
 
@@ -482,7 +494,7 @@ describe('ReactServerRendering', () => {
     });
 
     spyOn(console, 'error');
-    ReactServerRendering.renderToString(<Bar />);
+    ReactDOMServer.renderToString(<Bar />);
     jest.runOnlyPendingTimers();
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
@@ -490,7 +502,7 @@ describe('ReactServerRendering', () => {
       'This usually means you called replaceState() outside componentWillMount() on the server. ' +
       'This is a no-op. Please check the code for the Bar component.'
     );
-    var markup = ReactServerRendering.renderToStaticMarkup(<Bar />);
+    var markup = ReactDOMServer.renderToStaticMarkup(<Bar />);
     expect(markup).toBe('<div>hello</div>');
   });
 
@@ -509,7 +521,7 @@ describe('ReactServerRendering', () => {
     }
 
     spyOn(console, 'error');
-    ReactServerRendering.renderToString(<Baz />);
+    ReactDOMServer.renderToString(<Baz />);
     jest.runOnlyPendingTimers();
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
@@ -517,7 +529,7 @@ describe('ReactServerRendering', () => {
       'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
       'This is a no-op. Please check the code for the Baz component.'
     );
-    var markup = ReactServerRendering.renderToStaticMarkup(<Baz />);
+    var markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
   });
 
@@ -528,7 +540,7 @@ describe('ReactServerRendering', () => {
       return <div>{props.children}</div>;
     }
     expect(() => {
-      ReactServerRendering.renderToStaticMarkup(
+      ReactDOMServer.renderToStaticMarkup(
         <Wrapper>
           <span key={0}/>
           <span key={1}/>
