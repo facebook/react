@@ -44,6 +44,7 @@ type Props = { [key: any]: any };
 type Instance = {
   _rootNodeID: number;
   children: Array<number>;
+  child: ?number;
 };
 type TextInstance = {
   _rootNodeID: number;
@@ -91,23 +92,26 @@ var NativeRenderer = ReactFiberReconciler({
     const node = {
       _rootNodeID: ReactNativeTagHandles.allocateTag(),
       children: [],
+      child: null,
     };
     precacheFiberNode(internalInstanceHandle, node._rootNodeID);
+
+    const attributes = ReactNativeAttributePayload.create(
+      props,
+      viewConfig.validAttributes
+    );
+    UIManager.createView(node._rootNodeID, type, root, attributes);
 
     if (typeof props.children === 'string' || typeof props.children === 'number') {
       // create text node
       const textTag = ReactNativeTagHandles.allocateTag();
       const text = '' + props.children;
       UIManager.createView(textTag, 'RCTRawText', root, { text: text });
+      node.child = textTag;
       node.children.push(textTag);
+    } else {
+      recursivelyAppendChildren(node, children);
     }
-    recursivelyAppendChildren(node, children);
-    const attributes = ReactNativeAttributePayload.create(
-      props,
-      viewConfig.validAttributes
-    );
-
-    UIManager.createView(node._rootNodeID, type, root, attributes);
     UIManager.setChildren(node._rootNodeID, node.children.slice());
     return node;
   },
@@ -125,16 +129,28 @@ var NativeRenderer = ReactFiberReconciler({
     const { viewConfig } = internalInstanceHandle.return.type;
     const oldChildren = oldProps.children;
     const newChildren = newProps.children;
-    if (typeof oldChildren === 'string' || oldChildren === 'number') {
-      const textTag = node.children[0];
+    if (typeof oldChildren === 'string' || typeof oldChildren === 'number') {
+      const textTag = node.child;
       if (typeof newChildren === 'string' || typeof newChildren === 'number') {
+        // singlechild -> singlechild
         UIManager.updateView(textTag, 'RCTRawText', { text: '' + newChildren });
-      } else {
-        // TODO: does this work?
-        // will appendChild/insertBefore be called before this? if so this won't work
-        UIManager.manageChildren(node._rootNodeID, [], [], [], [], [0]);
-        node.children.splice(0, 1);
+      } else if (textTag) {
+        // singlechild -> multichild
+        const index = node.children.indexOf(textTag);
+        UIManager.manageChildren(node._rootNodeID, [], [], [], [], [index]);
+        node.children.splice(index, 1);
+        node.child = null;
       }
+    } else if (
+      typeof newChildren === 'string' ||
+      typeof newChildren === 'number') {
+      // multichild -> singlechild
+      const textTag = ReactNativeTagHandles.allocateTag();
+      const text = '' + newChildren;
+      UIManager.createView(textTag, 'RCTRawText', root, { text: text });
+      node.child = textTag;
+      node.children.push(textTag);
+      UIManager.setChildren(node._rootNodeID, node.children.slice());
     }
 
     const updatePayload = ReactNativeAttributePayload.diff(
