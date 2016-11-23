@@ -14,7 +14,6 @@
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
-var div = React.createFactory('div');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
@@ -54,7 +53,7 @@ describe('ReactDOM', () => {
 
   it('should allow children to be passed as an argument', () => {
     var argDiv = ReactTestUtils.renderIntoDocument(
-      div(null, 'child')
+      React.DOM.div(null, 'child')
     );
     var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
@@ -62,7 +61,7 @@ describe('ReactDOM', () => {
 
   it('should overwrite props.children with children argument', () => {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
-      div({children: 'fakechild'}, 'child')
+      React.DOM.div({children: 'fakechild'}, 'child')
     );
     var conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
