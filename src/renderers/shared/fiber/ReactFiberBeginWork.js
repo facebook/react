@@ -434,9 +434,6 @@ module.exports = function<T, P, I, TI, C>(
         return workInProgress.child;
       }
       case HostComponent:
-        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
-          config.beginUpdate(workInProgress.stateNode);
-        }
         return updateHostComponent(current, workInProgress);
       case HostText:
         // Nothing to do here. This is terminal. We'll do the completion step
