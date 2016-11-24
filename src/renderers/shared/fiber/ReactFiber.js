@@ -97,9 +97,6 @@ export type Fiber = {
   memoizedState: any,
   // Linked list of callbacks to call after updates are committed.
   callbackList: ?UpdateQueue,
-  // Output is the return value of this fiber, or a linked list of return values
-  // if this returns multiple values. Such as a fragment.
-  output: any, // This type will be more specific once we overload the tag.
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -190,7 +187,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     updateQueue: null,
     memoizedState: null,
     callbackList: null,
-    output: null,
 
     effectTag: NoEffect,
     nextEffect: null,
@@ -267,7 +263,6 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
 
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
-  alt.output = fiber.output;
 
   return alt;
 };

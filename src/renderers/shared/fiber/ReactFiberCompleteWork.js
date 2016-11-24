@@ -62,28 +62,31 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     workInProgress.effectTag |= Callback;
   }
 
-  function transferOutput(child : ?Fiber, returnFiber : Fiber) {
-    // If we have a single result, we just pass that through as the output to
-    // avoid unnecessary traversal. When we have multiple output, we just pass
-    // the linked list of fibers that has the individual output values.
-    returnFiber.output = (child && !child.sibling) ? child.output : child;
-    returnFiber.memoizedProps = returnFiber.pendingProps;
-  }
-
-  function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
-    if (!output) {
-      // Ignore nulls etc.
-    } else if (output.tag !== undefined) { // TODO: Fix this fragile duck test.
-      // Detect if this is a fiber, if so it is a fragment result.
-      // $FlowFixMe: Refinement issue.
-      var item = (output : Fiber);
-      do {
-        recursivelyFillYields(yields, item.output);
-        item = item.sibling;
-      } while (item);
-    } else {
-      // $FlowFixMe: Refinement issue. If it is not a Fiber or null, it is a yield
-      yields.push(output);
+  function appendAllYields(yields : Array<ReifiedYield>, workInProgress : Fiber) {
+    let node = workInProgress.child;
+    while (node) {
+      if (node.tag === HostComponent || node.tag === HostText ||
+          node.tag === Portal) {
+        throw new Error('A coroutine cannot have host component children.');
+      } else if (node.tag === YieldComponent) {
+        yields.push(node.type);
+      } else if (node.child) {
+        // TODO: Coroutines need to visit the stateNode.
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === workInProgress) {
+        return;
+      }
+      while (!node.sibling) {
+        if (!node.return || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
     }
   }
 
@@ -105,11 +108,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Build up the yields.
     // TODO: Compare this to a generator or opaque helpers like Children.
     var yields : Array<ReifiedYield> = [];
-    var child = workInProgress.child;
-    while (child) {
-      recursivelyFillYields(yields, child.output);
-      child = child.sibling;
-    }
+    appendAllYields(yields, workInProgress);
     var fn = coroutine.handler;
     var props = coroutine.props;
     var nextChildren = fn(props, yields);
@@ -158,10 +157,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     switch (workInProgress.tag) {
       case FunctionalComponent:
-        transferOutput(workInProgress.child, workInProgress);
+        workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
       case ClassComponent:
-        transferOutput(workInProgress.child, workInProgress);
         // We are leaving this subtree, so pop context if any.
         if (isContextProvider(workInProgress)) {
           popContextProvider();
@@ -191,7 +189,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
         return null;
       case HostContainer: {
-        transferOutput(workInProgress.child, workInProgress);
+        workInProgress.memoizedProps = workInProgress.pendingProps;
         popContextProvider();
         const fiberRoot = (workInProgress.stateNode : FiberRoot);
         if (fiberRoot.pendingContext) {
@@ -221,8 +219,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
           }
-          // TODO: Is this actually ever going to change? Why set it every time?
-          workInProgress.output = instance;
         } else {
           if (!newProps) {
             if (workInProgress.stateNode === null) {
@@ -242,9 +238,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           appendAllChildren(instance, workInProgress);
           finalizeInitialChildren(instance, workInProgress.type, newProps);
 
-          // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
-          workInProgress.output = instance;
           if (workInProgress.ref) {
             // If there is a ref on a host node we need to schedule a callback
             markUpdate(workInProgress);
@@ -268,16 +262,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             }
           }
           const textInstance = createTextInstance(newText, workInProgress);
-          // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = textInstance;
-          workInProgress.output = textInstance;
         }
         workInProgress.memoizedProps = newText;
         return null;
       case CoroutineComponent:
         return moveCoroutineToHandlerPhase(current, workInProgress);
       case CoroutineHandlerPhase:
-        transferOutput(workInProgress.stateNode, workInProgress);
+        workInProgress.memoizedProps = workInProgress.pendingProps;
         // Reset the tag to now be a first phase coroutine.
         workInProgress.tag = CoroutineComponent;
         return null;
@@ -285,12 +277,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // Does nothing.
         return null;
       case Fragment:
-        transferOutput(workInProgress.child, workInProgress);
+        workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
       case Portal:
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
-        workInProgress.output = null;
         workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
 
