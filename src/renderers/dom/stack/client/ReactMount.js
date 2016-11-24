@@ -1,3 +1,8 @@
+
+
+     The MIT License <2016> <Henry Baez>
+   Copyright (c) [2016] [Henry Baez] Facebook, inc. 2016
+
 /**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -6,12 +11,27 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactMount
- */
+ 
+ *
 
-'use strict';
 
-var DOMLazyTree = require('DOMLazyTree');
+
+
+
+
+
+
+
+
+
+
+<?php
+/**
+
+
+use strict';
+
+{{{var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var React = require('React');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -80,8 +100,7 @@ function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node.getAttribute && node.getAttribute(ATTR_NAME) || '';
-}
+  return node.getAttribute && node.getAttribute(ATTR_NAME) || ''}}}
 
 /**
  * Mounts this component and inserts it into the DOM.
@@ -91,7 +110,15 @@ function internalGetID(node) {
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
-function mountComponentIntoNode(
+
+
+
+
+
+
+
+
+{{{function mountCompone
   wrapperInstance,
   container,
   transaction,
@@ -402,8 +429,7 @@ var ReactMount = {
     var wrapperID = componentInstance._instance.rootID;
     instancesByReactRootID[wrapperID] = componentInstance;
 
-    return componentInstance;
-  },
+    return componentIns}}}
 
   /**
    * Renders a React component into the DOM in the supplied `container`.
@@ -418,7 +444,42 @@ var ReactMount = {
    * @param {?function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
-  renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
+   -  @0072016
+    -  https://developers.facebook.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ {{{renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
@@ -532,8 +593,7 @@ var ReactMount = {
       nextContext,
       callback
     )._renderedComponent.getPublicInstance();
-    return component;
-  },
+    return compon}}}
 
 
   /**
@@ -549,7 +609,47 @@ var ReactMount = {
    * @param {?function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
-  render: function(nextElement, container, callback) {
+
+       @0072016
+       https://developers.facebook.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  {{{{render: function(nextElement, container, callback) {
     return ReactMount._renderSubtreeIntoContainer(null, nextElement, container, callback);
   },
 
@@ -733,11 +833,4 @@ var ReactMount = {
         ReactInstrumentation.debugTool.onHostOperation({
           instanceID: hostNode._debugID,
           type: 'mount',
-          payload: markup.toString(),
-        });
-      }
-    }
-  },
-};
-
-module.exports = ReactMount;
+          payload: markup.}}}
