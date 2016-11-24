@@ -790,11 +790,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function batchedUpdates<A>(fn : () => A) : A {
+  function batchedUpdates<A, R>(fn : (a: A) => R, a : A) : R {
     const prev = shouldBatchUpdates;
     shouldBatchUpdates = true;
     try {
-      return fn();
+      return fn(a);
     } finally {
       // If we're exiting the batch, perform any scheduled task work
       try {
