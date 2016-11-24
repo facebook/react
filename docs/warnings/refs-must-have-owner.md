@@ -13,7 +13,7 @@ You are probably here because you got the following error messages:
 This usually means one of two things:
 
 - You are trying to add a `ref` to an element that is being created outside of a component's render() function.
-- You have multiple (conflicting) copies of React loaded (eg. due to a miss-configured NPM dependency)
+- You have multiple (conflicting) copies of React loaded (eg. due to a misconfigured NPM dependency)
 
 
 ## Invalid Refs
