@@ -23,6 +23,12 @@ var {
   isContextProvider,
   popContextProvider,
 } = require('ReactFiberContext');
+var {
+  getCurrentRoot,
+  getHostContainerOnStack,
+  popHostContainer,
+  popHostFiber,
+} = require('ReactFiberHostContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
@@ -50,6 +56,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const finalizeInitialChildren = config.finalizeInitialChildren;
   const createTextInstance = config.createTextInstance;
   const prepareUpdate = config.prepareUpdate;
+  const isRootInstance = config.isRootInstance;
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -125,35 +132,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return workInProgress.stateNode;
   }
 
-  function appendAllChildren(parent : I, workInProgress : Fiber) {
-    // We only have the top Fiber that was created but we need recurse down its
-    // children to find all the terminal nodes.
-    let node = workInProgress.child;
-    while (node) {
-      if (node.tag === HostComponent || node.tag === HostText) {
-        appendInitialChild(parent, node.stateNode);
-      } else if (node.tag === Portal) {
-        // If we have a portal child, then we don't want to traverse
-        // down its children. Instead, we'll get insertions from each child in
-        // the portal directly.
-      } else if (node.child) {
-        // TODO: Coroutines need to visit the stateNode.
-        node = node.child;
-        continue;
-      }
-      if (node === workInProgress) {
-        return;
-      }
-      while (!node.sibling) {
-        if (!node.return || node.return === workInProgress) {
-          return;
-        }
-        node = node.return;
-      }
-      node = node.sibling;
-    }
-  }
-
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     switch (workInProgress.tag) {
       case FunctionalComponent:
@@ -202,6 +180,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       }
       case HostComponent:
+        popHostFiber();
+        let hostContainerFiber = getHostContainerOnStack();
+        if (workInProgress === hostContainerFiber) {
+          popHostContainer();
+          hostContainerFiber = getHostContainerOnStack();
+        }
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -229,16 +213,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             }
           }
 
-          // TODO: Move createInstance to beginWork and keep it on a context
-          // "stack" as the parent. Then append children as we go in beginWork
-          // or completeWork depending on we want to add then top->down or
-          // bottom->up. Top->down is faster in IE11.
-          // Finally, finalizeInitialChildren here in completeWork.
-          const instance = createInstance(workInProgress.type, newProps, document.documentElement /* TODO */, workInProgress);
-          appendAllChildren(instance, workInProgress);
-          finalizeInitialChildren(instance, workInProgress.type, newProps, document.documentElement /* TODO */);
+          // TODO: do we want to append children top->down or
+          // bottom->up? Top->down is faster in IE11.
+          const hostContainerInstance = hostContainerFiber != null ?
+            // TODO: just store the instance itself on stack
+            hostContainerFiber.stateNode :
+            getCurrentRoot().stateNode.containerInfo;
+          const instance = workInProgress.stateNode;
+          finalizeInitialChildren(instance, workInProgress.type, newProps, hostContainerInstance);
 
-          workInProgress.stateNode = instance;
           if (workInProgress.ref) {
             // If there is a ref on a host node we need to schedule a callback
             markUpdate(workInProgress);

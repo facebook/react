@@ -24,6 +24,7 @@ var {
   CoroutineComponent,
   Portal,
 } = ReactTypeOfWork;
+var { getCurrentRoot } = require('ReactFiberHostContext');
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 var {
@@ -303,7 +304,9 @@ module.exports = function<T, P, I, TI, C>(
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          commitUpdate(instance, oldProps, newProps, finishedWork, document.documentElement /* TODO */);
+          const currentRootFiber = getCurrentRoot();
+          const rootInstance = currentRootFiber.stateNode.containerInfo;
+          commitUpdate(instance, oldProps, newProps, finishedWork, rootInstance);
         }
         detachRefIfNeeded(current, finishedWork);
         return;

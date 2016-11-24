@@ -32,16 +32,26 @@ describe('ReactDOMSVG', () => {
     expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
   });
 
-  it('creates elements with the svg namespace', () => {
+  it('creates elements with svg namespace inside svg tag', () => {
     var node = document.createElement('div');
-    var g;
-    var image;
+    var div, foreignDiv, g, image, image2, p;
     ReactDOM.render(
-      <svg>
-        <g ref={el => g = el} strokeWidth="5">
-          <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-        </g>
-      </svg>,
+      <div>
+        <svg>
+          <g ref={el => g = el} strokeWidth="5">
+            <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+            <foreignobject>
+              <div ref={el => foreignDiv = el} />
+            </foreignobject>
+          </g>
+        </svg>
+        <p ref={el => p = el}>
+          <svg>
+            <image ref={el => image2 = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+          </svg>
+        </p>
+        <div ref={el => div = el} />
+      </div>,
       node
     );
     expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
@@ -50,6 +60,13 @@ describe('ReactDOMSVG', () => {
     expect(
       image.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
     ).toBe('http://i.imgur.com/w7GCRPb.png');
+    expect(image2.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(
+      image2.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
+    ).toBe('http://i.imgur.com/w7GCRPb.png');
+    expect(p.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(foreignDiv.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
   });
 
 });
