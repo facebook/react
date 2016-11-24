@@ -25,7 +25,7 @@ describe('ReactMount', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
-    ReactMount = require('ReactMount');
+    ReactMount = {};
     ReactTestUtils = require('ReactTestUtils');
 
     try {
