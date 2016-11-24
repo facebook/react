@@ -280,6 +280,39 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
+    it('should render nested portals', () => {
+      var portalContainer1 = document.createElement('div');
+      var portalContainer2 = document.createElement('div');
+      var portalContainer3 = document.createElement('div');
+
+      ReactDOM.render([
+        <div>normal[0]</div>,
+        ReactDOM.unstable_createPortal([
+          <div>portal1[0]</div>,
+          ReactDOM.unstable_createPortal(
+            <div>portal2[0]</div>,
+            portalContainer2
+          ),
+          ReactDOM.unstable_createPortal(
+            <div>portal3[0]</div>,
+            portalContainer3
+          ),
+          <div>portal1[1]</div>,
+        ], portalContainer1),
+        <div>normal[1]</div>,
+      ], container);
+      expect(portalContainer1.innerHTML).toBe('<div>portal1[0]</div><div>portal1[1]</div>');
+      expect(portalContainer2.innerHTML).toBe('<div>portal2[0]</div>');
+      expect(portalContainer3.innerHTML).toBe('<div>portal3[0]</div>');
+      expect(container.innerHTML).toBe('<div>normal[0]</div><div>normal[1]</div>');
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(portalContainer1.innerHTML).toBe('');
+      expect(portalContainer2.innerHTML).toBe('');
+      expect(portalContainer3.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+
     it('should pass portal context when rendering subtree elsewhere', () => {
       var portalContainer = document.createElement('div');
 
