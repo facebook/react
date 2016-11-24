@@ -1,32 +1,6 @@
-# http://php.net
-root = true::.js
 
-[*]::npm
-charset = utf-8
-    <insert_final_newline-facebook-jssdk = true,
-end_of_line = lf
-indent_size = 2
-indent_style = space
-insert_final_newline = true
-max_line_length = 80
-trim_trailing_whitespace = true
-
-[*]::php
-
-
-
-
-
-max_line_length = 0
-trim_trailing_whitespace = 
-  
-
-[*]::sdk 
-
-
-max_line_length = 0
-   return;
-******************************************************************************************************************
+*****************************************************************************************************************/**
+Xmx8g
 
    -  JavaScript SDK in HTML
     -   AppId: '1638676273115757'
@@ -69,7 +43,7 @@ max_line_length = 0
      foo.gradle@gmail.com
     November 23, 2016
     23:59:28PST
-R
+  - FBSDK
 
 
 
