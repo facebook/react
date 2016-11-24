@@ -100,6 +100,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
       while (node.tag !== HostComponent && node.tag !== HostText) {
         // If it is not host node and, we might have a host node inside it.
@@ -112,6 +113,7 @@ module.exports = function<T, P, I, TI, C>(
         if (!node.child) {
           continue siblings;
         } else {
+          node.child.return = node;
           node = node.child;
         }
       }
@@ -169,6 +171,7 @@ module.exports = function<T, P, I, TI, C>(
       commitUnmount(node);
       if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
+        node.child.return = node;
         node = node.child;
         continue;
       }
@@ -181,6 +184,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
@@ -201,6 +205,7 @@ module.exports = function<T, P, I, TI, C>(
         commitUnmount(node);
         if (node.child) {
           // TODO: Coroutines need to visit the stateNode.
+          node.child.return = node;
           node = node.child;
           continue;
         }
@@ -214,6 +219,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
