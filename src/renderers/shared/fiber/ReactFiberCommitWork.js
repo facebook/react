@@ -21,6 +21,7 @@ var {
   HostContainer,
   HostComponent,
   HostText,
+  CoroutineComponent,
   Portal,
 } = ReactTypeOfWork;
 var { callCallbacks } = require('ReactFiberUpdateQueue');
@@ -276,6 +277,10 @@ module.exports = function<T, P, I, TI, C>(
       }
       case HostComponent: {
         detachRef(current);
+        return;
+      }
+      case CoroutineComponent: {
+        commitNestedUnmounts(current.stateNode);
         return;
       }
     }

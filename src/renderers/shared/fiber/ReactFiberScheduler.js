@@ -286,6 +286,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       workInProgress.pendingProps = null;
       workInProgress.updateQueue = null;
 
+      if (next) {
+        // If completing this work spawned new work, do that next. We'll come
+        // back here again.
+        return next;
+      }
+
       const returnFiber = workInProgress.return;
 
       if (returnFiber) {
@@ -318,10 +324,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
 
-      if (next) {
-        // If completing this work spawned new work, do that next.
-        return next;
-      } else if (workInProgress.sibling) {
+      if (workInProgress.sibling) {
         // If there is more work to do in this returnFiber, do that next.
         return workInProgress.sibling;
       } else if (returnFiber) {
