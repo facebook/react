@@ -44,8 +44,26 @@ Xmx8g
     November 23, 2016
     23:59:28PST
   - FBSDK
-
-
+  PHP
+ <clover> <phpunit>
+   Build:
+   Tests:
+    Override:
+   -  -
+  command: 'phpunit' --coverage-clover=some-file
+  Coverage:
+  File: 'some-file'
+  format: 'clover'
+  Python
+ <.coverage>  <.coveragrc>
+   Build:
+  Tests:
+  Override:
+  -  -
+   Command: './run-tests.sh
+  Coverage:
+   File: 'coverage'
+  @0072016
 
 
 
