@@ -14,6 +14,13 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { HostChildren } from 'ReactFiberReconciler';
+import type {
+  Instance,
+  TextInstance,
+  Container,
+  Props,
+} from 'ReactNativeFiberComponent';
+
 var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
@@ -22,9 +29,22 @@ var ReactNativeInjection = require('ReactNativeInjection');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var UIManager = require('UIManager');
 var findNodeHandle = require('findNodeHandle');
+var ReactNativeFiberComponent = require('ReactNativeFiberComponent');
+
 var warning = require('warning');
 
 var { precacheFiberNode } = ReactNativeComponentTree;
+var {
+  createSingleChild,
+  updateSingleChild,
+  createInstance,
+  createTextInstance,
+  updateTextInstance,
+  appendChild,
+  moveChild,
+  insertBefore,
+  removeChild,
+} = ReactNativeFiberComponent;
 
 ReactNativeInjection.inject();
 
@@ -33,24 +53,8 @@ findNodeHandle._injectFiber(function(fiber: Fiber) {
   return inst ? inst._rootNodeID : null;
 });
 
-type Container = {
-  children: Array<number>;
-  _rootNodeID: number;
-};
-
-type Props = { [key: any]: any };
-
-type Instance = {
-  _rootNodeID: number;
-  children: Array<number>;
-  child: ?number;
-};
-type TextInstance = {
-  _rootNodeID: number;
-};
-
-function isTextChild(maybeTextChild: any) {
-  return typeof maybeTextChild === 'string' || typeof maybeTextChild === 'number';
+function isText(maybeText: any) {
+  return typeof maybeText === 'string' || typeof maybeText === 'number';
 }
 
 var NativeRenderer = ReactFiberReconciler({
@@ -67,27 +71,17 @@ var NativeRenderer = ReactFiberReconciler({
   ) : Instance {
     const { viewConfig } = internalInstanceHandle.return.type;
     const root = 1; // HACK
-    const node = {
-      _rootNodeID: ReactNativeTagHandles.allocateTag(),
-      children: [],
-      child: null,
-    };
-    precacheFiberNode(internalInstanceHandle, node._rootNodeID);
-
-    if (isTextChild(props.children)) {
-      // create text node
-      const textTag = ReactNativeTagHandles.allocateTag();
-      const text = '' + props.children;
-      UIManager.createView(textTag, 'RCTRawText', root, { text: text });
-      node.child = textTag;
-      node.children.push(textTag);
-    }
-
     const attributes = ReactNativeAttributePayload.create(
       props,
       viewConfig.validAttributes
     );
-    UIManager.createView(node._rootNodeID, type, root, attributes);
+
+    const node = createInstance(type, attributes, root);
+    precacheFiberNode(internalInstanceHandle, node._rootNodeID);
+
+    if (isText(props.children)) {
+      createSingleChild(node, '' + props.children, root);
+    }
 
     return node;
   },
@@ -100,30 +94,24 @@ var NativeRenderer = ReactFiberReconciler({
     return true;
   },
 
-  commitUpdate(node : Instance, oldProps : Props, newProps : Props, internalInstanceHandle: Object) : void {
+  commitUpdate(
+    node : Instance,
+    oldProps : Props,
+    newProps : Props,
+    internalInstanceHandle: Object
+  ) : void {
     var root = 1; // HACK
     const { viewConfig } = internalInstanceHandle.return.type;
     const oldChildren = oldProps.children;
     const newChildren = newProps.children;
-    if (isTextChild(oldChildren)) {
-      const textTag = node.child;
-      if (isTextChild(newChildren)) {
-        // singlechild -> singlechild
-        UIManager.updateView(textTag, 'RCTRawText', { text: '' + newChildren });
-      } else if (textTag) {
-        // singlechild -> multichild
-        const index = node.children.indexOf(textTag);
-        UIManager.manageChildren(node._rootNodeID, [], [], [], [], [index]);
-        node.children.splice(index, 1);
-        node.child = null;
-      }
-    } else if (isTextChild(newChildren)) {
-      // multichild -> singlechild
-      const textTag = ReactNativeTagHandles.allocateTag();
-      const text = '' + newChildren;
-      UIManager.createView(textTag, 'RCTRawText', root, { text: text });
-      node.child = textTag;
-      node.children.push(textTag);
+
+    // Single child handling
+    if (node.child) {
+      // handles text updates and deletion of single child
+      updateSingleChild(node, newChildren);
+    } else if (isText(newChildren)) {
+      // handles creation of single child
+      createSingleChild(node, '' + newChildren, root);
       UIManager.setChildren(node._rootNodeID, node.children.slice());
     }
 
@@ -132,6 +120,7 @@ var NativeRenderer = ReactFiberReconciler({
       newProps,
       viewConfig.validAttributes
     );
+
     if (updatePayload) {
       UIManager.updateView(
         node._rootNodeID,
@@ -141,57 +130,63 @@ var NativeRenderer = ReactFiberReconciler({
     }
   },
 
-  createTextInstance(text: string, internalInstanceHandle : Object) : TextInstance {
+  createTextInstance(
+    text: string,
+    internalInstanceHandle : Object
+  ) : TextInstance {
     const root = 1; // HACK
-    const node : TextInstance = {
-      _rootNodeID: ReactNativeTagHandles.allocateTag(),
-    };
+    const node = createTextInstance(text, root);
     precacheFiberNode(internalInstanceHandle, node._rootNodeID);
-    UIManager.createView(node._rootNodeID, 'RCTRawText', root, { text: text });
     return node;
   },
 
-  commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
+  commitTextUpdate(
+    textInstance : TextInstance,
+    oldText : string,
+    newText : string
+  ) : void {
     if (oldText !== newText) {
-      UIManager.updateView(
-        textInstance._rootNodeID,
-        'RCTRawText',
-        { text: newText }
-      );
+      updateTextInstance(textInstance, newText);
     }
   },
 
-  appendInitialChild(parent: Instance, child: Instance | TextInstance): void {
-    parent.children.push(child._rootNodeID);
+  appendInitialChild(
+    parent: Instance,
+    child: Instance | TextInstance
+  ): void {
+    appendChild(parent, child);
   },
 
-  finalizeInitialChildren(node: Instance, type: string, props: Props): void {
+  finalizeInitialChildren(
+    node: Instance,
+    type: string,
+    props: Props
+  ): void {
     UIManager.setChildren(node._rootNodeID, node.children.slice());
   },
 
-  appendChild(parent: Instance | Container, child : Instance | TextInstance) : void {
+  appendChild(
+    parent: Instance | Container,
+    child : Instance | TextInstance
+  ) : void {
     if (parent.children.includes(child._rootNodeID)) {
-      // appendChild is called when a item get's moved to the end of a list
-      const children = parent.children;
-      const childIndex = children.indexOf(child._rootNodeID);
-      children.splice(childIndex, 1);
-      children.push(child._rootNodeID);
+      const [fromIndex, toIndex] = moveChild(parent, child);
       UIManager.manageChildren(
         parent._rootNodeID,
-        [childIndex],
-        [children.length - 1],
+        [fromIndex],
+        [toIndex],
         [],
         [],
         []
       );
     } else {
-      parent.children.push(child._rootNodeID);
+      const newIndex = appendChild(parent, child);
       UIManager.manageChildren(
         parent._rootNodeID,
         [],
         [],
         [child._rootNodeID],
-        [parent.children.length - 1 ],
+        [newIndex],
         []
       );
     }
@@ -200,13 +195,9 @@ var NativeRenderer = ReactFiberReconciler({
   insertBefore(
     parent : Instance | Container,
     child : Instance | TextInstance,
-    beforeChild : Instance | TextInstance
+    before : Instance | TextInstance
   ) : void {;
-    const children = parent.children;
-    const beforeIndex = children.indexOf(beforeChild._rootNodeID) - 1;
-    const childIndex = children.indexOf(child._rootNodeID);
-    children.splice(childIndex, 1);
-    children.splice(beforeIndex, 0, child._rootNodeID);
+    const [childIndex, beforeIndex] = insertBefore(parent, child, before);
     UIManager.manageChildren(
       parent._rootNodeID,
       [childIndex],
@@ -217,16 +208,18 @@ var NativeRenderer = ReactFiberReconciler({
     );
   },
 
-  removeChild(parent : Instance | Container, child : Instance | TextInstance) : void {
-    const childIndex = parent.children.indexOf(child._rootNodeID);
-    parent.children.splice(childIndex, 1);
+  removeChild(
+    parent : Instance | Container,
+    child : Instance | TextInstance
+  ) : void {
+    const removedIndex = removeChild(parent, child);
     UIManager.manageChildren(
       parent._rootNodeID,
       [],
       [],
       [],
       [],
-      [childIndex]
+      [removedIndex]
     );
   },
 
