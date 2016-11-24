@@ -83,9 +83,9 @@ var ReactInputSelection = {
       focusNode(priorFocusedElem);
 
       for (let i = 0; i < ancestors.length; i++) {
-        const ancestor = ancestors[i];
-        ancestor.element.scrollLeft = ancestor.left;
-        ancestor.element.scrollTop = ancestor.top;
+        const info = ancestors[i];
+        info.element.scrollLeft = info.left;
+        info.element.scrollTop = info.top;
       }
     }
   },
