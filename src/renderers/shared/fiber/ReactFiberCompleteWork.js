@@ -234,9 +234,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
           // Finally, finalizeInitialChildren here in completeWork.
-          const instance = createInstance(workInProgress.type, newProps, workInProgress);
+          const instance = createInstance(workInProgress.type, newProps, document.documentElement /* TODO */, workInProgress);
           appendAllChildren(instance, workInProgress);
-          finalizeInitialChildren(instance, workInProgress.type, newProps);
+          finalizeInitialChildren(instance, workInProgress.type, newProps, document.documentElement /* TODO */);
 
           workInProgress.stateNode = instance;
           if (workInProgress.ref) {
