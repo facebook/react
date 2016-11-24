@@ -30,7 +30,14 @@ declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
   declare function createView() : void;
-  declare function manageChildren() : void;
+  declare function manageChildren(
+    tag: number,
+    moveFromIndices: Array<number>,
+    moveToIndices: Array<number>,
+    addChildTags: Array<number>,
+    addAtIndices: Array<number>,
+    removeAtIndices: Array<number>
+    ) : void;
   declare function measure() : void;
   declare function measureInWindow() : void;
   declare function measureLayout() : void;
