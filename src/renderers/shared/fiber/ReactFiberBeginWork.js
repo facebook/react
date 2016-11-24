@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -30,6 +31,7 @@ var {
   isContextProvider,
   hasContextChanged,
   pushContextProvider,
+  pushTopLevelContextObject,
   resetContext,
 } = require('ReactFiberContext');
 var {
@@ -43,6 +45,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 var {
   NoWork,
@@ -296,6 +299,27 @@ module.exports = function<T, P, I, TI, C>(
     reconcileChildren(current, workInProgress, coroutine.children);
   }
 
+  function updatePortalComponent(current, workInProgress) {
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    const nextChildren = workInProgress.pendingProps;
+    if (!current) {
+      // Portals are special because we don't append the children during mount
+      // but at commit. Therefore we need to track insertions which the normal
+      // flow doesn't do during mount. This doesn't happen at the root because
+      // the root always starts with a "current" with a null child.
+      // TODO: Consider unifying this with how the root works.
+      workInProgress.child = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.child,
+        nextChildren,
+        priorityLevel
+      );
+      markChildAsProgressed(current, workInProgress, priorityLevel);
+    } else {
+      reconcileChildren(current, workInProgress, nextChildren);
+    }
+  }
+
   /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
@@ -411,15 +435,22 @@ module.exports = function<T, P, I, TI, C>(
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
         return updateClassComponent(current, workInProgress);
-      case HostContainer:
+      case HostContainer: {
+        const root = (workInProgress.stateNode : FiberRoot);
+        if (root.pendingContext) {
+          pushTopLevelContextObject(
+            root.pendingContext,
+            root.pendingContext !== root.context
+          );
+        } else {
+          pushTopLevelContextObject(root.context, false);
+        }
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return workInProgress.child;
+      }
       case HostComponent:
-        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
-          config.beginUpdate(workInProgress.stateNode);
-        }
         return updateHostComponent(current, workInProgress);
       case HostText:
         // Nothing to do here. This is terminal. We'll do the completion step
@@ -438,6 +469,10 @@ module.exports = function<T, P, I, TI, C>(
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case Portal:
+        updatePortalComponent(current, workInProgress);
+        // TODO: is this right?
+        return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
         return workInProgress.child;

@@ -226,7 +226,7 @@ var newPlayer = Object.assign({}, player, {score: 2});
 // Now player is unchanged, but newPlayer is {score: 2, name: 'Jeff'}
 
 // Or if you are using object spread, you can write:
-// var newPlayer = {score: 2, ...player};
+// var newPlayer = {...player, score: 2};
 ```
 
 The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.

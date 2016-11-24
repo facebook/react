@@ -552,9 +552,6 @@ var ReactDOMFiberComponent = {
       case 'input':
         ReactDOMFiberInput.mountWrapper(domElement, rawProps);
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
-        // TODO: Make sure we check if this is still unmounted or do any clean
-        // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement : any));
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
@@ -575,7 +572,6 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.mountWrapper(domElement, rawProps);
         props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
-        inputValueTracking.trackNode((domElement : any));
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
@@ -600,12 +596,18 @@ var ReactDOMFiberComponent = {
     // DOM yet. We need a special effect to handle this.
     switch (tag) {
       case 'input':
+        // TODO: Make sure we check if this is still unmounted or do any clean
+        // up necessary since we never stop tracking anymore.
+        inputValueTracking.trackNode((domElement : any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         if (props.autoFocus) {
           focusNode(domElement);
         }
         break;
       case 'textarea':
+        // TODO: Make sure we check if this is still unmounted or do any clean
+        // up necessary since we never stop tracking anymore.
+        inputValueTracking.trackNode((domElement : any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         if (props.autoFocus) {
           focusNode(domElement);

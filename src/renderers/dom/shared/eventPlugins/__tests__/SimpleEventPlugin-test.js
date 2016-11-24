@@ -17,16 +17,14 @@ describe('SimpleEventPlugin', function() {
   var ReactDOM;
   var ReactTestUtils;
 
-  var onClick = jest.fn();
+  var onClick;
 
   function expectClickThru(element) {
-    onClick.mockClear();
     ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
     expect(onClick.mock.calls.length).toBe(1);
   }
 
   function expectNoClickThru(element) {
-    onClick.mockClear();
     ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
     expect(onClick.mock.calls.length).toBe(0);
   }
@@ -40,6 +38,8 @@ describe('SimpleEventPlugin', function() {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+
+    onClick = jest.fn();
   });
 
   it('A non-interactive tags click when disabled', function() {
@@ -53,7 +53,48 @@ describe('SimpleEventPlugin', function() {
     );
     var child = ReactDOM.findDOMNode(element).firstChild;
 
-    onClick.mockClear();
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  it('does not register a click when clicking a child of a disabled element', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <button onClick={onClick} disabled={true}><span /></button>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(0);
+  });
+
+  it('triggers click events for children of disabled elements', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <button disabled={true}><span onClick={onClick} /></button>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  it('triggers parent captured click events when target is a child of a disabled elements', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <div onClickCapture={onClick}>
+        <button disabled={true}><span /></button>
+      </div>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
+    ReactTestUtils.SimulateNative.click(child);
+    expect(onClick.mock.calls.length).toBe(1);
+  });
+
+  it('triggers captured click events for children of disabled elements', function() {
+    var element = ReactTestUtils.renderIntoDocument(
+      <button disabled={true}><span onClickCapture={onClick} /></button>
+    );
+    var child = ReactDOM.findDOMNode(element).querySelector('span');
+
     ReactTestUtils.SimulateNative.click(child);
     expect(onClick.mock.calls.length).toBe(1);
   });
@@ -123,10 +164,6 @@ describe('SimpleEventPlugin', function() {
 
   describe('iOS bubbling click fix', function() {
     // See http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
-
-    beforeEach(function() {
-      onClick.mockClear();
-    });
 
     it('does not add a local click to interactive elements', function() {
       var container = document.createElement('div');

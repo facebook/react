@@ -196,4 +196,23 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
+  it('should render portal with non-context-provider parent', () => {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    var portal = document.createElement('div');
+
+    class Parent extends React.Component {
+      render() {
+        return null;
+      }
+
+      componentDidMount() {
+        renderSubtreeIntoContainer(this, <div>hello</div>, portal);
+      }
+    }
+
+    ReactDOM.render(<Parent bar="initial" />, container);
+    expect(portal.firstChild.innerHTML).toBe('hello');
+  });
+
 });
