@@ -40,6 +40,10 @@ var instanceCounter = 0;
 
 var NoopRenderer = ReactFiberReconciler({
 
+  isContainerType() {
+    return false;
+  },
+
   createInstance(type : string, props : Props) : Instance {
     const inst = {
       id: instanceCounter++,

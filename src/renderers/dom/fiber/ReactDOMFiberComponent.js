@@ -453,8 +453,6 @@ function updateDOMProperties(
 
 var ReactDOMFiberComponent = {
 
-  // TODO: Use this to keep track of changes to the host context and use this
-  // to determine whether we switch to svg and back.
   // TODO: Does this need to check the current namespace? In case these tags
   // happen to be valid in some other namespace.
   isNewHostContainer(tag : string) {
@@ -475,7 +473,7 @@ var ReactDOMFiberComponent = {
     var namespaceURI = rootContainerElement.namespaceURI;
     if (namespaceURI == null ||
         namespaceURI === DOMNamespaces.svg &&
-        rootContainerElement.tagName === 'foreignObject') {
+        rootContainerElement.tagName === 'foreignobject') { // TODO: lowercase?
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {

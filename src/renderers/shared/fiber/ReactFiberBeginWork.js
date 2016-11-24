@@ -35,6 +35,14 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 var {
+  getHostContainerOnStack,
+  getHostFiberOnStack,
+  pushHostContainer,
+  pushHostFiber,
+  getCurrentRoot,
+  setCurrentRoot,
+} = require('ReactFiberHostContext');
+var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
@@ -62,6 +70,12 @@ module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
   scheduleUpdate : (fiber: Fiber) => void
 ) {
+
+  const {
+    appendInitialChild,
+    createInstance,
+    isContainerType,
+  } = config;
 
   const {
     adoptClassInstance,
@@ -268,6 +282,29 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
+      if (!current && workInProgress.stateNode == null) {
+        const newProps = workInProgress.pendingProps;
+        const hostParentFiber = getHostFiberOnStack();
+        const hostParentInstance = hostParentFiber != null ?
+          // TODO: just store the instance itself on stack
+          hostParentFiber.stateNode :
+          getCurrentRoot().stateNode.containerInfo;
+        const hostContainerFiber = getHostContainerOnStack();
+        const hostContainerInstance = hostContainerFiber != null ?
+          // TODO: just store the instance itself on stack
+          hostContainerFiber.stateNode :
+          getCurrentRoot().stateNode.containerInfo;
+        const instance = createInstance(workInProgress.type, newProps, hostContainerInstance, workInProgress);
+        if (hostParentFiber) {
+          // TODO: this breaks reuse?
+          appendInitialChild(hostParentInstance, instance);
+        }
+        workInProgress.stateNode = instance;
+      }
+      pushHostFiber(workInProgress);
+      if (isContainerType(workInProgress.type)) {
+        pushHostContainer(workInProgress);
+      }
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -355,8 +392,9 @@ module.exports = function<T, P, I, TI, C>(
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+    const isHostComponent = workInProgress.tag === HostComponent;
 
-    if (workInProgress.tag === HostComponent &&
+    if (isHostComponent &&
         workInProgress.memoizedProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // This subtree still has work, but it should be deprioritized so we need
@@ -398,10 +436,16 @@ module.exports = function<T, P, I, TI, C>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
+
     // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
+    if (isHostComponent) {
+      if (isContainerType(workInProgress.type)) {
+        pushHostContainer(workInProgress);
+      }
+    } else if (isContextProvider(workInProgress)) {
       pushContextProvider(workInProgress, false);
     }
+
     return workInProgress.child;
   }
 
@@ -415,6 +459,7 @@ module.exports = function<T, P, I, TI, C>(
     if (!workInProgress.return) {
       // Don't start new work with context on the stack.
       resetContext();
+      setCurrentRoot(workInProgress);
     }
 
     if (workInProgress.pendingWorkPriority === NoWork ||

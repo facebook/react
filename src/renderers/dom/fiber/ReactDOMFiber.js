@@ -33,6 +33,7 @@ var warning = require('warning');
 
 var {
   createElement,
+  isNewHostContainer,
   setInitialProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
@@ -60,6 +61,11 @@ let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
+  isContainerType(type : string) {
+    type = type.toLowerCase(); // TODO
+    return isNewHostContainer(type);
+  },
+
   prepareForCommit() : void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     ReactBrowserEventEmitter.setEnabled(false);
@@ -76,10 +82,10 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(
     type : string,
     props : Props,
-    root : any, // TODO
+    containerInstance : Instance | Container,
     internalInstanceHandle : Object,
   ) : Instance {
-    const domElement : Instance = createElement(type, props, root);
+    const domElement : Instance = createElement(type, props, containerInstance);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
   },
@@ -92,9 +98,9 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     type : string,
     props : Props,
-    root : any, // TODO
+    containerInstance : Instance | Container,
   ) : void {
-    setInitialProperties(domElement, type, props, root);
+    setInitialProperties(domElement, type, props, containerInstance);
   },
 
   prepareUpdate(
@@ -109,14 +115,14 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     oldProps : Props,
     newProps : Props,
-    root : any, // TODO
+    containerInstance : Instance | Container,
     internalInstanceHandle : Object,
   ) : void {
     var type = domElement.tagName.toLowerCase(); // HACK
     // Update the internal instance handle so that we know which props are
     // the current ones.
     precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, root);
+    updateProperties(domElement, type, oldProps, newProps, containerInstance);
   },
 
   shouldSetTextContent(props : Props) : boolean {
