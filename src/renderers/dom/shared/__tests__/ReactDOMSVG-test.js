@@ -12,12 +12,14 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
 
   beforeEach(() => {
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
   });
 
@@ -28,6 +30,26 @@ describe('ReactDOMSVG', () => {
       </svg>
     );
     expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
+  });
+
+  it('creates elements with the svg namespace', () => {
+    var node = document.createElement('div');
+    var g;
+    var image;
+    ReactDOM.render(
+      <svg>
+        <g ref={el => g = el} strokeWidth="5">
+          <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+        </g>
+      </svg>,
+      node
+    );
+    expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(g.getAttribute('stroke-width')).toBe('5');
+    expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(
+      image.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
+    ).toBe('http://i.imgur.com/w7GCRPb.png');
   });
 
 });
