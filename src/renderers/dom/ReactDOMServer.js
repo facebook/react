@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactDOMInjection = require('ReactDOMInjection');
-var ReactDOMStackInjection = require('ReactDOMStackInjection');
-var ReactServerRendering = require('ReactServerRendering');
+var ReactDOMInjection = {};
+var ReactDOMStackInjection = {};
+var ReactServerRendering = {};
 var ReactVersion = require('ReactVersion');
 
-ReactDOMInjection.inject();
-ReactDOMStackInjection.inject();
+// ReactDOMInjection.inject();
+// ReactDOMStackInjection.inject();
 
 var ReactDOMServer = {
   renderToString: ReactServerRendering.renderToString,
