@@ -24,6 +24,10 @@ src/renderers/art/__tests__/ReactART-test.js
 * resolves refs before componentDidMount
 * resolves refs before componentDidUpdate
 
+src/renderers/dom/shared/__tests__/ReactDOM-test.js
+* throws in render() if the mount callback is not a function
+* throws in render() if the update callback is not a function
+
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should empty element when removing innerHTML
 * should transition from innerHTML to children in nested el
@@ -42,21 +46,14 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
-* should control a value in reentrant events
-
-src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
-* throws in render() if the mount callback is not a function
-* throws in render() if the update callback is not a function
-
-src/renderers/dom/stack/client/__tests__/ReactMount-test.js
+src/renderers/dom/shared/__tests__/ReactMount-test.js
 * throws when given a non-node
 * throws when given a string
 * throws when given a factory
 * tracks root instances
 * marks top-level mounts
 
-src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
+src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should be able to adopt server markup
 * should not be able to unmount component from document node
 * should not be able to switch root constructors
@@ -64,6 +61,9 @@ src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
+
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should control a value in reentrant events
 
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste
@@ -81,41 +81,41 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update
 
-src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
+src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
 * throws usefully when rendering badly-typed elements
 
-src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
+src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
+src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedState-test.js
+src/renderers/shared/shared/__tests__/ReactCompositeComponentNestedState-test.js
 * should provide up to date values for props
 
-src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
+src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 * throws when rendering null at the top level
 
-src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
+src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
 
-src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
+src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when stateless component returns array
 * should throw on string refs in pure functions
 * should warn when using non-React functions in JSX
 
-src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
+src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * should queue mount-ready handlers across different roots
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
 
-src/renderers/shared/stack/reconciler/__tests__/refs-test.js
+src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/test/__tests__/ReactTestUtils-test.js
