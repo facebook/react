@@ -207,17 +207,11 @@ module.exports = function<T, P, I, TI, C>(
         // node from the tree.
         removeChild(parent, node.stateNode);
       } else if (node.tag === Portal) {
-        // If this is a portal, then the parent is actually the portal itself.
-        // We need to keep track of which parent we're removing from.
-        // TODO: This uses a recursive call. We can get rid of that by mutating
-        // the parent binding and restoring it by searching for the host parent
-        // again when we pop past a portal.
-        const portalParent = node.stateNode.containerInfo;
-        let child = node.child;
-        while (child) {
-          unmountHostComponents(portalParent, child);
-          child = child.sibling;
-        }
+        // When we go into a portal, it becomes the parent to remove from.
+        // We will reassign it back when we pop the portal on the way up.
+        parent = node.stateNode.containerInfo;
+        node = node.child;
+        continue;
       } else {
         commitUnmount(node);
         if (node.child) {
@@ -235,6 +229,11 @@ module.exports = function<T, P, I, TI, C>(
           return;
         }
         node = node.return;
+        if (node.tag === Portal) {
+          // When we go out of the portal, we need to restore the parent.
+          // Since we don't keep a stack of them, we will search for it.
+          parent = getHostParent(node);
+        }
       }
       node.sibling.return = node.return;
       node = node.sibling;
