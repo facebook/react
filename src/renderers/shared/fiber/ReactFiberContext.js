@@ -22,6 +22,7 @@ var {
 } = require('ReactFiberTreeReflection');
 var {
   ClassComponent,
+  HostContainer,
 } = require('ReactTypeOfWork');
 
 if (__DEV__) {
@@ -137,12 +138,14 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {
     'Expected subtree parent to be a mounted class component'
   );
 
-  let node : ?Fiber = parent;
-  while (node) {
-    if (isContextProvider(fiber)) {
-      return fiber.stateNode.__reactInternalMemoizedMergedChildContext;
+  let node : Fiber = fiber;
+  while (node.tag !== HostContainer) {
+    if (isContextProvider(node)) {
+      return node.stateNode.__reactInternalMemoizedMergedChildContext;
     }
-    node = node.return;
+    const parent = node.return;
+    invariant(parent, 'Found unexpected detached subtree parent');
+    node = parent;
   }
-  return emptyObject;
+  return node.stateNode.context;
 };
