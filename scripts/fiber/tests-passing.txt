@@ -648,6 +648,7 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should propagate events one level down
 * should propagate events two levels down
 * should not get confused by disappearing elements
+* should batch between handlers from different roots
 * should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
@@ -812,7 +813,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
-* should control a value in reentrant events
 * should control values in reentrant events with different targets
 * should display `defaultValue` of number 0
 * only assigns defaultValue if it changes

@@ -42,8 +42,8 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
-src/renderers/dom/shared/__tests__/ReactEventListener-test.js
-* should batch between handlers from different roots
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should control a value in reentrant events
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function

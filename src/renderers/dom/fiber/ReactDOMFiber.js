@@ -22,6 +22,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMInjection = require('ReactDOMInjection');
+var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -165,6 +166,8 @@ var DOMRenderer = ReactFiberReconciler({
 
 });
 
+ReactGenericBatching.injection.injectFiberBatchedUpdates(DOMRenderer.batchedUpdates);
+
 var warned = false;
 
 function warnAboutUnstableUse() {
@@ -220,9 +223,7 @@ var ReactDOM = {
     return ReactPortal.createPortal(children, container, null, key);
   },
 
-  unstable_batchedUpdates<A>(fn : () => A) : A {
-    return DOMRenderer.batchedUpdates(fn);
-  },
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
 };
 
