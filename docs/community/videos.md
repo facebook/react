@@ -83,12 +83,6 @@ Facebook engineers [Bill Fisher](https://twitter.com/fisherwebdev) and [Jing Che
 
 <iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
-### Server-Side Rendering of Isomorphic Apps at SoundCloud
-
-Walk-through by [Andres Suarez](https://github.com/zertosh) on how [SoundCloud](https://developers.soundcloud.com/blog/) is using React and Flux for server-side rendering.
-
-<iframe src="https://player.vimeo.com/video/108488724" width="100%" height="365" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-
 > [Slides and sample code](https://github.com/zertosh/ssr-demo-kit)
 
 ### CodeWinds Podcast
