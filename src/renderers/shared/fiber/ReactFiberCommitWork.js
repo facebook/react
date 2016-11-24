@@ -210,8 +210,10 @@ module.exports = function<T, P, I, TI, C>(
         // When we go into a portal, it becomes the parent to remove from.
         // We will reassign it back when we pop the portal on the way up.
         parent = node.stateNode.containerInfo;
-        node = node.child;
-        continue;
+        if (node.child) {
+          node = node.child;
+          continue;
+        }
       } else {
         commitUnmount(node);
         if (node.child) {

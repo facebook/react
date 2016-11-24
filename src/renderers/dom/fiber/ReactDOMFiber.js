@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { HostChildren } from 'ReactFiberReconciler';
 import type { ReactNodeList } from 'ReactTypes';
 
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -55,23 +54,6 @@ type Props = { className ?: string };
 type Instance = Element;
 type TextInstance = Text;
 
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
-  if (!child) {
-    return;
-  }
-  /* $FlowFixMe: Element and Text should have this property. */
-  if (child.nodeType === 1 || child.nodeType === 3) {
-    /* $FlowFixMe: Refinement issue. I don't know how to express different. */
-    parent.appendChild(child);
-  } else {
-    /* As a result of the refinement issue this type isn't known. */
-    let node : any = child;
-    do {
-      recursivelyAppendChildren(parent, node.output);
-    } while (node = node.sibling);
-  }
-}
-
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
 
@@ -93,16 +75,23 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(
     type : string,
     props : Props,
-    children : HostChildren<Instance | TextInstance>,
     internalInstanceHandle : Object
   ) : Instance {
     const root = document.documentElement; // HACK
 
     const domElement : Instance = createElement(type, props, root);
     precacheFiberNode(internalInstanceHandle, domElement);
-    recursivelyAppendChildren(domElement, children);
-    setInitialProperties(domElement, type, props, root);
     return domElement;
+  },
+
+  appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.appendChild(child);
+  },
+
+  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
+    const root = document.documentElement; // HACK
+
+    setInitialProperties(domElement, type, props, root);
   },
 
   prepareUpdate(

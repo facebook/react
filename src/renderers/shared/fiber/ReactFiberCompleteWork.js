@@ -46,6 +46,8 @@ var {
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const createInstance = config.createInstance;
+  const appendInitialChild = config.appendInitialChild;
+  const finalizeInitialChildren = config.finalizeInitialChildren;
   const createTextInstance = config.createTextInstance;
   const prepareUpdate = config.prepareUpdate;
 
@@ -122,6 +124,35 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       priority
     );
     return workInProgress.stateNode;
+  }
+
+  function appendAllChildren(parent : I, workInProgress : Fiber) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node) {
+      if (node.tag === HostComponent || node.tag === HostText) {
+        appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === Portal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.child) {
+        // TODO: Coroutines need to visit the stateNode.
+        node = node.child;
+        continue;
+      }
+      if (node === workInProgress) {
+        return;
+      }
+      while (!node.sibling) {
+        if (!node.return || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node = node.sibling;
+    }
   }
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
@@ -201,9 +232,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               return null;
             }
           }
-          const child = workInProgress.child;
-          const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
-          const instance = createInstance(workInProgress.type, newProps, children, workInProgress);
+
+          // TODO: Move createInstance to beginWork and keep it on a context
+          // "stack" as the parent. Then append children as we go in beginWork
+          // or completeWork depending on we want to add then top->down or
+          // bottom->up. Top->down is faster in IE11.
+          // Finally, finalizeInitialChildren here in completeWork.
+          const instance = createInstance(workInProgress.type, newProps, workInProgress);
+          appendAllChildren(instance, workInProgress);
+          finalizeInitialChildren(instance, workInProgress.type, newProps);
+
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;

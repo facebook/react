@@ -47,7 +47,10 @@ type OpaqueNode = Fiber;
 
 export type HostConfig<T, P, I, TI, C> = {
 
-  createInstance(type : T, props : P, children : HostChildren<I | TI>, internalInstanceHandle : OpaqueNode) : I,
+  createInstance(type : T, props : P, internalInstanceHandle : OpaqueNode) : I,
+  appendInitialChild(parentInstance : I, child : I) : void,
+  finalizeInitialChildren(parentInstance : I, type : T, props : P) : void,
+
   prepareUpdate(instance : I, oldProps : P, newProps : P) : boolean,
   commitUpdate(instance : I, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
