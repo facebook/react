@@ -300,7 +300,24 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function updatePortalComponent(current, workInProgress) {
-    reconcileChildren(current, workInProgress, workInProgress.pendingProps);
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    const nextChildren = workInProgress.pendingProps;
+    if (!current) {
+      // Portals are special because we don't append the children during mount
+      // but at commit. Therefore we need to track insertions which the normal
+      // flow doesn't do during mount. This doesn't happen at the root because
+      // the root always starts with a "current" with a null child.
+      // TODO: Consider unifying this with how the root works.
+      workInProgress.child = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.child,
+        nextChildren,
+        priorityLevel
+      );
+      markChildAsProgressed(current, workInProgress, priorityLevel);
+    } else {
+      reconcileChildren(current, workInProgress, nextChildren);
+    }
   }
 
   /*
@@ -434,9 +451,6 @@ module.exports = function<T, P, I, TI, C>(
         return workInProgress.child;
       }
       case HostComponent:
-        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
-          config.beginUpdate(workInProgress.stateNode);
-        }
         return updateHostComponent(current, workInProgress);
       case HostText:
         // Nothing to do here. This is terminal. We'll do the completion step

@@ -74,6 +74,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
   const useSyncScheduling = config.useSyncScheduling;
 
+  const prepareForCommit = config.prepareForCommit;
+  const resetAfterCommit = config.resetAfterCommit;
+
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
     SynchronousPriority :
@@ -161,6 +164,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function commitAllWork(finishedWork : Fiber) {
+    prepareForCommit();
+
     // Commit all the side-effects within a tree.
     // First, we'll perform all the host insertions, updates, deletions and
     // ref unmounts.
@@ -202,6 +207,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       effectfulFiber = effectfulFiber.nextEffect;
     }
 
+    // Finally if the root itself had an effect, we perform that since it is
+    // not part of the effect list.
+    if (finishedWork.effectTag !== NoEffect) {
+      const current = finishedWork.alternate;
+      commitWork(current, finishedWork);
+    }
+
+    resetAfterCommit();
+
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have
     // already been invoked.
@@ -228,11 +242,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       effectfulFiber = next;
     }
 
-    // Finally if the root itself had an effect, we perform that since it is not
-    // part of the effect list.
+    // Lifecycles on the root itself
     if (finishedWork.effectTag !== NoEffect) {
       const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
       commitLifeCycles(current, finishedWork);
     }
 
@@ -760,7 +772,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           scheduleWorkAtPriority(root, priorityLevel);
           return;
         } else {
-          throw new Error('Invalid root');
+          // TODO: Warn about setting state on an unmounted component.
+          return;
         }
       }
       fiber = fiber.return;
@@ -777,16 +790,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function batchedUpdates<A>(fn : () => A) : A {
+  function batchedUpdates<A, R>(fn : (a: A) => R, a : A) : R {
     const prev = shouldBatchUpdates;
     shouldBatchUpdates = true;
     try {
-      return fn();
+      return fn(a);
     } finally {
-      shouldBatchUpdates = prev;
-      // If we've exited the batch, perform any scheduled task work
-      if (!shouldBatchUpdates) {
-        performTaskWork();
+      // If we're exiting the batch, perform any scheduled task work
+      try {
+        if (!prev) {
+          performTaskWork();
+        }
+      } finally {
+        shouldBatchUpdates = prev;
       }
     }
   }

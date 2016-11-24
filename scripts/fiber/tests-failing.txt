@@ -42,9 +42,6 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
-src/renderers/dom/shared/__tests__/ReactEventListener-test.js
-* should batch between handlers from different roots
-
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
 
@@ -92,8 +89,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
-* should warn about `forceUpdate` on unmounted components
-* should warn about `setState` on unmounted components
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
@@ -115,7 +110,6 @@ src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
 
 src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
 * should queue mount-ready handlers across different roots
-* should queue updates from during mount
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
@@ -126,4 +120,3 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 
 src/test/__tests__/ReactTestUtils-test.js
 * traverses children in the correct order
-* should support injected wrapper components as DOM components

@@ -16,9 +16,9 @@
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMStackInjection = require('ReactDOMStackInjection');
+var ReactGenericBatching = require('ReactGenericBatching');
 var ReactMount = require('ReactMount');
 var ReactReconciler = require('ReactReconciler');
-var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
@@ -35,7 +35,7 @@ var ReactDOM = {
   version: ReactVersion,
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates: ReactUpdates.batchedUpdates,
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
   unstable_renderSubtreeIntoContainer: ReactMount.renderSubtreeIntoContainer,
   /* eslint-enable camelcase */
 };
