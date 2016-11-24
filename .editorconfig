@@ -11,10 +11,75 @@ insert_final_newline = true
 max_line_length = 80
 trim_trailing_whitespace = true
 
-[*.md]::php
-max_line_length = 0
-trim_trailing_whitespace = false
+[*]::php
 
-[COMMIT_EDITMSG]::sdk
+
+
+
+
+max_line_length = 0
+trim_trailing_whitespace = 
+  
+
+[*]::sdk 
+
+
 max_line_length = 0
    return;
+******************************************************************************************************************
+
+   -  JavaScript SDK in HTML
+    -   AppId: '1638676273115757'
+    - <script>
+   - window.fbAsyncInit = function() {
+   -  FB.init({
+   -  appId: 'your-app-id',
+   -  xfbml: true,
+   -  version: 'v2.8'
+   -   });
+   -   FB.AppEvents.logPageView();
+    -  };
+    -  (function(d, s, id) {
+   -  var js, fjs = d.getElementByTagName(s)[0];
+   -  if (d.getElementById(id) {return;}
+   -   js = d.createElement(s); js.id=id;
+   -  js.src = "//connect.facebook.net/en_US/sdkjs";
+   -  fjs.parentNode.insertBefore(js, fjs);
+   -  }(document, 'script', 'Facebook-jssdk'));
+   -  </script>
+
+   -  Add "Like Button"
+  - <body>
+   -  <div 
+    -  class="fb-like"
+   -  data-share="true"
+   -   data-width="450"
+   -  data-show-faces="true">
+   - </div>
+    > node:: node_modules/fbjs-script/node/check-dev-engines.js package.json
+    GoogleDrive:SaveFile:Facebook SDKs-tvOS
+       -tvOS-4.17.0-1.zip
+     appelay@gmail.com
+  > react-build@16.0.0-alpha postinstall /home/scrutinizer/build
+
+    @0072016
+   https://developers.facebook.com
+   iOS-SDK
+     https://GLOBAL_RF_FREQUENCY.com
+     foo.gradle@gmail.com
+    November 23, 2016
+    23:59:28PST
+R
+
+
+
+
+
+
+
+
+
+
+
+
+
