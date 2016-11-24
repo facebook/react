@@ -14,7 +14,6 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
-import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
@@ -38,10 +37,6 @@ var getContextForSubtree = require('getContextForSubtree');
 export type Deadline = {
   timeRemaining : () => number
 };
-
-type HostChildNode<I> = { tag: TypeOfWork, output: HostChildren<I>, sibling: any };
-
-export type HostChildren<I> = null | void | I | HostChildNode<I>;
 
 type OpaqueNode = Fiber;
 

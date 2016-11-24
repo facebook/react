@@ -294,14 +294,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Insert
       const reifiedYield = createReifiedYield(yieldNode);
       const created = createFiberFromYield(yieldNode, priority);
-      created.output = reifiedYield;
+      created.type = reifiedYield;
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
-      existing.output = createUpdatedReifiedYield(
-        current.output,
+      existing.type = createUpdatedReifiedYield(
+        current.type,
         yieldNode
       );
       existing.return = returnFiber;
@@ -386,7 +386,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_YIELD_TYPE: {
           const reifiedYield = createReifiedYield(newChild);
           const created = createFiberFromYield(newChild, priority);
-          created.output = reifiedYield;
+          created.type = reifiedYield;
           created.return = returnFiber;
           return created;
         }
@@ -790,8 +790,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         if (child.tag === YieldComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
-          existing.output = createUpdatedReifiedYield(
-            child.output,
+          existing.type = createUpdatedReifiedYield(
+            child.type,
             yieldNode
           );
           existing.return = returnFiber;
@@ -808,7 +808,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     const reifiedYield = createReifiedYield(yieldNode);
     const created = createFiberFromYield(yieldNode, priority);
-    created.output = reifiedYield;
+    created.type = reifiedYield;
     created.return = returnFiber;
     return created;
   }
