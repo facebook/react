@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { HostChildren } from 'ReactFiberReconciler';
 import type { ReactNodeList } from 'ReactTypes';
 
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -39,6 +38,8 @@ var {
 } = ReactDOMFiberComponent;
 var { precacheFiberNode } = ReactDOMComponentTree;
 
+const DOCUMENT_NODE = 9;
+
 ReactDOMInjection.inject();
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent
@@ -53,23 +54,6 @@ type Container = Element;
 type Props = { className ?: string };
 type Instance = Element;
 type TextInstance = Text;
-
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
-  if (!child) {
-    return;
-  }
-  /* $FlowFixMe: Element and Text should have this property. */
-  if (child.nodeType === 1 || child.nodeType === 3) {
-    /* $FlowFixMe: Refinement issue. I don't know how to express different. */
-    parent.appendChild(child);
-  } else {
-    /* As a result of the refinement issue this type isn't known. */
-    let node : any = child;
-    do {
-      recursivelyAppendChildren(parent, node.output);
-    } while (node = node.sibling);
-  }
-}
 
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
@@ -89,25 +73,26 @@ var DOMRenderer = ReactFiberReconciler({
     eventsEnabled = null;
   },
 
-  updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
-    // TODO: Containers should update similarly to other parents.
-    container.innerHTML = '';
-    recursivelyAppendChildren(container, children);
-  },
-
   createInstance(
     type : string,
     props : Props,
-    children : HostChildren<Instance | TextInstance>,
     internalInstanceHandle : Object
   ) : Instance {
-    const root = document.body; // HACK
+    const root = document.documentElement; // HACK
 
     const domElement : Instance = createElement(type, props, root);
     precacheFiberNode(internalInstanceHandle, domElement);
-    recursivelyAppendChildren(domElement, children);
-    setInitialProperties(domElement, type, props, root);
     return domElement;
+  },
+
+  appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.appendChild(child);
+  },
+
+  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
+    const root = document.documentElement; // HACK
+
+    setInitialProperties(domElement, type, props, root);
   },
 
   prepareUpdate(
@@ -125,7 +110,7 @@ var DOMRenderer = ReactFiberReconciler({
     internalInstanceHandle : Object
   ) : void {
     var type = domElement.tagName.toLowerCase(); // HACK
-    var root = document.body; // HACK
+    var root = document.documentElement; // HACK
     // Update the internal instance handle so that we know which props are
     // the current ones.
     precacheFiberNode(internalInstanceHandle, domElement);
@@ -142,19 +127,19 @@ var DOMRenderer = ReactFiberReconciler({
     textInstance.nodeValue = newText;
   },
 
-  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     parentInstance.appendChild(child);
   },
 
   insertBefore(
-    parentInstance : Instance,
+    parentInstance : Instance | Container,
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
   ) : void {
     parentInstance.insertBefore(child, beforeChild);
   },
 
-  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     parentInstance.removeChild(child);
   },
 
@@ -180,9 +165,15 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
-function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
+function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  let container : DOMContainerElement =
+    containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
   let root;
   if (!container._reactRootContainer) {
+    // First clear any existing content.
+    while (container.lastChild) {
+      container.removeChild(container.lastChild);
+    }
     root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, parentComponent, callback);
   } else {
     DOMRenderer.updateContainer(element, root = container._reactRootContainer, parentComponent, callback);
@@ -197,12 +188,12 @@ var ReactDOM = {
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
-  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
+  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
     );
-    return renderSubtreeIntoContainer(parentComponent, element, container, callback);
+    return renderSubtreeIntoContainer(parentComponent, element, containerNode, callback);
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {

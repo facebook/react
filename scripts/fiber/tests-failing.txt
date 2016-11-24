@@ -120,4 +120,3 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 
 src/test/__tests__/ReactTestUtils-test.js
 * traverses children in the correct order
-* should support injected wrapper components as DOM components
