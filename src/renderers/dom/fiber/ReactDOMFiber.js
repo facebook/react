@@ -76,10 +76,9 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(
     type : string,
     props : Props,
-    internalInstanceHandle : Object
+    root : any, // TODO
+    internalInstanceHandle : Object,
   ) : Instance {
-    const root = document.documentElement; // HACK
-
     const domElement : Instance = createElement(type, props, root);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
@@ -89,9 +88,12 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.appendChild(child);
   },
 
-  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
-    const root = document.documentElement; // HACK
-
+  finalizeInitialChildren(
+    domElement : Instance,
+    type : string,
+    props : Props,
+    root : any, // TODO
+  ) : void {
     setInitialProperties(domElement, type, props, root);
   },
 
@@ -107,10 +109,10 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     oldProps : Props,
     newProps : Props,
-    internalInstanceHandle : Object
+    root : any, // TODO
+    internalInstanceHandle : Object,
   ) : void {
     var type = domElement.tagName.toLowerCase(); // HACK
-    var root = document.documentElement; // HACK
     // Update the internal instance handle so that we know which props are
     // the current ones.
     precacheFiberNode(internalInstanceHandle, domElement);

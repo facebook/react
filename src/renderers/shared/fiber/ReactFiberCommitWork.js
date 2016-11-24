@@ -339,7 +339,7 @@ module.exports = function<T, P, I, TI, C>(
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          commitUpdate(instance, oldProps, newProps, finishedWork);
+          commitUpdate(instance, oldProps, newProps, finishedWork, document.documentElement /* TODO */);
         }
         detachRefIfNeeded(current, finishedWork);
         return;
