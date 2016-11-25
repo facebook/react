@@ -224,6 +224,7 @@ describe('ReactDOM', () => {
     });
 
     expect(document.activeElement.id).toBe('one');
+
     ReactDOM.render(<A showTwo={true} />, container);
     // input2 gets added, which causes input to get blurred. Then
     // componentDidUpdate focuses input2 and that should make it down to here,

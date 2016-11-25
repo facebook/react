@@ -246,9 +246,9 @@ module.exports = function<T, P, I, TI, C>(
     }
     if (!current && workInProgress.stateNode == null) {
       const newProps = workInProgress.pendingProps;
-      const hostParent = getHostParentOnStack();
       const hostContainer = getHostContainerOnStack();
       const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
+      const hostParent = getHostParentOnStack();
       if (hostParent) {
         // TODO: this breaks reuse?
         appendInitialChild(hostParent, instance);
@@ -291,7 +291,9 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
-      pushHostParent(workInProgress.stateNode);
+      if (!current) {
+        pushHostParent(workInProgress.stateNode);
+      }
       if (isContainerType(workInProgress.type)) {
         pushHostContainer(workInProgress.stateNode);
       }
@@ -429,7 +431,9 @@ module.exports = function<T, P, I, TI, C>(
 
     // Put context on the stack because we will work on children
     if (isHostComponent) {
-      pushHostParent(workInProgress.stateNode);
+      if (!current) {
+        pushHostParent(workInProgress.stateNode);
+      }
       if (isContainerType(workInProgress.type)) {
         pushHostContainer(workInProgress.stateNode);
       }
@@ -516,9 +520,9 @@ module.exports = function<T, P, I, TI, C>(
           }
         }
         if (!current || workInProgress.stateNode == null) {
-          const hostParent = getHostParentOnStack();
           const textInstance = createTextInstance(newText, workInProgress);
           workInProgress.stateNode = textInstance;
+          const hostParent = getHostParentOnStack();
           if (hostParent) {
             // TODO: this breaks reuse?
             appendInitialChild(hostParent, textInstance);
