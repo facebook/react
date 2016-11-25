@@ -12,60 +12,86 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
+export type HostContext<I, C> = {
+  getHostParentOnStack() : I | null,
+  pushHostParent(instance : I) : void,
+  popHostParent() : void,
 
-// All host instances.
-const parentStack : Array = [];
-let parentIndex = -1;
+  getHostContainerOnStack() : I | C | null,
+  getRootHostContainerOnStack() : C | null,
+  pushHostContainer(instance : I | C) : void,
+  popHostContainer() : void,
 
-// Just the container instances (e.g. DOM uses this for SVG).
-const containerStack : Array = [];
-let containerIndex = -1;
+  resetHostStacks() : void,
+};
 
-// TODO: this is all likely broken with portals.
+module.exports = function<I, C>() : HostContext<I, C> {
+  // Host instances currently on the stack that have not yet been committed.
+  const parentStack : Array<I | null> = [];
+  let parentIndex = -1;
 
-exports.getHostParentOnStack = function() : mixed | null {
-  if (parentIndex === -1) {
-    return null;
+  // Container instances currently on the stack (e.g. DOM uses this for SVG).
+  const containerStack : Array<C | I | null> = [];
+  let containerIndex = -1;
+
+  // TODO: this is all likely broken with portals.
+
+  function getHostParentOnStack() : I | null {
+    if (parentIndex === -1) {
+      return null;
+    }
+    return parentStack[parentIndex];
   }
-  return parentStack[parentIndex];
-};
 
-exports.pushHostParent = function(instance : mixed) : void {
-  parentIndex++;
-  parentStack[parentIndex] = instance;
-};
-
-exports.popHostParent = function() {
-  parentStack[parentIndex] = null;
-  parentIndex--;
-};
-
-exports.getHostContainerOnStack = function() : mixed | null {
-  if (containerIndex === -1) {
-    return null;
+  function pushHostParent(instance : I) : void {
+    parentIndex++;
+    parentStack[parentIndex] = instance;
   }
-  return containerStack[containerIndex];
-};
 
-exports.getRootHostContainerOnStack = function() : Fiber | null {
-  if (containerIndex === -1) {
-    return null;
+  function popHostParent() : void {
+    parentStack[parentIndex] = null;
+    parentIndex--;
   }
-  return containerStack[0];
-};
 
-exports.pushHostContainer = function(instance : mixed) : void {
-  containerIndex++;
-  containerStack[containerIndex] = instance;
-};
+  function getHostContainerOnStack() : I | C | null {
+    if (containerIndex === -1) {
+      return null;
+    }
+    return containerStack[containerIndex];
+  }
 
-exports.popHostContainer = function() {
-  containerStack[containerIndex] = null;
-  containerIndex--;
-};
+  function getRootHostContainerOnStack() : C | null {
+    if (containerIndex === -1) {
+      return null;
+    }
+    return containerStack[0];
+  }
 
-exports.resetHostStacks = function() {
-  parentIndex = -1;
-  containerIndex = -1;
+  function pushHostContainer(instance : I | C) : void {
+    containerIndex++;
+    containerStack[containerIndex] = instance;
+  }
+
+  function popHostContainer() : void {
+    containerStack[containerIndex] = null;
+    containerIndex--;
+  }
+
+  function resetHostStacks() : void {
+    parentIndex = -1;
+    containerIndex = -1;
+  }
+
+  return {
+    getHostParentOnStack,
+    pushHostParent,
+    popHostParent,
+
+    getHostContainerOnStack,
+    getRootHostContainerOnStack,
+    pushHostContainer,
+    popHostContainer,
+
+    resetHostStacks,
+  };
 };

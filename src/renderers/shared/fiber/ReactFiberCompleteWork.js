@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
@@ -23,12 +24,6 @@ var {
   isContextProvider,
   popContextProvider,
 } = require('ReactFiberContext');
-var {
-  getRootHostContainerOnStack,
-  getHostContainerOnStack,
-  popHostContainer,
-  popHostParent,
-} = require('ReactFiberHostContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
@@ -49,12 +44,21 @@ var {
   Callback,
 } = ReactTypeOfSideEffect;
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-
+module.exports = function<T, P, I, TI, C>(
+  config : HostConfig<T, P, I, TI, C>,
+  hostContext : HostContext<I, C>,
+) {
   const {
     finalizeInitialChildren,
     prepareUpdate,
   } = config;
+
+  const {
+    getRootHostContainerOnStack,
+    getHostContainerOnStack,
+    popHostContainer,
+    popHostParent,
+  } = hostContext;
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -212,6 +216,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // TODO: do we want to append children top->down or
           // bottom->up? Top->down is faster in IE11.
           const rootContainerInstance = getRootHostContainerOnStack();
+          if (rootContainerInstance == null) {
+            throw new Error('Expected to find a root instance on the host stack.');
+          }
           finalizeInitialChildren(instance, workInProgress.type, newProps, rootContainerInstance);
 
           if (workInProgress.ref) {

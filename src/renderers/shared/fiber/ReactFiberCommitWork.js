@@ -13,6 +13,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -24,7 +25,6 @@ var {
   CoroutineComponent,
   Portal,
 } = ReactTypeOfWork;
-var { getRootHostContainerOnStack } = require('ReactFiberHostContext');
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
 var {
@@ -35,15 +35,21 @@ var {
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
+  hostContext : HostContext<I, C>,
   trapError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => void
 ) {
 
-  const commitUpdate = config.commitUpdate;
-  const commitTextUpdate = config.commitTextUpdate;
+  const {
+    commitUpdate,
+    commitTextUpdate,
+    appendChild,
+    insertBefore,
+    removeChild,
+  } = config;
 
-  const appendChild = config.appendChild;
-  const insertBefore = config.insertBefore;
-  const removeChild = config.removeChild;
+  const {
+    getRootHostContainerOnStack,
+  } = hostContext;
 
   function detachRef(current : Fiber) {
     const ref = current.ref;
@@ -305,6 +311,9 @@ module.exports = function<T, P, I, TI, C>(
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
           const rootContainerInstance = getRootHostContainerOnStack();
+          if (rootContainerInstance == null) {
+            throw new Error('Expected to find a root instance on the host stack.');
+          }
           commitUpdate(instance, oldProps, newProps, rootContainerInstance, finishedWork);
         }
         detachRefIfNeeded(current, finishedWork);
