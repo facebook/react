@@ -54,7 +54,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const createInstance = config.createInstance;
   const appendInitialChild = config.appendInitialChild;
   const finalizeInitialChildren = config.finalizeInitialChildren;
-  const createTextInstance = config.createTextInstance;
   const prepareUpdate = config.prepareUpdate;
   const isRootInstance = config.isRootInstance;
 
@@ -226,7 +225,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       case HostText:
         let newText = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
-          const oldText = current.memoizedProps;
+          const oldText = current.memoizedProps;          
           if (newText === null) {
             // If this was a bail out we need to fall back to memoized text.
             // This works the same way as HostComponent.
@@ -240,17 +239,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           if (oldText !== newText) {
             markUpdate(workInProgress);
           }
-        } else {
-          if (typeof newText !== 'string') {
-            if (workInProgress.stateNode === null) {
-              throw new Error('We must have new props for new mounts.');
-            } else {
-              // This can happen when we abort work.
-              return null;
-            }
-          }
-          const textInstance = createTextInstance(newText, workInProgress);
-          workInProgress.stateNode = textInstance;
         }
         workInProgress.memoizedProps = newText;
         return null;

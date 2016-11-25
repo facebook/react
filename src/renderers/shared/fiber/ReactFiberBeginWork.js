@@ -72,6 +72,7 @@ module.exports = function<T, P, I, TI, C>(
   const {
     appendInitialChild,
     createInstance,
+    createTextInstance,
     isContainerType,
   } = config;
 
@@ -505,8 +506,26 @@ module.exports = function<T, P, I, TI, C>(
       case HostComponent:
         return updateHostComponent(current, workInProgress);
       case HostText:
-        // Nothing to do here. This is terminal. We'll do the completion step
-        // immediately after.
+        let newText = workInProgress.pendingProps;
+        if (typeof newText !== 'string') {
+          if (workInProgress.stateNode === null) {
+            throw new Error('We must have new props for new mounts.');
+          } else {
+            // This can happen when we abort work.
+            // TODO: can it, still?
+            return null;
+          }
+        }
+        if (!current || workInProgress.stateNode == null) {
+          const hostParent = getHostParentOnStack();
+          const textInstance = createTextInstance(newText, workInProgress);
+          workInProgress.stateNode = textInstance;
+          if (hostParent) {
+            // TODO: this breaks reuse?
+            appendInitialChild(hostParent, textInstance);
+          }
+        }
+        // This is terminal. We'll do the completion step immediately after.
         return null;
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
