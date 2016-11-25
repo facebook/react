@@ -184,11 +184,14 @@ module.exports = function<T, P, I, TI, C>(
       case HostComponent:
         popHostParent();
         const instance : I = workInProgress.stateNode;
+        if (!instance) {
+          throw new Error('Expected host instance to be created in begin phase.');
+        }
         if (instance === getHostContainerOnStack()) {
           popHostContainer();
         }
         let newProps = workInProgress.pendingProps;
-        if (current && workInProgress.stateNode != null) {
+        if (current) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
           const oldProps = current.memoizedProps;
@@ -213,8 +216,6 @@ module.exports = function<T, P, I, TI, C>(
             }
           }
 
-          // TODO: do we want to append children top->down or
-          // bottom->up? Top->down is faster in IE11.
           const rootContainerInstance = getRootHostContainerOnStack();
           if (rootContainerInstance == null) {
             throw new Error('Expected to find a root instance on the host stack.');
