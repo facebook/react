@@ -489,7 +489,8 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * finds the first child when a component returns a fragment
 * finds the first child even when fragment is nested
 * finds the first child even when first child renders null
-* should render portal children
+* should render one portal
+* should render many portals
 * should render nested portals
 * should pass portal context when rendering subtree elsewhere
 * should update portal context if it changes due to setState
