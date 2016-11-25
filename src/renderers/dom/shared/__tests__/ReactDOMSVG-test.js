@@ -40,9 +40,9 @@ describe('ReactDOMSVG', () => {
         <svg>
           <g ref={el => g = el} strokeWidth="5">
             <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-            <foreignobject>
+            <foreignObject>
               <div ref={el => foreignDiv = el} />
-            </foreignobject>
+            </foreignObject>
           </g>
         </svg>
         <p ref={el => p = el}>
@@ -54,18 +54,26 @@ describe('ReactDOMSVG', () => {
       </div>,
       node
     );
+    // SVG tagName is case sensitive.
+    expect(g.tagName).toBe('g');
     expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(g.getAttribute('stroke-width')).toBe('5');
+    expect(image.tagName).toBe('image');
     expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(
       image.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
     ).toBe('http://i.imgur.com/w7GCRPb.png');
+    expect(image2.tagName).toBe('image');
     expect(image2.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(
       image2.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
     ).toBe('http://i.imgur.com/w7GCRPb.png');
+    // DOM tagName is capitalized by browsers.
+    expect(p.tagName).toBe('P');
     expect(p.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(div.tagName).toBe('DIV');
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(foreignDiv.tagName).toBe('DIV');
     expect(foreignDiv.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
   });
 

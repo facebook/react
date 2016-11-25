@@ -455,39 +455,46 @@ var ReactDOMFiberComponent = {
 
   // TODO: Does this need to check the current namespace? In case these tags
   // happen to be valid in some other namespace.
-  isNewHostContainer(tag : string) {
-    return tag === 'svg' || tag === 'foreignobject';
+  isNewHostContainer(type : string) {
+    // We don't need convert user-provided "type" to a lowercase "tag" because
+    // both cases we're comparing against are SVG tags, which is case sensitive.
+    return (
+      type === 'svg' ||
+      type === 'foreignObject'
+    );
   },
 
   createElement(
-    tag : string,
+    type : string,
     props : Object,
     rootContainerElement : Element
   ) : Element {
-    validateDangerousTag(tag);
+    validateDangerousTag(type);
     // TODO:
-    // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
+    // const tag = type.toLowerCase(); Do we need to apply lower case only on non-custom elements?
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var namespaceURI = rootContainerElement.namespaceURI;
     if (namespaceURI == null ||
         namespaceURI === DOMNamespaces.svg &&
-        rootContainerElement.tagName === 'foreignobject') { // TODO: lowercase?
+        // We don't need convert to lowercase because SVG is case sensitive:
+        rootContainerElement.tagName === 'foreignObject') {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
-      if (tag === 'svg') {
+      // We don't need convert to lowercase because SVG is case sensitive.
+      if (type === 'svg') {
         namespaceURI = DOMNamespaces.svg;
-      } else if (tag === 'math') {
+      } else if (type === 'math') {
         namespaceURI = DOMNamespaces.mathml;
       }
-      // TODO: Make this a new root container element.
     }
 
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
     if (namespaceURI === DOMNamespaces.html) {
+      const tag = type.toLowerCase();
       if (tag === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
@@ -497,17 +504,17 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild : any) : HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        domElement = ownerDocument.createElement(tag, props.is);
+        domElement = ownerDocument.createElement(type, props.is);
       } else {
         // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
         // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-        domElement = ownerDocument.createElement(tag);
+        domElement = ownerDocument.createElement(type);
       }
     } else {
       domElement = ownerDocument.createElementNS(
         namespaceURI,
-        tag
+        type
       );
     }
 
