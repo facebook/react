@@ -188,7 +188,27 @@ describe('ReactDOMFiber', () => {
   }
 
   if (ReactDOMFeatureFlags.useFiber) {
-    it('should render portal children', () => {
+    it('should render one portal', () => {
+      var portalContainer = document.createElement('div');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <div>portal</div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal</div>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+
+    it('should render many portals', () => {
       var portalContainer1 = document.createElement('div');
       var portalContainer2 = document.createElement('div');
 

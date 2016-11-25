@@ -283,6 +283,11 @@ module.exports = function<T, P, I, TI, C>(
         commitNestedUnmounts(current.stateNode);
         return;
       }
+      case Portal: {
+        // TODO: this is recursive.
+        commitDeletion(current);
+        return;
+      }
     }
   }
 
