@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -34,12 +35,6 @@ var {
   pushTopLevelContextObject,
   resetContext,
 } = require('ReactFiberContext');
-var {
-  getHostContainerOnStack,
-  getHostParentOnStack,
-  pushHostContainer,
-  pushHostParent,
-} = require('ReactFiberHostContext');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -66,6 +61,7 @@ var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
+  hostContext : HostContext<I, C>,
   scheduleUpdate : (fiber: Fiber) => void
 ) {
 
@@ -75,6 +71,13 @@ module.exports = function<T, P, I, TI, C>(
     createTextInstance,
     isContainerType,
   } = config;
+
+  const {
+    getHostContainerOnStack,
+    getHostParentOnStack,
+    pushHostContainer,
+    pushHostParent,
+  } = hostContext;
 
   const {
     adoptClassInstance,
@@ -249,8 +252,7 @@ module.exports = function<T, P, I, TI, C>(
       const hostContainer = getHostContainerOnStack();
       const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
       const hostParent = getHostParentOnStack();
-      if (hostParent) {
-        // TODO: this breaks reuse?
+      if (hostParent != null) {
         appendInitialChild(hostParent, instance);
       }
       workInProgress.stateNode = instance;
@@ -523,8 +525,7 @@ module.exports = function<T, P, I, TI, C>(
           const textInstance = createTextInstance(newText, workInProgress);
           workInProgress.stateNode = textInstance;
           const hostParent = getHostParentOnStack();
-          if (hostParent) {
-            // TODO: this breaks reuse?
+          if (hostParent != null) {
             appendInitialChild(hostParent, textInstance);
           }
         }

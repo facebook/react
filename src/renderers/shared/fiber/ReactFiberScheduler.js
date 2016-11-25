@@ -20,10 +20,10 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
+var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
-var { resetHostStacks } = require('ReactFiberHostContext');
 
 var {
   NoWork,
@@ -62,11 +62,12 @@ if (__DEV__) {
 var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
+  const hostContext = ReactFiberHostContext();
   const { beginWork, beginFailedWork } =
-    ReactFiberBeginWork(config, scheduleUpdate);
-  const { completeWork } = ReactFiberCompleteWork(config);
+    ReactFiberBeginWork(config, hostContext, scheduleUpdate);
+  const { completeWork } = ReactFiberCompleteWork(config, hostContext);
   const { commitPlacement, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config, captureError);
+    ReactFiberCommitWork(config, hostContext, captureError);
 
   const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
   const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
@@ -74,6 +75,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const prepareForCommit = config.prepareForCommit;
   const resetAfterCommit = config.resetAfterCommit;
+
+  const resetHostStacks = hostContext.resetHostStacks;
 
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
