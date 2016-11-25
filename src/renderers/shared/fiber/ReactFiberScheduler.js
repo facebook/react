@@ -63,20 +63,23 @@ var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const hostContext = ReactFiberHostContext();
+  const { resetHostStacks } = hostContext;
   const { beginWork, beginFailedWork } =
     ReactFiberBeginWork(config, hostContext, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
-  const { commitPlacement, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config, hostContext, captureError);
-
-  const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
-  const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
-  const useSyncScheduling = config.useSyncScheduling;
-
-  const prepareForCommit = config.prepareForCommit;
-  const resetAfterCommit = config.resetAfterCommit;
-
-  const resetHostStacks = hostContext.resetHostStacks;
+  const {
+    commitPlacement,
+    commitDeletion,
+    commitWork,
+    commitLifeCycles,
+  } = ReactFiberCommitWork(config, hostContext, captureError);
+  const {
+    scheduleAnimationCallback: hostScheduleAnimationCallback,
+    scheduleDeferredCallback: hostScheduleDeferredCallback,
+    useSyncScheduling,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
 
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
