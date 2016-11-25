@@ -511,17 +511,11 @@ module.exports = function<T, P, I, TI, C>(
       case HostComponent:
         return updateHostComponent(current, workInProgress);
       case HostText:
-        let newText = workInProgress.pendingProps;
+        const newText = workInProgress.pendingProps;
         if (typeof newText !== 'string') {
-          if (workInProgress.stateNode === null) {
-            throw new Error('We must have new props for new mounts.');
-          } else {
-            // This can happen when we abort work.
-            // TODO: can it, still?
-            return null;
-          }
+          throw new Error('We must have new props for new mounts.');
         }
-        if (!current || workInProgress.stateNode == null) {
+        if (!current) {
           const textInstance = createTextInstance(newText, workInProgress);
           workInProgress.stateNode = textInstance;
           const hostParent = getHostParentOnStack();
