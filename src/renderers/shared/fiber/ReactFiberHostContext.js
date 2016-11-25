@@ -25,6 +25,8 @@ let parentIndex = -1;
 const containerStack : Array = [];
 let containerIndex = -1;
 
+// TODO: this is all likely broken with portals.
+
 exports.getHostParentOnStack = function() : mixed | null {
   if (parentIndex === -1) {
     return null;
