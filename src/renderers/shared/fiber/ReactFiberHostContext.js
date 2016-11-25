@@ -14,9 +14,6 @@
 
 import type { Fiber } from 'ReactFiber';
 
-// Root we're working on.
-let currentRootFiber = null;
-
 // All host instances.
 const parentStack : Array = [];
 let parentIndex = -1;
@@ -69,7 +66,6 @@ exports.popHostContainer = function() {
 };
 
 exports.resetHostStacks = function() {
-  currentRootFiber = null;
   parentIndex = -1;
   containerIndex = -1;
 };

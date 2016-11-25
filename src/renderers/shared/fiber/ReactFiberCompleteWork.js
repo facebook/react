@@ -51,11 +51,10 @@ var {
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
-  const createInstance = config.createInstance;
-  const appendInitialChild = config.appendInitialChild;
-  const finalizeInitialChildren = config.finalizeInitialChildren;
-  const prepareUpdate = config.prepareUpdate;
-  const isRootInstance = config.isRootInstance;
+  const {
+    finalizeInitialChildren,
+    prepareUpdate,
+  } = config;
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
