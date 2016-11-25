@@ -351,6 +351,7 @@ exports.createFiberFromPortal = function(portal : ReactPortal, priorityLevel : P
   fiber.stateNode = {
     containerInfo: portal.containerInfo,
     implementation: portal.implementation,
+    savedHostContext: null,
   };
   return fiber;
 };

@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { Fiber } from 'ReactFiber';
+
 export type HostContext<I, C> = {
   getHostParentOnStack() : I | null,
   pushHostParent(instance : I) : void,
@@ -22,19 +24,19 @@ export type HostContext<I, C> = {
   pushHostContainer(instance : I | C) : void,
   popHostContainer() : void,
 
-  resetHostStacks() : void,
+  resetHostContext() : void,
+  saveHostContextToPortal(portal : Fiber): void,
+  restoreHostContextFromPortal(portal : Fiber): void,
 };
 
 module.exports = function<I, C>() : HostContext<I, C> {
   // Host instances currently on the stack that have not yet been committed.
-  const parentStack : Array<I | null> = [];
+  let parentStack : Array<I | null> = [];
   let parentIndex = -1;
 
   // Container instances currently on the stack (e.g. DOM uses this for SVG).
-  const containerStack : Array<C | I | null> = [];
+  let containerStack : Array<C | I | null> = [];
   let containerIndex = -1;
-
-  // TODO: this is all likely broken with portals.
 
   function getHostParentOnStack() : I | null {
     if (parentIndex === -1) {
@@ -77,9 +79,40 @@ module.exports = function<I, C>() : HostContext<I, C> {
     containerIndex--;
   }
 
-  function resetHostStacks() : void {
+  function resetHostContext() : void {
     parentIndex = -1;
     containerIndex = -1;
+  }
+
+  function saveHostContextToPortal(portal : Fiber) {
+    const stateNode = portal.stateNode;
+    // We don't throw if it already exists here because it might exist
+    // if something inside threw, and we started from the top.
+    // TODO: add tests for error boundaries inside portals when both are stable.
+    stateNode.savedHostContext = {
+      containerStack,
+      containerIndex,
+      parentStack,
+      parentIndex,
+    };
+    containerStack = [];
+    containerIndex = -1;
+    parentStack = [];
+    parentIndex = -1;
+    pushHostContainer(stateNode.containerInfo);
+  }
+
+  function restoreHostContextFromPortal(portal : Fiber) {
+    const stateNode = portal.stateNode;
+    const savedHostContext = stateNode.savedHostContext;
+    stateNode.savedHostContext = null;
+    if (savedHostContext == null) {
+      throw new Error('A portal has no host context saved on it.');
+    }
+    containerStack = savedHostContext.containerStack;
+    containerIndex = savedHostContext.containerIndex;
+    parentStack = savedHostContext.parentStack;
+    parentIndex = savedHostContext.parentIndex;
   }
 
   return {
@@ -92,6 +125,8 @@ module.exports = function<I, C>() : HostContext<I, C> {
     pushHostContainer,
     popHostContainer,
 
-    resetHostStacks,
+    resetHostContext,
+    saveHostContextToPortal,
+    restoreHostContextFromPortal,
   };
 };

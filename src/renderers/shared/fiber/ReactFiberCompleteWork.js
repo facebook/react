@@ -58,6 +58,7 @@ module.exports = function<T, P, I, TI, C>(
     getHostContainerOnStack,
     popHostContainer,
     popHostParent,
+    restoreHostContextFromPortal,
   } = hostContext;
 
   function markUpdate(workInProgress : Fiber) {
@@ -266,6 +267,7 @@ module.exports = function<T, P, I, TI, C>(
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
+        restoreHostContextFromPortal(workInProgress);
         return null;
 
       // Error cases

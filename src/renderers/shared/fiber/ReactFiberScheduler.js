@@ -63,7 +63,7 @@ var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const hostContext = ReactFiberHostContext();
-  const { resetHostStacks } = hostContext;
+  const { resetHostContext } = hostContext;
   const { beginWork, beginFailedWork } =
     ReactFiberBeginWork(config, hostContext, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
@@ -235,7 +235,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     resetAfterCommit();
-    resetHostStacks();
+    resetHostContext();
 
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have
