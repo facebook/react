@@ -504,6 +504,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render one portal
 * should render many portals
 * should render nested portals
+* should not apply SVG mode across portals
 * should pass portal context when rendering subtree elsewhere
 * should update portal context if it changes due to setState
 * should update portal context if it changes due to re-render

@@ -76,6 +76,7 @@ module.exports = function<T, P, I, TI, C>(
     getHostParentOnStack,
     pushHostContainer,
     pushHostParent,
+    saveHostContextToPortal,
   } = hostContext;
 
   const {
@@ -430,7 +431,10 @@ module.exports = function<T, P, I, TI, C>(
       pushContextProvider(workInProgress, false);
     } else if (workInProgress.tag === HostContainer) {
       pushHostContainer(workInProgress.stateNode.containerInfo);
+    } else if (workInProgress.tag === Portal) {
+      saveHostContextToPortal(workInProgress);
     }
+    // TODO: this is annoyingly duplicating non-jump codepaths.
 
     return workInProgress.child;
   }
@@ -526,9 +530,8 @@ module.exports = function<T, P, I, TI, C>(
         // next one immediately.
         return null;
       case Portal:
-        // TODO: host stack.
+        saveHostContextToPortal(workInProgress);
         updatePortalComponent(current, workInProgress);
-        // TODO: is this right?
         return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
