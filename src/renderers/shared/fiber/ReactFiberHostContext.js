@@ -17,62 +17,57 @@ import type { Fiber } from 'ReactFiber';
 // Root we're working on.
 let currentRootFiber = null;
 
-// All host fibers.
-const hostStack : Array<Fiber | null> = [];
-let hostIndex = -1;
+// All host instances.
+const parentStack : Array = [];
+let parentIndex = -1;
 
-// Just the container host fibers (e.g. DOM uses this for SVG).
-const hostContainerStack : Array<Fiber | null> = [];
-let hostContainerIndex = -1;
+// Just the container instances (e.g. DOM uses this for SVG).
+const containerStack : Array = [];
+let containerIndex = -1;
 
-exports.getCurrentRoot = function() : Fiber | null {
-  return currentRootFiber;
-};
-
-exports.setCurrentRoot = function(rootFiber : Fiber) {
-  currentRootFiber = rootFiber;
-};
-
-exports.resetCurrentRoot = function() {
-  currentRootFiber = null;
-};
-
-exports.getHostFiberOnStack = function() : Fiber | null {
-  if (hostIndex === -1) {
+exports.getHostParentOnStack = function() : mixed | null {
+  if (parentIndex === -1) {
     return null;
   }
-  return hostStack[hostIndex];
+  return parentStack[parentIndex];
 };
 
-exports.pushHostFiber = function(fiber : Fiber) : void {
-  hostIndex++;
-  hostStack[hostIndex] = fiber;
+exports.pushHostParent = function(instance : mixed) : void {
+  parentIndex++;
+  parentStack[parentIndex] = instance;
 };
 
-exports.popHostFiber = function() {
-  hostStack[hostIndex] = null;
-  hostIndex--;
+exports.popHostParent = function() {
+  parentStack[parentIndex] = null;
+  parentIndex--;
 };
 
-exports.getHostContainerOnStack = function() : Fiber | null {
-  if (hostContainerIndex === -1) {
+exports.getHostContainerOnStack = function() : mixed | null {
+  if (containerIndex === -1) {
     return null;
   }
-  return hostContainerStack[hostContainerIndex];
+  return containerStack[containerIndex];
 };
 
-exports.pushHostContainer = function(fiber : Fiber) : void {
-  hostContainerIndex++;
-  hostContainerStack[hostContainerIndex] = fiber;
+exports.getRootHostContainerOnStack = function() : Fiber | null {
+  if (containerIndex === -1) {
+    return null;
+  }
+  return containerStack[0];
+};
+
+exports.pushHostContainer = function(instance : mixed) : void {
+  containerIndex++;
+  containerStack[containerIndex] = instance;
 };
 
 exports.popHostContainer = function() {
-  hostContainerStack[hostContainerIndex] = null;
-  hostContainerIndex--;
+  containerStack[containerIndex] = null;
+  containerIndex--;
 };
 
-exports.resetHostFiberStacks = function() {
+exports.resetHostStacks = function() {
   currentRootFiber = null;
-  hostIndex = -1;
-  hostContainerIndex = -1;
+  parentIndex = -1;
+  containerIndex = -1;
 };

@@ -23,7 +23,7 @@ var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
-var { resetHostFiberStacks } = require('ReactFiberHostContext');
+var { resetHostStacks } = require('ReactFiberHostContext');
 
 var {
   NoWork,
@@ -229,7 +229,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     resetAfterCommit();
-    resetHostFiberStacks();
+    resetHostStacks();
 
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have

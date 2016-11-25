@@ -36,11 +36,9 @@ var {
 } = require('ReactFiberContext');
 var {
   getHostContainerOnStack,
-  getHostFiberOnStack,
+  getHostParentOnStack,
   pushHostContainer,
-  pushHostFiber,
-  getCurrentRoot,
-  setCurrentRoot,
+  pushHostParent,
 } = require('ReactFiberHostContext');
 var {
   IndeterminateComponent,
@@ -284,26 +282,18 @@ module.exports = function<T, P, I, TI, C>(
     } else {
       if (!current && workInProgress.stateNode == null) {
         const newProps = workInProgress.pendingProps;
-        const hostParentFiber = getHostFiberOnStack();
-        const hostParentInstance = hostParentFiber != null ?
-          // TODO: just store the instance itself on stack
-          hostParentFiber.stateNode :
-          getCurrentRoot().stateNode.containerInfo;
-        const hostContainerFiber = getHostContainerOnStack();
-        const hostContainerInstance = hostContainerFiber != null ?
-          // TODO: just store the instance itself on stack
-          hostContainerFiber.stateNode :
-          getCurrentRoot().stateNode.containerInfo;
-        const instance = createInstance(workInProgress.type, newProps, hostContainerInstance, workInProgress);
-        if (hostParentFiber) {
+        const hostParent = getHostParentOnStack();
+        const hostContainer = getHostContainerOnStack();
+        const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
+        if (hostParent) {
           // TODO: this breaks reuse?
-          appendInitialChild(hostParentInstance, instance);
+          appendInitialChild(hostParent, instance);
         }
         workInProgress.stateNode = instance;
       }
-      pushHostFiber(workInProgress);
+      pushHostParent(workInProgress.stateNode);
       if (isContainerType(workInProgress.type)) {
-        pushHostContainer(workInProgress);
+        pushHostContainer(workInProgress.stateNode);
       }
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
@@ -439,11 +429,14 @@ module.exports = function<T, P, I, TI, C>(
 
     // Put context on the stack because we will work on children
     if (isHostComponent) {
+      pushHostParent(workInProgress.stateNode);
       if (isContainerType(workInProgress.type)) {
-        pushHostContainer(workInProgress);
+        pushHostContainer(workInProgress.stateNode);
       }
     } else if (isContextProvider(workInProgress)) {
       pushContextProvider(workInProgress, false);
+    } else if (workInProgress.tag === HostContainer) {
+      pushHostContainer(workInProgress.stateNode.containerInfo);
     }
 
     return workInProgress.child;
@@ -459,7 +452,6 @@ module.exports = function<T, P, I, TI, C>(
     if (!workInProgress.return) {
       // Don't start new work with context on the stack.
       resetContext();
-      setCurrentRoot(workInProgress);
     }
 
     if (workInProgress.pendingWorkPriority === NoWork ||
@@ -504,6 +496,7 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
+        pushHostContainer(workInProgress.stateNode.containerInfo);
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
@@ -529,6 +522,7 @@ module.exports = function<T, P, I, TI, C>(
         // next one immediately.
         return null;
       case HostPortal:
+        // TODO: host stack.
         updatePortalComponent(current, workInProgress);
         // TODO: is this right?
         return workInProgress.child;

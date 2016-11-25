@@ -24,10 +24,10 @@ var {
   popContextProvider,
 } = require('ReactFiberContext');
 var {
-  getCurrentRoot,
+  getRootHostContainerOnStack,
   getHostContainerOnStack,
   popHostContainer,
-  popHostFiber,
+  popHostParent,
 } = require('ReactFiberHostContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
@@ -180,11 +180,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       }
       case HostComponent:
-        popHostFiber();
-        let hostContainerFiber = getHostContainerOnStack();
-        if (workInProgress === hostContainerFiber) {
+        popHostParent();
+        const instance : I = workInProgress.stateNode;
+        if (instance === getHostContainerOnStack()) {
           popHostContainer();
-          hostContainerFiber = getHostContainerOnStack();
         }
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
@@ -198,7 +197,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           if (!newProps) {
             newProps = workInProgress.memoizedProps || oldProps;
           }
-          const instance : I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps)) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
@@ -215,12 +213,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
           // TODO: do we want to append children top->down or
           // bottom->up? Top->down is faster in IE11.
-          const hostContainerInstance = hostContainerFiber != null ?
-            // TODO: just store the instance itself on stack
-            hostContainerFiber.stateNode :
-            getCurrentRoot().stateNode.containerInfo;
-          const instance = workInProgress.stateNode;
-          finalizeInitialChildren(instance, workInProgress.type, newProps, hostContainerInstance);
+          const rootContainerInstance = getRootHostContainerOnStack();
+          finalizeInitialChildren(instance, workInProgress.type, newProps, rootContainerInstance);
 
           if (workInProgress.ref) {
             // If there is a ref on a host node we need to schedule a callback

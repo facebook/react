@@ -98,9 +98,9 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     type : string,
     props : Props,
-    containerInstance : Instance | Container,
+    rootContainerInstance : Container,
   ) : void {
-    setInitialProperties(domElement, type, props, containerInstance);
+    setInitialProperties(domElement, type, props, rootContainerInstance);
   },
 
   prepareUpdate(
@@ -115,14 +115,14 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     oldProps : Props,
     newProps : Props,
-    containerInstance : Instance | Container,
+    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
     var type = domElement.tagName.toLowerCase(); // HACK
     // Update the internal instance handle so that we know which props are
     // the current ones.
     precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, containerInstance);
+    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
   },
 
   shouldSetTextContent(props : Props) : boolean {
