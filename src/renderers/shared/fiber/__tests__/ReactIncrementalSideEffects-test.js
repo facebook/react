@@ -517,7 +517,7 @@ describe('ReactIncrementalSideEffects', () => {
       );
     }
     ReactNoop.render(<Foo tick={0} idx={0} />);
-    ReactNoop.flushDeferredPri(40 + 25);
+    ReactNoop.flushDeferredPri(40 + 20);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(0),
@@ -525,14 +525,14 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
     ReactNoop.render(<Foo tick={1} idx={0} />);
-    ReactNoop.flushDeferredPri(35 + 25);
+    ReactNoop.flushDeferredPri(35 + 20);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(1),
         div(/*still not rendered yet*/)
       ),
     ]);
-    ReactNoop.flushDeferredPri(30 + 25);
+    ReactNoop.flushDeferredPri(30 + 20);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(1),
@@ -545,7 +545,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
     var innerSpanA = ReactNoop.getChildren()[0].children[1].children[1];
     ReactNoop.render(<Foo tick={2} idx={1} />);
-    ReactNoop.flushDeferredPri(30 + 25);
+    ReactNoop.flushDeferredPri(30 + 20);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(2),
@@ -623,7 +623,7 @@ describe('ReactIncrementalSideEffects', () => {
     ops = [];
 
     ReactNoop.render(<Foo tick={1} idx={0} />);
-    ReactNoop.flushDeferredPri(70);
+    ReactNoop.flushDeferredPri(65);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(1),
