@@ -231,6 +231,17 @@ module.exports = function<T, P, I, TI, C>(
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
     }
+    if (!current && workInProgress.stateNode == null) {
+      const newProps = workInProgress.pendingProps;
+      const hostParent = getHostParentOnStack();
+      const hostContainer = getHostContainerOnStack();
+      const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
+      if (hostParent) {
+        // TODO: this breaks reuse?
+        appendInitialChild(hostParent, instance);
+      }
+      workInProgress.stateNode = instance;
+    }
     if (workInProgress.pendingProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
@@ -267,17 +278,6 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
-      if (!current && workInProgress.stateNode == null) {
-        const newProps = workInProgress.pendingProps;
-        const hostParent = getHostParentOnStack();
-        const hostContainer = getHostContainerOnStack();
-        const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
-        if (hostParent) {
-          // TODO: this breaks reuse?
-          appendInitialChild(hostParent, instance);
-        }
-        workInProgress.stateNode = instance;
-      }
       pushHostParent(workInProgress.stateNode);
       if (isContainerType(workInProgress.type)) {
         pushHostContainer(workInProgress.stateNode);
