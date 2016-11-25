@@ -220,7 +220,7 @@ module.exports = function<T, P, I, TI, C>(
           if (rootContainerInstance == null) {
             throw new Error('Expected to find a root instance on the host stack.');
           }
-          finalizeInitialChildren(instance, workInProgress.type, newProps, rootContainerInstance);
+          finalizeInitialChildren(instance, newProps, rootContainerInstance);
 
           if (workInProgress.ref) {
             // If there is a ref on a host node we need to schedule a callback
