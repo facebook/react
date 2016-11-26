@@ -15,10 +15,6 @@
 import type { Fiber } from 'ReactFiber';
 
 export type HostContext<I, C> = {
-  getHostParentOnStack() : I | null,
-  pushHostParent(instance : I) : void,
-  popHostParent() : void,
-
   getHostContainerOnStack() : I | C | null,
   getRootHostContainerOnStack() : C | null,
   pushHostContainer(instance : I | C) : void,
@@ -30,30 +26,9 @@ export type HostContext<I, C> = {
 };
 
 module.exports = function<I, C>() : HostContext<I, C> {
-  // Host instances currently on the stack that have not yet been committed.
-  let parentStack : Array<I | null> = [];
-  let parentIndex = -1;
-
   // Container instances currently on the stack (e.g. DOM uses this for SVG).
   let containerStack : Array<C | I | null> = [];
   let containerIndex = -1;
-
-  function getHostParentOnStack() : I | null {
-    if (parentIndex === -1) {
-      return null;
-    }
-    return parentStack[parentIndex];
-  }
-
-  function pushHostParent(instance : I) : void {
-    parentIndex++;
-    parentStack[parentIndex] = instance;
-  }
-
-  function popHostParent() : void {
-    parentStack[parentIndex] = null;
-    parentIndex--;
-  }
 
   function getHostContainerOnStack() : I | C | null {
     if (containerIndex === -1) {
@@ -80,7 +55,6 @@ module.exports = function<I, C>() : HostContext<I, C> {
   }
 
   function resetHostContext() : void {
-    parentIndex = -1;
     containerIndex = -1;
   }
 
@@ -92,13 +66,9 @@ module.exports = function<I, C>() : HostContext<I, C> {
     stateNode.savedHostContext = {
       containerStack,
       containerIndex,
-      parentStack,
-      parentIndex,
     };
     containerStack = [];
     containerIndex = -1;
-    parentStack = [];
-    parentIndex = -1;
     pushHostContainer(stateNode.containerInfo);
   }
 
@@ -111,15 +81,9 @@ module.exports = function<I, C>() : HostContext<I, C> {
     }
     containerStack = savedHostContext.containerStack;
     containerIndex = savedHostContext.containerIndex;
-    parentStack = savedHostContext.parentStack;
-    parentIndex = savedHostContext.parentIndex;
   }
 
   return {
-    getHostParentOnStack,
-    pushHostParent,
-    popHostParent,
-
     getHostContainerOnStack,
     getRootHostContainerOnStack,
     pushHostContainer,

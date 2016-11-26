@@ -66,7 +66,6 @@ module.exports = function<T, P, I, TI, C>(
 ) {
 
   const {
-    appendInitialChild,
     createInstance,
     createTextInstance,
     isContainerType,
@@ -74,9 +73,7 @@ module.exports = function<T, P, I, TI, C>(
 
   const {
     getHostContainerOnStack,
-    getHostParentOnStack,
     pushHostContainer,
-    pushHostParent,
     saveHostContextToPortal,
   } = hostContext;
 
@@ -252,10 +249,6 @@ module.exports = function<T, P, I, TI, C>(
       const newProps = workInProgress.pendingProps;
       const hostContainer = getHostContainerOnStack();
       const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
-      const hostParent = getHostParentOnStack();
-      if (hostParent != null) {
-        appendInitialChild(hostParent, instance);
-      }
       workInProgress.stateNode = instance;
     }
     if (workInProgress.pendingProps.hidden &&
@@ -294,9 +287,6 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
-      if (!current) {
-        pushHostParent(workInProgress.stateNode);
-      }
       if (isContainerType(workInProgress.type)) {
         pushHostContainer(workInProgress.stateNode);
       }
@@ -434,18 +424,23 @@ module.exports = function<T, P, I, TI, C>(
 
     // Put context on the stack because we will work on children
     if (isHostComponent) {
-      if (!current) {
-        pushHostParent(workInProgress.stateNode);
-      }
       if (isContainerType(workInProgress.type)) {
         pushHostContainer(workInProgress.stateNode);
       }
-    } else if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress, false);
-    } else if (workInProgress.tag === HostContainer) {
-      pushHostContainer(workInProgress.stateNode.containerInfo);
-    } else if (workInProgress.tag === Portal) {
-      saveHostContextToPortal(workInProgress);
+    } else {
+      switch (workInProgress.tag) {
+        case ClassComponent:
+          if (isContextProvider(workInProgress)) {
+            pushContextProvider(workInProgress, false);
+          }
+          break;
+        case HostContainer:
+          pushHostContainer(workInProgress.stateNode.containerInfo);
+          break;
+        case Portal:
+          saveHostContextToPortal(workInProgress);
+          break;
+      }
     }
     // TODO: this is annoyingly duplicating non-jump codepaths.
 
@@ -522,10 +517,6 @@ module.exports = function<T, P, I, TI, C>(
         if (!current) {
           const textInstance = createTextInstance(newText, workInProgress);
           workInProgress.stateNode = textInstance;
-          const hostParent = getHostParentOnStack();
-          if (hostParent != null) {
-            appendInitialChild(hostParent, textInstance);
-          }
         }
         // This is terminal. We'll do the completion step immediately after.
         return null;

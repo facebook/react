@@ -49,6 +49,7 @@ module.exports = function<T, P, I, TI, C>(
   hostContext : HostContext<I, C>,
 ) {
   const {
+    appendInitialChild,
     finalizeInitialChildren,
     prepareUpdate,
   } = config;
@@ -57,7 +58,6 @@ module.exports = function<T, P, I, TI, C>(
     getRootHostContainerOnStack,
     getHostContainerOnStack,
     popHostContainer,
-    popHostParent,
     restoreHostContextFromPortal,
   } = hostContext;
 
@@ -135,6 +135,35 @@ module.exports = function<T, P, I, TI, C>(
     return workInProgress.stateNode;
   }
 
+  function appendAllChildren(parent : I, workInProgress : Fiber) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node) {
+      if (node.tag === HostComponent || node.tag === HostText) {
+        appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === Portal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.child) {
+        // TODO: Coroutines need to visit the stateNode.
+        node = node.child;
+        continue;
+      }
+      if (node === workInProgress) {
+        return;
+      }
+      while (!node.sibling) {
+        if (!node.return || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node = node.sibling;
+    }
+  }
+
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
     switch (workInProgress.tag) {
       case FunctionalComponent:
@@ -183,7 +212,6 @@ module.exports = function<T, P, I, TI, C>(
         return null;
       }
       case HostComponent:
-        popHostParent();
         const instance : I = workInProgress.stateNode;
         if (!instance) {
           throw new Error('Expected host instance to be created in begin phase.');
@@ -221,6 +249,12 @@ module.exports = function<T, P, I, TI, C>(
           if (rootContainerInstance == null) {
             throw new Error('Expected to find a root instance on the host stack.');
           }
+          // TODO: Keep the instance on a context "stack" as the parent.
+          // Then append children as we go in beginWork or completeWork
+          // depending on we want to add then top->down or bottom->up.
+          // Top->down is faster in IE11.
+          // Finally, finalizeInitialChildren here in completeWork.
+          appendAllChildren(instance, workInProgress);
           finalizeInitialChildren(instance, newProps, rootContainerInstance);
 
           if (workInProgress.ref) {
