@@ -166,6 +166,8 @@ function warnAboutUnstableUse() {
 }
 
 function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  invariant(element !== null, 'ReactDOM.render(): Invalid component element.');
+
   let container : DOMContainerElement =
     containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
   let root;
