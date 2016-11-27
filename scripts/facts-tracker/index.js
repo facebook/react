@@ -31,6 +31,7 @@ function exec(command) {
   return execSync(command, options).toString();
 }
 
+
 var isInsideOfTravis = !!process.env.TRAVIS_REPO_SLUG;
 
 if (isInsideOfTravis) {
