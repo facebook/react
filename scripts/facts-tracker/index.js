@@ -22,7 +22,13 @@ function escape(value) {
 var cwd = null;
 function exec(command) {
   console.error('>', command.replace(process.env.GITHUB_TOKEN, '************'));
-  return execSync(command, cwd ? {cwd: cwd} : undefined).toString();
+  var options = {
+    stdio: [null, null, null],
+  };
+  if (cwd) {
+    options.cwd = cwd;
+  }
+  return execSync(command, options).toString();
 }
 
 var isInsideOfTravis = !!process.env.TRAVIS_REPO_SLUG;
