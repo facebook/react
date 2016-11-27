@@ -13,11 +13,11 @@
 'use strict';
 
 var React = require('React');
-var ReactDOMInjection = require('ReactDOMInjection');
-var ReactDOMStackInjection = require('ReactDOMStackInjection');
-var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactReconciler = require('ReactReconciler');
-var ReactUpdates = require('ReactUpdates');
+var ReactDOMInjection = {};
+var ReactDOMStackInjection = {};
+var ReactCompositeComponent = {};
+var ReactReconciler = {};
+var ReactUpdates = {};
 
 var emptyObject = require('emptyObject');
 var getNextDebugID = require('getNextDebugID');

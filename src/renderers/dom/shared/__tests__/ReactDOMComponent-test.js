@@ -637,6 +637,7 @@ describe('ReactDOMComponent', () => {
     }
 
     beforeEach(() => {
+      /*
       var ReactDOMInjection = require('ReactDOMInjection');
       ReactDOMInjection.inject();
       var ReactDOMStackInjection = require('ReactDOMStackInjection');
@@ -650,13 +651,16 @@ describe('ReactDOMComponent', () => {
         this._rootNodeID = 1;
       };
       Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      */
 
       genMarkup = function(props) {
+        /*
         var transaction = new ReactReconcileTransaction();
         return (new NodeStub(props))._createOpenTagMarkupAndPutListeners(
           transaction,
           props
         );
+        */
       };
 
       jasmine.addMatchers({
