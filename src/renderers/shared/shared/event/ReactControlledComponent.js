@@ -11,6 +11,8 @@
 
 'use strict';
 
+var EventPluginUtils = require('EventPluginUtils');
+
 var invariant = require('invariant');
 
 // Use to restore controlled state after a change event has fired.
@@ -28,7 +30,14 @@ var ReactControlledComponentInjection = {
 var restoreTarget = null;
 var restoreQueue = null;
 
-function restoreStateOfTarget(internalInstance) {
+function restoreStateOfTarget(target) {
+  // We perform this translation at the end of the event loop so that we
+  // always receive the correct fiber here
+  var internalInstance = EventPluginUtils.getInstanceFromNode(target);
+  if (!internalInstance) {
+    // Unmounted
+    return;
+  }
   if (typeof internalInstance.tag === 'number') {
     invariant(
       fiberHostComponent &&
@@ -36,7 +45,6 @@ function restoreStateOfTarget(internalInstance) {
       'Fiber needs to be injected to handle a fiber target for controlled ' +
       'events.'
     );
-    // TODO: Ensure that this instance is the current one. Props needs to be correct.
     fiberHostComponent.restoreControlledState(
       internalInstance.stateNode,
       internalInstance.type,

@@ -484,7 +484,7 @@ function makeSimulator(eventType) {
     ReactGenericBatching.batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
-      ReactControlledComponent.enqueueStateRestore(targetInst);
+      ReactControlledComponent.enqueueStateRestore(node);
 
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
