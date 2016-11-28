@@ -32,7 +32,7 @@ describe('ReactDOMSVG', () => {
     expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
   });
 
-  it('creates elements with svg namespace inside svg tag', () => {
+  it('creates elements with SVG namespace inside SVG tag during mount', () => {
     var node = document.createElement('div');
     var div, foreignDiv, g, image, image2, p;
     ReactDOM.render(
@@ -73,6 +73,49 @@ describe('ReactDOMSVG', () => {
     expect(p.tagName).toBe('P');
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(div.tagName).toBe('DIV');
+    expect(foreignDiv.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(foreignDiv.tagName).toBe('DIV');
+  });
+
+  it('creates elements with SVG namespace inside SVG tag during update', () => {
+    var inst, foreignDiv, g, image;
+
+    class App extends React.Component {
+      state = {step: 0};
+      render() {
+        inst = this;
+        const {step} = this.state;
+        if (step === 0) {
+          return null;
+        }
+        return (
+          <g ref={el => g = el} strokeWidth="5">
+            <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+            <foreignObject>
+              <div ref={el => foreignDiv = el} />
+            </foreignObject>
+          </g>
+        );
+      }
+    }
+
+    var node = document.createElement('div');
+    ReactDOM.render(
+      <svg>
+        <App />
+      </svg>,
+      node
+    );
+    inst.setState({step: 1});
+
+    expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(g.tagName).toBe('g');
+    expect(g.getAttribute('stroke-width')).toBe('5');
+    expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(image.tagName).toBe('image');
+    expect(
+      image.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
+    ).toBe('http://i.imgur.com/w7GCRPb.png');
     expect(foreignDiv.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(foreignDiv.tagName).toBe('DIV');
   });
