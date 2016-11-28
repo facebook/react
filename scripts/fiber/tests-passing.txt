@@ -1482,6 +1482,13 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * ref called correctly for stateless component when __DEV__ = true
 * coerces numbers to strings
 
+src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
+* should call the callback with only the passed argument
+* should catch errors
+* should rethrow caught errors
+* should call the callback with only the passed argument
+* should use invokeGuardedCallbackWithCatch in production
+
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null
 * returns the second item if first is null
