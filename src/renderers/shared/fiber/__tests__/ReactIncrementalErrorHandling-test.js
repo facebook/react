@@ -53,7 +53,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary', () => {
-    class NoopBoundary extends React.Component {
+    class RethrowBoundary extends React.Component {
       unstable_handleError(error) {
         throw error;
       }
@@ -67,9 +67,9 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     ReactNoop.render(
-      <NoopBoundary>
+      <RethrowBoundary>
         <RenderError />
-      </NoopBoundary>
+      </RethrowBoundary>
     );
 
     expect(ReactNoop.flush).toThrow('render error');
