@@ -12,6 +12,8 @@
 
 'use strict';
 
+var invariant = require('invariant');
+
 type UpdateQueueNode = {
   partialState: any,
   callback: ?Function,
@@ -25,6 +27,29 @@ export type UpdateQueue = UpdateQueueNode & {
   hasCallback: boolean,
   tail: UpdateQueueNode
 };
+
+function formatUnexpectedArgument(arg) {
+  var type = typeof arg;
+  if (type !== 'object') {
+    return type;
+  }
+  var displayName = arg.constructor && arg.constructor.name || type;
+  var keys = Object.keys(arg);
+  if (keys.length > 0 && keys.length < 20) {
+    return `${displayName} (keys: ${keys.join(', ')})`;
+  }
+  return displayName;
+}
+
+function validateCallback(callback, callerName) {
+  invariant(
+    !callback || typeof callback === 'function',
+    '%s(...): Expected the last optional `callback` argument to be a ' +
+    'function. Instead received: %s.',
+    callerName,
+    formatUnexpectedArgument(callback)
+  );
+}
 
 exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
   const queue = {
@@ -56,7 +81,8 @@ function addToQueue(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
 
 exports.addToQueue = addToQueue;
 
-exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) : UpdateQueue {
+exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function, callerName: string) : UpdateQueue {
+  validateCallback(callback, callerName);
   if (queue.tail.callback) {
     // If the tail already as a callback, add an empty node to queue
     addToQueue(queue, null);
@@ -115,3 +141,4 @@ exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevSta
   }
   return state;
 };
+

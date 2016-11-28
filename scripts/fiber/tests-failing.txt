@@ -24,10 +24,6 @@ src/renderers/art/__tests__/ReactART-test.js
 * resolves refs before componentDidMount
 * resolves refs before componentDidUpdate
 
-src/renderers/dom/shared/__tests__/ReactDOM-test.js
-* throws in render() if the mount callback is not a function
-* throws in render() if the update callback is not a function
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should empty element when removing innerHTML
 * should transition from innerHTML to children in nested el
@@ -109,9 +105,6 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * should queue mount-ready handlers across different roots
 * marks top-level updates
-* throws in setState if the update callback is not a function
-* throws in replaceState if the update callback is not a function
-* throws in forceUpdate if the update callback is not a function
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
