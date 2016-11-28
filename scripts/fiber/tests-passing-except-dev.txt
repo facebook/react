@@ -28,16 +28,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should group multiple unknown prop warnings together
 * should warn for onDblClick prop
 * should emit a warning once for a named custom component using shady DOM
-* should not warn when server-side rendering `onScroll`
 * warns on invalid nesting
 * warns on invalid nesting at root
 * warns nicely for table rows
 * gives useful context in warnings
-* should warn about incorrect casing on properties (ssr)
-* should warn about incorrect casing on event handlers (ssr)
 * should warn about incorrect casing on properties
 * should warn about incorrect casing on event handlers
-* should warn about class
 * should suggest property name if available
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
@@ -57,7 +53,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value is null
 
 src/renderers/dom/stack/client/__tests__/ReactMount-test.js
-* should account for escaping on a checksum mismatch
 * should warn if render removes React-rendered children
 * should warn if the unmounted node was rendered by another copy of React
 
@@ -65,66 +60,11 @@ src/renderers/dom/stack/client/__tests__/ReactMountDestruction-test.js
 * should warn when unmounting a non-container root node
 * should warn when unmounting a non-container, non-root node
 
-src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
-* should have the correct mounting behavior
-
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
-* uses displayName or Unknown for classic components
-* uses displayName, name, or ReactComponent for modern components
-* uses displayName, name, or Object for factory components
-* uses displayName, name, or StatelessComponent for functional components
-* reports a host tree correctly
-* reports a simple tree with composites correctly
-* reports a tree with composites correctly
-* ignores null children
-* ignores false children
-* reports text nodes as children
-* reports a single text node as a child
-* reports a single number node as a child
-* reports a zero as a child
-* skips empty nodes for multiple children
-* reports html content as no children
-* updates text of a single text child
-* updates from no children to a single text child
-* updates from a single text child to no children
-* updates from html content to a single text child
-* updates from a single text child to html content
-* updates from no children to multiple text children
-* updates from multiple text children to no children
-* updates from html content to multiple text children
-* updates from multiple text children to html content
-* updates from html content to no children
-* updates from no children to html content
-* updates from one text child to multiple text children
-* updates from multiple text children to one text child
-* updates text nodes when reordering
-* updates host nodes when reordering with keys
-* updates host nodes when reordering without keys
-* updates a single composite child of a different type
-* updates a single composite child of the same type
-* updates from no children to a single composite child
-* updates from a single composite child to no children
-* updates mixed children
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* tracks owner correctly
 * purges unmounted components automatically
 * reports update counts
 * does not report top-level wrapper as a root
 * registers inlined text nodes
-* works
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded for host roots

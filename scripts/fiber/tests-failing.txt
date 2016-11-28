@@ -15,35 +15,66 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should give context for PropType errors in nested components.
 
-src/renderers/art/__tests__/ReactART-test.js
-* should have the correct lifecycle state
-* should render a reasonable SVG structure in SVG mode
-* should be able to reorder components
-* should be able to reorder many components
-* renders composite with lifecycle inside group
-* resolves refs before componentDidMount
-* resolves refs before componentDidUpdate
+src/renderers/dom/__tests__/ReactDOMProduction-test.js
+* should throw with an error code in production
+
+src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
+* should not set style attribute when no styles exist
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should empty element when removing innerHTML
 * should transition from innerHTML to children in nested el
+* should generate the correct markup with className
+* should escape style names and values
+* should handle dangerouslySetInnerHTML
+* should not duplicate uppercased selfclosing tags
+* should treat menuitem as a void element but still create the closing tag
 * should warn for children on void elements
 * should report component containing invalid styles
+* should properly escape text content and attributes values
 * should clean up input value tracking
 * should clean up input textarea tracking
+* should not warn when server-side rendering `onScroll`
+* should warn about incorrect casing on properties (ssr)
+* should warn about incorrect casing on event handlers (ssr)
+* should warn about class
 * gives source code refs for unknown prop warning
 * gives source code refs for unknown prop warning for update render
 * gives source code refs for unknown prop warning for exact elements 
 * gives source code refs for unknown prop warning for exact elements in composition 
 
+src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
+* finds nodes for instances
+* finds instances for nodes
+
+src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
+* encountered a declaration exception
+
+src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
+* creates initial namespaced markup
+
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
 * can reconcile text merged by Node.normalize()
+* can reconcile text from pre-rendered markup
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events
+* should render defaultValue for SSR
+* should render value for SSR
+* should render name attribute if it is supplied for SSR
+* should not render name attribute if it is not supplied for SSR
+
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
+* should support server-side rendering
+* should support server-side rendering with defaultValue
+* should support server-side rendering with multiple
+
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
+* should render defaultValue for SSR
+* should render value for SSR
 
 src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
@@ -53,6 +84,12 @@ src/renderers/dom/stack/client/__tests__/ReactMount-test.js
 * throws when given a non-node
 * throws when given a string
 * throws when given a factory
+* should render different components in same root
+* should unmount and remount if the key changes
+* should warn if mounting into dirty rendered markup
+* should not warn if mounting into non-empty node
+* should warn when mounting into document.body
+* should account for escaping on a checksum mismatch
 * tracks root instances
 * marks top-level mounts
 
@@ -65,6 +102,34 @@ src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
 
+src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
+* should generate simple markup
+* should generate simple markup for self-closing tags
+* should generate simple markup for attribute with `>` symbol
+* should generate comment markup for component returns null
+* should render composite components
+* should only execute certain lifecycle methods
+* should have the correct mounting behavior
+* should throw with silly args
+* should not put checksum and React ID on components
+* should not put checksum and React ID on text components
+* should only execute certain lifecycle methods
+* should throw with silly args
+* allows setState in componentWillMount without using DOM
+* renders components with different batching strategies
+* warns with a no-op when an async setState is triggered
+* warns with a no-op when an async replaceState is triggered
+* warns with a no-op when an async forceUpdate is triggered
+* should warn when children are mutated during render
+
+src/renderers/native/__tests__/ReactNativeEvents-test.js
+* handles events
+
+src/renderers/native/__tests__/ReactNativeMount-test.js
+* should be able to create and render a native component
+* should be able to create and update a native component
+* returns the correct instance and calls it in the callback
+
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste
 * should count no-op update in child as waste
@@ -75,8 +140,110 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should work when measurement starts during reconciliation
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
+* uses displayName or Unknown for classic components
+* uses displayName, name, or ReactComponent for modern components
+* uses displayName, name, or Object for factory components
+* uses displayName, name, or StatelessComponent for functional components
+* reports a host tree correctly
+* reports a simple tree with composites correctly
+* reports a tree with composites correctly
+* ignores null children
+* ignores false children
+* reports text nodes as children
+* reports a single text node as a child
+* reports a single number node as a child
+* reports a zero as a child
+* skips empty nodes for multiple children
+* reports html content as no children
+* updates text of a single text child
+* updates from no children to a single text child
+* updates from a single text child to no children
+* updates from html content to a single text child
+* updates from a single text child to html content
+* updates from no children to multiple text children
+* updates from multiple text children to no children
+* updates from html content to multiple text children
+* updates from multiple text children to html content
+* updates from html content to no children
+* updates from no children to html content
+* updates from one text child to multiple text children
+* updates from multiple text children to one text child
+* updates text nodes when reordering
+* updates host nodes when reordering with keys
+* updates host nodes when reordering without keys
+* updates a single composite child of a different type
+* updates a single composite child of the same type
+* updates from no children to a single composite child
+* updates from a single composite child to no children
+* updates mixed children
+* updates with a host child
+* updates from null to a host child
+* updates from a host child to null
+* updates from a host child to a composite child
+* updates from a composite child to a host child
+* updates from null to a composite child
+* updates from a composite child to null
+* updates with a host child
+* updates from null to a host child
+* updates from a host child to null
+* updates from a host child to a composite child
+* updates from a composite child to a host child
+* updates from null to a composite child
+* updates from a composite child to null
+* tracks owner correctly
 * gets created
 * can be retrieved by ID
+* is created when calling renderToString during render
+* works
+
+src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
+* uses displayName or Unknown for classic components
+* uses displayName, name, or ReactComponent for modern components
+* uses displayName, name, or Object for factory components
+* uses displayName, name, or StatelessComponent for functional components
+* reports a host tree correctly
+* reports a simple tree with composites correctly
+* reports a tree with composites correctly
+* ignores null children
+* ignores false children
+* reports text nodes as children
+* reports a single text node as a child
+* reports a single number node as a child
+* reports a zero as a child
+* skips empty nodes for multiple children
+* updates text of a single text child
+* updates from no children to a single text child
+* updates from a single text child to no children
+* updates from no children to multiple text children
+* updates from multiple text children to no children
+* updates from one text child to multiple text children
+* updates from multiple text children to one text child
+* updates text nodes when reordering
+* updates host nodes when reordering with keys
+* updates host nodes when reordering with keys
+* updates a single composite child of a different type
+* updates a single composite child of the same type
+* updates from no children to a single composite child
+* updates from a single composite child to no children
+* updates mixed children
+* updates with a host child
+* updates from null to a host child
+* updates from a host child to null
+* updates from a host child to a composite child
+* updates from a composite child to a host child
+* updates from null to a composite child
+* updates from a composite child to null
+* updates with a host child
+* updates from null to a host child
+* updates from a host child to null
+* updates from a host child to a composite child
+* updates from a composite child to a host child
+* updates from null to a composite child
+* updates from a composite child to null
+* tracks owner correctly
+* purges unmounted components automatically
+* reports update counts
+* does not report top-level wrapper as a root
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update
@@ -89,6 +256,7 @@ src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
 src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
+* should not thrash a server rendered layout with client side one
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
@@ -119,4 +287,19 @@ src/renderers/shared/stack/reconciler/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/test/__tests__/ReactTestUtils-test.js
+* should have shallow rendering
+* should shallow render a functional component
+* should throw for invalid elements
+* should have shallow unmounting
+* can shallow render to null
+* can shallow render with a ref
+* lets you update shallowly rendered components
+* can access the mounted component instance
+* can shallowly render components with contextTypes
+* can shallowly render components with ref as function
+* can setState in componentWillMount when shallow rendering
+* can pass context when shallowly rendering
+* can fail context when shallowly rendering
 * traverses children in the correct order
+* should support injected wrapper components as DOM components
+* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
