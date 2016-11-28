@@ -78,10 +78,10 @@ describe('ReactMount', () => {
     var container = document.createElement('container');
     document.body.appendChild(container);
 
-    ReactMount.render(<div />, container);
+    ReactDOM.render(<div />, container);
     expect(container.firstChild.nodeName).toBe('DIV');
 
-    ReactMount.render(<span />, container);
+    ReactDOM.render(<span />, container);
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
@@ -102,19 +102,19 @@ describe('ReactMount', () => {
     expect(mockMount.mock.calls.length).toBe(0);
     expect(mockUnmount.mock.calls.length).toBe(0);
 
-    ReactMount.render(<Component text="orange" key="A" />, container);
+    ReactDOM.render(<Component text="orange" key="A" />, container);
     expect(container.firstChild.innerHTML).toBe('orange');
     expect(mockMount.mock.calls.length).toBe(1);
     expect(mockUnmount.mock.calls.length).toBe(0);
 
     // If we change the key, the component is unmounted and remounted
-    ReactMount.render(<Component text="green" key="B" />, container);
+    ReactDOM.render(<Component text="green" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('green');
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
 
     // But if we don't change the key, the component instance is reused
-    ReactMount.render(<Component text="blue" key="B" />, container);
+    ReactDOM.render(<Component text="blue" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('blue');
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
@@ -133,12 +133,12 @@ describe('ReactMount', () => {
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     spyOn(console, 'error');
-    ReactMount.render(<div />, container);
+    ReactDOM.render(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
 
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
-    ReactMount.render(<div />, container);
+    ReactDOM.render(<div />, container);
     expectDev(console.error.calls.count()).toBe(2);
   });
 
@@ -147,7 +147,7 @@ describe('ReactMount', () => {
     container.innerHTML = '<div></div>';
 
     spyOn(console, 'error');
-    ReactMount.render(<div />, container);
+    ReactDOM.render(<div />, container);
     expectDev(console.error.calls.count()).toBe(0);
   });
 
@@ -156,7 +156,7 @@ describe('ReactMount', () => {
     document.body.appendChild(iFrame);
     spyOn(console, 'error');
 
-    ReactMount.render(<div />, iFrame.contentDocument.body);
+    ReactDOM.render(<div />, iFrame.contentDocument.body);
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(

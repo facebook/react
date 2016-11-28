@@ -45,6 +45,18 @@ src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should warn for many invalid aria-* props
 * should warn for an improperly cased aria-* prop
 
+src/renderers/dom/shared/__tests__/ReactMount-test.js
+* should account for escaping on a checksum mismatch
+* should warn if render removes React-rendered children
+* should warn if the unmounted node was rendered by another copy of React
+
+src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
+* should warn when unmounting a non-container root node
+* should warn when unmounting a non-container, non-root node
+
+src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
+* should have the correct mounting behavior
+
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should warn if value is null
 * should warn if controlled input switches to uncontrolled (value is null)
@@ -55,18 +67,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value is null
-
-src/renderers/dom/stack/client/__tests__/ReactMount-test.js
-* should account for escaping on a checksum mismatch
-* should warn if render removes React-rendered children
-* should warn if the unmounted node was rendered by another copy of React
-
-src/renderers/dom/stack/client/__tests__/ReactMountDestruction-test.js
-* should warn when unmounting a non-container root node
-* should warn when unmounting a non-container, non-root node
-
-src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
-* should have the correct mounting behavior
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
@@ -152,28 +152,28 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is removed
 
-src/renderers/shared/stack/reconciler/__tests__/ReactChildReconciler-test.js
+src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
 * warns for duplicated keys
 * warns for duplicated keys with component stack info
 
-src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
+src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should correctly determine if a component is mounted
 * should correctly determine if a null component is mounted
 * warns if findDOMNode is used inside render
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
+src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should disallow nested render calls
 * should warn when mutated props are passed
 
-src/renderers/shared/stack/reconciler/__tests__/ReactMultiChild-test.js
+src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should warn for duplicated keys with component stack info
 
-src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
+src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 * should reorder keyed text nodes
 
-src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
+src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
 * should warn when given a ref
 * should use correct name in key warning
