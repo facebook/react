@@ -52,7 +52,6 @@ export default function describeFibers(rootFiber, workInProgress) {
       tag: getFriendlyTag(fiber.tag),
       type: (fiber.type && ('<' + (fiber.type.name || fiber.type) + '>')),
       stateNode: `[${typeof fiber.stateNode}]`,
-      output: `[${typeof fiber.output}]`,
       return: acknowledgeFiber(fiber.return),
       child: acknowledgeFiber(fiber.child),
       sibling: acknowledgeFiber(fiber.sibling),
