@@ -108,6 +108,15 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
 * should treat single arrayless child as being in array
 * should treat single child in array as expected
+* should be called for each child
+* should traverse children of different kinds
+* should be called for each child in nested structure
+* should retain key across two mappings
+* should be called for each child in an iterable without keys
+* should be called for each child in an iterable with keys
+* should use keys from entry iterables
+* should not enumerate enumerable numbers (#4776)
+* should allow extension of native prototypes
 * should pass key to returned component
 * should invoke callback with the right context
 * should be called for each child
@@ -122,6 +131,8 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should count the number of children in flat structure
 * should count the number of children in nested structure
 * should flatten children to an array
+* should throw on object
+* should throw on regex
 
 src/isomorphic/children/__tests__/onlyChild-test.js
 * should fail when passed two children
@@ -1335,7 +1346,8 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should replace children with different keys
 
 src/renderers/shared/shared/__tests__/ReactMultiChildReconcile-test.js
-* should reset internal state if removed then readded
+* should reset internal state if removed then readded in an array
+* should reset internal state if removed then readded in an iterable
 * should create unique identity
 * should preserve order if children order has not changed
 * should transition from zero to one children correctly
@@ -1535,22 +1547,6 @@ src/shared/utils/__tests__/PooledClass-test.js
 
 src/shared/utils/__tests__/reactProdInvariant-test.js
 * should throw with the correct number of `%s`s in the URL
-
-src/shared/utils/__tests__/traverseAllChildren-test.js
-* should support identity for simple
-* should treat single arrayless child as being in array
-* should treat single child in array as expected
-* should be called for each child
-* should traverse children of different kinds
-* should be called for each child in nested structure
-* should retain key across two mappings
-* should be called for each child in an iterable without keys
-* should be called for each child in an iterable with keys
-* should use keys from entry iterables
-* should not enumerate enumerable numbers (#4776)
-* should allow extension of native prototypes
-* should throw on object
-* should throw on regex
 
 src/test/__tests__/ReactTestUtils-test.js
 * should have shallow rendering

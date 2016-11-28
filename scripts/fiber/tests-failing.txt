@@ -99,6 +99,7 @@ src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 
 src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
+* should reorder keyed text nodes
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when stateless component returns array

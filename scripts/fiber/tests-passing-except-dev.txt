@@ -171,14 +171,9 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 
 src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should warn for duplicated keys with component stack info
-
-src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
-* should reorder keyed text nodes
+* should warn for using maps as children with owner info
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
 * should warn when given a ref
 * should use correct name in key warning
-
-src/shared/utils/__tests__/traverseAllChildren-test.js
-* should warn for using maps as children with owner info
