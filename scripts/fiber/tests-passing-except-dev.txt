@@ -172,9 +172,6 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should warn for duplicated keys with component stack info
 
-src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
-* should reorder keyed text nodes
-
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
 * should warn when given a ref

@@ -100,35 +100,9 @@ src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 * throws when rendering null at the top level
 
-src/renderers/shared/shared/__tests__/ReactMultiChildReconcile-test.js
-* should reset internal state if removed then readded in an iterable
-* should create unique identity
-* should preserve order if children order has not changed
-* should transition from zero to one children correctly
-* should transition from one to zero children correctly
-* should transition from one child to null children
-* should transition from null children to one child
-* should remove nulled out children at the beginning
-* should remove nulled out children at the end
-* should reverse the order of two children
-* should reverse the order of more than two children
-* should cycle order correctly
-* should cycle order correctly in the other direction
-* should remove nulled out children and ignore new null children
-* should remove nulled out children and reorder remaining
-* should append children to the end
-* should append multiple children to the end
-* should prepend children to the beginning
-* should prepend multiple children to the beginning
-* should not prepend an empty child to the beginning
-* should not append an empty child to the end
-* should not insert empty children in the middle
-* should insert one new child in the middle
-* should insert multiple new truthy children in the middle
-* should insert non-empty children in middle where nulls were
-
 src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
+* should reorder keyed text nodes
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when stateless component returns array

@@ -545,6 +545,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // In this first iteration, we'll just live with hitting the bad case
     // (adding everything to a Map) in for every insert/move.
 
+    // If you change this code, also update reconcileChildrenIterator() which
+    // uses the same algorithm.
+
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;
 
@@ -676,10 +679,138 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
     newChildren : Iterator<*>,
-    priority : PriorityLevel) : null {
-    // TODO: Copy everything from reconcileChildrenArray but use the iterator
-    // instead.
-    return null;
+    priority : PriorityLevel) : ?Fiber {
+
+    // This is the same implementation as reconcileChildrenArray(),
+    // but using the iterator instead.
+
+    let resultingFirstChild : ?Fiber = null;
+    let previousNewFiber : ?Fiber = null;
+
+    let oldFiber = currentFirstChild;
+    let lastPlacedIndex = 0;
+    let newIdx = 0;
+    let nextOldFiber = null;
+
+    let step = newChildren.next();
+    for (; oldFiber && !step.done; newIdx++, step = newChildren.next()) {
+      if (oldFiber) {
+        if (oldFiber.index > newIdx) {
+          nextOldFiber = oldFiber;
+          oldFiber = null;
+        } else {
+          nextOldFiber = oldFiber.sibling;
+        }
+      }
+      const newFiber = updateSlot(
+        returnFiber,
+        oldFiber,
+        step.value,
+        priority
+      );
+      if (!newFiber) {
+        // TODO: This breaks on empty slots like null children. That's
+        // unfortunate because it triggers the slow path all the time. We need
+        // a better way to communicate whether this was a miss or null,
+        // boolean, undefined, etc.
+        if (!oldFiber) {
+          oldFiber = nextOldFiber;
+        }
+        break;
+      }
+      if (shouldTrackSideEffects) {
+        if (oldFiber && !newFiber.alternate) {
+          // We matched the slot, but we didn't reuse the existing fiber, so we
+          // need to delete the existing child.
+          deleteChild(returnFiber, oldFiber);
+        }
+      }
+      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+      if (!previousNewFiber) {
+        // TODO: Move out of the loop. This only happens for the first run.
+        resultingFirstChild = newFiber;
+      } else {
+        // TODO: Defer siblings if we're not at the right index for this slot.
+        // I.e. if we had null values before, then we want to defer this
+        // for each null value. However, we also don't want to call updateSlot
+        // with the previous one.
+        previousNewFiber.sibling = newFiber;
+      }
+      previousNewFiber = newFiber;
+      oldFiber = nextOldFiber;
+    }
+
+    if (step.done) {
+      // We've reached the end of the new children. We can delete the rest.
+      deleteRemainingChildren(returnFiber, oldFiber);
+      return resultingFirstChild;
+    }
+
+    if (!oldFiber) {
+      // If we don't have any more existing children we can choose a fast path
+      // since the rest will all be insertions.
+      for (; !step.done; newIdx++, step = newChildren.next()) {
+        const newFiber = createChild(
+          returnFiber,
+          step.value,
+          priority
+        );
+        if (!newFiber) {
+          continue;
+        }
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        if (!previousNewFiber) {
+          // TODO: Move out of the loop. This only happens for the first run.
+          resultingFirstChild = newFiber;
+        } else {
+          previousNewFiber.sibling = newFiber;
+        }
+        previousNewFiber = newFiber;
+      }
+      return resultingFirstChild;
+    }
+
+    // Add all children to a key map for quick lookups.
+    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+
+    // Keep scanning and use the map to restore deleted items as moves.
+    for (; !step.done; newIdx++, step = newChildren.next()) {
+      const newFiber = updateFromMap(
+        existingChildren,
+        returnFiber,
+        newIdx,
+        step.value,
+        priority
+      );
+      if (newFiber) {
+        if (shouldTrackSideEffects) {
+          if (newFiber.alternate) {
+            // The new fiber is a work in progress, but if there exists a
+            // current, that means that we reused the fiber. We need to delete
+            // it from the child list so that we don't add it to the deletion
+            // list.
+            existingChildren.delete(
+              newFiber.key === null ? newIdx : newFiber.key
+            );
+          }
+        }
+        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+        if (!previousNewFiber) {
+          resultingFirstChild = newFiber;
+        } else {
+          previousNewFiber.sibling = newFiber;
+        }
+        previousNewFiber = newFiber;
+      }
+    }
+
+    if (shouldTrackSideEffects) {
+      // Any existing children that weren't consumed above were deleted. We need
+      // to add them to the deletion list.
+      existingChildren.forEach(child => deleteChild(returnFiber, child));
+    }
+
+    return resultingFirstChild;
   }
 
   function reconcileSingleTextNode(
@@ -919,10 +1050,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
       const iteratorFn = getIteratorFn(newChild);
       if (iteratorFn) {
+        const iterator = iteratorFn.call(newChild);
+        if (iterator == null) {
+          throw new Error('An iterable object provided no iterator.');
+        }
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
-          newChild,
+          iterator,
           priority
         );
       }
