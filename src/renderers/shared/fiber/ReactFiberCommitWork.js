@@ -133,6 +133,10 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function commitPlacement(finishedWork : Fiber) : void {
+    // Clear effect from effect tag before any errors can be thrown, so that
+    // we don't attempt to do this again
+    finishedWork.effectTag &= ~Placement;
+
     // Recursively insert all host nodes into the parent.
     const parent = getHostParent(finishedWork);
     const before = getHostSibling(finishedWork);
