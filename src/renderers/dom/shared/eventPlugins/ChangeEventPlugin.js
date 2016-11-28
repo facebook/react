@@ -52,7 +52,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(inst);
+  ReactControlledComponent.enqueueStateRestore(target);
   EventPropagators.accumulateTwoPhaseDispatches(event);
   return event;
 }
