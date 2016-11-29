@@ -20,6 +20,7 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
+var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
@@ -64,18 +65,24 @@ type TrappedError = {
   error: any,
 };
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-  const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
-  const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config, trapError);
-
-  const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
-  const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
-  const useSyncScheduling = config.useSyncScheduling;
-
-  const prepareForCommit = config.prepareForCommit;
-  const resetAfterCommit = config.resetAfterCommit;
+module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
+  const hostContext = ReactFiberHostContext(config);
+  const { resetHostContext } = hostContext;
+  const { beginWork } = ReactFiberBeginWork(config, hostContext, scheduleUpdate);
+  const { completeWork } = ReactFiberCompleteWork(config, hostContext);
+  const {
+    commitInsertion,
+    commitDeletion,
+    commitWork,
+    commitLifeCycles,
+  } = ReactFiberCommitWork(config, hostContext, trapError);
+  const {
+    scheduleAnimationCallback: hostScheduleAnimationCallback,
+    scheduleDeferredCallback: hostScheduleDeferredCallback,
+    useSyncScheduling,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
 
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
@@ -215,6 +222,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     resetAfterCommit();
+    resetHostContext();
 
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have

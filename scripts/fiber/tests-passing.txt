@@ -504,6 +504,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render one portal
 * should render many portals
 * should render nested portals
+* should not apply SVG mode across portals
 * should pass portal context when rendering subtree elsewhere
 * should update portal context if it changes due to setState
 * should update portal context if it changes due to re-render
@@ -654,6 +655,8 @@ src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates initial namespaced markup
+* creates elements with SVG namespace inside SVG tag during mount
+* creates elements with SVG namespace inside SVG tag during update
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

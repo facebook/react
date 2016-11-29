@@ -40,6 +40,10 @@ var instanceCounter = 0;
 
 var NoopRenderer = ReactFiberReconciler({
 
+  getChildHostContext() {
+    return null;
+  },
+
   createInstance(type : string, props : Props) : Instance {
     const inst = {
       id: instanceCounter++,
@@ -56,7 +60,7 @@ var NoopRenderer = ReactFiberReconciler({
     parentInstance.children.push(child);
   },
 
-  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
+  finalizeInitialChildren(domElement : Instance, props : Props) : void {
     // Noop
   },
 

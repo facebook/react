@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -57,10 +58,17 @@ var {
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber: Fiber) => void
 ) {
+
+  const {
+    setRootHostContainer,
+    maybePushHostContext,
+    saveHostContextToPortal,
+  } = hostContext;
 
   const {
     adoptClassInstance,
@@ -254,6 +262,7 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
+      maybePushHostContext(workInProgress);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -341,8 +350,9 @@ module.exports = function<T, P, I, TI, C>(
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+    const isHostComponent = workInProgress.tag === HostComponent;
 
-    if (workInProgress.tag === HostComponent &&
+    if (isHostComponent &&
         workInProgress.memoizedProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // This subtree still has work, but it should be deprioritized so we need
@@ -384,10 +394,27 @@ module.exports = function<T, P, I, TI, C>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
+
     // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress, false);
+    if (isHostComponent) {
+      maybePushHostContext(workInProgress);
+    } else {
+      switch (workInProgress.tag) {
+        case ClassComponent:
+          if (isContextProvider(workInProgress)) {
+            pushContextProvider(workInProgress, false);
+          }
+          break;
+        case HostContainer:
+          setRootHostContainer(workInProgress.stateNode.containerInfo);
+          break;
+        case Portal:
+          saveHostContextToPortal(workInProgress);
+          break;
+      }
     }
+    // TODO: this is annoyingly duplicating non-jump codepaths.
+
     return workInProgress.child;
   }
 
@@ -445,6 +472,7 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
+        setRootHostContainer(workInProgress.stateNode.containerInfo);
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
@@ -470,8 +498,8 @@ module.exports = function<T, P, I, TI, C>(
         // next one immediately.
         return null;
       case Portal:
+        saveHostContextToPortal(workInProgress);
         updatePortalComponent(current, workInProgress);
-        // TODO: is this right?
         return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
