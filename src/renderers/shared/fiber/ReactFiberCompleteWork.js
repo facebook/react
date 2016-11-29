@@ -249,9 +249,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       case HostText:
         let newText = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
-          // If we have an alternate, that means this is an update and we need to
-          // schedule a side-effect to do the updates.
-          markUpdate(workInProgress);
+          const oldText = current.memoizedProps;
+          if (newText === null) {
+            // If this was a bail out we need to fall back to memoized text.
+            // This works the same way as HostComponent.
+            newText = workInProgress.memoizedProps;
+            if (newText === null) {
+              newText = oldText;
+            }
+          }
+          // If we have an alternate, that means this is an update and we need
+          // to schedule a side-effect to do the updates.
+          if (oldText !== newText) {
+            markUpdate(workInProgress);
+          }
         } else {
           if (typeof newText !== 'string') {
             if (workInProgress.stateNode === null) {
