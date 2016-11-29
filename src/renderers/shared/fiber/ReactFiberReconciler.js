@@ -44,7 +44,7 @@ export type HostConfig<T, P, I, TI, C> = {
 
   isContainerType(type : T) : boolean,
 
-  createInstance(type : T, props : P, containerInstance : I | C, internalInstanceHandle : OpaqueNode) : I,
+  createInstance(type : T, props : P, rootContainerInstance : C, containerInstance : I | C, internalInstanceHandle : OpaqueNode) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,
   finalizeInitialChildren(parentInstance : I, props : P, rootContainerInstance : C) : void,
 
