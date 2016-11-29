@@ -191,33 +191,17 @@ var ReactNativeEventEmitter = {
       removeTouchesAtIndices(touches, changedIndices) :
       touchSubsequence(touches, changedIndices);
 
-    for (var jj = 0; jj < changedTouches.length; jj++) {
-      var touch = changedTouches[jj];
-      // Touch objects can fulfill the role of `DOM` `Event` objects if we set
-      // the `changedTouches`/`touches`. This saves allocations.
-      touch.changedTouches = changedTouches;
-      touch.touches = touches;
-      var nativeEvent = touch;
-      var rootNodeID = null;
-      var target = nativeEvent.target;
-      if (target !== null && target !== undefined) {
-        if (target < ReactNativeTagHandles.tagsStartAt) {
-          if (__DEV__) {
-            warning(
-              false,
-              'A view is reporting that a touch occured on tag zero.'
-            );
-          }
-        } else {
-          rootNodeID = target;
-        }
-      }
-      ReactNativeEventEmitter._receiveRootNodeIDEvent(
-        rootNodeID,
-        eventTopLevelType,
-        nativeEvent
-      );
-    }
+    var nativeEvent = {
+      target: changedTouches[0].target,
+      touches,
+      changedTouches,
+    };
+
+    ReactNativeEventEmitter._receiveRootNodeIDEvent(
+      nativeEvent.target,
+      eventTopLevelType,
+      nativeEvent
+    );
   },
 };
 

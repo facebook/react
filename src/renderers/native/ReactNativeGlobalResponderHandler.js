@@ -14,13 +14,11 @@ var UIManager = require('UIManager');
 
 var ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
+    if (from !== null) {
+      UIManager.clearJSResponder(from._rootNodeID);
+    }
     if (to !== null) {
-      UIManager.setJSResponder(
-        to._rootNodeID,
-        blockNativeResponder
-      );
-    } else {
-      UIManager.clearJSResponder();
+      UIManager.setJSResponder(to._rootNodeID, blockNativeResponder);
     }
   },
 };
