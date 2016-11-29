@@ -238,7 +238,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       } catch (error) {
         captureError(effectfulFiber, error, false);
       } finally {
-        // Clean-uo
+        // Clean-up
         priorityContext = previousPriorityContext;
 
         const next = effectfulFiber.nextEffect;
@@ -577,7 +577,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     // Throw the first uncaught error
-    if (!shouldBatchUpdates && firstUncaughtError) {
+    if (!nextUnitOfWork && firstUncaughtError) {
       let e = firstUncaughtError;
       firstUncaughtError = null;
       throw e;
