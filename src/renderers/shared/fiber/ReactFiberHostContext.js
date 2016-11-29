@@ -36,8 +36,8 @@ module.exports = function<T, P, I, TI, C, CX>(
   } = config;
 
   let rootHostContainer : C | null = null;
-  let hostContextFiberStack : Array<Fiber | null> = [];
-  let hostContextValueStack : Array<CX | null> = [];
+  let hostContextFiberStack : Array<Fiber | null> | null = null;
+  let hostContextValueStack : Array<CX | null> | null = null;
   let hostContextIndex = -1;
 
   function getRootHostContainer() : C {
@@ -55,6 +55,9 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (hostContextIndex === -1) {
       return null;
     }
+    if (hostContextValueStack == null) {
+      throw new Error('Expected host context stacks to exist when index is more than -1.');
+    }
     return hostContextValueStack[hostContextIndex];
   }
 
@@ -65,13 +68,18 @@ module.exports = function<T, P, I, TI, C, CX>(
       return;
     }
     hostContextIndex++;
+    hostContextFiberStack = hostContextFiberStack || [];
     hostContextFiberStack[hostContextIndex] = fiber;
+    hostContextValueStack = hostContextValueStack || [];
     hostContextValueStack[hostContextIndex] = currentHostContext;
   }
 
   function maybePopHostContext(fiber : Fiber) : void {
     if (hostContextIndex === -1) {
       return;
+    }
+    if (hostContextFiberStack == null || hostContextValueStack == null) {
+      throw new Error('Expected host context stacks to exist when index is more than -1.');
     }
     if (fiber !== hostContextFiberStack[hostContextIndex]) {
       return;
@@ -87,27 +95,26 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function saveHostContextToPortal(portal : Fiber) {
-    const stateNode = portal.stateNode;
-    // We don't throw if it already exists here because it might exist
-    // if something inside threw, and we started from the top.
     // TODO: add tests for error boundaries inside portals when both are stable.
-    stateNode.savedHostContext = {
-      rootHostContainer,
-      hostContextFiberStack,
-      hostContextValueStack,
-      hostContextIndex,
-    };
-    rootHostContainer = null;
-    hostContextFiberStack = [];
-    hostContextValueStack = [];
+    const stateNode = portal.stateNode;
+    if (!stateNode.savedHostContext) {
+      // We assume host context never changes between passes so store it once lazily.
+      stateNode.savedHostContext = {
+        rootHostContainer,
+        hostContextFiberStack,
+        hostContextValueStack,
+        hostContextIndex,
+      };
+    }
+    rootHostContainer = stateNode.containerInfo;
+    hostContextFiberStack = null;
+    hostContextValueStack = null;
     hostContextIndex = -1;
-    setRootHostContainer(stateNode.containerInfo);
   }
 
   function restoreHostContextFromPortal(portal : Fiber) {
     const stateNode = portal.stateNode;
     const savedHostContext = stateNode.savedHostContext;
-    stateNode.savedHostContext = null;
     if (savedHostContext == null) {
       throw new Error('A portal has no host context saved on it.');
     }
