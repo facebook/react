@@ -72,6 +72,7 @@ module.exports = function<T, P, I, TI, C>(
 
   const {
     getHostContainerOnStack,
+    getRootHostContainerOnStack,
     pushHostContainer,
     saveHostContextToPortal,
   } = hostContext;
@@ -234,8 +235,18 @@ module.exports = function<T, P, I, TI, C>(
     }
     if (!current && workInProgress.stateNode == null) {
       const newProps = workInProgress.pendingProps;
-      const hostContainer = getHostContainerOnStack();
-      const instance = createInstance(workInProgress.type, newProps, hostContainer, workInProgress);
+      const containerInstance = getHostContainerOnStack();
+      const rootContainerInstance = getRootHostContainerOnStack();
+      if (rootContainerInstance == null) {
+        throw new Error('Expected to find a root instance on the host stack.');
+      }
+      const instance = createInstance(
+        workInProgress.type,
+        newProps,
+        rootContainerInstance,
+        containerInstance,
+        workInProgress
+      );
       workInProgress.stateNode = instance;
     }
     if (workInProgress.pendingProps.hidden &&

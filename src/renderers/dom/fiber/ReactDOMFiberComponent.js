@@ -467,7 +467,8 @@ var ReactDOMFiberComponent = {
   createElement(
     type : string,
     props : Object,
-    rootContainerElement : Element
+    rootContainerElement : Element,
+    containerElement : Element
   ) : Element {
     validateDangerousTag(type);
     // TODO:
@@ -475,11 +476,11 @@ var ReactDOMFiberComponent = {
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var namespaceURI = rootContainerElement.namespaceURI;
+    var namespaceURI = containerElement.namespaceURI;
     if (namespaceURI == null ||
         namespaceURI === DOMNamespaces.svg &&
         // We don't need convert to lowercase because SVG is case sensitive:
-        rootContainerElement.tagName === 'foreignObject') {
+        containerElement.tagName === 'foreignObject') {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {

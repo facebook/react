@@ -81,10 +81,11 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(
     type : string,
     props : Props,
+    rootContainerInstance : Container,
     containerInstance : Instance | Container,
     internalInstanceHandle : Object,
   ) : Instance {
-    const domElement : Instance = createElement(type, props, containerInstance);
+    const domElement : Instance = createElement(type, props, rootContainerInstance, containerInstance);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
   },
