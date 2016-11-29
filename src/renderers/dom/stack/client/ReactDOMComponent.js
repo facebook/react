@@ -897,6 +897,7 @@ ReactDOMComponent.Mixin = {
       if (nextProps.hasOwnProperty(propKey) ||
           !lastProps.hasOwnProperty(propKey) ||
           lastProps[propKey] == null ||
+          registrationNameModules.hasOwnProperty(propKey) ||
           DOMProperty.isReservedProp(propKey)) {
         continue;
       }
@@ -908,8 +909,7 @@ ReactDOMComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
-      // Do nothing for event names.
-      } else if (registrationNameModules.hasOwnProperty(propKey) === false) {
+      } else {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
