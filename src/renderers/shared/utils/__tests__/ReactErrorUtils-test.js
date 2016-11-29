@@ -60,7 +60,9 @@ describe('ReactErrorUtils', () => {
       );
       __DEV__ = false;
       var oldProcess = process;
-      global.process = {env: {NODE_ENV: 'production'}};
+      global.process = {
+        env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+      };
       jest.resetModuleRegistry();
       ReactErrorUtils = require('ReactErrorUtils');
       expect(ReactErrorUtils.invokeGuardedCallback).toEqual(

@@ -19,7 +19,9 @@ describe('ReactDOMProduction', () => {
   beforeEach(() => {
     __DEV__ = false;
     oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
+    global.process = {
+      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+    };
 
     jest.resetModuleRegistry();
     React = require('React');
