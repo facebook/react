@@ -132,7 +132,7 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function commitInsertion(finishedWork : Fiber) : void {
+  function commitPlacement(finishedWork : Fiber) : void {
     // Recursively insert all host nodes into the parent.
     const parent = getHostParent(finishedWork);
     const before = getHostSibling(finishedWork);
@@ -152,6 +152,7 @@ module.exports = function<T, P, I, TI, C>(
         // the portal directly.
       } else if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
+        node.child.return = node;
         node = node.child;
         continue;
       }
@@ -164,6 +165,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
@@ -423,7 +425,7 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   return {
-    commitInsertion,
+    commitPlacement,
     commitDeletion,
     commitWork,
     commitLifeCycles,

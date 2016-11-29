@@ -220,4 +220,38 @@ describe('ReactMultiChild', () => {
       );
     });
   });
+
+  it('should reorder bailed-out children', () => {
+    spyOn(console, 'error');
+
+    class LetterInner extends React.Component {
+      render() {
+        return <div>{this.props.char}</div>;
+      }
+    }
+
+    class Letter extends React.Component {
+      render() {
+        return <LetterInner char={this.props.char} />;
+      }
+      shouldComponentUpdate() {
+        return false;
+      }
+    }
+
+    class Letters extends React.Component {
+      render() {
+        const letters = this.props.letters.split('');
+        return <div>{letters.map((c) => <Letter key={c} char={c} />)}</div>;
+      }
+    }
+
+    var container = document.createElement('div');
+
+    // Two random strings -- some additions, some removals, some moves
+    ReactDOM.render(<Letters letters="XKwHomsNjIkBcQWFbiZU" />, container);
+    expect(container.textContent).toBe('XKwHomsNjIkBcQWFbiZU');
+    ReactDOM.render(<Letters letters="EHCjpdTUuiybDvhRJwZt" />, container);
+    expect(container.textContent).toBe('EHCjpdTUuiybDvhRJwZt');
+  });
 });

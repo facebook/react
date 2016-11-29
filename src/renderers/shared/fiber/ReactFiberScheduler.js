@@ -67,7 +67,7 @@ type TrappedError = {
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
+  const { commitPlacement, commitDeletion, commitWork, commitLifeCycles } =
     ReactFiberCommitWork(config, trapError);
 
   const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
@@ -174,7 +174,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       switch (effectfulFiber.effectTag) {
         case Placement:
         case PlacementAndCallback: {
-          commitInsertion(effectfulFiber);
+          commitPlacement(effectfulFiber);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
           effectfulFiber.effectTag ^= Placement;
@@ -183,7 +183,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         case PlacementAndUpdate:
         case PlacementAndUpdateAndCallback: {
           // Placement
-          commitInsertion(effectfulFiber);
+          commitPlacement(effectfulFiber);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
           effectfulFiber.effectTag ^= Placement;
