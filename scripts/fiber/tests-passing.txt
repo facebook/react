@@ -1345,6 +1345,7 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should replace children with different constructors
 * should NOT replace children with different owners
 * should replace children with different keys
+* should reorder bailed-out children
 
 src/renderers/shared/shared/__tests__/ReactMultiChildReconcile-test.js
 * should reset internal state if removed then readded in an array
