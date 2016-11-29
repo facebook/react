@@ -894,12 +894,10 @@ ReactDOMComponent.Mixin = {
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      if (
-        nextProps.hasOwnProperty(propKey) ||
-        !lastProps.hasOwnProperty(propKey) ||
-        lastProps[propKey] == null ||
-        DOMProperty.isReservedProp(propKey)
-      ) {
+      if (nextProps.hasOwnProperty(propKey) ||
+          !lastProps.hasOwnProperty(propKey) ||
+          lastProps[propKey] == null ||
+          DOMProperty.isReservedProp(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
@@ -910,10 +908,8 @@ ReactDOMComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
-        this._previousStyleCopy = null;
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        // Do nothing for event names.
-      } else {
+      // Do nothing for event names.
+      } else if (registrationNameModules.hasOwnProperty(propKey) === false) {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
