@@ -62,7 +62,8 @@ let selectionInformation : ?mixed = null;
 var DOMRenderer = ReactFiberReconciler({
 
   getChildHostContext(parentHostContext : string | null, type : string) {
-    return getChildNamespace(parentHostContext, type);
+    const parentNamespace = parentHostContext;
+    return getChildNamespace(parentNamespace, type);
   },
 
   prepareForCommit() : void {

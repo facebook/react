@@ -34,10 +34,10 @@ describe('ReactDOMSVG', () => {
 
   it('creates elements with SVG namespace inside SVG tag during mount', () => {
     var node = document.createElement('div');
-    var div, foreignDiv, foreignObject, g, image, image2, p;
+    var div, foreignDiv, foreignObject, g, image, image2, p, svg;
     ReactDOM.render(
       <div>
-        <svg>
+        <svg ref={el => svg = el}>
           <g ref={el => g = el} strokeWidth="5">
             <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
             <foreignObject ref={el => foreignObject = el}>
@@ -55,6 +55,8 @@ describe('ReactDOMSVG', () => {
       node
     );
     // SVG tagName is case sensitive.
+    expect(svg.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(svg.tagName).toBe('svg');
     expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(g.tagName).toBe('g');
     expect(g.getAttribute('stroke-width')).toBe('5');
@@ -80,7 +82,7 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates elements with SVG namespace inside SVG tag during update', () => {
-    var inst, foreignObject, foreignDiv, g, image;
+    var inst, foreignObject, foreignDiv, g, image, svg;
 
     class App extends React.Component {
       state = {step: 0};
@@ -103,13 +105,15 @@ describe('ReactDOMSVG', () => {
 
     var node = document.createElement('div');
     ReactDOM.render(
-      <svg>
+      <svg ref={el => svg = el}>
         <App />
       </svg>,
       node
     );
     inst.setState({step: 1});
 
+    expect(svg.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(svg.tagName).toBe('svg');
     expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(g.tagName).toBe('g');
     expect(g.getAttribute('stroke-width')).toBe('5');
