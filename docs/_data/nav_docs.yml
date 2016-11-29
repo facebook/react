@@ -48,6 +48,8 @@
       title: Context
     - id: web-components
       title: Web Components
+    - id: ajax
+      title: Ajax
 - title: Reference
   items:
     - id: react-api
