@@ -333,6 +333,42 @@ describe('ReactDOMFiber', () => {
       expect(container.innerHTML).toBe('');
     });
 
+    it('should not apply SVG mode across portals', () => {
+      var portalContainer = document.createElement('div');
+
+      ReactDOM.render(
+        <svg>
+          <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+          {ReactDOM.unstable_createPortal(
+            <div>portal</div>,
+            portalContainer
+          )}
+          <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+        </svg>,
+        container
+      );
+
+      const div = portalContainer.childNodes[0];
+      const image1 = container.firstChild.childNodes[0];
+      const image2 = container.firstChild.childNodes[1];
+      expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+      expect(div.tagName).toBe('DIV');
+      expect(image1.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(image1.tagName).toBe('image');
+      expect(
+        image1.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
+      ).toBe('http://i.imgur.com/w7GCRPb.png');
+      expect(image2.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(image2.tagName).toBe('image');
+      expect(
+        image2.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
+      ).toBe('http://i.imgur.com/w7GCRPb.png');
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+
     it('should pass portal context when rendering subtree elsewhere', () => {
       var portalContainer = document.createElement('div');
 
