@@ -93,6 +93,9 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 src/renderers/shared/shared/__tests__/ReactCompositeComponentNestedState-test.js
 * should provide up to date values for props
 
+src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
+* should update state when called from child cWRP
+
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 * throws when rendering null at the top level
