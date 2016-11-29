@@ -364,6 +364,26 @@ describe('ReactDOMFiber', () => {
         image2.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
       ).toBe('http://i.imgur.com/w7GCRPb.png');
 
+      ReactDOM.render(
+        <svg>
+          <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+          {ReactDOM.unstable_createPortal(
+            <span>portal</span>,
+            portalContainer
+          )}
+          <g />
+        </svg>,
+        container
+      );
+
+      const span = portalContainer.childNodes[0];
+      expect(span.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+      expect(span.tagName).toBe('SPAN');
+      expect(container.firstChild.childNodes[0]).toBe(image1);
+      const g = container.firstChild.childNodes[1];
+      expect(g.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(g.tagName).toBe('g');
+
       ReactDOM.unmountComponentAtNode(container);
       expect(portalContainer.innerHTML).toBe('');
       expect(container.innerHTML).toBe('');
