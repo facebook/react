@@ -33,7 +33,7 @@ var warning = require('warning');
 
 var {
   createElement,
-  isNewHostContainer,
+  getNamespace,
   setInitialProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
@@ -61,8 +61,8 @@ let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
-  isContainerType(type : string) {
-    return isNewHostContainer(type);
+  getHostContext(parentHostContext : string | null, type : string) {
+    return getNamespace(parentHostContext, type);
   },
 
   prepareForCommit() : void {
@@ -82,10 +82,10 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-    containerInstance : Instance | Container,
+    hostContext : string | null,
     internalInstanceHandle : Object,
   ) : Instance {
-    const domElement : Instance = createElement(type, props, rootContainerInstance, containerInstance);
+    const domElement : Instance = createElement(type, props, rootContainerInstance, hostContext);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
   },

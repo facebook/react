@@ -61,8 +61,8 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-  const hostContext = ReactFiberHostContext();
+module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
+  const hostContext = ReactFiberHostContext(config);
   const { resetHostContext } = hostContext;
   const { beginWork, beginFailedWork } =
     ReactFiberBeginWork(config, hostContext, scheduleUpdate);

@@ -34,9 +34,9 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
-  hostContext : HostContext<I, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
   captureError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => Fiber | null
 ) {
 
@@ -50,7 +50,7 @@ module.exports = function<T, P, I, TI, C>(
   } = config;
 
   const {
-    getRootHostContainerOnStack,
+    getRootHostContainer,
   } = hostContext;
 
   function detachRef(current : Fiber) {
@@ -346,10 +346,7 @@ module.exports = function<T, P, I, TI, C>(
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          const rootContainerInstance = getRootHostContainerOnStack();
-          if (rootContainerInstance == null) {
-            throw new Error('Expected to find a root instance on the host stack.');
-          }
+          const rootContainerInstance = getRootHostContainer();
           commitUpdate(instance, oldProps, newProps, rootContainerInstance, finishedWork);
         }
         detachRefIfNeeded(current, finishedWork);

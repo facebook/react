@@ -40,11 +40,11 @@ export type Deadline = {
 
 type OpaqueNode = Fiber;
 
-export type HostConfig<T, P, I, TI, C> = {
+export type HostConfig<T, P, I, TI, C, CX> = {
 
-  isContainerType(type : T) : boolean,
+  getHostContext(parentHostContext : CX | null, type : T) : CX,
 
-  createInstance(type : T, props : P, rootContainerInstance : C, containerInstance : I | C, internalInstanceHandle : OpaqueNode) : I,
+  createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX | null, internalInstanceHandle : OpaqueNode) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,
   finalizeInitialChildren(parentInstance : I, props : P, rootContainerInstance : C) : void,
 
@@ -95,7 +95,7 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
     parentContext;
 });
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
+module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) : Reconciler<C, I, TI> {
 
   var {
     scheduleWork,
