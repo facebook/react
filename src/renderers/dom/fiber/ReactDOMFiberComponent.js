@@ -456,21 +456,29 @@ function updateDOMProperties(
   }
 }
 
+// Assumes there is no parent namespace.
+function getIntrinsicNamespace(type : string) : string | null {
+  switch (type) {
+    case 'svg':
+      return SVG_NAMESPACE;
+    case 'math':
+      return MATH_NAMESPACE;
+    default:
+      return null;
+  }
+}
+
 var ReactDOMFiberComponent = {
   getChildNamespace(parentNamespace : string | null, type : string) : string | null {
     if (parentNamespace == null) {
-      switch (type) {
-        case 'svg':
-          return SVG_NAMESPACE;
-        case 'math':
-          return MATH_NAMESPACE;
-        default:
-          return null;
-      }
+      // No parent namespace: potential entry point.
+      return getIntrinsicNamespace(type);
     }
     if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
+      // We're leaving SVG.
       return null;
     }
+    // By default, pass namespace below.
     return parentNamespace;
   },
 
@@ -478,7 +486,7 @@ var ReactDOMFiberComponent = {
     type : string,
     props : Object,
     rootContainerElement : Element,
-    namespaceURI : string | null
+    parentNamespace : string | null
   ) : Element {
     validateDangerousTag(type);
     // TODO:
@@ -488,6 +496,7 @@ var ReactDOMFiberComponent = {
     // tags get no namespace.
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
+    var namespaceURI = parentNamespace || getIntrinsicNamespace(type);
     if (namespaceURI == null) {
       const tag = type.toLowerCase();
       if (tag === 'script') {
