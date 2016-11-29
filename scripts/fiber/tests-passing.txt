@@ -49,6 +49,8 @@ src/addons/__tests__/renderSubtreeIntoContainer-test.js
 * should update context if it changes due to setState
 * should update context if it changes due to re-render
 * should render portal with non-context-provider parent
+* should get context through non-context-provider parent
+* should get context through middle non-context-provider layer
 
 src/addons/__tests__/update-test.js
 * pushes
