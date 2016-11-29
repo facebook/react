@@ -65,8 +65,8 @@ type TrappedError = {
   error: any,
 };
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-  const hostContext = ReactFiberHostContext();
+module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
+  const hostContext = ReactFiberHostContext(config);
   const { resetHostContext } = hostContext;
   const { beginWork } = ReactFiberBeginWork(config, hostContext, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);

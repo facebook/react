@@ -46,6 +46,11 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
+var {
+  svg: SVG_NAMESPACE,
+  math: MATH_NAMESPACE,
+} = DOMNamespaces;
+
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
 
@@ -452,23 +457,28 @@ function updateDOMProperties(
 }
 
 var ReactDOMFiberComponent = {
-
-  // TODO: Does this need to check the current namespace? In case these tags
-  // happen to be valid in some other namespace.
-  isNewHostContainer(type : string) {
-    // We don't need convert user-provided "type" to a lowercase "tag" because
-    // both cases we're comparing against are SVG tags, which is case sensitive.
-    return (
-      type === 'svg' ||
-      type === 'foreignObject'
-    );
+  getNamespace(parentNamespace : string | null, type : string) : string | null {
+    if (parentNamespace == null) {
+      switch (type) {
+        case 'svg':
+          return SVG_NAMESPACE;
+        case 'math':
+          return MATH_NAMESPACE;
+        default:
+          return null;
+      }
+    }
+    if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
+      return null;
+    }
+    return parentNamespace;
   },
 
   createElement(
     type : string,
     props : Object,
     rootContainerElement : Element,
-    containerElement : Element
+    namespaceURI : string | null
   ) : Element {
     validateDangerousTag(type);
     // TODO:
@@ -476,25 +486,9 @@ var ReactDOMFiberComponent = {
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var namespaceURI = containerElement.namespaceURI;
-    if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg &&
-        // We don't need convert to lowercase because SVG is case sensitive:
-        containerElement.tagName === 'foreignObject') {
-      namespaceURI = DOMNamespaces.html;
-    }
-    if (namespaceURI === DOMNamespaces.html) {
-      // We don't need convert to lowercase because SVG is case sensitive.
-      if (type === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
-      } else if (type === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
-      }
-    }
-
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
-    if (namespaceURI === DOMNamespaces.html) {
+    if (namespaceURI == null) {
       const tag = type.toLowerCase();
       if (tag === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is

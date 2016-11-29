@@ -44,20 +44,22 @@ var {
   Callback,
 } = ReactTypeOfSideEffect;
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
-  hostContext : HostContext<I, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
 ) {
   const {
+    createInstance,
+    createTextInstance,
     appendInitialChild,
     finalizeInitialChildren,
     prepareUpdate,
   } = config;
 
   const {
-    getRootHostContainerOnStack,
-    getHostContainerOnStack,
-    popHostContainer,
+    getRootHostContainer,
+    maybePopHostContext,
+    getCurrentHostContext,
     restoreHostContextFromPortal,
   } = hostContext;
 
@@ -212,15 +214,8 @@ module.exports = function<T, P, I, TI, C>(
         return null;
       }
       case HostComponent:
-        const instance : I = workInProgress.stateNode;
-        if (!instance) {
-          throw new Error('Expected host instance to be created in begin phase.');
-        }
-        if (instance === getHostContainerOnStack()) {
-          popHostContainer();
-        }
         let newProps = workInProgress.pendingProps;
-        if (current) {
+        if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
           const oldProps = current.memoizedProps;
@@ -231,6 +226,7 @@ module.exports = function<T, P, I, TI, C>(
           if (!newProps) {
             newProps = workInProgress.memoizedProps || oldProps;
           }
+          const instance : I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps)) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
@@ -245,29 +241,35 @@ module.exports = function<T, P, I, TI, C>(
             }
           }
 
-          const rootContainerInstance = getRootHostContainerOnStack();
-          if (rootContainerInstance == null) {
-            throw new Error('Expected to find a root instance on the host stack.');
-          }
-          // TODO: Keep the instance on a context "stack" as the parent.
-          // Then append children as we go in beginWork or completeWork
-          // depending on we want to add then top->down or bottom->up.
-          // Top->down is faster in IE11.
-          // Finally, finalizeInitialChildren here in completeWork.
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getCurrentHostContext();
+          // TODO: Move createInstance to beginWork and keep it on a context
+          // "stack" as the parent. Then append children as we go in beginWork
+          // or completeWork depending on we want to add then top->down or
+          // bottom->up. Top->down is faster in IE11.
+          const instance = createInstance(
+            workInProgress.type,
+            newProps,
+            rootContainerInstance,
+            currentHostContext,
+            workInProgress
+          );
           appendAllChildren(instance, workInProgress);
           finalizeInitialChildren(instance, newProps, rootContainerInstance);
 
+          workInProgress.stateNode = instance;
           if (workInProgress.ref) {
             // If there is a ref on a host node we need to schedule a callback
             markUpdate(workInProgress);
           }
         }
+        maybePopHostContext(workInProgress);
         workInProgress.memoizedProps = newProps;
         return null;
       case HostText:
         let newText = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
-          const oldText = current.memoizedProps;          
+          const oldText = current.memoizedProps;
           if (newText === null) {
             // If this was a bail out we need to fall back to memoized text.
             // This works the same way as HostComponent.
@@ -281,6 +283,17 @@ module.exports = function<T, P, I, TI, C>(
           if (oldText !== newText) {
             markUpdate(workInProgress);
           }
+        } else {
+          if (typeof newText !== 'string') {
+            if (workInProgress.stateNode === null) {
+              throw new Error('We must have new props for new mounts.');
+            } else {
+              // This can happen when we abort work.
+              return null;
+            }
+          }
+          const textInstance = createTextInstance(newText, workInProgress);
+          workInProgress.stateNode = textInstance;
         }
         workInProgress.memoizedProps = newText;
         return null;

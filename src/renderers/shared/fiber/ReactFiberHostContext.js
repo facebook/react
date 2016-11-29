@@ -13,49 +13,77 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { HostConfig } from 'ReactFiberReconciler';
 
-export type HostContext<I, C> = {
-  getHostContainerOnStack() : I | C | null,
-  getRootHostContainerOnStack() : C | null,
-  pushHostContainer(instance : I | C) : void,
-  popHostContainer() : void,
+export type HostContext<C, CX> = {
+  getRootHostContainer() : C,
+  setRootHostContainer(container : C) : void,
+
+  getCurrentHostContext() : CX | null,
+  maybePushHostContext(fiber : Fiber) : void,
+  maybePopHostContext(fiber : Fiber) : void,
 
   resetHostContext() : void,
   saveHostContextToPortal(portal : Fiber): void,
   restoreHostContextFromPortal(portal : Fiber): void,
 };
 
-module.exports = function<I, C>() : HostContext<I, C> {
-  // Container instances currently on the stack (e.g. DOM uses this for SVG).
-  let containerStack : Array<C | I | null> = [];
-  let containerIndex = -1;
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>
+) : HostContext<C, CX> {
+  const {
+    getHostContext,
+  } = config;
 
-  function getHostContainerOnStack() : I | C | null {
-    if (containerIndex === -1) {
+  let rootHostContainer : C | null = null;
+  let hostContextFiberStack : Array<Fiber | null> = [];
+  let hostContextValueStack : Array<CX | null> = [];
+  let hostContextIndex = -1;
+
+  function getRootHostContainer() : C {
+    if (rootHostContainer === null) {
+      throw new Error('Expected to find a root container instance.');
+    }
+    return rootHostContainer;
+  }
+
+  function setRootHostContainer(instance : C) : void {
+    rootHostContainer = instance;
+  }
+
+  function getCurrentHostContext() : CX | null {
+    if (hostContextIndex === -1) {
       return null;
     }
-    return containerStack[containerIndex];
+    return hostContextValueStack[hostContextIndex];
   }
 
-  function getRootHostContainerOnStack() : C | null {
-    if (containerIndex === -1) {
-      return null;
+  function maybePushHostContext(fiber : Fiber) : void {
+    const parentHostContext = getCurrentHostContext();
+    const currentHostContext = getHostContext(parentHostContext, fiber.type);
+    if (parentHostContext === currentHostContext) {
+      return;
     }
-    return containerStack[0];
+    hostContextIndex++;
+    hostContextFiberStack[hostContextIndex] = fiber;
+    hostContextValueStack[hostContextIndex] = currentHostContext;
   }
 
-  function pushHostContainer(instance : I | C) : void {
-    containerIndex++;
-    containerStack[containerIndex] = instance;
+  function maybePopHostContext(fiber : Fiber) : void {
+    if (hostContextIndex === -1) {
+      return;
+    }
+    if (fiber !== hostContextFiberStack[hostContextIndex]) {
+      return;
+    }
+    hostContextFiberStack[hostContextIndex] = null;
+    hostContextValueStack[hostContextIndex] = null;
+    hostContextIndex--;
   }
 
-  function popHostContainer() : void {
-    containerStack[containerIndex] = null;
-    containerIndex--;
-  }
-
-  function resetHostContext() : void {
-    containerIndex = -1;
+  function resetHostContext() {
+    rootHostContainer = null;
+    hostContextIndex = -1;
   }
 
   function saveHostContextToPortal(portal : Fiber) {
@@ -64,12 +92,16 @@ module.exports = function<I, C>() : HostContext<I, C> {
     // if something inside threw, and we started from the top.
     // TODO: add tests for error boundaries inside portals when both are stable.
     stateNode.savedHostContext = {
-      containerStack,
-      containerIndex,
+      rootHostContainer,
+      hostContextFiberStack,
+      hostContextValueStack,
+      hostContextIndex,
     };
-    containerStack = [];
-    containerIndex = -1;
-    pushHostContainer(stateNode.containerInfo);
+    rootHostContainer = null;
+    hostContextFiberStack = [];
+    hostContextValueStack = [];
+    hostContextIndex = -1;
+    setRootHostContainer(stateNode.containerInfo);
   }
 
   function restoreHostContextFromPortal(portal : Fiber) {
@@ -79,15 +111,19 @@ module.exports = function<I, C>() : HostContext<I, C> {
     if (savedHostContext == null) {
       throw new Error('A portal has no host context saved on it.');
     }
-    containerStack = savedHostContext.containerStack;
-    containerIndex = savedHostContext.containerIndex;
+    rootHostContainer = savedHostContext.rootHostContainer;
+    hostContextFiberStack = savedHostContext.hostContextFiberStack;
+    hostContextValueStack = savedHostContext.hostContextValueStack;
+    hostContextIndex = savedHostContext.hostContextIndex;
   }
 
   return {
-    getHostContainerOnStack,
-    getRootHostContainerOnStack,
-    pushHostContainer,
-    popHostContainer,
+    getRootHostContainer,
+    setRootHostContainer,
+
+    maybePushHostContext,
+    maybePopHostContext,
+    getCurrentHostContext,
 
     resetHostContext,
     saveHostContextToPortal,

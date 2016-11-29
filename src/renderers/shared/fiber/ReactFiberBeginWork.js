@@ -58,22 +58,15 @@ var {
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
-  hostContext : HostContext<I, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber: Fiber) => void
 ) {
 
   const {
-    createInstance,
-    createTextInstance,
-    isContainerType,
-  } = config;
-
-  const {
-    getHostContainerOnStack,
-    getRootHostContainerOnStack,
-    pushHostContainer,
+    setRootHostContainer,
+    maybePushHostContext,
     saveHostContextToPortal,
   } = hostContext;
 
@@ -233,22 +226,6 @@ module.exports = function<T, P, I, TI, C>(
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
     }
-    if (!current && workInProgress.stateNode == null) {
-      const newProps = workInProgress.pendingProps;
-      const containerInstance = getHostContainerOnStack();
-      const rootContainerInstance = getRootHostContainerOnStack();
-      if (rootContainerInstance == null) {
-        throw new Error('Expected to find a root instance on the host stack.');
-      }
-      const instance = createInstance(
-        workInProgress.type,
-        newProps,
-        rootContainerInstance,
-        containerInstance,
-        workInProgress
-      );
-      workInProgress.stateNode = instance;
-    }
     if (workInProgress.pendingProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
@@ -285,9 +262,7 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
-      if (isContainerType(workInProgress.type)) {
-        pushHostContainer(workInProgress.stateNode);
-      }
+      maybePushHostContext(workInProgress);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -422,9 +397,7 @@ module.exports = function<T, P, I, TI, C>(
 
     // Put context on the stack because we will work on children
     if (isHostComponent) {
-      if (isContainerType(workInProgress.type)) {
-        pushHostContainer(workInProgress.stateNode);
-      }
+      maybePushHostContext(workInProgress);
     } else {
       switch (workInProgress.tag) {
         case ClassComponent:
@@ -433,7 +406,7 @@ module.exports = function<T, P, I, TI, C>(
           }
           break;
         case HostContainer:
-          pushHostContainer(workInProgress.stateNode.containerInfo);
+          setRootHostContainer(workInProgress.stateNode.containerInfo);
           break;
         case Portal:
           saveHostContextToPortal(workInProgress);
@@ -499,7 +472,7 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
-        pushHostContainer(workInProgress.stateNode.containerInfo);
+        setRootHostContainer(workInProgress.stateNode.containerInfo);
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
@@ -508,15 +481,8 @@ module.exports = function<T, P, I, TI, C>(
       case HostComponent:
         return updateHostComponent(current, workInProgress);
       case HostText:
-        const newText = workInProgress.pendingProps;
-        if (typeof newText !== 'string') {
-          throw new Error('We must have new props for new mounts.');
-        }
-        if (!current) {
-          const textInstance = createTextInstance(newText, workInProgress);
-          workInProgress.stateNode = textInstance;
-        }
-        // This is terminal. We'll do the completion step immediately after.
+        // Nothing to do here. This is terminal. We'll do the completion step
+        // immediately after.
         return null;
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
