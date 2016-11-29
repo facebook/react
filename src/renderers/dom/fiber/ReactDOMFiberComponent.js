@@ -457,7 +457,7 @@ function updateDOMProperties(
 }
 
 var ReactDOMFiberComponent = {
-  getNamespace(parentNamespace : string | null, type : string) : string | null {
+  getChildNamespace(parentNamespace : string | null, type : string) : string | null {
     if (parentNamespace == null) {
       switch (type) {
         case 'svg':

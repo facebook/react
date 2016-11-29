@@ -33,7 +33,7 @@ var warning = require('warning');
 
 var {
   createElement,
-  getNamespace,
+  getChildNamespace,
   setInitialProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
@@ -61,8 +61,8 @@ let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
-  getHostContext(parentHostContext : string | null, type : string) {
-    return getNamespace(parentHostContext, type);
+  getChildHostContext(parentHostContext : string | null, type : string) {
+    return getChildNamespace(parentHostContext, type);
   },
 
   prepareForCommit() : void {
