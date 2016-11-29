@@ -22,7 +22,9 @@ describe('ReactPropTypesProduction', function() {
   beforeEach(function() {
     __DEV__ = false;
     oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
+    global.process = {
+      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+    };
 
     jest.resetModuleRegistry();
     PropTypes = require('ReactPropTypes');
