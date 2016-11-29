@@ -34,13 +34,13 @@ describe('ReactDOMSVG', () => {
 
   it('creates elements with SVG namespace inside SVG tag during mount', () => {
     var node = document.createElement('div');
-    var div, foreignDiv, g, image, image2, p;
+    var div, foreignDiv, foreignObject, g, image, image2, p;
     ReactDOM.render(
       <div>
         <svg>
           <g ref={el => g = el} strokeWidth="5">
             <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-            <foreignObject>
+            <foreignObject ref={el => foreignObject = el}>
               <div ref={el => foreignDiv = el} />
             </foreignObject>
           </g>
@@ -63,6 +63,8 @@ describe('ReactDOMSVG', () => {
     expect(
       image.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
     ).toBe('http://i.imgur.com/w7GCRPb.png');
+    expect(foreignObject.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(foreignObject.tagName).toBe('foreignObject');
     expect(image2.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(image2.tagName).toBe('image');
     expect(
@@ -78,7 +80,7 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates elements with SVG namespace inside SVG tag during update', () => {
-    var inst, foreignDiv, g, image;
+    var inst, foreignObject, foreignDiv, g, image;
 
     class App extends React.Component {
       state = {step: 0};
@@ -91,7 +93,7 @@ describe('ReactDOMSVG', () => {
         return (
           <g ref={el => g = el} strokeWidth="5">
             <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-            <foreignObject>
+            <foreignObject ref={el => foreignObject = el}>
               <div ref={el => foreignDiv = el} />
             </foreignObject>
           </g>
@@ -116,6 +118,8 @@ describe('ReactDOMSVG', () => {
     expect(
       image.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
     ).toBe('http://i.imgur.com/w7GCRPb.png');
+    expect(foreignObject.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(foreignObject.tagName).toBe('foreignObject');
     expect(foreignDiv.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(foreignDiv.tagName).toBe('DIV');
   });

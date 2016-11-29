@@ -19,7 +19,7 @@ export type HostContext<C, CX> = {
   getRootHostContainer() : C,
   setRootHostContainer(container : C) : void,
 
-  getCurrentHostContext() : CX | null,
+  getHostContext() : CX | null,
   maybePushHostContext(fiber : Fiber) : void,
   maybePopHostContext(fiber : Fiber) : void,
 
@@ -32,7 +32,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>
 ) : HostContext<C, CX> {
   const {
-    getHostContext,
+    getChildHostContext,
   } = config;
 
   let rootHostContainer : C | null = null;
@@ -51,7 +51,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     rootHostContainer = instance;
   }
 
-  function getCurrentHostContext() : CX | null {
+  function getHostContext() : CX | null {
     if (hostContextIndex === -1) {
       return null;
     }
@@ -59,8 +59,8 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function maybePushHostContext(fiber : Fiber) : void {
-    const parentHostContext = getCurrentHostContext();
-    const currentHostContext = getHostContext(parentHostContext, fiber.type);
+    const parentHostContext = getHostContext();
+    const currentHostContext = getChildHostContext(parentHostContext, fiber.type);
     if (parentHostContext === currentHostContext) {
       return;
     }
@@ -123,7 +123,7 @@ module.exports = function<T, P, I, TI, C, CX>(
 
     maybePushHostContext,
     maybePopHostContext,
-    getCurrentHostContext,
+    getHostContext,
 
     resetHostContext,
     saveHostContextToPortal,

@@ -59,7 +59,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   const {
     getRootHostContainer,
     maybePopHostContext,
-    getCurrentHostContext,
+    getHostContext,
     restoreHostContextFromPortal,
   } = hostContext;
 
@@ -214,6 +214,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         return null;
       }
       case HostComponent:
+        maybePopHostContext(workInProgress);
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -242,7 +243,7 @@ module.exports = function<T, P, I, TI, C, CX>(
           }
 
           const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getCurrentHostContext();
+          const currentHostContext = getHostContext();
           // TODO: Move createInstance to beginWork and keep it on a context
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
@@ -263,7 +264,6 @@ module.exports = function<T, P, I, TI, C, CX>(
             markUpdate(workInProgress);
           }
         }
-        maybePopHostContext(workInProgress);
         workInProgress.memoizedProps = newProps;
         return null;
       case HostText:
