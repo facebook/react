@@ -90,7 +90,7 @@ After: You should see a number in each square in the rendered output.
 
 ##An Interactive Component
 
-Let's make the Square component fill in an "X" when you click it. Try changing the tag returned in the `render()` function of the `Square` class to:
+Let's make the Square component fill in an "X" when you click it. Try changing the opening tag returned in the `render()` function of the `Square` class to:
 
 ```html
 <button className="square" onClick={() => alert('click')}>
