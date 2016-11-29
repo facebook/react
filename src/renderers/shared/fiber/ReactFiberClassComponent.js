@@ -66,12 +66,12 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       updateQueue.isForced = true;
       scheduleUpdateQueue(fiber, updateQueue);
     },
-    enqueueCallback(instance, callback) {
+    enqueueCallback(instance, callback, callerName) {
       const fiber = ReactInstanceMap.get(instance);
       let updateQueue = fiber.updateQueue ?
         fiber.updateQueue :
         createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
+      addCallbackToQueue(updateQueue, callback, callerName);
       scheduleUpdateQueue(fiber, updateQueue);
     },
   };

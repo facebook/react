@@ -165,7 +165,13 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
-function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+function renderSubtreeIntoContainer(
+  parentComponent : ?ReactComponent<any, any, any>,
+  element : ReactElement<any>,
+  containerNode : DOMContainerElement | Document,
+  callback: ?Function,
+  callerName: ?string
+) {
   let container : DOMContainerElement =
     containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
   let root;
@@ -174,9 +180,10 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, parentComponent, callback);
+    root = container._reactRootContainer =
+      DOMRenderer.mountContainer(element, container, parentComponent, callback, callerName);
   } else {
-    DOMRenderer.updateContainer(element, root = container._reactRootContainer, parentComponent, callback);
+    DOMRenderer.updateContainer(element, root = container._reactRootContainer, parentComponent, callback, callerName);
   }
   return DOMRenderer.getPublicRootInstance(root);
 }
@@ -185,15 +192,22 @@ var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     warnAboutUnstableUse();
-    return renderSubtreeIntoContainer(null, element, container, callback);
+    var callerName = 'ReactDOM.render';
+    return renderSubtreeIntoContainer(null, element, container, callback, callerName);
   },
 
-  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  unstable_renderSubtreeIntoContainer(
+    parentComponent : ReactComponent<any, any, any>,
+    element : ReactElement<any>,
+    containerNode : DOMContainerElement | Document,
+    callback: ?Function
+  ) {
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
     );
-    return renderSubtreeIntoContainer(parentComponent, element, containerNode, callback);
+    var callerName = 'ReactDOM.unstable_renderSubtreeIntoContainer';
+    return renderSubtreeIntoContainer(parentComponent, element, containerNode, callback, callerName);
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {

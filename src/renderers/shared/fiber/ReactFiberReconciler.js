@@ -101,13 +101,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
+    mountContainer(
+      element : ReactElement<any>,
+      containerInfo : C,
+      parentComponent : ?ReactComponent<any, any, any>,
+      callback: ?Function,
+      callerName: ?string
+    ) : OpaqueNode {
       const context = getContextForSubtree(parentComponent);
       const root = createFiberRoot(containerInfo, context);
       const container = root.current;
       if (callback) {
         const queue = createUpdateQueue(null);
-        addCallbackToQueue(queue, callback);
+        addCallbackToQueue(queue, callback, ((callerName : any) : string));
         root.callbackList = queue;
       }
       // TODO: Use pending work/state instead of props.
@@ -127,14 +133,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       return container;
     },
 
-    updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
+    updateContainer(
+      element : ReactElement<any>,
+      container : OpaqueNode,
+      parentComponent : ?ReactComponent<any, any, any>,
+      callback: ?Function,
+      callerName: ?string
+    ) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       if (callback) {
         const queue = root.callbackList ?
           root.callbackList :
           createUpdateQueue(null);
-        addCallbackToQueue(queue, callback);
+        addCallbackToQueue(queue, callback, ((callerName : any) : string));
         root.callbackList = queue;
       }
       root.pendingContext = getContextForSubtree(parentComponent);

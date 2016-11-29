@@ -156,19 +156,25 @@ var ReactNoop = {
 
   // Shortcut for testing a single root
   render(element : ReactElement<any>, callback: ?Function) {
-    ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
+    var callerName = 'ReactNoop.render';
+    ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback, callerName);
   },
 
-  renderToRootWithID(element : ReactElement<any>, rootID : string, callback : ?Function) {
+  renderToRootWithID(
+    element : ReactElement<any>,
+    rootID : string,
+    callback : ?Function,
+    callerName: ?string = 'ReactNoop.renderToRootWithID'
+  ) {
     if (!roots.has(rootID)) {
       const container = { rootID: rootID, children: [] };
       rootContainers.set(rootID, container);
-      const root = NoopRenderer.mountContainer(element, container, null, callback);
+      const root = NoopRenderer.mountContainer(element, container, null, callback, callerName);
       roots.set(rootID, root);
     } else {
       const root = roots.get(rootID);
       if (root) {
-        NoopRenderer.updateContainer(element, root, null, callback);
+        NoopRenderer.updateContainer(element, root, null, callback, callerName);
       }
     }
   },
