@@ -108,11 +108,12 @@ function msg() {
   grunt.log.subhead('Release *almost* complete...');
   var steps = [
     'Still todo:',
-    '* put files on CDN',
-    '* add starter pack (git add -f docs/downloads/react-version.zip)',
-    '* push changes to git repositories',
-    '* update docs branch variable in Travis CI',
-    '* publish npm modules',
+    '* add starter pack (`git add -f docs/downloads/react-version.zip`) and commit',
+    '* push this repo with tags',
+    '* push bower repo with tags',
+    '* run `npm-publish` in rrm',
+    '* create release on github',
+    '* for a major release, update docs branch variable in Travis CI',
     '* announce it on FB/Twitter/mailing list',
   ];
   steps.forEach(function(ln) {
