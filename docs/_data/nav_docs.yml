@@ -48,6 +48,8 @@
       title: Context
     - id: web-components
       title: Web Components
+    - id: higher-order-components
+      title: Higher-Order Components
 - title: Reference
   items:
     - id: react-api
