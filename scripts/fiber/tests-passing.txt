@@ -1221,6 +1221,7 @@ src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should support new-style refs with mixed-up owners
 * should call refs at the correct time
 * fires the callback after a component is rendered
+* throws usefully when rendering badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should not reuse an instance when it has been unmounted
