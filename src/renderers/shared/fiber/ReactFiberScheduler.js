@@ -601,19 +601,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // Search for the nearest error boundary.
     let boundary : Fiber | null = null;
     if (failedWork) {
-      let node = failedWork.return;
-      while (node && !boundary) {
-        if (node.tag === ClassComponent) {
-          const instance = node.stateNode;
-          if (typeof instance.unstable_handleError === 'function') {
-            // Found an error boundary!
+      // Host containers are a special case. If the failed work itself is a host
+      // container, then it acts as its own boundary. In all other cases, we
+      // ignore the work itself and only search through the parents.
+      if (failedWork.tag === HostContainer) {
+        boundary = failedWork;
+      } else {
+        let node = failedWork.return;
+        while (node && !boundary) {
+          if (node.tag === ClassComponent) {
+            const instance = node.stateNode;
+            if (typeof instance.unstable_handleError === 'function') {
+              // Found an error boundary!
+              boundary = node;
+            }
+          } else if (node.tag === HostContainer) {
+            // Treat the root like a no-op error boundary.
             boundary = node;
           }
-        } else if (node.tag === HostContainer) {
-          // Treat the root like a no-op error boundary.
-          boundary = node;
+          node = node.return;
         }
-        node = node.return;
       }
     }
 

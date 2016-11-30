@@ -2029,6 +2029,31 @@ describe('ReactErrorBoundaries', () => {
         'InnerUpdateBoundary componentWillUnmount',
       ]);
     });
+
+    it('discards a bad root if the root component fails', () => {
+      spyOn(console, 'error');
+
+      const X = null;
+      const Y = undefined;
+      let err1;
+      let err2;
+
+      try {
+        let container = document.createElement('div');
+        ReactDOM.render(<X />, container);
+      } catch (err) {
+        err1 = err;
+      }
+      try {
+        let container = document.createElement('div');
+        ReactDOM.render(<Y />, container);
+      } catch (err) {
+        err2 = err;
+      }
+
+      expect(err1.message).toMatch(/got: null/);
+      expect(err2.message).toMatch(/got: undefined/);
+    });
   }
 
 });

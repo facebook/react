@@ -1237,6 +1237,7 @@ src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should support new-style refs with mixed-up owners
 * should call refs at the correct time
 * fires the callback after a component is rendered
+* throws usefully when rendering badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should not reuse an instance when it has been unmounted
@@ -1335,6 +1336,7 @@ src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
 * catches errors in componentDidUpdate
 * propagates errors inside boundary during componentDidMount
 * lets different boundaries catch their own first errors
+* discards a bad root if the root component fails
 
 src/renderers/shared/shared/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
