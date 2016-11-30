@@ -812,4 +812,56 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('hi')]);
   });
+
+  it('unmounts components with uncaught errors', () => {
+    const ops = [];
+    let inst;
+
+    class BrokenRenderAndUnmount extends React.Component {
+      state = {fail: false};
+      componentWillUnmount() {
+        ops.push('BrokenRenderAndUnmount componentWillUnmount');
+      }
+      render() {
+        inst = this;
+        if (this.state.fail) {
+          throw new Error('Hello.');
+        }
+        return null;
+      }
+    }
+
+    class Parent extends React.Component {
+      componentWillUnmount() {
+        ops.push('Parent componentWillUnmount [!]');
+        throw new Error('One does not simply unmount me.');
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    ReactNoop.render(
+      <Parent>
+        <Parent>
+          <BrokenRenderAndUnmount />
+        </Parent>
+      </Parent>
+    );
+    ReactNoop.flush();
+
+    inst.setState({fail: true});
+    expect(() => {
+      ReactNoop.flush();
+    }).toThrowError('Hello.');
+
+    expect(ops).toEqual([
+      // Attempt to clean up.
+      // Errors in parents shouldn't stop children from unmounting.
+      'Parent componentWillUnmount [!]',
+      'Parent componentWillUnmount [!]',
+      'BrokenRenderAndUnmount componentWillUnmount',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
 });
