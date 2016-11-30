@@ -165,48 +165,54 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // First, we'll perform all the host insertions, updates, deletions and
     // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
-    while (effectfulFiber) {
+    pass1: while (true) {
       try {
-        // The following switch statement is only concerned about placement,
-        // updates, and deletions. To avoid needing to add a case for every
-        // possible bitmap value, we remove the secondary effects from the
-        // effect tag and switch on that value.
-        let primaryEffectTag = effectfulFiber.effectTag & ~(Callback | Err);
-        switch (primaryEffectTag) {
-          case Placement: {
-            commitPlacement(effectfulFiber);
-            // Clear the "placement" from effect tag so that we know that this is inserted, before
-            // any life-cycles like componentDidMount gets called.
-            effectfulFiber.effectTag &= ~Placement;
-            break;
-          }
-          case PlacementAndUpdate: {
-            // Placement
-            commitPlacement(effectfulFiber);
-            // Clear the "placement" from effect tag so that we know that this is inserted, before
-            // any life-cycles like componentDidMount gets called.
-            effectfulFiber.effectTag &= ~Placement;
+        while (effectfulFiber) {
+          // The following switch statement is only concerned about placement,
+          // updates, and deletions. To avoid needing to add a case for every
+          // possible bitmap value, we remove the secondary effects from the
+          // effect tag and switch on that value.
+          let primaryEffectTag = effectfulFiber.effectTag & ~(Callback | Err);
+          switch (primaryEffectTag) {
+            case Placement: {
+              commitPlacement(effectfulFiber);
+              // Clear the "placement" from effect tag so that we know that this is inserted, before
+              // any life-cycles like componentDidMount gets called.
+              effectfulFiber.effectTag &= ~Placement;
+              break;
+            }
+            case PlacementAndUpdate: {
+              // Placement
+              commitPlacement(effectfulFiber);
+              // Clear the "placement" from effect tag so that we know that this is inserted, before
+              // any life-cycles like componentDidMount gets called.
+              effectfulFiber.effectTag &= ~Placement;
 
-            // Update
-            const current = effectfulFiber.alternate;
-            commitWork(current, effectfulFiber);
-            break;
+              // Update
+              const current = effectfulFiber.alternate;
+              commitWork(current, effectfulFiber);
+              break;
+            }
+            case Update: {
+              const current = effectfulFiber.alternate;
+              commitWork(current, effectfulFiber);
+              break;
+            }
+            case Deletion: {
+              commitDeletion(effectfulFiber);
+              break;
+            }
           }
-          case Update: {
-            const current = effectfulFiber.alternate;
-            commitWork(current, effectfulFiber);
-            break;
-          }
-          case Deletion: {
-            commitDeletion(effectfulFiber);
-            break;
-          }
+          effectfulFiber = effectfulFiber.nextEffect;
         }
       } catch (error) {
-        captureError(effectfulFiber, error, false);
-      } finally {
-        effectfulFiber = effectfulFiber.nextEffect;
+        if (effectfulFiber) {
+          captureError(effectfulFiber, error, false);
+          effectfulFiber = effectfulFiber.nextEffect;
+          continue pass1;
+        }
       }
+      break;
     }
 
     // Finally if the root itself had an effect, we perform that since it is
@@ -222,35 +228,42 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // happens as a separate pass so that all effects in the entire tree have
     // already been invoked.
     effectfulFiber = finishedWork.firstEffect;
-    while (effectfulFiber) {
-      const previousPriorityContext = priorityContext;
-      priorityContext = TaskPriority;
+    const previousPriorityContext = priorityContext;
+    priorityContext = TaskPriority;
+    pass2: while (true) {
       try {
-        const current = effectfulFiber.alternate;
-        // Use Task priority for lifecycle updates
-        if (effectfulFiber.effectTag & (Update | Callback)) {
-          commitLifeCycles(current, effectfulFiber);
-        }
+        while (effectfulFiber) {
+          const current = effectfulFiber.alternate;
+          // Use Task priority for lifecycle updates
+          if (effectfulFiber.effectTag & (Update | Callback)) {
+            commitLifeCycles(current, effectfulFiber);
+          }
 
-        if (effectfulFiber.effectTag & Err) {
-          commitErrorHandling(effectfulFiber);
+          if (effectfulFiber.effectTag & Err) {
+            commitErrorHandling(effectfulFiber);
+          }
+
+          const next = effectfulFiber.nextEffect;
+          // Ensure that we clean these up so that we don't accidentally keep them.
+          // I'm not actually sure this matters because we can't reset firstEffect
+          // and lastEffect since they're on every node, not just the effectful
+          // ones. So we have to clean everything as we reuse nodes anyway.
+          effectfulFiber.nextEffect = null;
+          // Ensure that we reset the effectTag here so that we can rely on effect
+          // tags to reason about the current life-cycle.
+          effectfulFiber = next;
         }
       } catch (error) {
-        captureError(effectfulFiber, error, false);
-      } finally {
-        // Clean-up
-        priorityContext = previousPriorityContext;
-
-        const next = effectfulFiber.nextEffect;
-        // Ensure that we clean these up so that we don't accidentally keep them.
-        // I'm not actually sure this matters because we can't reset firstEffect
-        // and lastEffect since they're on every node, not just the effectful
-        // ones. So we have to clean everything as we reuse nodes anyway.
-        effectfulFiber.nextEffect = null;
-        // Ensure that we reset the effectTag here so that we can rely on effect
-        // tags to reason about the current life-cycle.
-        effectfulFiber = next;
+        if (effectfulFiber) {
+          captureError(effectfulFiber, error, false);
+          const next = effectfulFiber.nextEffect;
+          effectfulFiber.nextEffect = null;
+          effectfulFiber = next;
+          continue pass2;
+        }
       }
+      priorityContext = previousPriorityContext;
+      break;
     }
 
     // Lifecycles on the root itself
