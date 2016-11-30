@@ -35,8 +35,9 @@ dependencies:
 
 test:
   override:
-    # - ./node_modules/.bin/grunt lint
+    - ./node_modules/.bin/grunt lint
     - ./node_modules/.bin/grunt jest:normal
+    - ./node_modules/.bin/grunt jest:coverage
     # - ./scripts/circleci/set_feature_flag.sh && ./node_modules/.bin/grunt jest:normal
     - ./scripts/circleci/flow.sh
   pre:
