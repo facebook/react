@@ -21,10 +21,7 @@ function escape(value) {
 
 var cwd = null;
 function exec(command) {
-  console.error('>', command.replace(process.env.GITHUB_TOKEN, '************'));
-  var options = {
-    stdio: [null, null, null],
-  };
+  var options = {};
   if (cwd) {
     options.cwd = cwd;
   }
@@ -45,7 +42,7 @@ if (isInsideOfTravis) {
     process.exit(0);
   }
 
-  if (!process.env.GITHUB_USER || !process.env.GITHUB_TOKEN) {
+  if (!process.env.GITHUB_USER) {
     console.error(
       'In order to use facts-tracker, you need to configure a ' +
       'few environment variables in order to be able to commit to the ' +
@@ -60,8 +57,6 @@ if (isInsideOfTravis) {
       'In a different tab, go to https://travis-ci.org/' +
         process.env.TRAVIS_REPO_SLUG + '/settings\n' +
       ' - Make sure "Build only if .travis.yml is present" is ON\n' +
-      ' - Fill "Name" with "GITHUB_TOKEN" and "Value" with the token you ' +
-        'just generated. Press "Add"\n' +
       ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
         'account you generated the token with. Press "Add"\n' +
       '\n' +
@@ -71,10 +66,6 @@ if (isInsideOfTravis) {
     process.exit(1);
   }
 
-  exec(
-    'echo "machine github.com login $GITHUB_USER password $GITHUB_TOKEN"' +
-    '> ~/.netrc'
-  );
   exec(
     'git config --global user.name ' +
     escape(process.env.GITHUB_USER_NAME || 'facts-tracker')
@@ -102,7 +93,7 @@ function getRepoSlug() {
       return match[1];
     }
   }
-  
+
   console.error('Cannot find repository slug, sorry.');
   process.exit(1);
 }
@@ -118,7 +109,7 @@ function checkoutFactsFolder() {
   if (!fs.existsSync(factsFolder)) {
     var escapedRepoURL;
     if (isInsideOfTravis) {
-      escapedRepoURL = 'https://$GITHUB_TOKEN@github.com/' + escape(repoSlug) + '.git';
+      escapedRepoURL = 'https://$GITHUB_USER@github.com/' + escape(repoSlug) + '.git';
     } else {
       escapedRepoURL = escape('git@github.com:' + repoSlug + '.git');
     }
