@@ -8,7 +8,10 @@
     "react-addon"
   ],
   "license": "BSD-3-Clause",
-  "dependencies": {},
+  "dependencies": {
+    "fbjs": "^0.8.4",
+    "object-assign": "^4.1.0"
+  },
   "peerDependencies": {
     "react": "^16.0.0-alpha"
   },
