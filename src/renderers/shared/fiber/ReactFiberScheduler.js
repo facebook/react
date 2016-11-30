@@ -587,6 +587,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   function captureError(failedWork : Fiber | null, error : Error, isUnmounting : boolean) : Fiber | null {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
+    // It is no longer valid because this unit of work failed.
+    nextUnitOfWork = null;
 
     // Ignore this error if it's the result of unmounting a failed boundary
     if (failedWork &&
@@ -629,7 +631,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           !(boundary.alternate && capturedErrors.has(boundary.alternate))) {
         capturedErrors.set(boundary, error);
       }
-      nextUnitOfWork = null;
       return boundary;
     } else if (!firstUncaughtError) {
       // If no boundary is found, we'll need to throw the error
