@@ -347,4 +347,22 @@ describe('ReactComponent', () => {
     expectDev(console.error.calls.count()).toBe(2);
   });
 
+  it('includes owner name in the error about badly-typed elements', () => {
+    spyOn(console, 'error');
+
+    function Foo() {
+      var X = undefined;
+      return <X />;
+    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toThrowError(
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: undefined. ' +
+      'Check the render method of `Foo`.'
+    );
+
+    // One warning for each element creation
+    expectDev(console.error.calls.count()).toBe(1);
+  });
+
 });
