@@ -774,9 +774,6 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       ...(ReactDOMFeatureFlags.useFiber ? [
         // In Fiber, noop error boundaries render null
-        // 'ErrorBoundary constructor',
-        // 'ErrorBoundary componentWillMount',
-        // 'ErrorBoundary render success',
         'NoopErrorBoundary componentDidMount',
         'ErrorBoundary componentDidMount',
         'NoopErrorBoundary unstable_handleError',
