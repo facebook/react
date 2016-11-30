@@ -275,4 +275,97 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren('e')).toEqual(null);
     expect(ReactNoop.getChildren('f')).toEqual(null);
   });
+
+  it('catches reconciler errors in a boundary during mounting', () => {
+    spyOn(console, 'error');
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          return <span prop={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const InvalidType = undefined;
+    const brokenElement = <InvalidType />;
+    function BrokenRender(props) {
+      return brokenElement;
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span(
+      'Element type is invalid: expected a string (for built-in components) or ' +
+      'a class/function (for composite components) but got: undefined.'
+    )]);
+    expect(console.error.calls.count()).toBe(1);
+  });
+
+  it('catches reconciler errors in a boundary during update', () => {
+    spyOn(console, 'error');
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      unstable_handleError(error) {
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          return <span prop={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const InvalidType = undefined;
+    const brokenElement = <InvalidType />;
+    function BrokenRender(props) {
+      return props.fail ? brokenElement : <span />;
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender fail={false} />
+      </ErrorBoundary>
+    );
+    ReactNoop.flush();
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender fail={true} />
+      </ErrorBoundary>
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span(
+      'Element type is invalid: expected a string (for built-in components) or ' +
+      'a class/function (for composite components) but got: undefined.'
+    )]);
+    expect(console.error.calls.count()).toBe(1);
+  });
+
+  it('recovers from uncaught reconciler errors', () => {
+    spyOn(console, 'error');
+    const InvalidType = undefined;
+    ReactNoop.render(<InvalidType />);
+    expect(() => {
+      ReactNoop.flush();
+    }).toThrowError(
+      'Element type is invalid: expected a string (for built-in components) or ' +
+      'a class/function (for composite components) but got: undefined.'
+    );
+
+    ReactNoop.render(<span prop="hi" />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span('hi')]);
+  });
 });
