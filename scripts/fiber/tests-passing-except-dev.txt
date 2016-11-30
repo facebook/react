@@ -177,3 +177,7 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
 * should warn when given a ref
 * should use correct name in key warning
+
+src/renderers/shared/shared/__tests__/refs-test.js
+* attaches, detaches from fiber component with stack layer
+* attaches, detaches from stack component with fiber layer
