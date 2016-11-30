@@ -33,7 +33,7 @@ var MOUNTING = 1;
 var MOUNTED = 2;
 var UNMOUNTED = 3;
 
-function isFiberMounted(fiber : Fiber) : number {
+function isFiberMountedImpl(fiber : Fiber) : number {
   let node = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
@@ -61,19 +61,21 @@ function isFiberMounted(fiber : Fiber) : number {
   // that has been unmounted.
   return UNMOUNTED;
 }
-exports.isFiberMounted = isFiberMounted;
+exports.isFiberMounted = function(fiber : Fiber) : boolean {
+  return isFiberMountedImpl(fiber) === MOUNTED;
+};
 
 exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
   var fiber : ?Fiber = ReactInstanceMap.get(component);
   if (!fiber) {
     return false;
   }
-  return isFiberMounted(fiber) === MOUNTED;
+  return isFiberMountedImpl(fiber) === MOUNTED;
 };
 
 exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
   // First check if this node itself is mounted.
-  const state = isFiberMounted(parent, true);
+  const state = isFiberMountedImpl(parent, true);
   if (state === UNMOUNTED) {
     invariant(
       false,
