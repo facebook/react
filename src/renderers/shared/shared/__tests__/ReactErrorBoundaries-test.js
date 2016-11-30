@@ -33,6 +33,7 @@ describe('ReactErrorBoundaries', () => {
   var ErrorBoundary;
   var ErrorMessage;
   var NoopErrorBoundary;
+  var RethrowErrorBoundary;
   var Normal;
 
   beforeEach(() => {
@@ -394,7 +395,12 @@ describe('ReactErrorBoundaries', () => {
         log.push('NoopErrorBoundary componentWillUnmount');
       }
       unstable_handleError() {
-        log.push('NoopErrorBoundary unstable_handleError');
+        if (ReactDOMFeatureFlags.useFiber) {
+          log.push('NoopErrorBoundary unstable_handleError');
+        } else {
+          // In Stack, not calling setState() is treated as a rethrow.
+          log.push('NoopErrorBoundary unstable_handleError [*]');
+        }
       }
     };
 
@@ -476,6 +482,35 @@ describe('ReactErrorBoundaries', () => {
           </div>
         );
       },
+    };
+
+    RethrowErrorBoundary = class extends React.Component {
+      constructor(props) {
+        super(props);
+        log.push('RethrowErrorBoundary constructor');
+      }
+      render() {
+        log.push('RethrowErrorBoundary render');
+        return <BrokenRender />;
+      }
+      componentWillMount() {
+        log.push('RethrowErrorBoundary componentWillMount');
+      }
+      componentDidMount() {
+        log.push('RethrowErrorBoundary componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push('RethrowErrorBoundary componentWillUnmount');
+      }
+      unstable_handleError(error) {
+        if (!ReactDOMFeatureFlags.useFiber) {
+          log.push('RethrowErrorBoundary unstable_handleError [*]');
+          // In Stack, not calling setState() is treated as a rethrow.
+          return;
+        }
+        log.push('RethrowErrorBoundary unstable_handleError [!]');
+        throw error;
+      }
     };
 
     ErrorMessage = class extends React.Component {
@@ -753,35 +788,41 @@ describe('ReactErrorBoundaries', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
-        <NoopErrorBoundary>
+        <RethrowErrorBoundary>
           <BrokenRender />
-        </NoopErrorBoundary>
+        </RethrowErrorBoundary>
       </ErrorBoundary>,
       container
     );
-    expect(container.firstChild.textContent).toBe(
-      ReactDOMFeatureFlags.useFiber ? '' : 'Caught an error: Hello.'
-    );
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
     expect(log).toEqual([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
-      'NoopErrorBoundary constructor',
-      'NoopErrorBoundary componentWillMount',
-      'NoopErrorBoundary render',
+      'RethrowErrorBoundary constructor',
+      'RethrowErrorBoundary componentWillMount',
+      'RethrowErrorBoundary render',
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       ...(ReactDOMFeatureFlags.useFiber ? [
         // In Fiber, noop error boundaries render null
-        'NoopErrorBoundary componentDidMount',
+        'RethrowErrorBoundary componentDidMount',
         'ErrorBoundary componentDidMount',
-        'NoopErrorBoundary unstable_handleError',
+        'RethrowErrorBoundary unstable_handleError [!]',
+        // The error got rethrown here.
+        // This time, the error propagates to the higher boundary
+        'RethrowErrorBoundary componentWillUnmount',
+        'ErrorBoundary unstable_handleError',
+        // Render the error
+        'ErrorBoundary componentWillUpdate',
+        'ErrorBoundary render error',
+        'ErrorBoundary componentDidUpdate',
       ] : [
         // The first error boundary catches the error.
         // However, it doesn't adjust its state so next render will also fail.
-        'NoopErrorBoundary unstable_handleError',
-        'NoopErrorBoundary render',
+        'RethrowErrorBoundary unstable_handleError [*]',
+        'RethrowErrorBoundary render',
         'BrokenRender constructor',
         'BrokenRender componentWillMount',
         'BrokenRender render [!]',
@@ -797,9 +838,6 @@ describe('ReactErrorBoundaries', () => {
     ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual([
       'ErrorBoundary componentWillUnmount',
-      ...(ReactDOMFeatureFlags.useFiber ? [
-        'NoopErrorBoundary componentWillUnmount',
-      ] : []),
     ]);
   });
 
@@ -2050,6 +2088,38 @@ describe('ReactErrorBoundaries', () => {
 
       expect(err1.message).toMatch(/got: null/);
       expect(err2.message).toMatch(/got: undefined/);
+    });
+
+    it('renders empty output if error boundary does not handle the error', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <div>
+          Sibling
+          <NoopErrorBoundary>
+            <BrokenRender />
+          </NoopErrorBoundary>
+        </div>,
+        container
+      );
+      expect(container.firstChild.textContent).toBe('Sibling');
+      expect(log).toEqual([
+        'NoopErrorBoundary constructor',
+        'NoopErrorBoundary componentWillMount',
+        'NoopErrorBoundary render',
+        'BrokenRender constructor',
+        'BrokenRender componentWillMount',
+        'BrokenRender render [!]',
+        // In Fiber, noop error boundaries render null
+        'NoopErrorBoundary componentDidMount',
+        'NoopErrorBoundary unstable_handleError',
+        // Nothing happens.
+      ]);
+
+      log.length = 0;
+      ReactDOM.unmountComponentAtNode(container);
+      expect(log).toEqual([
+        'NoopErrorBoundary componentWillUnmount',
+      ]);
     });
   }
 

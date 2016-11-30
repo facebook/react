@@ -1337,6 +1337,7 @@ src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
 * propagates errors inside boundary during componentDidMount
 * lets different boundaries catch their own first errors
 * discards a bad root if the root component fails
+* renders empty output if error boundary does not handle the error
 
 src/renderers/shared/shared/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
