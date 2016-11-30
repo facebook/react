@@ -41,6 +41,8 @@ var {
   NoEffect,
 } = require('ReactTypeOfSideEffect');
 
+var invariant = require('invariant');
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {
@@ -315,7 +317,13 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
     // There is probably a clever way to restructure this.
     fiber = ((type : any) : Fiber);
   } else {
-    throw new Error('Unknown component type: ' + typeof type);
+    invariant(
+      false,
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: %s.',
+      type == null ? type : typeof type,
+      // TODO: Stack also includes owner name in the message.
+    );
   }
   return fiber;
 }
