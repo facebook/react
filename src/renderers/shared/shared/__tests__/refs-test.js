@@ -111,6 +111,8 @@ var expectClickLogsLengthToBe = function(instance, length) {
 describe('reactiverefs', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
+    React = require('React');
+    ReactTestUtils = require('ReactTestUtils');
   });
 
   /**
@@ -152,43 +154,46 @@ describe('reactiverefs', () => {
  * Tests that when a ref hops around children, we can track that correctly.
  */
 describe('ref swapping', () => {
+  let RefHopsAround;
   beforeEach(() => {
     jest.resetModuleRegistry();
-  });
+    React = require('React');
+    ReactTestUtils = require('ReactTestUtils');
 
-  class RefHopsAround extends React.Component {
-    state = {count: 0};
+    RefHopsAround = class extends React.Component {
+      state = {count: 0};
 
-    moveRef = () => {
-      this.setState({count: this.state.count + 1});
+      moveRef = () => {
+        this.setState({count: this.state.count + 1});
+      };
+
+      render() {
+        var count = this.state.count;
+        /**
+         * What we have here, is three divs with refs (div1/2/3), but a single
+         * moving cursor ref `hopRef` that "hops" around the three. We'll call the
+         * `moveRef()` function several times and make sure that the hop ref
+         * points to the correct divs.
+         */
+        return (
+          <div>
+            <div
+              className="first"
+              ref={count % 3 === 0 ? 'hopRef' : 'divOneRef'}
+            />
+            <div
+              className="second"
+              ref={count % 3 === 1 ? 'hopRef' : 'divTwoRef'}
+            />
+            <div
+              className="third"
+              ref={count % 3 === 2 ? 'hopRef' : 'divThreeRef'}
+            />
+          </div>
+        );
+      }
     };
-
-    render() {
-      var count = this.state.count;
-      /**
-       * What we have here, is three divs with refs (div1/2/3), but a single
-       * moving cursor ref `hopRef` that "hops" around the three. We'll call the
-       * `moveRef()` function several times and make sure that the hop ref
-       * points to the correct divs.
-       */
-      return (
-        <div>
-          <div
-            className="first"
-            ref={count % 3 === 0 ? 'hopRef' : 'divOneRef'}
-          />
-          <div
-            className="second"
-            ref={count % 3 === 1 ? 'hopRef' : 'divTwoRef'}
-          />
-          <div
-            className="third"
-            ref={count % 3 === 2 ? 'hopRef' : 'divThreeRef'}
-          />
-        </div>
-      );
-    }
-  }
+  });
 
   it('Allow refs to hop around children correctly', () => {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
@@ -282,5 +287,103 @@ describe('ref swapping', () => {
     }
     const a = ReactTestUtils.renderIntoDocument(<A />);
     expect(a.refs[1].nodeName).toBe('DIV');
+  });
+});
+
+describe('string refs between fiber and stack', () => {
+  beforeEach(() => {
+    jest.resetModuleRegistry();
+    React = require('React');
+    ReactTestUtils = require('ReactTestUtils');
+  });
+
+  it('attaches, detaches from fiber component with stack layer', () => {
+    spyOn(console, 'error');
+    const ReactCurrentOwner = require('ReactCurrentOwner');
+    const ReactDOM = require('ReactDOM');
+    const ReactDOMFiber = require('ReactDOMFiber');
+    const ReactInstanceMap = require('ReactInstanceMap');
+    let layerMounted = false;
+    class A extends React.Component {
+      render() {
+        return <div />;
+      }
+      componentDidMount() {
+        // ReactLayeredComponentMixin sets ReactCurrentOwner manually
+        ReactCurrentOwner.current = ReactInstanceMap.get(this);
+        const span = <span ref="span" />;
+        ReactCurrentOwner.current = null;
+
+        ReactDOM.unstable_renderSubtreeIntoContainer(
+          this,
+          span,
+          this._container = document.createElement('div'),
+          () => {
+            expect(this.refs.span.nodeName).toBe('SPAN');
+            layerMounted = true;
+          }
+        );
+      }
+      componentWillUnmount() {
+        ReactDOM.unmountComponentAtNode(this._container);
+      }
+    }
+    const container = document.createElement('div');
+    const a = ReactDOMFiber.render(<A />, container);
+    expect(a.refs.span).toBeTruthy();
+    ReactDOMFiber.unmountComponentAtNode(container);
+    expect(a.refs.span).toBe(undefined);
+    expect(layerMounted).toBe(true);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: You are using React DOM Fiber which is an experimental ' +
+      'renderer. It is likely to have bugs, breaking changes and is ' +
+      'unsupported.'
+    );
+  });
+
+  it('attaches, detaches from stack component with fiber layer', () => {
+    spyOn(console, 'error');
+    const ReactCurrentOwner = require('ReactCurrentOwner');
+    const ReactDOM = require('ReactDOM');
+    const ReactDOMFiber = require('ReactDOMFiber');
+    const ReactInstanceMap = require('ReactInstanceMap');
+    let layerMounted = false;
+    class A extends React.Component {
+      render() {
+        return <div />;
+      }
+      componentDidMount() {
+        // ReactLayeredComponentMixin sets ReactCurrentOwner manually
+        ReactCurrentOwner.current = ReactInstanceMap.get(this);
+        const span = <span ref="span" />;
+        ReactCurrentOwner.current = null;
+
+        ReactDOMFiber.unstable_renderSubtreeIntoContainer(
+          this,
+          span,
+          this._container = document.createElement('div'),
+          () => {
+            expect(this.refs.span.nodeName).toBe('SPAN');
+            layerMounted = true;
+          }
+        );
+      }
+      componentWillUnmount() {
+        ReactDOMFiber.unmountComponentAtNode(this._container);
+      }
+    }
+    const container = document.createElement('div');
+    const a = ReactDOM.render(<A />, container);
+    expect(a.refs.span).toBeTruthy();
+    ReactDOM.unmountComponentAtNode(container);
+    expect(a.refs.span).toBe(undefined);
+    expect(layerMounted).toBe(true);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: You are using React DOM Fiber which is an experimental ' +
+      'renderer. It is likely to have bugs, breaking changes and is ' +
+      'unsupported.'
+    );
   });
 });

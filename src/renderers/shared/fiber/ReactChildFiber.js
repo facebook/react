@@ -15,6 +15,7 @@
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
 import type { Fiber } from 'ReactFiber';
+import type { ReactInstance } from 'ReactInstanceType';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
@@ -33,6 +34,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
+var invariant = require('invariant');
 
 const {
   cloneFiber,
@@ -70,21 +72,32 @@ function coerceRef(current: ?Fiber, element: ReactElement<any>) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
-      const ownerFiber : ?Fiber = (element._owner : any);
-      if (ownerFiber && ownerFiber.tag === ClassComponent) {
-        const stringRef = String(mixedRef);
-        // Check if previous string ref matches new string ref
-        if (current && current.ref && current.ref._stringRef === stringRef) {
-          return current.ref;
+      const ownerFiber : ?(Fiber | ReactInstance) = (element._owner : any);
+      let inst;
+      if (ownerFiber) {
+        if ((ownerFiber : any).tag === ClassComponent) {
+          inst = (ownerFiber : any).stateNode;
+        } else {
+          // Stack
+          inst = (ownerFiber : any).getPublicInstance();
         }
-        const inst = ownerFiber.stateNode;
-        const ref = function(value) {
-          const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
-          refs[stringRef] = value;
-        };
-        ref._stringRef = stringRef;
-        return ref;
       }
+      invariant(inst, 'Missing owner for string ref %s', mixedRef);
+      const stringRef = String(mixedRef);
+      // Check if previous string ref matches new string ref
+      if (current && current.ref && current.ref._stringRef === stringRef) {
+        return current.ref;
+      }
+      const ref = function(value) {
+        const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+        if (value === null) {
+          delete refs[stringRef];
+        } else {
+          refs[stringRef] = value;
+        }
+      };
+      ref._stringRef = stringRef;
+      return ref;
     }
   }
   return mixedRef;
