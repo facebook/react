@@ -34,13 +34,14 @@ dependencies:
     - ~/.yarn-cache
 
 test:
-  override:
-    - ./node_modules/.bin/grunt lint
-    - ./node_modules/.bin/grunt jest:coverage
-    - ./scripts/circleci/test_html_generation.sh
-    - ./scripts/circleci/flow.sh
   pre:
     # - ./node_modules/.bin/grunt build
+  override:
+    - ./node_modules/.bin/gulp lint
+    - ./node_modules/.bin/gulp flow
+    - ./node_modules/.bin/grunt jest:coverage
+    - ./scripts/circleci/test_html_generation.sh
+    - ./scripts/circleci/track_flow_facts.sh
 
 deployment:
   staging:
