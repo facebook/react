@@ -13,19 +13,16 @@
 
 var fs = require('fs');
 var path = require('path');
-var execSync = require('child_process').execSync;
-
-function escape(value) {
-  return '\'' + value.replace(/'/g, "'\\''") + '\'';
-}
+var execFileSync = require('child_process').execFileSync;
 
 var cwd = null;
-function exec(command) {
+function exec(command, args) {
+  console.error('>', [command].concat(args));
   var options = {};
   if (cwd) {
     options.cwd = cwd;
   }
-  return execSync(command, options).toString();
+  return execFileSync(command, args, options).toString();
 }
 
 
@@ -67,12 +64,22 @@ if (isInsideOfTravis) {
   }
 
   exec(
-    'git config --global user.name ' +
-    escape(process.env.GITHUB_USER_NAME || 'facts-tracker')
+    'git',
+    [
+      'config',
+      '--global',
+      'user.name',
+      process.env.GITHUB_USER_NAME || 'facts-tracker',
+    ]
   );
   exec(
-    'git config --global user.email ' +
-    escape(process.env.GITHUB_USER_EMAIL || 'facts-tracker@no-reply.github.com')
+    'git',
+    [
+      'config',
+      '--global',
+      'user.email',
+      process.env.GITHUB_USER_EMAIL || 'facts-tracker@no-reply.github.com',
+    ]
   );
 }
 
@@ -86,7 +93,7 @@ function getRepoSlug() {
     return process.env.TRAVIS_REPO_SLUG;
   }
 
-  var remotes = exec('git remote -v').split('\n');
+  var remotes = exec('git', ['remote', '-v']).split('\n');
   for (var i = 0; i < remotes.length; ++i) {
     var match = remotes[i].match(/^origin\t[^:]+:([^\.]+).+\(fetch\)/);
     if (match) {
@@ -99,7 +106,7 @@ function getRepoSlug() {
 }
 
 var repoSlug = getRepoSlug();
-var currentCommitHash = exec('git rev-parse HEAD').trim();
+var currentCommitHash = exec('git', ['rev-parse', 'HEAD']).trim();
 var currentTimestamp = new Date().toISOString()
   .replace('T', ' ')
   .replace(/\..+/, '');
@@ -107,29 +114,33 @@ var currentTimestamp = new Date().toISOString()
 function checkoutFactsFolder() {
   var factsFolder = '../' + repoSlug.split('/')[1] + '-facts';
   if (!fs.existsSync(factsFolder)) {
-    var escapedRepoURL;
+    var repoURL;
     if (isInsideOfTravis) {
-      escapedRepoURL = 'https://$GITHUB_USER@github.com/' + escape(repoSlug) + '.git';
+      repoURL = 'https://$GITHUB_USER@github.com/' + repoSlug + '.git';
     } else {
-      escapedRepoURL = escape('git@github.com:' + repoSlug + '.git');
+      repoURL = 'git@github.com:' + repoSlug + '.git';
     }
 
     exec(
-      'git clone ' +
-      '--branch facts ' +
-      '--depth=5 ' +
-      escapedRepoURL + ' ' +
-      escape(factsFolder)
+      'git',
+      [
+        'clone',
+        '--branch',
+        'facts',
+        '--depth=5',
+        repoURL,
+        factsFolder,
+      ]
     );
   }
 
   cwd = path.resolve(factsFolder);
-  exec('git fetch');
-  if (exec('git status --porcelain')) {
+  exec('git', ['fetch']);
+  if (exec('git', ['status', '--porcelain'])) {
     console.error('facts-tracker: `git status` is not clean, aborting.');
     process.exit(1);
   }
-  exec('git rebase origin/facts');
+  exec('git', ['rebase', 'origin/facts']);
 }
 checkoutFactsFolder();
 
@@ -146,7 +157,7 @@ for (var i = 2; i < process.argv.length; i += 2) {
 
   var filename = name + '.txt';
   try {
-    var lastLine = exec('tail -n 1 ' + escape(filename));
+    var lastLine = exec('tail', ['-n', '1', filename]);
   } catch (e) {
     // ignore error
   }
@@ -166,10 +177,10 @@ for (var i = 2; i < process.argv.length; i += 2) {
   console.log(value);
 }
 
-if (exec('git status --porcelain')) {
-  exec('git add --all');
-  exec('git commit -m ' + escape('Adding facts for ' + currentCommitHash));
-  exec('git push origin facts');
+if (exec('git', ['status', '--porcelain'])) {
+  exec('git', ['add', '--all']);
+  exec('git', ['commit', '-m', 'Adding facts for ' + currentCommitHash]);
+  exec('git', ['push', 'origin', 'facts']);
 } else {
   console.error('facts-tracker: nothing to update');
 }
