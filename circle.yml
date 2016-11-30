@@ -11,7 +11,6 @@ machine:
   ruby:
     version: 2.2.3
   environment:
-    COMMIT_RANGE: echo CIRCLE_COMPARE_URL | cut -d/ -f7
     TRAVIS_REPO_SLUG: zpao/react
 
 dependencies:
@@ -19,7 +18,7 @@ dependencies:
     - bundle install --gemfile=docs/Gemfile --deployment --path=vendor/bundle --jobs=3 --retry=3
     - yarn install
   pre:
-    - echo $COMMIT_RANGE
+    - echo $CIRCLE_COMPARE_URL | cut -d/ -f7
     # install yarn
     - sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
     - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
