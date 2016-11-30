@@ -74,6 +74,9 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should not count time in a portal towards lifecycle method
 * should work when measurement starts during reconciliation
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
+* recovers from uncaught reconciler errors
+
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * gets created
 * can be retrieved by ID
@@ -83,6 +86,7 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
+* throws usefully when rendering badly-typed elements
 * includes owner name in the error about badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
