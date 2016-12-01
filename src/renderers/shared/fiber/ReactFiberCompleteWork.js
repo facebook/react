@@ -29,14 +29,14 @@ var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-  Portal,
 } = ReactTypeOfWork;
 var {
   Update,
@@ -66,7 +66,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     let node = workInProgress.child;
     while (node) {
       if (node.tag === HostComponent || node.tag === HostText ||
-          node.tag === Portal) {
+          node.tag === HostPortal) {
         throw new Error('A coroutine cannot have host component children.');
       } else if (node.tag === YieldComponent) {
         yields.push(node.type);
@@ -132,7 +132,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     while (node) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
-      } else if (node.tag === Portal) {
+      } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
@@ -188,7 +188,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           markCallback(workInProgress);
         }
         return null;
-      case HostContainer: {
+      case HostRoot: {
         workInProgress.memoizedProps = workInProgress.pendingProps;
         popContextProvider();
         const fiberRoot = (workInProgress.stateNode : FiberRoot);
@@ -290,7 +290,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       case Fragment:
         workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
-      case Portal:
+      case HostPortal:
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;

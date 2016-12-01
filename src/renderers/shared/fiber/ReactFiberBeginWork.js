@@ -38,14 +38,14 @@ var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-  Portal,
 } = ReactTypeOfWork;
 var {
   NoWork,
@@ -449,7 +449,7 @@ module.exports = function<T, P, I, TI, C>(
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
         return updateClassComponent(current, workInProgress);
-      case HostContainer: {
+      case HostRoot: {
         const root = (workInProgress.stateNode : FiberRoot);
         if (root.pendingContext) {
           pushTopLevelContextObject(
@@ -483,7 +483,7 @@ module.exports = function<T, P, I, TI, C>(
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
-      case Portal:
+      case HostPortal:
         updatePortalComponent(current, workInProgress);
         // TODO: is this right?
         return workInProgress.child;
@@ -497,7 +497,7 @@ module.exports = function<T, P, I, TI, C>(
 
   function beginFailedWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
     if (workInProgress.tag !== ClassComponent &&
-        workInProgress.tag !== HostContainer) {
+        workInProgress.tag !== HostRoot) {
       throw new Error('Invalid type of work');
     }
 

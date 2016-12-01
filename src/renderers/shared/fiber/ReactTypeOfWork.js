@@ -18,12 +18,12 @@ module.exports = {
   IndeterminateComponent: 0, // Before we know whether it is functional or class
   FunctionalComponent: 1,
   ClassComponent: 2,
-  HostContainer: 3, // Root of a host tree. Could be nested inside another node.
-  HostComponent: 4,
-  HostText: 5,
-  CoroutineComponent: 6,
-  CoroutineHandlerPhase: 7,
-  YieldComponent: 8,
-  Fragment: 9,
-  Portal: 10, // A subtree. Could be an entry point to a different renderer.
+  HostRoot: 3, // Root of a host tree. Could be nested inside another node.
+  HostPortal: 4, // A subtree. Could be an entry point to a different renderer.
+  HostComponent: 5,
+  HostText: 6,
+  CoroutineComponent: 7,
+  CoroutineHandlerPhase: 8,
+  YieldComponent: 9,
+  Fragment: 10,
 };

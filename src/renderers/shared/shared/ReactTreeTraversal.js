@@ -20,7 +20,7 @@ function getParent(inst) {
   if (typeof inst.tag === 'number') {
     do {
       inst = inst.return;
-      // TODO: If this is a HostContainer we might want to bail out.
+      // TODO: If this is a HostRoot we might want to bail out.
       // That is depending on if we want nested subtrees (layers) to bubble
       // events to their parent.
     } while (inst && inst.tag !== HostComponent);
