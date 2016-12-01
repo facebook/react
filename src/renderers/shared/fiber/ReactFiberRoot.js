@@ -15,7 +15,7 @@
 import type { Fiber } from 'ReactFiber';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
-const { createHostContainerFiber } = require('ReactFiber');
+const { createHostRootFiber } = require('ReactFiber');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -36,7 +36,7 @@ export type FiberRoot = {
 exports.createFiberRoot = function(containerInfo : any, context : Object) : FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostContainerFiber();
+  const uninitializedFiber = createHostRootFiber();
   const root = {
     current: uninitializedFiber,
     containerInfo: containerInfo,

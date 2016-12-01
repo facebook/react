@@ -19,7 +19,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var invariant = require('invariant');
 
 var {
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
 } = require('ReactTypeOfWork');
@@ -52,8 +52,8 @@ function isFiberMountedImpl(fiber : Fiber) : number {
       node = node.return;
     }
   }
-  if (node.tag === HostContainer) {
-    // TODO: Check if this was a nested HostContainer when used with
+  if (node.tag === HostRoot) {
+    // TODO: Check if this was a nested HostRoot when used with
     // renderContainerIntoSubtree.
     return MOUNTED;
   }

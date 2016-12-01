@@ -22,7 +22,7 @@ var {
 } = require('ReactFiberTreeReflection');
 var {
   ClassComponent,
-  HostContainer,
+  HostRoot,
 } = require('ReactTypeOfWork');
 
 if (__DEV__) {
@@ -142,7 +142,7 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {
   );
 
   let node : Fiber = fiber;
-  while (node.tag !== HostContainer) {
+  while (node.tag !== HostRoot) {
     if (isContextProvider(node)) {
       return node.stateNode.__reactInternalMemoizedMergedChildContext;
     }

@@ -24,13 +24,13 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
   YieldComponent,
   Fragment,
-  Portal,
 } = ReactTypeOfWork;
 
 var {
@@ -269,8 +269,8 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   return alt;
 };
 
-exports.createHostContainerFiber = function() : Fiber {
-  const fiber = createFiber(HostContainer, null);
+exports.createHostRootFiber = function() : Fiber {
+  const fiber = createFiber(HostRoot, null);
   return fiber;
 };
 
@@ -345,7 +345,7 @@ exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : 
 };
 
 exports.createFiberFromPortal = function(portal : ReactPortal, priorityLevel : PriorityLevel) : Fiber {
-  const fiber = createFiber(Portal, portal.key);
+  const fiber = createFiber(HostPortal, portal.key);
   fiber.pendingProps = portal.children;
   fiber.pendingWorkPriority = priorityLevel;
   fiber.stateNode = {

@@ -56,10 +56,10 @@ const isArray = Array.isArray;
 const {
   ClassComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
   YieldComponent,
   Fragment,
-  Portal,
 } = ReactTypeOfWork;
 
 const {
@@ -330,7 +330,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ) : Fiber {
     if (
       current == null ||
-      current.tag !== Portal ||
+      current.tag !== HostPortal ||
       current.stateNode.containerInfo !== portal.containerInfo ||
       current.stateNode.implementation !== portal.implementation
     ) {
@@ -970,7 +970,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // the first item in the list.
       if (child.key === key) {
         if (
-          child.tag === Portal &&
+          child.tag === HostPortal &&
           child.stateNode.containerInfo === portal.containerInfo &&
           child.stateNode.implementation === portal.implementation
         ) {

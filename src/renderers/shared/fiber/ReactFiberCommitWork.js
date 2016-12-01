@@ -18,11 +18,11 @@ import type { HostConfig } from 'ReactFiberReconciler';
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
-  Portal,
 } = ReactTypeOfWork;
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
@@ -75,9 +75,9 @@ module.exports = function<T, P, I, TI, C>(
       switch (parent.tag) {
         case HostComponent:
           return parent.stateNode;
-        case HostContainer:
+        case HostRoot:
           return parent.stateNode.containerInfo;
-        case Portal:
+        case HostPortal:
           return parent.stateNode.containerInfo;
       }
       parent = parent.return;
@@ -99,8 +99,8 @@ module.exports = function<T, P, I, TI, C>(
   function isHostParent(fiber : Fiber) : boolean {
     return (
       fiber.tag === HostComponent ||
-      fiber.tag === HostContainer ||
-      fiber.tag === Portal
+      fiber.tag === HostRoot ||
+      fiber.tag === HostPortal
     );
   }
 
@@ -153,10 +153,10 @@ module.exports = function<T, P, I, TI, C>(
       case HostComponent:
         parent = parentFiber.stateNode;
         break;
-      case HostContainer:
+      case HostRoot:
         parent = parentFiber.stateNode.containerInfo;
         break;
-      case Portal:
+      case HostPortal:
         parent = parentFiber.stateNode.containerInfo;
         break;
       default:
@@ -180,7 +180,7 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           appendChild(parent, node.stateNode);
         }
-      } else if (node.tag === Portal) {
+      } else if (node.tag === HostPortal) {
         // If the insertion itself is a portal, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
@@ -243,7 +243,7 @@ module.exports = function<T, P, I, TI, C>(
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
         removeChild(parent, node.stateNode);
-      } else if (node.tag === Portal) {
+      } else if (node.tag === HostPortal) {
         // When we go into a portal, it becomes the parent to remove from.
         // We will reassign it back when we pop the portal on the way up.
         parent = node.stateNode.containerInfo;
@@ -268,7 +268,7 @@ module.exports = function<T, P, I, TI, C>(
           return;
         }
         node = node.return;
-        if (node.tag === Portal) {
+        if (node.tag === HostPortal) {
           // When we go out of the portal, we need to restore the parent.
           // Since we don't keep a stack of them, we will search for it.
           parent = getHostParent(node);
@@ -319,7 +319,7 @@ module.exports = function<T, P, I, TI, C>(
         commitNestedUnmounts(current.stateNode);
         return;
       }
-      case Portal: {
+      case HostPortal: {
         // TODO: this is recursive.
         commitDeletion(current);
         return;
@@ -354,10 +354,10 @@ module.exports = function<T, P, I, TI, C>(
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }
-      case HostContainer: {
+      case HostRoot: {
         return;
       }
-      case Portal: {
+      case HostPortal: {
         return;
       }
       default:
@@ -400,7 +400,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         return;
       }
-      case HostContainer: {
+      case HostRoot: {
         const rootFiber = finishedWork.stateNode;
         let firstError = null;
         if (rootFiber.callbackList) {
@@ -422,7 +422,7 @@ module.exports = function<T, P, I, TI, C>(
         // We have no life-cycles associated with text.
         return;
       }
-      case Portal: {
+      case HostPortal: {
         // We have no life-cycles associated with portals.
         return;
       }

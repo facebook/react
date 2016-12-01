@@ -21,7 +21,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
 
-var { HostContainer } = ReactTypeOfWork;
+var { HostRoot } = ReactTypeOfWork;
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -36,7 +36,7 @@ function findRootContainerNode(inst) {
     while (inst.return) {
       inst = inst.return;
     }
-    if (inst.tag !== HostContainer) {
+    if (inst.tag !== HostRoot) {
       // This can happen if we're in a detached tree.
       return null;
     }

@@ -46,7 +46,7 @@ var {
 } = require('ReactTypeOfSideEffect');
 
 var {
-  HostContainer,
+  HostRoot,
   ClassComponent,
 } = require('ReactTypeOfWork');
 
@@ -622,7 +622,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // Host containers are a special case. If the failed work itself is a host
       // container, then it acts as its own boundary. In all other cases, we
       // ignore the work itself and only search through the parents.
-      if (failedWork.tag === HostContainer) {
+      if (failedWork.tag === HostRoot) {
         boundary = failedWork;
       } else {
         let node = failedWork.return;
@@ -633,7 +633,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               // Found an error boundary!
               boundary = node;
             }
-          } else if (node.tag === HostContainer) {
+          } else if (node.tag === HostRoot) {
             // Treat the root like a no-op error boundary.
             boundary = node;
           }
@@ -686,7 +686,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           captureError(effectfulFiber, e, false);
         }
         return;
-      case HostContainer:
+      case HostRoot:
         if (!firstUncaughtError) {
           // If this is the host container, we treat it as a no-op error
           // boundary. We'll throw the first uncaught error once it's safe to
@@ -789,7 +789,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
       if (!node.return) {
-        if (node.tag === HostContainer) {
+        if (node.tag === HostRoot) {
           const root : FiberRoot = (node.stateNode : any);
           scheduleWorkAtPriority(root, priorityLevel);
         } else {
