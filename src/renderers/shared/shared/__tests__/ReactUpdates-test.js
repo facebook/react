@@ -1081,4 +1081,14 @@ describe('ReactUpdates', () => {
     });
     expect(result).toEqual(42);
   });
+
+  it('unmounts and remounts a root in the same batch', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<span>a</span>, container);
+    ReactDOM.unstable_batchedUpdates(function() {
+      ReactDOM.unmountComponentAtNode(container);
+      ReactDOM.render(<span>b</span>, container);
+    });
+    expect(container.textContent).toBe('b');
+  });
 });
