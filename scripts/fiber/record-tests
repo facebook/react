@@ -92,7 +92,7 @@ function runJest() {
               hasteMap,
               config,
               {
-                maxWorkers: Math.max(os.cpus().length - 1, 1),
+                maxWorkers: 1,
                 getTestSummary: () => 'You did it!'
               }
             );

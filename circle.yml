@@ -40,8 +40,8 @@ test:
     - ./node_modules/.bin/gulp flow
     - ./node_modules/.bin/gulp react:extract-errors
     - ./node_modules/.bin/grunt jest:coverage
+    - ./scripts/circleci/test_fiber.sh
     - ./scripts/circleci/test_html_generation.sh
-    # - ./scripts/circleci/test_fiber.sh
     - ./scripts/circleci/track_flow_facts.sh
 
 deployment:
