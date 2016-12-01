@@ -69,16 +69,19 @@ exports.hasContextChanged = function() : boolean {
 function isContextProvider(fiber : Fiber) : boolean {
   return (
     fiber.tag === ClassComponent &&
+    // Instance might be null, if the fiber errored during construction
+    fiber.stateNode &&
     typeof fiber.stateNode.getChildContext === 'function'
   );
 }
 exports.isContextProvider = isContextProvider;
 
-exports.popContextProvider = function() : void {
+function popContextProvider() : void {
   contextStack[index] = emptyObject;
   didPerformWorkStack[index] = false;
   index--;
-};
+}
+exports.popContextProvider = popContextProvider;
 
 exports.pushTopLevelContextObject = function(context : Object, didChange : boolean) : void {
   invariant(index === -1, 'Unexpected context found on stack');
@@ -148,4 +151,14 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {
     node = parent;
   }
   return node.stateNode.context;
+};
+
+exports.unwindContext = function(from : Fiber, to: Fiber) {
+  let node = from;
+  while (node && (node !== to) && (node.alternate !== to)) {
+    if (isContextProvider(node)) {
+      popContextProvider();
+    }
+    node = node.return;
+  }
 };

@@ -34,7 +34,7 @@ var {
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  trapError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => void
+  captureError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => Fiber | null
 ) {
 
   const commitUpdate = config.commitUpdate;
@@ -133,6 +133,10 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function commitPlacement(finishedWork : Fiber) : void {
+    // Clear effect from effect tag before any errors can be thrown, so that
+    // we don't attempt to do this again
+    finishedWork.effectTag &= ~Placement;
+
     // Recursively insert all host nodes into the parent.
     const parent = getHostParent(finishedWork);
     const before = getHostSibling(finishedWork);
@@ -272,7 +276,7 @@ module.exports = function<T, P, I, TI, C>(
         if (typeof instance.componentWillUnmount === 'function') {
           const error = tryCallComponentWillUnmount(instance);
           if (error) {
-            trapError(current, error, true);
+            captureError(current, error, true);
           }
         }
         return;
@@ -362,7 +366,7 @@ module.exports = function<T, P, I, TI, C>(
           }
         }
         if (firstError) {
-          trapError(finishedWork, firstError, false);
+          captureError(finishedWork, firstError, false);
         }
         return;
       }
@@ -375,7 +379,7 @@ module.exports = function<T, P, I, TI, C>(
           firstError = callCallbacks(callbackList, rootFiber.current.child.stateNode);
         }
         if (firstError) {
-          trapError(rootFiber, firstError, false);
+          captureError(rootFiber, firstError, false);
         }
         return;
       }

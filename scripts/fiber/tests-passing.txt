@@ -1080,16 +1080,29 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * reads context when setState is above the provider
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
-* catches render error in a boundary during mounting
-* propagates an error from a noop error boundary
+* catches render error in a boundary during full deferred mounting
+* catches render error in a boundary during partial deferred mounting
+* catches render error in a boundary during animation mounting
+* catches render error in a boundary during synchronous mounting
+* catches render error in a boundary during batched mounting
+* propagates an error from a noop error boundary during full deferred mounting
+* propagates an error from a noop error boundary during partial deferred mounting
+* propagates an error from a noop error boundary during animation mounting
+* propagates an error from a noop error boundary during synchronous mounting
+* propagates an error from a noop error boundary during batched mounting
+* applies batched updates regardless despite errors in scheduling
+* applies nested batched updates despite errors in scheduling
+* applies sync updates regardless despite errors in scheduling
 * can schedule updates after uncaught error in render on mount
 * can schedule updates after uncaught error in render on update
 * can schedule updates after uncaught error during umounting
 * continues work on other roots despite caught errors
 * continues work on other roots despite uncaught errors
+* unwinds the context stack correctly on error
 * catches reconciler errors in a boundary during mounting
 * catches reconciler errors in a boundary during update
 * recovers from uncaught reconciler errors
+* unmounts components with uncaught errors
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
@@ -1323,6 +1336,8 @@ src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
 * catches errors in componentDidUpdate
 * propagates errors inside boundary during componentDidMount
 * lets different boundaries catch their own first errors
+* discards a bad root if the root component fails
+* renders empty output if error boundary does not handle the error
 
 src/renderers/shared/shared/__tests__/ReactIdentity-test.js
 * should allow key property to express identity

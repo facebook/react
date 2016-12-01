@@ -481,8 +481,31 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
+  function beginFailedWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+    if (workInProgress.tag !== ClassComponent &&
+        workInProgress.tag !== HostContainer) {
+      throw new Error('Invalid type of work');
+    }
+
+    if (workInProgress.pendingWorkPriority === NoWork ||
+        workInProgress.pendingWorkPriority > priorityLevel) {
+      return bailoutOnLowPriority(current, workInProgress);
+    }
+
+    // If we don't bail out, we're going be recomputing our children so we need
+    // to drop our effect list.
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
+
+    // Unmount the current children as if the component rendered null
+    const nextChildren = null;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
   return {
     beginWork,
+    beginFailedWork,
   };
 
 };
