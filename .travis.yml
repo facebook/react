@@ -13,6 +13,9 @@ cache:
   - $HOME/.yarn-cache
 before_install:
 - |
+    echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
+    unset GITHUB_TOKEN
+
     if [ "$TEST_TYPE" != build_website ] && \
       ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
     then
@@ -35,7 +38,6 @@ script:
         set -e
 
         GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
-        echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
         git config --global user.name "$GITHUB_USER_NAME"
         git config --global user.email "$GITHUB_USER_EMAIL"
 
@@ -121,7 +123,7 @@ env:
   # SECRET_TOKEN
   - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
   # GITHUB_TOKEN
-  - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
+  - secure: Sn+HwLSkbgM5MqVszq/CJHcOsZax17zwW0ILpGgAaEKD6MHNmEBdc71skaLr+6R4gHVO5ybV2cgSxHuBLHKzYoidq5ksGKRHNeXfyOv8jeHGTN/FjwMQbM+WkIK3wFroLsuQ1kW2FBfFEXqx4rET6GXwdcqycGl8GSFB1l0VNzE=
   # COVERALLS_TOKEN
   - secure: h/cUq+TrUMZOQmkFD7CvuwX0uAwmjIfKZ4qSUzY+QzUtDzOzA0L/XF84xTBq1Q5YYsEiaoF6GxxGCdrLQiBA/ZTd+88UHgeZPMRvi0xG9Q+PeePVOsZMTxy4/WWFgOfSQCk49Mj9zizGgO78i6vxq+SDXMtFHnZ+TpPJIEW6/m0=
 notifications:
