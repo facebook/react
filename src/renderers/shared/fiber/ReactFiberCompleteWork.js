@@ -45,11 +45,14 @@ var {
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
-  const createInstance = config.createInstance;
-  const appendInitialChild = config.appendInitialChild;
-  const finalizeInitialChildren = config.finalizeInitialChildren;
-  const createTextInstance = config.createTextInstance;
-  const prepareUpdate = config.prepareUpdate;
+  const {
+    createInstance,
+    appendInitialChild,
+    finalizeInitialChildren,
+    createTextInstance,
+    prepareUpdate,
+    popHostContext,
+  } = config;
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -202,6 +205,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       }
       case HostComponent:
+        popHostContext(workInProgress.type);
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to

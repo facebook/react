@@ -15,7 +15,6 @@
 'use strict';
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
@@ -453,43 +452,19 @@ function updateDOMProperties(
 
 var ReactDOMFiberComponent = {
 
-  // TODO: Use this to keep track of changes to the host context and use this
-  // to determine whether we switch to svg and back.
-  // TODO: Does this need to check the current namespace? In case these tags
-  // happen to be valid in some other namespace.
-  isNewHostContainer(tag : string) {
-    return tag === 'svg' || tag === 'foreignobject';
-  },
-
   createElement(
     tag : string,
     props : Object,
+    namespaceURI : string | null,
     rootContainerElement : Element
   ) : Element {
     validateDangerousTag(tag);
     // TODO:
     // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
 
-    // We create tags in the namespace of their parent container, except HTML
-    // tags get no namespace.
-    var namespaceURI = rootContainerElement.namespaceURI;
-    if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg &&
-        rootContainerElement.tagName === 'foreignObject') {
-      namespaceURI = DOMNamespaces.html;
-    }
-    if (namespaceURI === DOMNamespaces.html) {
-      if (tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
-      } else if (tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
-      }
-      // TODO: Make this a new root container element.
-    }
-
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
-    if (namespaceURI === DOMNamespaces.html) {
+    if (namespaceURI == null) {
       if (tag === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute

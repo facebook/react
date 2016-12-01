@@ -15,6 +15,7 @@
 import type { Fiber } from 'ReactFiber';
 import type { ReactNodeList } from 'ReactTypes';
 
+var DOMNamespaces = require('DOMNamespaces');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -37,6 +38,10 @@ var {
   updateProperties,
 } = ReactDOMFiberComponent;
 var { precacheFiberNode } = ReactDOMComponentTree;
+var {
+  svg: SVG_NAMESPACE,
+  mathml: MATH_NAMESPACE,
+} = DOMNamespaces;
 
 const DOCUMENT_NODE = 9;
 
@@ -57,8 +62,58 @@ type TextInstance = Text;
 
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
+let currentNamespaceURI : null | SVG_NAMESPACE | MATH_NAMESPACE = null;
+
+function getIntrinsicNamespaceURI(type : string) {
+  switch (type) {
+    case 'svg':
+      return SVG_NAMESPACE;
+    case 'math':
+      return MATH_NAMESPACE;
+    default:
+      return null;
+  }
+}
 
 var DOMRenderer = ReactFiberReconciler({
+
+  pushHostContext(type : string) {
+    switch (type) {
+      case 'svg':
+      case 'math':
+        if (currentNamespaceURI == null) {
+          currentNamespaceURI = getIntrinsicNamespaceURI(type);
+        }
+        break;
+      case 'foreignObject':
+        if (currentNamespaceURI === SVG_NAMESPACE) {
+          currentNamespaceURI = null;
+        }
+        break;
+    }
+  },
+
+  popHostContext(type : string) {
+    switch (type) {
+      case 'svg':
+        if (currentNamespaceURI === SVG_NAMESPACE) {
+          currentNamespaceURI = null;
+        }
+        break;
+      case 'math':
+        if (currentNamespaceURI === MATH_NAMESPACE) {
+          currentNamespaceURI = null;
+        }
+        break;
+      case 'foreignObject':
+        if (currentNamespaceURI == null) {
+          currentNamespaceURI = SVG_NAMESPACE;
+        }
+        break;
+    }
+  },
+
+  // TODO: unwind host context on errors and consider portals.
 
   prepareForCommit() : void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
@@ -80,7 +135,8 @@ var DOMRenderer = ReactFiberReconciler({
   ) : Instance {
     const root = document.documentElement; // HACK
 
-    const domElement : Instance = createElement(type, props, root);
+    const namespaceURI = currentNamespaceURI || getIntrinsicNamespaceURI(type);
+    const domElement : Instance = createElement(type, props, namespaceURI, root);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
   },

@@ -71,6 +71,10 @@ module.exports = function<T, P, I, TI, C>(
     updateClassInstance,
   } = ReactFiberClassComponent(scheduleUpdate);
 
+  const {
+    pushHostContext,
+  } = config;
+
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
     workInProgress.progressedChild = workInProgress.child;
@@ -268,6 +272,7 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
+      pushHostContext(workInProgress.type);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -355,8 +360,9 @@ module.exports = function<T, P, I, TI, C>(
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+    const isHostComponent = workInProgress.tag === HostComponent;
 
-    if (workInProgress.tag === HostComponent &&
+    if (isHostComponent &&
         workInProgress.memoizedProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // This subtree still has work, but it should be deprioritized so we need
@@ -399,7 +405,9 @@ module.exports = function<T, P, I, TI, C>(
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
     // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
+    if (isHostComponent) {
+      pushHostContext(workInProgress.type);
+    } else if (isContextProvider(workInProgress)) {
       pushContextProvider(workInProgress, false);
     }
     return workInProgress.child;
