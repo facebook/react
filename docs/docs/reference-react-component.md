@@ -37,25 +37,6 @@ If you don't use ES6 yet, you may use the [`React.createClass`](/react/docs/reac
 
 Each component has several "lifecycle methods" that you can override to run code at particular times in the process. Methods prefixed with **`will`** are called right before something happens, and methods prefixed with **`did`** are called right after something happens.
 
-```
-             LIFECYCLE
------------------||-----------------
-|                ||                |
-|   -------------\/-------------   |
-|   |         MOUNTING         |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |         UPDATING         |   |
-|   -------------||-------------   |
-|                ||                |
-|   -------------\/-------------   |
-|   |        UNMOUNTING        |   |
-|   -------------||-------------   |
-|                ||                |
------------------\/-----------------
-```
-
 #### Mounting
 
 These methods are called when an instance of a component is being created and inserted into the DOM:
@@ -64,39 +45,6 @@ These methods are called when an instance of a component is being created and in
 - [`componentWillMount()`](#componentwillmount)
 - [`render()`](#render)
 - [`componentDidMount()`](#componentdidmount)
-
-The execution of these methods is important. They would be executed in the above order. Consider this example:
-
-```js{4,8,12,16}
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    console.log('constructor');
-  }
-
-  componentWillMount() {
-    console.log('componentWillMount');
-  }
-
-  componentDidMount() {
-    console.log('componentDidMount');
-  }
-  
-  render() {
-    console.log('render');
-    return <h1>Mounting</h1>;
-  }
-}
-
-ReactDOM.render(
-  <App />,
-  document.getElementById('app')
-);
-```
-
-![React Component Lifecycle - Mounting Phase](/react/img/docs/component-lifecycle-in-depth/mounting-phase-console.png)
-
-[Try it on CodePen.](http://codepen.io/dashtinejad/pen/zoGdgG?editors=0011) 
 
 #### Updating
 
@@ -113,10 +61,6 @@ An update can be caused by changes to props or state. These methods are called w
 This method is called when a component is being removed from the DOM:
 
 - [`componentWillUnmount()`](#componentwillunmount)
-
-
-
-
 
 ### Other APIs
 
@@ -207,28 +151,6 @@ componentDidMount()
 
 `componentDidMount()` is invoked immediately after a component is mounted. Initialization that requires DOM nodes should go here. If you need to load data from a remote endpoint, this is a good place to instantiate the network request. Setting state in this method will trigger a re-rendering.
 
-If you need to access your element, you can use `ReactDOM.findDOMNode(this)`:
-
-```js{7}
-class App extends React.Component {
-  render() {
-    return <h1>Hello World</h1>;
-  }
-  
-  componentDidMount() {
-    var elem = ReactDOM.findDOMNode(this);
-    console.log(elem);
-  }
-}
-
-ReactDOM.render(
-  <App />,
-  document.getElementById('app')
-);
-```
-
-[Try it on CodePen.](http://codepen.io/dashtinejad/pen/PbbwMr?editors=0011)
-
 * * *
 
 ### `componentWillReceiveProps()`
@@ -243,54 +165,11 @@ Note that React may call this method even if the props have not changed, so make
 
 `componentWillReceiveProps()` is not invoked if you just call `this.setState()`
 
-```javascript{15,25-28}
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { totalClicks: 0 };
-  }
-
-  incrementClick() {
-    this.setState({ totalClicks: this.state.totalClicks + 1 });
-  }
-  
-  render() {
-    return <div>
-      <h1>componentWillReceiveProps</h1>
-      <button onClick={this.incrementClick.bind(this)}>Click</button>
-      <Message clicks={this.state.totalClicks} />
-    </div>;
-  }
-}
-
-class Message extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    console.log('componentWillReceiveProps()');
-    console.log(this.props, nextProps);
-  }
-
-  render() {
-    return <div>Your total click is {this.props.clicks}.</div>;
-  }
-}
-```
-
-![React Component Lifecycle - componentWillReceiveProps](/react/img/docs/component-lifecycle-in-depth/componentwillreceiveprops.png)
-
 > Note
 >
-> The method `componentWillReceiveProps` won't be called at mounting phase.
-> Even you are passing props to your component.
+> `componentWillReceiveProps` is not invoked at [mounting phase](#mounting)
+> even if you are passing props to your component.
 
-So in the above example,
-the component get rendered 4 times (one in the mounting phase, and three in the updating phase),
-and so, `componentWillReceiveProps` executed three times.
-
-[Try it on CodePen.](https://codepen.io/dashtinejad/pen/mOygpw?editors=0011)
 
 * * *
 
@@ -309,55 +188,6 @@ Returning `false` does not prevent child components from re-rendering when *thei
 Currently, if `shouldComponentUpdate()` returns `false`, then [`componentWillUpdate()`](#componentwillupdate), [`render()`](#render), and [`componentDidUpdate()`](#componentdidupdate) will not be invoked. Note that in the future React may treat `shouldComponentUpdate()` as a hint rather than a strict directive, and returning `false` may still result in a re-rendering of the component.
 
 If you determine a specific component is slow after profiling, you may change it to inherit from [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) which implements `shouldComponentUpdate()` with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare `this.props` with `nextProps` and `this.state` with `nextState` and return `false` to tell React the update can be skipped.
-
-```js{15,22,23,27,31}
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { totalClicks: 0 };
-  }
-
-  incrementClick() {
-    this.setState({ totalClicks: this.state.totalClicks + 1 });
-  }
-  
-  render() {
-    return <div>
-      <h1>Component's Lifecycle</h1>
-      <button onClick={this.incrementClick.bind(this)}>Click</button>
-      <Message clicks={this.state.totalClicks} />
-    </div>;
-  }
-}
-
-class Message extends React.Component {
-  shouldComponentUpdate(nextProps, nextState) {
-    console.log('shouldComponentUpdate()');
-    return nextProps.clicks !== 7;
-  }
-
-  componentWillUpdate() {
-    console.log('componentWillUpdate()');
-  }
-
-  componentDidUpdate() {
-    console.log('componentDidUpdate()');
-  }
-
-  render() {
-    console.log('render()');
-    return <div>Your total clicks is: <b>{this.props.clicks}</b></div>;
-  }
-}
-```
-
-Clicking the button, will increase total number of clicks.
-When it reaches `7`, the `shouldComponentUpdate` method will return false,
-and so, the render will not be invoked.
-
-![React Component Lifecycle - shouldComponentUpdate](/react/img/docs/component-lifecycle-in-depth/shouldcomponentupdate-1.png) ![React Component Lifecycle - shouldComponentUpdate](/react/img/docs/component-lifecycle-in-depth/shouldcomponentupdate-2.png)
-
-[Try it on CodePen.](http://codepen.io/dashtinejad/pen/MbwEBK?editors=0011)
 
 * * *
 
@@ -400,62 +230,6 @@ componentWillUnmount()
 ```
 
 `componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in `componentDidMount`
-
-As discussed in [Conditional Rendering](/react/docs/conditional-rendering.html), a React component
-could be included in its parent's `render()` method or not. So, consider this basic component, which
-we'll use it as a child component:
-
-```javascript{2-4}
-class Child extends React.Component {
-  componentWillUnmount() {
-    console.log('componentWillUnmount()');
-  }
-
-  render() {
-    return <div>Hello World</div>;
-  }
-}
-```
-
-As you can see, we declared `componentWillUnmount` method. Whenever this component
-is being removed from DOM, this method will run by React. Now, see the parent component,
-which will render the child component based on a flag, which is controlled by user. 
-
-```javascript{16-19,26}
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { isShowingChild: true };
-  }
-
-  showChild() {
-    this.setState({ isShowingChild: true });
-  }
-
-  hideChild() {
-    this.setState({ isShowingChild: false });
-  }
-  
-  render() {
-    let child = '';
-    if (this.state.isShowingChild) {
-      child = <Child />;
-    }
-
-    return <div>
-      <h1>Unmounting</h1>
-      <button onClick={this.showChild.bind(this)}>Show Child</button>
-      <button onClick={this.hideChild.bind(this)}>Hide Child</button>
-
-      {child}
-    </div>;
-  }
-}
-```
-
-![React Component Lifecycle - componentwillunmount](/react/img/docs/component-lifecycle-in-depth/componentwillunmount.png)
-
-[Try it on CodePen.](https://codepen.io/dashtinejad/pen/NbPegM/?editors=0011)
 
 * * *
 
