@@ -49,6 +49,9 @@ export type HostConfig<T, P, I, TI, C> = {
   prepareUpdate(instance : I, oldProps : P, newProps : P) : boolean,
   commitUpdate(instance : I, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
+  shouldSetTextContent(props : P) : boolean,
+  resetTextContent(instance : I) : void,
+
   createTextInstance(text : string, internalInstanceHandle : OpaqueNode) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 

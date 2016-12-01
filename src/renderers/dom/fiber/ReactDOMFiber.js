@@ -117,6 +117,22 @@ var DOMRenderer = ReactFiberReconciler({
     updateProperties(domElement, type, oldProps, newProps, root);
   },
 
+  shouldSetTextContent(props : Props) : boolean {
+    return (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number' ||
+      (
+        typeof props.dangerouslySetInnerHTML === 'object' &&
+        props.dangerouslySetInnerHTML !== null &&
+        typeof props.dangerouslySetInnerHTML.__html === 'string'
+      )
+    );
+  },
+
+  resetTextContent(domElement : Instance) : void {
+    domElement.textContent = '';
+  },
+
   createTextInstance(text : string, internalInstanceHandle : Object) : TextInstance {
     var textNode : TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);

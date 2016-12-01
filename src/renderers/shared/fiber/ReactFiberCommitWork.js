@@ -30,6 +30,7 @@ var {
   Placement,
   Update,
   Callback,
+  ContentReset,
 } = require('ReactTypeOfSideEffect');
 
 module.exports = function<T, P, I, TI, C>(
@@ -38,6 +39,7 @@ module.exports = function<T, P, I, TI, C>(
 ) {
 
   const commitUpdate = config.commitUpdate;
+  const resetTextContent = config.resetTextContent;
   const commitTextUpdate = config.commitTextUpdate;
 
   const appendChild = config.appendChild;
@@ -77,6 +79,17 @@ module.exports = function<T, P, I, TI, C>(
           return parent.stateNode.containerInfo;
         case Portal:
           return parent.stateNode.containerInfo;
+      }
+      parent = parent.return;
+    }
+    throw new Error('Expected to find a host parent.');
+  }
+
+  function getHostParentFiber(fiber : Fiber) : Fiber {
+    let parent = fiber.return;
+    while (parent) {
+      if (isHostParent(parent)) {
+        return parent;
       }
       parent = parent.return;
     }
@@ -133,12 +146,29 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function commitPlacement(finishedWork : Fiber) : void {
-    // Clear effect from effect tag before any errors can be thrown, so that
-    // we don't attempt to do this again
-    finishedWork.effectTag &= ~Placement;
-
     // Recursively insert all host nodes into the parent.
-    const parent = getHostParent(finishedWork);
+    const parentFiber = getHostParentFiber(finishedWork);
+    let parent;
+    switch (parentFiber.tag) {
+      case HostComponent:
+        parent = parentFiber.stateNode;
+        break;
+      case HostContainer:
+        parent = parentFiber.stateNode.containerInfo;
+        break;
+      case Portal:
+        parent = parentFiber.stateNode.containerInfo;
+        break;
+      default:
+        throw new Error('Invalid host parent fiber.');
+    }
+    if (parentFiber.effectTag & ContentReset) {
+      // Reset the text content of the parent before doing any insertions
+      resetTextContent(parent);
+      // Clear ContentReset from the effect tag
+      parentFiber.effectTag &= ~ContentReset;
+    }
+
     const before = getHostSibling(finishedWork);
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.

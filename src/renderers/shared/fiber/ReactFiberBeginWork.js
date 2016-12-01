@@ -53,6 +53,7 @@ var {
 } = require('ReactPriorityLevel');
 var {
   Placement,
+  ContentReset,
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
@@ -210,14 +211,27 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function updateHostComponent(current, workInProgress) {
+    const nextProps = workInProgress.pendingProps;
+    const prevProps = current ? current.memoizedProps : null;
     let nextChildren = workInProgress.pendingProps.children;
-    if (typeof nextChildren === 'string' || typeof nextChildren === 'number') {
+    const isDirectTextChild = config.shouldSetTextContent(nextProps);
+    if (isDirectTextChild) {
       // We special case a direct text child of a host node. This is a common
       // case. We won't handle it as a reified child. We will instead handle
       // this in the host environment that also have access to this prop. That
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
+    } else if (prevProps && (
+      config.shouldSetTextContent(prevProps) ||
+      prevProps.children === null ||
+      typeof prevProps.children === 'undefined' ||
+      typeof prevProps.children === 'boolean'
+    )) {
+      // If we're switching from a direct text child to a normal child, or to
+      // empty, we need to schedule the text content to be reset.
+      workInProgress.effectTag |= ContentReset;
     }
+
     if (workInProgress.pendingProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.

@@ -32,8 +32,6 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * throws in render() if the update callback is not a function
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should empty element when removing innerHTML
-* should transition from innerHTML to children in nested el
 * should warn for children on void elements
 * should report component containing invalid styles
 * should clean up input value tracking
@@ -104,7 +102,6 @@ src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * throws when rendering null at the top level
 
 src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
-* should correctly handle all possible children for render and update
 * should reorder keyed text nodes
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js

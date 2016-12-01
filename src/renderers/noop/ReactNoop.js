@@ -68,6 +68,15 @@ var NoopRenderer = ReactFiberReconciler({
     instance.prop = newProps.prop;
   },
 
+  shouldSetTextContent(props : Props) : boolean {
+    return (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number'
+    );
+  },
+
+  resetTextContent(instance : Instance) : void {},
+
   createTextInstance(text : string) : TextInstance {
     var inst = { text : text, id: instanceCounter++ };
     // Hide from unit tests
