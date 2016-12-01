@@ -40,6 +40,7 @@ var {
   Update,
   PlacementAndUpdate,
   Deletion,
+  ContentReset,
   Callback,
   Err,
 } = require('ReactTypeOfSideEffect');
@@ -168,11 +169,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     pass1: while (true) {
       try {
         while (effectfulFiber) {
+          if (effectfulFiber.effectTag & ContentReset) {
+            config.resetTextContent(effectfulFiber.stateNode);
+          }
+
           // The following switch statement is only concerned about placement,
           // updates, and deletions. To avoid needing to add a case for every
           // possible bitmap value, we remove the secondary effects from the
           // effect tag and switch on that value.
-          let primaryEffectTag = effectfulFiber.effectTag & ~(Callback | Err);
+          let primaryEffectTag = effectfulFiber.effectTag & ~(Callback | Err | ContentReset);
           switch (primaryEffectTag) {
             case Placement: {
               commitPlacement(effectfulFiber);
