@@ -496,9 +496,9 @@ describe('ReactBrowserEventEmitter', () => {
       ReactTestUtils.nativeTouchData(0, 0)
     );
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expect(idCallOrder[0] === CHILD).toBe(true);
+    expect(idCallOrder[1] === PARENT).toBe(true);
+    expect(idCallOrder[2] === GRANDPARENT).toBe(true);
   });
 
   it('should not crash ensureScrollValueMonitoring when createEvent returns null', () => {

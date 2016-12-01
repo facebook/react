@@ -678,7 +678,7 @@ var ReactCompositeComponent = {
     var inst = this._instance;
     var childContext;
 
-    if (inst.getChildContext) {
+    if (typeof inst.getChildContext === 'function') {
       if (__DEV__) {
         ReactInstrumentation.debugTool.onBeginProcessingChildContext();
         try {
@@ -689,9 +689,7 @@ var ReactCompositeComponent = {
       } else {
         childContext = inst.getChildContext();
       }
-    }
 
-    if (childContext) {
       invariant(
         typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +

@@ -14,6 +14,7 @@
 
 import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+import type { ReactPortal } from 'ReactPortal';
 import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -29,6 +30,7 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
+  Portal,
 } = ReactTypeOfWork;
 
 var {
@@ -38,6 +40,8 @@ var {
 var {
   NoEffect,
 } = require('ReactTypeOfSideEffect');
+
+var invariant = require('invariant');
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
@@ -95,9 +99,6 @@ export type Fiber = {
   memoizedState: any,
   // Linked list of callbacks to call after updates are committed.
   callbackList: ?UpdateQueue,
-  // Output is the return value of this fiber, or a linked list of return values
-  // if this returns multiple values. Such as a fragment.
-  output: any, // This type will be more specific once we overload the tag.
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -143,6 +144,10 @@ export type Fiber = {
 
 };
 
+if (__DEV__) {
+  var debugCounter = 0;
+}
+
 // This is a constructor of a POJO instead of a constructor function for a few
 // reasons:
 // 1) Nobody should add any instance methods on this. Instance methods can be
@@ -157,7 +162,7 @@ export type Fiber = {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
-  return {
+  var fiber = {
 
     // Instance
 
@@ -184,7 +189,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     updateQueue: null,
     memoizedState: null,
     callbackList: null,
-    output: null,
 
     effectTag: NoEffect,
     nextEffect: null,
@@ -200,6 +204,10 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     alternate: null,
 
   };
+  if (__DEV__) {
+    (fiber : any)._debugID = debugCounter++;
+  }
+  return fiber;
 };
 
 function shouldConstruct(Component) {
@@ -257,7 +265,6 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
 
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
-  alt.output = fiber.output;
 
   return alt;
 };
@@ -310,7 +317,13 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
     // There is probably a clever way to restructure this.
     fiber = ((type : any) : Fiber);
   } else {
-    throw new Error('Unknown component type: ' + typeof type);
+    invariant(
+      false,
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: %s.',
+      type == null ? type : typeof type,
+      // TODO: Stack also includes owner name in the message.
+    );
   }
   return fiber;
 }
@@ -328,5 +341,16 @@ exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priority
 exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiber(YieldComponent, yieldNode.key);
   fiber.pendingProps = {};
+  return fiber;
+};
+
+exports.createFiberFromPortal = function(portal : ReactPortal, priorityLevel : PriorityLevel) : Fiber {
+  const fiber = createFiber(Portal, portal.key);
+  fiber.pendingProps = portal.children;
+  fiber.pendingWorkPriority = priorityLevel;
+  fiber.stateNode = {
+    containerInfo: portal.containerInfo,
+    implementation: portal.implementation,
+  };
   return fiber;
 };

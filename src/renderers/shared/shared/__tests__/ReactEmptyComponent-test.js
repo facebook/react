@@ -13,6 +13,7 @@
 
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactTestUtils;
 var TogglingComponent;
 
@@ -24,6 +25,7 @@ describe('ReactEmptyComponent', () => {
 
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
 
     log = jasmine.createSpy();
@@ -303,12 +305,20 @@ describe('ReactEmptyComponent', () => {
 
     ReactDOM.render(<Empty />, container);
     var noscript1 = container.firstChild;
-    expect(noscript1.nodeName).toBe('#comment');
+    if (ReactDOMFeatureFlags.useFiber) {
+      expect(noscript1).toBe(null);
+    } else {
+      expect(noscript1.nodeName).toBe('#comment');
+    }
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
     var noscript2 = container.firstChild;
-    expect(noscript2.nodeName).toBe('#comment');
+    if (ReactDOMFeatureFlags.useFiber) {
+      expect(noscript1).toBe(null);
+    } else {
+      expect(noscript2.nodeName).toBe('#comment');
+    }
 
     expect(noscript1).toBe(noscript2);
   });

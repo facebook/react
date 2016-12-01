@@ -16,6 +16,8 @@ import type { Fiber } from 'ReactFiber';
 
 var ReactInstanceMap = require('ReactInstanceMap');
 
+var invariant = require('invariant');
+
 var {
   HostContainer,
   HostComponent,
@@ -27,18 +29,22 @@ var {
   Placement,
 } = require('ReactTypeOfSideEffect');
 
-function isFiberMounted(fiber : Fiber) : boolean {
+var MOUNTING = 1;
+var MOUNTED = 2;
+var UNMOUNTED = 3;
+
+function isFiberMountedImpl(fiber : Fiber) : number {
   let node = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
     if ((node.effectTag & Placement) !== NoEffect) {
-      return false;
+      return MOUNTING;
     }
     while (node.return) {
       node = node.return;
       if ((node.effectTag & Placement) !== NoEffect) {
-        return false;
+        return MOUNTING;
       }
     }
   } else {
@@ -49,32 +55,43 @@ function isFiberMounted(fiber : Fiber) : boolean {
   if (node.tag === HostContainer) {
     // TODO: Check if this was a nested HostContainer when used with
     // renderContainerIntoSubtree.
-    return true;
+    return MOUNTED;
   }
-  // If we didn't hit the root, that means that we're in an disconnected tree.
-  return false;
+  // If we didn't hit the root, that means that we're in an disconnected tree
+  // that has been unmounted.
+  return UNMOUNTED;
 }
+exports.isFiberMounted = function(fiber : Fiber) : boolean {
+  return isFiberMountedImpl(fiber) === MOUNTED;
+};
 
 exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
   var fiber : ?Fiber = ReactInstanceMap.get(component);
   if (!fiber) {
     return false;
   }
-  return isFiberMounted(fiber);
+  return isFiberMountedImpl(fiber) === MOUNTED;
 };
 
-exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any>) : Fiber | null {
-  let parent = ReactInstanceMap.get(component);
-  if (!parent) {
-    return null;
-  }
-
-  if (!isFiberMounted(parent)) {
-    // First check if this node itself is mounted.
+exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
+  // First check if this node itself is mounted.
+  const state = isFiberMountedImpl(parent, true);
+  if (state === UNMOUNTED) {
+    invariant(
+      false,
+      'Unable to find node on an unmounted component.'
+    );
+  } else if (state === MOUNTING) {
     return null;
   }
 
   let didTryOtherTree = false;
+
+  // If the component doesn't have a child we first check the alternate to see
+  // if it has any and if so, if those were just recently inserted.
+  if (!parent.child && parent.alternate) {
+    parent = parent.alternate;
+  }
 
   // Next we'll drill down this component to find the first HostComponent/Text.
   let node : Fiber = parent;
@@ -112,6 +129,8 @@ exports.findCurrentHostFiber = function(component : ReactComponent<any, any, any
     }
     node = node.sibling;
   }
+  // Flow needs the return null here, but ESLint complains about it.
+  // eslint-disable-next-line no-unreachable
   return null;
 };
 

@@ -16,8 +16,8 @@ var ReactNativeBaseComponent = require('ReactNativeBaseComponent');
 
 // See also ReactNativeBaseComponent
 type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object;
-  uiViewClassName: string;
+  validAttributes: Object,
+  uiViewClassName: string,
   propTypes?: Object,
 }
 

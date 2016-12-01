@@ -16,9 +16,9 @@ var MorphingComponent;
 var React;
 var ReactDOM;
 var ReactDOMFeatureFlags;
+var ReactDOMServer;
 var ReactCurrentOwner;
 var ReactPropTypes;
-var ReactServerRendering;
 var ReactTestUtils;
 
 describe('ReactCompositeComponent', () => {
@@ -28,10 +28,10 @@ describe('ReactCompositeComponent', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+    ReactDOMServer = require('ReactDOMServer');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
-    ReactServerRendering = require('ReactServerRendering');
 
     MorphingComponent = class extends React.Component {
       state = {activated: false};
@@ -60,8 +60,8 @@ describe('ReactCompositeComponent', () => {
       render() {
         var className = this.props.anchorClassOn ? 'anchorClass' : '';
         return this.props.renderAnchor ?
-          <a ref="anch" className={className}></a> :
-          <b></b>;
+          <a ref="anch" className={className} /> :
+          <b />;
       }
     };
   });
@@ -108,7 +108,7 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    var markup = ReactServerRendering.renderToString(<Parent />);
+    var markup = ReactDOMServer.renderToString(<Parent />);
     var container = document.createElement('div');
     container.innerHTML = markup;
 
@@ -170,7 +170,7 @@ describe('ReactCompositeComponent', () => {
         return this;
       },
       render: function() {
-        return <div></div>;
+        return <div />;
       },
     });
     var instance = <ComponentClass />;
@@ -427,6 +427,7 @@ describe('ReactCompositeComponent', () => {
         return <div />;
       }
     }
+    Component.childContextTypes = {};
 
     expectDev(console.error.calls.count()).toBe(0);
     var instance = ReactDOM.render(<Component />, container);
@@ -1044,7 +1045,9 @@ describe('ReactCompositeComponent', () => {
 
       componentWillReceiveProps(props) {
         expect(props.update).toBe(1);
+        expect(renders).toBe(1);
         this.setState({updated: true});
+        expect(renders).toBe(1);
       }
 
       render() {
@@ -1058,6 +1061,36 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(1);
     expect(instance.state.updated).toBe(false);
     ReactDOM.render(<Component update={1} />, container);
+    expect(renders).toBe(2);
+    expect(instance.state.updated).toBe(true);
+  });
+
+  it('only renders once if updated in componentWillReceiveProps when batching', () => {
+    var renders = 0;
+
+    class Component extends React.Component {
+      state = {updated: false};
+
+      componentWillReceiveProps(props) {
+        expect(props.update).toBe(1);
+        expect(renders).toBe(1);
+        this.setState({updated: true});
+        expect(renders).toBe(1);
+      }
+
+      render() {
+        renders++;
+        return <div />;
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<Component update={0} />, container);
+    expect(renders).toBe(1);
+    expect(instance.state.updated).toBe(false);
+    ReactDOM.unstable_batchedUpdates(() => {
+      ReactDOM.render(<Component update={1} />, container);
+    });
     expect(renders).toBe(2);
     expect(instance.state.updated).toBe(true);
   });

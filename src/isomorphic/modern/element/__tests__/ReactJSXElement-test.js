@@ -147,7 +147,7 @@ describe('ReactJSXElement', () => {
         return 'someReturnValue';
       }
       render() {
-        return <div></div>;
+        return <div />;
       }
     }
 

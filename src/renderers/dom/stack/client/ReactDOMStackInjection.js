@@ -15,6 +15,7 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDOMComponent = require('ReactDOMComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
@@ -23,6 +24,9 @@ var ReactGenericBatching = require('ReactGenericBatching');
 var ReactHostComponent = require('ReactHostComponent');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
+
+var findDOMNode = require('findDOMNode');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
 
 var alreadyInjected = false;
 
@@ -61,6 +65,11 @@ function inject() {
   );
 
   ReactComponentEnvironment.injection.injectEnvironment(ReactComponentBrowserEnvironment);
+
+  findDOMNode._injectStack(function(inst) {
+    inst = getHostComponentFromComposite(inst);
+    return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
+  });
 }
 
 module.exports = {

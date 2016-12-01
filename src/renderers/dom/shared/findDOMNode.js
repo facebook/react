@@ -7,59 +7,59 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule findDOMNode
+ * @flow
  */
 
-'use strict';
-
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstanceMap = require('ReactInstanceMap');
 
-var getHostComponentFromComposite = require('getHostComponentFromComposite');
+var getComponentName = require('getComponentName');
 var invariant = require('invariant');
 var warning = require('warning');
 
-/**
- * Returns the DOM node rendered by this element.
- *
- * See https://facebook.github.io/react/docs/react-dom.html#finddomnode
- *
- * @param {ReactComponent|DOMElement} componentOrElement
- * @return {?DOMElement} The root node of this element.
- */
-function findDOMNode(componentOrElement) {
+let findFiber = function(arg) {
+  invariant(false, 'Missing injection for fiber findDOMNode');
+};
+let findStack = function(arg) {
+  invariant(false, 'Missing injection for stack findDOMNode');
+};
+
+const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
   if (__DEV__) {
     var owner = ReactCurrentOwner.current;
-    if (owner !== null) {
+    if (owner !== null && '_warnedAboutRefsInRender' in owner) {
       warning(
-        owner._warnedAboutRefsInRender,
+        (owner: any)._warnedAboutRefsInRender,
         '%s is accessing findDOMNode inside its render(). ' +
         'render() should be a pure function of props and state. It should ' +
         'never access something that requires stale data from the previous ' +
         'render, such as refs. Move this logic to componentDidMount and ' +
         'componentDidUpdate instead.',
-        owner.getName() || 'A component'
+        getComponentName(owner) || 'A component'
       );
-      owner._warnedAboutRefsInRender = true;
+      (owner: any)._warnedAboutRefsInRender = true;
     }
   }
   if (componentOrElement == null) {
     return null;
   }
-  if (componentOrElement.nodeType === 1) {
-    return componentOrElement;
+  if ((componentOrElement: any).nodeType === 1) {
+    return (componentOrElement: any);
   }
 
   var inst = ReactInstanceMap.get(componentOrElement);
   if (inst) {
-    inst = getHostComponentFromComposite(inst);
-    return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
+    if (typeof inst.tag === 'number') {
+      return findFiber(inst);
+    } else {
+      return findStack(inst);
+    }
   }
 
   if (typeof componentOrElement.render === 'function') {
     invariant(
       false,
-      'findDOMNode was called on an unmounted component.'
+      'Unable to find node on an unmounted component.'
     );
   } else {
     invariant(
@@ -68,6 +68,13 @@ function findDOMNode(componentOrElement) {
       Object.keys(componentOrElement)
     );
   }
-}
+};
+
+findDOMNode._injectFiber = function(fn) {
+  findFiber = fn;
+};
+findDOMNode._injectStack = function(fn) {
+  findStack = fn;
+};
 
 module.exports = findDOMNode;

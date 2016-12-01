@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -22,6 +21,8 @@ var {
   HostContainer,
   HostComponent,
   HostText,
+  CoroutineComponent,
+  Portal,
 } = ReactTypeOfWork;
 var { callCallbacks } = require('ReactFiberUpdateQueue');
 
@@ -29,15 +30,16 @@ var {
   Placement,
   Update,
   Callback,
+  ContentReset,
 } = require('ReactTypeOfSideEffect');
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  trapError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => void
+  captureError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => Fiber | null
 ) {
 
-  const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
+  const resetTextContent = config.resetTextContent;
   const commitTextUpdate = config.commitTextUpdate;
 
   const appendChild = config.appendChild;
@@ -67,20 +69,39 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function getHostParent(fiber : Fiber) : ?I {
+  function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
     while (parent) {
       switch (parent.tag) {
         case HostComponent:
           return parent.stateNode;
         case HostContainer:
-          // TODO: Currently we use the updateContainer feature to update these,
-          // but we should be able to handle this case too.
-          return null;
+          return parent.stateNode.containerInfo;
+        case Portal:
+          return parent.stateNode.containerInfo;
       }
       parent = parent.return;
     }
-    return null;
+    throw new Error('Expected to find a host parent.');
+  }
+
+  function getHostParentFiber(fiber : Fiber) : Fiber {
+    let parent = fiber.return;
+    while (parent) {
+      if (isHostParent(parent)) {
+        return parent;
+      }
+      parent = parent.return;
+    }
+    throw new Error('Expected to find a host parent.');
+  }
+
+  function isHostParent(fiber : Fiber) : boolean {
+    return (
+      fiber.tag === HostComponent ||
+      fiber.tag === HostContainer ||
+      fiber.tag === Portal
+    );
   }
 
   function getHostSibling(fiber : Fiber) : ?I {
@@ -92,13 +113,14 @@ module.exports = function<T, P, I, TI, C>(
     siblings: while (true) {
       // If we didn't find anything, let's try the next sibling.
       while (!node.sibling) {
-        if (!node.return || node.return.tag === HostComponent) {
+        if (!node.return || isHostParent(node.return)) {
           // If we pop out of the root or hit the parent the fiber we are the
           // last sibling.
           return null;
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
       while (node.tag !== HostComponent && node.tag !== HostText) {
         // If it is not host node and, we might have a host node inside it.
@@ -111,6 +133,7 @@ module.exports = function<T, P, I, TI, C>(
         if (!node.child) {
           continue siblings;
         } else {
+          node.child.return = node;
           node = node.child;
         }
       }
@@ -122,12 +145,30 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function commitInsertion(finishedWork : Fiber) : void {
+  function commitPlacement(finishedWork : Fiber) : void {
     // Recursively insert all host nodes into the parent.
-    const parent = getHostParent(finishedWork);
-    if (!parent) {
-      return;
+    const parentFiber = getHostParentFiber(finishedWork);
+    let parent;
+    switch (parentFiber.tag) {
+      case HostComponent:
+        parent = parentFiber.stateNode;
+        break;
+      case HostContainer:
+        parent = parentFiber.stateNode.containerInfo;
+        break;
+      case Portal:
+        parent = parentFiber.stateNode.containerInfo;
+        break;
+      default:
+        throw new Error('Invalid host parent fiber.');
     }
+    if (parentFiber.effectTag & ContentReset) {
+      // Reset the text content of the parent before doing any insertions
+      resetTextContent(parent);
+      // Clear ContentReset from the effect tag
+      parentFiber.effectTag &= ~ContentReset;
+    }
+
     const before = getHostSibling(finishedWork);
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
@@ -139,8 +180,13 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           appendChild(parent, node.stateNode);
         }
+      } else if (node.tag === Portal) {
+        // If the insertion itself is a portal, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
       } else if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
+        node.child.return = node;
         node = node.child;
         continue;
       }
@@ -153,6 +199,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
@@ -168,6 +215,7 @@ module.exports = function<T, P, I, TI, C>(
       commitUnmount(node);
       if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
+        node.child.return = node;
         node = node.child;
         continue;
       }
@@ -180,6 +228,7 @@ module.exports = function<T, P, I, TI, C>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
@@ -193,13 +242,20 @@ module.exports = function<T, P, I, TI, C>(
         commitNestedUnmounts(node);
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
-        if (parent) {
-          removeChild(parent, node.stateNode);
+        removeChild(parent, node.stateNode);
+      } else if (node.tag === Portal) {
+        // When we go into a portal, it becomes the parent to remove from.
+        // We will reassign it back when we pop the portal on the way up.
+        parent = node.stateNode.containerInfo;
+        if (node.child) {
+          node = node.child;
+          continue;
         }
       } else {
         commitUnmount(node);
         if (node.child) {
           // TODO: Coroutines need to visit the stateNode.
+          node.child.return = node;
           node = node.child;
           continue;
         }
@@ -212,7 +268,13 @@ module.exports = function<T, P, I, TI, C>(
           return;
         }
         node = node.return;
+        if (node.tag === Portal) {
+          // When we go out of the portal, we need to restore the parent.
+          // Since we don't keep a stack of them, we will search for it.
+          parent = getHostParent(node);
+        }
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
@@ -244,13 +306,22 @@ module.exports = function<T, P, I, TI, C>(
         if (typeof instance.componentWillUnmount === 'function') {
           const error = tryCallComponentWillUnmount(instance);
           if (error) {
-            trapError(current, error, true);
+            captureError(current, error, true);
           }
         }
         return;
       }
       case HostComponent: {
         detachRef(current);
+        return;
+      }
+      case CoroutineComponent: {
+        commitNestedUnmounts(current.stateNode);
+        return;
+      }
+      case Portal: {
+        // TODO: this is recursive.
+        commitDeletion(current);
         return;
       }
     }
@@ -262,21 +333,13 @@ module.exports = function<T, P, I, TI, C>(
         detachRefIfNeeded(current, finishedWork);
         return;
       }
-      case HostContainer: {
-        // TODO: Attach children to root container.
-        const children = finishedWork.output;
-        const root : FiberRoot = finishedWork.stateNode;
-        const containerInfo : C = root.containerInfo;
-        updateContainer(containerInfo, children);
-        return;
-      }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
         if (instance != null && current) {
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          commitUpdate(instance, oldProps, newProps);
+          commitUpdate(instance, oldProps, newProps, finishedWork);
         }
         detachRefIfNeeded(current, finishedWork);
         return;
@@ -289,6 +352,12 @@ module.exports = function<T, P, I, TI, C>(
         const newText : string = finishedWork.memoizedProps;
         const oldText : string = current.memoizedProps;
         commitTextUpdate(textInstance, oldText, newText);
+        return;
+      }
+      case HostContainer: {
+        return;
+      }
+      case Portal: {
         return;
       }
       default:
@@ -327,7 +396,7 @@ module.exports = function<T, P, I, TI, C>(
           }
         }
         if (firstError) {
-          trapError(finishedWork, firstError, false);
+          captureError(finishedWork, firstError, false);
         }
         return;
       }
@@ -340,7 +409,7 @@ module.exports = function<T, P, I, TI, C>(
           firstError = callCallbacks(callbackList, rootFiber.current.child.stateNode);
         }
         if (firstError) {
-          trapError(rootFiber, firstError, false);
+          captureError(rootFiber, firstError, false);
         }
         return;
       }
@@ -351,6 +420,10 @@ module.exports = function<T, P, I, TI, C>(
       }
       case HostText: {
         // We have no life-cycles associated with text.
+        return;
+      }
+      case Portal: {
+        // We have no life-cycles associated with portals.
         return;
       }
       default:
@@ -386,7 +459,7 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   return {
-    commitInsertion,
+    commitPlacement,
     commitDeletion,
     commitWork,
     commitLifeCycles,

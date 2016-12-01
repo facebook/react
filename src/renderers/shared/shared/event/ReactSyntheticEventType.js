@@ -26,11 +26,11 @@ export type DispatchConfig = {
 };
 
 export type ReactSyntheticEvent = {
-  dispatchConfig: DispatchConfig;
+  dispatchConfig: DispatchConfig,
   getPooled: (
     dispatchConfig: DispatchConfig,
     targetInst: ReactInstance,
     nativeTarget: Event,
     nativeEventTarget: EventTarget,
-  ) => ReactSyntheticEvent;
+  ) => ReactSyntheticEvent,
 } & SyntheticEvent;

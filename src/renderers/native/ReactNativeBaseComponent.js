@@ -21,8 +21,8 @@ var UIManager = require('UIManager');
 var deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
 
 type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object;
-  uiViewClassName: string;
+  validAttributes: Object,
+  uiViewClassName: string,
 }
 
 // require('UIManagerStatTracker').install(); // uncomment to enable

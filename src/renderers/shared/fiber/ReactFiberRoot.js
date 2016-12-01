@@ -28,9 +28,12 @@ export type FiberRoot = {
   nextScheduledRoot: ?FiberRoot,
   // Linked list of callbacks to call after updates are committed.
   callbackList: ?UpdateQueue,
+  // Top context object, used by renderSubtreeIntoContainer
+  context: Object,
+  pendingContext: ?Object,
 };
 
-exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
+exports.createFiberRoot = function(containerInfo : any, context : Object) : FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostContainerFiber();
@@ -40,6 +43,8 @@ exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
     isScheduled: false,
     nextScheduledRoot: null,
     callbackList: null,
+    context: context,
+    pendingContext: null,
   };
   uninitializedFiber.stateNode = root;
   return root;

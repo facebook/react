@@ -197,5 +197,61 @@ describe('ReactMultiChild', () => {
         '    in Parent (at **)'
       );
     });
+
+    it('should warn for using maps as children with owner info', () => {
+      spyOn(console, 'error');
+
+      class Parent extends React.Component {
+        render() {
+          return (
+            <div>{new Map([['foo', 0], ['bar', 1]])}</div>
+          );
+        }
+      }
+
+      var container = document.createElement('div');
+      ReactDOM.render(<Parent />, container);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Using Maps as children is not yet fully supported. It is an ' +
+        'experimental feature that might be removed. Convert it to a sequence ' +
+        '/ iterable of keyed ReactElements instead. Check the render method of `Parent`.'
+      );
+    });
+  });
+
+  it('should reorder bailed-out children', () => {
+    spyOn(console, 'error');
+
+    class LetterInner extends React.Component {
+      render() {
+        return <div>{this.props.char}</div>;
+      }
+    }
+
+    class Letter extends React.Component {
+      render() {
+        return <LetterInner char={this.props.char} />;
+      }
+      shouldComponentUpdate() {
+        return false;
+      }
+    }
+
+    class Letters extends React.Component {
+      render() {
+        const letters = this.props.letters.split('');
+        return <div>{letters.map((c) => <Letter key={c} char={c} />)}</div>;
+      }
+    }
+
+    var container = document.createElement('div');
+
+    // Two random strings -- some additions, some removals, some moves
+    ReactDOM.render(<Letters letters="XKwHomsNjIkBcQWFbiZU" />, container);
+    expect(container.textContent).toBe('XKwHomsNjIkBcQWFbiZU');
+    ReactDOM.render(<Letters letters="EHCjpdTUuiybDvhRJwZt" />, container);
+    expect(container.textContent).toBe('EHCjpdTUuiybDvhRJwZt');
   });
 });

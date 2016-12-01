@@ -12,7 +12,7 @@
 
 'use strict';
 
-export type TypeOfWork = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type TypeOfWork = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 module.exports = {
   IndeterminateComponent: 0, // Before we know whether it is functional or class
@@ -25,4 +25,5 @@ module.exports = {
   CoroutineHandlerPhase: 7,
   YieldComponent: 8,
   Fragment: 9,
+  Portal: 10, // A subtree. Could be an entry point to a different renderer.
 };
