@@ -74,6 +74,7 @@ module.exports = function<T, P, I, TI, C>(
   const {
     pushHostContext,
     pushHostPortal,
+    resetHostContext,
   } = config;
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
@@ -428,6 +429,7 @@ module.exports = function<T, P, I, TI, C>(
     if (!workInProgress.return) {
       // Don't start new work with context on the stack.
       resetContext();
+      resetHostContext();
     }
 
     if (workInProgress.pendingWorkPriority === NoWork ||

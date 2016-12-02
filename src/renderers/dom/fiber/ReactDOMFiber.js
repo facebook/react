@@ -235,7 +235,11 @@ var DOMRenderer = ReactFiberReconciler({
     portalStateIndex--;
   },
 
-  // TODO: unwind host context on errors and consider portals.
+  resetHostContext() : void {
+    currentNamespaceURI = null;
+    foreignObjectDepth = 0;
+    portalStateIndex = -1;
+  },
 
   prepareForCommit() : void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();

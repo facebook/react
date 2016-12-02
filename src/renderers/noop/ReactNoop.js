@@ -152,6 +152,9 @@ var NoopRenderer = ReactFiberReconciler({
   popHostContext() : void {
   },
 
+  resetHostContext() : void {
+  },
+
   pushHostPortal() : void {
   },
 

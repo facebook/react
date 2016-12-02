@@ -188,6 +188,39 @@ describe('ReactDOMFiber', () => {
   }
 
   if (ReactDOMFeatureFlags.useFiber) {
+    var svgEls, htmlEls, mathEls;
+    var expectSVG = {ref: el => svgEls.push(el)};
+    var expectHTML = {ref: el => htmlEls.push(el)};
+    var expectMath = {ref: el => mathEls.push(el)};
+
+    var portal = function(tree) {
+      return ReactDOM.unstable_createPortal(
+        tree,
+        document.createElement('div')
+      );
+    };
+
+    var assertNamespacesMatch = function(tree) {
+      container = document.createElement('div');
+      svgEls = [];
+      htmlEls = [];
+      mathEls = [];
+
+      ReactDOM.render(tree, container);
+      svgEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      });
+      htmlEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+      });
+      mathEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
+      });
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+    };
+
     it('should render one portal', () => {
       var portalContainer = document.createElement('div');
 
@@ -333,54 +366,7 @@ describe('ReactDOMFiber', () => {
       expect(container.innerHTML).toBe('');
     });
 
-    it('should keep track of namespace across portals', () => {
-      var svgEls, htmlEls, mathEls;
-      var expectSVG = {ref: el => svgEls.push(el)};
-      var expectHTML = {ref: el => htmlEls.push(el)};
-      var expectMath = {ref: el => mathEls.push(el)};
-
-      function portal(tree) {
-        return ReactDOM.unstable_createPortal(
-          tree,
-          document.createElement('div')
-        );
-      }
-
-      function assertNamespacesMatch(tree) {
-        container = document.createElement('div');
-        svgEls = [];
-        htmlEls = [];
-        mathEls = [];
-
-        ReactDOM.render(tree, container);
-        svgEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
-        });
-        htmlEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
-        });
-        mathEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
-        });
-
-        svgEls = [];
-        htmlEls = [];
-        mathEls = [];
-        ReactDOM.render(tree, container);
-        svgEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
-        });
-        htmlEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
-        });
-        mathEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
-        });
-
-        ReactDOM.unmountComponentAtNode(container);
-        expect(container.innerHTML).toBe('');
-      }
-
+    it('should keep track of namespace across portals (simple)', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <image {...expectSVG} />
@@ -410,6 +396,9 @@ describe('ReactDOMFiber', () => {
           <p {...expectHTML} />
         </div>
       );
+    });
+
+    it('should keep track of namespace across portals (medium)', () => {
       assertNamespacesMatch(
         <div {...expectHTML}>
           <math {...expectMath}>
@@ -466,6 +455,9 @@ describe('ReactDOMFiber', () => {
           <image {...expectSVG} />
         </svg>
       );
+    });
+
+    it('should keep track of namespace across portals (complex)', () => {
       assertNamespacesMatch(
         <div {...expectHTML}>
           {portal(
@@ -536,6 +528,90 @@ describe('ReactDOMFiber', () => {
           </svg>
           <p {...expectHTML} />
         </div>
+      );
+    });
+
+    it('should unwind namespaces on uncaught errors', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      expect(() => {
+        assertNamespacesMatch(
+          <svg {...expectSVG}>
+            <BrokenRender />
+          </svg>
+        );
+      }).toThrow('Hello');
+      assertNamespacesMatch(
+        <div {...expectHTML} />
+      );
+    });
+
+    it('should unwind namespaces on caught errors', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        unstable_handleError(error) {
+          this.setState({error});
+        }
+        render() {
+          if (this.state.error) {
+            return <p {...expectHTML} />;
+          }
+          return this.props.children;
+        }
+      }
+
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <foreignObject {...expectSVG}>
+            <ErrorBoundary>
+              <math {...expectMath}>
+                <BrokenRender />
+              </math>
+            </ErrorBoundary>
+          </foreignObject>
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML} />
+      );
+    });
+
+    it('should unwind namespaces on caught errors in a portal', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        unstable_handleError(error) {
+          this.setState({error});
+        }
+        render() {
+          if (this.state.error) {
+            return <image {...expectSVG} />;
+          }
+          return this.props.children;
+        }
+      }
+
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <ErrorBoundary>
+            {portal(
+              <math {...expectMath}>
+                <BrokenRender />)
+              </math>
+            )}
+          </ErrorBoundary>
+          <image {...expectSVG} />
+        </svg>
       );
     });
 

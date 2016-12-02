@@ -67,6 +67,7 @@ export type HostConfig<T, P, I, TI, C> = {
 
   pushHostContext(type : T) : void,
   popHostContext(type : T) : void,
+  resetHostContext() : void,
 
   pushHostPortal() : void,
   popHostPortal() : void,
