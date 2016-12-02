@@ -33,8 +33,6 @@ dependencies:
     - ~/.yarn-cache
 
 test:
-  pre:
-    - ./node_modules/.bin/grunt build
   override:
     - ./node_modules/.bin/gulp lint
     - ./node_modules/.bin/gulp flow
@@ -43,6 +41,8 @@ test:
     - ./scripts/circleci/test_html_generation.sh
     - ./scripts/circleci/track_stats.sh
     - ./node_modules/.bin/gulp react:extract-errors
+  post:
+    - ./node_modules/.bin/grunt build
 
 deployment:
   staging:
