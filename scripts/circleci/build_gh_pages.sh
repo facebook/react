@@ -5,11 +5,8 @@ set -e
 if [ -z $CI_PULL_REQUEST ] && [ "$CIRCLE_BRANCH" = "$REACT_WEBSITE_BRANCH" ]; then
 
   GH_PAGES_DIR=`pwd`/../react-gh-pages
-  echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
-  git config --global user.name "Circle CI"
-  git config --global user.email "circle@reactjs.org"
 
-  # TODO: check if directory exists (restored from cache)
+  # check if directory exists (restored from cache)
   if [ -d $GH_PAGES_DIR ]; then
     pushd $GH_PAGES_DIR
     git pull origin gh-pages
