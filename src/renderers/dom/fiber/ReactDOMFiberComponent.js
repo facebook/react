@@ -48,7 +48,7 @@ var HTML = '__html';
 
 var {
   svg: SVG_NAMESPACE,
-  math: MATH_NAMESPACE,
+  mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
 
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
