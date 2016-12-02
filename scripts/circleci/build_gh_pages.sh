@@ -6,8 +6,8 @@ if [ -z $CI_PULL_REQUEST ] && [ "$CIRCLE_BRANCH" = "$REACT_WEBSITE_BRANCH" ]; th
 
   GH_PAGES_DIR=`pwd`/../react-gh-pages
   echo "machine github.com login zpao password $GITHUB_TOKEN" >~/.netrc
-  git config --global user.name "Travis CI"
-  git config --global user.email "travis@reactjs.org"
+  git config --global user.name "Circle CI"
+  git config --global user.email "circle@reactjs.org"
 
   # TODO: check if directory exists (restored from cache)
   if [ -d $GH_PAGES_DIR ]; then
