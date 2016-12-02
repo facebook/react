@@ -2,7 +2,7 @@
 
 set -e
 
-if [ -z $CI_PULL_REQUEST ]; then
+if [ -z $CI_PULL_REQUEST ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
   curl \
     -F "react=@build/react.js" \
     -F "react.min=@build/react.min.js" \
