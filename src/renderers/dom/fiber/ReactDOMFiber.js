@@ -64,6 +64,21 @@ let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
 let currentNamespaceURI : null | SVG_NAMESPACE | MATH_NAMESPACE = null;
 
+// How many <foreignObject>s we have entered so far.
+// We increment and decrement it when pushing and popping <foreignObject>.
+// We use this counter as the current index for accessing the array below.
+let foreignObjectDepth : number = 0;
+
+// How many <svg>s have we entered so far.
+// We increment or decrement the last array item when pushing and popping <svg>.
+// A new counter is appended to the end whenever we enter a <foreignObject>.
+let svgDepthByForeignObjectDepth : Array<number> = [0];
+
+// For example, with this structure: <svg><foreignObject><svg><svg><svg><foreignObject><svg>
+//                                    ^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^]
+// svgDepthByForeignObjectDepth   =  [ 1         ,              3              ,         1 ]
+// foreignObjectDepth             =              1              +              1
+
 function getIntrinsicNamespaceURI(type : string) {
   switch (type) {
     case 'svg':
@@ -80,14 +95,32 @@ var DOMRenderer = ReactFiberReconciler({
   pushHostContext(type : string) {
     switch (type) {
       case 'svg':
+        if (currentNamespaceURI == null) {
+          // We are entering an <svg> for the first time.
+          currentNamespaceURI = SVG_NAMESPACE;
+          svgDepthByForeignObjectDepth[foreignObjectDepth] = 1;
+        } else if (currentNamespaceURI === SVG_NAMESPACE) {
+          // We are entering an <svg> inside <svg>.
+          // We record this fact so that when we pop this <svg>, we stay in the
+          // SVG mode instead of switching to HTML mode.
+          svgDepthByForeignObjectDepth[foreignObjectDepth]++;
+        }
+        break;
       case 'math':
         if (currentNamespaceURI == null) {
-          currentNamespaceURI = getIntrinsicNamespaceURI(type);
+          currentNamespaceURI = MATH_NAMESPACE;
         }
         break;
       case 'foreignObject':
         if (currentNamespaceURI === SVG_NAMESPACE) {
           currentNamespaceURI = null;
+          // We are in HTML mode again, so current <svg> nesting counter needs
+          // to be reset. However we still need to remember its value when we
+          // pop this <foreignObject>. So instead of resetting the counter, we
+          // advance the pointer, and start a new independent <svg> depth
+          // counter at the next array index.
+          foreignObjectDepth++;
+          svgDepthByForeignObjectDepth[foreignObjectDepth] = 0;
         }
         break;
     }
@@ -97,7 +130,16 @@ var DOMRenderer = ReactFiberReconciler({
     switch (type) {
       case 'svg':
         if (currentNamespaceURI === SVG_NAMESPACE) {
-          currentNamespaceURI = null;
+          if (svgDepthByForeignObjectDepth[foreignObjectDepth] === 1) {
+            // We exited all nested <svg> nodes.
+            // We can switch to HTML mode.
+            currentNamespaceURI = null;
+          } else {
+            // There is still an <svg> above so we stay in SVG mode.
+            // We decrease the counter so that next time we leave <svg>
+            // we will be able to switch to HTML mode.
+            svgDepthByForeignObjectDepth[foreignObjectDepth]--;
+          }
         }
         break;
       case 'math':
@@ -107,6 +149,9 @@ var DOMRenderer = ReactFiberReconciler({
         break;
       case 'foreignObject':
         if (currentNamespaceURI == null) {
+          // We are exiting <foreignObject> and nested <svg>s may exist above.
+          // Switch to the previous <svg> depth counter by decreasing the index.
+          foreignObjectDepth--;
           currentNamespaceURI = SVG_NAMESPACE;
         }
         break;
