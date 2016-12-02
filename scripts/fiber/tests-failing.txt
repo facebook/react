@@ -27,6 +27,9 @@ src/renderers/art/__tests__/ReactART-test.js
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
+src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
+* findDOMNode should find dom element after expanding a fragment
+
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
 * throws in render() if the update callback is not a function
@@ -62,6 +65,9 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
+
+src/renderers/dom/shared/__tests__/findDOMNode-test.js
+* findDOMNode should find dom element after an update from null
 
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste

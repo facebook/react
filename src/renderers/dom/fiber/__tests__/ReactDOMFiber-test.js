@@ -459,5 +459,29 @@ describe('ReactDOMFiber', () => {
       expect(portalContainer.innerHTML).toBe('<div>changed-changed</div>');
       expect(container.innerHTML).toBe('');
     });
+
+    it('findDOMNode should find dom element after expanding a fragment', () => {
+      class MyNode extends React.Component {
+        render() {
+          return (
+            !this.props.flag ?
+            [<div key="a" />] :
+            [<span key="b" />, <div key="a" />]
+          );
+        }
+      }
+
+      var container = document.createElement('div');
+
+      var myNodeA = ReactDOM.render(<MyNode />, container);
+      var a = ReactDOM.findDOMNode(myNodeA);
+      expect(a.tagName).toBe('DIV');
+
+      var myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
+      expect(myNodeA === myNodeB).toBe(true);
+
+      var b = ReactDOM.findDOMNode(myNodeB);
+      expect(b.tagName).toBe('SPAN');
+    });
   }
 });
