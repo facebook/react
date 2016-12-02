@@ -89,6 +89,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let nextUnitOfWork : ?Fiber = null;
   let nextPriorityLevel : PriorityLevel = NoWork;
 
+  let pendingCommit : Fiber | null = null;
+
   // Linked list of roots with scheduled work on them.
   let nextScheduledRoot : ?FiberRoot = null;
   let lastScheduledRoot : ?FiberRoot = null;
@@ -115,6 +117,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function findNextUnitOfWork() {
+    if (pendingCommit) {
+      return null;
+    }
+
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
       // Unschedule this root.
@@ -160,6 +166,17 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function commitAllWork(finishedWork : Fiber) {
+    pendingCommit = null;
+    const root : FiberRoot = (finishedWork.stateNode : any);
+    resetWorkPriority(finishedWork);
+    if (root.current === finishedWork) {
+      throw new Error(
+        'Cannot commit the same tree as before. This is probably a bug ' +
+        'related to the return field.'
+      );
+    }
+    root.current = finishedWork;
+
     prepareForCommit();
 
     // Commit all the side-effects within a tree.
@@ -293,11 +310,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    // Flush any task work that was scheduled during this batch
-    performTaskWork();
+    return null;
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
+    if (workInProgress.pendingProps) {
+      // Don't reset the priority if the workInProgress has pending props. This
+      // could happen if a completed root is updated before it is able to commit.
+      return;
+    }
+
     let newPriority = NoWork;
     // progressedChild is going to be the child set with the highest priority.
     // Either it is the same as child, or it just bailed out because it choose
@@ -324,12 +346,18 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
 
-      resetWorkPriority(workInProgress);
-
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
       workInProgress.updateQueue = null;
+
+      const returnFiber = workInProgress.return;
+      const siblingFiber = workInProgress.sibling;
+      const isRoot = !returnFiber && !siblingFiber;
+
+      if (!isRoot) {
+        resetWorkPriority(workInProgress);
+      }
 
       if (next) {
         // If completing this work spawned new work, do that next. We'll come
@@ -337,7 +365,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return next;
       }
 
-      const returnFiber = workInProgress.return;
+      if (isRoot) {
+        // If we've reached the root, commit during the next unit of work.
+        pendingCommit = workInProgress;
+        return workInProgress;
+      }
 
       if (returnFiber) {
         // Append all the effects of the subtree and this fiber onto the effect
@@ -369,37 +401,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
 
-      if (workInProgress.sibling) {
+      if (siblingFiber) {
         // If there is more work to do in this returnFiber, do that next.
-        return workInProgress.sibling;
+        return siblingFiber;
       } else if (returnFiber) {
         // If there's no more work in this returnFiber. Complete the returnFiber.
         workInProgress = returnFiber;
         continue;
       } else {
-        // If we're at the root, there's no more work to do. We can flush it.
-        const root : FiberRoot = (workInProgress.stateNode : any);
-        if (root.current === workInProgress) {
-          throw new Error(
-            'Cannot commit the same tree as before. This is probably a bug ' +
-            'related to the return field.'
-          );
-        }
-        root.current = workInProgress;
-        // TODO: We can be smarter here and only look for more work in the
-        // "next" scheduled work since we've already scanned passed. That
-        // also ensures that work scheduled during reconciliation gets deferred.
-        // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        commitAllWork(workInProgress);
-        const nextWork = findNextUnitOfWork();
-        // if (!nextWork && hasMoreWork) {
-          // TODO: This can happen when some deep work completes and we don't
-          // know if this was the last one. We should be able to keep track of
-          // the highest priority still in the tree for one pass. But if we
-          // terminate an update we don't know.
-          // throw new Error('FiberRoots should not have flagged more work if there is none.');
-        // }
-        return nextWork;
+        throw new Error('Should have already handled root.');
       }
     }
   }
@@ -445,13 +455,17 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performDeferredWorkUnsafe(deadline) {
-    if (!nextUnitOfWork) {
+    if (!nextUnitOfWork && !pendingCommit) {
       nextUnitOfWork = findNextUnitOfWork();
     }
-    while (nextUnitOfWork) {
+    while (nextUnitOfWork || pendingCommit) {
       if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        if (!nextUnitOfWork) {
+        if (pendingCommit) {
+          nextUnitOfWork = commitAllWork(pendingCommit);
+        } else if (nextUnitOfWork) {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        }
+        if (!nextUnitOfWork && !pendingCommit) {
           // Find more work. We might have time to complete some more.
           nextUnitOfWork = findNextUnitOfWork();
         }
@@ -468,12 +482,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performAnimationWorkUnsafe() {
-    // Always start from the root
-    nextUnitOfWork = findNextUnitOfWork();
-    while (nextUnitOfWork &&
-           nextPriorityLevel === AnimationPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      if (!nextUnitOfWork) {
+    if (!nextUnitOfWork && !pendingCommit) {
+      nextUnitOfWork = findNextUnitOfWork();
+    }
+    while (
+      pendingCommit ||
+      (nextUnitOfWork && nextPriorityLevel === AnimationPriority)
+    ) {
+      if (pendingCommit) {
+        nextUnitOfWork = commitAllWork(pendingCommit);
+      } else if (nextUnitOfWork) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+      if (!nextUnitOfWork && !pendingCommit) {
         // Keep searching for animation work until there's no more left
         nextUnitOfWork = findNextUnitOfWork();
       }
@@ -489,12 +510,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function performSynchronousWorkUnsafe() {
-    nextUnitOfWork = findNextUnitOfWork();
-    while (nextUnitOfWork &&
-           nextPriorityLevel === SynchronousPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-
-      if (!nextUnitOfWork) {
+    if (!nextUnitOfWork && !pendingCommit) {
+      nextUnitOfWork = findNextUnitOfWork();
+    }
+    while (
+      pendingCommit ||
+      (nextUnitOfWork && nextPriorityLevel === SynchronousPriority)
+    ) {
+      if (pendingCommit) {
+        nextUnitOfWork = commitAllWork(pendingCommit);
+      } else if (nextUnitOfWork) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+      if (!nextUnitOfWork && !pendingCommit) {
+        // Keep searching for sync work until there's no more left
         nextUnitOfWork = findNextUnitOfWork();
       }
     }
@@ -514,13 +543,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     isPerformingTaskWork = true;
     try {
-      nextUnitOfWork = findNextUnitOfWork();
-      while (nextUnitOfWork &&
-             nextPriorityLevel === TaskPriority) {
-        nextUnitOfWork =
-          performUnitOfWork(nextUnitOfWork);
-
-        if (!nextUnitOfWork) {
+      if (!nextUnitOfWork && !pendingCommit) {
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+      while (
+        (pendingCommit && pendingCommit.pendingWorkPriority === TaskPriority) ||
+        (nextUnitOfWork && nextPriorityLevel === TaskPriority)
+      ) {
+        if (pendingCommit && pendingCommit.pendingWorkPriority === TaskPriority) {
+          nextUnitOfWork = commitAllWork(pendingCommit);
+        } else if (nextUnitOfWork) {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        }
+        if (!nextUnitOfWork && !pendingCommit) {
+          // Keep searching for sync work until there's no more left
           nextUnitOfWork = findNextUnitOfWork();
         }
       }
@@ -595,6 +631,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       } finally {
         shouldBatchUpdates = prevShouldBatchUpdates;
       }
+    }
+
+    // Flush any task work that was scheduled during this batch
+    if (priorityLevel !== TaskPriority) {
+      performTaskWork();
     }
 
     // Throw the first uncaught error

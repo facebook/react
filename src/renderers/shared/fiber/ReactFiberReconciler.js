@@ -143,6 +143,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       root.pendingContext = getContextForSubtree(parentComponent);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = element;
+      if (root.current.alternate) {
+        root.current.alternate.pendingProps = element;
+      }
 
       scheduleWork(root);
 
@@ -156,6 +159,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       const root : FiberRoot = (container.stateNode : any);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = [];
+      if (root.current.alternate) {
+        root.current.alternate.pendingProps = [];
+      }
 
       scheduleWork(root);
 
