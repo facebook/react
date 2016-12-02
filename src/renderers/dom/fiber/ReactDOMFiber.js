@@ -72,7 +72,7 @@ let foreignObjectDepth : number = 0;
 // How many <svg>s have we entered so far.
 // We increment or decrement the last array item when pushing and popping <svg>.
 // A new counter is appended to the end whenever we enter a <foreignObject>.
-let svgDepthByForeignObjectDepth : Array<number> = [0];
+let svgDepthByForeignObjectDepth : Array<number> | null = null;
 
 // For example, with this structure: <svg><foreignObject><svg><svg><svg><foreignObject><svg>
 //                                    ^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^]
@@ -95,6 +95,10 @@ var DOMRenderer = ReactFiberReconciler({
   pushHostContext(type : string) {
     switch (type) {
       case 'svg':
+        // Lazily initialize the array for the first time.
+        if (!svgDepthByForeignObjectDepth) {
+          svgDepthByForeignObjectDepth = [0];
+        }
         if (currentNamespaceURI == null) {
           // We are entering an <svg> for the first time.
           currentNamespaceURI = SVG_NAMESPACE;
@@ -120,6 +124,9 @@ var DOMRenderer = ReactFiberReconciler({
           // advance the pointer, and start a new independent <svg> depth
           // counter at the next array index.
           foreignObjectDepth++;
+          if (!svgDepthByForeignObjectDepth) {
+            throw new Error('Expected to already be in SVG mode.');
+          }
           svgDepthByForeignObjectDepth[foreignObjectDepth] = 0;
         }
         break;
@@ -130,6 +137,9 @@ var DOMRenderer = ReactFiberReconciler({
     switch (type) {
       case 'svg':
         if (currentNamespaceURI === SVG_NAMESPACE) {
+          if (!svgDepthByForeignObjectDepth) {
+            throw new Error('Expected to already be in SVG mode.');
+          }
           if (svgDepthByForeignObjectDepth[foreignObjectDepth] === 1) {
             // We exited all nested <svg> nodes.
             // We can switch to HTML mode.
