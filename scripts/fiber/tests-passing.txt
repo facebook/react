@@ -1161,6 +1161,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * preserves a previously rendered node when deprioritized
 * can reuse side-effects after being preempted
 * can reuse side-effects after being preempted, if shouldComponentUpdate is false
+* can update a completed tree before it has a chance to commit
 * updates a child even though the old props is empty
 * can defer side-effects and resume them later on
 * can defer side-effects and reuse them later - complex

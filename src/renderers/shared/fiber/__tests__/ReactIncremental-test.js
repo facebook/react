@@ -410,7 +410,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will create a low pri tree on top of the
     // already low pri tree.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
 
     expect(ops).toEqual(['Foo']);
 
@@ -491,7 +491,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushDeferredPri(55 + 25 + 5);
+    ReactNoop.flushDeferredPri(55 + 25 + 5 + 5);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -520,7 +520,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.flushDeferredPri(30 + 5);
     expect(ops).toEqual(['Middle', 'Bar']);
 
     ops = [];
@@ -600,7 +600,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" step={1} />);
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.flushDeferredPri(30 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
