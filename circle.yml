@@ -15,6 +15,8 @@ machine:
 
 dependencies:
   pre:
+    # This is equivalent to $TRAVIS_COMMIT_RANGE
+    # Need to figure out how to bail early if this is a "docs only" build
     - echo $CIRCLE_COMPARE_URL | cut -d/ -f7
     # install yarn
     - sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
