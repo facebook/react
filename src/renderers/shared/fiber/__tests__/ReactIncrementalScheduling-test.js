@@ -341,7 +341,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual(null);
     // Then the second one gets processed
-    ReactNoop.flushDeferredPri(15 + 5);
+    ReactNoop.flushDeferredPri(15 + 5 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual(null);
@@ -483,7 +483,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ReactNoop.render(<Foo />);
 
-    ReactNoop.flushDeferredPri(20 + 5);
+    ReactNoop.flushDeferredPri(20 + 5 + 5);
     expect(ops).toEqual([
       'render: 0',
       'componentDidMount (before setState): 0',
@@ -496,7 +496,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ops = [];
     instance.setState({ tick: 2 });
-    ReactNoop.flushDeferredPri(20 + 5);
+    ReactNoop.flushDeferredPri(20 + 5 + 5);
 
     expect(ops).toEqual([
       'render: 2',

@@ -1465,6 +1465,7 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(4);
   });
+
   it('can handle if setState callback throws', () => {
     var ops = [];
     var instance;
