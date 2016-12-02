@@ -79,11 +79,13 @@ class CounterButton extends React.Component {
   }
 
   render() {
-    <button
-      color={this.props.color}
-      onClick={() => this.setState(state => ({count: state.count + 1}))}>
-      Count: {this.state.count}
-    </button>
+    return (
+      <button
+        color={this.props.color}
+        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        Count: {this.state.count}
+      </button>
+    );
   }
 }
 ```
@@ -98,11 +100,13 @@ class CounterButton extends React.PureComponent {
   }
 
   render() {
-    <button
-      color={this.props.color}
-      onClick={() => this.setState(state => ({count: state.count + 1}))}>
-      Count: {this.state.count}
-    </button>
+    return (
+      <button
+        color={this.props.color}
+        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        Count: {this.state.count}
+      </button>
+    );
   }
 }
 ```
