@@ -79,11 +79,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     SynchronousPriority :
     LowPriority;
 
-  // Whether updates should be batched. Only applies when using sync scheduling.
-  let shouldBatchUpdates : boolean = false;
-
-  // Need this to prevent recursion while in a Task loop.
-  let isPerformingTaskWork : boolean = false;
+  // Keeps track of whether we're currently in a work loop. Used to batch
+  // nested updates.
+  let isPerformingWork : boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -425,14 +423,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
-    let next;
-    const isFailedWork = capturedErrors && capturedErrors.has(workInProgress);
-    if (isFailedWork) {
-      next = beginFailedWork(current, workInProgress, nextPriorityLevel);
-      workInProgress.effectTag |= Err;
-    } else {
-      next = beginWork(current, workInProgress, nextPriorityLevel);
-    }
+    let next = beginWork(current, workInProgress, nextPriorityLevel);
 
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
@@ -454,162 +445,209 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return next;
   }
 
-  function performDeferredWorkUnsafe(deadline) {
-    if (!nextUnitOfWork && !pendingCommit) {
-      nextUnitOfWork = findNextUnitOfWork();
+  function performFailedUnitOfWork(workInProgress : Fiber) : ?Fiber {
+    // The current, flushed, state of this fiber is the alternate.
+    // Ideally nothing should rely on this, but relying on it here
+    // means that we don't need an additional field on the work in
+    // progress.
+    const current = workInProgress.alternate;
+
+    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+      ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
-    while (nextUnitOfWork || pendingCommit) {
-      if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        if (pendingCommit) {
-          nextUnitOfWork = commitAllWork(pendingCommit);
-        } else if (nextUnitOfWork) {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        }
+    // See if beginning this work spawns more work.
+    let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
+    workInProgress.effectTag |= Err;
+
+    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+      ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
+    }
+
+    if (!next) {
+      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+        ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
+      }
+      // If this doesn't spawn new work, complete the current work.
+      next = completeUnitOfWork(workInProgress);
+      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+        ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
+      }
+    }
+
+    ReactCurrentOwner.current = null;
+
+    return next;
+  }
+
+  function performDeferredWork(deadline) {
+    // We pass the lowest deferred priority here because it acts as a minimum.
+    // Higher priorities will also be performed.
+    isDeferredCallbackScheduled = false;
+    performWork(OffscreenPriority, deadline);
+  }
+
+  function performAnimationWork() {
+    isAnimationCallbackScheduled = false;
+    performWork(AnimationPriority);
+  }
+
+  function workLoop(priorityLevel) {
+    // If there are errors, use a forked version of performUnitOfWork
+    // TODO: Need to make commitAllWork throw on error before doing this
+    if (true || (capturedErrors && capturedErrors.size)) {
+      while (true) {
         if (!nextUnitOfWork && !pendingCommit) {
-          // Find more work. We might have time to complete some more.
           nextUnitOfWork = findNextUnitOfWork();
         }
+        if (pendingCommit && !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)) {
+          nextUnitOfWork = commitAllWork(pendingCommit);
+        } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
+          if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
+            nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+          } else {
+            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+          }
+        } else {
+          return;
+        }
+      }
+    }
+
+    // Otherwise, handle the normal, faster case where there are no errors:
+    while (true) {
+      if (!nextUnitOfWork && !pendingCommit) {
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+      if (pendingCommit && !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)) {
+        nextUnitOfWork = commitAllWork(pendingCommit);
+      } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       } else {
-        scheduleDeferredCallback(performDeferredWork);
         return;
       }
     }
   }
 
-  function performDeferredWork(deadline) {
-    isDeferredCallbackScheduled = false;
-    performAndHandleErrors(LowPriority, deadline);
-  }
-
-  function performAnimationWorkUnsafe() {
-    if (!nextUnitOfWork && !pendingCommit) {
+  function deferredWorkLoop(deadline) {
+    if (!nextUnitOfWork) {
       nextUnitOfWork = findNextUnitOfWork();
     }
-    while (
-      pendingCommit ||
-      (nextUnitOfWork && nextPriorityLevel === AnimationPriority)
-    ) {
-      if (pendingCommit) {
-        nextUnitOfWork = commitAllWork(pendingCommit);
-      } else if (nextUnitOfWork) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      }
-      if (!nextUnitOfWork && !pendingCommit) {
-        // Keep searching for animation work until there's no more left
-        nextUnitOfWork = findNextUnitOfWork();
-      }
-    }
-    if (nextUnitOfWork) {
-      scheduleCallbackAtPriority(nextPriorityLevel);
-    }
-  }
 
-  function performAnimationWork() {
-    isAnimationCallbackScheduled = false;
-    performAndHandleErrors(AnimationPriority);
-  }
-
-  function performSynchronousWorkUnsafe() {
-    if (!nextUnitOfWork && !pendingCommit) {
-      nextUnitOfWork = findNextUnitOfWork();
-    }
-    while (
-      pendingCommit ||
-      (nextUnitOfWork && nextPriorityLevel === SynchronousPriority)
-    ) {
-      if (pendingCommit) {
-        nextUnitOfWork = commitAllWork(pendingCommit);
-      } else if (nextUnitOfWork) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      }
-      if (!nextUnitOfWork && !pendingCommit) {
-        // Keep searching for sync work until there's no more left
-        nextUnitOfWork = findNextUnitOfWork();
+    // If there are errors, use a forked version of performUnitOfWork
+    // TODO: Need to make commitAllWork throw on error before doing this
+    if (true || (capturedErrors && capturedErrors.size)) {
+      while (true) {
+        if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+          if (!nextUnitOfWork && !pendingCommit) {
+            nextUnitOfWork = findNextUnitOfWork();
+          }
+          if (pendingCommit) {
+            nextUnitOfWork = commitAllWork(pendingCommit);
+          } else if (nextUnitOfWork) {
+            if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
+              nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+            } else {
+              nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+            }
+          } else {
+            return;
+          }
+        } else {
+          return;
+        }
       }
     }
-    if (nextUnitOfWork) {
-      scheduleCallbackAtPriority(nextPriorityLevel);
-    }
-  }
 
-  function performSynchronousWork() {
-    performAndHandleErrors(SynchronousPriority);
-  }
-
-  function performTaskWorkUnsafe() {
-    if (isPerformingTaskWork) {
-      throw new Error('Already performing task work');
-    }
-
-    isPerformingTaskWork = true;
-    try {
-      if (!nextUnitOfWork && !pendingCommit) {
-        nextUnitOfWork = findNextUnitOfWork();
-      }
-      while (
-        (pendingCommit && pendingCommit.pendingWorkPriority === TaskPriority) ||
-        (nextUnitOfWork && nextPriorityLevel === TaskPriority)
-      ) {
-        if (pendingCommit && pendingCommit.pendingWorkPriority === TaskPriority) {
+    // Otherwise, handle the normal, faster case where there are no errors:
+    while (true) {
+      if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+        if (!nextUnitOfWork && !pendingCommit) {
+          nextUnitOfWork = findNextUnitOfWork();
+        }
+        if (pendingCommit) {
           nextUnitOfWork = commitAllWork(pendingCommit);
         } else if (nextUnitOfWork) {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        } else {
+          return;
         }
-        if (!nextUnitOfWork && !pendingCommit) {
-          // Keep searching for sync work until there's no more left
-          nextUnitOfWork = findNextUnitOfWork();
-        }
+      } else {
+        return;
       }
-      if (nextUnitOfWork) {
-        scheduleCallbackAtPriority(nextPriorityLevel);
-      }
-    } finally {
-      isPerformingTaskWork = false;
     }
   }
 
-  function performTaskWork() {
-    performAndHandleErrors(TaskPriority);
-  }
+  function performWork(priorityLevel : PriorityLevel, deadline : null | Deadline) {
+    if (isPerformingWork) {
+      throw new Error('performWork was called recursively.');
+    }
+    isPerformingWork = true;
 
-  function performAndHandleErrors(priorityLevel : PriorityLevel, deadline : null | Deadline) {
-    // The exact priority level doesn't matter, so long as it's in range of the
-    // work (sync, animation, deferred) being performed.
-    let shouldContinue = true;
-    while (shouldContinue) {
-      shouldContinue = false;
-      const prevShouldBatchUpdates = shouldBatchUpdates;
-      shouldBatchUpdates = true;
+    // Perform work until either there's no more work at this priority level, or
+    // (in the case of deferred work) we've run out of time.
+    while (priorityLevel !== NoWork) {
+      // Functions that contain a try-catch block are not optimizable by the
+      // JS engine. The hottest code paths have been extracted to separate
+      // functions, workLoop and deferredWorkLoop, which run on every unit of
+      // work. The loop we're in now runs infrequently: to flush task work at
+      // the end of a frame, or to restart after an error.
       try {
-        switch (priorityLevel) {
+        if (priorityLevel >= HighPriority) {
+          if (!deadline) {
+            throw new Error('Cannot perform deferred work without a deadline.');
+          }
+          // The deferred work loop will run until there's no time left in
+          // the current frame
+          deferredWorkLoop(deadline);
+        } else {
+          // The non-deferred work loop will run until there's no more work
+          // at the given priority level
+          workLoop(priorityLevel);
+        }
+
+        // Stop performing work
+        priorityLevel = NoWork;
+
+        // There might still be work left. Depending on the priority, we should
+        // either perform it now or schedule a callback to perform it later.
+        switch (nextPriorityLevel) {
           case SynchronousPriority:
-            performSynchronousWorkUnsafe();
-            break;
           case TaskPriority:
-            if (!isPerformingTaskWork) {
-              performTaskWorkUnsafe();
-            }
+            // Perform work immediately by switching the priority level
+            // and continuing the loop.
+            priorityLevel = nextPriorityLevel;
             break;
           case AnimationPriority:
-            performAnimationWorkUnsafe();
+            scheduleAnimationCallback(performAnimationWork);
+            // Even though the next unit of work has animation priority, there
+            // may still be deferred work left over as well. I think this is
+            // only important for unit tests. In a real app, a deferred callback
+            // would be scheduled during the next animation frame.
+            scheduleDeferredCallback(performDeferredWork);
             break;
           case HighPriority:
           case LowPriority:
           case OffscreenPriority:
-            if (!deadline) {
-              throw new Error('No deadline');
-            } else {
-              performDeferredWorkUnsafe(deadline);
-            }
-            break;
-          default:
+            scheduleDeferredCallback(performDeferredWork);
             break;
         }
       } catch (error) {
+        // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
-        const boundary = captureError(failedWork, error, false);
-        if (boundary) {
-          // The boundary failed to complete. Complete it as if rendered null.
+
+        // "Capture" the error by finding the nearest boundary. If there is no
+        // error boundary, the nearest host container acts as one.
+        const maybeBoundary = captureError(failedWork, error, false);
+        if (maybeBoundary) {
+          const boundary = maybeBoundary;
+
+          // Schedule an Task update on the boundary
+          const previousPriorityContext = priorityContext;
+          priorityContext = TaskPriority;
+          scheduleUpdate(boundary);
+          priorityContext = previousPriorityContext;
+
+          // Complete the boundary as if rendered null.
           beginFailedWork(boundary.alternate, boundary, priorityLevel);
 
           // The next unit of work is now the boundary that captured the error.
@@ -624,22 +662,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             unwindContext(failedWork, boundary);
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
-
-          // We were interupted by an error. Continue performing work.
-          shouldContinue = true;
         }
-      } finally {
-        shouldBatchUpdates = prevShouldBatchUpdates;
+        // The loop will continue performing work
       }
     }
 
-    // Flush any task work that was scheduled during this batch
-    if (priorityLevel !== TaskPriority) {
-      performTaskWork();
+    // We're done performing work. Time to clean up.
+    isPerformingWork = false;
+    if (capturedErrors && !capturedErrors.size) {
+      capturedErrors = null;
     }
 
-    // Throw the first uncaught error
-    if (!nextUnitOfWork && firstUncaughtError) {
+    // It's now safe to throw the first uncaught error.
+    if (firstUncaughtError) {
       let e = firstUncaughtError;
       firstUncaughtError = null;
       throw e;
@@ -747,7 +782,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     let priorityLevel = priorityContext;
 
     // If we're in a batch, switch to task priority
-    if (priorityLevel === SynchronousPriority && shouldBatchUpdates) {
+    if (priorityLevel === SynchronousPriority && isPerformingWork) {
       priorityLevel = TaskPriority;
     }
 
@@ -774,24 +809,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    // We must reset the current unit of work pointer so that we restart the
-    // search from the root during the next tick, in case there is now higher
-    // priority work somewhere earlier than before.
     if (priorityLevel <= nextPriorityLevel) {
+      // We must reset the current unit of work pointer so that we restart the
+      // search from the root during the next tick, in case there is now higher
+      // priority work somewhere earlier than before.
       nextUnitOfWork = null;
     }
 
-    scheduleCallbackAtPriority(priorityLevel);
-  }
-
-  function scheduleCallbackAtPriority(priorityLevel : PriorityLevel) {
+    // Depending on the priority level, either perform work now or schedule
+    // a callback to perform work later.
     switch (priorityLevel) {
       case SynchronousPriority:
         // Perform work immediately
-        performSynchronousWork();
+        performWork(SynchronousPriority);
         return;
       case TaskPriority:
-        // Do nothing. Task work should be flushed after committing.
+        // If we're already performing work, Task work will be flushed before
+        // exiting the current batch. So we can skip it here.
+        if (!isPerformingWork) {
+          performWork(TaskPriority);
+        }
         return;
       case AnimationPriority:
         scheduleAnimationCallback(performAnimationWork);
@@ -806,8 +843,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function scheduleUpdate(fiber : Fiber) {
     let priorityLevel = priorityContext;
-    // If we're in a batch, switch to task priority
-    if (priorityLevel === SynchronousPriority && shouldBatchUpdates) {
+    // If we're in a batch, downgrade sync priority to task priority
+    if (priorityLevel === SynchronousPriority && isPerformingWork) {
       priorityLevel = TaskPriority;
     }
 
@@ -856,18 +893,17 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function batchedUpdates<A, R>(fn : (a: A) => R, a : A) : R {
-    const prev = shouldBatchUpdates;
-    shouldBatchUpdates = true;
+    const previousIsPerformingWork = isPerformingWork;
+    // Simulate that we're performing work so that sync work is batched
+    isPerformingWork = true;
     try {
       return fn(a);
     } finally {
-      // If we're exiting the batch, perform any scheduled task work
-      try {
-        if (!prev) {
-          performTaskWork();
-        }
-      } finally {
-        shouldBatchUpdates = prev;
+      isPerformingWork = previousIsPerformingWork;
+      // If we're not already performing work, we need to flush any task work
+      // that was created by the user-provided function.
+      if (!isPerformingWork) {
+        performWork(TaskPriority);
       }
     }
   }

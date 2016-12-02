@@ -88,7 +88,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     ops.length = 0;
-    ReactNoop.flushDeferredPri(30 + 5 + 5 + 5);
+    ReactNoop.flushDeferredPri(30 + 5 + 5 + 5 + 5);
     expect(ops).toEqual([
       'BrokenRender',
       'ErrorBoundary unstable_handleError',
@@ -134,7 +134,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'BrokenRender',
     ]);
     ops = [];
-    ReactNoop.flushDeferredPri(25 + 5 + 5);
+    ReactNoop.flushDeferredPri(25 + 5 + 5 + 5);
     expect(ops).toEqual([
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
