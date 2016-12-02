@@ -11,7 +11,7 @@ machine:
   ruby:
     version: 2.2.3
   environment:
-    TRAVIS_REPO_SLUG: zpao/react
+    TRAVIS_REPO_SLUG: facebook/react
 
 dependencies:
   pre:
@@ -49,5 +49,5 @@ deployment:
   staging:
     branch: /.*/
     commands:
-      # - ./scripts/circleci/upload_build.sh
+      - ./scripts/circleci/upload_build.sh
       - ./scripts/circleci/build_gh_pages.sh

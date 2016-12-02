@@ -5,7 +5,7 @@ set -e
 if [ -z $CI_PULL_REQUEST ] && [ "$CIRCLE_BRANCH" = "$REACT_WEBSITE_BRANCH" ]; then
 
   GH_PAGES_DIR=`pwd`/../react-gh-pages
-  echo "machine github.com login zpao password $GITHUB_TOKEN" >~/.netrc
+  echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
   git config --global user.name "Circle CI"
   git config --global user.email "circle@reactjs.org"
 
@@ -16,7 +16,7 @@ if [ -z $CI_PULL_REQUEST ] && [ "$CIRCLE_BRANCH" = "$REACT_WEBSITE_BRANCH" ]; th
     popd
   else
     git clone --branch gh-pages --depth=1 \
-      https://zpao@github.com/zpao/react.git \
+      https://reactjs-bot@github.com/facebook/react.git \
       $GH_PAGES_DIR
   fi
 
