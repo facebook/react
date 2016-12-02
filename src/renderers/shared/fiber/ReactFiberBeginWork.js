@@ -73,6 +73,7 @@ module.exports = function<T, P, I, TI, C>(
 
   const {
     pushHostContext,
+    pushHostPortal,
   } = config;
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
@@ -319,6 +320,8 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function updatePortalComponent(current, workInProgress) {
+    pushHostPortal();
+
     const priorityLevel = workInProgress.pendingWorkPriority;
     const nextChildren = workInProgress.pendingProps;
     if (!current) {
@@ -409,6 +412,8 @@ module.exports = function<T, P, I, TI, C>(
       pushHostContext(workInProgress.type);
     } else if (isContextProvider(workInProgress)) {
       pushContextProvider(workInProgress, false);
+    } else if (workInProgress.tag === HostPortal) {
+      pushHostPortal();
     }
     return workInProgress.child;
   }
@@ -493,7 +498,6 @@ module.exports = function<T, P, I, TI, C>(
         return null;
       case HostPortal:
         updatePortalComponent(current, workInProgress);
-        // TODO: is this right?
         return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);

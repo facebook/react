@@ -62,22 +62,34 @@ type TextInstance = Text;
 
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
-let currentNamespaceURI : null | SVG_NAMESPACE | MATH_NAMESPACE = null;
 
+// The next few variables are mutable state that changes as we perform work.
+// We could have replaced them by a single stack of namespaces but we want
+// to avoid it since this is a very hot path.
+let currentNamespaceURI : null | SVG_NAMESPACE | MATH_NAMESPACE = null;
 // How many <foreignObject>s we have entered so far.
 // We increment and decrement it when pushing and popping <foreignObject>.
 // We use this counter as the current index for accessing the array below.
 let foreignObjectDepth : number = 0;
-
 // How many <svg>s have we entered so far.
 // We increment or decrement the last array item when pushing and popping <svg>.
 // A new counter is appended to the end whenever we enter a <foreignObject>.
 let svgDepthByForeignObjectDepth : Array<number> | null = null;
+// For example:
+// <svg><foreignObject><svg><svg><svg><foreignObject><svg>
+//  ^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^]
+// [ 1         ,              3              ,         1 ]
 
-// For example, with this structure: <svg><foreignObject><svg><svg><svg><foreignObject><svg>
-//                                    ^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^]
-// svgDepthByForeignObjectDepth   =  [ 1         ,              3              ,         1 ]
-// foreignObjectDepth             =              1              +              1
+// The mutable state above becomes irrelevant whenever we push a portal
+// because a portal represents a different DOM tree. We store a snapshot
+// of this state and restore it when the portal is popped.
+type PortalState = {
+  currentNamespaceURI: string | null,
+  foreignObjectDepth: number,
+  svgDepthByForeignObjectDepth: Array<number> | null,
+};
+let portalState : Array<PortalState> | null = null;
+let portalStateIndex : number = -1;
 
 function getIntrinsicNamespaceURI(type : string) {
   switch (type) {
@@ -166,6 +178,61 @@ var DOMRenderer = ReactFiberReconciler({
         }
         break;
     }
+  },
+
+  pushHostPortal() : void {
+    // We optimize for the simple case: portals usually exist outside of SVG.
+    const canBailOutOfTrackingPortalState = (
+      // If we're in HTML mode, we don't need to save this.
+      currentNamespaceURI == null &&
+      // If state was ever saved before, we can't bail out because we wouldn't
+      // be able to tell whether to restore it or not next time we pop a portal.
+      portalStateIndex === -1
+    );
+    if (canBailOutOfTrackingPortalState) {
+      return;
+    }
+    // We are going to save the state before entering the portal.
+    portalStateIndex++;
+    // We are inside <svg> (or deeper) and need to store that before
+    // jumping into a portal elsewhere in the tree.
+    if (!portalState) {
+      portalState = [];
+    }
+    if (!portalState[portalStateIndex]) {
+      // Lazily allocate a single object for every portal nesting level.
+      portalState[portalStateIndex] = {
+        currentNamespaceURI,
+        foreignObjectDepth,
+        svgDepthByForeignObjectDepth,
+      };
+    } else {
+      // If we already have state on the stack, just mutate it.
+      const mutableState = portalState[portalStateIndex];
+      mutableState.currentNamespaceURI = currentNamespaceURI;
+      mutableState.foreignObjectDepth = foreignObjectDepth;
+      mutableState.svgDepthByForeignObjectDepth = svgDepthByForeignObjectDepth;
+    }
+    // Reset the host context we're working with.
+    // TODO: what if the portal is inside <svg> element itself?
+    // We currently don't handle this case.
+    currentNamespaceURI = null;
+    foreignObjectDepth = 0;
+    svgDepthByForeignObjectDepth = null;
+  },
+
+  popHostPortal() {
+    if (portalStateIndex === -1 || portalState == null) {
+      // There is nothing interesting to restore.
+      return;
+    }
+    // Restore to the state before we entered that portal.
+    const savedState = portalState[portalStateIndex];
+    currentNamespaceURI = savedState.currentNamespaceURI;
+    foreignObjectDepth = savedState.foreignObjectDepth;
+    svgDepthByForeignObjectDepth = savedState.svgDepthByForeignObjectDepth;
+    // We have restored the state.
+    portalStateIndex--;
   },
 
   // TODO: unwind host context on errors and consider portals.

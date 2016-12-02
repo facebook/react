@@ -52,6 +52,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     createTextInstance,
     prepareUpdate,
     popHostContext,
+    popHostPortal,
   } = config;
 
   function markUpdate(workInProgress : Fiber) {
@@ -295,6 +296,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
       case HostPortal:
+        popHostPortal();
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
