@@ -73,60 +73,116 @@ exports.isMounted = function(component : ReactComponent<any, any, any>) : boolea
   return isFiberMountedImpl(fiber) === MOUNTED;
 };
 
-exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
-  // First check if this node itself is mounted.
-  const state = isFiberMountedImpl(parent, true);
-  if (state === UNMOUNTED) {
+function assertIsMounted(fiber) {
+  invariant(
+    isFiberMountedImpl(fiber) === MOUNTED,
+    'Unable to find node on an unmounted component.'
+  );
+}
+
+function findCurrentFiberUsingSlowPath(fiber : Fiber) : Fiber | null {
+  let alternate = fiber.alternate;
+  if (!alternate) {
+    // If there is no alternate, then we only need to check if it is mounted.
+    const state = isFiberMountedImpl(fiber);
     invariant(
-      false,
+      state !== UNMOUNTED,
       'Unable to find node on an unmounted component.'
     );
-  } else if (state === MOUNTING) {
+    if (state === MOUNTING) {
+      return null;
+    }
+    return fiber;
+  }
+  // If we have two possible branches, we'll walk backwards up to the root
+  // to see what path the root points to. On the way we may hit one of the
+  // special cases and we'll deal with them.
+  let a = fiber;
+  let b = alternate;
+  while (true) {
+    let parentA = a.return;
+    let parentB = b.return;
+    if (!parentA || !parentB) {
+      // We're at the root.
+      break;
+    }
+    if (parentA.child === parentB.child) {
+      // If both parents are the same, then that is the current parent. If
+      // they're different but point to the same child, then it doesn't matter.
+      // Regardless, whatever child they point to is the current child.
+      // So we can now determine which child is current by scanning the child
+      // list for either A or B.
+      let child = parentA.child;
+      while (child) {
+        if (child === a) {
+          // We've determined that A is the current branch.
+          assertIsMounted(parentA);
+          return fiber;
+        }
+        if (child === b) {
+          // We've determined that B is the current branch.
+          assertIsMounted(parentA);
+          return alternate;
+        }
+        child = child.sibling;
+      }
+      // We should never have an alternate for any mounting node. So the only
+      // way this could possibly happen is if this was unmounted, if at all.
+      invariant(
+        false,
+        'Unable to find node on an unmounted component.'
+      );
+    }
+    a = parentA;
+    b = parentB;
+    invariant(
+      a.alternate === b,
+      'Return fibers should always be each others\' alternates.'
+    );
+  }
+  // If the root is not a host container, we're in a disconnected tree. I.e.
+  // unmounted.
+  invariant(
+    a.tag === HostRoot,
+    'Unable to find node on an unmounted component.'
+  );
+  if (a.stateNode.current === a) {
+    // We've determined that A is the current branch.
+    return fiber;
+  }
+  // Otherwise B has to be current branch.
+  return alternate;
+}
+exports.findCurrentFiberUsingSlowPath = findCurrentFiberUsingSlowPath;
+
+exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
+  const currentParent = findCurrentFiberUsingSlowPath(parent);
+  if (!currentParent) {
     return null;
   }
 
-  let didTryOtherTree = false;
-
-  // If the component doesn't have a child we first check the alternate to see
-  // if it has any and if so, if those were just recently inserted.
-  if (!parent.child && parent.alternate) {
-    parent = parent.alternate;
-  }
-
   // Next we'll drill down this component to find the first HostComponent/Text.
-  let node : Fiber = parent;
+  let node : Fiber = currentParent;
   while (true) {
-    if ((node.effectTag & Placement) !== NoEffect || !node.return) {
-      // If any node along the way was deleted, or is an insertion, that means
-      // that we're actually in a work in progress to update this component with
-      // a different component. We need to look in the "current" fiber instead.
-      if (!parent.alternate) {
-        return null;
-      }
-      if (didTryOtherTree) {
-        // Safety, to avoid an infinite loop if something goes wrong.
-        throw new Error('This should never hit this infinite loop.');
-      }
-      didTryOtherTree = true;
-      node = parent = parent.alternate;
-      continue;
-    }
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
     } else if (node.child) {
+      // TODO: If we hit a Portal, we're supposed to skip it.
       // TODO: Coroutines need to visit the stateNode.
+      node.child.return = node;
       node = node.child;
       continue;
     }
-    if (node === parent) {
+    if (node === currentParent) {
       return null;
     }
     while (!node.sibling) {
-      if (!node.return || node.return === parent) {
+      if (!node.return || node.return === currentParent) {
         return null;
       }
       node = node.return;
     }
+    node.sibling.return = node.return;
     node = node.sibling;
   }
   // Flow needs the return null here, but ESLint complains about it.
