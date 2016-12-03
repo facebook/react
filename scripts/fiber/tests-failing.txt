@@ -27,10 +27,6 @@ src/renderers/art/__tests__/ReactART-test.js
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
-src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
-* should bubble to the right handler after an update
-* should invoke handlers that were removed while bubbling
-
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function
 * throws in render() if the update callback is not a function
