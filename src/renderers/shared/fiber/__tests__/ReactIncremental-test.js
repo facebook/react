@@ -1497,11 +1497,10 @@ describe('ReactIncremental', () => {
       ReactNoop.flush();
     }).toThrow('callback error');
 
-    // Should call all callbacks, even though the second one throws
+    // The third callback isn't called because the second one throws
     expect(ops).toEqual([
       'first callback',
       'second callback',
-      'third callback',
     ]);
     expect(instance.state.n).toEqual(3);
   });

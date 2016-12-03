@@ -35,7 +35,7 @@ var {
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  captureError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => Fiber | null
+  captureError : (failedFiber : Fiber, error: Error) => Fiber | null
 ) {
 
   const commitUpdate = config.commitUpdate;
@@ -204,15 +204,17 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function commitNestedUnmounts(root : Fiber): void {
+  function commitNestedUnmounts(root : Fiber): boolean {
     // While we're inside a removed host node we don't want to call
     // removeChild on the inner nodes because they're removed by the top
     // call anyway. We also want to call componentWillUnmount on all
     // composites before this host node is removed from the tree. Therefore
     // we do an inner loop while we're still inside the host node.
+    let noErrors = true;
     let node : Fiber = root;
     while (true) {
-      commitUnmount(node);
+      const noError = commitUnmount(node);
+      noErrors = noErrors && noError;
       if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
         node.child.return = node;
@@ -220,26 +222,32 @@ module.exports = function<T, P, I, TI, C>(
         continue;
       }
       if (node === root) {
-        return;
+        return noErrors;
       }
       while (!node.sibling) {
         if (!node.return || node.return === root) {
-          return;
+          return noErrors;
         }
         node = node.return;
       }
       node.sibling.return = node.return;
       node = node.sibling;
     }
+    // This is unreachable but without it Flow complains about implicitly-
+    // returned undefined.
+    return noErrors; // eslint-disable-line no-unreachable
   }
 
-  function unmountHostComponents(parent, current): void {
+  // Returns true if it completed without any errors
+  function unmountHostComponents(parent, current): boolean {
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
+    let noErrors = true;
     let node : Fiber = current;
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
-        commitNestedUnmounts(node);
+        const noError = commitNestedUnmounts(node);
+        noErrors = noErrors && noError;
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
         removeChild(parent, node.stateNode);
@@ -252,7 +260,8 @@ module.exports = function<T, P, I, TI, C>(
           continue;
         }
       } else {
-        commitUnmount(node);
+        const noError = commitUnmount(node);
+        noErrors = noErrors && noError;
         if (node.child) {
           // TODO: Coroutines need to visit the stateNode.
           node.child.return = node;
@@ -261,11 +270,11 @@ module.exports = function<T, P, I, TI, C>(
         }
       }
       if (node === current) {
-        return;
+        return noErrors;
       }
       while (!node.sibling) {
         if (!node.return || node.return === current) {
-          return;
+          return noErrors;
         }
         node = node.return;
         if (node.tag === HostPortal) {
@@ -277,13 +286,16 @@ module.exports = function<T, P, I, TI, C>(
       node.sibling.return = node.return;
       node = node.sibling;
     }
+    // This is unreachable but without it Flow complains about implicitly-
+    // returned undefined.
+    return noErrors; // eslint-disable-line no-unreachable
   }
 
-  function commitDeletion(current : Fiber) : void {
+  function commitDeletion(current : Fiber) : boolean {
     // Recursively delete all host nodes from the parent.
     const parent = getHostParent(current);
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(parent, current);
+    const noErrors = unmountHostComponents(parent, current);
 
     // Cut off the return pointers to disconnect it from the tree. Ideally, we
     // should clear the child pointer of the parent alternate to let this
@@ -296,9 +308,12 @@ module.exports = function<T, P, I, TI, C>(
       current.alternate.child = null;
       current.alternate.return = null;
     }
+    return noErrors;
   }
 
-  function commitUnmount(current : Fiber) : void {
+  // Returns true if it completed without any errors
+  function commitUnmount(current : Fiber) : boolean {
+    let noErrors = true;
     switch (current.tag) {
       case ClassComponent: {
         detachRef(current);
@@ -306,25 +321,28 @@ module.exports = function<T, P, I, TI, C>(
         if (typeof instance.componentWillUnmount === 'function') {
           const error = tryCallComponentWillUnmount(instance);
           if (error) {
-            captureError(current, error, true);
+            captureError(current, error);
+            noErrors = false;
           }
         }
-        return;
+        break;
       }
       case HostComponent: {
         detachRef(current);
-        return;
+        break;
       }
       case CoroutineComponent: {
-        commitNestedUnmounts(current.stateNode);
-        return;
+        const noError = commitNestedUnmounts(current.stateNode);
+        noErrors = noErrors && noError;
+        break;
       }
       case HostPortal: {
         // TODO: this is recursive.
         commitDeletion(current);
-        return;
+        break;
       }
     }
+    return noErrors;
   }
 
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
@@ -369,17 +387,16 @@ module.exports = function<T, P, I, TI, C>(
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
-        let firstError = null;
         if (finishedWork.effectTag & Update) {
           if (!current) {
             if (typeof instance.componentDidMount === 'function') {
-              firstError = tryCallComponentDidMount(instance);
+              instance.componentDidMount();
             }
           } else {
             if (typeof instance.componentDidUpdate === 'function') {
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
-              firstError = tryCallComponentDidUpdate(instance, prevProps, prevState);
+              instance.componentDidUpdate(prevProps, prevState);
             }
           }
           attachRef(current, finishedWork, instance);
@@ -390,26 +407,19 @@ module.exports = function<T, P, I, TI, C>(
         }
         if (finishedWork.effectTag & Callback) {
           if (finishedWork.callbackList) {
-            const callbackError = callCallbacks(finishedWork.callbackList, instance);
-            firstError = firstError || callbackError;
+            const callbackList = finishedWork.callbackList;
             finishedWork.callbackList = null;
+            callCallbacks(callbackList, instance);
           }
-        }
-        if (firstError) {
-          captureError(finishedWork, firstError, false);
         }
         return;
       }
       case HostRoot: {
         const rootFiber = finishedWork.stateNode;
-        let firstError = null;
         if (rootFiber.callbackList) {
-          const { callbackList } = rootFiber;
+          const callbackList = rootFiber.callbackList;
           rootFiber.callbackList = null;
-          firstError = callCallbacks(callbackList, rootFiber.current.child.stateNode);
-        }
-        if (firstError) {
-          captureError(rootFiber, firstError, false);
+          callCallbacks(callbackList, rootFiber.current.child.stateNode);
         }
         return;
       }
@@ -428,24 +438,6 @@ module.exports = function<T, P, I, TI, C>(
       }
       default:
         throw new Error('This unit of work tag should not have side-effects.');
-    }
-  }
-
-  function tryCallComponentDidMount(instance) {
-    try {
-      instance.componentDidMount();
-      return null;
-    } catch (error) {
-      return error;
-    }
-  }
-
-  function tryCallComponentDidUpdate(instance, prevProps, prevState) {
-    try {
-      instance.componentDidUpdate(prevProps, prevState);
-      return null;
-    } catch (error) {
-      return error;
     }
   }
 

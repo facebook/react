@@ -93,12 +93,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let nextScheduledRoot : ?FiberRoot = null;
   let lastScheduledRoot : ?FiberRoot = null;
 
-  // Keep track of which host environment callbacks are scheduled
+  // Keep track of which host environment callbacks are scheduled.
   let isAnimationCallbackScheduled : boolean = false;
   let isDeferredCallbackScheduled : boolean = false;
 
   let capturedErrors : Map<Fiber, Error> | null = null;
   let firstUncaughtError : Error | null = null;
+
+  let isUnmounting : boolean = false;
 
   function scheduleAnimationCallback(callback) {
     if (!isAnimationCallbackScheduled) {
@@ -116,7 +118,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   function findNextUnitOfWork() {
     if (pendingCommit) {
-      return null;
+      return pendingCommit;
     }
 
     // Clear out roots with no more work on them, or if they have uncaught errors
@@ -163,7 +165,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
-  function commitAllWork(finishedWork : Fiber) {
+  // Returns true if the commit phase finishes without any errors.
+  function commitAllWork(finishedWork : Fiber): boolean {
+    let noErrors = true;
+
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
     resetWorkPriority(finishedWork);
@@ -182,6 +187,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
     pass1: while (true) {
+      let didHandleRoot = false;
       try {
         while (effectfulFiber) {
           if (effectfulFiber.effectTag & ContentReset) {
@@ -222,27 +228,34 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               break;
             }
             case Deletion: {
-              commitDeletion(effectfulFiber);
+              isUnmounting = true;
+              const noError = commitDeletion(effectfulFiber);
+              noErrors = noErrors && noError;
+              isUnmounting = false;
               break;
             }
           }
           effectfulFiber = effectfulFiber.nextEffect;
         }
-      } catch (error) {
-        if (effectfulFiber) {
-          captureError(effectfulFiber, error, false);
-          effectfulFiber = effectfulFiber.nextEffect;
-          continue pass1;
+
+        // Finally if the root itself had an effect, we perform that since it is
+        // not part of the effect list.
+        if (!didHandleRoot && finishedWork.effectTag !== NoEffect) {
+          didHandleRoot = true;
+          const current = finishedWork.alternate;
+          commitWork(current, finishedWork);
         }
+      } catch (error) {
+        noErrors = false;
+        captureError(effectfulFiber || null, error);
+        if (effectfulFiber) {
+          effectfulFiber = effectfulFiber.nextEffect;
+        }
+        // Clean-up
+        isUnmounting = false;
+        continue pass1;
       }
       break;
-    }
-
-    // Finally if the root itself had an effect, we perform that since it is
-    // not part of the effect list.
-    if (finishedWork.effectTag !== NoEffect) {
-      const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
     }
 
     resetAfterCommit();
@@ -254,6 +267,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
     pass2: while (true) {
+      let didHandleRoot = false;
       try {
         while (effectfulFiber) {
           const current = effectfulFiber.alternate;
@@ -276,26 +290,29 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // tags to reason about the current life-cycle.
           effectfulFiber = next;
         }
+
+        // Finally if the root itself had an effect, we perform that since it is
+        // not part of the effect list.
+        if (!didHandleRoot && finishedWork.effectTag !== NoEffect) {
+          didHandleRoot = true;
+          const current = finishedWork.alternate;
+          commitLifeCycles(current, finishedWork);
+          if (finishedWork.effectTag & Err) {
+            commitErrorHandling(finishedWork);
+          }
+        }
       } catch (error) {
+        noErrors = false;
+        captureError(effectfulFiber || null, error);
         if (effectfulFiber) {
-          captureError(effectfulFiber, error, false);
           const next = effectfulFiber.nextEffect;
           effectfulFiber.nextEffect = null;
           effectfulFiber = next;
-          continue pass2;
         }
+        continue pass2;
       }
       priorityContext = previousPriorityContext;
       break;
-    }
-
-    // Lifecycles on the root itself
-    if (finishedWork.effectTag !== NoEffect) {
-      const current = finishedWork.alternate;
-      commitLifeCycles(current, finishedWork);
-      if (finishedWork.effectTag & Err) {
-        commitErrorHandling(finishedWork);
-      }
     }
 
     if (capturedErrors) {
@@ -308,7 +325,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    return null;
+    nextUnitOfWork = null;
+
+    return noErrors;
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
@@ -492,58 +511,27 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function workLoop(priorityLevel) {
-    // If there are errors, use a forked version of performUnitOfWork
-    // TODO: Need to make commitAllWork throw on error before doing this
-    if (true || (capturedErrors && capturedErrors.size)) {
-      while (true) {
-        if (!nextUnitOfWork && !pendingCommit) {
-          nextUnitOfWork = findNextUnitOfWork();
-        }
-        if (pendingCommit && !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)) {
-          nextUnitOfWork = commitAllWork(pendingCommit);
-        } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
-          if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
-            nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-          } else {
-            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-          }
-        } else {
-          return;
-        }
-      }
-    }
-
-    // Otherwise, handle the normal, faster case where there are no errors:
-    while (true) {
-      if (!nextUnitOfWork && !pendingCommit) {
+    outer: while (true) {
+      if (!nextUnitOfWork) {
         nextUnitOfWork = findNextUnitOfWork();
       }
-      if (pendingCommit && !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)) {
-        nextUnitOfWork = commitAllWork(pendingCommit);
-      } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      } else {
-        return;
-      }
-    }
-  }
 
-  function deferredWorkLoop(deadline) {
-    if (!nextUnitOfWork) {
-      nextUnitOfWork = findNextUnitOfWork();
-    }
-
-    // If there are errors, use a forked version of performUnitOfWork
-    // TODO: Need to make commitAllWork throw on error before doing this
-    if (true || (capturedErrors && capturedErrors.size)) {
-      while (true) {
-        if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+      // If there are errors, use a forked version of performUnitOfWork
+      // TODO: Need to make commitAllWork throw on error before doing this
+      if (capturedErrors && capturedErrors.size) {
+        while (true) {
           if (!nextUnitOfWork && !pendingCommit) {
             nextUnitOfWork = findNextUnitOfWork();
           }
-          if (pendingCommit) {
-            nextUnitOfWork = commitAllWork(pendingCommit);
-          } else if (nextUnitOfWork) {
+          // If we're currently flushing Task work, but the pending commit does
+          // not have Task priority, don't commit it — we're at the end of a
+          // deferred work batch and the commit should happen in the next batch.
+          if (
+            pendingCommit &&
+            !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)
+          ) {
+            commitAllWork(pendingCommit);
+          } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
             if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
               nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
             } else {
@@ -552,27 +540,90 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           } else {
             return;
           }
+        }
+      }
+
+      // Otherwise, handle the normal, faster case where there are no errors:
+      while (true) {
+        if (!nextUnitOfWork && !pendingCommit) {
+          nextUnitOfWork = findNextUnitOfWork();
+        }
+        // If we're currently flushing Task work, but the pending commit does
+        // not have Task priority, don't commit it — we're at the end of a
+        // deferred work batch and the commit should happen in the next batch.
+        if (
+          pendingCommit &&
+          !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)
+        ) {
+          const noError = commitAllWork(pendingCommit);
+          if (!noError) {
+            // There was an error during the commit phase. Restart the outer
+            // loop so we can switch to the slower version of the work loop that
+            // checks for failed work.
+            continue outer;
+          }
+        } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         } else {
           return;
         }
       }
     }
+  }
 
-    // Otherwise, handle the normal, faster case where there are no errors:
-    while (true) {
-      if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        if (!nextUnitOfWork && !pendingCommit) {
-          nextUnitOfWork = findNextUnitOfWork();
+  function deferredWorkLoop(deadline) {
+    outer: while (true) {
+      if (!nextUnitOfWork) {
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+
+      // If there are errors, use a forked version of performUnitOfWork
+      // TODO: Need to make commitAllWork throw on error before doing this
+      if (capturedErrors && capturedErrors.size) {
+        while (true) {
+          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+            if (!nextUnitOfWork && !pendingCommit) {
+              nextUnitOfWork = findNextUnitOfWork();
+            }
+            if (pendingCommit) {
+              commitAllWork(pendingCommit);
+            } else if (nextUnitOfWork) {
+              if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
+                nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+              } else {
+                nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+              }
+            } else {
+              return;
+            }
+          } else {
+            return;
+          }
         }
-        if (pendingCommit) {
-          nextUnitOfWork = commitAllWork(pendingCommit);
-        } else if (nextUnitOfWork) {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+
+      // Otherwise, handle the normal, faster case where there are no errors:
+      while (true) {
+        if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+          if (!nextUnitOfWork && !pendingCommit) {
+            nextUnitOfWork = findNextUnitOfWork();
+          }
+          if (pendingCommit) {
+            const noError = commitAllWork(pendingCommit);
+            if (!noError) {
+              // There was an error during the commit phase. Restart the outer
+              // loop so we can switch to the slower version of the work loop that
+              // checks for failed work.
+              continue outer;
+            }
+          } else if (nextUnitOfWork) {
+            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+          } else {
+            return;
+          }
         } else {
           return;
         }
-      } else {
-        return;
       }
     }
   }
@@ -585,51 +636,53 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     // Perform work until either there's no more work at this priority level, or
     // (in the case of deferred work) we've run out of time.
-    while (priorityLevel !== NoWork) {
-      // Functions that contain a try-catch block are not optimizable by the
-      // JS engine. The hottest code paths have been extracted to separate
-      // functions, workLoop and deferredWorkLoop, which run on every unit of
-      // work. The loop we're in now runs infrequently: to flush task work at
-      // the end of a frame, or to restart after an error.
+    while (true) {
       try {
-        if (priorityLevel >= HighPriority) {
-          if (!deadline) {
-            throw new Error('Cannot perform deferred work without a deadline.');
+        // Functions that contain a try-catch block are not optimizable by the
+        // JS engine. The hottest code paths have been extracted to separate
+        // functions, workLoop and deferredWorkLoop, which run on every unit of
+        // work. The loop we're in now runs infrequently: to flush task work at
+        // the end of a frame, or to restart after an error.
+        while (priorityLevel !== NoWork) {
+          if (priorityLevel >= HighPriority) {
+            if (!deadline) {
+              throw new Error('Cannot perform deferred work without a deadline.');
+            }
+            // The deferred work loop will run until there's no time left in
+            // the current frame
+            deferredWorkLoop(deadline);
+          } else {
+            // The non-deferred work loop will run until there's no more work
+            // at the given priority level
+            workLoop(priorityLevel);
           }
-          // The deferred work loop will run until there's no time left in
-          // the current frame
-          deferredWorkLoop(deadline);
-        } else {
-          // The non-deferred work loop will run until there's no more work
-          // at the given priority level
-          workLoop(priorityLevel);
-        }
 
-        // Stop performing work
-        priorityLevel = NoWork;
+          // Stop performing work
+          priorityLevel = NoWork;
 
-        // There might still be work left. Depending on the priority, we should
-        // either perform it now or schedule a callback to perform it later.
-        switch (nextPriorityLevel) {
-          case SynchronousPriority:
-          case TaskPriority:
-            // Perform work immediately by switching the priority level
-            // and continuing the loop.
-            priorityLevel = nextPriorityLevel;
-            break;
-          case AnimationPriority:
-            scheduleAnimationCallback(performAnimationWork);
-            // Even though the next unit of work has animation priority, there
-            // may still be deferred work left over as well. I think this is
-            // only important for unit tests. In a real app, a deferred callback
-            // would be scheduled during the next animation frame.
-            scheduleDeferredCallback(performDeferredWork);
-            break;
-          case HighPriority:
-          case LowPriority:
-          case OffscreenPriority:
-            scheduleDeferredCallback(performDeferredWork);
-            break;
+          // There might still be work left. Depending on the priority, we should
+          // either perform it now or schedule a callback to perform it later.
+          switch (nextPriorityLevel) {
+            case SynchronousPriority:
+            case TaskPriority:
+              // Perform work immediately by switching the priority level
+              // and continuing the loop.
+              priorityLevel = nextPriorityLevel;
+              break;
+            case AnimationPriority:
+              scheduleAnimationCallback(performAnimationWork);
+              // Even though the next unit of work has animation priority, there
+              // may still be deferred work left over as well. I think this is
+              // only important for unit tests. In a real app, a deferred callback
+              // would be scheduled during the next animation frame.
+              scheduleDeferredCallback(performDeferredWork);
+              break;
+            case HighPriority:
+            case LowPriority:
+            case OffscreenPriority:
+              scheduleDeferredCallback(performDeferredWork);
+              break;
+          }
         }
       } catch (error) {
         // We caught an error during either the begin or complete phases.
@@ -637,7 +690,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
         // "Capture" the error by finding the nearest boundary. If there is no
         // error boundary, the nearest host container acts as one.
-        const maybeBoundary = captureError(failedWork, error, false);
+        const maybeBoundary = captureError(failedWork, error);
         if (maybeBoundary) {
           const boundary = maybeBoundary;
 
@@ -663,8 +716,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
         }
-        // The loop will continue performing work
+        // Continue performing work
+        continue;
       }
+      break;
     }
 
     // We're done performing work. Time to clean up.
@@ -681,7 +736,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function captureError(failedWork : Fiber | null, error : Error, isUnmounting : boolean) : Fiber | null {
+  function captureError(failedWork : Fiber | null, error : Error) : Fiber | null {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     // It is no longer valid because this unit of work failed.
@@ -762,7 +817,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // an update to itself
           instance.unstable_handleError(error);
         } catch (e) {
-          captureError(effectfulFiber, e, false);
+          captureError(effectfulFiber, e);
         }
         return;
       case HostRoot:
