@@ -605,12 +605,22 @@ describe('ReactDOMFiber', () => {
         <svg {...expectSVG}>
           <ErrorBoundary>
             {portal(
-              <math {...expectMath}>
-                <BrokenRender />)
-              </math>
+              <div {...expectHTML}>
+                <math {...expectMath}>
+                  <BrokenRender />)
+                </math>
+              </div>
             )}
           </ErrorBoundary>
-          <image {...expectSVG} />
+          {
+            /*
+            * TODO: enable. Currently this leads to stack overflow
+            * but it might be a bug in error boundaries rather than SVG or portals.
+            portal(
+              <div {...expectHTML} />
+            )
+            */
+          }
         </svg>
       );
     });

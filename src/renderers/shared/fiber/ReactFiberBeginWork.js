@@ -430,6 +430,9 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
+    if (workInProgress.tag === HostPortal) {
+      pushHostContainer(workInProgress.stateNode.containerInfo);
+    }
     // TODO: What if this is currently in progress?
     // How can that happen? How is this not being cloned?
     return null;

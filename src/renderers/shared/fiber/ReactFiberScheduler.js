@@ -48,6 +48,8 @@ var {
 
 var {
   HostRoot,
+  HostComponent,
+  HostPortal,
   ClassComponent,
 } = require('ReactTypeOfWork');
 
@@ -63,7 +65,7 @@ var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
   const hostContext = ReactFiberHostContext(config);
-  const { popHostContainer } = hostContext;
+  const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
   const { beginWork, beginFailedWork } =
     ReactFiberBeginWork(config, hostContext, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
@@ -236,9 +238,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
     resetAfterCommit();
 
-    // We don't pop the host root in the complete phase because we still needed
-    // it for the commitUpdate() calls, but not anymore.
-    popHostContainer();
+    // We didn't pop the host root in the complete phase because we still needed
+    // it for the commitUpdate() calls, but now we can reset host context.
+    resetHostContainer();
 
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have
@@ -594,6 +596,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
           // props, the nodes higher up in the tree will rerender unnecessarily.
           if (failedWork) {
             unwindContext(failedWork, boundary);
+            unwindHostContext(failedWork, boundary);
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
 
@@ -707,6 +710,24 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         return;
       default:
         throw new Error('Invalid type of work.');
+    }
+  }
+
+  function unwindHostContext(from : Fiber, to: Fiber) {
+    let node = from;
+    while (node && (node !== to) && (node.alternate !== to)) {
+      switch (node.tag) {
+        case HostComponent:
+          popHostContext(node);
+          break;
+        case HostRoot:
+          popHostContainer();
+          break;
+        case HostPortal:
+          popHostContainer();
+          break;
+      }
+      node = node.return;
     }
   }
 
