@@ -66,9 +66,9 @@ module.exports = function<T, P, I, TI, C, CX>(
 ) {
 
   const {
-    setRootHostContainer,
-    maybePushHostContext,
-    saveHostContextToPortal,
+    pushHostContext,
+    pushHostContainer,
+    resetHostContainer,
   } = hostContext;
 
   const {
@@ -275,7 +275,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       // Abort and don't process children yet.
       return null;
     } else {
-      maybePushHostContext(workInProgress);
+      pushHostContext(workInProgress);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -410,7 +410,7 @@ module.exports = function<T, P, I, TI, C, CX>(
 
     // Put context on the stack because we will work on children
     if (isHostComponent) {
-      maybePushHostContext(workInProgress);
+      pushHostContext(workInProgress);
     } else {
       switch (workInProgress.tag) {
         case ClassComponent:
@@ -419,10 +419,8 @@ module.exports = function<T, P, I, TI, C, CX>(
           }
           break;
         case HostContainer:
-          setRootHostContainer(workInProgress.stateNode.containerInfo);
-          break;
         case Portal:
-          saveHostContextToPortal(workInProgress);
+          pushHostContainer(workInProgress.stateNode.containerInfo);
           break;
       }
     }
@@ -441,6 +439,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (!workInProgress.return) {
       // Don't start new work with context on the stack.
       resetContext();
+      resetHostContainer();
     }
 
     if (workInProgress.pendingWorkPriority === NoWork ||
@@ -485,7 +484,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
-        setRootHostContainer(workInProgress.stateNode.containerInfo);
+        pushHostContainer(workInProgress.stateNode.containerInfo);
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
@@ -511,7 +510,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         // next one immediately.
         return null;
       case HostPortal:
-        saveHostContextToPortal(workInProgress);
+        pushHostContainer(workInProgress.stateNode.containerInfo);
         updatePortalComponent(current, workInProgress);
         return workInProgress.child;
       case Fragment:

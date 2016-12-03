@@ -17,15 +17,14 @@ import type { HostConfig } from 'ReactFiberReconciler';
 
 export type HostContext<C, CX> = {
   getRootHostContainer() : C,
-  setRootHostContainer(container : C) : void,
-
   getHostContext() : CX | null,
-  maybePushHostContext(fiber : Fiber) : void,
-  maybePopHostContext(fiber : Fiber) : void,
 
-  resetHostContext() : void,
-  saveHostContextToPortal(portal : Fiber): void,
-  restoreHostContextFromPortal(portal : Fiber): void,
+  pushHostContext(fiber : Fiber) : void,
+  popHostContext(fiber : Fiber) : void,
+
+  pushHostContainer(container : C) : void,
+  popHostContainer() : void,
+  resetHostContainer() : void,
 };
 
 module.exports = function<T, P, I, TI, C, CX>(
@@ -35,105 +34,118 @@ module.exports = function<T, P, I, TI, C, CX>(
     getChildHostContext,
   } = config;
 
-  let rootHostContainer : C | null = null;
-  let hostContextFiberStack : Array<Fiber | null> | null = null;
-  let hostContextValueStack : Array<CX | null> | null = null;
-  let hostContextIndex = -1;
+  type ContainerState = {
+    rootInstance : C,
+    contextFibers : Array<Fiber | null> | null,
+    contextValues : Array<CX | null> | null,
+    contextIndex: number
+  };
 
-  function getRootHostContainer() : C {
-    if (rootHostContainer === null) {
-      throw new Error('Expected to find a root container instance.');
-    }
-    return rootHostContainer;
+  function createContainerState(rootInstance) {
+    return {
+      rootInstance,
+      contextFibers: null,
+      contextValues: null,
+      contextDepth: -1,
+    };
   }
 
-  function setRootHostContainer(instance : C) : void {
-    rootHostContainer = instance;
+  // State of the current tree.
+  let containerState : ContainerState = createContainerState(null);
+
+  // If we meet any portals, we'll go deeper.
+  let containerStack : Array<ContainerState> = [containerState];
+  let containerDepth : number = 0;
+
+  function getRootHostContainer() : C {
+    const {rootInstance} = containerState;
+    if (rootInstance == null) {
+      throw new Error('Expected to find a root container instance.');
+    }
+    return rootInstance;
+  }
+
+  function pushHostContainer(portalHostContainer) {
+    containerDepth++;
+    if (containerDepth === containerStack.length) {
+      containerState = createContainerState(portalHostContainer);
+      containerStack[containerDepth] = containerState;
+    } else {
+      containerState = containerStack[containerDepth];
+    }
+  }
+
+  function popHostContainer() {
+    containerDepth--;
+    containerState = containerStack[containerDepth];
   }
 
   function getHostContext() : CX | null {
-    if (hostContextIndex === -1) {
+    const {contextDepth, contextValues} = containerState;
+    if (contextDepth === -1) {
       return null;
     }
-    if (hostContextValueStack == null) {
+    if (contextValues == null) {
       throw new Error('Expected host context stacks to exist when index is more than -1.');
     }
-    return hostContextValueStack[hostContextIndex];
+    return contextValues[contextDepth];
   }
 
-  function maybePushHostContext(fiber : Fiber) : void {
+  function pushHostContext(fiber : Fiber) : void {
     const parentHostContext = getHostContext();
     const currentHostContext = getChildHostContext(parentHostContext, fiber.type);
     if (parentHostContext === currentHostContext) {
       return;
     }
-    hostContextIndex++;
-    hostContextFiberStack = hostContextFiberStack || [];
-    hostContextFiberStack[hostContextIndex] = fiber;
-    hostContextValueStack = hostContextValueStack || [];
-    hostContextValueStack[hostContextIndex] = currentHostContext;
+    let {contextDepth, contextFibers, contextValues} = containerState;
+    if (contextFibers == null) {
+      contextFibers = [];
+      containerState.contextFibers = contextFibers;
+    }
+    if (contextValues == null) {
+      contextValues = [];
+      containerState.contextValues = contextValues;
+    }
+    contextDepth++;
+    containerState.contextDepth = contextDepth;
+    contextFibers[contextDepth] = fiber;
+    contextValues[contextDepth] = currentHostContext;
   }
 
-  function maybePopHostContext(fiber : Fiber) : void {
-    if (hostContextIndex === -1) {
+  function popHostContext(fiber : Fiber) : void {
+    let {contextDepth} = containerState;
+    if (contextDepth === -1) {
       return;
     }
-    if (hostContextFiberStack == null || hostContextValueStack == null) {
+    const {contextFibers, contextValues} = containerState;
+    if (contextFibers == null || contextValues == null) {
       throw new Error('Expected host context stacks to exist when index is more than -1.');
     }
-    if (fiber !== hostContextFiberStack[hostContextIndex]) {
+    if (fiber !== contextFibers[contextDepth]) {
       return;
     }
-    hostContextFiberStack[hostContextIndex] = null;
-    hostContextValueStack[hostContextIndex] = null;
-    hostContextIndex--;
+    contextFibers[contextDepth] = null;
+    contextValues[contextDepth] = null;
+    contextDepth--;
+    containerState.contextDepth = contextDepth;
   }
 
-  function resetHostContext() {
-    rootHostContainer = null;
-    hostContextIndex = -1;
-  }
-
-  function saveHostContextToPortal(portal : Fiber) {
-    // TODO: add tests for error boundaries inside portals when both are stable.
-    const stateNode = portal.stateNode;
-    if (!stateNode.savedHostContext) {
-      // We assume host context never changes between passes so store it once lazily.
-      stateNode.savedHostContext = {
-        rootHostContainer,
-        hostContextFiberStack,
-        hostContextValueStack,
-        hostContextIndex,
-      };
-    }
-    rootHostContainer = stateNode.containerInfo;
-    hostContextFiberStack = null;
-    hostContextValueStack = null;
-    hostContextIndex = -1;
-  }
-
-  function restoreHostContextFromPortal(portal : Fiber) {
-    const stateNode = portal.stateNode;
-    const savedHostContext = stateNode.savedHostContext;
-    if (savedHostContext == null) {
-      throw new Error('A portal has no host context saved on it.');
-    }
-    rootHostContainer = savedHostContext.rootHostContainer;
-    hostContextFiberStack = savedHostContext.hostContextFiberStack;
-    hostContextValueStack = savedHostContext.hostContextValueStack;
-    hostContextIndex = savedHostContext.hostContextIndex;
+  function resetHostContainer() {
+    containerDepth = 0;
+    containerState = containerStack[0];
+    containerState.rootInstance = null;
+    containerState.contextDepth = -1;
   }
 
   return {
     getRootHostContainer,
-    setRootHostContainer,
-
-    maybePushHostContext,
-    maybePopHostContext,
     getHostContext,
 
-    resetHostContext,
-    saveHostContextToPortal,
-    restoreHostContextFromPortal,
+    pushHostContext,
+    popHostContext,
+
+    pushHostContainer,
+    popHostContainer,
+    resetHostContainer,
   };
 };

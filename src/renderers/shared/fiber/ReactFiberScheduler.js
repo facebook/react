@@ -63,7 +63,7 @@ var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
   const hostContext = ReactFiberHostContext(config);
-  const { resetHostContext } = hostContext;
+  const { popHostContainer } = hostContext;
   const { beginWork, beginFailedWork } =
     ReactFiberBeginWork(config, hostContext, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
@@ -235,7 +235,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
 
     resetAfterCommit();
-    resetHostContext();
+
+    // We don't pop the host root in the complete phase because we still needed
+    // it for the commitUpdate() calls, but not anymore.
+    popHostContainer();
 
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have

@@ -58,9 +58,9 @@ module.exports = function<T, P, I, TI, C, CX>(
 
   const {
     getRootHostContainer,
-    maybePopHostContext,
+    popHostContext,
     getHostContext,
-    restoreHostContextFromPortal,
+    popHostContainer,
   } = hostContext;
 
   function markUpdate(workInProgress : Fiber) {
@@ -214,7 +214,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         return null;
       }
       case HostComponent:
-        maybePopHostContext(workInProgress);
+        popHostContext(workInProgress);
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -314,7 +314,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
-        restoreHostContextFromPortal(workInProgress);
+        popHostContainer();
         return null;
 
       // Error cases
