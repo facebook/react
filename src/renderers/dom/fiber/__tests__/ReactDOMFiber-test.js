@@ -471,8 +471,6 @@ describe('ReactDOMFiber', () => {
         }
       }
 
-      var container = document.createElement('div');
-
       var myNodeA = ReactDOM.render(<MyNode />, container);
       var a = ReactDOM.findDOMNode(myNodeA);
       expect(a.tagName).toBe('DIV');
