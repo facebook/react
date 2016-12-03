@@ -418,8 +418,8 @@ module.exports = function<T, P, I, TI, C, CX>(
             pushContextProvider(workInProgress, false);
           }
           break;
-        case HostContainer:
-        case Portal:
+        case HostRoot:
+        case HostPortal:
           pushHostContainer(workInProgress.stateNode.containerInfo);
           break;
       }
