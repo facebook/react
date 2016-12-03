@@ -54,6 +54,7 @@ var {
 var {
   Placement,
   ContentReset,
+  Err,
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
@@ -501,6 +502,9 @@ module.exports = function<T, P, I, TI, C>(
         workInProgress.tag !== HostRoot) {
       throw new Error('Invalid type of work');
     }
+
+    // Add an error effect so we can handle the error during the commit phase
+    workInProgress.effectTag |= Err;
 
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {

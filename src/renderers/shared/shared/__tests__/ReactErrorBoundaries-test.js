@@ -808,8 +808,8 @@ describe('ReactErrorBoundaries', () => {
       ...(ReactDOMFeatureFlags.useFiber ? [
         // In Fiber, noop error boundaries render null
         'RethrowErrorBoundary componentDidMount',
-        'ErrorBoundary componentDidMount',
         'RethrowErrorBoundary unstable_handleError [!]',
+        'ErrorBoundary componentDidMount',
         // The error got rethrown here.
         // This time, the error propagates to the higher boundary
         'RethrowErrorBoundary componentWillUnmount',
@@ -904,9 +904,9 @@ describe('ReactErrorBoundaries', () => {
       ...(ReactDOMFeatureFlags.useFiber ? [
         // Finish mounting with null children
         'BrokenRenderErrorBoundary componentDidMount',
-        'ErrorBoundary componentDidMount',
         // Attempt to handle the error
         'BrokenRenderErrorBoundary unstable_handleError',
+        'ErrorBoundary componentDidMount',
         'BrokenRenderErrorBoundary render error [!]',
         // Boundary fails with new error, propagate to next boundary
         'BrokenRenderErrorBoundary componentWillUnmount',
@@ -2044,15 +2044,15 @@ describe('ReactErrorBoundaries', () => {
         'OuterErrorBoundary componentDidUpdate',
         // After the commit phase, attempt to recover from any errors that
         // were captured
+        'BrokenComponentDidUpdate componentWillUnmount',
+        'BrokenComponentDidUpdate componentWillUnmount',
         'InnerUnmountBoundary unstable_handleError',
+        'InnerUpdateBoundary unstable_handleError',
         'InnerUnmountBoundary componentWillUpdate',
         'InnerUnmountBoundary render error',
-        'BrokenComponentDidUpdate componentWillUnmount',
-        'BrokenComponentDidUpdate componentWillUnmount',
-        'InnerUnmountBoundary componentDidUpdate',
-        'InnerUpdateBoundary unstable_handleError',
         'InnerUpdateBoundary componentWillUpdate',
         'InnerUpdateBoundary render error',
+        'InnerUnmountBoundary componentDidUpdate',
         'InnerUpdateBoundary componentDidUpdate',
       ]);
 

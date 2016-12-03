@@ -483,7 +483,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ReactNoop.render(<Foo />);
 
-    ReactNoop.flushDeferredPri(20 + 5 + 5);
+    ReactNoop.flushDeferredPri(5 + 20 + 20);
     expect(ops).toEqual([
       'render: 0',
       'componentDidMount (before setState): 0',
@@ -496,7 +496,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ops = [];
     instance.setState({ tick: 2 });
-    ReactNoop.flushDeferredPri(20 + 5 + 5);
+    ReactNoop.flushDeferredPri(5 + 20 + 20);
 
     expect(ops).toEqual([
       'render: 2',

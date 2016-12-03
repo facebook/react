@@ -204,17 +204,15 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
-  function commitNestedUnmounts(root : Fiber): boolean {
+  function commitNestedUnmounts(root : Fiber): void {
     // While we're inside a removed host node we don't want to call
     // removeChild on the inner nodes because they're removed by the top
     // call anyway. We also want to call componentWillUnmount on all
     // composites before this host node is removed from the tree. Therefore
     // we do an inner loop while we're still inside the host node.
-    let noErrors = true;
     let node : Fiber = root;
     while (true) {
-      const noError = commitUnmount(node);
-      noErrors = noErrors && noError;
+      commitUnmount(node);
       if (node.child) {
         // TODO: Coroutines need to visit the stateNode.
         node.child.return = node;
@@ -222,32 +220,26 @@ module.exports = function<T, P, I, TI, C>(
         continue;
       }
       if (node === root) {
-        return noErrors;
+        return;
       }
       while (!node.sibling) {
         if (!node.return || node.return === root) {
-          return noErrors;
+          return;
         }
         node = node.return;
       }
       node.sibling.return = node.return;
       node = node.sibling;
     }
-    // This is unreachable but without it Flow complains about implicitly-
-    // returned undefined.
-    return noErrors; // eslint-disable-line no-unreachable
   }
 
-  // Returns true if it completed without any errors
-  function unmountHostComponents(parent, current): boolean {
+  function unmountHostComponents(parent, current): void {
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
-    let noErrors = true;
     let node : Fiber = current;
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
-        const noError = commitNestedUnmounts(node);
-        noErrors = noErrors && noError;
+        commitNestedUnmounts(node);
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
         removeChild(parent, node.stateNode);
@@ -260,8 +252,7 @@ module.exports = function<T, P, I, TI, C>(
           continue;
         }
       } else {
-        const noError = commitUnmount(node);
-        noErrors = noErrors && noError;
+        commitUnmount(node);
         if (node.child) {
           // TODO: Coroutines need to visit the stateNode.
           node.child.return = node;
@@ -270,11 +261,11 @@ module.exports = function<T, P, I, TI, C>(
         }
       }
       if (node === current) {
-        return noErrors;
+        return;
       }
       while (!node.sibling) {
         if (!node.return || node.return === current) {
-          return noErrors;
+          return;
         }
         node = node.return;
         if (node.tag === HostPortal) {
@@ -286,16 +277,13 @@ module.exports = function<T, P, I, TI, C>(
       node.sibling.return = node.return;
       node = node.sibling;
     }
-    // This is unreachable but without it Flow complains about implicitly-
-    // returned undefined.
-    return noErrors; // eslint-disable-line no-unreachable
   }
 
-  function commitDeletion(current : Fiber) : boolean {
+  function commitDeletion(current : Fiber) : void {
     // Recursively delete all host nodes from the parent.
     const parent = getHostParent(current);
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    const noErrors = unmountHostComponents(parent, current);
+    unmountHostComponents(parent, current);
 
     // Cut off the return pointers to disconnect it from the tree. Ideally, we
     // should clear the child pointer of the parent alternate to let this
@@ -308,12 +296,9 @@ module.exports = function<T, P, I, TI, C>(
       current.alternate.child = null;
       current.alternate.return = null;
     }
-    return noErrors;
   }
 
-  // Returns true if it completed without any errors
-  function commitUnmount(current : Fiber) : boolean {
-    let noErrors = true;
+  function commitUnmount(current : Fiber) : void {
     switch (current.tag) {
       case ClassComponent: {
         detachRef(current);
@@ -322,27 +307,24 @@ module.exports = function<T, P, I, TI, C>(
           const error = tryCallComponentWillUnmount(instance);
           if (error) {
             captureError(current, error);
-            noErrors = false;
           }
         }
-        break;
+        return;
       }
       case HostComponent: {
         detachRef(current);
-        break;
+        return;
       }
       case CoroutineComponent: {
-        const noError = commitNestedUnmounts(current.stateNode);
-        noErrors = noErrors && noError;
-        break;
+        commitNestedUnmounts(current.stateNode);
+        return;
       }
       case HostPortal: {
         // TODO: this is recursive.
         commitDeletion(current);
-        break;
+        return;
       }
     }
-    return noErrors;
   }
 
   function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
