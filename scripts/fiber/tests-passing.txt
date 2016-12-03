@@ -561,7 +561,6 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should support stopPropagation()
 * should stop after first dispatch if stopPropagation
 * should not stopPropagation if false is returned
-* should invoke handlers that were removed while bubbling
 * should not invoke newly inserted handlers while bubbling
 * should have mouse enter simulated by test utils
 * should infer onTouchTap from a touchStart/End
