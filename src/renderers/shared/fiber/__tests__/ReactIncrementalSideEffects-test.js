@@ -491,7 +491,7 @@ describe('ReactIncrementalSideEffects', () => {
     // To confirm, perform one more unit of work. The tree should now be flushed.
     // (ReactNoop decrements the time remaining by 5 *before* returning it from
     // the deadline, so to perform n units of work, you need to give it 5n + 5.
-    // TODO: This is confusing. Decerement it after.)
+    // TODO: This is confusing. Decrement it after.)
     ReactNoop.flushDeferredPri(10);
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
 

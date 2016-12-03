@@ -82,6 +82,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Keeps track of whether we're currently in a work loop. Used to batch
   // nested updates.
   let isPerformingWork : boolean = false;
+  // This lets us know if we should defer a commit until the next frame.
+  let isPerformingDeferredWork : boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -100,6 +102,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let capturedErrors : Map<Fiber, Error> | null = null;
   let firstUncaughtError : Error | null = null;
 
+  let isCommitting : boolean = false;
+  // Error boundaries that captured an error during the current commit.
+  let commitPhaseBoundaries : Set<Fiber> | null = null;
+
   let isUnmounting : boolean = false;
 
   function scheduleAnimationCallback(callback) {
@@ -117,10 +123,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function findNextUnitOfWork() {
-    if (pendingCommit) {
-      return pendingCommit;
-    }
-
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
       // Unschedule this root.
@@ -139,6 +141,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // Continue with the next root.
       // If there's no work on it, it will get unscheduled too.
       nextScheduledRoot = next;
+    }
+    if (pendingCommit) {
+      nextPriorityLevel = pendingCommit.pendingWorkPriority;
+      return null;
     }
     let root = nextScheduledRoot;
     let highestPriorityRoot = null;
@@ -167,11 +173,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   // Returns true if the commit phase finishes without any errors.
   function commitAllWork(finishedWork : Fiber): boolean {
-    let noErrors = true;
+    // We keep track of this so that captureError can collect any boundaries
+    // that capture an error during the commit phase. The reason these aren't
+    // local to this function is because errors that occur during cWU are
+    // captured elsewhere, to prevent the unmount from being interrupted.
+    isCommitting = true;
 
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
-    resetWorkPriority(finishedWork);
     if (root.current === finishedWork) {
       throw new Error(
         'Cannot commit the same tree as before. This is probably a bug ' +
@@ -179,6 +188,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       );
     }
     root.current = finishedWork;
+
+    // Updates that occur during the commit phase should have Task priority
+    const previousPriorityContext = priorityContext;
+    priorityContext = TaskPriority;
 
     prepareForCommit();
 
@@ -229,8 +242,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             }
             case Deletion: {
               isUnmounting = true;
-              const noError = commitDeletion(effectfulFiber);
-              noErrors = noErrors && noError;
+              commitDeletion(effectfulFiber);
               isUnmounting = false;
               break;
             }
@@ -246,7 +258,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           commitWork(current, finishedWork);
         }
       } catch (error) {
-        noErrors = false;
         captureError(effectfulFiber || null, error);
         if (effectfulFiber) {
           effectfulFiber = effectfulFiber.nextEffect;
@@ -264,8 +275,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // happens as a separate pass so that all effects in the entire tree have
     // already been invoked.
     effectfulFiber = finishedWork.firstEffect;
-    const previousPriorityContext = priorityContext;
-    priorityContext = TaskPriority;
     pass2: while (true) {
       let didHandleRoot = false;
       try {
@@ -302,7 +311,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           }
         }
       } catch (error) {
-        noErrors = false;
         captureError(effectfulFiber || null, error);
         if (effectfulFiber) {
           const next = effectfulFiber.nextEffect;
@@ -315,28 +323,26 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       break;
     }
 
-    if (capturedErrors) {
-      if (capturedErrors.size) {
-        capturedErrors.forEach((error, boundary) => {
-          scheduleUpdate(boundary);
-        });
-      } else {
-        capturedErrors = null;
-      }
+    isCommitting = false;
+
+    // If we caught any errors during this commit, schedule their boundaries
+    // to update.
+    let noErrors;
+    if (commitPhaseBoundaries) {
+      noErrors = false;
+      commitPhaseBoundaries.forEach(scheduleUpdate);
+      commitPhaseBoundaries = null;
+    } else {
+      noErrors = true;
     }
 
+    priorityContext = previousPriorityContext;
     nextUnitOfWork = null;
 
     return noErrors;
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
-    if (workInProgress.pendingProps) {
-      // Don't reset the priority if the workInProgress has pending props. This
-      // could happen if a completed root is updated before it is able to commit.
-      return;
-    }
-
     let newPriority = NoWork;
     // progressedChild is going to be the child set with the highest priority.
     // Either it is the same as child, or it just bailed out because it choose
@@ -370,22 +376,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
-      const isRoot = !returnFiber && !siblingFiber;
 
-      if (!isRoot) {
-        resetWorkPriority(workInProgress);
-      }
+      resetWorkPriority(workInProgress);
 
       if (next) {
         // If completing this work spawned new work, do that next. We'll come
         // back here again.
         return next;
-      }
-
-      if (isRoot) {
-        // If we've reached the root, commit during the next unit of work.
-        pendingCommit = workInProgress;
-        return workInProgress;
       }
 
       if (returnFiber) {
@@ -426,7 +423,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         workInProgress = returnFiber;
         continue;
       } else {
-        throw new Error('Should have already handled root.');
+        // If we've reached the root, commit during the next unit of work.
+        pendingCommit = workInProgress;
+        return null;
       }
     }
   }
@@ -476,7 +475,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
     // See if beginning this work spawns more work.
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
-    workInProgress.effectTag |= Err;
 
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
@@ -517,22 +515,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
 
       // If there are errors, use a forked version of performUnitOfWork
-      // TODO: Need to make commitAllWork throw on error before doing this
       if (capturedErrors && capturedErrors.size) {
         while (true) {
           if (!nextUnitOfWork && !pendingCommit) {
             nextUnitOfWork = findNextUnitOfWork();
           }
-          // If we're currently flushing Task work, but the pending commit does
-          // not have Task priority, don't commit it — we're at the end of a
-          // deferred work batch and the commit should happen in the next batch.
+
+          // If we're performing Task work and we're inside a deferred work batch,
+          // then we shouldn't commit any work yet. Defer it to the next frame.
+          // TODO: Is there a better way check if the pending commit should be
+          // deferred? It's not as simple as retaining work priority because
+          // the root may receive a lower priority update before the completed
+          // work is flushed, causing the new update to be up-prioritized.
           if (
             pendingCommit &&
-            !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)
+            !(priorityLevel === TaskPriority && isPerformingDeferredWork)
           ) {
             commitAllWork(pendingCommit);
           } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
-            if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
+            if (isFailedWork(nextUnitOfWork)) {
               nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
             } else {
               nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
@@ -548,12 +549,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (!nextUnitOfWork && !pendingCommit) {
           nextUnitOfWork = findNextUnitOfWork();
         }
-        // If we're currently flushing Task work, but the pending commit does
-        // not have Task priority, don't commit it — we're at the end of a
-        // deferred work batch and the commit should happen in the next batch.
+
+        // If we're performing Task work and we're inside a deferred work batch,
+        // then we shouldn't commit any work yet. Defer it to the next frame.
+        // TODO: Is there a better way check if the pending commit should be
+        // deferred? It's not as simple as retaining work priority because
+        // the root may receive a lower priority update before the completed
+        // work is flushed, causing the new update to be up-prioritized.
         if (
           pendingCommit &&
-          !(priorityLevel === TaskPriority && pendingCommit.pendingWorkPriority !== TaskPriority)
+          !(priorityLevel === TaskPriority && isPerformingDeferredWork)
         ) {
           const noError = commitAllWork(pendingCommit);
           if (!noError) {
@@ -578,7 +583,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
 
       // If there are errors, use a forked version of performUnitOfWork
-      // TODO: Need to make commitAllWork throw on error before doing this
       if (capturedErrors && capturedErrors.size) {
         while (true) {
           if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
@@ -588,7 +592,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             if (pendingCommit) {
               commitAllWork(pendingCommit);
             } else if (nextUnitOfWork) {
-              if (capturedErrors && capturedErrors.has(nextUnitOfWork)) {
+              if (isFailedWork(nextUnitOfWork)) {
                 nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
               } else {
                 nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
@@ -633,6 +637,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       throw new Error('performWork was called recursively.');
     }
     isPerformingWork = true;
+    isPerformingDeferredWork = priorityLevel >= HighPriority;
 
     // Perform work until either there's no more work at this priority level, or
     // (in the case of deferred work) we've run out of time.
@@ -694,13 +699,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         if (maybeBoundary) {
           const boundary = maybeBoundary;
 
-          // Schedule an Task update on the boundary
-          const previousPriorityContext = priorityContext;
-          priorityContext = TaskPriority;
-          scheduleUpdate(boundary);
-          priorityContext = previousPriorityContext;
-
-          // Complete the boundary as if rendered null.
+          // Complete the boundary as if it rendered null.
           beginFailedWork(boundary.alternate, boundary, priorityLevel);
 
           // The next unit of work is now the boundary that captured the error.
@@ -724,6 +723,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
+    isPerformingDeferredWork = false;
     if (capturedErrors && !capturedErrors.size) {
       capturedErrors = null;
     }
@@ -736,6 +736,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
+  // Returns the boundary that captured the error, or null if the error is ignored
   function captureError(failedWork : Fiber | null, error : Error) : Fiber | null {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
@@ -784,11 +785,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       if (!capturedErrors) {
         capturedErrors = new Map();
       }
+
       // Ensure that neither this boundary nor its alternate has captured an
       // error already.
-      if (!capturedErrors.has(boundary) &&
-          !(boundary.alternate && capturedErrors.has(boundary.alternate))) {
+      if (!isFailedWork(boundary)) {
         capturedErrors.set(boundary, error);
+        // If we're in the commit phase, defer scheduling an update on the
+        // boundary until after the commit is complete
+        if (isCommitting) {
+          if (!commitPhaseBoundaries) {
+            commitPhaseBoundaries = new Set();
+          }
+          commitPhaseBoundaries.add(boundary);
+        } else {
+          // Otherwise, schedule an update now. Error recovery has Task priority.
+          const previousPriorityContext = priorityContext;
+          priorityContext = TaskPriority;
+          scheduleUpdate(boundary);
+          priorityContext = previousPriorityContext;
+        }
       }
       return boundary;
     } else if (!firstUncaughtError) {
@@ -798,27 +813,37 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
+  function isFailedWork(fiber : Fiber) : boolean {
+    return Boolean(
+      capturedErrors &&
+      (capturedErrors.has(fiber) || (fiber.alternate && capturedErrors.has(fiber.alternate)))
+    );
+  }
+
   function commitErrorHandling(effectfulFiber : Fiber) {
     let error;
     if (capturedErrors) {
-      // Get the error associated with the fiber being commited.
       error = capturedErrors.get(effectfulFiber);
       capturedErrors.delete(effectfulFiber);
+      if (!error) {
+        if (effectfulFiber.alternate) {
+          effectfulFiber = effectfulFiber.alternate;
+          error = capturedErrors.get(effectfulFiber);
+          capturedErrors.delete(effectfulFiber);
+        }
+      }
     }
+
     if (!error) {
-      throw new Error('No matching captured error.');
+      throw new Error('No error for given unit of work.');
     }
 
     switch (effectfulFiber.tag) {
       case ClassComponent:
         const instance = effectfulFiber.stateNode;
-        try {
-          // Allow the boundary to handle the error, usually by scheduling
-          // an update to itself
-          instance.unstable_handleError(error);
-        } catch (e) {
-          captureError(effectfulFiber, e);
-        }
+        // Allow the boundary to handle the error, usually by scheduling
+        // an update to itself
+        instance.unstable_handleError(error);
         return;
       case HostRoot:
         if (!firstUncaughtError) {
@@ -849,6 +874,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     if (root.current.pendingWorkPriority === NoWork ||
         priorityLevel <= root.current.pendingWorkPriority) {
       root.current.pendingWorkPriority = priorityLevel;
+    }
+    if (root.current.alternate) {
+      if (root.current.alternate.pendingWorkPriority === NoWork ||
+          priorityLevel <= root.current.alternate.pendingWorkPriority) {
+        root.current.alternate.pendingWorkPriority = priorityLevel;
+      }
     }
 
     if (!root.isScheduled) {
