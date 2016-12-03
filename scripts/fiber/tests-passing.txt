@@ -507,6 +507,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should pass portal context when rendering subtree elsewhere
 * should update portal context if it changes due to setState
 * should update portal context if it changes due to re-render
+* findDOMNode should find dom element after expanding a fragment
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
@@ -713,6 +714,7 @@ src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 src/renderers/dom/shared/__tests__/findDOMNode-test.js
 * findDOMNode should return null if passed null
 * findDOMNode should find dom element
+* findDOMNode should find dom element after an update from null
 * findDOMNode should reject random objects
 * findDOMNode should reject unmounted objects with render func
 * findDOMNode should not throw an error when called within a component that is not mounted
@@ -1589,6 +1591,7 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
+* traverses children in the correct order
 * should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component

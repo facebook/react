@@ -34,6 +34,32 @@ describe('findDOMNode', () => {
     expect(mySameDiv).toBe(myDiv);
   });
 
+  it('findDOMNode should find dom element after an update from null', () => {
+    function Bar({ flag }) {
+      if (flag) {
+        return <span>A</span>;
+      }
+      return null;
+    }
+    class MyNode extends React.Component {
+      render() {
+        return <Bar flag={this.props.flag} />;
+      }
+    }
+
+    var container = document.createElement('div');
+
+    var myNodeA = ReactDOM.render(<MyNode />, container);
+    var a = ReactDOM.findDOMNode(myNodeA);
+    expect(a).toBe(null);
+
+    var myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
+    expect(myNodeA === myNodeB).toBe(true);
+
+    var b = ReactDOM.findDOMNode(myNodeB);
+    expect(b.tagName).toBe('SPAN');
+  });
+
   it('findDOMNode should reject random objects', () => {
     expect(function() {
       ReactDOM.findDOMNode({foo: 'bar'});

@@ -119,6 +119,3 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
-
-src/test/__tests__/ReactTestUtils-test.js
-* traverses children in the correct order

@@ -183,6 +183,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               commitPlacement(effectfulFiber);
               // Clear the "placement" from effect tag so that we know that this is inserted, before
               // any life-cycles like componentDidMount gets called.
+              // TODO: findDOMNode doesn't rely on this any more but isMounted
+              // does and isMounted is deprecated anyway so we should be able
+              // to kill this.
               effectfulFiber.effectTag &= ~Placement;
               break;
             }

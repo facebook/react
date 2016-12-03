@@ -20,9 +20,9 @@ var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
@@ -37,10 +37,6 @@ var {
   HostComponent,
   HostText,
 } = ReactTypeOfWork;
-var {
-  NoEffect,
-  Placement,
-} = ReactTypeOfSideEffect;
 
 function Event(suffix) {}
 
@@ -84,34 +80,40 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  if (
-    fiber.tag !== ClassComponent &&
-    fiber.tag !== FunctionalComponent &&
-    fiber.tag !== HostComponent &&
-    fiber.tag !== HostText
-  ) {
+  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
+    fiber
+  );
+  if (!currentParent) {
     return [];
   }
-  if ((fiber.effectTag & Placement) !== NoEffect || !fiber.return) {
-    // If any node along the way was deleted, or is an insertion, that means
-    // that we're actually in a work in progress to update this component with
-    // a different component. We need to look in the "current" fiber instead.
-    return null;
+  let node = currentParent;
+  let ret = [];
+  while (true) {
+    if (node.tag === HostComponent || node.tag === HostText ||
+        node.tag === ClassComponent || node.tag === FunctionalComponent) {
+      var publicInst = node.stateNode;
+      if (test(publicInst)) {
+        ret.push(publicInst);
+      }
+    }
+    if (node.child) {
+      // TODO: Coroutines need to visit the stateNode.
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return ret;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return ret;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
   }
-  var publicInst = fiber.stateNode;
-  var ret = publicInst && test(publicInst) ? [publicInst] : [];
-  var child = fiber.child;
-  while (child) {
-    ret = ret.concat(
-      findAllInRenderedFiberTreeInternal(
-        child,
-        test
-      )
-    );
-    child = child.sibling;
-  }
-  // TODO: visit stateNode for coroutines
-  return ret;
 }
 
 /**
@@ -222,21 +224,7 @@ var ReactTestUtils = {
     );
     var internalInstance = ReactInstanceMap.get(inst);
     if (internalInstance && typeof internalInstance.tag === 'number') {
-      var fiber = internalInstance;
-      if (!fiber.child && fiber.alternate) {
-        // When we don't have children, we try the alternate first to see if it
-        // has any current children first.
-        fiber = fiber.alternate;
-      }
-      var results = findAllInRenderedFiberTreeInternal(fiber, test);
-      if (results === null) {
-        // Null is a sentinel that indicates that this was the wrong fiber.
-        results = findAllInRenderedFiberTreeInternal(fiber.alternate, test);
-        if (results === null) {
-          throw new Error('This should never happen.');
-        }
-      }
-      return results;
+      return findAllInRenderedFiberTreeInternal(internalInstance, test);
     } else {
       return findAllInRenderedStackTreeInternal(internalInstance, test);
     }
