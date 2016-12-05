@@ -33,7 +33,7 @@ describe('ReactErrorBoundaries', () => {
   var ErrorBoundary;
   var ErrorMessage;
   var NoopErrorBoundary;
-  var RethrowErrorBoundary;
+  var RetryErrorBoundary;
   var Normal;
 
   beforeEach(() => {
@@ -484,32 +484,33 @@ describe('ReactErrorBoundaries', () => {
       },
     };
 
-    RethrowErrorBoundary = class extends React.Component {
+    RetryErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
-        log.push('RethrowErrorBoundary constructor');
+        log.push('RetryErrorBoundary constructor');
       }
       render() {
-        log.push('RethrowErrorBoundary render');
+        log.push('RetryErrorBoundary render');
         return <BrokenRender />;
       }
       componentWillMount() {
-        log.push('RethrowErrorBoundary componentWillMount');
+        log.push('RetryErrorBoundary componentWillMount');
       }
       componentDidMount() {
-        log.push('RethrowErrorBoundary componentDidMount');
+        log.push('RetryErrorBoundary componentDidMount');
       }
       componentWillUnmount() {
-        log.push('RethrowErrorBoundary componentWillUnmount');
+        log.push('RetryErrorBoundary componentWillUnmount');
       }
       unstable_handleError(error) {
-        if (!ReactDOMFeatureFlags.useFiber) {
-          log.push('RethrowErrorBoundary unstable_handleError [*]');
+        if (ReactDOMFeatureFlags.useFiber) {
+          log.push('RetryErrorBoundary unstable_handleError [!]');
+          // In Fiber, calling setState() (and failing) is treated as a rethrow.
+          this.setState({});
+        } else {
+          log.push('RetryErrorBoundary unstable_handleError [*]');
           // In Stack, not calling setState() is treated as a rethrow.
-          return;
         }
-        log.push('RethrowErrorBoundary unstable_handleError [!]');
-        throw error;
       }
     };
 
@@ -788,9 +789,9 @@ describe('ReactErrorBoundaries', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
-        <RethrowErrorBoundary>
+        <RetryErrorBoundary>
           <BrokenRender />
-        </RethrowErrorBoundary>
+        </RetryErrorBoundary>
       </ErrorBoundary>,
       container
     );
@@ -799,20 +800,24 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
-      'RethrowErrorBoundary constructor',
-      'RethrowErrorBoundary componentWillMount',
-      'RethrowErrorBoundary render',
+      'RetryErrorBoundary constructor',
+      'RetryErrorBoundary componentWillMount',
+      'RetryErrorBoundary render',
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       ...(ReactDOMFeatureFlags.useFiber ? [
-        // In Fiber, noop error boundaries render null
-        'RethrowErrorBoundary componentDidMount',
-        'RethrowErrorBoundary unstable_handleError [!]',
+        // In Fiber, failed error boundaries render null before attempting to recover
+        'RetryErrorBoundary componentDidMount',
+        'RetryErrorBoundary unstable_handleError [!]',
         'ErrorBoundary componentDidMount',
-        // The error got rethrown here.
+        // Retry
+        'RetryErrorBoundary render',
+        'BrokenRender constructor',
+        'BrokenRender componentWillMount',
+        'BrokenRender render [!]',
         // This time, the error propagates to the higher boundary
-        'RethrowErrorBoundary componentWillUnmount',
+        'RetryErrorBoundary componentWillUnmount',
         'ErrorBoundary unstable_handleError',
         // Render the error
         'ErrorBoundary componentWillUpdate',
@@ -821,8 +826,8 @@ describe('ReactErrorBoundaries', () => {
       ] : [
         // The first error boundary catches the error.
         // However, it doesn't adjust its state so next render will also fail.
-        'RethrowErrorBoundary unstable_handleError [*]',
-        'RethrowErrorBoundary render',
+        'RetryErrorBoundary unstable_handleError [*]',
+        'RetryErrorBoundary render',
         'BrokenRender constructor',
         'BrokenRender componentWillMount',
         'BrokenRender render [!]',

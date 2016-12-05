@@ -99,13 +99,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let isAnimationCallbackScheduled : boolean = false;
   let isDeferredCallbackScheduled : boolean = false;
 
+  // Keep track of which fibers have captured an error that need to be handled.
+  // Work is removed from this collection after unstable_handleError is called.
   let capturedErrors : Map<Fiber, Error> | null = null;
+  // Keep track of which fibers have failed during the current batch of work.
+  // This is a different set than capturedErrors, because it is not reset until
+  // the end of the batch. This is needed to propagate errors correctly if a
+  // subtree fails more than once.
+  let failedBoundaries : Set<Fiber> | null = null;
+  // Error boundaries that captured an error during the current commit.
+  let commitPhaseBoundaries : Set<Fiber> | null = null;
   let firstUncaughtError : Error | null = null;
 
   let isCommitting : boolean = false;
-  // Error boundaries that captured an error during the current commit.
-  let commitPhaseBoundaries : Set<Fiber> | null = null;
-
   let isUnmounting : boolean = false;
 
   function scheduleAnimationCallback(callback) {
@@ -508,126 +514,83 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     performWork(AnimationPriority);
   }
 
+  function errorLoop() {
+    // Keep performing work until there are no more errors
+    while (capturedErrors && capturedErrors.size) {
+      if (!nextUnitOfWork && !pendingCommit) {
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+      if (pendingCommit) {
+        commitAllWork(pendingCommit);
+      } else if (nextUnitOfWork) {
+        if (hasCapturedError(nextUnitOfWork)) {
+          // Use a forked version of performUnitOfWork
+          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+        } else {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        }
+      } else {
+        return;
+      }
+    }
+  }
+
   function workLoop(priorityLevel) {
-    outer: while (true) {
-      if (!nextUnitOfWork) {
+    while (true) {
+      if (!nextUnitOfWork && !pendingCommit) {
         nextUnitOfWork = findNextUnitOfWork();
       }
 
-      // If there are errors, use a forked version of performUnitOfWork
-      if (capturedErrors && capturedErrors.size) {
-        while (true) {
-          if (!nextUnitOfWork && !pendingCommit) {
-            nextUnitOfWork = findNextUnitOfWork();
-          }
-
-          // If we're performing Task work and we're inside a deferred work batch,
-          // then we shouldn't commit any work yet. Defer it to the next frame.
-          // TODO: Is there a better way check if the pending commit should be
-          // deferred? It's not as simple as retaining work priority because
-          // the root may receive a lower priority update before the completed
-          // work is flushed, causing the new update to be up-prioritized.
-          if (
-            pendingCommit &&
-            !(priorityLevel === TaskPriority && isPerformingDeferredWork)
-          ) {
-            commitAllWork(pendingCommit);
-          } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
-            if (isFailedWork(nextUnitOfWork)) {
-              nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-            } else {
-              nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-            }
-          } else {
-            return;
-          }
+      // If we're performing Task work and we're inside a deferred work batch,
+      // then we shouldn't commit any work yet. Defer it to the next frame.
+      // TODO: Is there a better way check if the pending commit should be
+      // deferred? It's not as simple as retaining work priority because
+      // the root may receive a lower priority update before the completed
+      // work is flushed, causing the new update to be up-prioritized.
+      if (
+        pendingCommit &&
+        !(priorityLevel === TaskPriority && isPerformingDeferredWork)
+      ) {
+        const noError = commitAllWork(pendingCommit);
+        if (!noError) {
+          // There was an error during the commit phase. Clear them before
+          // continuing.
+          errorLoop();
+          continue;
         }
-      }
-
-      // Otherwise, handle the normal, faster case where there are no errors:
-      while (true) {
-        if (!nextUnitOfWork && !pendingCommit) {
-          nextUnitOfWork = findNextUnitOfWork();
-        }
-
-        // If we're performing Task work and we're inside a deferred work batch,
-        // then we shouldn't commit any work yet. Defer it to the next frame.
-        // TODO: Is there a better way check if the pending commit should be
-        // deferred? It's not as simple as retaining work priority because
-        // the root may receive a lower priority update before the completed
-        // work is flushed, causing the new update to be up-prioritized.
-        if (
-          pendingCommit &&
-          !(priorityLevel === TaskPriority && isPerformingDeferredWork)
-        ) {
-          const noError = commitAllWork(pendingCommit);
-          if (!noError) {
-            // There was an error during the commit phase. Restart the outer
-            // loop so we can switch to the slower version of the work loop that
-            // checks for failed work.
-            continue outer;
-          }
-        } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        } else {
-          return;
-        }
+      } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      } else {
+        return;
       }
     }
   }
 
   function deferredWorkLoop(deadline) {
-    outer: while (true) {
-      if (!nextUnitOfWork) {
-        nextUnitOfWork = findNextUnitOfWork();
-      }
+    if (!nextUnitOfWork) {
+      nextUnitOfWork = findNextUnitOfWork();
+    }
 
-      // If there are errors, use a forked version of performUnitOfWork
-      if (capturedErrors && capturedErrors.size) {
-        while (true) {
-          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-            if (!nextUnitOfWork && !pendingCommit) {
-              nextUnitOfWork = findNextUnitOfWork();
-            }
-            if (pendingCommit) {
-              commitAllWork(pendingCommit);
-            } else if (nextUnitOfWork) {
-              if (isFailedWork(nextUnitOfWork)) {
-                nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-              } else {
-                nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-              }
-            } else {
-              return;
-            }
-          } else {
-            return;
-          }
+    while (true) {
+      if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+        if (!nextUnitOfWork && !pendingCommit) {
+          nextUnitOfWork = findNextUnitOfWork();
         }
-      }
-
-      // Otherwise, handle the normal, faster case where there are no errors:
-      while (true) {
-        if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-          if (!nextUnitOfWork && !pendingCommit) {
-            nextUnitOfWork = findNextUnitOfWork();
+        if (pendingCommit) {
+          const noError = commitAllWork(pendingCommit);
+          if (!noError) {
+            // There was an error during the commit phase. Clear them before
+            // continuing.
+            errorLoop();
+            continue;
           }
-          if (pendingCommit) {
-            const noError = commitAllWork(pendingCommit);
-            if (!noError) {
-              // There was an error during the commit phase. Restart the outer
-              // loop so we can switch to the slower version of the work loop that
-              // checks for failed work.
-              continue outer;
-            }
-          } else if (nextUnitOfWork) {
-            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-          } else {
-            return;
-          }
+        } else if (nextUnitOfWork) {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         } else {
           return;
         }
+      } else {
+        return;
       }
     }
   }
@@ -649,6 +612,11 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // work. The loop we're in now runs infrequently: to flush task work at
         // the end of a frame, or to restart after an error.
         while (priorityLevel !== NoWork) {
+          // If there are errors, clear them first.
+          if (capturedErrors && capturedErrors.size) {
+            errorLoop();
+          }
+
           if (priorityLevel >= HighPriority) {
             if (!deadline) {
               throw new Error('Cannot perform deferred work without a deadline.');
@@ -724,9 +692,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
     isPerformingDeferredWork = false;
-    if (capturedErrors && !capturedErrors.size) {
-      capturedErrors = null;
-    }
+    capturedErrors = null;
+    failedBoundaries = null;
 
     // It's now safe to throw the first uncaught error.
     if (firstUncaughtError) {
@@ -743,14 +710,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
 
-    // Ignore this error if it's the result of unmounting a failed boundary
-    if (failedWork &&
-        isUnmounting &&
-        capturedErrors &&
-        capturedErrors.has(failedWork)) {
-      return null;
-    }
-
     // Search for the nearest error boundary.
     let boundary : Fiber | null = null;
     if (failedWork) {
@@ -765,8 +724,33 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           if (node.tag === ClassComponent) {
             const instance = node.stateNode;
             if (typeof instance.unstable_handleError === 'function') {
-              // Found an error boundary!
-              boundary = node;
+              if (isFailedBoundary(node)) {
+                // This boundary is already in a failed state. The error should
+                // propagate to the next boundary — except in the
+                // following cases:
+
+                // If we're currently unmounting, that means this error was
+                // thrown while unmounting a failed subtree. We should ignore
+                // the error.
+                if (isUnmounting) {
+                  return null;
+                }
+
+                // If we're in the commit phase, we should check to see if
+                // this boundary already captured an error during this commit.
+                // This case exists because multiple errors can be thrown during
+                // a single commit without interruption.
+                if (commitPhaseBoundaries && (
+                  commitPhaseBoundaries.has(node) ||
+                  (node.alternate) && commitPhaseBoundaries.has(node.alternate)
+                )) {
+                  // If so, we should ignore this error.
+                  return null;
+                }
+              } else {
+                // Found an error boundary!
+                boundary = node;
+              }
             }
           } else if (node.tag === HostRoot) {
             // Treat the root like a no-op error boundary.
@@ -778,6 +762,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     if (boundary) {
+      // Add to the collection of failed boundaries. This lets us know that
+      // subsequent errors in this subtree should propagate to the next boundary.
+      if (!failedBoundaries) {
+        failedBoundaries = new Set();
+      }
+      failedBoundaries.add(boundary);
+
       // Add to the collection of captured errors. This is stored as a global
       // map of errors keyed by the boundaries that capture them. We mostly
       // use this Map as a Set; it's a Map only to avoid adding a field to Fiber
@@ -786,24 +777,20 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         capturedErrors = new Map();
       }
 
-      // Ensure that neither this boundary nor its alternate has captured an
-      // error already.
-      if (!isFailedWork(boundary)) {
-        capturedErrors.set(boundary, error);
-        // If we're in the commit phase, defer scheduling an update on the
-        // boundary until after the commit is complete
-        if (isCommitting) {
-          if (!commitPhaseBoundaries) {
-            commitPhaseBoundaries = new Set();
-          }
-          commitPhaseBoundaries.add(boundary);
-        } else {
-          // Otherwise, schedule an update now. Error recovery has Task priority.
-          const previousPriorityContext = priorityContext;
-          priorityContext = TaskPriority;
-          scheduleUpdate(boundary);
-          priorityContext = previousPriorityContext;
+      capturedErrors.set(boundary, error);
+      // If we're in the commit phase, defer scheduling an update on the
+      // boundary until after the commit is complete
+      if (isCommitting) {
+        if (!commitPhaseBoundaries) {
+          commitPhaseBoundaries = new Set();
         }
+        commitPhaseBoundaries.add(boundary);
+      } else {
+        // Otherwise, schedule an update now. Error recovery has Task priority.
+        const previousPriorityContext = priorityContext;
+        priorityContext = TaskPriority;
+        scheduleUpdate(boundary);
+        priorityContext = previousPriorityContext;
       }
       return boundary;
     } else if (!firstUncaughtError) {
@@ -813,11 +800,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
-  function isFailedWork(fiber : Fiber) : boolean {
+  function hasCapturedError(fiber : Fiber) : boolean {
     return Boolean(
       capturedErrors &&
       (capturedErrors.has(fiber) || (fiber.alternate && capturedErrors.has(fiber.alternate)))
     );
+  }
+
+  function isFailedBoundary(fiber : Fiber) : boolean {
+    const res = Boolean(
+      failedBoundaries &&
+      (failedBoundaries.has(fiber) || (fiber.alternate && failedBoundaries.has(fiber.alternate)))
+    );
+    return res;
   }
 
   function commitErrorHandling(effectfulFiber : Fiber) {
