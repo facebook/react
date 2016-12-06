@@ -156,7 +156,7 @@ var topListenersIDKey = '_reactListenersID' + String(Math.random()).slice(2);
 function getListeningForDocument(mountAt) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
   // directly.
-  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
+  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey) || mountAt[topListenersIDKey] === undefined) {
     mountAt[topListenersIDKey] = reactTopListenersCounter++;
     alreadyListeningTo[mountAt[topListenersIDKey]] = {};
   }
