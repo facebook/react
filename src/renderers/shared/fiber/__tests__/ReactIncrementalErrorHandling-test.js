@@ -21,6 +21,11 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop = require('ReactNoop');
   });
 
+  function div(...children) {
+    children = children.map(c => typeof c === 'string' ? { text: c } : c);
+    return { type: 'div', children, prop: undefined };
+  }
+
   function span(prop) {
     return { type: 'span', children: [], prop };
   }
@@ -858,6 +863,57 @@ describe('ReactIncrementalErrorHandling', () => {
       'Parent componentWillUnmount [!]',
       'BrokenRenderAndUnmount componentWillUnmount',
     ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('does not interrupt unmounting if detaching a ref throws', () => {
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentWillUnmount() {
+        ops.push('Bar unmount');
+      }
+      render() {
+        return <span prop="Bar" />;
+      }
+    }
+
+    function barRef(inst) {
+      if (inst === null) {
+        ops.push('barRef detach');
+        throw new Error('Detach error');
+      }
+      ops.push('barRef attach');
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.hide ? null : <Bar ref={barRef} />}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['barRef attach']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('Bar'),
+      ),
+    ]);
+
+    ops = [];
+
+    // Unmount
+    ReactNoop.render(<Foo hide={true} />);
+    expect(() => ReactNoop.flush()).toThrow('Detach error');
+    expect(ops).toEqual([
+      'barRef detach',
+      // Bar should unmount even though its ref threw an error while detaching
+      'Bar unmount',
+    ]);
+    // Because there was an error, entire tree should unmount
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 });

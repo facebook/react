@@ -46,13 +46,28 @@ module.exports = function<T, P, I, TI, C>(
   const insertBefore = config.insertBefore;
   const removeChild = config.removeChild;
 
-  function detachRef(current : Fiber) {
-    const ref = current.ref;
-    if (ref) {
-      ref(null);
+  // Capture errors so they don't interrupt unmounting.
+  function safelyCallComponentWillUnmount(current, instance) {
+    try {
+      instance.componentWillUnmount();
+    } catch (error) {
+      captureError(current, error);
     }
   }
 
+  // Capture errors so they don't interrupt unmounting.
+  function safelyDetachRef(current : Fiber) {
+    try {
+      const ref = current.ref;
+      if (ref) {
+        ref(null);
+      }
+    } catch (error) {
+      captureError(current, error);
+    }
+  }
+
+  // Only called during update. It's ok to throw.
   function detachRefIfNeeded(current : ?Fiber, finishedWork : Fiber) {
     if (current) {
       const currentRef = current.ref;
@@ -298,21 +313,21 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
+  // User-originating errors (lifecycles and refs) should not interrupt
+  // deletion, so don't let them throw. Host-originating errors should
+  // interrupt deletion, so it's okay
   function commitUnmount(current : Fiber) : void {
     switch (current.tag) {
       case ClassComponent: {
-        detachRef(current);
+        safelyDetachRef(current);
         const instance = current.stateNode;
         if (typeof instance.componentWillUnmount === 'function') {
-          const error = tryCallComponentWillUnmount(instance);
-          if (error) {
-            captureError(current, error);
-          }
+          safelyCallComponentWillUnmount(current, instance);
         }
         return;
       }
       case HostComponent: {
-        detachRef(current);
+        safelyDetachRef(current);
         return;
       }
       case CoroutineComponent: {
@@ -420,15 +435,6 @@ module.exports = function<T, P, I, TI, C>(
       }
       default:
         throw new Error('This unit of work tag should not have side-effects.');
-    }
-  }
-
-  function tryCallComponentWillUnmount(instance) {
-    try {
-      instance.componentWillUnmount();
-      return null;
-    } catch (error) {
-      return error;
     }
   }
 
