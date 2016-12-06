@@ -63,6 +63,8 @@ module.exports = function<T, P, I, TI, C>(
   scheduleUpdate : (fiber: Fiber) => void
 ) {
 
+  const { shouldSetTextContent } = config;
+
   const {
     adoptClassInstance,
     constructClassInstance,
@@ -213,8 +215,8 @@ module.exports = function<T, P, I, TI, C>(
   function updateHostComponent(current, workInProgress) {
     const nextProps = workInProgress.pendingProps;
     const prevProps = current ? current.memoizedProps : null;
-    let nextChildren = workInProgress.pendingProps.children;
-    const isDirectTextChild = config.shouldSetTextContent(nextProps);
+    let nextChildren = nextProps.children;
+    const isDirectTextChild = shouldSetTextContent(nextProps);
     if (isDirectTextChild) {
       // We special case a direct text child of a host node. This is a common
       // case. We won't handle it as a reified child. We will instead handle
@@ -222,7 +224,7 @@ module.exports = function<T, P, I, TI, C>(
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
     } else if (prevProps && (
-      config.shouldSetTextContent(prevProps) ||
+      shouldSetTextContent(prevProps) ||
       prevProps.children === null ||
       typeof prevProps.children === 'undefined' ||
       typeof prevProps.children === 'boolean'
@@ -232,7 +234,7 @@ module.exports = function<T, P, I, TI, C>(
       workInProgress.effectTag |= ContentReset;
     }
 
-    if (workInProgress.pendingProps.hidden &&
+    if (nextProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
       // We'll rerender the children later at the lower priority.
