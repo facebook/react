@@ -95,10 +95,11 @@ function assertValidProps(tag : string, props : ?Object) {
       props.suppressContentEditableWarning ||
       !props.contentEditable ||
       props.children == null,
-      'A component is `contentEditable` and contains `children` managed by ' +
+      '%s is `contentEditable` and contains `children` managed by ' +
       'React. It is now your responsibility to guarantee that none of ' +
       'those nodes are unexpectedly modified or duplicated. This is ' +
-      'probably not intentional.'
+      'probably not intentional.',
+      getCurrentOwnerName() || 'A component'
     );
     warning(
       props.onFocusIn == null &&

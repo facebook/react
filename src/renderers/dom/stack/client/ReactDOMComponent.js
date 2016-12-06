@@ -64,10 +64,15 @@ function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
     var owner = internalInstance._currentElement._owner || null;
     if (owner) {
-      var name = owner.getName();
-      if (name) {
-        return ' This DOM node was rendered by `' + name + '`.';
+      if (owner.getName) {
+        var name = owner.getName();
+        if (name) {
+          return ' This DOM node was rendered by `' + name + '`.';
+        }
+      } else {
+        return ' This DOM node was rendered by `' + owner.tag + '`.';
       }
+      
     }
   }
   return '';
@@ -117,11 +122,13 @@ function assertValidProps(component, props) {
       props.suppressContentEditableWarning ||
       !props.contentEditable ||
       props.children == null,
-      'A component is `contentEditable` and contains `children` managed by ' +
+      'A componen is `contentEditable` and contains `children` managed by ' +
       'React. It is now your responsibility to guarantee that none of ' +
       'those nodes are unexpectedly modified or duplicated. This is ' +
-      'probably not intentional.'
+      'probably not intentional. %s',
+      getDeclarationErrorAddendum(component)
     );
+
     warning(
       props.onFocusIn == null &&
       props.onFocusOut == null,
