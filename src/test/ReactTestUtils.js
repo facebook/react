@@ -16,12 +16,14 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
+var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
 
@@ -31,6 +33,7 @@ var invariant = require('invariant');
 var topLevelTypes = EventConstants.topLevelTypes;
 var {
   ClassComponent,
+  FunctionalComponent,
   HostComponent,
   HostText,
 } = ReactTypeOfWork;
@@ -77,27 +80,40 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  if (
-    fiber.tag !== ClassComponent &&
-    fiber.tag !== HostComponent &&
-    fiber.tag !== HostText
-  ) {
+  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
+    fiber
+  );
+  if (!currentParent) {
     return [];
   }
-  var publicInst = fiber.stateNode;
-  var ret = publicInst && test(publicInst) ? [publicInst] : [];
-  var child = fiber.child;
-  while (child) {
-    ret = ret.concat(
-      findAllInRenderedFiberTreeInternal(
-        child,
-        test
-      )
-    );
-    child = child.sibling;
+  let node = currentParent;
+  let ret = [];
+  while (true) {
+    if (node.tag === HostComponent || node.tag === HostText ||
+        node.tag === ClassComponent || node.tag === FunctionalComponent) {
+      var publicInst = node.stateNode;
+      if (test(publicInst)) {
+        ret.push(publicInst);
+      }
+    }
+    if (node.child) {
+      // TODO: Coroutines need to visit the stateNode.
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return ret;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return ret;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
   }
-  // TODO: visit stateNode for coroutines
-  return ret;
 }
 
 /**
@@ -164,6 +180,7 @@ var ReactTestUtils = {
     return (constructor === type);
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElement: function(inst) {
     if (!React.isValidElement(inst)) {
       return false;
@@ -177,6 +194,7 @@ var ReactTestUtils = {
     );
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElementWithType: function(inst, type) {
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance
@@ -187,6 +205,7 @@ var ReactTestUtils = {
              (constructor === type));
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   getRenderedChildOfCompositeComponent: function(inst) {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;
@@ -431,12 +450,14 @@ function makeSimulator(eventType) {
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
+    var targetInst = ReactDOMComponentTree.getInstanceFromNode(node);
     var event = new SyntheticEvent(
       dispatchConfig,
-      ReactDOMComponentTree.getInstanceFromNode(node),
+      targetInst,
       fakeNativeEvent,
       node
     );
+
     // Since we aren't using pooling, always persist the event. This will make
     // sure it's marked and won't warn when setting additional properties.
     event.persist();
@@ -448,7 +469,11 @@ function makeSimulator(eventType) {
       EventPropagators.accumulateDirectDispatches(event);
     }
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
+      // Normally extractEvent enqueues a state restore, but we'll just always
+      // do that since we we're by-passing it here.
+      ReactControlledComponent.enqueueStateRestore(node);
+
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
     });

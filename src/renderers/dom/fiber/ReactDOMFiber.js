@@ -12,12 +12,41 @@
 
 'use strict';
 
-import type { HostChildren } from 'ReactFiberReconciler';
+import type { Fiber } from 'ReactFiber';
+import type { ReactNodeList } from 'ReactTypes';
 
-var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactControlledComponent = require('ReactControlledComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMInjection = require('ReactDOMInjection');
+var ReactGenericBatching = require('ReactGenericBatching');
+var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactInputSelection = require('ReactInputSelection');
+var ReactInstanceMap = require('ReactInstanceMap');
+var ReactPortal = require('ReactPortal');
 
+var findDOMNode = require('findDOMNode');
+var invariant = require('invariant');
 var warning = require('warning');
+
+var {
+  createElement,
+  setInitialProperties,
+  updateProperties,
+} = ReactDOMFiberComponent;
+var { precacheFiberNode } = ReactDOMComponentTree;
+
+const DOCUMENT_NODE = 9;
+
+ReactDOMInjection.inject();
+ReactControlledComponent.injection.injectFiberControlledHostComponent(
+  ReactDOMFiberComponent
+);
+findDOMNode._injectFiber(function(fiber: Fiber) {
+  return DOMRenderer.findHostInstance(fiber);
+});
 
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
@@ -26,43 +55,44 @@ type Props = { className ?: string };
 type Instance = Element;
 type TextInstance = Text;
 
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
-  if (!child) {
-    return;
-  }
-  /* $FlowFixMe: Element and Text should have this property. */
-  if (child.nodeType === 1 || child.nodeType === 3) {
-    /* $FlowFixMe: Refinement issue. I don't know how to express different. */
-    parent.appendChild(child);
-  } else {
-    /* As a result of the refinement issue this type isn't known. */
-    let node : any = child;
-    do {
-      recursivelyAppendChildren(parent, node.output);
-    } while (node = node.sibling);
-  }
-}
+let eventsEnabled : ?boolean = null;
+let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
-  updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
-    // TODO: Containers should update similarly to other parents.
-    container.innerHTML = '';
-    recursivelyAppendChildren(container, children);
+  prepareForCommit() : void {
+    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
+    ReactBrowserEventEmitter.setEnabled(false);
+    selectionInformation = ReactInputSelection.getSelectionInformation();
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
-    const domElement = document.createElement(type);
-    recursivelyAppendChildren(domElement, children);
-    if (typeof props.className !== 'undefined') {
-      domElement.className = props.className;
-    }
-    if (typeof props.children === 'string') {
-      domElement.textContent = props.children;
-    } else if (typeof props.children === 'number') {
-      domElement.textContent = props.children.toString();
-    }
+  resetAfterCommit() : void {
+    ReactInputSelection.restoreSelection(selectionInformation);
+    selectionInformation = null;
+    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+    eventsEnabled = null;
+  },
+
+  createInstance(
+    type : string,
+    props : Props,
+    internalInstanceHandle : Object
+  ) : Instance {
+    const root = document.documentElement; // HACK
+
+    const domElement : Instance = createElement(type, props, root);
+    precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
+  },
+
+  appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.appendChild(child);
+  },
+
+  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
+    const root = document.documentElement; // HACK
+
+    setInitialProperties(domElement, type, props, root);
   },
 
   prepareUpdate(
@@ -73,38 +103,59 @@ var DOMRenderer = ReactFiberReconciler({
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
-    if (typeof newProps.className !== 'undefined') {
-      domElement.className = newProps.className;
-    }
-    if (typeof newProps.children === 'string') {
-      domElement.textContent = newProps.children;
-    } else if (typeof newProps.children === 'number') {
-      domElement.textContent = newProps.children.toString();
-    }
+  commitUpdate(
+    domElement : Instance,
+    oldProps : Props,
+    newProps : Props,
+    internalInstanceHandle : Object
+  ) : void {
+    var type = domElement.tagName.toLowerCase(); // HACK
+    var root = document.documentElement; // HACK
+    // Update the internal instance handle so that we know which props are
+    // the current ones.
+    precacheFiberNode(internalInstanceHandle, domElement);
+    updateProperties(domElement, type, oldProps, newProps, root);
   },
 
-  createTextInstance(text : string) : TextInstance {
-    return document.createTextNode(text);
+  shouldSetTextContent(props : Props) : boolean {
+    return (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number' ||
+      (
+        typeof props.dangerouslySetInnerHTML === 'object' &&
+        props.dangerouslySetInnerHTML !== null &&
+        typeof props.dangerouslySetInnerHTML.__html === 'string'
+      )
+    );
+  },
+
+  resetTextContent(domElement : Instance) : void {
+    domElement.textContent = '';
+  },
+
+  createTextInstance(text : string, internalInstanceHandle : Object) : TextInstance {
+    var textNode : TextInstance = document.createTextNode(text);
+    precacheFiberNode(internalInstanceHandle, textNode);
+    return textNode;
   },
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
     textInstance.nodeValue = newText;
   },
 
-  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     parentInstance.appendChild(child);
   },
 
   insertBefore(
-    parentInstance : Instance,
+    parentInstance : Instance | Container,
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
   ) : void {
     parentInstance.insertBefore(child, beforeChild);
   },
 
-  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     parentInstance.removeChild(child);
   },
 
@@ -115,6 +166,8 @@ var DOMRenderer = ReactFiberReconciler({
   useSyncScheduling: true,
 
 });
+
+ReactGenericBatching.injection.injectFiberBatchedUpdates(DOMRenderer.batchedUpdates);
 
 var warned = false;
 
@@ -128,18 +181,35 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
+function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  let container : DOMContainerElement =
+    containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
+  let root;
+  if (!container._reactRootContainer) {
+    // First clear any existing content.
+    while (container.lastChild) {
+      container.removeChild(container.lastChild);
+    }
+    root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, parentComponent, callback);
+  } else {
+    DOMRenderer.updateContainer(element, root = container._reactRootContainer, parentComponent, callback);
+  }
+  return DOMRenderer.getPublicRootInstance(root);
+}
+
 var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     warnAboutUnstableUse();
-    let root;
+    return renderSubtreeIntoContainer(null, element, container, callback);
+  },
 
-    if (!container._reactRootContainer) {
-      root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, callback);
-    } else {
-      DOMRenderer.updateContainer(element, root = container._reactRootContainer, callback);
-    }
-    return DOMRenderer.getPublicRootInstance(root);
+  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+    invariant(
+      parentComponent != null && ReactInstanceMap.has(parentComponent),
+      'parentComponent must be a valid React Component'
+    );
+    return renderSubtreeIntoContainer(parentComponent, element, containerNode, callback);
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {
@@ -153,21 +223,14 @@ var ReactDOM = {
     }
   },
 
-  findDOMNode(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
-    if (componentOrElement == null) {
-      return null;
-    }
-    // Unsound duck typing.
-    const component = (componentOrElement : any);
-    if (component.nodeType === 1) {
-      return component;
-    }
-    return DOMRenderer.findHostInstance(component);
+  findDOMNode: findDOMNode,
+
+  unstable_createPortal(children: ReactNodeList, container : DOMContainerElement, key : ?string = null) {
+    // TODO: pass ReactDOM portal implementation as third argument
+    return ReactPortal.createPortal(children, container, null, key);
   },
 
-  unstable_batchedUpdates<A>(fn : () => A) : A {
-    return DOMRenderer.batchedUpdates(fn);
-  },
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
 };
 

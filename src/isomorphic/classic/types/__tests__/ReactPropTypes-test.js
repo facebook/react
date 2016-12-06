@@ -308,18 +308,18 @@ describe('ReactPropTypes', () => {
       spyOn(console, 'error');
 
       var instance = <Component label={<div />} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
-      expect(console.error.calls.count()).toBe(0);
+      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should warn when passing no label and isRequired is set', () => {
       spyOn(console, 'error');
 
       var instance = <Component />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
-      expect(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.count()).toBe(1);
     });
 
     it('should be implicitly optional and not warn without values', () => {
@@ -454,7 +454,7 @@ describe('ReactPropTypes', () => {
         k4: null,
         k5: undefined,
       }));
-      expect(console.error.calls.count()).toBe(0);
+      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should not warn for iterables', () => {
@@ -612,8 +612,8 @@ describe('ReactPropTypes', () => {
 
       PropTypes.oneOf('red', 'blue');
 
-      expect(console.error).toHaveBeenCalled();
-      expect(console.error.calls.argsFor(0)[0])
+      expectDev(console.error).toHaveBeenCalled();
+      expectDev(console.error.calls.argsFor(0)[0])
         .toContain('Invalid argument supplied to oneOf, expected an instance of array.');
 
       typeCheckPass(PropTypes.oneOf('red', 'blue'), 'red');
@@ -668,8 +668,8 @@ describe('ReactPropTypes', () => {
 
       PropTypes.oneOfType(PropTypes.string, PropTypes.number);
 
-      expect(console.error).toHaveBeenCalled();
-      expect(console.error.calls.argsFor(0)[0])
+      expectDev(console.error).toHaveBeenCalled();
+      expectDev(console.error.calls.argsFor(0)[0])
         .toContain('Invalid argument supplied to oneOfType, expected an instance of array.');
 
       typeCheckPass(PropTypes.oneOf(PropTypes.string, PropTypes.number), []);
@@ -851,7 +851,7 @@ describe('ReactPropTypes', () => {
       };
 
       var instance = <Component num={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -868,7 +868,7 @@ describe('ReactPropTypes', () => {
       };
 
       var instance = <Component bla={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -892,8 +892,8 @@ describe('ReactPropTypes', () => {
       };
 
       var instance = <Component num={6} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
-      expect(console.error.calls.count()).toBe(1);
+      ReactTestUtils.renderIntoDocument(instance);
+      expectDev(console.error.calls.count()).toBe(1);
       expect(
         console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
       ).toBe(
@@ -919,8 +919,8 @@ describe('ReactPropTypes', () => {
         };
 
         var instance = <Component num={5} />;
-        instance = ReactTestUtils.renderIntoDocument(instance);
-        expect(console.error.calls.count()).toBe(0);
+        ReactTestUtils.renderIntoDocument(instance);
+        expectDev(console.error.calls.count()).toBe(0);
       }
     );
   });

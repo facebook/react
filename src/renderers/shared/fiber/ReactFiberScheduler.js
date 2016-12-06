@@ -12,7 +12,6 @@
 
 'use strict';
 
-import type { TrappedError } from 'ReactFiberErrorBoundary';
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig, Deadline } from 'ReactFiberReconciler';
@@ -24,13 +23,15 @@ var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
-var { trapError, acknowledgeErrorInBoundary } = require('ReactFiberErrorBoundary');
 
 var {
   NoWork,
-  LowPriority,
-  AnimationPriority,
   SynchronousPriority,
+  TaskPriority,
+  AnimationPriority,
+  HighPriority,
+  LowPriority,
+  OffscreenPriority,
 } = require('ReactPriorityLevel');
 
 var {
@@ -39,16 +40,19 @@ var {
   Update,
   PlacementAndUpdate,
   Deletion,
+  ContentReset,
   Callback,
-  PlacementAndCallback,
-  UpdateAndCallback,
-  PlacementAndUpdateAndCallback,
-  DeletionAndCallback,
+  Err,
 } = require('ReactTypeOfSideEffect');
 
 var {
-  HostContainer,
+  HostRoot,
+  ClassComponent,
 } = require('ReactTypeOfWork');
+
+var {
+  unwindContext,
+} = require('ReactFiberContext');
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
@@ -57,14 +61,18 @@ if (__DEV__) {
 var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
-  const { beginWork } = ReactFiberBeginWork(config, scheduleUpdate);
+  const { beginWork, beginFailedWork } =
+    ReactFiberBeginWork(config, scheduleUpdate);
   const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitInsertion, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config);
+  const { commitPlacement, commitDeletion, commitWork, commitLifeCycles } =
+    ReactFiberCommitWork(config, captureError);
 
-  const scheduleAnimationCallback = config.scheduleAnimationCallback;
-  const scheduleDeferredCallback = config.scheduleDeferredCallback;
+  const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
+  const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
   const useSyncScheduling = config.useSyncScheduling;
+
+  const prepareForCommit = config.prepareForCommit;
+  const resetAfterCommit = config.resetAfterCommit;
 
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
@@ -73,6 +81,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   // Whether updates should be batched. Only applies when using sync scheduling.
   let shouldBatchUpdates : boolean = false;
+
+  // Need this to prevent recursion while in a Task loop.
+  let isPerformingTaskWork : boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -86,8 +97,25 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   let isAnimationCallbackScheduled : boolean = false;
   let isDeferredCallbackScheduled : boolean = false;
 
+  let capturedErrors : Map<Fiber, Error> | null = null;
+  let firstUncaughtError : Error | null = null;
+
+  function scheduleAnimationCallback(callback) {
+    if (!isAnimationCallbackScheduled) {
+      isAnimationCallbackScheduled = true;
+      hostScheduleAnimationCallback(callback);
+    }
+  }
+
+  function scheduleDeferredCallback(callback) {
+    if (!isDeferredCallbackScheduled) {
+      isDeferredCallbackScheduled = true;
+      hostScheduleDeferredCallback(callback);
+    }
+  }
+
   function findNextUnitOfWork() {
-    // Clear out roots with no more work on them.
+    // Clear out roots with no more work on them, or if they have uncaught errors
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
@@ -131,108 +159,142 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     return null;
   }
 
-  function commitAllWork(finishedWork : Fiber, ignoreUnmountingErrors : boolean) {
+  function commitAllWork(finishedWork : Fiber) {
+    prepareForCommit();
+
     // Commit all the side-effects within a tree.
-
-    // Commit phase is meant to be atomic and non-interruptible.
-    // Any errors raised in it should be handled after it is over
-    // so that we don't end up in an inconsistent state due to user code.
-    // We'll keep track of all caught errors and handle them later.
-    let allTrappedErrors = null;
-
     // First, we'll perform all the host insertions, updates, deletions and
     // ref unmounts.
     let effectfulFiber = finishedWork.firstEffect;
-    while (effectfulFiber) {
-      switch (effectfulFiber.effectTag) {
-        case Placement:
-        case PlacementAndCallback: {
-          commitInsertion(effectfulFiber);
-          // Clear the "placement" from effect tag so that we know that this is inserted, before
-          // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag = NoEffect;
-          break;
-        }
-        case PlacementAndUpdate:
-        case PlacementAndUpdateAndCallback: {
-          // Placement
-          commitInsertion(effectfulFiber);
-          // Clear the "placement" from effect tag so that we know that this is inserted, before
-          // any life-cycles like componentDidMount gets called.
-          effectfulFiber.effectTag = Update;
+    pass1: while (true) {
+      try {
+        while (effectfulFiber) {
+          if (effectfulFiber.effectTag & ContentReset) {
+            config.resetTextContent(effectfulFiber.stateNode);
+          }
 
-          // Update
-          const current = effectfulFiber.alternate;
-          commitWork(current, effectfulFiber);
-          break;
-        }
-        case Update:
-        case UpdateAndCallback:
-          const current = effectfulFiber.alternate;
-          commitWork(current, effectfulFiber);
-          break;
-        case Deletion:
-        case DeletionAndCallback:
-          // Deletion might cause an error in componentWillUnmount().
-          // We will continue nevertheless and handle those later on.
-          const trappedErrors = commitDeletion(effectfulFiber);
-          // There is a special case where we completely ignore errors.
-          // It happens when we already caught an error earlier, and the update
-          // is caused by an error boundary trying to render an error message.
-          // In this case, we want to blow away the tree without catching errors.
-          if (trappedErrors && !ignoreUnmountingErrors) {
-            if (!allTrappedErrors) {
-              allTrappedErrors = trappedErrors;
-            } else {
-              allTrappedErrors.push.apply(allTrappedErrors, trappedErrors);
+          // The following switch statement is only concerned about placement,
+          // updates, and deletions. To avoid needing to add a case for every
+          // possible bitmap value, we remove the secondary effects from the
+          // effect tag and switch on that value.
+          let primaryEffectTag = effectfulFiber.effectTag & ~(Callback | Err | ContentReset);
+          switch (primaryEffectTag) {
+            case Placement: {
+              commitPlacement(effectfulFiber);
+              // Clear the "placement" from effect tag so that we know that this is inserted, before
+              // any life-cycles like componentDidMount gets called.
+              // TODO: findDOMNode doesn't rely on this any more but isMounted
+              // does and isMounted is deprecated anyway so we should be able
+              // to kill this.
+              effectfulFiber.effectTag &= ~Placement;
+              break;
+            }
+            case PlacementAndUpdate: {
+              // Placement
+              commitPlacement(effectfulFiber);
+              // Clear the "placement" from effect tag so that we know that this is inserted, before
+              // any life-cycles like componentDidMount gets called.
+              effectfulFiber.effectTag &= ~Placement;
+
+              // Update
+              const current = effectfulFiber.alternate;
+              commitWork(current, effectfulFiber);
+              break;
+            }
+            case Update: {
+              const current = effectfulFiber.alternate;
+              commitWork(current, effectfulFiber);
+              break;
+            }
+            case Deletion: {
+              commitDeletion(effectfulFiber);
+              break;
             }
           }
-          break;
+          effectfulFiber = effectfulFiber.nextEffect;
+        }
+      } catch (error) {
+        if (effectfulFiber) {
+          captureError(effectfulFiber, error, false);
+          effectfulFiber = effectfulFiber.nextEffect;
+          continue pass1;
+        }
       }
-
-      effectfulFiber = effectfulFiber.nextEffect;
+      break;
     }
+
+    // Finally if the root itself had an effect, we perform that since it is
+    // not part of the effect list.
+    if (finishedWork.effectTag !== NoEffect) {
+      const current = finishedWork.alternate;
+      commitWork(current, finishedWork);
+    }
+
+    resetAfterCommit();
 
     // Next, we'll perform all life-cycles and ref callbacks. Life-cycles
     // happens as a separate pass so that all effects in the entire tree have
     // already been invoked.
     effectfulFiber = finishedWork.firstEffect;
-    while (effectfulFiber) {
-      if (effectfulFiber.effectTag & (Update | Callback)) {
-        const current = effectfulFiber.alternate;
-        const trappedError = commitLifeCycles(current, effectfulFiber);
-        if (trappedError) {
-          allTrappedErrors = allTrappedErrors || [];
-          allTrappedErrors.push(trappedError);
+    const previousPriorityContext = priorityContext;
+    priorityContext = TaskPriority;
+    pass2: while (true) {
+      try {
+        while (effectfulFiber) {
+          const current = effectfulFiber.alternate;
+          // Use Task priority for lifecycle updates
+          if (effectfulFiber.effectTag & (Update | Callback)) {
+            commitLifeCycles(current, effectfulFiber);
+          }
+
+          if (effectfulFiber.effectTag & Err) {
+            commitErrorHandling(effectfulFiber);
+          }
+
+          const next = effectfulFiber.nextEffect;
+          // Ensure that we clean these up so that we don't accidentally keep them.
+          // I'm not actually sure this matters because we can't reset firstEffect
+          // and lastEffect since they're on every node, not just the effectful
+          // ones. So we have to clean everything as we reuse nodes anyway.
+          effectfulFiber.nextEffect = null;
+          // Ensure that we reset the effectTag here so that we can rely on effect
+          // tags to reason about the current life-cycle.
+          effectfulFiber = next;
+        }
+      } catch (error) {
+        if (effectfulFiber) {
+          captureError(effectfulFiber, error, false);
+          const next = effectfulFiber.nextEffect;
+          effectfulFiber.nextEffect = null;
+          effectfulFiber = next;
+          continue pass2;
         }
       }
-      const next = effectfulFiber.nextEffect;
-      // Ensure that we clean these up so that we don't accidentally keep them.
-      // I'm not actually sure this matters because we can't reset firstEffect
-      // and lastEffect since they're on every node, not just the effectful
-      // ones. So we have to clean everything as we reuse nodes anyway.
-      effectfulFiber.nextEffect = null;
-      // Ensure that we reset the effectTag here so that we can rely on effect
-      // tags to reason about the current life-cycle.
-      effectfulFiber = next;
+      priorityContext = previousPriorityContext;
+      break;
     }
 
-    // Finally if the root itself had an effect, we perform that since it is not
-    // part of the effect list.
+    // Lifecycles on the root itself
     if (finishedWork.effectTag !== NoEffect) {
       const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
-      const trappedError = commitLifeCycles(current, finishedWork);
-      if (trappedError) {
-        allTrappedErrors = allTrappedErrors || [];
-        allTrappedErrors.push(trappedError);
+      commitLifeCycles(current, finishedWork);
+      if (finishedWork.effectTag & Err) {
+        commitErrorHandling(finishedWork);
       }
     }
 
-    // Now that the tree has been committed, we can handle errors.
-    if (allTrappedErrors) {
-      handleErrors(allTrappedErrors);
+    if (capturedErrors) {
+      if (capturedErrors.size) {
+        capturedErrors.forEach((error, boundary) => {
+          scheduleUpdate(boundary);
+        });
+      } else {
+        capturedErrors = null;
+      }
     }
+
+    // Flush any task work that was scheduled during this batch
+    performTaskWork();
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
@@ -253,7 +315,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     workInProgress.pendingWorkPriority = newPriority;
   }
 
-  function completeUnitOfWork(workInProgress : Fiber, ignoreUnmountingErrors : boolean) : ?Fiber {
+  function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
       // Ideally nothing should rely on this, but relying on it here
@@ -268,6 +330,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
       workInProgress.updateQueue = null;
+
+      if (next) {
+        // If completing this work spawned new work, do that next. We'll come
+        // back here again.
+        return next;
+      }
 
       const returnFiber = workInProgress.return;
 
@@ -301,10 +369,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
 
-      if (next) {
-        // If completing this work spawned new work, do that next.
-        return next;
-      } else if (workInProgress.sibling) {
+      if (workInProgress.sibling) {
         // If there is more work to do in this returnFiber, do that next.
         return workInProgress.sibling;
       } else if (returnFiber) {
@@ -325,7 +390,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // "next" scheduled work since we've already scanned passed. That
         // also ensures that work scheduled during reconciliation gets deferred.
         // const hasMoreWork = workInProgress.pendingWorkPriority !== NoWork;
-        commitAllWork(workInProgress, ignoreUnmountingErrors);
+        commitAllWork(workInProgress);
         const nextWork = findNextUnitOfWork();
         // if (!nextWork && hasMoreWork) {
           // TODO: This can happen when some deep work completes and we don't
@@ -339,7 +404,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function performUnitOfWork(workInProgress : Fiber, ignoreUnmountingErrors : boolean) : ?Fiber {
+  function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -350,7 +415,15 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
-    let next = beginWork(current, workInProgress, nextPriorityLevel);
+    let next;
+    const isFailedWork = capturedErrors && capturedErrors.has(workInProgress);
+    if (isFailedWork) {
+      next = beginFailedWork(current, workInProgress, nextPriorityLevel);
+      workInProgress.effectTag |= Err;
+    } else {
+      next = beginWork(current, workInProgress, nextPriorityLevel);
+    }
+
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
     }
@@ -360,7 +433,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
       }
       // If this doesn't spawn new work, complete the current work.
-      next = completeUnitOfWork(workInProgress, ignoreUnmountingErrors);
+      next = completeUnitOfWork(workInProgress);
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
       }
@@ -377,16 +450,13 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
     while (nextUnitOfWork) {
       if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         if (!nextUnitOfWork) {
           // Find more work. We might have time to complete some more.
           nextUnitOfWork = findNextUnitOfWork();
         }
       } else {
-        if (!isDeferredCallbackScheduled) {
-          isDeferredCallbackScheduled = true;
-          scheduleDeferredCallback(performDeferredWork);
-        }
+        scheduleDeferredCallback(performDeferredWork);
         return;
       }
     }
@@ -397,56 +467,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     performAndHandleErrors(LowPriority, deadline);
   }
 
-  function scheduleDeferredWork(root : FiberRoot, priority : PriorityLevel) {
-    // We must reset the current unit of work pointer so that we restart the
-    // search from the root during the next tick, in case there is now higher
-    // priority work somewhere earlier than before.
-    if (priority <= nextPriorityLevel) {
-      nextUnitOfWork = null;
-    }
-
-    // Set the priority on the root, without deprioritizing
-    if (root.current.pendingWorkPriority === NoWork ||
-        priority <= root.current.pendingWorkPriority) {
-      root.current.pendingWorkPriority = priority;
-    }
-
-    if (!root.isScheduled) {
-      root.isScheduled = true;
-      if (lastScheduledRoot) {
-        // Schedule ourselves to the end.
-        lastScheduledRoot.nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      } else {
-        // We're the only work scheduled.
-        nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      }
-    }
-
-    if (!isDeferredCallbackScheduled) {
-      isDeferredCallbackScheduled = true;
-      scheduleDeferredCallback(performDeferredWork);
-    }
-  }
-
   function performAnimationWorkUnsafe() {
     // Always start from the root
     nextUnitOfWork = findNextUnitOfWork();
     while (nextUnitOfWork &&
-           nextPriorityLevel !== NoWork &&
-           nextPriorityLevel <= AnimationPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
+           nextPriorityLevel === AnimationPriority) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       if (!nextUnitOfWork) {
         // Keep searching for animation work until there's no more left
         nextUnitOfWork = findNextUnitOfWork();
       }
     }
-    if (nextUnitOfWork && nextPriorityLevel > AnimationPriority) {
-      if (!isDeferredCallbackScheduled) {
-        isDeferredCallbackScheduled = true;
-        scheduleDeferredCallback(performDeferredWork);
-      }
+    if (nextUnitOfWork) {
+      scheduleCallbackAtPriority(nextPriorityLevel);
     }
   }
 
@@ -455,7 +488,232 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     performAndHandleErrors(AnimationPriority);
   }
 
-  function scheduleAnimationWork(root: FiberRoot, priorityLevel : PriorityLevel) {
+  function performSynchronousWorkUnsafe() {
+    nextUnitOfWork = findNextUnitOfWork();
+    while (nextUnitOfWork &&
+           nextPriorityLevel === SynchronousPriority) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+
+      if (!nextUnitOfWork) {
+        nextUnitOfWork = findNextUnitOfWork();
+      }
+    }
+    if (nextUnitOfWork) {
+      scheduleCallbackAtPriority(nextPriorityLevel);
+    }
+  }
+
+  function performSynchronousWork() {
+    performAndHandleErrors(SynchronousPriority);
+  }
+
+  function performTaskWorkUnsafe() {
+    if (isPerformingTaskWork) {
+      throw new Error('Already performing task work');
+    }
+
+    isPerformingTaskWork = true;
+    try {
+      nextUnitOfWork = findNextUnitOfWork();
+      while (nextUnitOfWork &&
+             nextPriorityLevel === TaskPriority) {
+        nextUnitOfWork =
+          performUnitOfWork(nextUnitOfWork);
+
+        if (!nextUnitOfWork) {
+          nextUnitOfWork = findNextUnitOfWork();
+        }
+      }
+      if (nextUnitOfWork) {
+        scheduleCallbackAtPriority(nextPriorityLevel);
+      }
+    } finally {
+      isPerformingTaskWork = false;
+    }
+  }
+
+  function performTaskWork() {
+    performAndHandleErrors(TaskPriority);
+  }
+
+  function performAndHandleErrors(priorityLevel : PriorityLevel, deadline : null | Deadline) {
+    // The exact priority level doesn't matter, so long as it's in range of the
+    // work (sync, animation, deferred) being performed.
+    let shouldContinue = true;
+    while (shouldContinue) {
+      shouldContinue = false;
+      const prevShouldBatchUpdates = shouldBatchUpdates;
+      shouldBatchUpdates = true;
+      try {
+        switch (priorityLevel) {
+          case SynchronousPriority:
+            performSynchronousWorkUnsafe();
+            break;
+          case TaskPriority:
+            if (!isPerformingTaskWork) {
+              performTaskWorkUnsafe();
+            }
+            break;
+          case AnimationPriority:
+            performAnimationWorkUnsafe();
+            break;
+          case HighPriority:
+          case LowPriority:
+          case OffscreenPriority:
+            if (!deadline) {
+              throw new Error('No deadline');
+            } else {
+              performDeferredWorkUnsafe(deadline);
+            }
+            break;
+          default:
+            break;
+        }
+      } catch (error) {
+        const failedWork = nextUnitOfWork;
+        const boundary = captureError(failedWork, error, false);
+        if (boundary) {
+          // The boundary failed to complete. Complete it as if rendered null.
+          beginFailedWork(boundary.alternate, boundary, priorityLevel);
+
+          // The next unit of work is now the boundary that captured the error.
+          // Conceptually, we're unwinding the stack. We need to unwind the
+          // context stack, too, from the failed work to the boundary that
+          // captured the error.
+          // TODO: If we set the memoized props in beginWork instead of
+          // completeWork, rather than unwind the stack, we can just restart
+          // from the root. Can't do that until then because without memoized
+          // props, the nodes higher up in the tree will rerender unnecessarily.
+          if (failedWork) {
+            unwindContext(failedWork, boundary);
+          }
+          nextUnitOfWork = completeUnitOfWork(boundary);
+
+          // We were interupted by an error. Continue performing work.
+          shouldContinue = true;
+        }
+      } finally {
+        shouldBatchUpdates = prevShouldBatchUpdates;
+      }
+    }
+
+    // Throw the first uncaught error
+    if (!nextUnitOfWork && firstUncaughtError) {
+      let e = firstUncaughtError;
+      firstUncaughtError = null;
+      throw e;
+    }
+  }
+
+  function captureError(failedWork : Fiber | null, error : Error, isUnmounting : boolean) : Fiber | null {
+    // It is no longer valid because we exited the user code.
+    ReactCurrentOwner.current = null;
+    // It is no longer valid because this unit of work failed.
+    nextUnitOfWork = null;
+
+    // Ignore this error if it's the result of unmounting a failed boundary
+    if (failedWork &&
+        isUnmounting &&
+        capturedErrors &&
+        capturedErrors.has(failedWork)) {
+      return null;
+    }
+
+    // Search for the nearest error boundary.
+    let boundary : Fiber | null = null;
+    if (failedWork) {
+      // Host containers are a special case. If the failed work itself is a host
+      // container, then it acts as its own boundary. In all other cases, we
+      // ignore the work itself and only search through the parents.
+      if (failedWork.tag === HostRoot) {
+        boundary = failedWork;
+      } else {
+        let node = failedWork.return;
+        while (node && !boundary) {
+          if (node.tag === ClassComponent) {
+            const instance = node.stateNode;
+            if (typeof instance.unstable_handleError === 'function') {
+              // Found an error boundary!
+              boundary = node;
+            }
+          } else if (node.tag === HostRoot) {
+            // Treat the root like a no-op error boundary.
+            boundary = node;
+          }
+          node = node.return;
+        }
+      }
+    }
+
+    if (boundary) {
+      // Add to the collection of captured errors. This is stored as a global
+      // map of errors keyed by the boundaries that capture them. We mostly
+      // use this Map as a Set; it's a Map only to avoid adding a field to Fiber
+      // to store the error.
+      if (!capturedErrors) {
+        capturedErrors = new Map();
+      }
+      // Ensure that neither this boundary nor its alternate has captured an
+      // error already.
+      if (!capturedErrors.has(boundary) &&
+          !(boundary.alternate && capturedErrors.has(boundary.alternate))) {
+        capturedErrors.set(boundary, error);
+      }
+      return boundary;
+    } else if (!firstUncaughtError) {
+      // If no boundary is found, we'll need to throw the error
+      firstUncaughtError = error;
+    }
+    return null;
+  }
+
+  function commitErrorHandling(effectfulFiber : Fiber) {
+    let error;
+    if (capturedErrors) {
+      // Get the error associated with the fiber being commited.
+      error = capturedErrors.get(effectfulFiber);
+      capturedErrors.delete(effectfulFiber);
+    }
+    if (!error) {
+      throw new Error('No matching captured error.');
+    }
+
+    switch (effectfulFiber.tag) {
+      case ClassComponent:
+        const instance = effectfulFiber.stateNode;
+        try {
+          // Allow the boundary to handle the error, usually by scheduling
+          // an update to itself
+          instance.unstable_handleError(error);
+        } catch (e) {
+          captureError(effectfulFiber, e, false);
+        }
+        return;
+      case HostRoot:
+        if (!firstUncaughtError) {
+          // If this is the host container, we treat it as a no-op error
+          // boundary. We'll throw the first uncaught error once it's safe to
+          // do so, at the end of the batch.
+          firstUncaughtError = error;
+        }
+        return;
+      default:
+        throw new Error('Invalid type of work.');
+    }
+  }
+
+  function scheduleWork(root : FiberRoot) {
+    let priorityLevel = priorityContext;
+
+    // If we're in a batch, switch to task priority
+    if (priorityLevel === SynchronousPriority && shouldBatchUpdates) {
+      priorityLevel = TaskPriority;
+    }
+
+    scheduleWorkAtPriority(root, priorityLevel);
+  }
+
+  function scheduleWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) {
     // Set the priority on the root, without deprioritizing
     if (root.current.pendingWorkPriority === NoWork ||
         priorityLevel <= root.current.pendingWorkPriority) {
@@ -475,238 +733,74 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       }
     }
 
-    if (!isAnimationCallbackScheduled) {
-      isAnimationCallbackScheduled = true;
-      scheduleAnimationCallback(performAnimationWork);
-    }
-  }
-
-  function scheduleErrorBoundaryWork(boundary : Fiber, priority) : FiberRoot {
-    let root = null;
-    let fiber = boundary;
-    while (fiber) {
-      fiber.pendingWorkPriority = priority;
-      if (fiber.alternate) {
-        fiber.alternate.pendingWorkPriority = priority;
-      }
-      if (!fiber.return) {
-        if (fiber.tag === HostContainer) {
-          // We found the root.
-          // Remember it so we can update it.
-          root = ((fiber.stateNode : any) : FiberRoot);
-          break;
-        } else {
-          throw new Error('Invalid root');
-        }
-      }
-      fiber = fiber.return;
-    }
-    if (!root) {
-      throw new Error('Could not find root from the boundary.');
-    }
-    return root;
-  }
-
-  function performSynchronousWorkUnsafe() {
-    // Perform work now
-    nextUnitOfWork = findNextUnitOfWork();
-    while (nextUnitOfWork &&
-           nextPriorityLevel === SynchronousPriority) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, false);
-
-      if (!nextUnitOfWork) {
-        nextUnitOfWork = findNextUnitOfWork();
-      }
-    }
-    if (nextUnitOfWork) {
-      if (nextPriorityLevel > AnimationPriority) {
-        if (!isDeferredCallbackScheduled) {
-          isDeferredCallbackScheduled = true;
-          scheduleDeferredCallback(performDeferredWork);
-        }
-        return;
-      }
-      if (!isAnimationCallbackScheduled) {
-        isAnimationCallbackScheduled = true;
-        scheduleAnimationCallback(performAnimationWork);
-      }
-    }
-  }
-
-  function performSynchronousWork() {
-    const prev = shouldBatchUpdates;
-    shouldBatchUpdates = true;
-    // All nested updates are batched
-    try {
-      performAndHandleErrors(SynchronousPriority);
-    } finally {
-      shouldBatchUpdates = prev;
-    }
-  }
-
-  function scheduleSynchronousWork(root : FiberRoot) {
-    root.current.pendingWorkPriority = SynchronousPriority;
-
-    if (root.isScheduled) {
-      // If we're already scheduled, we can bail out.
-      return;
-    }
-    root.isScheduled = true;
-    if (lastScheduledRoot) {
-      // Schedule ourselves to the end.
-      lastScheduledRoot.nextScheduledRoot = root;
-      lastScheduledRoot = root;
-    } else {
-      // We're the only work scheduled.
-      nextScheduledRoot = root;
-      lastScheduledRoot = root;
-
-      if (!shouldBatchUpdates) {
-        // Unless in batched mode, perform work immediately
-        performSynchronousWork();
-      }
-    }
-  }
-
-  function performAndHandleErrors(priorityLevel : PriorityLevel, deadline : null | Deadline) {
-    // The exact priority level doesn't matter, so long as it's in range of the
-    // work (sync, animation, deferred) being performed.
-    try {
-      if (priorityLevel === SynchronousPriority) {
-        performSynchronousWorkUnsafe();
-      } else if (priorityLevel > AnimationPriority) {
-        if (!deadline) {
-          throw new Error('No deadline');
-        } else {
-          performDeferredWorkUnsafe(deadline);
-        }
-        return;
-      } else {
-        performAnimationWorkUnsafe();
-      }
-    } catch (error) {
-      const failedUnitOfWork = nextUnitOfWork;
-      // Reset because it points to the error boundary:
+    // We must reset the current unit of work pointer so that we restart the
+    // search from the root during the next tick, in case there is now higher
+    // priority work somewhere earlier than before.
+    if (priorityLevel <= nextPriorityLevel) {
       nextUnitOfWork = null;
-      if (!failedUnitOfWork) {
-        // We shouldn't end up here because nextUnitOfWork
-        // should always be set while work is being performed.
-        throw error;
-      }
-      const trappedError = trapError(failedUnitOfWork, error);
-      handleErrors([trappedError]);
-    }
-  }
-
-  function handleErrors(initialTrappedErrors : Array<TrappedError>) : void {
-    let nextTrappedErrors = initialTrappedErrors;
-    let firstUncaughtError = null;
-
-    // In each phase, we will attempt to pass errors to boundaries and re-render them.
-    // If we get more errors, we propagate them to higher boundaries in the next iterations.
-    while (nextTrappedErrors) {
-      const trappedErrors = nextTrappedErrors;
-      nextTrappedErrors = null;
-
-      // Pass errors to all affected boundaries.
-      const affectedBoundaries : Set<Fiber> = new Set();
-      trappedErrors.forEach(trappedError => {
-        const boundary = trappedError.boundary;
-        const error = trappedError.error;
-        if (!boundary) {
-          firstUncaughtError = firstUncaughtError || error;
-          return;
-        }
-        // Don't visit boundaries twice.
-        if (affectedBoundaries.has(boundary)) {
-          return;
-        }
-        // Give error boundary a chance to update its state.
-        try {
-          acknowledgeErrorInBoundary(boundary, error);
-          affectedBoundaries.add(boundary);
-        } catch (nextError) {
-          // If it throws, propagate the error.
-          nextTrappedErrors = nextTrappedErrors || [];
-          nextTrappedErrors.push(trapError(boundary, nextError));
-        }
-      });
-
-      // We will process an update caused by each error boundary synchronously.
-      affectedBoundaries.forEach(boundary => {
-        const priority = priorityContext;
-        const root = scheduleErrorBoundaryWork(boundary, priority);
-        // This should use findNextUnitOfWork() when synchronous scheduling is implemented.
-        let fiber = cloneFiber(root.current, priority);
-        try {
-          while (fiber) {
-            // TODO: this is the only place where we recurse and it's unfortunate.
-            // (This may potentially get us into handleErrors() again.)
-            fiber = performUnitOfWork(fiber, true);
-          }
-        } catch (nextError) {
-          // If it throws, propagate the error.
-          nextTrappedErrors = nextTrappedErrors || [];
-          nextTrappedErrors.push(trapError(boundary, nextError));
-        }
-      });
     }
 
-    ReactCurrentOwner.current = null;
-
-    // Surface the first error uncaught by the boundaries to the user.
-    if (firstUncaughtError) {
-      // We need to make sure any future root can get scheduled despite these errors.
-      // Currently after throwing, nothing gets scheduled because these fields are set.
-      // FIXME: this is likely a wrong fix! It's still better than ignoring updates though.
-      nextScheduledRoot = null;
-      lastScheduledRoot = null;
-
-      // Throw any unhandled errors.
-      throw firstUncaughtError;
-    }
+    scheduleCallbackAtPriority(priorityLevel);
   }
 
-  function scheduleWork(root : FiberRoot) {
-    scheduleWorkAtPriority(root, priorityContext);
-  }
-
-  function scheduleWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) {
-    if (priorityLevel === NoWork) {
-      return;
-    } else if (priorityLevel === SynchronousPriority) {
-      scheduleSynchronousWork(root);
-    } else if (priorityLevel <= AnimationPriority) {
-      scheduleAnimationWork(root, priorityLevel);
-    } else {
-      scheduleDeferredWork(root, priorityLevel);
-      return;
+  function scheduleCallbackAtPriority(priorityLevel : PriorityLevel) {
+    switch (priorityLevel) {
+      case SynchronousPriority:
+        // Perform work immediately
+        performSynchronousWork();
+        return;
+      case TaskPriority:
+        // Do nothing. Task work should be flushed after committing.
+        return;
+      case AnimationPriority:
+        scheduleAnimationCallback(performAnimationWork);
+        return;
+      case HighPriority:
+      case LowPriority:
+      case OffscreenPriority:
+        scheduleDeferredCallback(performDeferredWork);
+        return;
     }
   }
 
   function scheduleUpdate(fiber : Fiber) {
-    const priorityLevel = priorityContext;
-    while (true) {
-      if (fiber.pendingWorkPriority === NoWork ||
-          fiber.pendingWorkPriority >= priorityLevel) {
-        fiber.pendingWorkPriority = priorityLevel;
+    let priorityLevel = priorityContext;
+    // If we're in a batch, switch to task priority
+    if (priorityLevel === SynchronousPriority && shouldBatchUpdates) {
+      priorityLevel = TaskPriority;
+    }
+
+    let node = fiber;
+    let shouldContinue = true;
+    while (node && shouldContinue) {
+      // Walk the parent path to the root and update each node's priority. Once
+      // we reach a node whose priority matches (and whose alternate's priority
+      // matches) we can exit safely knowing that the rest of the path is correct.
+      shouldContinue = false;
+      if (node.pendingWorkPriority === NoWork ||
+          node.pendingWorkPriority >= priorityLevel) {
+        // Priority did not match. Update and keep going.
+        shouldContinue = true;
+        node.pendingWorkPriority = priorityLevel;
       }
-      if (fiber.alternate) {
-        if (fiber.alternate.pendingWorkPriority === NoWork ||
-            fiber.alternate.pendingWorkPriority >= priorityLevel) {
-          fiber.alternate.pendingWorkPriority = priorityLevel;
+      if (node.alternate) {
+        if (node.alternate.pendingWorkPriority === NoWork ||
+            node.alternate.pendingWorkPriority >= priorityLevel) {
+          // Priority did not match. Update and keep going.
+          shouldContinue = true;
+          node.alternate.pendingWorkPriority = priorityLevel;
         }
       }
-      if (!fiber.return) {
-        if (fiber.tag === HostContainer) {
-          const root : FiberRoot = (fiber.stateNode : any);
+      if (!node.return) {
+        if (node.tag === HostRoot) {
+          const root : FiberRoot = (node.stateNode : any);
           scheduleWorkAtPriority(root, priorityLevel);
-          return;
         } else {
-          throw new Error('Invalid root');
+          // TODO: Warn about setting state on an unmounted component.
+          return;
         }
       }
-      fiber = fiber.return;
+      node = node.return;
     }
   }
 
@@ -720,16 +814,19 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
   }
 
-  function batchedUpdates<A>(fn : () => A) : A {
+  function batchedUpdates<A, R>(fn : (a: A) => R, a : A) : R {
     const prev = shouldBatchUpdates;
     shouldBatchUpdates = true;
     try {
-      return fn();
+      return fn(a);
     } finally {
-      shouldBatchUpdates = prev;
-      // If we've exited the batch, perform any scheduled sync work
-      if (!shouldBatchUpdates) {
-        performSynchronousWork();
+      // If we're exiting the batch, perform any scheduled task work
+      try {
+        if (!prev) {
+          performTaskWork();
+        }
+      } finally {
+        shouldBatchUpdates = prev;
       }
     }
   }
@@ -746,7 +843,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   return {
     scheduleWork: scheduleWork,
-    scheduleDeferredWork: scheduleDeferredWork,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     syncUpdates: syncUpdates,

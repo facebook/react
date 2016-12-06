@@ -7,6 +7,8 @@ permalink: docs/react-component.html
 redirect_from:
   - "docs/component-api.html"
   - "docs/component-specs.html"
+  - "docs/component-specs-ko-KR.html"
+  - "docs/component-specs-zh-CN.html"
   - "tips/componentWillReceiveProps-not-triggered-after-mounting.html"
   - "tips/dom-event-listeners.html"
   - "tips/initial-ajax.html"
@@ -345,7 +347,7 @@ In particular, `this.props.children` is a special prop, typically defined by the
 
 The state contains data specific to this component that may change over time. The state is user-defined, and it should be a plain JavaScript object.
 
-If you don't use it in `render(), it shouldn't be on the state. For example, you can put timer IDs directly on the instance.
+If you don't use it in `render()`, it shouldn't be on the state. For example, you can put timer IDs directly on the instance.
 
 See [State and Lifecycle](/react/docs/state-and-lifecycle.html) for more information about the state.
 

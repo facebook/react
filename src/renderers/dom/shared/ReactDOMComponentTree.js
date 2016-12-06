@@ -13,6 +13,7 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
+var { HostComponent, HostText } = require('ReactTypeOfWork');
 
 var invariant = require('invariant');
 
@@ -21,6 +22,18 @@ var Flags = ReactDOMComponentFlags;
 
 var internalInstanceKey =
   '__reactInternalInstance$' + Math.random().toString(36).slice(2);
+
+/**
+ * Check if a given node should be cached.
+ */
+function shouldPrecacheNode(node, nodeID) {
+  return (node.nodeType === 1 &&
+          node.getAttribute(ATTR_NAME) === String(nodeID)) ||
+         (node.nodeType === 8 &&
+          node.nodeValue === ' react-text: ' + nodeID + ' ') ||
+         (node.nodeType === 8 &&
+          node.nodeValue === ' react-empty: ' + nodeID + ' ');
+}
 
 /**
  * Drill down (through composites and empty components) until we get a host or
@@ -44,6 +57,10 @@ function getRenderedHostOrTextFromComponent(component) {
 function precacheNode(inst, node) {
   var hostInst = getRenderedHostOrTextFromComponent(inst);
   hostInst._hostNode = node;
+  node[internalInstanceKey] = hostInst;
+}
+
+function precacheFiberNode(hostInst, node) {
   node[internalInstanceKey] = hostInst;
 }
 
@@ -87,12 +104,7 @@ function precacheChildNodes(inst, node) {
     }
     // We assume the child nodes are in the same order as the child instances.
     for (; childNode !== null; childNode = childNode.nextSibling) {
-      if ((childNode.nodeType === 1 &&
-           childNode.getAttribute(ATTR_NAME) === String(childID)) ||
-          (childNode.nodeType === 8 &&
-           childNode.nodeValue === ' react-text: ' + childID + ' ') ||
-          (childNode.nodeType === 8 &&
-           childNode.nodeValue === ' react-empty: ' + childID + ' ')) {
+      if (shouldPrecacheNode(childNode, childID)) {
         precacheNode(childInst, childNode);
         continue outer;
       }
@@ -126,7 +138,11 @@ function getClosestInstanceFromNode(node) {
   }
 
   var closest;
-  var inst;
+  var inst = node[internalInstanceKey];
+  if (inst.tag === HostComponent || inst.tag === HostText) {
+    // In Fiber, this will always be the deepest root.
+    return inst;
+  }
   for (; node && (inst = node[internalInstanceKey]); node = parents.pop()) {
     closest = inst;
     if (parents.length) {
@@ -142,7 +158,17 @@ function getClosestInstanceFromNode(node) {
  * instance, or null if the node was not rendered by this React.
  */
 function getInstanceFromNode(node) {
-  var inst = getClosestInstanceFromNode(node);
+  var inst = node[internalInstanceKey];
+  if (inst) {
+    if (inst.tag === HostComponent || inst.tag === HostText) {
+      return inst;
+    } else if (inst._hostNode === node) {
+      return inst;
+    } else {
+      return null;
+    }
+  }
+  inst = getClosestInstanceFromNode(node);
   if (inst != null && inst._hostNode === node) {
     return inst;
   } else {
@@ -155,6 +181,12 @@ function getInstanceFromNode(node) {
  * DOM node.
  */
 function getNodeFromInstance(inst) {
+  if (inst.tag === HostComponent || inst.tag === HostText) {
+    // In Fiber this, is just the state node right now. We assume it will be
+    // a host component or host text.
+    return inst.stateNode;
+  }
+
   // Without this first invariant, passing a non-DOM-component triggers the next
   // invariant for a missing parent, which is super confusing.
   invariant(
@@ -193,6 +225,7 @@ var ReactDOMComponentTree = {
   precacheChildNodes: precacheChildNodes,
   precacheNode: precacheNode,
   uncacheNode: uncacheNode,
+  precacheFiberNode: precacheFiberNode,
 };
 
 module.exports = ReactDOMComponentTree;

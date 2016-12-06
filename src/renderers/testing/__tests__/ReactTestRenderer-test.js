@@ -74,8 +74,15 @@ describe('ReactTestRenderer', () => {
       }
     }
 
-    var Child = () => (renders++, <moo />);
-    var Null = () => (renders++, null);
+    var Child = () => {
+      renders++;
+      return <moo />;
+    };
+
+    var Null = () => {
+      renders++;
+      return null;
+    };
 
     var renderer = ReactTestRenderer.create(<Component />);
     expect(renderer.toJSON()).toEqual({
@@ -223,8 +230,8 @@ describe('ReactTestRenderer', () => {
     }
     ReactTestRenderer.create(<Baz />);
     ReactTestRenderer.create(<Foo />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Stateless function components cannot be given refs ' +
       '(See ref "foo" in Bar created by Foo). ' +
       'Attempts to access this ref will fail.'
@@ -304,6 +311,41 @@ describe('ReactTestRenderer', () => {
       null,
       null,
     ]);
+  });
+
+  it('supports unmounting when using refs', () => {
+    class Foo extends React.Component {
+      render() {
+        return <div ref="foo" />;
+      }
+    }
+    const inst = ReactTestRenderer.create(
+      <Foo />,
+      {createNodeMock: () => 'foo'}
+    );
+    expect(() => inst.unmount()).not.toThrow();
+  });
+
+  it('supports updates when using refs', () => {
+    const log = [];
+    const createNodeMock = element => {
+      log.push(element.type);
+      return element.type;
+    };
+    class Foo extends React.Component {
+      render() {
+        return this.props.useDiv
+          ? <div ref="foo" />
+          : <span ref="foo" />;
+      }
+    }
+    const inst = ReactTestRenderer.create(
+      <Foo useDiv={true} />,
+      {createNodeMock}
+    );
+    inst.update(<Foo useDiv={false} />);
+    // It's called with 'div' twice (mounting and unmounting)
+    expect(log).toEqual(['div', 'div', 'span']);
   });
 
   it('supports error boundaries', () => {

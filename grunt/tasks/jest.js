@@ -7,7 +7,8 @@ function run(done, coverage) {
   grunt.log.writeln('running jest');
 
   var args = [
-    path.join('node_modules', 'jest', 'bin', 'jest'),
+    path.join('node_modules', 'jest-cli', 'bin', 'jest'),
+    '--runInBand',
   ];
   if (coverage) {
     args.push('--coverage');

@@ -292,7 +292,7 @@ describe('ReactTestUtils', () => {
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SimpleComponent />);
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
@@ -546,7 +546,7 @@ describe('ReactTestUtils', () => {
       ReactDOM.findDOMNode(instance),
       {clientX: CLIENT_X}
     );
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('can scry with stateless components involved', () => {

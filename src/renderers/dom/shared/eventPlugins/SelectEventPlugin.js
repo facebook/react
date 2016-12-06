@@ -13,6 +13,7 @@
 
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
@@ -51,9 +52,10 @@ var activeElementInst = null;
 var lastSelection = null;
 var mouseDown = false;
 
-// Track whether a listener exists for this plugin. If none exist, we do
+// Track whether all listeners exists for this plugin. If none exist, we do
 // not extract events. See #3639.
-var hasListener = false;
+var isListeningToAllDependencies =
+  ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -154,7 +156,12 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget
   ) {
-    if (!hasListener) {
+    var doc = nativeEventTarget.window === nativeEventTarget ?
+      nativeEventTarget.document :
+      nativeEventTarget.nodeType === 9 ?
+      nativeEventTarget :
+      nativeEventTarget.ownerDocument;
+    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
@@ -209,11 +216,6 @@ var SelectEventPlugin = {
     return null;
   },
 
-  didPutListener: function(inst, registrationName, listener) {
-    if (registrationName === 'onSelect') {
-      hasListener = true;
-    }
-  },
 };
 
 module.exports = SelectEventPlugin;

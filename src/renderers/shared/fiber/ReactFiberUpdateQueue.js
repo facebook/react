@@ -15,7 +15,6 @@
 type UpdateQueueNode = {
   partialState: any,
   callback: ?Function,
-  callbackWasCalled: boolean,
   isReplace: boolean,
   next: ?UpdateQueueNode,
 };
@@ -31,7 +30,6 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
   const queue = {
     partialState,
     callback: null,
-    callbackWasCalled: false,
     isReplace: false,
     next: null,
     isForced: false,
@@ -47,7 +45,6 @@ function addToQueue(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
   const node = {
     partialState,
     callback: null,
-    callbackWasCalled: false,
     isReplace: false,
     next: null,
   };
@@ -69,35 +66,51 @@ exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) :
   return queue;
 };
 
-exports.callCallbacks = function(queue : UpdateQueue, context : any) {
+exports.callCallbacks = function(queue : UpdateQueue, context : any) : Error | null {
   let node : ?UpdateQueueNode = queue;
+  let firstError = null;
   while (node) {
     const callback = node.callback;
-    if (callback && !node.callbackWasCalled) {
-      node.callbackWasCalled = true;
-      if (typeof context !== 'undefined') {
-        callback.call(context);
-      } else {
-        callback();
+    if (callback) {
+      try {
+        if (typeof context !== 'undefined') {
+          callback.call(context);
+        } else {
+          callback();
+        }
+      } catch (error) {
+        firstError = firstError || error;
       }
     }
     node = node.next;
   }
+  return firstError;
 };
+
+function getStateFromNode(node, instance, state, props) {
+  if (typeof node.partialState === 'function') {
+    const updateFn = node.partialState;
+    return updateFn.call(instance, state, props);
+  } else {
+    return node.partialState;
+  }
+}
 
 exports.mergeUpdateQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
   let node : ?UpdateQueueNode = queue;
+  if (queue.isReplace) {
+    // replaceState is always first in the queue.
+    prevState = getStateFromNode(queue, instance, prevState, props);
+    node = queue.next;
+    if (!node) {
+      // If there is no more work, we replace the raw object instead of cloning.
+      return prevState;
+    }
+  }
   let state = Object.assign({}, prevState);
   while (node) {
-    state = node.isReplace ? null : state;
-    let partialState;
-    if (typeof node.partialState === 'function') {
-      const updateFn = node.partialState;
-      partialState = updateFn.call(instance, state, props);
-    } else {
-      partialState = node.partialState;
-    }
-    state = Object.assign(state || {}, partialState);
+    let partialState = getStateFromNode(node, instance, state, props);
+    Object.assign(state, partialState);
     node = node.next;
   }
   return state;

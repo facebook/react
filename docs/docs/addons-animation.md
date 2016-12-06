@@ -6,6 +6,10 @@ layout: docs
 category: Add-Ons
 prev: addons.html
 next: create-fragment.html
+redirect_from:
+  - "docs/animation-ja-JP.html"
+  - "docs/animation-ko-KR.html"
+  - "docs/animation-zh-CN.html"
 ---
 
 The [`ReactTransitionGroup`](#reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.

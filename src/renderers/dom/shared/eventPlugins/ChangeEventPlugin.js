@@ -14,6 +14,7 @@
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
@@ -50,6 +51,8 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
     target
   );
   event.type = 'change';
+  // Flag this event loop as needing state restore.
+  ReactControlledComponent.enqueueStateRestore(target);
   EventPropagators.accumulateTwoPhaseDispatches(event);
   return event;
 }

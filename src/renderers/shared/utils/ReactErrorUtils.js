@@ -19,8 +19,7 @@ var caughtError = null;
  *
  * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
- * @param {*} a First argument
- * @param {*} b Second argument
+ * @param {*} a Argument
  */
 function invokeGuardedCallback<A>(
   name: string,
@@ -73,7 +72,9 @@ if (__DEV__) {
       func: (a: A) => void,
       a: A,
     ): void {
-      var boundFunc = func.bind(null, a);
+      var boundFunc = function() {
+        func(a);
+      };
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');

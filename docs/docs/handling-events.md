@@ -4,6 +4,8 @@ title: Handling Events
 permalink: docs/handling-events.html
 prev: state-and-lifecycle.html
 next: conditional-rendering.html
+redirect_from:
+  - "docs/events-ko-KR.html"
 ---
 
 Handling events with React elements is very similar to handling events on DOM elements. There are some syntactic differences:

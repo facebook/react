@@ -19,7 +19,9 @@ describe('ReactDOMProduction', () => {
   beforeEach(() => {
     __DEV__ = false;
     oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
+    global.process = {
+      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+    };
 
     jest.resetModuleRegistry();
     React = require('React');
@@ -36,7 +38,7 @@ describe('ReactDOMProduction', () => {
 
     spyOn(console, 'error');
     warning(false, 'Do cows go moo?');
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should use prod React', () => {
@@ -45,7 +47,7 @@ describe('ReactDOMProduction', () => {
     // no key warning
     void <div>{[<span />]}</div>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should handle a simple flow', () => {
@@ -178,7 +180,7 @@ describe('ReactDOMProduction', () => {
     expect(function() {
       class Component extends React.Component {
         render() {
-          return ['this is wrong'];
+          return undefined;
         }
       }
 

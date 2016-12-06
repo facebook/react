@@ -49,7 +49,7 @@ describe('inputValueTracking', () => {
   });
 
   it('should initialize with the current value', () => {
-    input.value ='foo';
+    input.value = 'foo';
 
     inputValueTracking.track(mockComponent);
 
@@ -69,13 +69,13 @@ describe('inputValueTracking', () => {
   });
 
   it('should track value changes', () => {
-    input.value ='foo';
+    input.value = 'foo';
 
     inputValueTracking.track(mockComponent);
 
     var tracker = mockComponent._wrapperState.valueTracker;
 
-    input.value ='bar';
+    input.value = 'bar';
     expect(tracker.getValue()).toEqual('bar');
   });
 
@@ -91,7 +91,7 @@ describe('inputValueTracking', () => {
   });
 
   it('should update value manually', () => {
-    input.value ='foo';
+    input.value = 'foo';
     inputValueTracking.track(mockComponent);
 
     var tracker = mockComponent._wrapperState.valueTracker;
@@ -101,7 +101,7 @@ describe('inputValueTracking', () => {
   });
 
   it('should coerce value to a string', () => {
-    input.value ='foo';
+    input.value = 'foo';
     inputValueTracking.track(mockComponent);
 
     var tracker = mockComponent._wrapperState.valueTracker;
@@ -112,7 +112,7 @@ describe('inputValueTracking', () => {
 
   it('should update value if it changed and return result', () => {
     inputValueTracking.track(mockComponent);
-    input.value ='foo';
+    input.value = 'foo';
 
     var tracker = mockComponent._wrapperState.valueTracker;
 
@@ -130,7 +130,7 @@ describe('inputValueTracking', () => {
   });
 
   it('should track value and return true when updating untracked instance', () => {
-    input.value ='foo';
+    input.value = 'foo';
 
     expect(
       inputValueTracking.updateValueIfChanged(mockComponent)

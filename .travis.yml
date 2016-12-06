@@ -3,23 +3,34 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-- 4
+- 6
 rvm:
 - 2.2.3
 cache:
   directories:
   - docs/vendor/bundle
   - node_modules
+  - $HOME/.yarn-cache
 before_install:
 - |
+    echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
+    unset GITHUB_TOKEN
+
     if [ "$TEST_TYPE" != build_website ] && \
       ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
     then
       echo "Only docs were updated, stopping build process."
       exit
     fi
-    npm install -g npm@latest-2
-    npm --version
+
+    sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
+    echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq yarn
+    yarn --version
+install:
+- |
+    yarn install
 script:
 - |
     if [ "$TEST_TYPE" = build_website ]; then
@@ -27,7 +38,6 @@ script:
         set -e
 
         GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
-        echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
         git config --global user.name "$GITHUB_USER_NAME"
         git config --global user.email "$GITHUB_USER_EMAIL"
 
@@ -81,22 +91,7 @@ script:
       git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
 
       echo 'Testing in fiber mode...'
-      printf '\nmodule.exports.useFiber = true;\n' \
-        >> src/renderers/dom/shared/ReactDOMFeatureFlags.js
-      FIBER_TESTS=`\
-        NODE_ENV=test node node_modules/jest/bin/jest --json | \
-        node -e "\
-          var data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')); \
-          console.log(data.numPassedTests + '/' + data.numTotalTests)\
-        "\
-      `
-      git checkout -- src/renderers/dom/shared/ReactDOMFeatureFlags.js
-      node scripts/facts-tracker/index.js \
-        "fiber-tests" "$FIBER_TESTS"
-
-      # Should consolidate this with the above fiber run
-      echo 'Testing in fiber mode against test records...'
-      scripts/fiber/record-tests
+      scripts/fiber/record-tests --track-facts
       git --no-pager diff scripts/fiber
       FIBER_TESTS_STATUS=$(git status --porcelain scripts/fiber)
       test -z "$FIBER_TESTS_STATUS"
@@ -128,7 +123,7 @@ env:
   # SECRET_TOKEN
   - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
   # GITHUB_TOKEN
-  - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
+  - secure: Sn+HwLSkbgM5MqVszq/CJHcOsZax17zwW0ILpGgAaEKD6MHNmEBdc71skaLr+6R4gHVO5ybV2cgSxHuBLHKzYoidq5ksGKRHNeXfyOv8jeHGTN/FjwMQbM+WkIK3wFroLsuQ1kW2FBfFEXqx4rET6GXwdcqycGl8GSFB1l0VNzE=
   # COVERALLS_TOKEN
   - secure: h/cUq+TrUMZOQmkFD7CvuwX0uAwmjIfKZ4qSUzY+QzUtDzOzA0L/XF84xTBq1Q5YYsEiaoF6GxxGCdrLQiBA/ZTd+88UHgeZPMRvi0xG9Q+PeePVOsZMTxy4/WWFgOfSQCk49Mj9zizGgO78i6vxq+SDXMtFHnZ+TpPJIEW6/m0=
 notifications:

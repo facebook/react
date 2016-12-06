@@ -13,19 +13,11 @@
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var warning = require('warning');
 
 var didWarnValDefaultVal = false;
-
-function forceUpdateIfMounted() {
-  if (this._rootNodeID) {
-    // DOM component is still mounted; update
-    ReactDOMTextarea.updateWrapper(this);
-  }
-}
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and
@@ -58,7 +50,6 @@ var ReactDOMTextarea = {
       value: undefined,
       defaultValue: undefined,
       children: '' + inst._wrapperState.initialValue,
-      onChange: inst._wrapperState.onChange,
     });
 
     return hostProps;
@@ -66,10 +57,11 @@ var ReactDOMTextarea = {
 
   mountWrapper: function(inst, props) {
     if (__DEV__) {
+      var owner = inst._currentElement._owner;
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        inst._currentElement._owner
+        owner ? owner.getName() : null
       );
       if (
         props.value !== undefined &&
@@ -128,7 +120,6 @@ var ReactDOMTextarea = {
     inst._wrapperState = {
       initialValue: '' + initialValue,
       listeners: null,
-      onChange: _handleChange.bind(inst),
     };
   },
 
@@ -159,20 +150,24 @@ var ReactDOMTextarea = {
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+    var textContent = node.textContent;
 
-    // Warning: node.value may be the empty string at this point (IE11) if placeholder is set.
-    node.value = node.textContent; // Detach value from defaultValue
+    // Only set node.value if textContent is equal to the expected
+    // initial value. In IE10/IE11 there is a bug where the placeholder attribute
+    // will populate textContent as well.
+    // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+    if (textContent === inst._wrapperState.initialValue) {
+      node.value = textContent;
+    }
   },
-};
 
-function _handleChange(event) {
-  var props = this._currentElement.props;
-  var returnValue;
-  if (props.onChange) {
-    returnValue = props.onChange.call(undefined, event);
-  }
-  ReactUpdates.asap(forceUpdateIfMounted, this);
-  return returnValue;
-}
+  restoreControlledState: function(inst) {
+    if (inst._rootNodeID) {
+      // DOM component is still mounted; update
+      ReactDOMTextarea.updateWrapper(inst);
+    }
+  },
+
+};
 
 module.exports = ReactDOMTextarea;

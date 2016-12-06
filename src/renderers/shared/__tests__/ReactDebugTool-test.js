@@ -63,14 +63,14 @@ describe('ReactDebugTool', () => {
     });
 
     ReactDebugTool.onTestEvent();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Exception thrown by hook while handling ' +
       'onTestEvent: Error: Hi.'
     );
 
     ReactDebugTool.onTestEvent();
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('returns isProfiling state', () => {

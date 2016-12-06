@@ -383,6 +383,18 @@ var ReactCompositeComponent = {
       }
     }
 
+    // setState callbacks during willMount should end up here
+    const callbacks = this._pendingCallbacks;
+    if (callbacks) {
+      this._pendingCallbacks = null;
+      for (let i = 0; i < callbacks.length; i++) {
+        transaction.getReactMountReady().enqueue(
+          callbacks[i],
+          inst
+        );
+      }
+    }
+
     return markup;
   },
 
@@ -666,7 +678,7 @@ var ReactCompositeComponent = {
     var inst = this._instance;
     var childContext;
 
-    if (inst.getChildContext) {
+    if (typeof inst.getChildContext === 'function') {
       if (__DEV__) {
         ReactInstrumentation.debugTool.onBeginProcessingChildContext();
         try {
@@ -677,9 +689,7 @@ var ReactCompositeComponent = {
       } else {
         childContext = inst.getChildContext();
       }
-    }
 
-    if (childContext) {
       invariant(
         typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
@@ -1193,10 +1203,10 @@ var ReactCompositeComponent = {
    * @final
    * @private
    */
-  attachRef: function(ref, component, transaction) {
+  attachRef: function(ref, component) {
     var inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
-    var publicComponentInstance = component.getPublicInstance(transaction);
+    var publicComponentInstance = component.getPublicInstance();
     if (__DEV__) {
       var componentName = component && component.getName ?
         component.getName() : 'a component';

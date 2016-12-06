@@ -9,6 +9,8 @@ redirect_from:
   - "tips/self-closing-tag.html"
   - "tips/maximum-number-of-jsx-root-nodes.html"
   - "tips/children-props-type.html"
+  - "docs/jsx-in-depth-zh-CN.html"
+  - "docs/jsx-in-depth-ko-KR.html"
 ---
 
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:

@@ -8,6 +8,9 @@ redirect_from:
   - "docs/reference.html"
   - "docs/clone-with-props.html"
   - "docs/top-level-api.html"
+  - "docs/top-level-api-ja-JP.html"
+  - "docs/top-level-api-ko-KR.html"
+  - "docs/top-level-api-zh-CN.html"
   - "docs/glossary.html"
 ---
 
@@ -218,7 +221,7 @@ Like [`React.Children.map()`](#react.children.map) but does not return an array.
 #### `React.Children.count`
 
 ```javascript
-Children.count(children)
+React.Children.count(children)
 ```
 
 Returns the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.

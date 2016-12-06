@@ -19,7 +19,6 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
@@ -36,14 +35,12 @@ var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
-var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
-var deleteListener = EventPluginHub.deleteListener;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
@@ -74,69 +71,6 @@ function getDeclarationErrorAddendum(internalInstance) {
     }
   }
   return '';
-}
-
-function friendlyStringify(obj) {
-  if (typeof obj === 'object') {
-    if (Array.isArray(obj)) {
-      return '[' + obj.map(friendlyStringify).join(', ') + ']';
-    } else {
-      var pairs = [];
-      for (var key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          var keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
-            key :
-            JSON.stringify(key);
-          pairs.push(keyEscaped + ': ' + friendlyStringify(obj[key]));
-        }
-      }
-      return '{' + pairs.join(', ') + '}';
-    }
-  } else if (typeof obj === 'string') {
-    return JSON.stringify(obj);
-  } else if (typeof obj === 'function') {
-    return '[function object]';
-  }
-  // Differs from JSON.stringify in that undefined because undefined and that
-  // inf and nan don't become null
-  return String(obj);
-}
-
-var styleMutationWarning = {};
-
-function checkAndWarnForMutatedStyle(style1, style2, component) {
-  if (style1 == null || style2 == null) {
-    return;
-  }
-  if (shallowEqual(style1, style2)) {
-    return;
-  }
-
-  var componentName = component._tag;
-  var owner = component._currentElement._owner;
-  var ownerName;
-  if (owner) {
-    ownerName = owner.getName();
-  }
-
-  var hash = ownerName + '|' + componentName;
-
-  if (styleMutationWarning.hasOwnProperty(hash)) {
-    return;
-  }
-
-  styleMutationWarning[hash] = true;
-
-  warning(
-    false,
-    '`%s` was passed a style object that has previously been mutated. ' +
-    'Mutating `style` is deprecated. Consider cloning it beforehand. Check ' +
-    'the `render` %s. Previous style: %s. Mutated style: %s.',
-    componentName,
-    owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
-    friendlyStringify(style1),
-    friendlyStringify(style2)
-  );
 }
 
 /**
@@ -205,7 +139,7 @@ function assertValidProps(component, props) {
   );
 }
 
-function enqueuePutListener(inst, registrationName, listener, transaction) {
+function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
   }
@@ -221,20 +155,6 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
-  transaction.getReactMountReady().enqueue(putListener, {
-    inst: inst,
-    registrationName: registrationName,
-    listener: listener,
-  });
-}
-
-function putListener() {
-  var listenerToPut = this;
-  EventPluginHub.putListener(
-    listenerToPut.inst,
-    listenerToPut.registrationName,
-    listenerToPut.listener
-  );
 }
 
 function inputPostMount() {
@@ -311,6 +231,20 @@ var mediaEvents = {
 
 function trackInputValue() {
   inputValueTracking.track(this);
+}
+
+function trapClickOnNonInteractiveElement() {
+  // Mobile Safari does not fire properly bubble click events on
+  // non-interactive elements, which means delegated click listeners do not
+  // fire. The workaround for this bug involves attaching an empty click
+  // listener on the target node.
+  // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+  // Just set it using the onclick property so that we don't have to manage any
+  // bookkeeping for it. Not sure if we need to clear it when the listener is
+  // removed.
+  // TODO: Only do this for the relevant Safaris maybe?
+  var node = getNode(this);
+  node.onclick = emptyFunction;
 }
 
 function trapBubbledEventsLocal() {
@@ -484,8 +418,6 @@ function ReactDOMComponent(element) {
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
   this._renderedChildren = null;
-  this._previousStyle = null;
-  this._previousStyleCopy = null;
   this._hostNode = null;
   this._hostParent = null;
   this._rootNodeID = 0;
@@ -547,6 +479,9 @@ ReactDOMComponent.Mixin = {
         props = ReactDOMInput.getHostProps(this, props);
         transaction.getReactMountReady().enqueue(trackInputValue, this);
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(this, 'onChange', transaction);
         break;
       case 'option':
         ReactDOMOption.mountWrapper(this, props, hostParent);
@@ -556,12 +491,18 @@ ReactDOMComponent.Mixin = {
         ReactDOMSelect.mountWrapper(this, props, hostParent);
         props = ReactDOMSelect.getHostProps(this, props);
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(this, 'onChange', transaction);
         break;
       case 'textarea':
         ReactDOMTextarea.mountWrapper(this, props, hostParent);
         props = ReactDOMTextarea.getHostProps(this, props);
         transaction.getReactMountReady().enqueue(trackInputValue, this);
         transaction.getReactMountReady().enqueue(trapBubbledEventsLocal, this);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(this, 'onChange', transaction);
         break;
     }
 
@@ -711,6 +652,14 @@ ReactDOMComponent.Mixin = {
           this
         );
         break;
+      default:
+        if (typeof props.onClick === 'function') {
+          transaction.getReactMountReady().enqueue(
+            trapClickOnNonInteractiveElement,
+            this
+          );
+        }
+        break;
     }
 
     return mountImage;
@@ -742,16 +691,14 @@ ReactDOMComponent.Mixin = {
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
-          enqueuePutListener(this, propKey, propValue, transaction);
+          ensureListeningTo(this, propKey, transaction);
         }
       } else {
         if (propKey === STYLE) {
           if (propValue) {
             if (__DEV__) {
-              // See `_updateDOMProperties`. style block
-              this._previousStyle = propValue;
+              Object.freeze(propValue);
             }
-            propValue = this._previousStyleCopy = Object.assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
@@ -847,12 +794,18 @@ ReactDOMComponent.Mixin = {
       var contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
+      // TODO: Validate that text is allowed as a child of this node
       if (contentToUse != null) {
-        // TODO: Validate that text is allowed as a child of this node
-        if (__DEV__) {
-          setAndValidateContentChildDev.call(this, contentToUse);
+        // Avoid setting textContent when the text is empty. In IE11 setting
+        // textContent on a text area will cause the placeholder to not
+        // show within the textarea until it has been focused and blurred again.
+        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+        if (contentToUse !== '') {
+          if (__DEV__) {
+            setAndValidateContentChildDev.call(this, contentToUse);
+          }
+          DOMLazyTree.queueText(lazyTree, contentToUse);
         }
-        DOMLazyTree.queueText(lazyTree, contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
@@ -910,6 +863,15 @@ ReactDOMComponent.Mixin = {
       case 'textarea':
         lastProps = ReactDOMTextarea.getHostProps(this, lastProps);
         nextProps = ReactDOMTextarea.getHostProps(this, nextProps);
+        break;
+      default:
+        if (typeof lastProps.onClick !== 'function' &&
+            typeof nextProps.onClick === 'function') {
+          transaction.getReactMountReady().enqueue(
+            trapClickOnNonInteractiveElement,
+            this
+          );
+        }
         break;
     }
 
@@ -973,21 +935,15 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (propKey === STYLE) {
-        var lastStyle = this._previousStyleCopy;
+        var lastStyle = lastProps[STYLE];
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
           }
         }
-        this._previousStyleCopy = null;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (lastProps[propKey]) {
-          // Only call deleteListener if there was a listener previously or
-          // else willDeleteListener gets called when there wasn't actually a
-          // listener (e.g., onClick={null})
-          deleteListener(this, propKey);
-        }
+        // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
@@ -1003,9 +959,7 @@ ReactDOMComponent.Mixin = {
     }
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
-      var lastProp =
-        propKey === STYLE ? this._previousStyleCopy :
-        lastProps != null ? lastProps[propKey] : undefined;
+      var lastProp = lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||
           nextProp === lastProp ||
           nextProp == null && lastProp == null) {
@@ -1014,16 +968,8 @@ ReactDOMComponent.Mixin = {
       if (propKey === STYLE) {
         if (nextProp) {
           if (__DEV__) {
-            checkAndWarnForMutatedStyle(
-              this._previousStyleCopy,
-              this._previousStyle,
-              this
-            );
-            this._previousStyle = nextProp;
+            Object.freeze(nextProp);
           }
-          nextProp = this._previousStyleCopy = Object.assign({}, nextProp);
-        } else {
-          this._previousStyleCopy = null;
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
@@ -1048,9 +994,7 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          enqueuePutListener(this, propKey, nextProp, transaction);
-        } else if (lastProp) {
-          deleteListener(this, propKey);
+          ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
@@ -1199,13 +1143,26 @@ ReactDOMComponent.Mixin = {
 
     this.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(this);
-    EventPluginHub.deleteAllListeners(this);
     this._rootNodeID = 0;
     this._domID = 0;
     this._wrapperState = null;
 
     if (__DEV__) {
       setAndValidateContentChildDev.call(this, null);
+    }
+  },
+
+  restoreControlledState: function() {
+    switch (this._tag) {
+      case 'input':
+        ReactDOMInput.restoreControlledState(this);
+        return;
+      case 'textarea':
+        ReactDOMTextarea.restoreControlledState(this);
+        return;
+      case 'select':
+        ReactDOMSelect.restoreControlledState(this);
+        return;
     }
   },
 

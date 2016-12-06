@@ -27,7 +27,7 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
@@ -357,7 +357,8 @@ var ReactMount = {
     nextElement,
     container,
     shouldReuseMarkup,
-    context
+    context,
+    callback
   ) {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
@@ -379,6 +380,12 @@ var ReactMount = {
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
     var componentInstance = instantiateReactComponent(nextElement, false);
+
+    if (callback) {
+      componentInstance._pendingCallbacks = [function() {
+        callback.call(componentInstance._renderedComponent.getPublicInstance());
+      }];
+    }
 
     // The initial render is synchronous but any updates that happen during
     // rendering, in componentWillMount or componentDidMount, will be batched
@@ -459,14 +466,7 @@ var ReactMount = {
       { child: nextElement }
     );
 
-    var nextContext;
-    if (parentComponent) {
-      var parentInst = ReactInstanceMap.get(parentComponent);
-      nextContext = parentInst._processChildContext(parentInst._context);
-    } else {
-      nextContext = emptyObject;
-    }
-
+    var nextContext = getContextForSubtree(parentComponent);
     var prevComponent = getTopLevelWrapperInContainer(container);
 
     if (prevComponent) {
@@ -529,11 +529,9 @@ var ReactMount = {
       nextWrappedElement,
       container,
       shouldReuseMarkup,
-      nextContext
+      nextContext,
+      callback
     )._renderedComponent.getPublicInstance();
-    if (callback) {
-      callback.call(component);
-    }
     return component;
   },
 

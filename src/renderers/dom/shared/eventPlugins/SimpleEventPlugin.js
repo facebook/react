@@ -12,9 +12,7 @@
 
 'use strict';
 
-var EventListener = require('EventListener');
 var EventPropagators = require('EventPropagators');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
 var SyntheticEvent = require('SyntheticEvent');
@@ -27,7 +25,6 @@ var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
-var emptyFunction = require('emptyFunction');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('invariant');
 
@@ -141,33 +138,6 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   topLevelEventsToDispatchConfig[topEvent] = type;
 });
 
-var onClickListeners = {};
-
-function getDictionaryKey(inst: ReactInstance): string {
-  // Prevents V8 performance issue:
-  // https://github.com/facebook/react/pull/7232
-  return '.' + inst._rootNodeID;
-}
-
-function isInteractive(tag) {
-  return (
-    tag === 'button' || tag === 'input' ||
-    tag === 'select' || tag === 'textarea'
-  );
-}
-
-function shouldPreventMouseEvent(inst) {
-  if (inst) {
-    var disabled = inst._currentElement && inst._currentElement.props.disabled;
-
-    if (disabled) {
-      return isInteractive(inst._tag);
-    }
-  }
-
-  return false;
-}
-
 var SimpleEventPlugin: PluginModule<MouseEvent> = {
 
   eventTypes: eventTypes,
@@ -243,10 +213,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // Disabled elements should not respond to mouse events
-        if (shouldPreventMouseEvent(targetInst)) {
-          return null;
-        }
+        // TODO: Disabled elements should not respond to mouse events
         /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
@@ -302,40 +269,6 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
-  },
-
-  didPutListener: function(
-    inst: ReactInstance,
-    registrationName: string,
-    listener: () => void,
-  ): void {
-    // Mobile Safari does not fire properly bubble click events on
-    // non-interactive elements, which means delegated click listeners do not
-    // fire. The workaround for this bug involves attaching an empty click
-    // listener on the target node.
-    // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
-    if (registrationName === 'onClick' && !isInteractive(inst._tag)) {
-      var key = getDictionaryKey(inst);
-      var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-      if (!onClickListeners[key]) {
-        onClickListeners[key] = EventListener.listen(
-          node,
-          'click',
-          emptyFunction
-        );
-      }
-    }
-  },
-
-  willDeleteListener: function(
-    inst: ReactInstance,
-    registrationName: string,
-  ): void {
-    if (registrationName === 'onClick' && !isInteractive(inst._tag)) {
-      var key = getDictionaryKey(inst);
-      onClickListeners[key].remove();
-      delete onClickListeners[key];
-    }
   },
 
 };

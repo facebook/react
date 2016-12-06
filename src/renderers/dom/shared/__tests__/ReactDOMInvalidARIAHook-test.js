@@ -30,13 +30,13 @@ describe('ReactDOMInvalidARIAHook', () => {
     it('should allow valid aria-* props', () => {
       spyOn(console, 'error');
       mountComponent({'aria-label': 'Bumble bees'});
-      expect(console.error.calls.count()).toBe(0);
+      expectDev(console.error.calls.count()).toBe(0);
     });
     it('should warn for one invalid aria-* prop', () => {
       spyOn(console, 'error');
       mountComponent({'aria-badprop': 'maybe'});
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid aria prop `aria-badprop` on <div> tag. ' +
         'For details, see https://fb.me/invalid-aria-prop'
       );
@@ -49,8 +49,8 @@ describe('ReactDOMInvalidARIAHook', () => {
           'aria-malprop': 'Turbulent seas',
         }
       );
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid aria props `aria-badprop`, `aria-malprop` on <div> ' +
         'tag. For details, see https://fb.me/invalid-aria-prop'
       );
@@ -59,8 +59,8 @@ describe('ReactDOMInvalidARIAHook', () => {
       spyOn(console, 'error');
       // The valid attribute name is aria-haspopup.
       mountComponent({'aria-hasPopup': 'true'});
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Unknown ARIA attribute aria-hasPopup. ' +
         'Did you mean aria-haspopup?'
       );

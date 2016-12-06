@@ -16,50 +16,62 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
+var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+
+var { HostRoot } = ReactTypeOfWork;
 
 /**
  * Find the deepest React component completely containing the root of the
  * passed-in instance (for use when entire React trees are nested within each
  * other). If React trees are not nested, returns null.
  */
-function findParent(inst) {
+function findRootContainerNode(inst) {
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
-  while (inst._hostParent) {
-    inst = inst._hostParent;
+  if (typeof inst.tag === 'number') {
+    while (inst.return) {
+      inst = inst.return;
+    }
+    if (inst.tag !== HostRoot) {
+      // This can happen if we're in a detached tree.
+      return null;
+    }
+    return inst.stateNode.containerInfo;
+  } else {
+    while (inst._hostParent) {
+      inst = inst._hostParent;
+    }
+    var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
+    return rootNode.parentNode;
   }
-  var rootNode = ReactDOMComponentTree.getNodeFromInstance(inst);
-  var container = rootNode.parentNode;
-  return ReactDOMComponentTree.getClosestInstanceFromNode(container);
 }
 
 // Used to store ancestor hierarchy in top level callback
-function TopLevelCallbackBookKeeping(topLevelType, nativeEvent) {
+function TopLevelCallbackBookKeeping(topLevelType, nativeEvent, targetInst) {
   this.topLevelType = topLevelType;
   this.nativeEvent = nativeEvent;
+  this.targetInst = targetInst;
   this.ancestors = [];
 }
 Object.assign(TopLevelCallbackBookKeeping.prototype, {
   destructor: function() {
     this.topLevelType = null;
     this.nativeEvent = null;
+    this.targetInst = null;
     this.ancestors.length = 0;
   },
 });
 PooledClass.addPoolingTo(
   TopLevelCallbackBookKeeping,
-  PooledClass.twoArgumentPooler
+  PooledClass.threeArgumentPooler
 );
 
 function handleTopLevelImpl(bookKeeping) {
-  var nativeEventTarget = getEventTarget(bookKeeping.nativeEvent);
-  var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
-    nativeEventTarget
-  );
+  var targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
   // It's important that we build the array of ancestors before calling any
@@ -67,8 +79,18 @@ function handleTopLevelImpl(bookKeeping) {
   // inconsistencies with ReactMount's node cache. See #1105.
   var ancestor = targetInst;
   do {
+    if (!ancestor) {
+      bookKeeping.ancestors.push(ancestor);
+      break;
+    }
+    var root = findRootContainerNode(ancestor);
+    if (!root) {
+      break;
+    }
     bookKeeping.ancestors.push(ancestor);
-    ancestor = ancestor && findParent(ancestor);
+    ancestor = ReactDOMComponentTree.getClosestInstanceFromNode(
+      root
+    );
   } while (ancestor);
 
   for (var i = 0; i < bookKeeping.ancestors.length; i++) {
@@ -158,10 +180,17 @@ var ReactEventListener = {
       return;
     }
 
+    var nativeEventTarget = getEventTarget(nativeEvent);
+    var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
+      nativeEventTarget
+    );
+
     var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,
-      nativeEvent
+      nativeEvent,
+      targetInst
     );
+
     try {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.

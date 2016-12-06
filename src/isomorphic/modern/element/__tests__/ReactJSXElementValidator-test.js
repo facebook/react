@@ -47,8 +47,8 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component>{[<Component />, <Component />]}</Component>;
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -74,8 +74,8 @@ describe('ReactJSXElementValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<ComponentWrapper />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop. ' +
       'Check the render method of `InnerComponent`. ' +
       'It was passed a child from ComponentWrapper. '
@@ -99,8 +99,8 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component>{iterable}</Component>;
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
@@ -110,7 +110,7 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warns for iterable elements with keys', () => {
@@ -133,7 +133,7 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component>{iterable}</Component>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn for numeric keys in entry iterable as a child', () => {
@@ -154,7 +154,7 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component>{iterable}</Component>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly as children', () => {
@@ -162,7 +162,7 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component><Component /><Component /></Component>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the child array contains non-elements', () => {
@@ -170,7 +170,7 @@ describe('ReactJSXElementValidator', () => {
 
     void <Component>{[{}, {}]}</Component>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   // TODO: These warnings currently come from the composite component, but
@@ -217,25 +217,25 @@ describe('ReactJSXElementValidator', () => {
     void <Null />;
     void <True />;
     void <Num />;
-    expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls.argsFor(1)[0]).toContain(
+    expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls.argsFor(2)[0]).toContain(
+    expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
-    expect(console.error.calls.argsFor(3)[0]).toContain(
+    expectDev(console.error.calls.argsFor(3)[0]).toContain(
       'type should not be null, undefined, boolean, or number. It should be ' +
       'a string (for DOM elements) or a ReactClass (for composite components).'
     );
     void <Div />;
-    expect(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(4);
   });
 
   it('should check default prop values', () => {
@@ -245,7 +245,7 @@ describe('ReactJSXElementValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
@@ -260,7 +260,7 @@ describe('ReactJSXElementValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
@@ -276,7 +276,7 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
     expect(
       console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
     ).toBe(
@@ -298,7 +298,7 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop="string" />);
 
     // Should not error for strings
-    expect(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
   it('should warn on invalid prop types', () => {
@@ -316,8 +316,8 @@ describe('ReactJSXElementValidator', () => {
       prop: null,
     };
     ReactTestUtils.renderIntoDocument(<NullPropTypeComponent />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'NullPropTypeComponent: prop type `prop` is invalid; it must be a ' +
       'function, usually from React.PropTypes.'
     );
@@ -334,8 +334,8 @@ describe('ReactJSXElementValidator', () => {
       prop: null,
     };
     ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'NullContextTypeComponent: context type `prop` is invalid; it must ' +
       'be a function, usually from React.PropTypes.'
     );
@@ -352,8 +352,8 @@ describe('ReactJSXElementValidator', () => {
       prop: 'foo',
     });
     ReactTestUtils.renderIntoDocument(<GetDefaultPropsComponent />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'getDefaultProps is only used on classic React.createClass definitions.' +
       ' Use a static property named `defaultProps` instead.'
     );

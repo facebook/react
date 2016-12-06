@@ -186,7 +186,7 @@ describe('autobind optout', () => {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn if you pass an manually bound method to setState', () => {
@@ -210,7 +210,7 @@ describe('autobind optout', () => {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
 });

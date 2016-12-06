@@ -49,24 +49,30 @@ Shallow rendering lets you render a component "one level deep" and assert facts 
 
 Call [`createRenderer()`](#createrenderer) in your tests to create a shallow renderer. You can think of this as a "place" to render the component you're testing, and from which you can extract the component's output.
 
-[`shadowRenderer.render()`](#shallowrenderer.render) is similar to [`ReactDOM.render()`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. This means you can test components in isolated from how their children are implemented.
+[`shallowRenderer.render()`](#shallowrenderer.render) is similar to [`ReactDOM.render()`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. This means you can test components isolated from how their children are implemented.
 
-After `shadowRenderer.render()` has been called, you can use [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput) to get the shallowly rendered output.
+After `shallowRenderer.render()` has been called, you can use [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput) to get the shallowly rendered output.
 
-You can then begin to assert facts about the output. For example, if your component's render method returns:
+You can then begin to assert facts about the output. For example, if you have the following component:
 
 ```javascript
-<div>
-  <span className="heading">Title</span>
-  <Subcomponent foo="bar" />
-</div>
+function MyComponent() {
+  return (
+    <div>
+      <span className="heading">Title</span>
+      <Subcomponent foo="bar" />
+    </div>
+  );
+}
 ```
 
 Then you can assert:
 
 ```javascript
 const renderer = ReactTestUtils.createRenderer();
-result = renderer.getRenderOutput();
+renderer.render(<MyComponent />);
+const result = renderer.getRenderOutput();
+
 expect(result.type).toBe('div');
 expect(result.props.children).toEqual([
   <span className="heading">Title</span>,

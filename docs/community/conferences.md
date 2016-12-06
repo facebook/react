@@ -9,10 +9,20 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
+### Agent Conference 2017
+January 20-21 in Dornbirn, Austria
+
+[Website](http://agent.sh/)
+
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
 [Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
+
+### React Amsterdam 2017
+April 21st in Amsterdam, The Netherlands
+
+[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
 
 ### Chain React 2017
 Summer 2017, Portland, Oregon USA
@@ -52,7 +62,7 @@ February 22 & 23 in San Francisco, CA
 ### React Amsterdam 2016
 April 16 in Amsterdam, The Netherlands
 
-[Website](http://react.amsterdam) - [Videos](https://youtu.be/sXDZBxbRRag?list=PLNBNS7NRGKMG3uLrm5fgY02hJ87Wzb4IU)
+[Website](https://react.amsterdam/2016) - [Videos](https://youtu.be/sXDZBxbRRag?list=PLNBNS7NRGKMG3uLrm5fgY02hJ87Wzb4IU)
 
 ### ReactEurope 2016
 June 2 & 3 in Paris, France

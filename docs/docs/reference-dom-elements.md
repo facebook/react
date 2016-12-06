@@ -8,6 +8,7 @@ redirect_from:
   - "docs/tags-and-attributes.html"
   - "docs/dom-differences.html"
   - "docs/special-non-dom-attributes.html"
+  - "docs/class-name-manipulation.html"
   - "tips/inline-styles.html"
   - "tips/style-props-value-px.html"
   - "tips/dangerously-set-inner-html.html"
@@ -167,7 +168,7 @@ underlineThickness unicode unicodeBidi unicodeRange unitsPerEm vAlphabetic
 vHanging vIdeographic vMathematical values vectorEffect version vertAdvY
 vertOriginX vertOriginY viewBox viewTarget visibility widths wordSpacing
 writingMode x x1 x2 xChannelSelector xHeight xlinkActuate xlinkArcrole
-xlinkHref xlinkRole xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace
-y y1 y2 yChannelSelector z zoomAndPan
+xlinkHref xlinkRole xlinkShow xlinkTitle xlinkType xmlns xmlnsXlink xmlBase
+xmlLang xmlSpace y y1 y2 yChannelSelector z zoomAndPan
 
 ```
