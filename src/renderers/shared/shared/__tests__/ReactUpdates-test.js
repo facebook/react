@@ -544,6 +544,8 @@ describe('ReactUpdates', () => {
     // componentDidUpdate handlers is called, B's DOM should already have been
     // updated.
 
+    var bContainer = document.createElement('div');
+
     var a;
     var b;
 
@@ -558,7 +560,15 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        return <div>A{this.state.x}</div>;
+        var portal = null;
+        // If we're using Fiber, we use Portals instead to achieve this.
+        if (ReactDOMFeatureFlags.useFiber) {
+          portal = ReactDOM.unstable_createPortal(
+            <B ref={n => b = n} />,
+            bContainer
+          );
+        }
+        return <div>A{this.state.x}{portal}</div>;
       }
     }
 
@@ -571,7 +581,9 @@ describe('ReactUpdates', () => {
     }
 
     a = ReactTestUtils.renderIntoDocument(<A />);
-    b = ReactTestUtils.renderIntoDocument(<B />);
+    if (!ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.render(<B ref={n => b = n} />, bContainer);
+    }
 
     ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});

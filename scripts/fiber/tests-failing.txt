@@ -110,7 +110,6 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/shared/__tests__/ReactUpdates-test.js
-* should queue mount-ready handlers across different roots
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
