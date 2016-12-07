@@ -602,6 +602,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should update arbitrary attributes for tags containing dashes
 * should clear all the styles when removing `style`
 * should update styles when `style` changes from null to object
+* should not reset innerHTML for when children is null
+* should reset innerHTML when switching from a direct text child to an empty child
 * should empty element when removing innerHTML
 * should transition from string content to innerHTML
 * should transition from innerHTML to string content

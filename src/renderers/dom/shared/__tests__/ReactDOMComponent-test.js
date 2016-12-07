@@ -416,6 +416,32 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.color).toEqual('red');
     });
 
+    it('should not reset innerHTML for when children is null', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<div />, container);
+      container.firstChild.innerHTML = 'bonjour';
+      expect(container.firstChild.innerHTML).toEqual('bonjour');
+
+      ReactDOM.render(<div />, container);
+      expect(container.firstChild.innerHTML).toEqual('bonjour');
+    });
+
+    it('should reset innerHTML when switching from a direct text child to an empty child', () => {
+      const transitionToValues = [
+        null,
+        undefined,
+        false,
+      ];
+      transitionToValues.forEach((transitionToValue) => {
+        var container = document.createElement('div');
+        ReactDOM.render(<div>bonjour</div>, container);
+        expect(container.firstChild.innerHTML).toEqual('bonjour');
+
+        ReactDOM.render(<div>{transitionToValue}</div>, container);
+        expect(container.firstChild.innerHTML).toEqual('');
+      });
+    });
+
     it('should empty element when removing innerHTML', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
