@@ -418,11 +418,11 @@ describe('ReactDOMComponent', () => {
 
     it('should not reset innerHTML for when children is null', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<div></div>, container);
+      ReactDOM.render(<div />, container);
       container.firstChild.innerHTML = 'bonjour';
       expect(container.firstChild.innerHTML).toEqual('bonjour');
 
-      ReactDOM.render(<div></div>, container);
+      ReactDOM.render(<div />, container);
       expect(container.firstChild.innerHTML).toEqual('bonjour');
     });
 
