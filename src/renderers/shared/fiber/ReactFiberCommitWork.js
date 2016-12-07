@@ -35,7 +35,7 @@ var {
 
 module.exports = function<T, P, I, TI, C>(
   config : HostConfig<T, P, I, TI, C>,
-  captureError : (failedFiber : Fiber, error: Error) => Fiber | null
+  captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
 
   const commitUpdate = config.commitUpdate;
