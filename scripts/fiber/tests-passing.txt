@@ -1294,6 +1294,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponentDOMMinimalism-test.
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
 * should support setting state
+* should call componentDidUpdate of children first
 * should batch unmounts
 
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
