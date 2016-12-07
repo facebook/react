@@ -26,15 +26,20 @@ function exec(command, args) {
 }
 
 
-var isInsideOfTravis = !!process.env.TRAVIS_REPO_SLUG;
+var isCI = !!process.env.TRAVIS_REPO_SLUG;
 
-if (isInsideOfTravis) {
-  if (process.env.TRAVIS_BRANCH !== 'master') {
+if (isCI) {
+  var branch = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH;
+  var isPullRequest =
+    process.env.TRAVIS_PULL_REQUEST !== 'false' ||
+    !!process.env.CI_PULL_REQUEST;
+
+  if (branch !== 'master') {
     console.error('facts-tracker: Branch is not master, exiting...');
     process.exit(0);
   }
 
-  if (process.env.TRAVIS_PULL_REQUEST !== 'false') {
+  if (isPullRequest) {
     console.error('facts-tracker: This is a pull request, exiting...');
     process.exit(0);
   }
@@ -89,7 +94,7 @@ if (process.argv.length <= 2) {
 }
 
 function getRepoSlug() {
-  if (isInsideOfTravis) {
+  if (isCI) {
     return process.env.TRAVIS_REPO_SLUG;
   }
 
@@ -115,7 +120,7 @@ function checkoutFactsFolder() {
   var factsFolder = '../' + repoSlug.split('/')[1] + '-facts';
   if (!fs.existsSync(factsFolder)) {
     var repoURL;
-    if (isInsideOfTravis) {
+    if (isCI) {
       repoURL = 'https://$GITHUB_USER@github.com/' + repoSlug + '.git';
     } else {
       repoURL = 'git@github.com:' + repoSlug + '.git';
