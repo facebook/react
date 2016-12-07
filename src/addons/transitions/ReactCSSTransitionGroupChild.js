@@ -51,6 +51,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
     appearTimeout: React.PropTypes.number,
     enterTimeout: React.PropTypes.number,
     leaveTimeout: React.PropTypes.number,
+    children: React.PropTypes.node,
   },
 
   transition: function(animationType, finishCallback, userSpecifiedDelay) {
@@ -164,7 +165,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   render: function() {
-    return onlyChild(this.props.children);
+    var props = Object.assign({}, this.props);
+    Object.keys(ReactCSSTransitionGroupChild.propTypes)
+      .forEach(key => delete props[key]);
+    return React.cloneElement(onlyChild(this.props.children), props);
   },
 });
 

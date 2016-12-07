@@ -327,4 +327,46 @@ describe('ReactCSSTransitionGroup', () => {
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();
   });
+
+  it('should work with custom component wrapper cloning children', () => {
+    const extraClassNameProp = 'wrapper-item';
+    class Wrapper extends React.Component {
+      render() {
+        return (
+          <div>
+            {
+              React.Children.map(this.props.children,
+                child => React.cloneElement(child, { className: extraClassNameProp }))
+            }
+          </div>
+        );
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        return <div {...this.props} />;
+      }
+    }
+
+    class Component extends React.Component {
+      render() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            component={Wrapper}
+          >
+            <Child />
+          </ReactCSSTransitionGroup>
+        );
+      }
+    }
+
+    var a = ReactDOM.render(<Component/>, container);
+    var child = ReactDOM.findDOMNode(a).childNodes[0];
+    expect(CSSCore.hasClass(child, extraClassNameProp)).toBe(true);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
+  });
 });
