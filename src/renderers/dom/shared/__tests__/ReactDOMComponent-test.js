@@ -416,6 +416,16 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.color).toEqual('red');
     });
 
+    it('should not reset innerHTML for when children is null', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<div></div>, container);
+      container.firstChild.innerHTML = 'bonjour';
+      expect(container.firstChild.innerHTML).toEqual('bonjour');
+
+      ReactDOM.render(<div></div>, container);
+      expect(container.firstChild.innerHTML).toEqual('bonjour');
+    });
+
     it('should empty element when removing innerHTML', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
