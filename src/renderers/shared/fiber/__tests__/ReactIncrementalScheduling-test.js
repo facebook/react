@@ -419,11 +419,11 @@ describe('ReactIncrementalScheduling', () => {
     });
     // We're flushing deferred work
     // Still, roots with animation work are handled first
-    ReactNoop.flushDeferredPri(15 + 5);
+    ReactNoop.flushDeferredPri(15);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
-    ReactNoop.flushDeferredPri(15 + 5);
+    ReactNoop.flushDeferredPri(15);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
@@ -434,7 +434,7 @@ describe('ReactIncrementalScheduling', () => {
       ReactNoop.renderToRootWithID(<span prop="b:3" />, 'b');
     });
     // Animation is still handled first
-    ReactNoop.flushDeferredPri(15 + 5);
+    ReactNoop.flushDeferredPri(15);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);

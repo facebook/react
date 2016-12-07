@@ -82,8 +82,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   // Keeps track of whether we're currently in a work loop. Used to batch
   // nested updates.
   let isPerformingWork : boolean = false;
-  // This lets us know if we should defer a commit until the next frame.
-  let isPerformingDeferredWork : boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -148,10 +146,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       // If there's no work on it, it will get unscheduled too.
       nextScheduledRoot = next;
     }
-    if (pendingCommit) {
-      nextPriorityLevel = pendingCommit.pendingWorkPriority;
-      return null;
-    }
+
     let root = nextScheduledRoot;
     let highestPriorityRoot = null;
     let highestPriorityLevel = NoWork;
@@ -178,7 +173,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   // Returns true if the commit phase finishes without any errors.
-  function commitAllWork(finishedWork : Fiber): boolean {
+  function commitAllWork(finishedWork : Fiber) {
     // We keep track of this so that captureError can collect any boundaries
     // that capture an error during the commit phase. The reason these aren't
     // local to this function is because errors that occur during cWU are
@@ -325,7 +320,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
         continue pass2;
       }
-      priorityContext = previousPriorityContext;
       break;
     }
 
@@ -333,19 +327,18 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     // If we caught any errors during this commit, schedule their boundaries
     // to update.
-    let noErrors;
     if (commitPhaseBoundaries) {
-      noErrors = false;
       commitPhaseBoundaries.forEach(scheduleUpdate);
       commitPhaseBoundaries = null;
-    } else {
-      noErrors = true;
     }
 
     priorityContext = previousPriorityContext;
-    nextUnitOfWork = null;
 
-    return noErrors;
+    // Clear any errors that may have occurred during this commit
+    // TODO: Possibly recursive. Can we move this into performWork? Not sure how
+    // because we need to clear errors after every commit, and one of the call
+    // sites of commitAllWork is completeUnitOfWork.
+    errorLoop();
   }
 
   function resetWorkPriority(workInProgress : Fiber) {
@@ -429,8 +422,16 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         workInProgress = returnFiber;
         continue;
       } else {
-        // If we've reached the root, commit during the next unit of work.
-        pendingCommit = workInProgress;
+        // We've reached the root. Unless we're current performing deferred
+        // work, we should commit the completed work immediately. If we are
+        // performing deferred work, returning null indicates to the caller
+        // that we just completed the root so they can handle that case correctly.
+        if (nextPriorityLevel < HighPriority) {
+          // Otherwise, we should commit immediately.
+          commitAllWork(workInProgress);
+        } else {
+          pendingCommit = workInProgress;
+        }
         return null;
       }
     }
@@ -515,84 +516,71 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function errorLoop() {
+    if (!nextUnitOfWork) {
+      nextUnitOfWork = findNextUnitOfWork();
+    }
     // Keep performing work until there are no more errors
-    while (capturedErrors && capturedErrors.size) {
-      if (!nextUnitOfWork && !pendingCommit) {
-        nextUnitOfWork = findNextUnitOfWork();
-      }
-      if (pendingCommit) {
-        commitAllWork(pendingCommit);
-      } else if (nextUnitOfWork) {
-        if (hasCapturedError(nextUnitOfWork)) {
-          // Use a forked version of performUnitOfWork
-          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-        } else {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        }
+    while (capturedErrors && capturedErrors.size &&
+           nextUnitOfWork &&
+           nextPriorityLevel !== NoWork &&
+           nextPriorityLevel <= TaskPriority) {
+      if (hasCapturedError(nextUnitOfWork)) {
+        // Use a forked version of performUnitOfWork
+        nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
       } else {
-        return;
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+      if (!nextUnitOfWork) {
+        nextUnitOfWork = findNextUnitOfWork();
       }
     }
   }
 
   function workLoop(priorityLevel) {
-    while (true) {
-      if (!nextUnitOfWork && !pendingCommit) {
+    if (!nextUnitOfWork) {
+      nextUnitOfWork = findNextUnitOfWork();
+    }
+    while (nextUnitOfWork &&
+           nextPriorityLevel !== NoWork &&
+           nextPriorityLevel <= priorityLevel) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      if (!nextUnitOfWork) {
         nextUnitOfWork = findNextUnitOfWork();
-      }
-
-      // If we're performing Task work and we're inside a deferred work batch,
-      // then we shouldn't commit any work yet. Defer it to the next frame.
-      // TODO: Is there a better way check if the pending commit should be
-      // deferred? It's not as simple as retaining work priority because
-      // the root may receive a lower priority update before the completed
-      // work is flushed, causing the new update to be up-prioritized.
-      if (
-        pendingCommit &&
-        !(priorityLevel === TaskPriority && isPerformingDeferredWork)
-      ) {
-        const noError = commitAllWork(pendingCommit);
-        if (!noError) {
-          // There was an error during the commit phase. Clear them before
-          // continuing.
-          errorLoop();
-          continue;
-        }
-      } else if (nextUnitOfWork && nextPriorityLevel !== NoWork && nextPriorityLevel <= priorityLevel) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      } else {
-        return;
       }
     }
   }
 
-  function deferredWorkLoop(deadline) {
+  // Returns true if we exit because the deadline has expired
+  function deferredWorkLoop(deadline) : boolean {
+    let deadlineHasExpired = false;
     if (!nextUnitOfWork) {
       nextUnitOfWork = findNextUnitOfWork();
     }
-
-    while (true) {
+    while (nextUnitOfWork && !deadlineHasExpired) {
       if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        if (!nextUnitOfWork && !pendingCommit) {
-          nextUnitOfWork = findNextUnitOfWork();
-        }
-        if (pendingCommit) {
-          const noError = commitAllWork(pendingCommit);
-          if (!noError) {
-            // There was an error during the commit phase. Clear them before
-            // continuing.
-            errorLoop();
-            continue;
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        // The order of the checks here is important: we should only check if
+        // there's a pending commit if performUnitOfWork returns null.
+        // Alternatively, to avoid checking for the pending commit, we could
+        // get it from the nextScheduledRoot. However, that requires additional
+        // checks to satisfy Flow. Since the logical operator short-circuits,
+        // this should be fine.
+        if (!nextUnitOfWork && pendingCommit) {
+          // performUnitOfWork returned null and we have a pendingCommit. If we
+          // have time, we should commit the work now.
+          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+            commitAllWork(pendingCommit);
+            nextUnitOfWork = findNextUnitOfWork();
+          } else {
+            deadlineHasExpired = true;
           }
-        } else if (nextUnitOfWork) {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        } else {
-          return;
+          // Otherwise the root will committed in the next frame.
         }
       } else {
-        return;
+        deadlineHasExpired = true;
       }
     }
+    return deadlineHasExpired;
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : null | Deadline) {
@@ -600,7 +588,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       throw new Error('performWork was called recursively.');
     }
     isPerformingWork = true;
-    isPerformingDeferredWork = priorityLevel >= HighPriority;
+    const isPerformingDeferredWork = Boolean(deadline);
+    let deadlineHasExpired = false;
 
     // Perform work until either there's no more work at this priority level, or
     // (in the case of deferred work) we've run out of time.
@@ -612,19 +601,35 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // work. The loop we're in now runs infrequently: to flush task work at
         // the end of a frame, or to restart after an error.
         while (priorityLevel !== NoWork) {
-          // If there are errors, clear them first.
-          if (capturedErrors && capturedErrors.size) {
-            errorLoop();
+          // Before starting any work, check to see if there are any pending
+          // commits from the previous frame. An exception if we're flushing
+          // Task work in a deferred batch and the pending commit does not
+          // have Task priority.
+          if (pendingCommit) {
+            const isFlushingTaskWorkInDeferredBatch =
+              priorityLevel === TaskPriority &&
+              isPerformingDeferredWork &&
+              pendingCommit.pendingWorkPriority !== TaskPriority;
+            if (!isFlushingTaskWorkInDeferredBatch) {
+              commitAllWork(pendingCommit);
+            }
           }
 
-          if (priorityLevel >= HighPriority) {
-            if (!deadline) {
-              throw new Error('Cannot perform deferred work without a deadline.');
-            }
+          // Clear any errors.
+          errorLoop();
+
+          if (deadline) {
             // The deferred work loop will run until there's no time left in
-            // the current frame
-            deferredWorkLoop(deadline);
+            // the current frame.
+            if (!deadlineHasExpired) {
+              deadlineHasExpired = deferredWorkLoop(deadline);
+            }
           } else {
+            if (priorityLevel >= HighPriority) {
+              throw new Error(
+                'Deferred work should only be performed using deferredWorkLoop'
+              );
+            }
             // The non-deferred work loop will run until there's no more work
             // at the given priority level
             workLoop(priorityLevel);
@@ -632,6 +637,14 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
           // Stop performing work
           priorityLevel = NoWork;
+
+          // If we additional work, and we're in a deferred batch, check to see
+          // if the deadline has expired. If not, we may have more time to
+          // do work.
+          if (nextPriorityLevel !== NoWork && isPerformingDeferredWork && !deadlineHasExpired) {
+            priorityLevel = nextPriorityLevel;
+            continue;
+          }
 
           // There might still be work left. Depending on the priority, we should
           // either perform it now or schedule a callback to perform it later.
@@ -691,7 +704,6 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
-    isPerformingDeferredWork = false;
     capturedErrors = null;
     failedBoundaries = null;
 
