@@ -625,16 +625,7 @@ describe('ReactIncremental', () => {
     // we should be able to reuse the reconciliation work that we already did
     // without restarting.
     ReactNoop.flush();
-    // TODO: Content never fully completed its render so can't completely bail
-    // out on the entire subtree. However, we could do a shallow bail out and
-    // not rerender Content, but keep going down the incomplete tree.
-    // Normally shouldComponentUpdate->false is not enough to determine that we
-    // can safely reuse the old props, but I think in this case it would be ok,
-    // since it is a resume of already started work.
-    // Because of the above we can not reuse the work of Bar because the
-    // rerender of Content will generate a new element which will mean we don't
-    // auto-bail out from Bar.
-    expect(ops).toEqual(['Bar', 'Middle']);
+    expect(ops).toEqual(['Middle']);
 
   });
 
