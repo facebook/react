@@ -7,7 +7,6 @@
 * Fixed event handling on disabled button elements ([@spicyj](https://github.com/spicyj) in [#8387](https://github.com/facebook/react/pull/8387))
 * Fixed compatibility of browser build with AMD environments ([@zpao](https://github.com/zpao) in [#8374](https://github.com/facebook/react/pull/8374))
 
-
 ## 15.4.0 (November 16, 2016)
 
 ### React
