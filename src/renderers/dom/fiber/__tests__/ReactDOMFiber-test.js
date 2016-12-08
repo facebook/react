@@ -194,7 +194,7 @@ describe('ReactDOMFiber', () => {
     var expectHTML = {ref: el => htmlEls.push(el)};
     var expectMath = {ref: el => mathEls.push(el)};
 
-    var portal = function(tree) {
+    var usePortal = function(tree) {
       return ReactDOM.unstable_createPortal(
         tree,
         document.createElement('div')
@@ -371,7 +371,7 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <image {...expectSVG} />
-          {portal(
+          {usePortal(
             <div {...expectHTML} />
           )}
           <image {...expectSVG} />
@@ -380,7 +380,7 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <math {...expectMath}>
           <mi {...expectMath} />
-          {portal(
+          {usePortal(
             <div {...expectHTML} />
           )}
           <mi {...expectMath} />
@@ -389,7 +389,7 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <div {...expectHTML}>
           <p {...expectHTML} />
-          {portal(
+          {usePortal(
             <svg {...expectSVG}>
               <image {...expectSVG} />
             </svg>
@@ -404,7 +404,7 @@ describe('ReactDOMFiber', () => {
         <div {...expectHTML}>
           <math {...expectMath}>
             <mi {...expectMath} />
-            {portal(
+            {usePortal(
               <svg {...expectSVG}>
                 <image {...expectSVG} />
               </svg>
@@ -416,7 +416,7 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <math {...expectMath}>
           <mi {...expectMath} />
-          {portal(
+          {usePortal(
             <svg {...expectSVG}>
               <image {...expectSVG} />
               <foreignObject {...expectSVG}>
@@ -434,9 +434,9 @@ describe('ReactDOMFiber', () => {
       );
       assertNamespacesMatch(
         <div {...expectHTML}>
-          {portal(
+          {usePortal(
             <svg {...expectSVG}>
-              {portal(
+              {usePortal(
                 <div {...expectHTML} />
               )}
               <image {...expectSVG} />
@@ -448,7 +448,7 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <svg {...expectSVG}>
-            {portal(
+            {usePortal(
               <div {...expectHTML} />
             )}
             <image {...expectSVG} />
@@ -461,7 +461,7 @@ describe('ReactDOMFiber', () => {
     it('should keep track of namespace across portals (complex)', () => {
       assertNamespacesMatch(
         <div {...expectHTML}>
-          {portal(
+          {usePortal(
             <svg {...expectSVG}>
               <image {...expectSVG} />
             </svg>
@@ -484,7 +484,7 @@ describe('ReactDOMFiber', () => {
           <svg {...expectSVG}>
             <svg {...expectSVG}>
               <image {...expectSVG} />
-              {portal(
+              {usePortal(
                 <svg {...expectSVG}>
                   <image {...expectSVG} />
                   <svg {...expectSVG}>
@@ -496,7 +496,7 @@ describe('ReactDOMFiber', () => {
               <image {...expectSVG} />
               <foreignObject {...expectSVG}>
                 <p {...expectHTML} />
-                {portal(<p {...expectHTML} />)}
+                {usePortal(<p {...expectHTML} />)}
                 <p {...expectHTML} />
               </foreignObject>
             </svg>
@@ -510,7 +510,7 @@ describe('ReactDOMFiber', () => {
           <svg {...expectSVG}>
             <foreignObject {...expectSVG}>
               <p {...expectHTML} />
-              {portal(
+              {usePortal(
                 <svg {...expectSVG}>
                   <image {...expectSVG} />
                   <svg {...expectSVG}>
@@ -518,7 +518,7 @@ describe('ReactDOMFiber', () => {
                     <foreignObject {...expectSVG}>
                       <p {...expectHTML} />
                     </foreignObject>
-                    {portal(<p {...expectHTML} />)}
+                    {usePortal(<p {...expectHTML} />)}
                   </svg>
                   <image {...expectSVG} />
                 </svg>
@@ -605,7 +605,7 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <ErrorBoundary>
-            {portal(
+            {usePortal(
               <div {...expectHTML}>
                 <math {...expectMath}>
                   <BrokenRender />)
@@ -617,7 +617,7 @@ describe('ReactDOMFiber', () => {
             /*
             * TODO: enable. Currently this leads to stack overflow
             * but it might be a bug in error boundaries rather than SVG or portals.
-            portal(
+            usePortal(
               <div {...expectHTML} />
             )
             */
