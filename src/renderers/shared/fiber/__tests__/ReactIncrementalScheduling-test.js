@@ -341,7 +341,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual(null);
     // Then the second one gets processed
-    ReactNoop.flushDeferredPri(15 + 5 + 5);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual(null);
@@ -483,7 +483,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ReactNoop.render(<Foo />);
 
-    ReactNoop.flushDeferredPri(5 + 20 + 20);
+    ReactNoop.flushDeferredPri(20 + 5);
     expect(ops).toEqual([
       'render: 0',
       'componentDidMount (before setState): 0',
@@ -496,7 +496,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ops = [];
     instance.setState({ tick: 2 });
-    ReactNoop.flushDeferredPri(5 + 20 + 20);
+    ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual([
       'render: 2',
@@ -586,5 +586,64 @@ describe('ReactIncrementalScheduling', () => {
       'render: 3',
       'componentDidUpdate: 3',
     ]);
+  });
+
+  it('performs Task work even after time runs out', () => {
+    class Foo extends React.Component {
+      state = { step: 1 };
+      componentDidMount() {
+        this.setState({ step: 2 }, () => {
+          this.setState({ step: 3 }, () => {
+            this.setState({ step: 4 }, () => {
+              this.setState({ step: 5 });
+            });
+          });
+        });
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.render(<Foo />);
+    // This should be just enough to complete all the work, but not enough to
+    // commit it.
+    ReactNoop.flushDeferredPri(20);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Do one more unit of work.
+    ReactNoop.flushDeferredPri(10);
+    // The updates should all be flushed with Task priority
+    expect(ReactNoop.getChildren()).toEqual([span(5)]);
+  });
+
+  it('does not perform animation work after time runs out', () => {
+    class Foo extends React.Component {
+      state = { step: 1 };
+      componentDidMount() {
+        ReactNoop.performAnimationWork(() => {
+          this.setState({ step: 2 }, () => {
+            this.setState({ step: 3 }, () => {
+              this.setState({ step: 4 }, () => {
+                this.setState({ step: 5 });
+              });
+            });
+          });
+        });
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.render(<Foo />);
+    // This should be just enough to complete all the work, but not enough to
+    // commit it.
+    ReactNoop.flushDeferredPri(20);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Do one more unit of work.
+    ReactNoop.flushDeferredPri(10);
+    // None of the updates should be flushed because they only have
+    // animation priority.
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
   });
 });
