@@ -485,6 +485,16 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should warn on invalid context types
 * should warn if getDefaultProps is specificed on the class
 
+src/renderers/art/__tests__/ReactART-test.js
+* should have the correct lifecycle state
+* should render a reasonable SVG structure in SVG mode
+* should be able to reorder components
+* should be able to reorder many components
+* renders composite with lifecycle inside group
+* resolves refs before componentDidMount
+* resolves refs before componentDidUpdate
+* adds and updates event handlers
+
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod fbjs
 * should use prod React

@@ -15,15 +15,6 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should give context for PropType errors in nested components.
 
-src/renderers/art/__tests__/ReactART-test.js
-* should have the correct lifecycle state
-* should render a reasonable SVG structure in SVG mode
-* should be able to reorder components
-* should be able to reorder many components
-* renders composite with lifecycle inside group
-* resolves refs before componentDidMount
-* resolves refs before componentDidUpdate
-
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
