@@ -14,6 +14,7 @@
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactTestUtils = require('ReactTestUtils');
 
 describe('ReactDOMFiber', () => {
   var container;
@@ -772,6 +773,113 @@ describe('ReactDOMFiber', () => {
 
       var b = ReactDOM.findDOMNode(myNodeB);
       expect(b.tagName).toBe('SPAN');
+    });
+
+    it('should bubble events from the portal to the parent', () => {
+      var portalContainer = document.createElement('div');
+
+      var ops = [];
+      var portal = null;
+
+      ReactDOM.render(
+        <div onClick={() => ops.push('parent clicked')}>
+          {ReactDOM.unstable_createPortal(
+            <div onClick={() => ops.push('portal clicked')} ref={n => portal = n}>
+              portal
+            </div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+
+      expect(portal.tagName).toBe('DIV');
+
+      var fakeNativeEvent = {};
+      ReactTestUtils.simulateNativeEventOnNode(
+        'topClick',
+        portal,
+        fakeNativeEvent
+      );
+
+      expect(ops).toEqual([
+        'portal clicked',
+        'parent clicked',
+      ]);
+    });
+
+    it('should not onMouseLeave when staying in the portal', () => {
+      var portalContainer = document.createElement('div');
+
+      var ops = [];
+      var firstTarget = null;
+      var secondTarget = null;
+      var thirdTarget = null;
+
+      function simulateMouseMove(from, to) {
+        if (from) {
+          ReactTestUtils.simulateNativeEventOnNode(
+            'topMouseOut',
+            from,
+            {
+              target: from,
+              relatedTarget: to,
+            }
+          );
+        }
+        if (to) {
+          ReactTestUtils.simulateNativeEventOnNode(
+            'topMouseOver',
+            to,
+            {
+              target: to,
+              relatedTarget: from,
+            }
+          );
+        }
+      }
+
+      ReactDOM.render(
+        <div>
+          <div
+            onMouseEnter={() => ops.push('enter parent')}
+            onMouseLeave={() => ops.push('leave parent')}>
+            <div ref={n => firstTarget = n} />
+            {ReactDOM.unstable_createPortal(
+              <div
+                onMouseEnter={() => ops.push('enter portal')}
+                onMouseLeave={() => ops.push('leave portal')}
+                ref={n => secondTarget = n}>
+                portal
+              </div>,
+              portalContainer
+            )}
+          </div>
+          <div ref={n => thirdTarget = n} />
+        </div>,
+        container
+      );
+
+      simulateMouseMove(null, firstTarget);
+      expect(ops).toEqual([
+        'enter parent',
+      ]);
+
+      ops = [];
+
+      simulateMouseMove(firstTarget, secondTarget);
+      expect(ops).toEqual([
+        // Parent did not invoke leave because we're still inside the portal.
+        'enter portal',
+      ]);
+
+      ops = [];
+
+      simulateMouseMove(secondTarget, thirdTarget);
+      expect(ops).toEqual([
+        'leave portal',
+        'leave parent', // Only when we leave the portal does onMouseLeave fire.
+      ]);
     });
   }
 });

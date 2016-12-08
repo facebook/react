@@ -524,6 +524,8 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should update portal context if it changes due to setState
 * should update portal context if it changes due to re-render
 * findDOMNode should find dom element after expanding a fragment
+* should bubble events from the portal to the parent
+* should not onMouseLeave when staying in the portal
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
