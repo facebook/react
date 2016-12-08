@@ -67,6 +67,12 @@ module.exports = function<T, P, I, TI, C, CX>(
     containerDepth++;
     if (containerDepth === containerStack.length) {
       containerStack[containerDepth] = createContainerState(portalHostContainer);
+    } else {
+      const containerState = containerStack[containerDepth];
+      containerState.rootInstance = portalHostContainer;
+      containerState.contextFibers = null;
+      containerState.contextValues = null;
+      containerState.contextDepth = -1;
     }
   }
 
