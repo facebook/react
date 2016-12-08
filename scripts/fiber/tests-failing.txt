@@ -15,15 +15,6 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should give context for PropType errors in nested components.
 
-src/renderers/art/__tests__/ReactART-test.js
-* should have the correct lifecycle state
-* should render a reasonable SVG structure in SVG mode
-* should be able to reorder components
-* should be able to reorder many components
-* renders composite with lifecycle inside group
-* resolves refs before componentDidMount
-* resolves refs before componentDidUpdate
-
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
@@ -110,7 +101,6 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/shared/__tests__/ReactUpdates-test.js
-* should queue mount-ready handlers across different roots
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
@@ -119,6 +109,3 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
-
-src/test/__tests__/ReactTestUtils-test.js
-* traverses children in the correct order

@@ -491,7 +491,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushDeferredPri(55 + 25 + 5);
+    ReactNoop.flushDeferredPri(55 + 25 + 5 + 5);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -520,7 +520,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.flushDeferredPri(30 + 5);
     expect(ops).toEqual(['Middle', 'Bar']);
 
     ops = [];
@@ -600,7 +600,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" step={1} />);
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.flushDeferredPri(30 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -625,16 +625,7 @@ describe('ReactIncremental', () => {
     // we should be able to reuse the reconciliation work that we already did
     // without restarting.
     ReactNoop.flush();
-    // TODO: Content never fully completed its render so can't completely bail
-    // out on the entire subtree. However, we could do a shallow bail out and
-    // not rerender Content, but keep going down the incomplete tree.
-    // Normally shouldComponentUpdate->false is not enough to determine that we
-    // can safely reuse the old props, but I think in this case it would be ok,
-    // since it is a resume of already started work.
-    // Because of the above we can not reuse the work of Bar because the
-    // rerender of Content will generate a new element which will mean we don't
-    // auto-bail out from Bar.
-    expect(ops).toEqual(['Bar', 'Middle']);
+    expect(ops).toEqual(['Middle']);
 
   });
 
@@ -1465,6 +1456,7 @@ describe('ReactIncremental', () => {
     ]);
     expect(instance.state.n).toEqual(4);
   });
+
   it('can handle if setState callback throws', () => {
     var ops = [];
     var instance;
@@ -1496,11 +1488,10 @@ describe('ReactIncremental', () => {
       ReactNoop.flush();
     }).toThrow('callback error');
 
-    // Should call all callbacks, even though the second one throws
+    // The third callback isn't called because the second one throws
     expect(ops).toEqual([
       'first callback',
       'second callback',
-      'third callback',
     ]);
     expect(instance.state.n).toEqual(3);
   });

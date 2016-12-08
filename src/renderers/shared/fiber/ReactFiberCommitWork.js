@@ -37,7 +37,7 @@ var {
 module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
-  captureError : (failedFiber : Fiber, error: Error, isUnmounting : boolean) => Fiber | null
+  captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
 
   const {
@@ -53,13 +53,28 @@ module.exports = function<T, P, I, TI, C, CX>(
     getRootHostContainer,
   } = hostContext;
 
-  function detachRef(current : Fiber) {
-    const ref = current.ref;
-    if (ref) {
-      ref(null);
+  // Capture errors so they don't interrupt unmounting.
+  function safelyCallComponentWillUnmount(current, instance) {
+    try {
+      instance.componentWillUnmount();
+    } catch (error) {
+      captureError(current, error);
     }
   }
 
+  // Capture errors so they don't interrupt unmounting.
+  function safelyDetachRef(current : Fiber) {
+    try {
+      const ref = current.ref;
+      if (ref) {
+        ref(null);
+      }
+    } catch (error) {
+      captureError(current, error);
+    }
+  }
+
+  // Only called during update. It's ok to throw.
   function detachRefIfNeeded(current : ?Fiber, finishedWork : Fiber) {
     if (current) {
       const currentRef = current.ref;
@@ -305,21 +320,21 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
+  // User-originating errors (lifecycles and refs) should not interrupt
+  // deletion, so don't let them throw. Host-originating errors should
+  // interrupt deletion, so it's okay
   function commitUnmount(current : Fiber) : void {
     switch (current.tag) {
       case ClassComponent: {
-        detachRef(current);
+        safelyDetachRef(current);
         const instance = current.stateNode;
         if (typeof instance.componentWillUnmount === 'function') {
-          const error = tryCallComponentWillUnmount(instance);
-          if (error) {
-            captureError(current, error, true);
-          }
+          safelyCallComponentWillUnmount(current, instance);
         }
         return;
       }
       case HostComponent: {
-        detachRef(current);
+        safelyDetachRef(current);
         return;
       }
       case CoroutineComponent: {
@@ -377,17 +392,16 @@ module.exports = function<T, P, I, TI, C, CX>(
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
-        let firstError = null;
         if (finishedWork.effectTag & Update) {
           if (!current) {
             if (typeof instance.componentDidMount === 'function') {
-              firstError = tryCallComponentDidMount(instance);
+              instance.componentDidMount();
             }
           } else {
             if (typeof instance.componentDidUpdate === 'function') {
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
-              firstError = tryCallComponentDidUpdate(instance, prevProps, prevState);
+              instance.componentDidUpdate(prevProps, prevState);
             }
           }
           attachRef(current, finishedWork, instance);
@@ -398,26 +412,19 @@ module.exports = function<T, P, I, TI, C, CX>(
         }
         if (finishedWork.effectTag & Callback) {
           if (finishedWork.callbackList) {
-            const callbackError = callCallbacks(finishedWork.callbackList, instance);
-            firstError = firstError || callbackError;
+            const callbackList = finishedWork.callbackList;
             finishedWork.callbackList = null;
+            callCallbacks(callbackList, instance);
           }
-        }
-        if (firstError) {
-          captureError(finishedWork, firstError, false);
         }
         return;
       }
       case HostRoot: {
         const rootFiber = finishedWork.stateNode;
-        let firstError = null;
         if (rootFiber.callbackList) {
-          const { callbackList } = rootFiber;
+          const callbackList = rootFiber.callbackList;
           rootFiber.callbackList = null;
-          firstError = callCallbacks(callbackList, rootFiber.current.child.stateNode);
-        }
-        if (firstError) {
-          captureError(rootFiber, firstError, false);
+          callCallbacks(callbackList, rootFiber.current.child.stateNode);
         }
         return;
       }
@@ -436,33 +443,6 @@ module.exports = function<T, P, I, TI, C, CX>(
       }
       default:
         throw new Error('This unit of work tag should not have side-effects.');
-    }
-  }
-
-  function tryCallComponentDidMount(instance) {
-    try {
-      instance.componentDidMount();
-      return null;
-    } catch (error) {
-      return error;
-    }
-  }
-
-  function tryCallComponentDidUpdate(instance, prevProps, prevState) {
-    try {
-      instance.componentDidUpdate(prevProps, prevState);
-      return null;
-    } catch (error) {
-      return error;
-    }
-  }
-
-  function tryCallComponentWillUnmount(instance) {
-    try {
-      instance.componentWillUnmount();
-      return null;
-    } catch (error) {
-      return error;
     }
   }
 

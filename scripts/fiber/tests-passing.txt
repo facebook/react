@@ -485,6 +485,16 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should warn on invalid context types
 * should warn if getDefaultProps is specificed on the class
 
+src/renderers/art/__tests__/ReactART-test.js
+* should have the correct lifecycle state
+* should render a reasonable SVG structure in SVG mode
+* should be able to reorder components
+* should be able to reorder many components
+* renders composite with lifecycle inside group
+* resolves refs before componentDidMount
+* resolves refs before componentDidUpdate
+* adds and updates event handlers
+
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod fbjs
 * should use prod React
@@ -508,6 +518,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should pass portal context when rendering subtree elsewhere
 * should update portal context if it changes due to setState
 * should update portal context if it changes due to re-render
+* findDOMNode should find dom element after expanding a fragment
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
@@ -602,6 +613,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should update arbitrary attributes for tags containing dashes
 * should clear all the styles when removing `style`
 * should update styles when `style` changes from null to object
+* should not reset innerHTML for when children is null
+* should reset innerHTML when switching from a direct text child to an empty child
 * should empty element when removing innerHTML
 * should transition from string content to innerHTML
 * should transition from innerHTML to string content
@@ -716,6 +729,7 @@ src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 src/renderers/dom/shared/__tests__/findDOMNode-test.js
 * findDOMNode should return null if passed null
 * findDOMNode should find dom element
+* findDOMNode should find dom element after an update from null
 * findDOMNode should reject random objects
 * findDOMNode should reject unmounted objects with render func
 * findDOMNode should not throw an error when called within a component that is not mounted
@@ -1108,6 +1122,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches reconciler errors in a boundary during update
 * recovers from uncaught reconciler errors
 * unmounts components with uncaught errors
+* does not interrupt unmounting if detaching a ref throws
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
@@ -1138,6 +1153,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * handles interleaved deferred and animation work
 * schedules sync updates when inside componentDidMount/Update
 * can opt-in to deferred/animation scheduling inside componentDidMount/Update
+* performs Task work even after time runs out
+* does not perform animation work after time runs out
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
@@ -1150,6 +1167,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * preserves a previously rendered node when deprioritized
 * can reuse side-effects after being preempted
 * can reuse side-effects after being preempted, if shouldComponentUpdate is false
+* can update a completed tree before it has a chance to commit
 * updates a child even though the old props is empty
 * can defer side-effects and resume them later on
 * can defer side-effects and reuse them later - complex
@@ -1295,6 +1313,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponentDOMMinimalism-test.
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
 * should support setting state
+* should call componentDidUpdate of children first
 * should batch unmounts
 
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
@@ -1452,6 +1471,7 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * should not reconcile children passed via props
 * should flow updates correctly
 * should share reconcile transaction across different roots
+* should queue mount-ready handlers across different roots
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
 * should queue nested updates
@@ -1592,6 +1612,7 @@ src/test/__tests__/ReactTestUtils-test.js
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
+* traverses children in the correct order
 * should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component

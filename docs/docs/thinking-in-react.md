@@ -14,7 +14,7 @@ One of the many great parts of React is how it makes you think about apps as you
 
 ## Start With A Mock
 
-Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn't very good because the mock looks like this:
+Imagine that we already have a JSON API and a mock from our designer. The mock looks like this:
 
 ![Mockup](/react/img/blog/thinking-in-react-mock.png)
 
