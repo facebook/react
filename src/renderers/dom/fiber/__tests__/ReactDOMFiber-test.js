@@ -401,6 +401,19 @@ describe('ReactDOMFiber', () => {
 
     it('should keep track of namespace across portals (medium)', () => {
       assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <image {...expectSVG} />
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+          <image {...expectSVG} />
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
         <div {...expectHTML}>
           <math {...expectMath}>
             <mi {...expectMath} />
@@ -613,15 +626,9 @@ describe('ReactDOMFiber', () => {
               </div>
             )}
           </ErrorBoundary>
-          {
-            /*
-            * TODO: enable. Currently this leads to stack overflow
-            * but it might be a bug in error boundaries rather than SVG or portals.
-            usePortal(
-              <div {...expectHTML} />
-            )
-            */
-          }
+          {usePortal(
+            <div {...expectHTML} />
+          )}
         </svg>
       );
     });
