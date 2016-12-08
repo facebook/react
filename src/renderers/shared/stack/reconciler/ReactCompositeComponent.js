@@ -780,6 +780,16 @@ var ReactCompositeComponent = {
         this._context
       );
     } else {
+      var callbacks = this._pendingCallbacks;
+      this._pendingCallbacks = null;
+      if (callbacks) {
+        for (var j = 0; j < callbacks.length; j++) {
+          transaction.getReactMountReady().enqueue(
+            callbacks[j],
+            this.getPublicInstance()
+          );
+        }
+      }
       this._updateBatchNumber = null;
     }
   },
@@ -848,6 +858,11 @@ var ReactCompositeComponent = {
       }
     }
 
+    // If updating happens to enqueue any new updates, we shouldn't execute new
+    // callbacks until the next render happens, so stash the callbacks first.
+    var callbacks = this._pendingCallbacks;
+    this._pendingCallbacks = null;
+
     var nextState = this._processPendingState(nextProps, nextContext);
     var shouldUpdate = true;
 
@@ -900,6 +915,15 @@ var ReactCompositeComponent = {
       inst.props = nextProps;
       inst.state = nextState;
       inst.context = nextContext;
+    }
+
+    if (callbacks) {
+      for (var j = 0; j < callbacks.length; j++) {
+        transaction.getReactMountReady().enqueue(
+          callbacks[j],
+          this.getPublicInstance()
+        );
+      }
     }
   },
 

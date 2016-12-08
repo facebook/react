@@ -111,8 +111,8 @@ describe('ReactCompositeComponentNestedState-state', () => {
       ['setState-this', 'dark blue', 'blue'],
       ['setState-args', 'dark blue', 'green'],
       ['render', 'light green', 'green'],
-      ['parent-after-setState', 'green'],
       ['after-setState', 'light green', 'green'],
+      ['parent-after-setState', 'green'],
     ]);
   });
 });
