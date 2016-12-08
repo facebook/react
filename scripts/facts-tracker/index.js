@@ -122,7 +122,7 @@ function checkoutFactsFolder() {
   if (!fs.existsSync(factsFolder)) {
     var repoURL;
     if (isCI) {
-      repoURL = 'https://$GITHUB_USER@github.com/' + repoSlug + '.git';
+      repoURL = 'https://' + process.env.GITHUB_USER + '@github.com/' + repoSlug + '.git';
     } else {
       repoURL = 'git@github.com:' + repoSlug + '.git';
     }
