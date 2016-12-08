@@ -787,8 +787,9 @@ ReactDOMComponent.Mixin = {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
+      const innerHTMLContent = innerHTML.__html;
+      if (innerHTMLContent != null && innerHTMLContent !== '') {
+        DOMLazyTree.queueHTML(lazyTree, innerHTMLContent);
       }
     } else {
       var contentToUse =
