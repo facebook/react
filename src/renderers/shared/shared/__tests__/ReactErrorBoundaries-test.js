@@ -503,13 +503,14 @@ describe('ReactErrorBoundaries', () => {
         log.push('RethrowErrorBoundary componentWillUnmount');
       }
       unstable_handleError(error) {
-        if (!ReactDOMFeatureFlags.useFiber) {
+        if (ReactDOMFeatureFlags.useFiber) {
+          log.push('RethrowErrorBoundary unstable_handleError [!]');
+          // In Fiber, calling setState() (and failing) is treated as a rethrow.
+          this.setState({});
+        } else {
           log.push('RethrowErrorBoundary unstable_handleError [*]');
           // In Stack, not calling setState() is treated as a rethrow.
-          return;
         }
-        log.push('RethrowErrorBoundary unstable_handleError [!]');
-        throw error;
       }
     };
 
