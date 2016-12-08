@@ -46,7 +46,9 @@ var {
 } = require('ReactTypeOfSideEffect');
 
 var {
+  HostComponent,
   HostRoot,
+  HostPortal,
   ClassComponent,
 } = require('ReactTypeOfWork');
 
@@ -73,6 +75,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
 
   const prepareForCommit = config.prepareForCommit;
   const resetAfterCommit = config.resetAfterCommit;
+
+  const popHostContext = config.popHostContext;
+  const popHostPortal = config.popHostPortal;
 
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
@@ -658,6 +663,10 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // props, the nodes higher up in the tree will rerender unnecessarily.
           if (failedWork) {
             unwindContext(failedWork, boundary);
+            // TODO: disabling this doesn't fail any tests because we don't
+            // do any more host work and immediately restart from the root:
+            unwindHostContext(failedWork, boundary);
+            // This seems like a bug in error boundaries.
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
         }
@@ -861,6 +870,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return;
       default:
         throw new Error('Invalid type of work.');
+    }
+  }
+
+  function unwindHostContext(from : Fiber, to: Fiber) {
+    let node = from;
+    while (node && (node !== to) && (node.alternate !== to)) {
+      switch (node.tag) {
+        case HostComponent:
+          popHostContext(node.type);
+          break;
+        case HostPortal:
+          popHostPortal();
+          break;
+      }
+      node = node.return;
     }
   }
 

@@ -146,6 +146,21 @@ var NoopRenderer = ReactFiberReconciler({
   resetAfterCommit() : void {
   },
 
+  pushHostContext() : void {
+  },
+
+  popHostContext() : void {
+  },
+
+  resetHostContext() : void {
+  },
+
+  pushHostPortal() : void {
+  },
+
+  popHostPortal() : void {
+  },
+
 });
 
 var rootContainers = new Map();

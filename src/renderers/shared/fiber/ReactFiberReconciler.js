@@ -65,6 +65,13 @@ export type HostConfig<T, P, I, TI, C> = {
   prepareForCommit() : void,
   resetAfterCommit() : void,
 
+  pushHostContext(type : T) : void,
+  popHostContext(type : T) : void,
+  resetHostContext() : void,
+
+  pushHostPortal() : void,
+  popHostPortal() : void,
+
   useSyncScheduling ?: boolean,
 };
 
