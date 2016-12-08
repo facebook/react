@@ -505,6 +505,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render strings as children
 * should render numbers as children
 * should be called a callback argument
+* should call a callback argument when the same element is re-rendered
 * should render a component returning strings directly from render
 * should render a component returning numbers directly from render
 * finds the DOM Text node of a string child
