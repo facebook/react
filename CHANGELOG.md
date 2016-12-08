@@ -1,3 +1,12 @@
+## 15.4.1 (November 22, 2016)
+
+### React
+* Restructure variable assignment to work around a Rollup bug ([@gaearon](https://github.com/gaearon) in [#8384](https://github.com/facebook/react/pull/8384))
+
+### React DOM
+* Fixed event handling on disabled button elements ([@spicyj](https://github.com/spicyj) in [#8387](https://github.com/facebook/react/pull/8387))
+* Fixed compatibility of browser build with AMD environments ([@zpao](https://github.com/zpao) in [#8374](https://github.com/facebook/react/pull/8374))
+
 ## 15.4.0 (November 16, 2016)
 
 ### React
