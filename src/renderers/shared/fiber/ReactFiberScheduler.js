@@ -548,7 +548,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
       nextUnitOfWork = findNextUnitOfWork();
     }
 
-    if (deadline) {
+    // If there's a deadline, and we're not performing Task work, perform work
+    // using this loop that checks the deadline on every iteration.
+    if (deadline && priorityLevel > TaskPriority) {
       // The deferred work loop will run until there's no time left in
       // the current frame.
       while (nextUnitOfWork && !deadlineHasExpired) {
@@ -575,13 +577,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         }
       }
     } else {
-      // The non-deferred work loop will run until there's no more work
-      // at the given priority level
-      if (priorityLevel >= HighPriority) {
-        throw new Error(
-          'Deferred work should only be performed using deferredWorkLoop'
-        );
-      }
+      // If there's no deadline, or if we're performing Task work, use this loop
+      // that doesn't check how much time is remaining. It will keep running
+      // until we run out of work at this priority level.
       while (nextUnitOfWork &&
              nextPriorityLevel !== NoWork &&
              nextPriorityLevel <= priorityLevel) {
@@ -610,6 +608,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
     while (priorityLevel !== NoWork) {
+      if (priorityLevel >= HighPriority && !deadline) {
+        throw new Error(
+          'Cannot perform deferred work without a deadline.'
+        );
+      }
+
       // Before starting any work, check to see if there are any pending
       // commits from the previous frame. An exception is if we're flushing
       // Task work in a deferred batch and the pending commit does not

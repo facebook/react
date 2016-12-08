@@ -410,7 +410,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will create a low pri tree on top of the
     // already low pri tree.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushDeferredPri(15 + 5);
+    ReactNoop.flushDeferredPri(15);
 
     expect(ops).toEqual(['Foo']);
 

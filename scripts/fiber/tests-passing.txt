@@ -1150,6 +1150,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * handles interleaved deferred and animation work
 * schedules sync updates when inside componentDidMount/Update
 * can opt-in to deferred/animation scheduling inside componentDidMount/Update
+* performs Task work even after time runs out
+* does not perform animation work after time runs out
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
