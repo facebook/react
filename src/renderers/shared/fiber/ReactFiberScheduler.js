@@ -20,6 +20,7 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
+var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var { cloneFiber } = require('ReactFiber');
@@ -47,6 +48,8 @@ var {
 
 var {
   HostRoot,
+  HostComponent,
+  HostPortal,
   ClassComponent,
 } = require('ReactTypeOfWork');
 
@@ -60,19 +63,25 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
+module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
+  const hostContext = ReactFiberHostContext(config);
+  const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
   const { beginWork, beginFailedWork } =
-    ReactFiberBeginWork(config, scheduleUpdate);
-  const { completeWork } = ReactFiberCompleteWork(config);
-  const { commitPlacement, commitDeletion, commitWork, commitLifeCycles } =
-    ReactFiberCommitWork(config, captureError);
-
-  const hostScheduleAnimationCallback = config.scheduleAnimationCallback;
-  const hostScheduleDeferredCallback = config.scheduleDeferredCallback;
-  const useSyncScheduling = config.useSyncScheduling;
-
-  const prepareForCommit = config.prepareForCommit;
-  const resetAfterCommit = config.resetAfterCommit;
+    ReactFiberBeginWork(config, hostContext, scheduleUpdate);
+  const { completeWork } = ReactFiberCompleteWork(config, hostContext);
+  const {
+    commitPlacement,
+    commitDeletion,
+    commitWork,
+    commitLifeCycles,
+  } = ReactFiberCommitWork(config, hostContext, captureError);
+  const {
+    scheduleAnimationCallback: hostScheduleAnimationCallback,
+    scheduleDeferredCallback: hostScheduleDeferredCallback,
+    useSyncScheduling,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
 
   // The priority level to use when scheduling an update.
   let priorityContext : PriorityLevel = useSyncScheduling ?
@@ -309,6 +318,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
     }
 
     resetAfterCommit();
+    // We didn't pop the host root in the complete phase because we still needed
+    // it for the commitUpdate() calls, but now we can reset host context.
+    resetHostContainer();
 
     // In the second pass we'll perform all life-cycles and ref callbacks.
     // Life-cycles happen as a separate pass so that all placements, updates,
@@ -658,6 +670,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
           // props, the nodes higher up in the tree will rerender unnecessarily.
           if (failedWork) {
             unwindContext(failedWork, boundary);
+            unwindHostContext(failedWork, boundary);
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
         }
@@ -861,6 +874,24 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return;
       default:
         throw new Error('Invalid type of work.');
+    }
+  }
+
+  function unwindHostContext(from : Fiber, to: Fiber) {
+    let node = from;
+    while (node && (node !== to) && (node.alternate !== to)) {
+      switch (node.tag) {
+        case HostComponent:
+          popHostContext(node);
+          break;
+        case HostRoot:
+          popHostContainer();
+          break;
+        case HostPortal:
+          popHostContainer();
+          break;
+      }
+      node = node.return;
     }
   }
 

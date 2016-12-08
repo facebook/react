@@ -33,6 +33,7 @@ var warning = require('warning');
 
 var {
   createElement,
+  getChildNamespace,
   setInitialProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
@@ -60,6 +61,11 @@ let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
+  getChildHostContext(parentHostContext : string | null, type : string) {
+    const parentNamespace = parentHostContext;
+    return getChildNamespace(parentNamespace, type);
+  },
+
   prepareForCommit() : void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     ReactBrowserEventEmitter.setEnabled(false);
@@ -76,11 +82,11 @@ var DOMRenderer = ReactFiberReconciler({
   createInstance(
     type : string,
     props : Props,
-    internalInstanceHandle : Object
+    rootContainerInstance : Container,
+    hostContext : string | null,
+    internalInstanceHandle : Object,
   ) : Instance {
-    const root = document.documentElement; // HACK
-
-    const domElement : Instance = createElement(type, props, root);
+    const domElement : Instance = createElement(type, props, rootContainerInstance, hostContext);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
   },
@@ -89,10 +95,18 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.appendChild(child);
   },
 
-  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
-    const root = document.documentElement; // HACK
-
-    setInitialProperties(domElement, type, props, root);
+  finalizeInitialChildren(
+    domElement : Instance,
+    props : Props,
+    rootContainerInstance : Container,
+  ) : void {
+    // TODO: we normalize here because DOM renderer expects tag to be lowercase.
+    // We can change DOM renderer to compare special case against upper case,
+    // and use tagName (which is upper case for HTML DOM elements). Or we could
+    // let the renderer "normalize" the fiber type so we don't have to read
+    // the type from DOM. However we need to remember SVG is case-sensitive.
+    var tag = domElement.tagName.toLowerCase();
+    setInitialProperties(domElement, tag, props, rootContainerInstance);
   },
 
   prepareUpdate(
@@ -107,14 +121,19 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     oldProps : Props,
     newProps : Props,
-    internalInstanceHandle : Object
+    rootContainerInstance : Container,
+    internalInstanceHandle : Object,
   ) : void {
-    var type = domElement.tagName.toLowerCase(); // HACK
-    var root = document.documentElement; // HACK
+    // TODO: we normalize here because DOM renderer expects tag to be lowercase.
+    // We can change DOM renderer to compare special case against upper case,
+    // and use tagName (which is upper case for HTML DOM elements). Or we could
+    // let the renderer "normalize" the fiber type so we don't have to read
+    // the type from DOM. However we need to remember SVG is case-sensitive.
+    var tag = domElement.tagName.toLowerCase();
     // Update the internal instance handle so that we know which props are
     // the current ones.
     precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, root);
+    updateProperties(domElement, tag, oldProps, newProps, rootContainerInstance);
   },
 
   shouldSetTextContent(props : Props) : boolean {

@@ -46,6 +46,11 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
+var {
+  svg: SVG_NAMESPACE,
+  mathml: MATH_NAMESPACE,
+} = DOMNamespaces;
+
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
 
@@ -451,45 +456,49 @@ function updateDOMProperties(
   }
 }
 
-var ReactDOMFiberComponent = {
+// Assumes there is no parent namespace.
+function getIntrinsicNamespace(type : string) : string | null {
+  switch (type) {
+    case 'svg':
+      return SVG_NAMESPACE;
+    case 'math':
+      return MATH_NAMESPACE;
+    default:
+      return null;
+  }
+}
 
-  // TODO: Use this to keep track of changes to the host context and use this
-  // to determine whether we switch to svg and back.
-  // TODO: Does this need to check the current namespace? In case these tags
-  // happen to be valid in some other namespace.
-  isNewHostContainer(tag : string) {
-    return tag === 'svg' || tag === 'foreignobject';
+var ReactDOMFiberComponent = {
+  getChildNamespace(parentNamespace : string | null, type : string) : string | null {
+    if (parentNamespace == null) {
+      // No parent namespace: potential entry point.
+      return getIntrinsicNamespace(type);
+    }
+    if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
+      // We're leaving SVG.
+      return null;
+    }
+    // By default, pass namespace below.
+    return parentNamespace;
   },
 
   createElement(
-    tag : string,
+    type : string,
     props : Object,
-    rootContainerElement : Element
+    rootContainerElement : Element,
+    parentNamespace : string | null
   ) : Element {
-    validateDangerousTag(tag);
+    validateDangerousTag(type);
     // TODO:
-    // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
+    // const tag = type.toLowerCase(); Do we need to apply lower case only on non-custom elements?
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var namespaceURI = rootContainerElement.namespaceURI;
-    if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg &&
-        rootContainerElement.tagName === 'foreignObject') {
-      namespaceURI = DOMNamespaces.html;
-    }
-    if (namespaceURI === DOMNamespaces.html) {
-      if (tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
-      } else if (tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
-      }
-      // TODO: Make this a new root container element.
-    }
-
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
-    if (namespaceURI === DOMNamespaces.html) {
+    var namespaceURI = parentNamespace || getIntrinsicNamespace(type);
+    if (namespaceURI == null) {
+      const tag = type.toLowerCase();
       if (tag === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
@@ -499,17 +508,17 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild : any) : HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        domElement = ownerDocument.createElement(tag, props.is);
+        domElement = ownerDocument.createElement(type, props.is);
       } else {
         // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
         // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-        domElement = ownerDocument.createElement(tag);
+        domElement = ownerDocument.createElement(type);
       }
     } else {
       domElement = ownerDocument.createElementNS(
         namespaceURI,
-        tag
+        type
       );
     }
 

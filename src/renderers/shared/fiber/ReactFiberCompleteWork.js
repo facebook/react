@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
@@ -43,13 +44,24 @@ var {
   Callback,
 } = ReactTypeOfSideEffect;
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
+) {
+  const {
+    createInstance,
+    createTextInstance,
+    appendInitialChild,
+    finalizeInitialChildren,
+    prepareUpdate,
+  } = config;
 
-  const createInstance = config.createInstance;
-  const appendInitialChild = config.appendInitialChild;
-  const finalizeInitialChildren = config.finalizeInitialChildren;
-  const createTextInstance = config.createTextInstance;
-  const prepareUpdate = config.prepareUpdate;
+  const {
+    getRootHostContainer,
+    popHostContext,
+    getHostContext,
+    popHostContainer,
+  } = hostContext;
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -202,6 +214,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         return null;
       }
       case HostComponent:
+        popHostContext(workInProgress);
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -229,14 +242,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             }
           }
 
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getHostContext();
           // TODO: Move createInstance to beginWork and keep it on a context
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
-          // Finally, finalizeInitialChildren here in completeWork.
-          const instance = createInstance(workInProgress.type, newProps, workInProgress);
+          const instance = createInstance(
+            workInProgress.type,
+            newProps,
+            rootContainerInstance,
+            currentHostContext,
+            workInProgress
+          );
           appendAllChildren(instance, workInProgress);
-          finalizeInitialChildren(instance, workInProgress.type, newProps);
+          finalizeInitialChildren(instance, newProps, rootContainerInstance);
 
           workInProgress.stateNode = instance;
           if (workInProgress.ref) {
@@ -294,6 +314,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
+        popHostContainer();
         return null;
 
       // Error cases

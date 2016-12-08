@@ -13,6 +13,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -33,18 +34,24 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
 
-  const commitUpdate = config.commitUpdate;
-  const resetTextContent = config.resetTextContent;
-  const commitTextUpdate = config.commitTextUpdate;
+  const {
+    commitUpdate,
+    resetTextContent,
+    commitTextUpdate,
+    appendChild,
+    insertBefore,
+    removeChild,
+  } = config;
 
-  const appendChild = config.appendChild;
-  const insertBefore = config.insertBefore;
-  const removeChild = config.removeChild;
+  const {
+    getRootHostContainer,
+  } = hostContext;
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
@@ -354,7 +361,8 @@ module.exports = function<T, P, I, TI, C>(
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          commitUpdate(instance, oldProps, newProps, finishedWork);
+          const rootContainerInstance = getRootHostContainer();
+          commitUpdate(instance, oldProps, newProps, rootContainerInstance, finishedWork);
         }
         detachRefIfNeeded(current, finishedWork);
         return;

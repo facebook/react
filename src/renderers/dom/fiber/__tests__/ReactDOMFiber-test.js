@@ -188,6 +188,39 @@ describe('ReactDOMFiber', () => {
   }
 
   if (ReactDOMFeatureFlags.useFiber) {
+    var svgEls, htmlEls, mathEls;
+    var expectSVG = {ref: el => svgEls.push(el)};
+    var expectHTML = {ref: el => htmlEls.push(el)};
+    var expectMath = {ref: el => mathEls.push(el)};
+
+    var portal = function(tree) {
+      return ReactDOM.unstable_createPortal(
+        tree,
+        document.createElement('div')
+      );
+    };
+
+    var assertNamespacesMatch = function(tree) {
+      container = document.createElement('div');
+      svgEls = [];
+      htmlEls = [];
+      mathEls = [];
+
+      ReactDOM.render(tree, container);
+      svgEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      });
+      htmlEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+      });
+      mathEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
+      });
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+    };
+
     it('should render one portal', () => {
       var portalContainer = document.createElement('div');
 
@@ -331,6 +364,265 @@ describe('ReactDOMFiber', () => {
       expect(portalContainer2.innerHTML).toBe('');
       expect(portalContainer3.innerHTML).toBe('');
       expect(container.innerHTML).toBe('');
+    });
+
+    it('should keep track of namespace across portals (simple)', () => {
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <image {...expectSVG} />
+          {portal(
+            <div {...expectHTML} />
+          )}
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
+        <math {...expectMath}>
+          <mi {...expectMath} />
+          {portal(
+            <div {...expectHTML} />
+          )}
+          <mi {...expectMath} />
+        </math>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <p {...expectHTML} />
+          {portal(
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <p {...expectHTML} />
+        </div>
+      );
+    });
+
+    it('should keep track of namespace across portals (medium)', () => {
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <math {...expectMath}>
+            <mi {...expectMath} />
+            {portal(
+              <svg {...expectSVG}>
+                <image {...expectSVG} />
+              </svg>
+            )}
+          </math>
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <math {...expectMath}>
+          <mi {...expectMath} />
+          {portal(
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+              <foreignObject {...expectSVG}>
+                <p {...expectHTML} />
+                <math {...expectMath}>
+                  <mi {...expectMath} />
+                </math>
+                <p {...expectHTML} />
+              </foreignObject>
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <mi {...expectMath} />
+        </math>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          {portal(
+            <svg {...expectSVG}>
+              {portal(
+                <div {...expectHTML} />
+              )}
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <svg {...expectSVG}>
+            {portal(
+              <div {...expectHTML} />
+            )}
+            <image {...expectSVG} />
+          </svg>
+          <image {...expectSVG} />
+        </svg>
+      );
+    });
+
+    it('should keep track of namespace across portals (complex)', () => {
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          {portal(
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <p {...expectHTML} />
+          <svg {...expectSVG}>
+            <image {...expectSVG} />
+          </svg>
+          <svg {...expectSVG}>
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+            </svg>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <svg {...expectSVG}>
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+              {portal(
+                <svg {...expectSVG}>
+                  <image {...expectSVG} />
+                  <svg {...expectSVG}>
+                    <image {...expectSVG} />
+                  </svg>
+                  <image {...expectSVG} />
+                </svg>
+              )}
+              <image {...expectSVG} />
+              <foreignObject {...expectSVG}>
+                <p {...expectHTML} />
+                {portal(<p {...expectHTML} />)}
+                <p {...expectHTML} />
+              </foreignObject>
+            </svg>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <svg {...expectSVG}>
+            <foreignObject {...expectSVG}>
+              <p {...expectHTML} />
+              {portal(
+                <svg {...expectSVG}>
+                  <image {...expectSVG} />
+                  <svg {...expectSVG}>
+                    <image {...expectSVG} />
+                    <foreignObject {...expectSVG}>
+                      <p {...expectHTML} />
+                    </foreignObject>
+                    {portal(<p {...expectHTML} />)}
+                  </svg>
+                  <image {...expectSVG} />
+                </svg>
+              )}
+              <p {...expectHTML} />
+            </foreignObject>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+    });
+
+    it('should unwind namespaces on uncaught errors', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      expect(() => {
+        assertNamespacesMatch(
+          <svg {...expectSVG}>
+            <BrokenRender />
+          </svg>
+        );
+      }).toThrow('Hello');
+      assertNamespacesMatch(
+        <div {...expectHTML} />
+      );
+    });
+
+    it('should unwind namespaces on caught errors', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        unstable_handleError(error) {
+          this.setState({error});
+        }
+        render() {
+          if (this.state.error) {
+            return <p {...expectHTML} />;
+          }
+          return this.props.children;
+        }
+      }
+
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <foreignObject {...expectSVG}>
+            <ErrorBoundary>
+              <math {...expectMath}>
+                <BrokenRender />
+              </math>
+            </ErrorBoundary>
+          </foreignObject>
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML} />
+      );
+    });
+
+    it('should unwind namespaces on caught errors in a portal', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        unstable_handleError(error) {
+          this.setState({error});
+        }
+        render() {
+          if (this.state.error) {
+            return <image {...expectSVG} />;
+          }
+          return this.props.children;
+        }
+      }
+
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <ErrorBoundary>
+            {portal(
+              <div {...expectHTML}>
+                <math {...expectMath}>
+                  <BrokenRender />)
+                </math>
+              </div>
+            )}
+          </ErrorBoundary>
+          {
+            /*
+            * TODO: enable. Currently this leads to stack overflow
+            * but it might be a bug in error boundaries rather than SVG or portals.
+            portal(
+              <div {...expectHTML} />
+            )
+            */
+          }
+        </svg>
+      );
     });
 
     it('should pass portal context when rendering subtree elsewhere', () => {

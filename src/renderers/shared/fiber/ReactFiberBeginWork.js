@@ -14,6 +14,7 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
@@ -59,12 +60,19 @@ var {
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber: Fiber) => void
 ) {
 
   const { shouldSetTextContent } = config;
+
+  const {
+    pushHostContext,
+    pushHostContainer,
+    resetHostContainer,
+  } = hostContext;
 
   const {
     adoptClassInstance,
@@ -233,7 +241,6 @@ module.exports = function<T, P, I, TI, C>(
       // empty, we need to schedule the text content to be reset.
       workInProgress.effectTag |= ContentReset;
     }
-
     if (nextProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
@@ -270,6 +277,7 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
+      pushHostContext(workInProgress);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -357,8 +365,9 @@ module.exports = function<T, P, I, TI, C>(
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+    const isHostComponent = workInProgress.tag === HostComponent;
 
-    if (workInProgress.tag === HostComponent &&
+    if (isHostComponent &&
         workInProgress.memoizedProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // This subtree still has work, but it should be deprioritized so we need
@@ -400,14 +409,32 @@ module.exports = function<T, P, I, TI, C>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
+
     // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress, false);
+    if (isHostComponent) {
+      pushHostContext(workInProgress);
+    } else {
+      switch (workInProgress.tag) {
+        case ClassComponent:
+          if (isContextProvider(workInProgress)) {
+            pushContextProvider(workInProgress, false);
+          }
+          break;
+        case HostRoot:
+        case HostPortal:
+          pushHostContainer(workInProgress.stateNode.containerInfo);
+          break;
+      }
     }
+    // TODO: this is annoyingly duplicating non-jump codepaths.
+
     return workInProgress.child;
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
+    if (workInProgress.tag === HostPortal) {
+      pushHostContainer(workInProgress.stateNode.containerInfo);
+    }
     // TODO: What if this is currently in progress?
     // How can that happen? How is this not being cloned?
     return null;
@@ -417,6 +444,7 @@ module.exports = function<T, P, I, TI, C>(
     if (!workInProgress.return) {
       // Don't start new work with context on the stack.
       resetContext();
+      resetHostContainer();
     }
 
     if (workInProgress.pendingWorkPriority === NoWork ||
@@ -461,6 +489,7 @@ module.exports = function<T, P, I, TI, C>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
+        pushHostContainer(workInProgress.stateNode.containerInfo);
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
@@ -486,8 +515,8 @@ module.exports = function<T, P, I, TI, C>(
         // next one immediately.
         return null;
       case HostPortal:
+        pushHostContainer(workInProgress.stateNode.containerInfo);
         updatePortalComponent(current, workInProgress);
-        // TODO: is this right?
         return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
