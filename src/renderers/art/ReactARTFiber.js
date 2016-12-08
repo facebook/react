@@ -485,6 +485,10 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  getChildHostContext() {
+    return null;
+  },
+
   scheduleAnimationCallback: window.requestAnimationFrame,
 
   scheduleDeferredCallback: window.requestIdleCallback,
