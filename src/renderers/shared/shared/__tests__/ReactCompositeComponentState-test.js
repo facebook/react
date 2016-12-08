@@ -299,16 +299,16 @@ describe('ReactCompositeComponent-state', () => {
     // We expect the same thing to happen if we bail out in the middle.
     expect(ops).toEqual(
       ReactDOMFeatureFlags.useFiber ?
-      [
-        // Fiber works as expected
-        'child did update',
-        'parent did update',
-      ] : [
-        // Stack treats these as two separate updates and therefore the order
-        // is inverse.
-        'parent did update',
-        'child did update',
-      ]
+        [
+          // Fiber works as expected
+          'child did update',
+          'parent did update',
+        ] : [
+          // Stack treats these as two separate updates and therefore the order
+          // is inverse.
+          'parent did update',
+          'child did update',
+        ]
     );
 
   });
