@@ -75,11 +75,21 @@ describe('ReactBrowserEventEmitter', () => {
     var PARENT_PROPS = {};
     var CHILD_PROPS = {};
 
+    function Child(props) {
+      return <div ref={(c) => CHILD = c} {...props} />;
+    }
+
+    class ChildWrapper extends React.PureComponent {
+      render() {
+        return <Child {...this.props} />;
+      }
+    }
+
     function renderTree() {
       ReactDOM.render(
         <div ref={(c) => GRANDPARENT = c} {...GRANDPARENT_PROPS}>
           <div ref={(c) => PARENT = c} {...PARENT_PROPS}>
-            <div ref={(c) => CHILD = c} {...CHILD_PROPS} />
+            <ChildWrapper {...CHILD_PROPS} />
           </div>
         </div>,
         container
@@ -191,6 +201,46 @@ describe('ReactBrowserEventEmitter', () => {
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
     expect(idCallOrder[2]).toBe(GRANDPARENT);
+  });
+
+  it('should bubble to the right handler after an update', () => {
+    putListener(
+      GRANDPARENT,
+      ON_CLICK_KEY,
+      recordID.bind(null, 'GRANDPARENT')
+    );
+    putListener(
+      PARENT,
+      ON_CLICK_KEY,
+      recordID.bind(null, 'PARENT')
+    );
+    putListener(
+      CHILD,
+      ON_CLICK_KEY,
+      recordID.bind(null, 'CHILD')
+    );
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder).toEqual([
+      'CHILD',
+      'PARENT',
+      'GRANDPARENT',
+    ]);
+
+    idCallOrder = [];
+
+    // Update just the grand parent without updating the child.
+    putListener(
+      GRANDPARENT,
+      ON_CLICK_KEY,
+      recordID.bind(null, 'UPDATED_GRANDPARENT')
+    );
+
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder).toEqual([
+      'CHILD',
+      'PARENT',
+      'UPDATED_GRANDPARENT',
+    ]);
   });
 
   it('should continue bubbling if an error is thrown', () => {
