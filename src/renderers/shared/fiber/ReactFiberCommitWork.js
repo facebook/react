@@ -265,16 +265,19 @@ module.exports = function<T, P, I, TI, C, CX>(
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
         removeChild(parent, node.stateNode);
+        // Don't visit children because we already visited them.
       } else if (node.tag === HostPortal) {
         // When we go into a portal, it becomes the parent to remove from.
         // We will reassign it back when we pop the portal on the way up.
         parent = node.stateNode.containerInfo;
+        // Visit children because portals might contain host components.
         if (node.child) {
           node = node.child;
           continue;
         }
       } else {
         commitUnmount(node);
+        // Visit children because we may find more host components below.
         if (node.child) {
           // TODO: Coroutines need to visit the stateNode.
           node.child.return = node;
@@ -302,10 +305,22 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function commitDeletion(current : Fiber) : void {
-    // Recursively delete all host nodes from the parent.
-    const parent = getHostParent(current);
-    // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(parent, current);
+    // Recursively delete the closest child host nodes from the closest host parent.
+    // Then detach refs and call componentWillUnmount() on the whole subtree.
+    if (current.tag === HostPortal) {
+      // When deleting a portal, there are no host nodes above it.
+      // It is as a host parent itself.
+      const parent = current.stateNode.containerInfo;
+      let child = current.child;
+      while (child) {
+        unmountHostComponents(parent, child);
+        child = child.sibling;
+      }
+    } else {
+      // When deleting anything other than a portal, search for the host parent.
+      const parent = getHostParent(current);
+      unmountHostComponents(parent, current);
+    }
 
     // Cut off the return pointers to disconnect it from the tree. Ideally, we
     // should clear the child pointer of the parent alternate to let this

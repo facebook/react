@@ -19,7 +19,6 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
-* should keep track of namespace across portals (medium)
 * should unwind namespaces on caught errors in a portal
 
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
