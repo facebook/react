@@ -15,6 +15,7 @@
 import type { Fiber } from 'ReactFiber';
 
 const {
+  ForceUpdate,
   Callback: CallbackEffect,
 } = require('ReactTypeOfSideEffect');
 
@@ -41,11 +42,6 @@ export type UpdateQueue = {
   firstPendingUpdate: Update | null,
   // Points to the last (newest) update.
   last: Update | null,
-
-  // Used to implement forceUpdate. Only true if there's a merged (non-pending)
-  // force update; pending force updates do not affect this.
-  // TODO: We could use a ForceUpdate effect instead?
-  hasForceUpdate: boolean,
 };
 
 exports.createUpdateQueue = function() : UpdateQueue {
@@ -53,8 +49,6 @@ exports.createUpdateQueue = function() : UpdateQueue {
     first: null,
     firstPendingUpdate: null,
     last: null,
-
-    hasForceUpdate: false,
   };
 };
 
@@ -184,8 +178,8 @@ exports.beginUpdateQueue = function(workInProgress : Fiber, queue : UpdateQueue,
   // TODO: Would memoization be worth it?
 
   // Reset these flags. We'll update them while looping through the queue.
-  queue.hasForceUpdate = false;
-  workInProgress.effectTag |= CallbackEffect;
+  workInProgress.effectTag &= ~ForceUpdate;
+  workInProgress.effectTag &= ~CallbackEffect;
 
   let state = prevState;
   let dontMutatePrevState = true;
@@ -215,7 +209,7 @@ exports.beginUpdateQueue = function(workInProgress : Fiber, queue : UpdateQueue,
       }
     }
     if (update.isForced) {
-      queue.hasForceUpdate = true;
+      workInProgress.effectTag |= ForceUpdate;
     }
     if (update.callback) {
       workInProgress.effectTag |= CallbackEffect;

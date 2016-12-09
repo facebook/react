@@ -493,8 +493,6 @@ module.exports = function<T, P, I, TI, C, CX>(
     const memoizedProps = workInProgress.memoizedProps;
     const updateQueue = workInProgress.updateQueue;
 
-
-
     // This is kept as a single expression to take advantage of short-circuiting.
     const hasNewProps = (
       pendingProps !== null && (            // hasPendingProps && (

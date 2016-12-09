@@ -26,6 +26,8 @@ var {
   addCallback,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
+var { hasContextChanged } = require('ReactFiberContext');
+var { ForceUpdate } = require('ReactTypeOfSideEffect');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
@@ -76,8 +78,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
-    const updateQueue = workInProgress.updateQueue;
-    if (oldProps === null || (updateQueue && updateQueue.hasForceUpdate)) {
+    if (oldProps === null || (workInProgress.effectTag & ForceUpdate)) {
       // If the workInProgress already has an Update effect, return true
       return true;
     }
@@ -339,8 +340,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
 
     if (oldProps === newProps &&
         oldState === newState &&
-        oldContext === newContext &&
-        updateQueue && !updateQueue.hasForceUpdate) {
+        !hasContextChanged() &&
+        !(workInProgress.effectTag & ForceUpdate)) {
       return false;
     }
 
