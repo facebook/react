@@ -20,6 +20,22 @@ import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
+export type Fiber =
+  | IndeterminateComponentFiber
+  | FunctionalComponentFiber<any>
+  | ClassComponentFiber<any, any>
+  | HostRootFiber
+  | HostPortalFiber
+  | HostComponentFiber
+  | HostTextFiber
+  | CoroutineComponentFiber
+  | CoroutineHandlerPhaseFiber
+  | YieldComponentFiber
+  | FragmentFiber;
+
+export type ParentFiber = Fiber;
+export type ChildFiber = Fiber;
+
 type ReactFunctionalComponent<Props> = (props : Props, context : any) => ReactNode;
 type ReactClassComponent<Props, State> = React$Component<any, Props, State>;
 
@@ -167,7 +183,7 @@ export type HostPortalFiber = {
   lastEffect: ?Fiber,
 
   tag: 4,
-  type: {
+  stateNode: {
     containerInfo: any,
     implementation: any,
   },

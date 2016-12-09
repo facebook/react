@@ -14,7 +14,11 @@
 
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
-import type { Fiber, ElementFiber } from 'ReactFiber';
+import type {
+  Fiber,
+  ElementFiber,
+  ParentFiber,
+} from 'ReactFiber';
 import type { ReactInstance } from 'ReactInstanceType';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -116,7 +120,7 @@ function coerceRef(current: ?ElementFiber, element: ReactElement<any>) :
 function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
   function deleteChild(
-    returnFiber : Fiber,
+    returnFiber : ParentFiber,
     childToDelete : Fiber
   ) : void {
     if (!shouldTrackSideEffects) {
@@ -147,7 +151,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   }
 
   function deleteRemainingChildren(
-    returnFiber : Fiber,
+    returnFiber : ParentFiber,
     currentFirstChild : ?Fiber
   ) : null {
     if (!shouldTrackSideEffects) {
@@ -265,11 +269,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element : ReactElement<any>,
     priority : PriorityLevel
   ) : Fiber {
-    if (current == null || current.type !== element.type ||
+    if (current == null ||
         // Verify that this is indeed an element tag
         current.tag !== HostComponent ||
         current.tag !== ClassComponent ||
-        current.tag !== FunctionalComponent
+        current.tag !== FunctionalComponent ||
+        // If it is an element tag, check the type.
+        current.type !== element.type
         ) {
       // Insert
       const created = createFiberFromElement(element, priority);
@@ -548,7 +554,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   }
 
   function reconcileChildrenArray(
-    returnFiber : Fiber,
+    returnFiber : ParentFiber,
     currentFirstChild : ?Fiber,
     newChildren : Array<*>,
     priority : PriorityLevel) : ?Fiber {

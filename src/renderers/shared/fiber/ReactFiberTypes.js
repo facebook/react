@@ -10,6 +10,9 @@
  * @flow
  */
 
+// This file is only provided for documentation purposes until Flow lands spread
+// of object types. ReactFiberTypes.exploded is the one that gets used.
+
 'use strict';
 
 import type { ReactFragment, ReactNode } from 'ReactTypes';
@@ -18,6 +21,22 @@ import type { ReactPortal } from 'ReactPortal';
 import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+
+export type Fiber =
+  | IndeterminateComponentFiber
+  | FunctionalComponentFiber<any>
+  | ClassComponentFiber<any, any>
+  | HostRootFiber
+  | HostPortalFiber
+  | HostComponentFiber
+  | HostTextFiber
+  | CoroutineComponentFiber
+  | CoroutineHandlerPhaseFiber
+  | YieldComponentFiber
+  | FragmentFiber;
+
+export type ParentFiber = Fiber;
+export type ChildFiber = Fiber;
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.

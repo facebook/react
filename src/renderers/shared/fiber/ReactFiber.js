@@ -19,7 +19,14 @@ import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
+export type {
+  Fiber,
+  ChildFiber,
+  ParentFiber,
+} from 'ReactFiberTypes.exploded';
+
 import type {
+ Fiber,
  IndeterminateComponentFiber,
  FunctionalComponentFiber,
  ClassComponentFiber,
@@ -31,6 +38,8 @@ import type {
  CoroutineHandlerPhaseFiber,
  YieldComponentFiber,
  FragmentFiber,
+ ChildFiber,
+ ParentFiber,
 } from 'ReactFiberTypes.exploded';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -61,19 +70,6 @@ export type ElementFiber =
   | FunctionalComponentFiber<any>
   | HostComponentFiber
   | ClassComponentFiber<any, any>;
-
-export type Fiber =
-  | IndeterminateComponentFiber
-  | FunctionalComponentFiber<any>
-  | ClassComponentFiber<any, any>
-  | HostRootFiber
-  | HostPortalFiber
-  | HostComponentFiber
-  | HostTextFiber
-  | CoroutineComponentFiber
-  | CoroutineHandlerPhaseFiber
-  | YieldComponentFiber
-  | FragmentFiber;
 
 if (__DEV__) {
   var debugCounter = 0;
@@ -162,7 +158,9 @@ function shouldConstruct(Component) {
 
 // This is used to create an alternate fiber to do work on.
 // TODO: Rename to createWorkInProgressFiber or something like that.
-exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
+// TODO: All these fields do indeed exist but as a WIP, they don't. Add null
+// fields to the type signature instead of missing fields.
+exports.cloneFiber = function<T : Fiber>(fiber : any, priorityLevel : PriorityLevel) : T {
   // We clone to get a work in progress. That means that this fiber is the
   // current. To make it safe to reuse that fiber later on as work in progress
   // we need to reset its work in progress flag now. We don't have an
@@ -237,7 +235,7 @@ exports.createFiberFromFragment = function(elements : ReactFragment, priorityLev
   return fiber;
 };
 
-exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) : HostTextFiber {
   const fiber = createFiber(HostText, null);
   fiber.pendingProps = content;
   fiber.pendingWorkPriority = priorityLevel;
