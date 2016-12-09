@@ -152,7 +152,7 @@ module.exports = function<T, P, I, TI, C, CX>(
           // If we don't have a child, try the siblings instead.
           continue siblings;
         }
-        if (!node.child) {
+        if (!node.child || node.tag === HostPortal) {
           continue siblings;
         } else {
           node.child.return = node;

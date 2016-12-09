@@ -519,6 +519,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should keep track of namespace across portals (complex)
 * should unwind namespaces on uncaught errors
 * should unwind namespaces on caught errors
+* should unwind namespaces on caught errors in a portal
 * should pass portal context when rendering subtree elsewhere
 * should update portal context if it changes due to setState
 * should update portal context if it changes due to re-render
