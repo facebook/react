@@ -309,7 +309,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Then detach refs and call componentWillUnmount() on the whole subtree.
     if (current.tag === HostPortal) {
       // When deleting a portal, there are no host nodes above it.
-      // It is as a host parent itself.
+      // It is a host parent itself.
       const parent = current.stateNode.containerInfo;
       let child = current.child;
       while (child) {
