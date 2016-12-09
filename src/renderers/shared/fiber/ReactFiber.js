@@ -153,7 +153,7 @@ function createFiber(tag : number, key : null | string) : Fiber {
   if (__DEV__) {
     (fiber : any)._debugID = debugCounter++;
   }
-  return fiber;
+  return (fiber : any); // TODO: Ensure that non-nullable fields are passed.
 };
 
 function shouldConstruct(Component) {
