@@ -41,54 +41,92 @@ module.exports = function<T, P, I, TI, C, CX>(
     contextDepth: number
   };
 
-  function createContainerState(rootInstance) {
-    return {
-      rootInstance,
-      contextFibers: null,
-      contextValues: null,
-      contextDepth: -1,
-    };
-  }
+  // Current container context on the stack.
+  let rootInstance : C | null = null;
+  let contextFibers : Array<Fiber | null> | null = null;
+  let contextValues : Array<CX | null> | null = null;
+  let contextDepth : number = -1;
 
-  // If we meet any portals, we'll go deeper.
-  let containerStack : Array<ContainerState> = [];
-  let containerDepth : number = -1;
+  // If we meet any portals, we'll pack outer context in this array.
+  let portalStack : Array<ContainerState> = [];
+  let portalDepth : number = -1;
 
   function getRootHostContainer() : C {
-    if (containerDepth === -1) {
-      throw new Error('Expected to find a root container.');
+    if (rootInstance == null) {
+      throw new Error('Expected root container to exist.');
     }
-    const containerState = containerStack[containerDepth];
-    const {rootInstance} = containerState;
     return rootInstance;
   }
 
-  function pushHostContainer(portalHostContainer) {
-    containerDepth++;
-    if (containerDepth === containerStack.length) {
-      containerStack[containerDepth] = createContainerState(portalHostContainer);
-    } else {
-      const containerState = containerStack[containerDepth];
-      containerState.rootInstance = portalHostContainer;
-      containerState.contextFibers = null;
-      containerState.contextValues = null;
-      containerState.contextDepth = -1;
+  function pushPortal(portalRootInstance : C) {
+    if (rootInstance == null) {
+      throw new Error('Cannot push a portal when there is no root.');
     }
+    // Only create a new item on the portal stack if necessary.
+    if (portalDepth === portalStack.length) {
+      portalStack[portalDepth] = {
+        rootInstance,
+        contextFibers,
+        contextValues,
+        contextDepth,
+      };
+    } else {
+      // Write over the existing state since it's from the previous traversal.
+      const stateOutsidePortal = portalStack[portalDepth];
+      stateOutsidePortal.rootInstance = rootInstance;
+      stateOutsidePortal.contextFibers = contextFibers;
+      stateOutsidePortal.contextValues = contextValues;
+      stateOutsidePortal.contextDepth = contextDepth;
+    }
+    // The local variables reflect the inner container now.
+    rootInstance = portalRootInstance;
+    contextFibers = null;
+    contextValues = null;
+    contextDepth = -1;
+  }
+
+  function pushHostContainer(nextRootInstance : C) {
+    const isEnteringPortal = portalDepth > -1;
+    if (isEnteringPortal) {
+      pushPortal(nextRootInstance);
+    } else {
+      // Don't reset arrays because we reuse them.
+      rootInstance = nextRootInstance;
+      contextDepth = -1;
+    }
+    portalDepth++;
+  }
+
+  function popPortal() {
+    // The local variables reflect the outer container now.
+    const stateOutsidePortal = portalStack[portalDepth];
+    rootInstance = stateOutsidePortal.rootInstance;
+    contextFibers = stateOutsidePortal.contextFibers;
+    contextValues = stateOutsidePortal.contextValues;
+    contextDepth = stateOutsidePortal.contextDepth;
   }
 
   function popHostContainer() {
-    if (containerDepth === -1) {
+    if (portalDepth === -1) {
       throw new Error('Already reached the root.');
     }
-    containerDepth--;
+    portalDepth--;
+
+    const isLeavingPortal = portalDepth > -1;
+    if (isLeavingPortal) {
+      popPortal();
+    } else {
+      // Reset current container state.
+      // Don't reset arrays because we reuse them.
+      rootInstance = null;
+      contextDepth = -1;
+    }
   }
 
   function getHostContext() : CX | null {
-    if (containerDepth == null) {
+    if (portalDepth === -1) {
       throw new Error('Expected to find a root container.');
     }
-    const containerState = containerStack[containerDepth];
-    const {contextDepth, contextValues} = containerState;
     if (contextDepth === -1) {
       return null;
     }
@@ -104,29 +142,21 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (parentHostContext === currentHostContext) {
       return;
     }
-    const containerState = containerStack[containerDepth];
-    let {contextDepth, contextFibers, contextValues} = containerState;
     if (contextFibers == null) {
       contextFibers = [];
-      containerState.contextFibers = contextFibers;
     }
     if (contextValues == null) {
       contextValues = [];
-      containerState.contextValues = contextValues;
     }
     contextDepth++;
-    containerState.contextDepth = contextDepth;
     contextFibers[contextDepth] = fiber;
     contextValues[contextDepth] = currentHostContext;
   }
 
   function popHostContext(fiber : Fiber) : void {
-    const containerState = containerStack[containerDepth];
-    let {contextDepth} = containerState;
     if (contextDepth === -1) {
       return;
     }
-    const {contextFibers, contextValues} = containerState;
     if (contextFibers == null || contextValues == null) {
       throw new Error('Expected host context stacks to exist when index is more than -1.');
     }
@@ -136,11 +166,15 @@ module.exports = function<T, P, I, TI, C, CX>(
     contextFibers[contextDepth] = null;
     contextValues[contextDepth] = null;
     contextDepth--;
-    containerState.contextDepth = contextDepth;
   }
 
   function resetHostContainer() {
-    containerDepth = -1;
+    // Reset portal stack pointer because we're starting from the very top.
+    portalDepth = -1;
+    // Reset current container state.
+    // Don't reset arrays because we reuse them.
+    rootInstance = null;
+    contextDepth = -1;
   }
 
   return {
