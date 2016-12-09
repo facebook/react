@@ -24,7 +24,7 @@ var {
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
-var { createUpdateQueue, addCallbackToQueue } = require('ReactFiberUpdateQueue');
+var { createUpdateQueue, addCallback } = require('ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
@@ -109,16 +109,23 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
       const context = getContextForSubtree(parentComponent);
       const root = createFiberRoot(containerInfo, context);
-      const container = root.current;
-      if (callback) {
-        const queue = createUpdateQueue(null);
-        addCallbackToQueue(queue, callback);
-        root.callbackList = queue;
-      }
-      // TODO: Use pending work/state instead of props.
+      const current = root.current;
+
+      // TODO: Use the updateQueue and scheduleUpdate, instead of pendingProps.
       // TODO: This should not override the pendingWorkPriority if there is
       // higher priority work in the subtree.
-      container.pendingProps = element;
+      current.pendingProps = element;
+      if (current.alternate) {
+        current.alternate.pendingProps = element;
+      }
+      if (callback) {
+        const queue = current.updateQueue || createUpdateQueue();
+        addCallback(queue, callback);
+        current.updateQueue = queue;
+        if (current.alternate) {
+          current.alternate.updateQueue = queue;
+        }
+      }
 
       scheduleWork(root);
 
@@ -129,24 +136,30 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // It may seem strange that we don't return the root here, but that will
       // allow us to have containers that are in the middle of the tree instead
       // of being roots.
-      return container;
+      return current;
     },
 
     updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
-      if (callback) {
-        const queue = root.callbackList ?
-          root.callbackList :
-          createUpdateQueue(null);
-        addCallbackToQueue(queue, callback);
-        root.callbackList = queue;
-      }
+      const current = root.current;
+
       root.pendingContext = getContextForSubtree(parentComponent);
-      // TODO: Use pending work/state instead of props.
-      root.current.pendingProps = element;
-      if (root.current.alternate) {
-        root.current.alternate.pendingProps = element;
+
+      // TODO: Use the updateQueue and scheduleUpdate, instead of pendingProps.
+      // TODO: This should not override the pendingWorkPriority if there is
+      // higher priority work in the subtree.
+      current.pendingProps = element;
+      if (current.alternate) {
+        current.alternate.pendingProps = element;
+      }
+      if (callback) {
+        const queue = current.updateQueue || createUpdateQueue();
+        addCallback(queue, callback);
+        current.updateQueue = queue;
+        if (current.alternate) {
+          current.alternate.updateQueue = queue;
+        }
       }
 
       scheduleWork(root);

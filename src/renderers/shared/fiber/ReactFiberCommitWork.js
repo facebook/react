@@ -25,12 +25,11 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var { callCallbacks } = require('ReactFiberUpdateQueue');
+var { commitUpdateQueue } = require('ReactFiberUpdateQueue');
 
 var {
   Placement,
   Update,
-  Callback,
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
@@ -418,25 +417,16 @@ module.exports = function<T, P, I, TI, C, CX>(
           }
           attachRef(current, finishedWork, instance);
         }
-        // Clear updates from current fiber.
-        if (finishedWork.alternate) {
-          finishedWork.alternate.updateQueue = null;
-        }
-        if (finishedWork.effectTag & Callback) {
-          if (finishedWork.callbackList) {
-            const callbackList = finishedWork.callbackList;
-            finishedWork.callbackList = null;
-            callCallbacks(callbackList, instance);
-          }
+        if (finishedWork.updateQueue) {
+          commitUpdateQueue(finishedWork, finishedWork.updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
-        const rootFiber = finishedWork.stateNode;
-        if (rootFiber.callbackList) {
-          const callbackList = rootFiber.callbackList;
-          rootFiber.callbackList = null;
-          callCallbacks(callbackList, rootFiber.current.child.stateNode);
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue) {
+          const instance = finishedWork.child && finishedWork.child.stateNode;
+          commitUpdateQueue(finishedWork, updateQueue, instance);
         }
         return;
       }

@@ -392,7 +392,6 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // The work is now done. We don't need this anymore. This flags
       // to the system not to redo any work here.
       workInProgress.pendingProps = null;
-      workInProgress.updateQueue = null;
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;

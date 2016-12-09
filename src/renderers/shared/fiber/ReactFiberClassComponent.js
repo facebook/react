@@ -20,9 +20,11 @@ var {
 } = require('ReactFiberContext');
 var {
   createUpdateQueue,
-  addToQueue,
-  addCallbackToQueue,
-  mergeUpdateQueue,
+  addUpdate,
+  addReplaceUpdate,
+  addForceUpdate,
+  addCallback,
+  mergeQueue,
 } = require('ReactFiberUpdateQueue');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -49,36 +51,33 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     isMounted,
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue ?
-        addToQueue(fiber.updateQueue, partialState) :
-        createUpdateQueue(partialState);
-      scheduleUpdateQueue(fiber, updateQueue);
+      const queue = fiber.updateQueue || createUpdateQueue();
+      addUpdate(queue, partialState);
+      scheduleUpdateQueue(fiber, queue);
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
-      scheduleUpdateQueue(fiber, updateQueue);
+      const queue = fiber.updateQueue || createUpdateQueue();
+      addReplaceUpdate(queue, state);
+      scheduleUpdateQueue(fiber, queue);
     },
     enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
-      updateQueue.isForced = true;
-      scheduleUpdateQueue(fiber, updateQueue);
+      const queue = fiber.updateQueue || createUpdateQueue();
+      addForceUpdate(queue);
+      scheduleUpdateQueue(fiber, queue);
     },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      scheduleUpdateQueue(fiber, updateQueue);
+      const queue = fiber.updateQueue || createUpdateQueue();
+      addCallback(queue, callback);
+      scheduleUpdateQueue(fiber, queue);
     },
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
     const updateQueue = workInProgress.updateQueue;
-    if (oldProps === null || (updateQueue && updateQueue.isForced)) {
+    if (oldProps === null || (updateQueue && updateQueue.hasForceUpdate)) {
       return true;
     }
 
@@ -245,7 +244,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
+        instance.state = mergeQueue(updateQueue, instance, state, props);
       }
     }
   }
@@ -294,7 +293,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
-      newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
+      newInstance.state = mergeQueue(newUpdateQueue, newInstance, newState, newProps);
     }
     return true;
   }
@@ -332,11 +331,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      if (!updateQueue.hasUpdate) {
-        newState = oldState;
-      } else {
-        newState = mergeUpdateQueue(updateQueue, instance, oldState, newProps);
-      }
+      newState = mergeQueue(updateQueue, instance, oldState, newProps);
     } else {
       newState = oldState;
     }
@@ -344,7 +339,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     if (oldProps === newProps &&
         oldState === newState &&
         oldContext === newContext &&
-        updateQueue && !updateQueue.isForced) {
+        updateQueue && !updateQueue.hasForceUpdate) {
       return false;
     }
 

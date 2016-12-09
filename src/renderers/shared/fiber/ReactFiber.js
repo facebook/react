@@ -100,12 +100,11 @@ export type Fiber = {
   pendingProps: any, // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
-  // A queue of local state updates.
-  updateQueue: ?UpdateQueue,
-  // The state used to create the output. This is a full state object.
+
+  // A queue of state updates and callbacks.
+  updateQueue: UpdateQueue | null,
+  // The state used to create the output
   memoizedState: any,
-  // Linked list of callbacks to call after updates are committed.
-  callbackList: ?UpdateQueue,
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -195,7 +194,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     memoizedProps: null,
     updateQueue: null,
     memoizedState: null,
-    callbackList: null,
 
     effectTag: NoEffect,
     nextEffect: null,
@@ -271,7 +269,6 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
   alt.updateQueue = fiber.updateQueue;
-  alt.callbackList = fiber.callbackList;
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;

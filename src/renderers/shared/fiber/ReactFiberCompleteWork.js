@@ -41,7 +41,6 @@ var {
 } = ReactTypeOfWork;
 var {
   Update,
-  Callback,
 } = ReactTypeOfSideEffect;
 
 if (__DEV__) {
@@ -71,11 +70,6 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Tag the fiber with an update effect. This turns a Placement into
     // an UpdateAndPlacement.
     workInProgress.effectTag |= Update;
-  }
-
-  function markCallback(workInProgress : Fiber) {
-    // Tag the fiber with a callback effect.
-    workInProgress.effectTag |= Callback;
   }
 
   function appendAllYields(yields : Array<ReifiedYield>, workInProgress : Fiber) {
@@ -187,26 +181,11 @@ module.exports = function<T, P, I, TI, C, CX>(
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null
-        // in the case of an update
+        // in the case of an update.
         const { state, props } = workInProgress.stateNode;
-        const updateQueue = workInProgress.updateQueue;
         workInProgress.memoizedState = state;
         workInProgress.memoizedProps = props;
-        if (current) {
-          if (current.memoizedProps !== workInProgress.memoizedProps ||
-              current.memoizedState !== workInProgress.memoizedState ||
-              updateQueue && updateQueue.isForced) {
-            markUpdate(workInProgress);
-          }
-        } else {
-          markUpdate(workInProgress);
-        }
-        if (updateQueue && updateQueue.hasCallback) {
-          // Transfer update queue to callbackList field so callbacks can be
-          // called during commit phase.
-          workInProgress.callbackList = updateQueue;
-          markCallback(workInProgress);
-        }
+
         return null;
       case HostRoot: {
         workInProgress.memoizedProps = workInProgress.pendingProps;
@@ -215,9 +194,6 @@ module.exports = function<T, P, I, TI, C, CX>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-        // TODO: Only mark this as an update if we have any pending callbacks
-        // on it.
-        markUpdate(workInProgress);
         return null;
       }
       case HostComponent:

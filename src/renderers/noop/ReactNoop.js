@@ -284,17 +284,19 @@ var ReactNoop = {
 
     function logUpdateQueue(updateQueue : UpdateQueue, depth) {
       log(
-        '  '.repeat(depth + 1) + 'QUEUED UPDATES',
-        updateQueue.isReplace ? 'is replace' : '',
-        updateQueue.isForced ? 'is forced' : ''
+        '  '.repeat(depth + 1) + 'QUEUED UPDATES'
       );
+      const firstPendingUpdate = updateQueue.firstPendingUpdate;
+      if (!firstPendingUpdate) {
+        return;
+      }
       log(
         '  '.repeat(depth + 1) + '~',
-        updateQueue.partialState,
-        updateQueue.callback ? 'with callback' : ''
+        firstPendingUpdate && firstPendingUpdate.partialState,
+        firstPendingUpdate.callback ? 'with callback' : ''
       );
       var next;
-      while (next = updateQueue.next) {
+      while (next = firstPendingUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,

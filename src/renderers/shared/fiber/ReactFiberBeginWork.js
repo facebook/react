@@ -25,7 +25,10 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-
+var {
+  hasPendingUpdate,
+  mergeQueue,
+} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -53,6 +56,8 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
+  Update,
+  Callback,
   Placement,
   ContentReset,
   Err,
@@ -210,9 +215,29 @@ module.exports = function<T, P, I, TI, C, CX>(
     } else {
       shouldUpdate = updateClassInstance(current, workInProgress);
     }
-    if (!shouldUpdate) {
+
+    // Schedule side-effects
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue && updateQueue.hasCallback) {
+      // The update queue has a callback. Schedule a callback effect.
+      // Callbacks are scheduled regardless of whether we bail out below.
+      workInProgress.effectTag |= Callback;
+    }
+    if (shouldUpdate) {
+      workInProgress.effectTag |= Update;
+    } else {
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (current) {
+        const instance = current.stateNode;
+        if (instance.props !== current.memoizedProps ||
+            instance.state !== current.memoizedState) {
+          workInProgress.effectTag |= Update;
+        }
+      }
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
+
     // Rerender
     const instance = workInProgress.stateNode;
     ReactCurrentOwner.current = workInProgress;
@@ -471,13 +496,24 @@ module.exports = function<T, P, I, TI, C, CX>(
       workInProgress.child = workInProgress.progressedChild;
     }
 
-    if ((workInProgress.pendingProps === null || (
-      workInProgress.memoizedProps !== null &&
-      workInProgress.pendingProps === workInProgress.memoizedProps
-      )) &&
-      workInProgress.updateQueue === null &&
-      !hasContextChanged()) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    const pendingProps = workInProgress.pendingProps;
+    const memoizedProps = workInProgress.memoizedProps;
+    const updateQueue = workInProgress.updateQueue;
+
+
+
+    // This is kept as a single expression to take advantage of short-circuiting.
+    const hasNewProps = (
+      pendingProps !== null && (            // hasPendingProps && (
+        memoizedProps === null ||           //   hasNoMemoizedProps ||
+        pendingProps !== memoizedProps      //   memoizedPropsDontMatch
+      )                                     // )
+    );
+    if (!hasNewProps) {
+      const hasUpdate = updateQueue && hasPendingUpdate(updateQueue);
+      if (!hasUpdate && !hasContextChanged()) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
     }
 
     switch (workInProgress.tag) {
@@ -497,8 +533,19 @@ module.exports = function<T, P, I, TI, C, CX>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
+
+        if (updateQueue) {
+          // The last three arguments are unimportant because there should be
+          // no update functions in a HostRoot's queue.
+          mergeQueue(updateQueue, null, null, null);
+          if (updateQueue.hasCallback) {
+            workInProgress.effectTag |= Callback;
+          }
+        }
+
         pushHostContainer(workInProgress.stateNode.containerInfo);
-        reconcileChildren(current, workInProgress, workInProgress.pendingProps);
+        reconcileChildren(current, workInProgress, pendingProps);
+
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return workInProgress.child;
