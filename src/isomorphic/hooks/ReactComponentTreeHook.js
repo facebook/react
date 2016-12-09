@@ -325,7 +325,7 @@ var ReactComponentTreeHook = {
 
     var currentOwner = ReactCurrentOwner.current;
     if (currentOwner && typeof currentOwner._debugID === 'number') {
-      var id = currentOwner && currentOwner._debugID;
+      var id = currentOwner ? currentOwner._debugID : null;
       info += ReactComponentTreeHook.getStackAddendumByID(id);
     }
     return info;

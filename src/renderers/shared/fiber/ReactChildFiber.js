@@ -14,7 +14,7 @@
 
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
-import type { Fiber } from 'ReactFiber';
+import type { Fiber, ElementFiber } from 'ReactFiber';
 import type { ReactInstance } from 'ReactInstanceType';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -55,6 +55,8 @@ const isArray = Array.isArray;
 
 const {
   ClassComponent,
+  FunctionalComponent,
+  HostComponent,
   HostText,
   HostPortal,
   CoroutineComponent,
@@ -68,7 +70,11 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
-function coerceRef(current: ?Fiber, element: ReactElement<any>) {
+function coerceRef(current: ?ElementFiber, element: ReactElement<any>) :
+  // TODO: This should either be a typed host ref or it should be a typed class
+  // component ref. This should move into the type check that we do in
+  // createFiberFromElementType where we know which one it is.
+  ((handle : any) => void) & { _stringRef: ?string } {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
@@ -180,7 +186,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return existingChildren;
   }
 
-  function useFiber(fiber : Fiber, priority : PriorityLevel) : Fiber {
+  function useFiber<T : Fiber>(fiber : T, priority : PriorityLevel) : T {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
@@ -259,10 +265,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element : ReactElement<any>,
     priority : PriorityLevel
   ) : Fiber {
-    if (current == null || current.type !== element.type) {
+    if (current == null || current.type !== element.type ||
+        // Verify that this is indeed an element tag
+        current.tag !== HostComponent ||
+        current.tag !== ClassComponent ||
+        current.tag !== FunctionalComponent
+        ) {
       // Insert
       const created = createFiberFromElement(element, priority);
-      created.ref = coerceRef(current, element);
+      created.ref = coerceRef(null, element);
       created.return = returnFiber;
       return created;
     } else {
@@ -863,7 +874,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        if (child.type === element.type) {
+        if (
+            // Verify that this is indeed an element tag
+            child.tag === HostComponent &&
+            child.tag === ClassComponent &&
+            child.tag === FunctionalComponent &&
+            // And if it is, then compare the type field to validate that we
+            // should indeed update this one.
+            child.type === element.type
+          ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
           existing.ref = coerceRef(child, element);
@@ -881,7 +900,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     const created = createFiberFromElement(element, priority);
-    created.ref = coerceRef(currentFirstChild, element);
+    created.ref = coerceRef(null, element);
     created.return = returnFiber;
     return created;
   }
