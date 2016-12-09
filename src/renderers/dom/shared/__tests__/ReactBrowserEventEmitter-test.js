@@ -57,7 +57,7 @@ function registerSimpleTestHandler() {
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     LISTENER.mockClear();
     EventListener = require('EventListener');
     EventPluginHub = require('EventPluginHub');

@@ -24,7 +24,7 @@ var ReactTestUtils;
 describe('ReactCompositeComponent', () => {
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');

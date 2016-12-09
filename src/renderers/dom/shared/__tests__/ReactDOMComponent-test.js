@@ -24,7 +24,7 @@ describe('ReactDOMComponent', () => {
   }
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -506,11 +506,11 @@ describe('ReactDOMComponent', () => {
       var node = container.firstChild;
       var nodeSetAttribute = node.setAttribute;
       node.setAttribute = jest.fn();
-      node.setAttribute.mockImpl(nodeSetAttribute);
+      node.setAttribute.mockImplementation(nodeSetAttribute);
 
       var nodeRemoveAttribute = node.removeAttribute;
       node.removeAttribute = jest.fn();
-      node.removeAttribute.mockImpl(nodeRemoveAttribute);
+      node.removeAttribute.mockImplementation(nodeRemoveAttribute);
 
       ReactDOM.render(<div id="" />, container);
       expect(node.setAttribute.mock.calls.length).toBe(0);
@@ -1167,7 +1167,7 @@ describe('ReactDOMComponent', () => {
     it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
       // Mock this here so we can mimic IE8 support. We require isEventSupported
       // before React so it's pre-mocked before React would require it.
-      jest.resetModuleRegistry()
+      jest.resetModules()
         .mock('isEventSupported');
       var isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);

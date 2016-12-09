@@ -30,7 +30,7 @@ describe('ReactDOMInput', () => {
   }
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');

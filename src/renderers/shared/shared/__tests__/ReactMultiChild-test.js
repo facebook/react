@@ -20,7 +20,7 @@ describe('ReactMultiChild', () => {
   var ReactDOM;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
   });

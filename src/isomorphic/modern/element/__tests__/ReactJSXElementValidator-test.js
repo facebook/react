@@ -22,7 +22,7 @@ describe('ReactJSXElementValidator', () => {
   var RequiredPropComponent;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');

@@ -20,7 +20,7 @@ var TestComponentWithMixin;
 
 describe('ReactStateSetters', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     TestComponent = class extends React.Component {
       state = {foo: 'foo'};

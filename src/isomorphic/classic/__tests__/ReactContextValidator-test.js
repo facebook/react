@@ -27,7 +27,7 @@ describe('ReactContextValidator', () => {
   }
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactDOM = require('ReactDOM');

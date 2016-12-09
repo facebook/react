@@ -95,7 +95,7 @@ function getLifeCycleState(instance): ComponentLifeCycle {
  */
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');

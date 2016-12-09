@@ -110,7 +110,7 @@ var expectClickLogsLengthToBe = function(instance, length) {
 
 describe('reactiverefs', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
@@ -156,7 +156,7 @@ describe('reactiverefs', () => {
 describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -292,7 +292,7 @@ describe('ref swapping', () => {
 
 describe('string refs between fiber and stack', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });

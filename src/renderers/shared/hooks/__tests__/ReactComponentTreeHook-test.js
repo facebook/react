@@ -20,7 +20,7 @@ describe('ReactComponentTreeHook', () => {
   var ReactComponentTreeTestUtils;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -1884,7 +1884,7 @@ describe('ReactComponentTreeHook', () => {
       global.Set = undefined;
       Array.from = undefined;
 
-      jest.resetModuleRegistry();
+      jest.resetModules();
 
       React = require('React');
       ReactDOM = require('ReactDOM');

@@ -19,7 +19,7 @@ describe('CSSPropertyOperations', () => {
   var CSSPropertyOperations;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     CSSPropertyOperations = require('CSSPropertyOperations');
   });
 

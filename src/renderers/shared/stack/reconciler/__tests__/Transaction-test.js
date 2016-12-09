@@ -17,7 +17,7 @@ var Transaction;
 var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
 describe('Transaction', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     Transaction = require('Transaction');
   });
 

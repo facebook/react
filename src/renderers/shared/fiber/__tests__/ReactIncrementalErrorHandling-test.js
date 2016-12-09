@@ -16,7 +16,7 @@ var ReactNoop;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
   });

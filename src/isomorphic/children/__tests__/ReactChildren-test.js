@@ -16,7 +16,7 @@ describe('ReactChildren', () => {
   var ReactFragment;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactFragment = require('ReactFragment');
   });
