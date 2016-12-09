@@ -27,7 +27,7 @@ var {
 } = require('ReactChildFiber');
 var {
   hasPendingUpdate,
-  mergeQueue,
+  beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -57,7 +57,6 @@ var {
 } = require('ReactPriorityLevel');
 var {
   Update,
-  Callback,
   Placement,
   ContentReset,
   Err,
@@ -217,12 +216,6 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
 
     // Schedule side-effects
-    const updateQueue = workInProgress.updateQueue;
-    if (updateQueue && updateQueue.hasCallback) {
-      // The update queue has a callback. Schedule a callback effect.
-      // Callbacks are scheduled regardless of whether we bail out below.
-      workInProgress.effectTag |= Callback;
-    }
     if (shouldUpdate) {
       workInProgress.effectTag |= Update;
     } else {
@@ -537,10 +530,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         if (updateQueue) {
           // The last three arguments are unimportant because there should be
           // no update functions in a HostRoot's queue.
-          mergeQueue(updateQueue, null, null, null);
-          if (updateQueue.hasCallback) {
-            workInProgress.effectTag |= Callback;
-          }
+          beginUpdateQueue(workInProgress, updateQueue, null, null, null);
         }
 
         pushHostContainer(workInProgress.stateNode.containerInfo);

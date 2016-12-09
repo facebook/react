@@ -14,6 +14,10 @@
 
 import type { Fiber } from 'ReactFiber';
 
+const {
+  Callback: CallbackEffect,
+} = require('ReactTypeOfSideEffect');
+
 type PartialState<State, Props> =
   $Subtype<State> |
   (prevState: State, props: Props) => $Subtype<State>;
@@ -40,10 +44,8 @@ export type UpdateQueue = {
 
   // Used to implement forceUpdate. Only true if there's a merged (non-pending)
   // force update; pending force updates do not affect this.
+  // TODO: We could use a ForceUpdate effect instead?
   hasForceUpdate: boolean,
-
-  // TODO: Remove this by scheduling the side-effect during the begin phase.
-  hasCallback: boolean,
 };
 
 exports.createUpdateQueue = function() : UpdateQueue {
@@ -53,7 +55,6 @@ exports.createUpdateQueue = function() : UpdateQueue {
     last: null,
 
     hasForceUpdate: false,
-    hasCallback: false,
   };
 };
 
@@ -177,15 +178,14 @@ function getStateFromUpdate(update, instance, prevState, props) {
   }
 }
 
-// TODO: Move callback effect scheduling here. Rename to beginUpdateQueue or similar.
-exports.mergeQueue = function(queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
+exports.beginUpdateQueue = function(workInProgress : Fiber, queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
   // This merges the entire update queue into a single object, not just the
   // pending updates, because the previous state and props may have changed.
   // TODO: Would memoization be worth it?
 
   // Reset these flags. We'll update them while looping through the queue.
   queue.hasForceUpdate = false;
-  queue.hasCallback = false;
+  workInProgress.effectTag |= CallbackEffect;
 
   let state = prevState;
   let dontMutatePrevState = true;
@@ -218,7 +218,7 @@ exports.mergeQueue = function(queue : UpdateQueue, instance : any, prevState : a
       queue.hasForceUpdate = true;
     }
     if (update.callback) {
-      queue.hasCallback = true;
+      workInProgress.effectTag |= CallbackEffect;
     }
     update = update.next;
   }
@@ -236,7 +236,7 @@ exports.mergeQueue = function(queue : UpdateQueue, instance : any, prevState : a
 };
 
 exports.commitUpdateQueue = function(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
-  if (queue.hasCallback) {
+  if (finishedWork.effectTag & CallbackEffect) {
     // Call the callbacks on all the non-pending updates.
     let update = queue.first;
     while (update && update !== queue.firstPendingUpdate) {

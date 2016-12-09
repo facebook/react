@@ -24,7 +24,7 @@ var {
   addReplaceUpdate,
   addForceUpdate,
   addCallback,
-  mergeQueue,
+  beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -78,6 +78,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
     const updateQueue = workInProgress.updateQueue;
     if (oldProps === null || (updateQueue && updateQueue.hasForceUpdate)) {
+      // If the workInProgress already has an Update effect, return true
       return true;
     }
 
@@ -244,7 +245,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeQueue(updateQueue, instance, state, props);
+        instance.state = beginUpdateQueue(workInProgress, updateQueue, instance, state, props);
       }
     }
   }
@@ -293,7 +294,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
-      newInstance.state = mergeQueue(newUpdateQueue, newInstance, newState, newProps);
+      newInstance.state = beginUpdateQueue(workInProgress, newUpdateQueue, newInstance, newState, newProps);
     }
     return true;
   }
@@ -331,7 +332,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      newState = mergeQueue(updateQueue, instance, oldState, newProps);
+      newState = beginUpdateQueue(workInProgress, updateQueue, instance, oldState, newProps);
     } else {
       newState = oldState;
     }
