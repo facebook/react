@@ -1900,7 +1900,7 @@ describe('ReactComponentTreeHook', () => {
       Array.from = realArrayFrom;
     });
 
-    it('works', () => {
+    it('produces correct tree structure', () => {
       class Qux extends React.Component {
         render() {
           return null;
