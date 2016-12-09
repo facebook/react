@@ -71,7 +71,8 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
-  scheduleUpdate : (fiber: Fiber) => void
+  scheduleUpdateAtPriority : (fiber: Fiber, priorityLevel : PriorityLevel) => void,
+  getPriorityContext : () => PriorityLevel
 ) {
 
   const { shouldSetTextContent } = config;
@@ -88,7 +89,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     mountClassInstance,
     resumeMountClassInstance,
     updateClassInstance,
-  } = ReactFiberClassComponent(scheduleUpdate);
+  } = ReactFiberClassComponent(scheduleUpdateAtPriority, getPriorityContext);
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -199,20 +200,20 @@ module.exports = function<T, P, I, TI, C, CX>(
     return workInProgress.child;
   }
 
-  function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
+  function updateClassComponent(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
     let shouldUpdate;
     if (!current) {
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress);
-        mountClassInstance(workInProgress);
+        mountClassInstance(workInProgress, priorityLevel);
         shouldUpdate = true;
       } else {
         // In a resume, we'll already have an instance we can reuse.
-        shouldUpdate = resumeMountClassInstance(workInProgress);
+        shouldUpdate = resumeMountClassInstance(workInProgress, priorityLevel);
       }
     } else {
-      shouldUpdate = updateClassInstance(current, workInProgress);
+      shouldUpdate = updateClassInstance(current, workInProgress, priorityLevel);
     }
 
     // Schedule side-effects
@@ -305,7 +306,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
-  function mountIndeterminateComponent(current, workInProgress) {
+  function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
     if (current) {
       throw new Error('An indeterminate component should never have mounted.');
     }
@@ -326,7 +327,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
       adoptClassInstance(workInProgress, value);
-      mountClassInstance(workInProgress);
+      mountClassInstance(workInProgress, priorityLevel);
       ReactCurrentOwner.current = workInProgress;
       value = value.render();
     } else {
@@ -509,11 +510,11 @@ module.exports = function<T, P, I, TI, C, CX>(
 
     switch (workInProgress.tag) {
       case IndeterminateComponent:
-        return mountIndeterminateComponent(current, workInProgress);
+        return mountIndeterminateComponent(current, workInProgress, priorityLevel);
       case FunctionalComponent:
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
-        return updateClassComponent(current, workInProgress);
+        return updateClassComponent(current, workInProgress, priorityLevel);
       case HostRoot: {
         const root = (workInProgress.stateNode : FiberRoot);
         if (root.pendingContext) {
@@ -526,9 +527,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         }
 
         if (updateQueue) {
-          // The last three arguments are unimportant because there should be
-          // no update functions in a HostRoot's queue.
-          beginUpdateQueue(workInProgress, updateQueue, null, null, null);
+          beginUpdateQueue(workInProgress, updateQueue, null, null, null, priorityLevel);
         }
 
         pushHostContainer(workInProgress.stateNode.containerInfo);

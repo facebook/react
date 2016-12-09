@@ -13,11 +13,14 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 const {
   ForceUpdate,
   Callback: CallbackEffect,
 } = require('ReactTypeOfSideEffect');
+
+const { NoWork } = require('ReactPriorityLevel');
 
 type PartialState<State, Props> =
   $Subtype<State> |
@@ -26,6 +29,7 @@ type PartialState<State, Props> =
 type Callback = () => void;
 
 type Update = {
+  priorityLevel: PriorityLevel,
   partialState: PartialState<any, any>,
   callback: Callback | null,
   isReplace: boolean,
@@ -44,19 +48,31 @@ export type UpdateQueue = {
   last: Update | null,
 };
 
-exports.createUpdateQueue = function() : UpdateQueue {
-  return {
+// Ensures that a fiber and its alternate have an update queue, creating a newText
+// one if needed. Returns the new or existing queue.
+function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
+  if (fiber.updateQueue) {
+    // We already have an update queue.
+    return fiber.updateQueue;
+  }
+  const queue = {
     first: null,
     firstPendingUpdate: null,
     last: null,
   };
-};
+  fiber.updateQueue = queue;
+  // Add queue to the alternate as well, because when we call setState we don't
+  // know which tree is current.
+  if (fiber.alternate) {
+    fiber.alternate.updateQueue = queue;
+  }
+  return queue;
+}
+exports.ensureUpdateQueue = ensureUpdateQueue;
 
-function insertUpdateIntoQueue(queue : UpdateQueue, update : Update) : void {
+function insertUpdateIntoQueue(queue : UpdateQueue, update : Update, priorityLevel : PriorityLevel) : void {
   // Add a pending update to the end of the queue.
-  // TODO: Once updates have priorities, they should be inserted in the
-  // correct order. Addtionally, replaceState should remove any pending updates
-  // that have lower priority from queue.
+  // TODO: Insert updates in order of priority.
   if (!queue.last) {
     // The queue is empty.
     queue.first = queue.last = queue.firstPendingUpdate = update;
@@ -72,26 +88,36 @@ function insertUpdateIntoQueue(queue : UpdateQueue, update : Update) : void {
   }
 }
 
-exports.addUpdate = function(queue : UpdateQueue, partialState : PartialState<any, any> | null) : void {
+function addUpdate(
+  queue : UpdateQueue,
+  partialState : PartialState<any, any> | null,
+  priorityLevel : PriorityLevel
+) : void {
   const update = {
+    priorityLevel,
     partialState,
     callback: null,
     isReplace: false,
     isForced: false,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update);
-};
+  insertUpdateIntoQueue(queue, update, priorityLevel);
+}
+exports.addUpdate = addUpdate;
 
-exports.addReplaceUpdate = function(queue : UpdateQueue, state : any | null) : void {
+function addReplaceUpdate(
+  queue : UpdateQueue,
+  state : any | null,
+  priorityLevel : PriorityLevel
+) : void {
   const replaceUpdate = {
+    priorityLevel,
     partialState: state,
     callback: null,
     isReplace: true,
     isForced: false,
     next: null,
   };
-
 
   if (!queue.last) {
     // The queue is empty.
@@ -124,21 +150,24 @@ exports.addReplaceUpdate = function(queue : UpdateQueue, state : any | null) : v
     }
   }
 
-};
+}
+exports.addReplaceUpdate = addReplaceUpdate;
 
-exports.addForceUpdate = function(queue : UpdateQueue) : void {
+function addForceUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : void {
   const update = {
+    priorityLevel,
     partialState: null,
     callback: null,
     isReplace: false,
     isForced: true,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update);
-};
+  insertUpdateIntoQueue(queue, update, priorityLevel);
+}
+exports.addForceUpdate = addForceUpdate;
 
 
-exports.addCallback = function(queue : UpdateQueue, callback: Callback) : void {
+function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : PriorityLevel) : void {
   if (queue.firstPendingUpdate && queue.last && !queue.last.callback) {
     // If pending updates already exist, and the last pending update does not
     // have a callback, we can add the new callback to that update.
@@ -148,19 +177,39 @@ exports.addCallback = function(queue : UpdateQueue, callback: Callback) : void {
   }
 
   const update = {
+    priorityLevel,
     partialState: null,
     callback,
     isReplace: false,
     isForced: false,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update);
-};
+  insertUpdateIntoQueue(queue, update, priorityLevel);
+}
+exports.addCallback = addCallback;
 
-exports.hasPendingUpdate = function(queue : UpdateQueue) : boolean {
+function hasPendingUpdate(queue : UpdateQueue) : boolean {
   // TODO: Check priority level
   return queue.firstPendingUpdate !== null;
-};
+}
+exports.hasPendingUpdate = hasPendingUpdate;
+
+function getPendingPriority(queue : UpdateQueue) : PriorityLevel {
+  // Loop through the pending updates to recompute the pending priority.
+  // TODO: Once updates are sorted, just read from the first pending update.
+  let priorityLevel = NoWork;
+  let update = queue.firstPendingUpdate;
+  while (update) {
+    if (priorityLevel === NoWork ||
+        priorityLevel >= update.priorityLevel) {
+      // Update pending priority
+      priorityLevel = update.priorityLevel;
+    }
+    update = update.next;
+  }
+  return priorityLevel;
+}
+exports.getPendingPriority = getPendingPriority;
 
 function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
@@ -172,7 +221,14 @@ function getStateFromUpdate(update, instance, prevState, props) {
   }
 }
 
-exports.beginUpdateQueue = function(workInProgress : Fiber, queue : UpdateQueue, instance : any, prevState : any, props : any) : any {
+function beginUpdateQueue(
+  workInProgress : Fiber,
+  queue : UpdateQueue,
+  instance : any,
+  prevState : any,
+  props : any,
+  priorityLevel : PriorityLevel
+) : any {
   // This merges the entire update queue into a single object, not just the
   // pending updates, because the previous state and props may have changed.
   // TODO: Would memoization be worth it?
@@ -227,9 +283,10 @@ exports.beginUpdateQueue = function(workInProgress : Fiber, queue : UpdateQueue,
   }
 
   return state;
-};
+}
+exports.beginUpdateQueue = beginUpdateQueue;
 
-exports.commitUpdateQueue = function(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
+function commitUpdateQueue(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
   if (finishedWork.effectTag & CallbackEffect) {
     // Call the callbacks on all the non-pending updates.
     let update = queue.first;
@@ -254,4 +311,5 @@ exports.commitUpdateQueue = function(finishedWork : Fiber, queue : UpdateQueue, 
       finishedWork.alternate.updateQueue = null;
     }
   }
-};
+}
+exports.commitUpdateQueue = commitUpdateQueue;

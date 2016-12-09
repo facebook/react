@@ -55,6 +55,10 @@ var {
 } = require('ReactTypeOfWork');
 
 var {
+  getPendingPriority,
+} = require('ReactFiberUpdateQueue');
+
+var {
   unwindContext,
 } = require('ReactFiberContext');
 
@@ -69,7 +73,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
   const { beginWork, beginFailedWork } =
-    ReactFiberBeginWork(config, hostContext, scheduleUpdate);
+    ReactFiberBeginWork(config, hostContext, scheduleUpdateAtPriority, getPriorityContext);
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
   const {
     commitPlacement,
@@ -86,6 +90,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   } = config;
 
   // The priority level to use when scheduling an update.
+  // TODO: Should we change this to an array? Might be less confusing.
   let priorityContext : PriorityLevel = useSyncScheduling ?
     SynchronousPriority :
     LowPriority;
@@ -138,6 +143,15 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       isDeferredCallbackScheduled = true;
       hostScheduleDeferredCallback(callback);
     }
+  }
+
+  function getPriorityContext() : PriorityLevel {
+    let priorityLevel = priorityContext;
+    // If we're in a batch, downgrade sync priority to task priority
+    if (priorityLevel === SynchronousPriority && isPerformingWork) {
+      priorityLevel = TaskPriority;
+    }
+    return priorityLevel;
   }
 
   function findNextUnitOfWork() {
@@ -357,7 +371,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     // If we caught any errors during this commit, schedule their boundaries
     // to update.
     if (commitPhaseBoundaries) {
-      commitPhaseBoundaries.forEach(scheduleUpdate);
+      commitPhaseBoundaries.forEach(scheduleErrorRecovery);
       commitPhaseBoundaries = null;
     }
 
@@ -366,6 +380,13 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   function resetWorkPriority(workInProgress : Fiber) {
     let newPriority = NoWork;
+
+    // Check for pending update priority
+    const queue = workInProgress.updateQueue;
+    if (queue) {
+      newPriority = getPendingPriority(queue);
+    }
+
     // progressedChild is going to be the child set with the highest priority.
     // Either it is the same as child, or it just bailed out because it choose
     // not to do the work.
@@ -829,11 +850,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         }
         commitPhaseBoundaries.add(boundary);
       } else {
-        // Otherwise, schedule an update now. Error recovery has Task priority.
-        const previousPriorityContext = priorityContext;
-        priorityContext = TaskPriority;
-        scheduleUpdate(boundary);
-        priorityContext = previousPriorityContext;
+        // Otherwise, schedule an update now.
+        scheduleErrorRecovery(boundary);
       }
       return boundary;
     } else if (!firstUncaughtError) {
@@ -983,13 +1001,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
-  function scheduleUpdate(fiber : Fiber) {
-    let priorityLevel = priorityContext;
-    // If we're in a batch, downgrade sync priority to task priority
-    if (priorityLevel === SynchronousPriority && isPerformingWork) {
-      priorityLevel = TaskPriority;
-    }
-
+  function scheduleUpdateAtPriority(fiber : Fiber, priorityLevel : PriorityLevel) {
     let node = fiber;
     let shouldContinue = true;
     while (node && shouldContinue) {
@@ -1022,6 +1034,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       }
       node = node.return;
     }
+  }
+
+  function scheduleErrorRecovery(fiber : Fiber) {
+    scheduleUpdateAtPriority(fiber, TaskPriority);
   }
 
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
@@ -1062,6 +1078,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   return {
     scheduleWork: scheduleWork,
+    getPriorityContext: getPriorityContext,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     syncUpdates: syncUpdates,

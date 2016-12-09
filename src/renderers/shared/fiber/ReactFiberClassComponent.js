@@ -13,13 +13,13 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
   getMaskedContext,
 } = require('ReactFiberContext');
 var {
-  createUpdateQueue,
+  ensureUpdateQueue,
   addUpdate,
   addReplaceUpdate,
   addForceUpdate,
@@ -36,44 +36,41 @@ var invariant = require('invariant');
 
 const isArray = Array.isArray;
 
-module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
-
-  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
-    fiber.updateQueue = updateQueue;
-    // Schedule update on the alternate as well, since we don't know which tree
-    // is current.
-    if (fiber.alternate) {
-      fiber.alternate.updateQueue = updateQueue;
-    }
-    scheduleUpdate(fiber);
-  }
+module.exports = function(
+  scheduleUpdateAtPriority : (fiber: Fiber, priorityLevel : PriorityLevel) => void,
+  getPriorityContext : () => PriorityLevel,
+) {
 
   // Class component state updater
   const updater = {
     isMounted,
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = fiber.updateQueue || createUpdateQueue();
-      addUpdate(queue, partialState);
-      scheduleUpdateQueue(fiber, queue);
+      const queue = ensureUpdateQueue(fiber);
+      const priorityLevel = getPriorityContext();
+      addUpdate(queue, partialState, priorityLevel);
+      scheduleUpdateAtPriority(fiber, priorityLevel);
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = fiber.updateQueue || createUpdateQueue();
-      addReplaceUpdate(queue, state);
-      scheduleUpdateQueue(fiber, queue);
+      const queue = ensureUpdateQueue(fiber);
+      const priorityLevel = getPriorityContext();
+      addReplaceUpdate(queue, state, priorityLevel);
+      scheduleUpdateAtPriority(fiber, priorityLevel);
     },
     enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = fiber.updateQueue || createUpdateQueue();
-      addForceUpdate(queue);
-      scheduleUpdateQueue(fiber, queue);
+      const queue = ensureUpdateQueue(fiber);
+      const priorityLevel = getPriorityContext();
+      addForceUpdate(queue, priorityLevel);
+      scheduleUpdateAtPriority(fiber, priorityLevel);
     },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = fiber.updateQueue || createUpdateQueue();
-      addCallback(queue, callback);
-      scheduleUpdateQueue(fiber, queue);
+      const queue = ensureUpdateQueue(fiber);
+      const priorityLevel = getPriorityContext();
+      addCallback(queue, callback, priorityLevel);
+      scheduleUpdateAtPriority(fiber, priorityLevel);
     },
   };
 
@@ -227,7 +224,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   }
 
   // Invokes the mount life-cycles on a previously never rendered instance.
-  function mountClassInstance(workInProgress : Fiber) : void {
+  function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -246,14 +243,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = beginUpdateQueue(workInProgress, updateQueue, instance, state, props);
+        instance.state = beginUpdateQueue(
+          workInProgress,
+          updateQueue,
+          instance,
+          state,
+          props,
+          priorityLevel
+        );
       }
     }
   }
 
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
-  function resumeMountClassInstance(workInProgress : Fiber) : boolean {
+  function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -295,13 +299,20 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
-      newInstance.state = beginUpdateQueue(workInProgress, newUpdateQueue, newInstance, newState, newProps);
+      newInstance.state = beginUpdateQueue(
+        workInProgress,
+        newUpdateQueue,
+        newInstance,
+        newState,
+        newProps,
+        priorityLevel
+      );
     }
     return true;
   }
 
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
-  function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
+  function updateClassInstance(current : Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     const instance = workInProgress.stateNode;
 
     const oldProps = workInProgress.memoizedProps || current.memoizedProps;
@@ -333,7 +344,14 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      newState = beginUpdateQueue(workInProgress, updateQueue, instance, oldState, newProps);
+      newState = beginUpdateQueue(
+        workInProgress,
+        updateQueue,
+        instance,
+        oldState,
+        newProps,
+        priorityLevel
+      );
     } else {
       newState = oldState;
     }

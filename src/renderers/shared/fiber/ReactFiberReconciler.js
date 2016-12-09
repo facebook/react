@@ -24,7 +24,7 @@ var {
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
-var { createUpdateQueue, addCallback } = require('ReactFiberUpdateQueue');
+var { ensureUpdateQueue, addCallback } = require('ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
@@ -99,6 +99,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   var {
     scheduleWork,
+    getPriorityContext,
     performWithPriority,
     batchedUpdates,
     syncUpdates,
@@ -114,13 +115,15 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // TODO: Use the updateQueue and scheduleUpdate, instead of pendingProps.
       // TODO: This should not override the pendingWorkPriority if there is
       // higher priority work in the subtree.
+
       current.pendingProps = element;
       if (current.alternate) {
         current.alternate.pendingProps = element;
       }
       if (callback) {
-        const queue = current.updateQueue || createUpdateQueue();
-        addCallback(queue, callback);
+        const queue = ensureUpdateQueue(current);
+        const priorityLevel = getPriorityContext();
+        addCallback(queue, callback, priorityLevel);
         current.updateQueue = queue;
         if (current.alternate) {
           current.alternate.updateQueue = queue;
@@ -154,8 +157,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         current.alternate.pendingProps = element;
       }
       if (callback) {
-        const queue = current.updateQueue || createUpdateQueue();
-        addCallback(queue, callback);
+        const queue = ensureUpdateQueue(current);
+        const priorityLevel = getPriorityContext();
+        addCallback(queue, callback, priorityLevel);
         current.updateQueue = queue;
         if (current.alternate) {
           current.alternate.updateQueue = queue;

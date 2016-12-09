@@ -1382,6 +1382,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
 * should support setting state
 * should call componentDidUpdate of children first
 * should batch unmounts
+* should update state when called from child cWRP
 
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should not produce child DOM nodes for null and false
