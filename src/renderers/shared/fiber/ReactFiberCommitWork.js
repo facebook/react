@@ -152,6 +152,8 @@ module.exports = function<T, P, I, TI, C, CX>(
           // If we don't have a child, try the siblings instead.
           continue siblings;
         }
+        // If we don't have a child, try the siblings instead.
+        // We also skip portals because they are not part of this host tree.
         if (!node.child || node.tag === HostPortal) {
           continue siblings;
         } else {
