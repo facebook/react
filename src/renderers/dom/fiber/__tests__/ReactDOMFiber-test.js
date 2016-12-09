@@ -367,6 +367,82 @@ describe('ReactDOMFiber', () => {
       expect(container.innerHTML).toBe('');
     });
 
+    it('should reconcile portal children', () => {
+      var portalContainer = document.createElement('div');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <div>portal:1</div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal:1</div>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <div>portal:2</div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal:2</div>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <p>portal:3</p>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<p>portal:3</p>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            ['Hi', 'Bye'],
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('HiBye');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            ['Bye', 'Hi'],
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('ByeHi');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            null,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('<div></div>');
+    });
+
     it('should keep track of namespace across portals (simple)', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
