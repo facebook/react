@@ -38,17 +38,34 @@ type Update = {
 };
 
 export type UpdateQueue = {
-  // Points to the first (oldest) update.
+  // Points to the first update.
   first: Update | null,
-  // Points to the first pending update. A pending update is one that is not
-  // part of the progressed work. This could be null even in a non-empty queue,
-  // when none of the updates are empty.
-  firstPendingUpdate: Update | null,
-  // Points to the last (newest) update.
+  lastProgressedUpdate: Update | null,
+  // Points to the last update.
   last: Update | null,
 };
 
-// Ensures that a fiber and its alternate have an update queue, creating a newText
+function getFirstPendingUpdate(queue : UpdateQueue) {
+  if (queue.lastProgressedUpdate) {
+    return queue.lastProgressedUpdate.next;
+  }
+  return queue.first;
+}
+
+function getFirstProgressedUpdate(queue : UpdateQueue) {
+  if (queue.lastProgressedUpdate) {
+    return queue.first;
+  }
+  return null;
+}
+
+function hasPendingUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : boolean {
+  // TODO: Check priority level
+  return Boolean(getFirstPendingUpdate(queue));
+}
+exports.hasPendingUpdate = hasPendingUpdate;
+
+// Ensures that a fiber and its alternate have an update queue, creating a new
 // one if needed. Returns the new or existing queue.
 function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
   if (fiber.updateQueue) {
@@ -57,7 +74,7 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
   }
   const queue = {
     first: null,
-    firstPendingUpdate: null,
+    lastProgressedUpdate: null,
     last: null,
   };
   fiber.updateQueue = queue;
@@ -75,15 +92,13 @@ function insertUpdateIntoQueue(queue : UpdateQueue, update : Update, priorityLev
   // TODO: Insert updates in order of priority.
   if (!queue.last) {
     // The queue is empty.
-    queue.first = queue.last = queue.firstPendingUpdate = update;
+    queue.first = queue.last = update;
   } else {
     // The queue is not empty. Append the update to the end.
     queue.last.next = update;
     queue.last = update;
-
-    if (!queue.firstPendingUpdate) {
-      // This is the first pending update. Update the pointer.
-      queue.firstPendingUpdate = update;
+    if (queue.lastProgressedUpdate && !queue.lastProgressedUpdate.next) {
+      queue.lastProgressedUpdate.next = update;
     }
   }
 }
@@ -121,32 +136,18 @@ function addReplaceUpdate(
 
   if (!queue.last) {
     // The queue is empty.
-    queue.first = queue.last = queue.firstPendingUpdate = replaceUpdate;
+    queue.first = queue.last = replaceUpdate;
   } else {
     // The queue is not empty.
 
     // Drop all existing pending updates.
     // TODO: Only drop updates with matching priority.
-    let lastMergedUpdate = null;
-    if (queue.firstPendingUpdate) {
-      let node = queue.first;
-      while (node && node.next !== queue.firstPendingUpdate) {
-        node = node.next;
-      }
-      lastMergedUpdate = node;
-    } else {
-      lastMergedUpdate = queue.last;
-    }
-
-    if (lastMergedUpdate) {
-      // Append the new update to the end of the list.
-      // $FlowFixMe: Union bug (I think? Getting "object literal - This type incompatible with null")
-      lastMergedUpdate.next = replaceUpdate;
-      queue.firstPendingUpdate = replaceUpdate;
+    if (queue.lastProgressedUpdate) {
+      queue.lastProgressedUpdate.next = replaceUpdate;
       queue.last = replaceUpdate;
     } else {
       // Drop everything
-      queue.first = queue.firstPendingUpdate = queue.last = replaceUpdate;
+      queue.first = queue.last = replaceUpdate;
     }
   }
 
@@ -168,7 +169,7 @@ exports.addForceUpdate = addForceUpdate;
 
 
 function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : PriorityLevel) : void {
-  if (queue.firstPendingUpdate && queue.last && !queue.last.callback) {
+  if (getFirstPendingUpdate(queue) && queue.last && !queue.last.callback) {
     // If pending updates already exist, and the last pending update does not
     // have a callback, we can add the new callback to that update.
     // TODO: Add an additional check to ensure the priority matches.
@@ -188,17 +189,12 @@ function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : Pr
 }
 exports.addCallback = addCallback;
 
-function hasPendingUpdate(queue : UpdateQueue) : boolean {
-  // TODO: Check priority level
-  return queue.firstPendingUpdate !== null;
-}
-exports.hasPendingUpdate = hasPendingUpdate;
-
 function getPendingPriority(queue : UpdateQueue) : PriorityLevel {
   // Loop through the pending updates to recompute the pending priority.
   // TODO: Once updates are sorted, just read from the first pending update.
   let priorityLevel = NoWork;
-  let update = queue.firstPendingUpdate;
+  // Start with first pending update
+  let update = getFirstPendingUpdate(queue);
   while (update) {
     if (priorityLevel === NoWork ||
         priorityLevel >= update.priorityLevel) {
@@ -239,11 +235,12 @@ function beginUpdateQueue(
 
   let state = prevState;
   let dontMutatePrevState = true;
-  let update : Update | null = queue.first;
   let isEmpty = true;
 
   // TODO: Stop merging once we reach an update whose priority doesn't match.
   // Should this also apply to updates that were previous merged but bailed out?
+  let update : Update | null = queue.first;
+  let lastProgressedUpdate = null;
   while (update) {
     let partialState;
     if (update.isReplace) {
@@ -270,12 +267,11 @@ function beginUpdateQueue(
     if (update.callback) {
       workInProgress.effectTag |= CallbackEffect;
     }
+    lastProgressedUpdate = update;
     update = update.next;
   }
 
-  // The next pending update is the one that we exited on in the loop above.
-  // Until priorities are implemented, this is always null.
-  queue.firstPendingUpdate = update;
+  queue.lastProgressedUpdate = lastProgressedUpdate;
 
   if (isEmpty) {
     // None of the updates contained state. Return the original state object.
@@ -287,10 +283,11 @@ function beginUpdateQueue(
 exports.beginUpdateQueue = beginUpdateQueue;
 
 function commitUpdateQueue(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
+
   if (finishedWork.effectTag & CallbackEffect) {
     // Call the callbacks on all the non-pending updates.
-    let update = queue.first;
-    while (update && update !== queue.firstPendingUpdate) {
+    let update = getFirstProgressedUpdate(queue);
+    while (update && update !== getFirstPendingUpdate(queue)) {
       const callback = update.callback;
       if (typeof callback === 'function') {
         callback.call(context);
@@ -300,8 +297,10 @@ function commitUpdateQueue(finishedWork : Fiber, queue : UpdateQueue, context : 
   }
 
   // Drop all completed updates, leaving only the pending updates.
-  queue.first = queue.firstPendingUpdate;
+  queue.first = getFirstPendingUpdate(queue);
   if (!queue.first) {
+    queue.last = queue.lastProgressedUpdate = null;
+
     // If the list is now empty, we can remove it from the finished work
     finishedWork.updateQueue = null;
     if (finishedWork.alternate) {

@@ -286,10 +286,16 @@ var ReactNoop = {
       log(
         '  '.repeat(depth + 1) + 'QUEUED UPDATES'
       );
-      const firstPendingUpdate = updateQueue.firstPendingUpdate;
+      let firstPendingUpdate;
+      if (updateQueue.lastProgressedUpdate) {
+        firstPendingUpdate = updateQueue.lastProgressedUpdate.next;
+      } else {
+        firstPendingUpdate = updateQueue.first;
+      }
       if (!firstPendingUpdate) {
         return;
       }
+
       log(
         '  '.repeat(depth + 1) + '~',
         firstPendingUpdate && firstPendingUpdate.partialState,

@@ -502,7 +502,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       )                                     // )
     );
     if (!hasNewProps) {
-      const hasUpdate = updateQueue && hasPendingUpdate(updateQueue);
+      const hasUpdate = updateQueue && hasPendingUpdate(updateQueue, priorityLevel);
       if (!hasUpdate && !hasContextChanged()) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
