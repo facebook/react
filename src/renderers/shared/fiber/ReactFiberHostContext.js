@@ -34,21 +34,15 @@ module.exports = function<T, P, I, TI, C, CX>(
     getChildHostContext,
   } = config;
 
-  type ContainerState = {
-    rootInstance : C,
-    contextFibers : Array<Fiber | null> | null,
-    contextValues : Array<CX | null> | null,
-    contextDepth: number
-  };
-
-  // Current container context on the stack.
-  let rootInstance : C | null = null;
+  // Context stack is reused across the subtrees.
+  // We use a null sentinel on the fiber stack to separate them.
   let contextFibers : Array<Fiber | null> | null = null;
   let contextValues : Array<CX | null> | null = null;
   let contextDepth : number = -1;
-
-  // If we meet any portals, we'll pack outer context in this array.
-  let portalStack : Array<ContainerState> = [];
+  // Current root instance.
+  let rootInstance : C | null = null;
+  // A stack of outer root instances if we're in a portal.
+  let portalStack : Array<C | null> = [];
   let portalDepth : number = -1;
 
   function getRootHostContainer() : C {
@@ -58,75 +52,51 @@ module.exports = function<T, P, I, TI, C, CX>(
     return rootInstance;
   }
 
-  function pushPortal(portalRootInstance : C) {
-    if (rootInstance == null) {
-      throw new Error('Cannot push a portal when there is no root.');
-    }
-    // Only create a new item on the portal stack if necessary.
-    if (portalDepth === portalStack.length) {
-      portalStack[portalDepth] = {
-        rootInstance,
-        contextFibers,
-        contextValues,
-        contextDepth,
-      };
-    } else {
-      // Write over the existing state since it's from the previous traversal.
-      const stateOutsidePortal = portalStack[portalDepth];
-      stateOutsidePortal.rootInstance = rootInstance;
-      stateOutsidePortal.contextFibers = contextFibers;
-      stateOutsidePortal.contextValues = contextValues;
-      stateOutsidePortal.contextDepth = contextDepth;
-    }
-    // The local variables reflect the inner container now.
-    rootInstance = portalRootInstance;
-    contextFibers = null;
-    contextValues = null;
-    contextDepth = -1;
-  }
-
   function pushHostContainer(nextRootInstance : C) {
-    const isEnteringPortal = portalDepth > -1;
-    if (isEnteringPortal) {
-      pushPortal(nextRootInstance);
-    } else {
-      // Don't reset arrays because we reuse them.
+    if (rootInstance == null) {
+      // We're entering a root.
       rootInstance = nextRootInstance;
-      contextDepth = -1;
+    } else {
+      // We're entering a portal.
+      // Save the current root to the portal stack.
+      portalDepth++;
+      portalStack[portalDepth] = rootInstance;
+      rootInstance = nextRootInstance;
+      // Delimit subtree context with a sentinel so we know where to pop later.
+      if (contextFibers != null && contextValues != null) {
+        contextDepth++;
+        contextFibers[contextDepth] = null;
+        contextValues[contextDepth] = null;
+      }
     }
-    portalDepth++;
-  }
-
-  function popPortal() {
-    // The local variables reflect the outer container now.
-    const stateOutsidePortal = portalStack[portalDepth];
-    rootInstance = stateOutsidePortal.rootInstance;
-    contextFibers = stateOutsidePortal.contextFibers;
-    contextValues = stateOutsidePortal.contextValues;
-    contextDepth = stateOutsidePortal.contextDepth;
   }
 
   function popHostContainer() {
     if (portalDepth === -1) {
-      throw new Error('Already reached the root.');
-    }
-    portalDepth--;
-
-    const isLeavingPortal = portalDepth > -1;
-    if (isLeavingPortal) {
-      popPortal();
-    } else {
-      // Reset current container state.
-      // Don't reset arrays because we reuse them.
+      // We're popping the root.
       rootInstance = null;
       contextDepth = -1;
+    } else {
+      // We're popping a portal.
+      // Restore the root instance.
+      rootInstance = portalStack[portalDepth];
+      portalStack[portalDepth] = null;
+      portalDepth--;
+      // If we pushed any context while in a portal, we need to roll it back.
+      if (contextDepth > -1 && contextFibers != null) {
+        // Pop the context until we meet the null sentinel on fiber stack.
+        while (contextDepth > -1 && contextFibers[contextDepth] != null) {
+          contextDepth--;
+        }
+        // We have found the null sentinel. Pop past it.
+        if (contextDepth > -1 && contextFibers[contextDepth] == null) {
+          contextDepth--;
+        }
+      }
     }
   }
 
   function getHostContext() : CX | null {
-    if (portalDepth === -1) {
-      throw new Error('Expected to find a root container.');
-    }
     if (contextDepth === -1) {
       return null;
     }
