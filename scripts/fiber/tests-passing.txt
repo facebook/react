@@ -514,6 +514,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render one portal
 * should render many portals
 * should render nested portals
+* should reconcile portal children
 * should keep track of namespace across portals (simple)
 * should keep track of namespace across portals (medium)
 * should keep track of namespace across portals (complex)

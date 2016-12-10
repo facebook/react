@@ -341,7 +341,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     } else {
       // Update
       const existing = useFiber(current, priority);
-      existing.pendingProps = portal.children;
+      existing.pendingProps = portal.children || [];
       existing.return = returnFiber;
       return existing;
     }
@@ -976,7 +976,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
-          existing.pendingProps = portal.children;
+          existing.pendingProps = portal.children || [];
           existing.return = returnFiber;
           return existing;
         } else {
