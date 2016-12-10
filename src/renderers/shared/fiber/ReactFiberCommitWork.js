@@ -276,6 +276,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         parent = node.stateNode.containerInfo;
         // Visit children because portals might contain host components.
         if (node.child) {
+          node.child.return = node;
           node = node.child;
           continue;
         }
