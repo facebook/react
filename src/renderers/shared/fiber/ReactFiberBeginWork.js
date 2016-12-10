@@ -325,7 +325,7 @@ module.exports = function<T, P, I, TI, C, CX>(
 
   function updatePortalComponent(current, workInProgress) {
     const priorityLevel = workInProgress.pendingWorkPriority;
-    const nextChildren = workInProgress.pendingProps.children;
+    const nextChildren = workInProgress.pendingProps;
     if (!current) {
       // Portals are special because we don't append the children during mount
       // but at commit. Therefore we need to track insertions which the normal
