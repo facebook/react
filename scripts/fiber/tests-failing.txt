@@ -20,6 +20,7 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should keep track of namespace across portals (medium)
+* should keep track of namespace across portals (complex)
 
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * throws in render() if the mount callback is not a function

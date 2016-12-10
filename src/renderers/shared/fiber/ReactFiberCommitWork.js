@@ -348,7 +348,10 @@ module.exports = function<T, P, I, TI, C, CX>(
       }
       case HostPortal: {
         // TODO: this is recursive.
-        commitDeletion(current);
+        // We are also not using this parent because
+        // the portal will get pushed immediately.
+        const parent = getHostParent(current);
+        unmountHostComponents(parent, current);
         return;
       }
     }
