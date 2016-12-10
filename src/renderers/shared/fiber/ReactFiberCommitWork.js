@@ -237,7 +237,9 @@ module.exports = function<T, P, I, TI, C, CX>(
     let node : Fiber = root;
     while (true) {
       commitUnmount(node);
-      if (node.child) {
+      // Visit children because they may contain more composite or host nodes.
+      // Skip portals because commitUnmount() currently visits them recursively.
+      if (node.child && node.tag !== HostPortal) {
         // TODO: Coroutines need to visit the stateNode.
         node.child.return = node;
         node = node.child;
