@@ -20,7 +20,11 @@ const {
   Callback: CallbackEffect,
 } = require('ReactTypeOfSideEffect');
 
-const { NoWork } = require('ReactPriorityLevel');
+const {
+  NoWork,
+  SynchronousPriority,
+  TaskPriority,
+} = require('ReactPriorityLevel');
 
 type PartialState<State, Props> =
   $Subtype<State> |
@@ -37,22 +41,57 @@ type Update = {
   next: Update | null,
 };
 
+// Linked-list of updates
+//
+// - A "pending" update is one that has been scheduled but not yet used
+// for reconciliation.
+// - A "progressed" update is an update that was used for reconciliation, but
+// has not yet been flushed.
+//
+// The queue maintains a pointer to the last progressed update in the list.
+// Updates that come after that pointer are pending. The pointer is set to the
+// end of the list during reconciliation.
+//
+// Pending updates are sorted by priority then insertion. Progressed updates
+// are sorted by the order in which they were applied during reconciliation,
+// which may not be by priority: if a component bails out before the updates are
+// committed, in the next render, the progressed updates are applied in the same
+// order that they were previously, even if a higher priority update comes in.
+//
+// Once a progressed update is flushed/committed, it's removed from the queue.
 export type UpdateQueue = {
-  // Points to the first update.
   first: Update | null,
+  // A pointer to the last progressed update in the queue. This may be null
+  // even in a non-empty queue, if all the updates are pending.
   lastProgressedUpdate: Update | null,
-  // Points to the last update.
   last: Update | null,
 };
 
-function getFirstPendingUpdate(queue : UpdateQueue) {
+function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
+  // When comparing update priorities, treat sync and Task work as equal.
+  // TODO: Could we avoid the need for this by always coercing sync priority
+  // to Task when scheduling an update?
+  if ((a === TaskPriority || a === SynchronousPriority) &&
+      (b === TaskPriority || b === SynchronousPriority)) {
+    return 0;
+  }
+  if (a === NoWork && b !== NoWork) {
+    return -Infinity;
+  }
+  if (a !== NoWork && b === NoWork) {
+    return Infinity;
+  }
+  return a - b;
+}
+
+function getFirstPendingUpdate(queue : UpdateQueue) : Update | null {
   if (queue.lastProgressedUpdate) {
     return queue.lastProgressedUpdate.next;
   }
   return queue.first;
 }
 
-function getFirstProgressedUpdate(queue : UpdateQueue) {
+function getFirstProgressedUpdate(queue : UpdateQueue) : Update | null {
   if (queue.lastProgressedUpdate) {
     return queue.first;
   }
@@ -60,8 +99,12 @@ function getFirstProgressedUpdate(queue : UpdateQueue) {
 }
 
 function hasPendingUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : boolean {
-  // TODO: Check priority level
-  return Boolean(getFirstPendingUpdate(queue));
+  const firstPendingUpdate = getFirstPendingUpdate(queue);
+  if (!firstPendingUpdate) {
+    return false;
+  }
+  // Return true if the first pending update has greater or equal priority.
+  return comparePriority(firstPendingUpdate.priorityLevel, priorityLevel) <= 0;
 }
 exports.hasPendingUpdate = hasPendingUpdate;
 
@@ -72,7 +115,7 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
     // We already have an update queue.
     return fiber.updateQueue;
   }
-  const queue = {
+  const queue : UpdateQueue = {
     first: null,
     lastProgressedUpdate: null,
     last: null,
@@ -87,19 +130,60 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
 }
 exports.ensureUpdateQueue = ensureUpdateQueue;
 
-function insertUpdateIntoQueue(queue : UpdateQueue, update : Update, priorityLevel : PriorityLevel) : void {
+function insertUpdateIntoQueue(queue : UpdateQueue, update : Update) : void {
   // Add a pending update to the end of the queue.
-  // TODO: Insert updates in order of priority.
   if (!queue.last) {
     // The queue is empty.
     queue.first = queue.last = update;
-  } else {
-    // The queue is not empty. Append the update to the end.
+    return;
+  }
+  // The queue is not empty. Insert the new update into the queue, sorted by
+  // priority then insertion order.
+  const firstPendingUpdate = getFirstPendingUpdate(queue);
+  if (!firstPendingUpdate && queue.last) {
+    // This is the first pending update. Add it to the end of the queue.
     queue.last.next = update;
     queue.last = update;
-    if (queue.lastProgressedUpdate && !queue.lastProgressedUpdate.next) {
-      queue.lastProgressedUpdate.next = update;
+    return;
+  }
+
+  const priorityLevel = update.priorityLevel;
+  const lastPendingUpdate = queue.last;
+
+  let insertAfter;
+  let insertBefore;
+  if (queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0) {
+    // Fast path where the incoming update has equal or lower priority than the
+    // last pending update. We can just append it to the end of the queue.
+    insertAfter = lastPendingUpdate;
+    insertBefore = null;
+  } else {
+    // Loop through the pending updates to find the first one with lower
+    // priority than the incoming update. Insert the incoming update before
+    // that one.
+    insertAfter = queue.lastProgressedUpdate;
+    insertBefore = firstPendingUpdate;
+    while (
+      insertBefore &&
+      comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0
+    ) {
+      insertAfter = insertBefore;
+      insertBefore = insertBefore.next;
     }
+  }
+
+  if (insertAfter) {
+    insertAfter.next = update;
+  } else {
+    // This is the first item in the queue.
+    queue.first = update;
+  }
+
+  if (insertBefore) {
+    update.next = insertBefore;
+  } else {
+    // This is the last item in the queue.
+    queue.last = update;
   }
 }
 
@@ -108,7 +192,7 @@ function addUpdate(
   partialState : PartialState<any, any> | null,
   priorityLevel : PriorityLevel
 ) : void {
-  const update = {
+  const update : Update = {
     priorityLevel,
     partialState,
     callback: null,
@@ -116,7 +200,7 @@ function addUpdate(
     isForced: false,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update, priorityLevel);
+  insertUpdateIntoQueue(queue, update);
 }
 exports.addUpdate = addUpdate;
 
@@ -125,7 +209,7 @@ function addReplaceUpdate(
   state : any | null,
   priorityLevel : PriorityLevel
 ) : void {
-  const replaceUpdate = {
+  const update : Update = {
     priorityLevel,
     partialState: state,
     callback: null,
@@ -133,29 +217,57 @@ function addReplaceUpdate(
     isForced: false,
     next: null,
   };
-
+  // Add a pending update to the end of the queue.
   if (!queue.last) {
     // The queue is empty.
-    queue.first = queue.last = replaceUpdate;
-  } else {
-    // The queue is not empty.
+    queue.first = queue.last = update;
+    return;
+  }
+  // The queue is not empty. Insert the new update into the queue, sorted by
+  // priority then insertion order. Since this is a replace, drop all pending
+  // updates with equal priority. We can't drop updates with higher priority,
+  // because they might be flushed in an earlier commit. We'll drop them during
+  // the commit phase if necessary.
+  const firstPendingUpdate = getFirstPendingUpdate(queue);
+  if (!firstPendingUpdate && queue.last) {
+    // This is the first pending update. Add it to the end of the queue.
+    queue.last.next = update;
+    queue.last = update;
+    return;
+  }
 
-    // Drop all existing pending updates.
-    // TODO: Only drop updates with matching priority.
-    if (queue.lastProgressedUpdate) {
-      queue.lastProgressedUpdate.next = replaceUpdate;
-      queue.last = replaceUpdate;
-    } else {
-      // Drop everything
-      queue.first = queue.last = replaceUpdate;
+  // Find the last pending update with equal priority.
+  let replaceAfter = queue.lastProgressedUpdate;
+  let replaceBefore = firstPendingUpdate;
+  if (replaceBefore) {
+    let comparison = Infinity;
+    while (replaceBefore &&
+           (comparison = comparePriority(replaceBefore.priorityLevel, priorityLevel)) <= 0) {
+      if (comparison < 0) {
+        replaceAfter = replaceBefore;
+      }
+      replaceBefore = replaceBefore.next;
     }
   }
 
+  if (replaceAfter) {
+    replaceAfter.next = update;
+  } else {
+    // This is the first item in the queue.
+    queue.first = update;
+  }
+
+  if (replaceBefore) {
+    update.next = replaceBefore;
+  } else {
+    // This is the last item in the queue.
+    queue.last = update;
+  }
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
 function addForceUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : void {
-  const update = {
+  const update : Update = {
     priorityLevel,
     partialState: null,
     callback: null,
@@ -163,21 +275,24 @@ function addForceUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : vo
     isForced: true,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update, priorityLevel);
+  insertUpdateIntoQueue(queue, update);
 }
 exports.addForceUpdate = addForceUpdate;
 
 
 function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : PriorityLevel) : void {
-  if (getFirstPendingUpdate(queue) && queue.last && !queue.last.callback) {
+  if (getFirstPendingUpdate(queue) &&
+      queue.last &&
+      (queue.last.priorityLevel === priorityLevel) &&
+      !queue.last.callback) {
     // If pending updates already exist, and the last pending update does not
-    // have a callback, we can add the new callback to that update.
-    // TODO: Add an additional check to ensure the priority matches.
+    // have a callback, and the priority levels are equal, we can add the
+    // incoming callback to that update to avoid an extra allocation.
     queue.last.callback = callback;
     return;
   }
 
-  const update = {
+  const update : Update = {
     priorityLevel,
     partialState: null,
     callback,
@@ -185,25 +300,13 @@ function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : Pr
     isForced: false,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update, priorityLevel);
+  insertUpdateIntoQueue(queue, update);
 }
 exports.addCallback = addCallback;
 
 function getPendingPriority(queue : UpdateQueue) : PriorityLevel {
-  // Loop through the pending updates to recompute the pending priority.
-  // TODO: Once updates are sorted, just read from the first pending update.
-  let priorityLevel = NoWork;
-  // Start with first pending update
-  let update = getFirstPendingUpdate(queue);
-  while (update) {
-    if (priorityLevel === NoWork ||
-        priorityLevel >= update.priorityLevel) {
-      // Update pending priority
-      priorityLevel = update.priorityLevel;
-    }
-    update = update.next;
-  }
-  return priorityLevel;
+  const firstPendingUpdate = getFirstPendingUpdate(queue);
+  return firstPendingUpdate ? firstPendingUpdate.priorityLevel : NoWork;
 }
 exports.getPendingPriority = getPendingPriority;
 
@@ -225,23 +328,25 @@ function beginUpdateQueue(
   props : any,
   priorityLevel : PriorityLevel
 ) : any {
-  // This merges the entire update queue into a single object, not just the
-  // pending updates, because the previous state and props may have changed.
-  // TODO: Would memoization be worth it?
+  // Applies updates with matching priority to the previous state to create
+  // a new state object. If an update was used previously but never flushed
+  // due to a bail out, it's used again regardless of its priority.
 
   // Reset these flags. We'll update them while looping through the queue.
   workInProgress.effectTag &= ~ForceUpdate;
   workInProgress.effectTag &= ~CallbackEffect;
 
+  const prevLastProgressedUpdate = queue.lastProgressedUpdate;
   let state = prevState;
   let dontMutatePrevState = true;
   let isEmpty = true;
-
-  // TODO: Stop merging once we reach an update whose priority doesn't match.
-  // Should this also apply to updates that were previous merged but bailed out?
-  let update : Update | null = queue.first;
+  let alreadyProgressedUpdate = Boolean(prevLastProgressedUpdate);
   let lastProgressedUpdate = null;
-  while (update) {
+  let update : Update | null = queue.first;
+  while (update && (
+    alreadyProgressedUpdate ||
+    comparePriority(update.priorityLevel, priorityLevel) <= 0
+  )) {
     let partialState;
     if (update.isReplace) {
       // A replace should drop all previous updates in the queue, so
@@ -267,10 +372,15 @@ function beginUpdateQueue(
     if (update.callback) {
       workInProgress.effectTag |= CallbackEffect;
     }
+    if (update === prevLastProgressedUpdate) {
+      alreadyProgressedUpdate = false;
+    }
     lastProgressedUpdate = update;
     update = update.next;
   }
 
+
+  // Mark the point in the queue where we stopped applying updates
   queue.lastProgressedUpdate = lastProgressedUpdate;
 
   if (isEmpty) {
@@ -296,8 +406,9 @@ function commitUpdateQueue(finishedWork : Fiber, queue : UpdateQueue, context : 
     }
   }
 
-  // Drop all completed updates, leaving only the pending updates.
+  // Drop all comitted updates, leaving only the pending updates.
   queue.first = getFirstPendingUpdate(queue);
+  queue.lastProgressedUpdate = null;
   if (!queue.first) {
     queue.last = queue.lastProgressedUpdate = null;
 

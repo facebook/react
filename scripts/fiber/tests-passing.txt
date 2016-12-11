@@ -1230,6 +1230,14 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * invokes ref callbacks after insertion/update/unmount
 * supports string refs
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
+* applies updates in order of priority
+* applies updates with equal priority in insertion order
+* only drops updates with equal or lesser priority when replaceState is called
+* can abort an update, schedule additional updates, and resume
+* can abort an update, schedule a replaceState, and resume
+* does not call callbacks that are scheduled by another callback until a later commit
+
 src/renderers/shared/fiber/__tests__/ReactTopLevelFragment-test.js
 * should render a simple fragment at the top of a component
 * should preserve state when switching from a single child
