@@ -1076,11 +1076,22 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
+  function deferredUpdates<A>(fn : () => A) : A {
+    const previousPriorityContext = priorityContext;
+    priorityContext = LowPriority;
+    try {
+      return fn();
+    } finally {
+      priorityContext = previousPriorityContext;
+    }
+  }
+
   return {
     scheduleWork: scheduleWork,
     getPriorityContext: getPriorityContext,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     syncUpdates: syncUpdates,
+    deferredUpdates: deferredUpdates,
   };
 };
