@@ -39,7 +39,9 @@ module.exports = function<T, P, I, TI, C, CX>(
   let contextFibers : Array<Fiber | null> | null = null;
   let contextValues : Array<CX | null> | null = null;
   let contextDepth : number = -1;
-  // Current root instance.
+  // Current context for fast access.
+  let currentContextValue : CX | null = null;
+  // Current root instance for fast access.
   let rootInstance : C | null = null;
   // A stack of outer root instances if we're in a portal.
   let portalStack : Array<C | null> = [];
@@ -67,6 +69,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         contextDepth++;
         contextFibers[contextDepth] = null;
         contextValues[contextDepth] = null;
+        currentContextValue = null;
       }
     }
   }
@@ -75,6 +78,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (portalDepth === -1) {
       // We're popping the root.
       rootInstance = null;
+      currentContextValue = null;
       contextDepth = -1;
     } else {
       // We're popping a portal.
@@ -85,24 +89,22 @@ module.exports = function<T, P, I, TI, C, CX>(
       // If we pushed any context while in a portal, we need to roll it back.
       if (contextDepth > -1) {
         contextDepth--;
+        if (contextDepth > -1 && contextValues != null) {
+          currentContextValue = contextValues[contextDepth];
+        } else {
+          currentContextValue = null;
+        }
       }
     }
   }
 
   function getHostContext() : CX | null {
-    if (contextDepth === -1) {
-      return null;
-    }
-    if (contextValues == null) {
-      throw new Error('Expected context values to exist.');
-    }
-    return contextValues[contextDepth];
+    return currentContextValue;
   }
 
   function pushHostContext(fiber : Fiber) : void {
-    const parentHostContext = getHostContext();
-    const currentHostContext = getChildHostContext(parentHostContext, fiber.type);
-    if (parentHostContext === currentHostContext) {
+    const nextContextValue = getChildHostContext(currentContextValue, fiber.type);
+    if (currentContextValue === nextContextValue) {
       return;
     }
     if (contextFibers == null) {
@@ -113,7 +115,8 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
     contextDepth++;
     contextFibers[contextDepth] = fiber;
-    contextValues[contextDepth] = currentHostContext;
+    contextValues[contextDepth] = nextContextValue;
+    currentContextValue = nextContextValue;
   }
 
   function popHostContext(fiber : Fiber) : void {
@@ -126,9 +129,15 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (fiber !== contextFibers[contextDepth]) {
       return;
     }
+
     contextFibers[contextDepth] = null;
     contextValues[contextDepth] = null;
     contextDepth--;
+    if (contextDepth > -1) {
+      currentContextValue = contextValues[contextDepth];
+    } else {
+      currentContextValue = null;
+    }
   }
 
   function resetHostContainer() {
@@ -138,6 +147,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Don't reset arrays because we reuse them.
     rootInstance = null;
     contextDepth = -1;
+    currentContextValue = null;
   }
 
   return {
