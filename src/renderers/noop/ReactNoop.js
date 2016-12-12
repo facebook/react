@@ -81,7 +81,7 @@ var NoopRenderer = ReactFiberReconciler({
 
   resetTextContent(instance : Instance) : void {},
 
-  createTextInstance(text : string) : TextInstance {
+  createTextInstance(text : string, rootContainerInstance : Container, internalInstanceHandle : Object) : TextInstance {
     var inst = { text : text, id: instanceCounter++ };
     // Hide from unit tests
     Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });

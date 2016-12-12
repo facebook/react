@@ -152,7 +152,7 @@ var DOMRenderer = ReactFiberReconciler({
     domElement.textContent = '';
   },
 
-  createTextInstance(text : string, internalInstanceHandle : Object) : TextInstance {
+  createTextInstance(text : string, rootContainerInstance : Container, internalInstanceHandle : Object) : TextInstance {
     var textNode : TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
     return textNode;

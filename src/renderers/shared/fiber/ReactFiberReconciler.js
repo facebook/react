@@ -54,7 +54,7 @@ export type HostConfig<T, P, I, TI, C, CX> = {
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
 
-  createTextInstance(text : string, internalInstanceHandle : OpaqueNode) : TI,
+  createTextInstance(text : string, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
   appendChild(parentInstance : I | C, child : I | TI) : void,

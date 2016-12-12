@@ -446,7 +446,7 @@ const ARTRenderer = ReactFiberReconciler({
     return instance;
   },
 
-  createTextInstance(text, internalInstanceHandle) {
+  createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
     return text;
   },
 

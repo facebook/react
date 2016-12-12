@@ -292,7 +292,8 @@ module.exports = function<T, P, I, TI, C, CX>(
               return null;
             }
           }
-          const textInstance = createTextInstance(newText, workInProgress);
+          const rootContainerInstance = getRootHostContainer();
+          const textInstance = createTextInstance(newText, rootContainerInstance, workInProgress);
           workInProgress.stateNode = textInstance;
         }
         workInProgress.memoizedProps = newText;
