@@ -83,15 +83,8 @@ module.exports = function<T, P, I, TI, C, CX>(
       portalStack[portalDepth] = null;
       portalDepth--;
       // If we pushed any context while in a portal, we need to roll it back.
-      if (contextDepth > -1 && contextFibers != null) {
-        // Pop the context until we meet the null sentinel on fiber stack.
-        while (contextDepth > -1 && contextFibers[contextDepth] != null) {
-          contextDepth--;
-        }
-        // We have found the null sentinel. Pop past it.
-        if (contextDepth > -1 && contextFibers[contextDepth] == null) {
-          contextDepth--;
-        }
+      if (contextDepth > -1) {
+        contextDepth--;
       }
     }
   }
