@@ -18,7 +18,7 @@ declare module 'deepFreezeAndThrowOnMutationInDev' {
   declare function exports<T>(obj : T) : T;
 }
 declare module 'flattenStyle' { }
-declare module 'InitializeJavaScriptAppEngine' { }
+declare module 'InitializeCore' { }
 declare module 'RCTEventEmitter' {
   declare function register() : void;
 }

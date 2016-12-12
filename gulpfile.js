@@ -145,7 +145,7 @@ var moduleMapReactNative = Object.assign(
     deepDiffer: 'react-native/lib/deepDiffer',
     deepFreezeAndThrowOnMutationInDev: 'react-native/lib/deepFreezeAndThrowOnMutationInDev',
     flattenStyle: 'react-native/lib/flattenStyle',
-    InitializeJavaScriptAppEngine: 'react-native/lib/InitializeJavaScriptAppEngine',
+    InitializeCore: 'react-native/lib/InitializeCore',
     RCTEventEmitter: 'react-native/lib/RCTEventEmitter',
     TextInputState: 'react-native/lib/TextInputState',
     UIManager: 'react-native/lib/UIManager',
