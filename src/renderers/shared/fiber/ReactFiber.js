@@ -346,7 +346,7 @@ exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : 
 
 exports.createFiberFromPortal = function(portal : ReactPortal, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiber(HostPortal, portal.key);
-  fiber.pendingProps = portal.children;
+  fiber.pendingProps = portal.children || [];
   fiber.pendingWorkPriority = priorityLevel;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,

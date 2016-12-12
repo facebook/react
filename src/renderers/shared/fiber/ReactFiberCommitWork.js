@@ -152,7 +152,9 @@ module.exports = function<T, P, I, TI, C, CX>(
           // If we don't have a child, try the siblings instead.
           continue siblings;
         }
-        if (!node.child) {
+        // If we don't have a child, try the siblings instead.
+        // We also skip portals because they are not part of this host tree.
+        if (!node.child || node.tag === HostPortal) {
           continue siblings;
         } else {
           node.child.return = node;
@@ -235,7 +237,9 @@ module.exports = function<T, P, I, TI, C, CX>(
     let node : Fiber = root;
     while (true) {
       commitUnmount(node);
-      if (node.child) {
+      // Visit children because they may contain more composite or host nodes.
+      // Skip portals because commitUnmount() currently visits them recursively.
+      if (node.child && node.tag !== HostPortal) {
         // TODO: Coroutines need to visit the stateNode.
         node.child.return = node;
         node = node.child;
@@ -265,16 +269,20 @@ module.exports = function<T, P, I, TI, C, CX>(
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
         removeChild(parent, node.stateNode);
+        // Don't visit children because we already visited them.
       } else if (node.tag === HostPortal) {
         // When we go into a portal, it becomes the parent to remove from.
         // We will reassign it back when we pop the portal on the way up.
         parent = node.stateNode.containerInfo;
+        // Visit children because portals might contain host components.
         if (node.child) {
+          node.child.return = node;
           node = node.child;
           continue;
         }
       } else {
         commitUnmount(node);
+        // Visit children because we may find more host components below.
         if (node.child) {
           // TODO: Coroutines need to visit the stateNode.
           node.child.return = node;
@@ -343,7 +351,10 @@ module.exports = function<T, P, I, TI, C, CX>(
       }
       case HostPortal: {
         // TODO: this is recursive.
-        commitDeletion(current);
+        // We are also not using this parent because
+        // the portal will get pushed immediately.
+        const parent = getHostParent(current);
+        unmountHostComponents(parent, current);
         return;
       }
     }
