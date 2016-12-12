@@ -182,6 +182,59 @@ class FlavorForm extends React.Component {
 
 Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
 
+## Handling Multiple Inputs
+
+When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let a handler function choose what to do based on the value of `event.target.name`. For example:
+
+```javascript{14-15,18,32,38}
+class RSVP extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isGoing: false,
+      numberOfGuests: 0
+    };
+
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    const pendingState = {};
+    switch (event.target.name) {
+      case 'isGoing':
+        pendingState[event.target.name] = event.target.checked;
+        break;
+      case 'numberOfGuests':
+        pendingState[event.target.name] = event.target.value;
+        break;
+      default:
+        // the code should never reach here
+        return;
+    }
+    this.setState(pendingState);
+  }
+
+  render() {
+    return (
+      <div>
+        <input
+          name="isGoing"
+          type="checkbox"
+          checked={this.state.isGoing}
+          onChange={this.handleInputChange}
+        />
+        <input
+          name="numberOfGuests"
+          type="number"
+          value={this.state.numberOfGuests}
+          onChange={this.handleInputChange}
+        />
+      </div>
+    );
+  }
+}
+```
+
 ## Alternatives to Controlled Components
 
 It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out [uncontrolled components](/react/docs/uncontrolled-components.html), an alternative technique for implementing input forms.
