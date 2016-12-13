@@ -640,6 +640,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should handle dangerouslySetInnerHTML
 * should work error event on <source> element
 * should not duplicate uppercased selfclosing tags
+* should warn on upper case HTML tags, not SVG nor custom tags
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
 * should emit a warning once for an unnamed custom component using shady DOM
@@ -663,6 +664,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
 * should warn about the `onScroll` issue when unsupported (IE8)
+* should throw when an invalid tag name is used server-side
+* should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
 * should throw when an attack vector is used
 * should warn about props that are no longer supported

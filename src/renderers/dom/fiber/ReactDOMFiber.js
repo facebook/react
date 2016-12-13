@@ -97,20 +97,16 @@ var DOMRenderer = ReactFiberReconciler({
 
   finalizeInitialChildren(
     domElement : Instance,
+    type : string,
     props : Props,
     rootContainerInstance : Container,
   ) : void {
-    // TODO: we normalize here because DOM renderer expects tag to be lowercase.
-    // We can change DOM renderer to compare special case against upper case,
-    // and use tagName (which is upper case for HTML DOM elements). Or we could
-    // let the renderer "normalize" the fiber type so we don't have to read
-    // the type from DOM. However we need to remember SVG is case-sensitive.
-    var tag = domElement.tagName.toLowerCase();
-    setInitialProperties(domElement, tag, props, rootContainerInstance);
+    setInitialProperties(domElement, type, props, rootContainerInstance);
   },
 
   prepareUpdate(
     domElement : Instance,
+    type : string,
     oldProps : Props,
     newProps : Props
   ) : boolean {
@@ -119,21 +115,16 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitUpdate(
     domElement : Instance,
+    type : string,
     oldProps : Props,
     newProps : Props,
     rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
-    // TODO: we normalize here because DOM renderer expects tag to be lowercase.
-    // We can change DOM renderer to compare special case against upper case,
-    // and use tagName (which is upper case for HTML DOM elements). Or we could
-    // let the renderer "normalize" the fiber type so we don't have to read
-    // the type from DOM. However we need to remember SVG is case-sensitive.
-    var tag = domElement.tagName.toLowerCase();
     // Update the internal instance handle so that we know which props are
     // the current ones.
     precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, tag, oldProps, newProps, rootContainerInstance);
+    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
   },
 
   shouldSetTextContent(props : Props) : boolean {

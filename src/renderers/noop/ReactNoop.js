@@ -60,15 +60,15 @@ var NoopRenderer = ReactFiberReconciler({
     parentInstance.children.push(child);
   },
 
-  finalizeInitialChildren(domElement : Instance, props : Props) : void {
+  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : void {
     // Noop
   },
 
-  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props) : boolean {
+  prepareUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : boolean {
     return true;
   },
 
-  commitUpdate(instance : Instance, oldProps : Props, newProps : Props) : void {
+  commitUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : void {
     instance.prop = newProps.prop;
   },
 

@@ -413,7 +413,6 @@ var globalIdCounter = 1;
  */
 function ReactDOMComponent(element) {
   var tag = element.type;
-  validateDangerousTag(tag);
   this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
@@ -524,6 +523,15 @@ ReactDOMComponent.Mixin = {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
+      if (__DEV__) {
+        warning(
+          isCustomComponent(this._tag, props) ||
+          this._tag === this._currentElement.type,
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          'in React.',
+          this._currentElement.type
+        );
+      }
       if (this._tag === 'svg') {
         namespaceURI = DOMNamespaces.svg;
       } else if (this._tag === 'math') {
@@ -596,6 +604,7 @@ ReactDOMComponent.Mixin = {
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
+      validateDangerousTag(this._tag);
       var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
       var tagContent = this._createContentMarkup(transaction, props, context);
       if (!tagContent && omittedCloseTags[this._tag]) {

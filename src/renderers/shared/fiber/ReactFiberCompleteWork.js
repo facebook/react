@@ -215,6 +215,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       }
       case HostComponent:
         popHostContext(workInProgress);
+        const type = workInProgress.type;
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -228,7 +229,7 @@ module.exports = function<T, P, I, TI, C, CX>(
             newProps = workInProgress.memoizedProps || oldProps;
           }
           const instance : I = workInProgress.stateNode;
-          if (prepareUpdate(instance, oldProps, newProps)) {
+          if (prepareUpdate(instance, type, oldProps, newProps)) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
           }
@@ -249,14 +250,14 @@ module.exports = function<T, P, I, TI, C, CX>(
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
           const instance = createInstance(
-            workInProgress.type,
+            type,
             newProps,
             rootContainerInstance,
             currentHostContext,
             workInProgress
           );
           appendAllChildren(instance, workInProgress);
-          finalizeInitialChildren(instance, newProps, rootContainerInstance);
+          finalizeInitialChildren(instance, type, newProps, rootContainerInstance);
 
           workInProgress.stateNode = instance;
           if (workInProgress.ref) {
