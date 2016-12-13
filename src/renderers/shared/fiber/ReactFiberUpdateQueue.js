@@ -55,6 +55,9 @@ type Update = {
 export type UpdateQueue = {
   first: Update | null,
   last: Update | null,
+
+  // Dev only
+  isProcessing?: boolean,
 };
 
 function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
@@ -90,10 +93,21 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
     // We already have an update queue.
     return fiber.updateQueue;
   }
-  const queue = {
-    first: null,
-    last: null,
-  };
+
+  let queue;
+  if (__DEV__) {
+    queue = {
+      first: null,
+      last: null,
+      isProcessing: false,
+    };
+  } else {
+    queue = {
+      first: null,
+      last: null,
+    };
+  }
+
   fiber.updateQueue = queue;
   return queue;
 }
@@ -170,9 +184,29 @@ function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
 //
 // However, if incoming update is inserted into the same position of both lists,
 // we shouldn't make a copy.
-function insertUpdate(fiber : Fiber, update : Update) : void {
+
+function insertUpdate(fiber : Fiber, update : Update, methodName : ?string) : void {
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
+
+  // Warn if an update is scheduled from inside an updater function.
+  if (__DEV__ && typeof methodName === 'string' && (queue1.isProcessing || (queue2 && queue2.isProcessing))) {
+    if (methodName === 'setState') {
+      console.error(
+        'setState was called from inside the updater function of another' +
+        'setState. A function passed as the first argument of setState ' +
+        'should not contain any side-effects. Return a partial state object ' +
+        'instead of calling setState again. Example: ' +
+        'this.setState(function(state) { return { count: state.count + 1 }; })'
+      );
+    } else {
+      console.error(
+        `${methodName} was called from inside the updater function of ` +
+        'setState. A function passed as the first argument of setState ' +
+        'should not contain any side-effects.'
+      );
+    }
+  }
 
   const priorityLevel = update.priorityLevel;
 
@@ -238,7 +272,11 @@ function addUpdate(
     isForced: false,
     next: null,
   };
-  insertUpdate(fiber, update);
+  if (__DEV__) {
+    insertUpdate(fiber, update, 'setState');
+  } else {
+    insertUpdate(fiber, update);
+  }
 }
 exports.addUpdate = addUpdate;
 
@@ -286,8 +324,11 @@ function addReplaceUpdate(
       queue = null;
     }
   }
-
-  insertUpdate(fiber, update);
+  if (__DEV__) {
+    insertUpdate(fiber, update, 'replaceState');
+  } else {
+    insertUpdate(fiber, update);
+  }
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
@@ -300,7 +341,11 @@ function addForceUpdate(fiber : Fiber, priorityLevel : PriorityLevel) : void {
     isForced: true,
     next: null,
   };
-  insertUpdate(fiber, update);
+  if (__DEV__) {
+    insertUpdate(fiber, update, 'forceUpdate');
+  } else {
+    insertUpdate(fiber, update);
+  }
 }
 exports.addForceUpdate = addForceUpdate;
 
@@ -341,15 +386,28 @@ function beginUpdateQueue(
   props : any,
   priorityLevel : PriorityLevel
 ) : any {
+  if (__DEV__) {
+    // Set this flag so we can warn if setState is called inside the update
+    // function of another setState.
+    queue.isProcessing = true;
+  }
+
   // Applies updates with matching priority to the previous state to create
   // a new state object.
-
   let state = prevState;
   let dontMutatePrevState = true;
   let isEmpty = true;
   let callbackList = null;
   let update = queue.first;
   while (update && comparePriority(update.priorityLevel, priorityLevel) <= 0) {
+    // Remove each update from the queue right before it is processed. That way
+    // if setState is called from inside an updater function, the new update
+    // will be inserted in the correct position.
+    queue.first = update.next;
+    if (!queue.first) {
+      queue.last = null;
+    }
+
     let partialState;
     if (update.isReplace) {
       // A replace should drop all previous updates in the queue, so
@@ -392,15 +450,17 @@ function beginUpdateQueue(
     state = prevState;
   }
 
-  if (update) {
-    queue.first = update;
-  } else {
+  if (!queue.first) {
     // Queue is now empty
     workInProgress.updateQueue = null;
   }
 
   workInProgress.callbackList = callbackList;
   workInProgress.memoizedState = state;
+
+  if (__DEV__) {
+    queue.isProcessing = false;
+  }
 
   return state;
 }

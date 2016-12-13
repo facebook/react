@@ -245,4 +245,67 @@ describe('ReactIncrementalUpdates', () => {
       'callback b',
     ]);
   });
+
+  it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
+    spyOn(console, 'error');
+    let instance;
+    let ops = [];
+    class Foo extends React.Component {
+      state = {};
+      componentDidMount() {
+        ops.push('componentDidMount');
+        this.setState(function a() {
+          // Force update b to have Task priority
+          ReactNoop.syncUpdates(() => {
+            this.setState({ b: 'b' });
+          });
+          return { a: 'a' };
+        });
+      }
+      render() {
+        ops.push('render');
+        instance = this;
+        return <span prop={Object.keys(this.state).join('')} />;
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expectDev(console.error.calls.count()).toBe(1);
+    expect(ReactNoop.getChildren()).toEqual([span('ab')]);
+    expect(ops).toEqual([
+      // Initial render
+      'render',
+      'componentDidMount',
+      // Updates a and b both have Task priority. Update b is enqueued while
+      // update a is being processed, but it should be inserted into the queue
+      // as if update a is already processed. Then processing continues. Because
+      // they have the same priority, update b is processed in the same batch.
+      // So there should only be a single render below.
+      'render',
+    ]);
+
+    ops = [];
+
+    ReactNoop.performAnimationWork(() => {
+      instance.setState(function c() {
+        // Update d happens during the begin phase, so it has low priority.
+        this.setState({ d: 'd' });
+        return { c: 'c' };
+      });
+    });
+
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span('abcd')]);
+    expect(ops).toEqual([
+      // Update c has animation priority. Update d is enqueued while c is being
+      // processed with animation priority. Because d is low priority, it is not
+      // processed until the next render. So there should be two renders below.
+      'render',
+      'render',
+    ]);
+
+    expectDev(console.error.calls.count()).toBe(2);
+    console.error.calls.reset();
+  });
 });

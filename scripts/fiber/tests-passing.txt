@@ -1237,6 +1237,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * can abort an update, schedule additional updates, and resume
 * can abort an update, schedule a replaceState, and resume
 * does not call callbacks that are scheduled by another callback until a later commit
+* enqueues setState inside an updater function as if the in-progress update is progressed (and warns)
 
 src/renderers/shared/fiber/__tests__/ReactTopLevelFragment-test.js
 * should render a simple fragment at the top of a component
