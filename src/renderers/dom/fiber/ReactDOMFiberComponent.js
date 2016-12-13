@@ -489,8 +489,6 @@ var ReactDOMFiberComponent = {
     parentNamespace : string | null
   ) : Element {
     validateDangerousTag(type);
-    // TODO:
-    // const tag = type.toLowerCase(); Do we need to apply lower case only on non-custom elements?
 
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
@@ -498,8 +496,17 @@ var ReactDOMFiberComponent = {
     var domElement : Element;
     var namespaceURI = parentNamespace || getIntrinsicNamespace(type);
     if (namespaceURI == null) {
-      const tag = type.toLowerCase();
-      if (tag === 'script') {
+      if (__DEV__) {
+        warning(
+          type === type.toLowerCase() ||
+          isCustomComponent(type, props),
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          'in React.',
+          type
+        );
+      }
+
+      if (type === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
         var div = ownerDocument.createElement('div');

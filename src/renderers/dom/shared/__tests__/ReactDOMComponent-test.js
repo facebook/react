@@ -14,6 +14,7 @@
 
 describe('ReactDOMComponent', () => {
   var React;
+  var ReactTestUtils;
   var ReactDOM;
   var ReactDOMFeatureFlags;
   var ReactDOMServer;
@@ -29,16 +30,11 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
+    ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
   });
 
   describe('updateDOM', () => {
-    var ReactTestUtils;
-
-    beforeEach(() => {
-      ReactTestUtils = require('ReactTestUtils');
-    });
-
     it('should handle className', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div style={{}} />, container);
@@ -795,6 +791,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should not duplicate uppercased selfclosing tags', () => {
+      spyOn(console, 'error');
       class Container extends React.Component {
         render() {
           return React.createElement('BR', null);
@@ -803,6 +800,27 @@ describe('ReactDOMComponent', () => {
 
       var returnedValue = ReactDOMServer.renderToString(<Container/>);
       expect(returnedValue).not.toContain('</BR>');
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        '<BR /> is using uppercase HTML.'
+      );
+    });
+
+    it('should warn on upper case HTML tags, not SVG nor custom tags', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(
+        React.createElement('svg', null, React.createElement('PATH'))
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      ReactTestUtils.renderIntoDocument(
+        React.createElement('CUSTOM-TAG')
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      ReactTestUtils.renderIntoDocument(React.createElement('IMG'));
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        '<IMG /> is using uppercase HTML.'
+      );
     });
 
     it('should warn against children for void elements', () => {
@@ -1171,8 +1189,7 @@ describe('ReactDOMComponent', () => {
         .mock('isEventSupported');
       var isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);
-
-      var ReactTestUtils = require('ReactTestUtils');
+      ReactTestUtils = require('ReactTestUtils');
 
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
@@ -1191,7 +1208,6 @@ describe('ReactDOMComponent', () => {
 
   describe('tag sanitization', () => {
     it('should throw when an invalid tag name is used', () => {
-      var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('script tag');
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
@@ -1201,7 +1217,6 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should throw when an attack vector is used', () => {
-      var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('div><img /><div');
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
@@ -1212,12 +1227,6 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('nesting validation', () => {
-    var ReactTestUtils;
-
-    beforeEach(() => {
-      ReactTestUtils = require('ReactTestUtils');
-    });
-
     it('warns on invalid nesting', () => {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div><tr /><tr /></div>);
