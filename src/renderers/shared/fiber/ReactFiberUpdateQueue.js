@@ -176,26 +176,41 @@ function insertUpdate(fiber : Fiber, update : Update) : void {
 
   const priorityLevel = update.priorityLevel;
 
-  // TODO: Fast path where last item in the queue has greater or equal priority.
-
-  let insertAfter1 = null;
-  let insertBefore1 = queue1.first;
-  while (insertBefore1 && comparePriority(insertBefore1.priorityLevel, priorityLevel) <= 0) {
-    insertAfter1 = insertBefore1;
-    insertBefore1 = insertBefore1.next;
-  }
-  const update1 = update;
-
-  let insertAfter2 = null;
-  let insertBefore2 = null;
-  let update2 = null;
-  if (queue2) {
-    insertBefore2 = queue2.first;
-    while (insertBefore2 && comparePriority(insertBefore2.priorityLevel, priorityLevel) <= 0) {
-      insertAfter2 = insertBefore2;
-      insertBefore2 = insertBefore2.next;
+  let queue = queue1;
+  let insertAfter1;
+  let insertBefore1;
+  let insertAfter2;
+  let insertBefore2;
+  for (let i = 0; queue && i < 2; i++) {
+    let insertAfter = null;
+    let insertBefore = null;
+    if (queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0) {
+      // Fast path for the common case where the update should be inserted at
+      // the end of the queue.
+      insertAfter = queue.last;
+    } else {
+      insertBefore = queue.first;
+      while (insertBefore && comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0) {
+        insertAfter = insertBefore;
+        insertBefore = insertBefore.next;
+      }
     }
+    if (i === 0) {
+      insertAfter1 = insertAfter;
+      insertBefore1 = insertBefore;
+      queue = queue2;
+    } else {
+      insertAfter2 = insertAfter;
+      insertBefore2 = insertBefore;
+      queue = null;
+    }
+  }
 
+  const update1 = update;
+  insertUpdateIntoQueue(queue1, update1, insertAfter1, insertBefore1);
+
+  if (queue2) {
+    let update2;
     if (insertBefore1 === insertBefore2) {
       // The update is inserted into the same position of both lists. There's no
       // need to clone the update.
@@ -206,11 +221,6 @@ function insertUpdate(fiber : Fiber, update : Update) : void {
       // time we commit.
       update2 = cloneUpdate(update1);
     }
-  }
-
-  // Now we're ready to insert the updates into their queues.
-  insertUpdateIntoQueue(queue1, update1, insertAfter1, insertBefore1);
-  if (queue2 && update2) {
     insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
   }
 }
@@ -296,7 +306,6 @@ exports.addForceUpdate = addForceUpdate;
 
 
 function addCallback(fiber : Fiber, callback: Callback, priorityLevel : PriorityLevel) : void {
-  // TODO: Fast path where last item in queue has equal priority.
   const update : Update = {
     priorityLevel,
     partialState: null,
