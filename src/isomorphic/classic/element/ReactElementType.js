@@ -32,6 +32,5 @@ export type ReactElement = {
     validated: boolean,
   },
   _self: ReactElement,
-  _shadowChildren: any,
   _source: Source,
 };

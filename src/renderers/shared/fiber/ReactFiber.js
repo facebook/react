@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { ReactElement } from 'ReactElementType';
 import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
@@ -144,8 +145,12 @@ export type Fiber = {
 
 };
 
+export type FiberDev = Fiber & {
+  _debugID : number,
+};
+
 if (__DEV__) {
-  var debugCounter = 0;
+  var debugCounter = 1;
 }
 
 // This is a constructor of a POJO instead of a constructor function for a few
@@ -205,7 +210,13 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
 
   };
   if (__DEV__) {
-    (fiber : any)._debugID = debugCounter++;
+    const fiberDev = ((fiber : any) : FiberDev);
+    if (tag === HostRoot) {
+      // Roots are unobservable for debug tools
+      fiberDev._debugID = 0;
+    } else {
+      fiberDev._debugID = debugCounter++;
+    }
   }
   return fiber;
 };
@@ -274,8 +285,7 @@ exports.createHostRootFiber = function() : Fiber {
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) : Fiber {
-// $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
+exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;

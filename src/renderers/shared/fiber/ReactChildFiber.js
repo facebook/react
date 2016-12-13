@@ -12,9 +12,10 @@
 
 'use strict';
 
+import type { ReactElement } from 'ReactElementType';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
-import type { Fiber } from 'ReactFiber';
+import type { Fiber, FiberDev } from 'ReactFiber';
 import type { ReactInstance } from 'ReactInstanceType';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -28,6 +29,7 @@ var {
 } = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
+var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -68,7 +70,7 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
-function coerceRef(current: ?Fiber, element: ReactElement<any>) {
+function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
@@ -256,7 +258,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function updateElement(
     returnFiber : Fiber,
     current : ?Fiber,
-    element : ReactElement<any>,
+    element : ReactElement,
     priority : PriorityLevel
   ) : Fiber {
     if (current == null || current.type !== element.type) {
@@ -264,6 +266,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       const created = createFiberFromElement(element, priority);
       created.ref = coerceRef(current, element);
       created.return = returnFiber;
+      if (__DEV__) {
+        const createdDev = ((created : any) : FiberDev);
+        const returnDev = ((returnFiber : any) : FiberDev);
+        ReactInstrumentation.debugTool.onBeforeMountComponent(
+          createdDev._debugID,
+          element,
+          returnDev._debugID,
+        );
+      }
       return created;
     } else {
       // Move based on index
@@ -387,6 +398,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const created = createFiberFromElement(newChild, priority);
           created.ref = coerceRef(null, newChild);
           created.return = returnFiber;
+          if (__DEV__) {
+            const createdDev = ((created : any) : FiberDev);
+            const returnDev = ((returnFiber : any) : FiberDev);
+            ReactInstrumentation.debugTool.onBeforeMountComponent(
+              createdDev._debugID,
+              newChild,
+              returnDev._debugID,
+            );
+          }
           return created;
         }
 
@@ -854,7 +874,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function reconcileSingleElement(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
-    element : ReactElement<any>,
+    element : ReactElement,
     priority : PriorityLevel
   ) : Fiber {
     const key = element.key;
@@ -883,6 +903,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const created = createFiberFromElement(element, priority);
     created.ref = coerceRef(currentFirstChild, element);
     created.return = returnFiber;
+    if (__DEV__) {
+      const createdDev = ((created : any) : FiberDev);
+      const returnDev = ((returnFiber : any) : FiberDev);
+      ReactInstrumentation.debugTool.onBeforeMountComponent(
+        createdDev._debugID,
+        element,
+        returnDev._debugID,
+      );
+    }
     return created;
   }
 
