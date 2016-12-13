@@ -76,7 +76,7 @@ var paths = {
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
     ],
-    lib: 'build/node_modules/react-native/lib',
+    lib: '../react-native/Libraries/Renderer',
   },
   reactTestRenderer: {
     src: [
@@ -139,19 +139,19 @@ var moduleMapReactDOM = Object.assign(
   moduleMapBase
 );
 
-var moduleMapReactNative = Object.assign(
-  {
-    // React Native Hooks
-    deepDiffer: 'react-native/lib/deepDiffer',
-    deepFreezeAndThrowOnMutationInDev: 'react-native/lib/deepFreezeAndThrowOnMutationInDev',
-    flattenStyle: 'react-native/lib/flattenStyle',
-    InitializeJavaScriptAppEngine: 'react-native/lib/InitializeJavaScriptAppEngine',
-    RCTEventEmitter: 'react-native/lib/RCTEventEmitter',
-    TextInputState: 'react-native/lib/TextInputState',
-    UIManager: 'react-native/lib/UIManager',
-    UIManagerStatTracker: 'react-native/lib/UIManagerStatTracker',
-    View: 'react-native/lib/View',
-  },
+var moduleMapReactNative = Object.assign({},
+  //{
+  //   // React Native Hooks
+  //   deepDiffer: 'react-native/lib/deepDiffer',
+  //   deepFreezeAndThrowOnMutationInDev: 'react-native/lib/deepFreezeAndThrowOnMutationInDev',
+  //   flattenStyle: 'react-native/lib/flattenStyle',
+  //   InitializeJavaScriptAppEngine: 'react-native/lib/InitializeJavaScriptAppEngine',
+  //   RCTEventEmitter: 'react-native/lib/RCTEventEmitter',
+  //   TextInputState: 'react-native/lib/TextInputState',
+  //   UIManager: 'react-native/lib/UIManager',
+  //   UIManagerStatTracker: 'react-native/lib/UIManagerStatTracker',
+  //   View: 'react-native/lib/View',
+  // },
   rendererSharedState,
   moduleMapBase
 );
@@ -189,8 +189,7 @@ var babelOptsReactDOM = {
 
 var babelOptsReactNative = {
   plugins: [
-    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
-    [babelPluginModules, {map: moduleMapReactNative}],
+    [babelPluginModules, {map: moduleMapReactNative, 'prefix': ''}],
   ],
 };
 
@@ -227,42 +226,10 @@ gulp.task('react:clean', function() {
 });
 
 gulp.task('react:modules', function() {
-  return merge(
-    gulp
-      .src(paths.react.src)
-      .pipe(babel(babelOptsReact))
-      .pipe(stripProvidesModule())
-      .pipe(flatten())
-      .pipe(gulp.dest(paths.react.lib)),
-
-    gulp
-      .src(paths.reactDOM.src)
-      .pipe(babel(babelOptsReactDOM))
-      .pipe(stripProvidesModule())
-      .pipe(flatten())
-      .pipe(gulp.dest(paths.reactDOM.lib)),
-
-    gulp
-      .src(paths.reactNative.src)
-      .pipe(babel(babelOptsReactNative))
-      .pipe(stripProvidesModule())
-      .pipe(flatten())
-      .pipe(gulp.dest(paths.reactNative.lib)),
-
-    gulp
-      .src(paths.reactTestRenderer.src)
-      .pipe(stripProvidesModule())
-      .pipe(babel(babelOptsReactTestRenderer))
-      .pipe(flatten())
-      .pipe(gulp.dest(paths.reactTestRenderer.lib)),
-
-    gulp
-      .src(paths.reactNoopRenderer.src)
-      .pipe(stripProvidesModule())
-      .pipe(babel(babelOptsReactNoopRenderer))
-      .pipe(flatten())
-      .pipe(gulp.dest(paths.reactNoopRenderer.lib))
-  );
+  return gulp
+    .src(paths.reactNative.src, { base: '.' })
+    .pipe(babel(babelOptsReactNative))
+    .pipe(gulp.dest(paths.reactNative.lib));
 });
 
 gulp.task('react:extract-errors', function() {

@@ -51,8 +51,17 @@ function getInstanceFromTag(tag) {
 }
 
 function getTagFromInstance(inst) {
+  if (typeof inst.tag === 'number') {
+    inst = inst.stateNode;
+  }
+
   invariant(inst._rootNodeID, 'All native instances should have a tag.');
   return inst._rootNodeID;
+
+}
+
+function precacheFiberNode(inst, tag) {
+  instanceCache[tag] = inst;
 }
 
 var ReactNativeComponentTree = {
@@ -61,6 +70,7 @@ var ReactNativeComponentTree = {
   getNodeFromInstance: getTagFromInstance,
   precacheNode: precacheNode,
   uncacheNode: uncacheNode,
+  precacheFiberNode: precacheFiberNode,
 };
 
 module.exports = ReactNativeComponentTree;

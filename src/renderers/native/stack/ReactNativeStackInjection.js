@@ -17,7 +17,7 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
-require('InitializeJavaScriptAppEngine');
+require('InitializeCore');
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
@@ -29,6 +29,8 @@ var ReactNativeComponentEnvironment = require('ReactNativeComponentEnvironment')
 var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
+var findNodeHandle = require('findNodeHandle');
 
 var invariant = require('invariant');
 
@@ -74,6 +76,11 @@ function inject() {
     }
     invariant(false, 'Expected a component class, got %s.%s', tag, info);
   });
+
+  findNodeHandle._injectStack(function(inst) {
+    return inst.getHostNode();
+  });
+
 }
 
 module.exports = {

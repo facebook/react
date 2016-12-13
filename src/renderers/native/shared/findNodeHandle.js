@@ -20,6 +20,13 @@ var warning = require('warning');
 
 import type { ReactInstance } from 'ReactInstanceType';
 
+let findFiber = function(arg) {
+  invariant(false, 'Missing injection for fiber findDOMNode');
+};
+let findStack = function(arg) {
+  invariant(false, 'Missing injection for stack findDOMNode');
+};
+
 /**
  * ReactNative vs ReactWeb
  * -----------------------
@@ -80,8 +87,13 @@ function findNodeHandle(componentOrHandle: any): ?number {
 
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
-  var internalInstance = ReactInstanceMap.get(component);
-  if (internalInstance) {
+  var inst = ReactInstanceMap.get(component);
+  if (inst) {
+    if (typeof inst.tag === 'number') {
+      return findFiber(inst);
+    } else {
+      return findStack(inst);
+    }
     return internalInstance.getHostNode();
   } else {
     var rootNodeID = component._rootNodeID;
@@ -111,5 +123,13 @@ function findNodeHandle(componentOrHandle: any): ?number {
     }
   }
 }
+
+findNodeHandle._injectFiber = function(fn) {
+  findFiber = fn;
+};
+findNodeHandle._injectStack = function(fn) {
+  findStack = fn;
+};
+
 
 module.exports = findNodeHandle;

@@ -6,16 +6,15 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeContainerInfo
+ * @providesModule ReactNativeFeatureFlags
  * @flow
  */
+
 'use strict';
 
-function ReactNativeContainerInfo(tag: number) {
-  var info = {
-    _tag: tag,
-  };
-  return info;
-}
 
-module.exports = ReactNativeContainerInfo;
+var ReactNativeFeatureFlags = {
+  useFiber: true,
+};
+
+module.exports = ReactNativeFeatureFlags;
