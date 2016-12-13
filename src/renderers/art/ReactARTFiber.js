@@ -408,7 +408,7 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  commitUpdate(instance, oldProps, newProps) {
+  commitUpdate(instance, type, oldProps, newProps) {
     instance._applyProps(instance, newProps, oldProps);
   },
 
@@ -467,7 +467,7 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  prepareUpdate(domElement, oldProps, newProps) {
+  prepareUpdate(domElement, type, oldProps, newProps) {
     return true;
   },
 

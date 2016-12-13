@@ -373,7 +373,8 @@ module.exports = function<T, P, I, TI, C, CX>(
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
           const rootContainerInstance = getRootHostContainer();
-          commitUpdate(instance, oldProps, newProps, rootContainerInstance, finishedWork);
+          const type = finishedWork.type;
+          commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, finishedWork);
         }
         detachRefIfNeeded(current, finishedWork);
         return;
