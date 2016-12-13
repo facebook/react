@@ -1,25 +1,31 @@
-// We run our own grunt task instead of using grunt-jest so that we can have
-// more control. Specifically we want to set NODE_ENV and make sure stdio is
-// inherited. We also run with --harmony directly so that we don't have to
-// respawn immediately. We should be able to reduce some of this complexity
-// when jest 0.5 is run on top of iojs.
-
 'use strict';
 
 var grunt = require('grunt');
 var path = require('path');
 
-module.exports = function() {
-  var done = this.async();
-  grunt.log.writeln('running jest (this may take a while)');
+function run(done, coverage) {
+  grunt.log.writeln('running jest');
+
+  var args = [
+    path.join('node_modules', 'jest-cli', 'bin', 'jest'),
+    '--runInBand',
+  ];
+  if (coverage) {
+    args.push('--coverage');
+  }
   grunt.util.spawn({
     cmd: 'node',
-    args: ['--harmony', path.join('node_modules', 'jest-cli', 'bin', 'jest')],
-    opts: {stdio: 'inherit', env: {NODE_ENV: 'test'}},
-  }, function(err, result, code) {
-    if (err) {
+    args: args,
+    opts: {
+      stdio: 'inherit',
+      env: Object.assign({}, process.env, {
+        NODE_ENV: 'test',
+      }),
+    },
+  }, function(spawnErr, result, code) {
+    if (spawnErr) {
       grunt.log.error('jest failed');
-      grunt.log.error(err);
+      grunt.log.error(spawnErr);
     } else {
       grunt.log.ok('jest passed');
     }
@@ -27,4 +33,19 @@ module.exports = function() {
 
     done(code === 0);
   });
+}
+
+function runJestNormally() {
+  var done = this.async();
+  run(done);
+}
+
+function runJestWithCoverage() {
+  var done = this.async();
+  run(done, /* coverage */ true);
+}
+
+module.exports = {
+  normal: runJestNormally,
+  coverage: runJestWithCoverage,
 };

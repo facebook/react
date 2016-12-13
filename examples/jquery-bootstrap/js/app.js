@@ -18,17 +18,20 @@ var BootstrapModal = React.createClass({
   // integrate Bootstrap or jQuery with the components lifecycle methods.
   componentDidMount: function() {
     // When the component is added, turn it into a modal
-    $(React.findDOMNode(this))
-      .modal({backdrop: 'static', keyboard: false, show: false});
+    $(this.refs.root).modal({backdrop: 'static', keyboard: false, show: false});
+
+    // Bootstrap's modal class exposes a few events for hooking into modal
+    // functionality. Lets hook into one of them:
+    $(this.refs.root).on('hidden.bs.modal', this.handleHidden);
   },
   componentWillUnmount: function() {
-    $(React.findDOMNode(this)).off('hidden', this.handleHidden);
+    $(this.refs.root).off('hidden.bs.modal', this.handleHidden);
   },
   close: function() {
-    $(React.findDOMNode(this)).modal('hide');
+    $(this.refs.root).modal('hide');
   },
   open: function() {
-    $(React.findDOMNode(this)).modal('show');
+    $(this.refs.root).modal('show');
   },
   render: function() {
     var confirmButton = null;
@@ -52,7 +55,7 @@ var BootstrapModal = React.createClass({
     }
 
     return (
-      <div className="modal fade">
+      <div className="modal fade" ref="root">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
@@ -85,6 +88,11 @@ var BootstrapModal = React.createClass({
     if (this.props.onConfirm) {
       this.props.onConfirm();
     }
+  },
+  handleHidden: function() {
+    if (this.props.onHidden) {
+      this.props.onHidden();
+    }
   }
 });
 
@@ -103,6 +111,7 @@ var Example = React.createClass({
         cancel="Cancel"
         onCancel={this.handleCancel}
         onConfirm={this.closeModal}
+        onHidden={this.handleModalDidClose}
         title="Hello, Bootstrap!">
           This is a React component powered by jQuery and Bootstrap!
       </BootstrapModal>
@@ -121,7 +130,10 @@ var Example = React.createClass({
   },
   closeModal: function() {
     this.refs.modal.close();
+  },
+  handleModalDidClose: function() {
+    alert("The modal has been dismissed!");
   }
 });
 
-React.render(<Example />, document.getElementById('jqueryexample'));
+ReactDOM.render(<Example />, document.getElementById('jqueryexample'));

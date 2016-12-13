@@ -10,7 +10,7 @@ module.exports = {
       archive: './build/react-' + version + '.zip',
     },
     files: [
-      {cwd: './build/starter', src: ['**'], dest: 'react-' + version + '/'},
+      {cwd: './build/starter', src: ['**'], dot: true, dest: 'react-' + version + '/'},
     ],
   },
 };

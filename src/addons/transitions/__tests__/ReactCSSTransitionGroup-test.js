@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -19,10 +19,11 @@ var ReactCSSTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
-describe('ReactCSSTransitionGroup', function() {
+describe('ReactCSSTransitionGroup', () => {
   var container;
 
-  beforeEach(function() {
+  beforeEach(() => {
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
@@ -31,7 +32,7 @@ describe('ReactCSSTransitionGroup', function() {
     spyOn(console, 'error');
   });
 
-  it('should warn if timeouts aren\'t specified', function() {
+  it('should warn if timeouts aren\'t specified', () => {
     ReactDOM.render(
       <ReactCSSTransitionGroup
         transitionName="yolo"
@@ -44,10 +45,26 @@ describe('ReactCSSTransitionGroup', function() {
     );
 
     // Warning about the missing transitionLeaveTimeout prop
-    expect(console.error.argsForCall.length).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
-  it('should clean-up silently after the timeout elapses', function() {
+  it('should not warn if timeouts is zero', () => {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}
+        transitionLeaveTimeout={0}
+      >
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+
+    expectDev(console.error.calls.count()).toBe(0);
+  });
+
+  it('should clean-up silently after the timeout elapses', () => {
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup
         transitionName="yolo"
@@ -86,14 +103,14 @@ describe('ReactCSSTransitionGroup', function() {
     }
 
     // No warnings
-    expect(console.error.argsForCall.length).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
 
     // The leaving child has been removed
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
   });
 
-  it('should keep both sets of DOM nodes around', function() {
+  it('should keep both sets of DOM nodes around', () => {
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
@@ -112,7 +129,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('one');
   });
 
-  it('should switch transitionLeave from false to true', function() {
+  it('should switch transitionLeave from false to true', () => {
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
@@ -147,14 +164,14 @@ describe('ReactCSSTransitionGroup', function() {
     expect(ReactDOM.findDOMNode(a).childNodes[1].id).toBe('two');
   });
 
-  it('should work with no children', function() {
+  it('should work with no children', () => {
     ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo" />,
       container
     );
   });
 
-  it('should work with a null child', function() {
+  it('should work with a null child', () => {
     ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {[null]}
@@ -163,7 +180,7 @@ describe('ReactCSSTransitionGroup', function() {
     );
   });
 
-  it('should transition from one to null', function() {
+  it('should transition from one to null', () => {
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
@@ -183,7 +200,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
 
-  it('should transition from false to one', function() {
+  it('should transition from false to one', () => {
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {false}
@@ -201,7 +218,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
 
-  it('should use transition-type specific names when they\'re provided', function() {
+  it('should use transition-type specific names when they\'re provided', () => {
     var customTransitionNames = {
       enter: 'custom-entering',
       leave: 'custom-leaving',
@@ -251,5 +268,63 @@ describe('ReactCSSTransitionGroup', function() {
 
     var leavingNode = ReactDOM.findDOMNode(a).childNodes[0];
     expect(CSSCore.hasClass(leavingNode, 'custom-leaving')).toBe(true);
+  });
+
+  it('should clear transition timeouts when unmounted', () => {
+    class Component extends React.Component {
+      render() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            transitionEnterTimeout={500}>
+            {this.props.children}
+          </ReactCSSTransitionGroup>
+        );
+      }
+    }
+
+    ReactDOM.render(<Component/>, container);
+    ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
+
+    ReactDOM.unmountComponentAtNode(container);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
+  });
+
+  it('should handle unmounted elements properly', () => {
+    class Child extends React.Component {
+      render() {
+        if (!this.props.show) {
+          return null;
+        }
+        return <div />;
+      }
+    }
+
+    class Component extends React.Component {
+      state = { showChild: true };
+
+      componentDidMount() {
+        this.setState({ showChild: false });
+      }
+
+      render() {
+        return (
+          <ReactCSSTransitionGroup
+            transitionName="yolo"
+            transitionAppear={true}
+            transitionAppearTimeout={0}
+          >
+            <Child show={this.state.showChild} />
+          </ReactCSSTransitionGroup>
+        );
+      }
+    }
+
+    ReactDOM.render(<Component/>, container);
+
+    // Testing that no exception is thrown here, as the timeout has been cleared.
+    jest.runAllTimers();
   });
 });

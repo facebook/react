@@ -1,12 +1,10 @@
-# [React](https://facebook.github.io/react/) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=master)](https://travis-ci.org/facebook/react) [![npm version](https://badge.fury.io/js/react.svg)](http://badge.fury.io/js/react)
+# [React](https://facebook.github.io/react/) &middot; [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![Build Status](https://img.shields.io/travis/facebook/react/master.svg?style=flat)](https://travis-ci.org/facebook/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md#pull-requests)
 
 React is a JavaScript library for building user interfaces.
 
-* **Just the UI:** Lots of people use React as the V in MVC. Since React makes no assumptions about the rest of your technology stack, it's easy to try it out on a small feature in an existing project.
-* **Virtual DOM:** React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using [React Native](https://facebook.github.io/react-native/).
-* **Data flow:** React implements one-way reactive data flow which reduces boilerplate and is easier to reason about than traditional data binding.
-
-**NEW**! Check out our newest project [React Native](https://github.com/facebook/react-native), which uses React and JavaScript to create native mobile apps.
+* **Declarative:** React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes. Declarative views make your code more predictable, simpler to understand, and easier to debug.
+* **Component-Based:** Build encapsulated components that manage their own state, then compose them to make complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep state out of the DOM.
+* **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using Node and power mobile apps using [React Native](https://facebook.github.io/react-native/).
 
 [Learn how to use React in your own project](https://facebook.github.io/react/docs/getting-started.html).
 
@@ -14,14 +12,14 @@ React is a JavaScript library for building user interfaces.
 
 We have several examples [on the website](https://facebook.github.io/react/). Here is the first one to get you started:
 
-```js
-var HelloMessage = React.createClass({
-  render: function() {
+```jsx
+class HelloMessage extends React.Component {
+  render() {
     return <div>Hello {this.props.name}</div>;
   }
-});
+}
 
-React.render(
+ReactDOM.render(
   <HelloMessage name="John" />,
   document.getElementById('container')
 );
@@ -33,16 +31,16 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://faceboo
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from the CDN (also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](http://www.jsdelivr.com/#!react)):
+The fastest way to get started is to serve JavaScript from a CDN. We're using [unpkg](https://unpkg.com/) below but React is also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react):
 
 ```html
 <!-- The core React library -->
-<script src="https://fb.me/react-0.13.3.js"></script>
-<!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="https://fb.me/JSXTransformer-0.13.3.js"></script>
+<script src="https://unpkg.com/react@15.4.0/dist/react.js"></script>
+<!-- The ReactDOM Library -->
+<script src="https://unpkg.com/react-dom@15.4.0/dist/react-dom.js"></script>
 ```
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-0.13.3.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.4.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
@@ -50,47 +48,27 @@ If you'd like to use [bower](http://bower.io), it's as easy as:
 bower install --save react
 ```
 
-## Contribute
-
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, then keep reading. If you're not interested in helping right now that's ok too. :) Any feedback you have about using React would be greatly appreciated.
-
-### Building Your Copy of React
-
-The process to build `react.js` is built entirely on top of node.js, using many libraries you may already be familiar with.
-
-#### Prerequisites
-
-* You have `node` installed at v0.10.0+ (it might work at lower versions, we just haven't tested) and `npm` at v2.0.0+.
-* You are familiar with `npm` and know whether or not you need to use `sudo` when installing packages globally.
-* You are familiar with `git`.
-
-#### Build
-
-Once you have the repository cloned, building a copy of `react.js` is really easy.
+And it's just as easy with [npm](http://npmjs.com):
 
 ```sh
-# grunt-cli is needed by grunt; you might have this installed already
-npm install -g grunt-cli
-npm install
-grunt build
+npm i --save react
 ```
 
-At this point, you should now have a `build/` directory populated with everything you need to use React. The examples should all work.
+## Contributing
 
-### Grunt
+The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
 
-We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete listing. The important ones to know:
+### [Code of Conduct](https://code.facebook.com/codeofconduct)
 
-```sh
-# Build and run tests with PhantomJS
-grunt test
-# Build and run tests in your browser
-grunt test --debug
-# Lint the code with ESLint
-grunt lint
-# Wipe out build directory
-grunt clean
-```
+Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
+
+### Contributing Guide
+
+Read our [contributing guide](https://facebook.github.io/react/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
+
+### Good First Bug
+
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 ### License
 
@@ -99,10 +77,6 @@ React is [BSD licensed](./LICENSE). We also provide an additional [patent grant]
 React documentation is [Creative Commons licensed](./LICENSE-docs).
 
 Examples provided in this repository and in the documentation are [separately licensed](./LICENSE-examples).
-
-### More…
-
-There's only so much we can cram in here. To read more about the community and guidelines for submitting pull requests, please read the [Contributing document](CONTRIBUTING.md).
 
 ## Troubleshooting
 See the [Troubleshooting Guide](https://github.com/facebook/react/wiki/Troubleshooting)

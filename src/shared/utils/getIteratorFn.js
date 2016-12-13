@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule getIteratorFn
- * @typechecks static-only
+ * @flow
  */
 
 'use strict';
@@ -30,7 +30,7 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
  * @param {?object} maybeIterable
  * @return {?function}
  */
-function getIteratorFn(maybeIterable) {
+function getIteratorFn(maybeIterable: ?any): ?(() => ?Iterator<*>) {
   var iteratorFn = maybeIterable && (
     (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
     maybeIterable[FAUX_ITERATOR_SYMBOL]

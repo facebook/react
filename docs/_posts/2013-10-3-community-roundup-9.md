@@ -29,7 +29,7 @@ We organized a React hackathon last week-end in the Facebook Seattle office. 50 
 
 The video will be available soon on the [JSConf EU website](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html), but in the meantime, here are Pete's slides:
 
-<figure><iframe src="https://www.slideshare.net/slideshow/embed_code/26589373" width="550" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
+<figure><iframe src="https://www.slideshare.net/slideshow/embed_code/26589373" width="100%" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
 
 
 ## Pump - Clojure bindings for React
@@ -56,7 +56,7 @@ The video will be available soon on the [JSConf EU website](http://2013.jsconf.e
 
 [Todd Kennedy](http://blog.selfassembled.org/) working at [Cond&eacute; Nast](http://www.condenast.com/) implemented a wrapper on-top of [JSHint](http://www.jshint.com/) that first converts JSX files to JS.
 
-> A wrapper around JSHint to allow linting of files containg JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.
+> A wrapper around JSHint to allow linting of files containing JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.
 >
 > ```
 npm install -g jsxhint
@@ -96,4 +96,3 @@ var Table = React.createClass({
 > You see that React components are defined using a regular JS object. Some properties and methods of the object such as render() have special meanings, the rest is upforgrabs.
 >
 > [Read the full article...](http://www.phpied.com/reactive-table/)
-

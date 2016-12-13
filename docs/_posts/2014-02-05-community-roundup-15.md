@@ -34,7 +34,7 @@ React's one-way data-binding naturally lends itself to a functional programming 
 
 Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):
 
-<iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
 
 
 

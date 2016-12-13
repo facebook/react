@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -21,24 +21,23 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
-var reactComponentExpect;
+describe('ReactContextValidator', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
-describe('ReactContextValidator', function() {
-  beforeEach(function() {
-    require('mock-modules').dumpCache();
+  beforeEach(() => {
+    jest.resetModuleRegistry();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
-
-    spyOn(console, 'error');
   });
 
   // TODO: This behavior creates a runtime dependency on propTypes. We should
   // ensure that this is not required for ES6 classes with Flow.
 
-  it('should filter out context not in contextTypes', function() {
+  it('should filter out context not in contextTypes', () => {
     var Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string,
@@ -63,19 +62,18 @@ describe('ReactContextValidator', function() {
       },
 
       render: function() {
-        return <Component />;
+        return <Component ref="child" />;
       },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
-    reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
+    expect(instance.refs.child.context).toEqual({foo: 'abc'});
   });
 
-  it('should filter context properly in callbacks', function() {
+  it('should pass next context to lifecycles', () => {
     var actualComponentWillReceiveProps;
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
-    var actualComponentDidUpdate;
 
     var Parent = React.createClass({
       childContextTypes: {
@@ -114,6 +112,45 @@ describe('ReactContextValidator', function() {
         actualComponentWillUpdate = nextContext;
       },
 
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Parent foo="abc" />, container);
+    ReactDOM.render(<Parent foo="def" />, container);
+    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
+    expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
+    expect(actualComponentWillUpdate).toEqual({foo: 'def'});
+  });
+
+  it('should pass previous context to lifecycles', () => {
+    var actualComponentDidUpdate;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string.isRequired,
+        bar: React.PropTypes.string.isRequired,
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.foo,
+          bar: 'bar',
+        };
+      },
+
+      render: function() {
+        return <Component />;
+      },
+    });
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: React.PropTypes.string,
+      },
+
       componentDidUpdate: function(prevProps, prevState, prevContext) {
         actualComponentDidUpdate = prevContext;
       },
@@ -126,13 +163,12 @@ describe('ReactContextValidator', function() {
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
-    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
-    expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
-    expect(actualComponentWillUpdate).toEqual({foo: 'def'});
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
   });
 
-  it('should check context types', function() {
+  it('should check context types', () => {
+    spyOn(console, 'error');
+
     var Component = React.createClass({
       contextTypes: {
         foo: React.PropTypes.string.isRequired,
@@ -145,10 +181,12 @@ describe('ReactContextValidator', function() {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed Context Types: ' +
-      'Required context `foo` was not specified in `Component`.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Failed context type: ' +
+      'The context `foo` is marked as required in `Component`, but its value ' +
+      'is `undefined`.\n' +
+      '    in Component (at **)'
     );
 
     var ComponentInFooStringContext = React.createClass({
@@ -172,7 +210,7 @@ describe('ReactContextValidator', function() {
     );
 
     // Previous call should not error
-    expect(console.error.argsForCall.length).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
 
     var ComponentInFooNumberContext = React.createClass({
       childContextTypes: {
@@ -192,16 +230,19 @@ describe('ReactContextValidator', function() {
 
     ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
 
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[1][0]).toBe(
-      'Warning: Failed Context Types: ' +
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      'Warning: Failed context type: ' +
       'Invalid context `foo` of type `number` supplied ' +
-      'to `Component`, expected `string`.' +
-      ' Check the render method of `ComponentInFooNumberContext`.'
+      'to `Component`, expected `string`.\n' +
+      '    in Component (at **)\n' +
+      '    in ComponentInFooNumberContext (at **)'
     );
   });
 
-  it('should check child context types', function() {
+  it('should check child context types', () => {
+    spyOn(console, 'error');
+
     var Component = React.createClass({
       childContextTypes: {
         foo: React.PropTypes.string.isRequired,
@@ -218,19 +259,22 @@ describe('ReactContextValidator', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-    expect(console.error.argsForCall.length).toBe(1);
-    expect(console.error.argsForCall[0][0]).toBe(
-      'Warning: Failed Context Types: ' +
-      'Required child context `foo` was not specified in `Component`.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Failed childContext type: ' +
+      'The child context `foo` is marked as required in `Component`, but its ' +
+      'value is `undefined`.\n' +
+      '    in Component (at **)'
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
 
-    expect(console.error.argsForCall.length).toBe(2);
-    expect(console.error.argsForCall[1][0]).toBe(
-      'Warning: Failed Context Types: ' +
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      'Warning: Failed childContext type: ' +
       'Invalid child context `foo` of type `number` ' +
-      'supplied to `Component`, expected `string`.'
+      'supplied to `Component`, expected `string`.\n' +
+      '    in Component (at **)'
     );
 
     ReactTestUtils.renderIntoDocument(
@@ -242,7 +286,7 @@ describe('ReactContextValidator', function() {
     );
 
     // Previous calls should not log errors
-    expect(console.error.argsForCall.length).toBe(2);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
 });

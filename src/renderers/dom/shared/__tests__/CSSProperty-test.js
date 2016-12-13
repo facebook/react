@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, Facebook, Inc.
+ * Copyright 2014-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -11,19 +11,21 @@
 
 'use strict';
 
-describe('CSSProperty', function() {
+describe('CSSProperty', () => {
   var CSSProperty;
 
-  beforeEach(function() {
-    require('mock-modules').dumpCache();
+  beforeEach(() => {
+    jest.resetModuleRegistry();
     CSSProperty = require('CSSProperty');
   });
 
-  it('should generate browser prefixes for its `isUnitlessNumber`', function() {
+  it('should generate browser prefixes for its `isUnitlessNumber`', () => {
     expect(CSSProperty.isUnitlessNumber.lineClamp).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.WebkitLineClamp).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.MozFlexGrow).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
   });
 
 });

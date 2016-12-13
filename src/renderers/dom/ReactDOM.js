@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,33 +13,30 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMTextComponent = require('ReactDOMTextComponent');
-var ReactDefaultInjection = require('ReactDefaultInjection');
-var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMInjection = require('ReactDOMInjection');
+var ReactDOMStackInjection = require('ReactDOMStackInjection');
+var ReactGenericBatching = require('ReactGenericBatching');
 var ReactMount = require('ReactMount');
-var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
-var ReactUpdates = require('ReactUpdates');
 var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
+var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var warning = require('warning');
 
-ReactDefaultInjection.inject();
+ReactDOMInjection.inject();
+ReactDOMStackInjection.inject();
 
-var render = ReactPerf.measure('React', 'render', ReactMount.render);
-
-var React = {
+var ReactDOM = {
   findDOMNode: findDOMNode,
-  render: render,
+  render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   version: ReactVersion,
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates: ReactUpdates.batchedUpdates,
-  unstable_renderSubtreeIntoContainer: renderSubtreeIntoContainer,
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_renderSubtreeIntoContainer: ReactMount.renderSubtreeIntoContainer,
   /* eslint-enable camelcase */
 };
 
@@ -49,11 +46,23 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-    CurrentOwner: ReactCurrentOwner,
-    InstanceHandles: ReactInstanceHandles,
+    ComponentTree: {
+      getClosestInstanceFromNode:
+        ReactDOMComponentTree.getClosestInstanceFromNode,
+      getNodeFromInstance: function(inst) {
+        // inst is an internal instance (but could be a composite)
+        if (inst._renderedComponent) {
+          inst = getHostComponentFromComposite(inst);
+        }
+        if (inst) {
+          return ReactDOMComponentTree.getNodeFromInstance(inst);
+        } else {
+          return null;
+        }
+      },
+    },
     Mount: ReactMount,
     Reconciler: ReactReconciler,
-    TextComponent: ReactDOMTextComponent,
   });
 }
 
@@ -67,12 +76,26 @@ if (__DEV__) {
       if ((navigator.userAgent.indexOf('Chrome') > -1 &&
           navigator.userAgent.indexOf('Edge') === -1) ||
           navigator.userAgent.indexOf('Firefox') > -1) {
+        // Firefox does not have the issue with devtools loaded over file://
+        var showFileUrlMessage = window.location.protocol.indexOf('http') === -1 &&
+          navigator.userAgent.indexOf('Firefox') === -1;
         console.debug(
-          'Download the React DevTools for a better development experience: ' +
+          'Download the React DevTools ' +
+          (showFileUrlMessage ? 'and use an HTTP server (instead of a file: URL) ' : '') +
+          'for a better development experience: ' +
           'https://fb.me/react-devtools'
         );
       }
     }
+
+    var testFunc = function testFn() {};
+    warning(
+      (testFunc.name || testFunc.toString()).indexOf('testFn') !== -1,
+      'It looks like you\'re using a minified copy of the development build ' +
+      'of React. When deploying React apps to production, make sure to use ' +
+      'the production build which skips development warnings and is faster. ' +
+      'See https://fb.me/react-minification for more details.'
+    );
 
     // If we're in IE8, check to see if we are in compatibility mode and provide
     // information on preventing compatibility mode
@@ -96,18 +119,14 @@ if (__DEV__) {
       Date.now,
       Function.prototype.bind,
       Object.keys,
-      String.prototype.split,
       String.prototype.trim,
-
-      // shams
-      Object.create,
-      Object.freeze,
     ];
 
     for (var i = 0; i < expectedFeatures.length; i++) {
       if (!expectedFeatures[i]) {
-        console.error(
-          'One or more ES5 shim/shams expected by React are not available: ' +
+        warning(
+          false,
+          'One or more ES5 shims expected by React are not available: ' +
           'https://fb.me/react-warning-polyfills'
         );
         break;
@@ -116,4 +135,15 @@ if (__DEV__) {
   }
 }
 
-module.exports = React;
+if (__DEV__) {
+  var ReactInstrumentation = require('ReactInstrumentation');
+  var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
+
+  ReactInstrumentation.debugTool.addHook(ReactDOMUnknownPropertyHook);
+  ReactInstrumentation.debugTool.addHook(ReactDOMNullInputValuePropHook);
+  ReactInstrumentation.debugTool.addHook(ReactDOMInvalidARIAHook);
+}
+
+module.exports = ReactDOM;

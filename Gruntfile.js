@@ -1,13 +1,16 @@
 'use strict';
 
-var assign = require('object-assign');
 var path = require('path');
+
+var GULP_EXE = 'gulp';
+if (process.platform === 'win32') {
+  GULP_EXE += '.cmd';
+}
 
 module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    jsx: require('./grunt/config/jsx'),
     browserify: require('./grunt/config/browserify'),
     npm: require('./grunt/config/npm'),
     clean: [
@@ -17,20 +20,19 @@ module.exports = function(grunt) {
       './examples/shared/*.js',
       '.module-cache',
     ],
-    /*eslint-disable camelcase */
-    compare_size: require('./grunt/config/compare_size'),
-    /*eslint-enable camelcase */
+    'compare_size': require('./grunt/config/compare_size'),
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
   function spawnGulp(args, opts, done) {
+
     grunt.util.spawn({
       // This could be more flexible (require.resolve & lookup bin in package)
       // but if it breaks we'll fix it then.
-      cmd: path.join('node_modules', '.bin', 'gulp'),
+      cmd: path.join('node_modules', '.bin', GULP_EXE),
       args: args,
-      opts: assign({stdio: 'inherit'}, opts),
+      opts: Object.assign({stdio: 'inherit'}, opts),
     }, function(err, result, code) {
       if (err) {
         grunt.fail.fatal('Something went wrong running gulp: ', result);
@@ -50,17 +52,22 @@ module.exports = function(grunt) {
       grunt.loadNpmTasks(npmTaskName);
     });
 
-  grunt.registerTask('eslint', require('./grunt/tasks/eslint'));
+  grunt.registerTask('eslint', function() {
+    // Use gulp here.
+    spawnGulp(['eslint'], null, this.async());
+  });
 
   grunt.registerTask('lint', ['eslint']);
+
+  grunt.registerTask('flow', function() {
+    // Use gulp here.
+    spawnGulp(['flow'], null, this.async());
+  });
 
   grunt.registerTask('delete-build-modules', function() {
     // Use gulp here.
     spawnGulp(['react:clean'], null, this.async());
   });
-
-  // Register jsx:normal and :release tasks.
-  grunt.registerMultiTask('jsx', require('./grunt/tasks/jsx'));
 
   // Our own browserify-based tasks to build a single JS file build.
   grunt.registerMultiTask('browserify', require('./grunt/tasks/browserify'));
@@ -72,13 +79,29 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
 
   var npmReactDOMTasks = require('./grunt/tasks/npm-react-dom');
+  grunt.registerTask('npm-react-dom:release', npmReactDOMTasks.buildRelease);
   grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
+
+  var npmReactNativeTasks = require('./grunt/tasks/npm-react-native');
+  grunt.registerTask('npm-react-native:release', npmReactNativeTasks.buildRelease);
+  grunt.registerTask('npm-react-native:pack', npmReactNativeTasks.packRelease);
 
   var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
   grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
   grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
 
-  grunt.registerTask('version-check', require('./grunt/tasks/version-check'));
+  var npmReactTestRendererTasks = require('./grunt/tasks/npm-react-test');
+  grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
+
+  var npmReactNoopRendererTasks = require('./grunt/tasks/npm-react-noop');
+  grunt.registerTask('npm-react-noop:release', npmReactNoopRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-noop:pack', npmReactNoopRendererTasks.packRelease);
+
+  grunt.registerTask('version-check', function() {
+    // Use gulp here.
+    spawnGulp(['version-check'], null, this.async());
+  });
 
   grunt.registerTask('build:basic', [
     'build-modules',
@@ -98,17 +121,48 @@ module.exports = function(grunt) {
     'build-modules',
     'browserify:addonsMin',
   ]);
+  grunt.registerTask('build:dom', [
+    'build-modules',
+    'version-check',
+    'browserify:dom',
+  ]);
+  grunt.registerTask('build:dom-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domMin',
+  ]);
+  grunt.registerTask('build:dom-server', [
+    'build-modules',
+    'version-check',
+    'browserify:domServer',
+  ]);
+  grunt.registerTask('build:dom-server-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domServerMin',
+  ]);
+  grunt.registerTask('build:dom-fiber', [
+    'build-modules',
+    'version-check',
+    'browserify:domFiber',
+  ]);
+  grunt.registerTask('build:dom-fiber-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domFiberMin',
+  ]);
   grunt.registerTask('build:npm-react', [
     'version-check',
     'build-modules',
     'npm-react:release',
   ]);
-  grunt.registerTask('build:react-dom', require('./grunt/tasks/react-dom'));
 
-  grunt.registerTask('test', ['jest']);
+  var jestTasks = require('./grunt/tasks/jest');
+  grunt.registerTask('jest:normal', jestTasks.normal);
+  grunt.registerTask('jest:coverage', jestTasks.coverage);
+
+  grunt.registerTask('test', ['jest:normal']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
-
-  grunt.registerTask('jest', require('./grunt/tasks/jest'));
 
   // Optimized build task that does all of our builds. The subtasks will be run
   // in order so we can take advantage of that and only run build-modules once.
@@ -120,12 +174,24 @@ module.exports = function(grunt) {
     'browserify:addons',
     'browserify:min',
     'browserify:addonsMin',
-    'build:react-dom',
+    'browserify:dom',
+    'browserify:domMin',
+    'browserify:domServer',
+    'browserify:domServerMin',
+    'browserify:domFiber',
+    'browserify:domFiberMin',
     'npm-react:release',
     'npm-react:pack',
+    'npm-react-dom:release',
     'npm-react-dom:pack',
+    'npm-react-native:release',
+    'npm-react-native:pack',
     'npm-react-addons:release',
     'npm-react-addons:pack',
+    'npm-react-test:release',
+    'npm-react-test:pack',
+    'npm-react-noop:release',
+    'npm-react-noop:pack',
     'compare_size',
   ]);
 

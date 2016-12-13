@@ -21,8 +21,8 @@ var CodeMirrorEditor = React.createClass({
   componentDidMount: function() {
     if (IS_MOBILE) return;
 
-    this.editor = CodeMirror.fromTextArea(React.findDOMNode(this.refs.editor), {
-      mode: 'javascript',
+    this.editor = CodeMirror.fromTextArea(this.refs.editor, {
+      mode: 'jsx',
       lineNumbers: this.props.lineNumbers,
       lineWrapping: true,
       smartIndent: false,  // javascript mode does bad things with jsx indents
@@ -90,8 +90,14 @@ var ReactPlayground = React.createClass({
 
   getDefaultProps: function() {
     return {
-      transformer: function(code) {
-        return JSXTransformer.transform(code).code;
+      transformer: function(code, options) {
+        var presets = ['react'];
+        if (!options || !options.skipES2015Transform) {
+          presets.push('es2015');
+        }
+        return Babel.transform(code, {
+          presets
+        }).code;
       },
       editorTabTitle: 'Live JSX Editor',
       showCompiledJSTab: true,
@@ -115,15 +121,15 @@ var ReactPlayground = React.createClass({
     this.setState({mode: mode});
   },
 
-  compileCode: function() {
-    return this.props.transformer(this.state.code);
+  compileCode: function(options) {
+    return this.props.transformer(this.state.code, options);
   },
 
   render: function() {
     var isJS = this.state.mode === this.MODES.JS;
     var compiledCode = '';
     try {
-      compiledCode = this.compileCode();
+      compiledCode = this.compileCode({skipES2015Transform: true});
     } catch (err) {}
 
     var JSContent =
@@ -194,25 +200,27 @@ var ReactPlayground = React.createClass({
   },
 
   executeCode: function() {
-    var mountNode = React.findDOMNode(this.refs.mount);
+    var mountNode = this.refs.mount;
 
     try {
-      React.unmountComponentAtNode(mountNode);
+      ReactDOM.unmountComponentAtNode(mountNode);
     } catch (e) { }
 
     try {
-      var compiledCode = this.compileCode();
+      var compiledCode;
       if (this.props.renderCode) {
-        React.render(
+        compiledCode = this.compileCode({skipES2015Transform: true});
+        ReactDOM.render(
           <CodeMirrorEditor codeText={compiledCode} readOnly={true} />,
           mountNode
         );
       } else {
+        compiledCode = this.compileCode({skipES2015Transform: false});
         eval(compiledCode);
       }
     } catch (err) {
       this.setTimeout(function() {
-        React.render(
+        ReactDOM.render(
           <div className="playgroundError">{err.toString()}</div>,
           mountNode
         );

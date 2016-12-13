@@ -5,7 +5,7 @@ var grunt = require('grunt');
 
 var src = 'packages/react/';
 var dest = 'build/packages/react/';
-var modSrc = 'build/modules/';
+var modSrc = 'build/node_modules/react/lib';
 var lib = dest + 'lib/';
 var dist = dest + 'dist/';
 var distFiles = [
@@ -13,8 +13,6 @@ var distFiles = [
   'react.min.js',
   'react-with-addons.js',
   'react-with-addons.min.js',
-  'react-dom.js',
-  'react-dom.min.js',
 ];
 
 function buildRelease() {
@@ -30,7 +28,8 @@ function buildRelease() {
   // and build/modules/**/* to build/react-core/lib
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
-    grunt.file.expandMapping('**/*', lib, {cwd: modSrc})
+    grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
+    grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
   );
   mappings.forEach(function(mapping) {
     var mappingSrc = mapping.src[0];

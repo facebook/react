@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,24 +13,30 @@
 
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
+var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOM = require('ReactDOM');
-var ReactElement = require('ReactElement');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactMount = require('ReactMount');
-var ReactUpdates = require('ReactUpdates');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
+var ReactShallowRenderer = require('ReactShallowRenderer');
 
-var assign = require('Object.assign');
-var emptyObject = require('emptyObject');
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
+var {
+  ClassComponent,
+  FunctionalComponent,
+  HostComponent,
+  HostText,
+} = ReactTypeOfWork;
 
 function Event(suffix) {}
 
@@ -38,12 +44,13 @@ function Event(suffix) {}
  * @class ReactTestUtils
  */
 
-function findAllInRenderedTreeInternal(inst, test) {
+function findAllInRenderedStackTreeInternal(inst, test) {
   if (!inst || !inst.getPublicInstance) {
     return [];
   }
   var publicInst = inst.getPublicInstance();
   var ret = test(publicInst) ? [publicInst] : [];
+  var currentElement = inst._currentElement;
   if (ReactTestUtils.isDOMComponent(publicInst)) {
     var renderedChildren = inst._renderedChildren;
     var key;
@@ -52,56 +59,101 @@ function findAllInRenderedTreeInternal(inst, test) {
         continue;
       }
       ret = ret.concat(
-        findAllInRenderedTreeInternal(
+        findAllInRenderedStackTreeInternal(
           renderedChildren[key],
           test
         )
       );
     }
-  } else if (ReactTestUtils.isCompositeComponent(publicInst)) {
+  } else if (
+    React.isValidElement(currentElement) &&
+    typeof currentElement.type === 'function'
+  ) {
     ret = ret.concat(
-      findAllInRenderedTreeInternal(inst._renderedComponent, test)
+      findAllInRenderedStackTreeInternal(inst._renderedComponent, test)
     );
   }
   return ret;
 }
 
+function findAllInRenderedFiberTreeInternal(fiber, test) {
+  if (!fiber) {
+    return [];
+  }
+  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
+    fiber
+  );
+  if (!currentParent) {
+    return [];
+  }
+  let node = currentParent;
+  let ret = [];
+  while (true) {
+    if (node.tag === HostComponent || node.tag === HostText ||
+        node.tag === ClassComponent || node.tag === FunctionalComponent) {
+      var publicInst = node.stateNode;
+      if (test(publicInst)) {
+        ret.push(publicInst);
+      }
+    }
+    if (node.child) {
+      // TODO: Coroutines need to visit the stateNode.
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return ret;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return ret;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+}
+
 /**
+ * Utilities for making it easy to test React components.
+ *
+ * See https://facebook.github.io/react/docs/test-utils.html
+ *
  * Todo: Support the entire DOM.scry query syntax. For now, these simple
  * utilities will suffice for testing purposes.
  * @lends ReactTestUtils
  */
 var ReactTestUtils = {
-  renderIntoDocument: function(instance) {
+  renderIntoDocument: function(element) {
     var div = document.createElement('div');
     // None of our tests actually require attaching the container to the
     // DOM, and doing so creates a mess that we rely on test isolation to
     // clean up, so we're going to stop honoring the name of this method
     // (and probably rename it eventually) if no problems arise.
     // document.documentElement.appendChild(div);
-    return ReactDOM.render(instance, div);
+    return ReactDOM.render(element, div);
   },
 
   isElement: function(element) {
-    return ReactElement.isValidElement(element);
+    return React.isValidElement(element);
   },
 
   isElementOfType: function(inst, convenienceConstructor) {
     return (
-      ReactElement.isValidElement(inst) &&
+      React.isValidElement(inst) &&
       inst.type === convenienceConstructor
     );
   },
 
   isDOMComponent: function(inst) {
-    // TODO: Fix this heuristic. It's just here because composites can currently
-    // pretend to be DOM components.
     return !!(inst && inst.nodeType === 1 && inst.tagName);
   },
 
   isDOMComponentElement: function(inst) {
     return !!(inst &&
-              ReactElement.isValidElement(inst) &&
+              React.isValidElement(inst) &&
               !!inst.tagName);
   },
 
@@ -111,7 +163,8 @@ var ReactTestUtils = {
       // this returns when we have DOM nodes as refs directly
       return false;
     }
-    return typeof inst.render === 'function' &&
+    return inst != null &&
+           typeof inst.render === 'function' &&
            typeof inst.setState === 'function';
   },
 
@@ -120,15 +173,16 @@ var ReactTestUtils = {
       return false;
     }
     var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance
-      ._currentElement
-      .type;
+    var constructor = typeof internalInstance.tag === 'number' ?
+      internalInstance.type : // Fiber reconciler
+      internalInstance._currentElement.type; // Stack reconciler
 
     return (constructor === type);
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElement: function(inst) {
-    if (!ReactElement.isValidElement(inst)) {
+    if (!React.isValidElement(inst)) {
       return false;
     }
     // We check the prototype of the type that will get mounted, not the
@@ -140,6 +194,7 @@ var ReactTestUtils = {
     );
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElementWithType: function(inst, type) {
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance
@@ -150,6 +205,7 @@ var ReactTestUtils = {
              (constructor === type));
   },
 
+  // TODO: deprecate? It's undocumented and unused.
   getRenderedChildOfCompositeComponent: function(inst) {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;
@@ -166,7 +222,12 @@ var ReactTestUtils = {
       ReactTestUtils.isCompositeComponent(inst),
       'findAllInRenderedTree(...): instance must be a composite component'
     );
-    return findAllInRenderedTreeInternal(ReactInstanceMap.get(inst), test);
+    var internalInstance = ReactInstanceMap.get(inst);
+    if (internalInstance && typeof internalInstance.tag === 'number') {
+      return findAllInRenderedFiberTreeInternal(internalInstance, test);
+    } else {
+      return findAllInRenderedStackTreeInternal(internalInstance, test);
+    }
   },
 
   /**
@@ -174,14 +235,27 @@ var ReactTestUtils = {
    * components with the class name matching `className`.
    * @return {array} an array of all the matches.
    */
-  scryRenderedDOMComponentsWithClass: function(root, className) {
+  scryRenderedDOMComponentsWithClass: function(root, classNames) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var instClassName = ReactDOM.findDOMNode(inst).className;
-        return (
-          instClassName &&
-          (('' + instClassName).split(/\s+/)).indexOf(className) !== -1
-        );
+        var className = inst.className;
+        if (typeof className !== 'string') {
+          // SVG, probably.
+          className = inst.getAttribute('class') || '';
+        }
+        var classList = className.split(/\s+/);
+
+        if (!Array.isArray(classNames)) {
+          invariant(
+            classNames !== undefined,
+            'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
+            'className as a second argument.'
+          );
+          classNames = classNames.split(/\s+/);
+        }
+        return classNames.every(function(name) {
+          return classList.indexOf(name) !== -1;
+        });
       }
       return false;
     });
@@ -197,8 +271,9 @@ var ReactTestUtils = {
     var all =
       ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match ' +
-        '(found: ' + all.length + ') for class:' + className
+      throw new Error(
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for class:' + className
       );
     }
     return all[0];
@@ -226,7 +301,10 @@ var ReactTestUtils = {
   findRenderedDOMComponentWithTag: function(root, tagName) {
     var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match for tag:' + tagName);
+      throw new Error(
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for tag:' + tagName
+      );
     }
     return all[0];
   },
@@ -258,8 +336,8 @@ var ReactTestUtils = {
     );
     if (all.length !== 1) {
       throw new Error(
-        'Did not find exactly one match for componentType:' + componentType +
-        ' (found ' + all.length + ')'
+        'Did not find exactly one match (found: ' + all.length + ') ' +
+        'for componentType:' + componentType
       );
     }
     return all[0];
@@ -342,100 +420,6 @@ var ReactTestUtils = {
 };
 
 /**
- * @class ReactShallowRenderer
- */
-var ReactShallowRenderer = function() {
-  this._instance = null;
-};
-
-ReactShallowRenderer.prototype.getRenderOutput = function() {
-  return (
-    (this._instance && this._instance._renderedComponent &&
-     this._instance._renderedComponent._renderedOutput)
-    || null
-  );
-};
-
-var NoopInternalComponent = function(element) {
-  this._renderedOutput = element;
-  this._currentElement = element;
-};
-
-NoopInternalComponent.prototype = {
-
-  mountComponent: function() {
-  },
-
-  receiveComponent: function(element) {
-    this._renderedOutput = element;
-    this._currentElement = element;
-  },
-
-  unmountComponent: function() {
-  },
-
-};
-
-var ShallowComponentWrapper = function() { };
-assign(
-  ShallowComponentWrapper.prototype,
-  ReactCompositeComponent.Mixin, {
-    _instantiateReactComponent: function(element) {
-      return new NoopInternalComponent(element);
-    },
-    _replaceNodeWithMarkupByID: function() {},
-    _renderValidatedComponent:
-      ReactCompositeComponent.Mixin
-        ._renderValidatedComponentWithoutOwnerOrContext,
-  }
-);
-
-ReactShallowRenderer.prototype.render = function(element, context) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'ReactShallowRenderer render(): Invalid component element.%s',
-    typeof element === 'function' ?
-      ' Instead of passing a component class, make sure to instantiate ' +
-      'it by passing it to React.createElement.' :
-      ''
-  );
-  invariant(
-    typeof element.type !== 'string',
-    'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
-    'components, not primitives (%s). Instead of calling `.render(el)` and ' +
-    'inspecting the rendered output, look at `el.props` directly instead.',
-    element.type
-  );
-
-  if (!context) {
-    context = emptyObject;
-  }
-  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(false);
-  this._render(element, transaction, context);
-  ReactUpdates.ReactReconcileTransaction.release(transaction);
-};
-
-ReactShallowRenderer.prototype.unmount = function() {
-  if (this._instance) {
-    this._instance.unmountComponent();
-  }
-};
-
-ReactShallowRenderer.prototype._render = function(element, transaction, context) {
-  if (this._instance) {
-    this._instance.receiveComponent(element, transaction, context);
-  } else {
-    var rootID = ReactInstanceHandles.createReactRootID();
-    var instance = new ShallowComponentWrapper(element.type);
-    instance.construct(element);
-
-    instance.mountComponent(rootID, transaction, context);
-
-    this._instance = instance;
-  }
-};
-
-/**
  * Exports:
  *
  * - `ReactTestUtils.Simulate.click(Element/ReactDOMComponent)`
@@ -446,6 +430,11 @@ ReactShallowRenderer.prototype._render = function(element, transaction, context)
 function makeSimulator(eventType) {
   return function(domComponentOrNode, eventData) {
     var node;
+    invariant(
+      !React.isValidElement(domComponentOrNode),
+      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
+      'TestUtils.Simulate will not work if you are using shallow rendering.'
+    );
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       node = findDOMNode(domComponentOrNode);
     } else if (domComponentOrNode.tagName) {
@@ -453,19 +442,26 @@ function makeSimulator(eventType) {
     }
 
     var dispatchConfig =
-      ReactBrowserEventEmitter.eventNameDispatchConfigs[eventType];
+      EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
+    fakeNativeEvent.type = eventType.toLowerCase();
+
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
+    var targetInst = ReactDOMComponentTree.getInstanceFromNode(node);
     var event = new SyntheticEvent(
       dispatchConfig,
-      ReactMount.getID(node),
+      targetInst,
       fakeNativeEvent,
       node
     );
-    assign(event, eventData);
+
+    // Since we aren't using pooling, always persist the event. This will make
+    // sure it's marked and won't warn when setting additional properties.
+    event.persist();
+    Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
       EventPropagators.accumulateTwoPhaseDispatches(event);
@@ -473,9 +469,13 @@ function makeSimulator(eventType) {
       EventPropagators.accumulateDirectDispatches(event);
     }
 
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
+      // Normally extractEvent enqueues a state restore, but we'll just always
+      // do that since we we're by-passing it here.
+      ReactControlledComponent.enqueueStateRestore(node);
+
       EventPluginHub.enqueueEvents(event);
-      EventPluginHub.processEventQueue();
+      EventPluginHub.processEventQueue(true);
     });
   };
 }
@@ -484,7 +484,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
   var eventType;
-  for (eventType in ReactBrowserEventEmitter.eventNameDispatchConfigs) {
+  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
@@ -526,7 +526,7 @@ buildSimulators();
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
     var fakeNativeEvent = new Event(eventType);
-    assign(fakeNativeEvent, nativeEventData);
+    Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
         eventType,

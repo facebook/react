@@ -11,12 +11,12 @@ var BOWER_FILES = [
   'react-with-addons.min.js',
   'react-dom.js',
   'react-dom.min.js',
+  'react-dom-server.js',
+  'react-dom-server.min.js',
 ];
-var GH_PAGES_PATH = '../react-gh-pages/';
-var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];
 
 var EXAMPLES_PATH = 'examples/';
-var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*'];
+var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*', EXAMPLES_PATH + '**/.babelrc'];
 
 var STARTER_PATH = 'starter/';
 var STARTER_GLOB = [STARTER_PATH + '/**/*.*'];
@@ -75,12 +75,6 @@ function setup() {
     return false;
   }
 
-  if (!grunt.file.exists(GH_PAGES_PATH)) {
-    grunt.log.error('Make sure you have the react gh-pages branch checked ' +
-                    'out at ../react-gh-pages.');
-    return false;
-  }
-
   VERSION = grunt.config.data.pkg.version;
   VERSION_STRING = 'v' + VERSION;
 }
@@ -104,27 +98,9 @@ function bower() {
 }
 
 function docs() {
-  var done = this.async();
-
   grunt.file.copy('build/react-' + VERSION + '.zip', 'docs/downloads/react-' + VERSION + '.zip');
   grunt.file.copy('build/react.js', 'docs/js/react.js');
-
-  var files = grunt.file.expand(GH_PAGES_GLOB);
-  files.forEach(function(file) {
-    grunt.file.delete(file, {force: true});
-  });
-
-  // Build the docs with `rake release`, which will compile the CSS & JS, then
-  // build jekyll into GH_PAGES_PATH
-  var rakeOpts = {
-    cmd: 'rake',
-    args: ['release'],
-    opts: {cwd: 'docs'},
-  };
-  grunt.util.spawn(rakeOpts, function() {
-    // Commit the repo. We don't really care about tagging this.
-    _gitCommitAndTag(GH_PAGES_PATH, VERSION_STRING, null, done);
-  });
+  grunt.file.copy('build/react-dom.js', 'docs/js/react-dom.js');
 }
 
 function msg() {
@@ -132,9 +108,12 @@ function msg() {
   grunt.log.subhead('Release *almost* complete...');
   var steps = [
     'Still todo:',
-    '* put files on CDN',
-    '* push changes to git repositories',
-    '* publish npm module (`npm publish .`)',
+    '* add starter pack (`git add -f docs/downloads/react-version.zip`) and commit',
+    '* push this repo with tags',
+    '* push bower repo with tags',
+    '* run `npm-publish` in rrm',
+    '* create release on github',
+    '* for a major release, update docs branch variable in Travis CI',
     '* announce it on FB/Twitter/mailing list',
   ];
   steps.forEach(function(ln) {

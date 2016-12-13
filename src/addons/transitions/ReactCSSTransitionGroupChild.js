@@ -1,29 +1,24 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @typechecks
  * @providesModule ReactCSSTransitionGroupChild
  */
 
 'use strict';
 
 var React = require('React');
-var ReactDOM = require('ReactDOM');
+var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
 
-// We don't remove the element from the DOM until we receive an animationend or
-// transitionend event. If the user screws up and forgets to add an animation
-// their node will be stuck in the DOM forever, so we detect if an animation
-// does not start and if it doesn't, we just call the end listener immediately.
 var TICK = 17;
 
 var ReactCSSTransitionGroupChild = React.createClass({
@@ -59,7 +54,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   transition: function(animationType, finishCallback, userSpecifiedDelay) {
-    var node = ReactDOM.findDOMNode(this);
+    var node = ReactAddonsDOMDependencies.getReactDOM().findDOMNode(this);
 
     if (!node) {
       if (finishCallback) {
@@ -94,44 +89,54 @@ var ReactCSSTransitionGroupChild = React.createClass({
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.
-    this.queueClass(activeClassName);
+    this.queueClassAndNode(activeClassName, node);
 
     // If the user specified a timeout delay.
     if (userSpecifiedDelay) {
       // Clean-up the animation after the specified delay
       timeout = setTimeout(endListener, userSpecifiedDelay);
+      this.transitionTimeouts.push(timeout);
     } else {
       // DEPRECATED: this listener will be removed in a future version of react
       ReactTransitionEvents.addEndEventListener(node, endListener);
     }
   },
 
-  queueClass: function(className) {
-    this.classNameQueue.push(className);
+  queueClassAndNode: function(className, node) {
+    this.classNameAndNodeQueue.push({
+      className: className,
+      node: node,
+    });
 
     if (!this.timeout) {
-      this.timeout = setTimeout(this.flushClassNameQueue, TICK);
+      this.timeout = setTimeout(this.flushClassNameAndNodeQueue, TICK);
     }
   },
 
-  flushClassNameQueue: function() {
+  flushClassNameAndNodeQueue: function() {
     if (this.isMounted()) {
-      this.classNameQueue.forEach(
-        CSSCore.addClass.bind(CSSCore, ReactDOM.findDOMNode(this))
-      );
+      this.classNameAndNodeQueue.forEach(function(obj) {
+        CSSCore.addClass(obj.node, obj.className);
+      });
     }
-    this.classNameQueue.length = 0;
+    this.classNameAndNodeQueue.length = 0;
     this.timeout = null;
   },
 
   componentWillMount: function() {
-    this.classNameQueue = [];
+    this.classNameAndNodeQueue = [];
+    this.transitionTimeouts = [];
   },
 
   componentWillUnmount: function() {
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
+    this.transitionTimeouts.forEach(function(timeout) {
+      clearTimeout(timeout);
+    });
+
+    this.classNameAndNodeQueue.length = 0;
   },
 
   componentWillAppear: function(done) {

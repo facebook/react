@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -7,9 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactCurrentOwner
+ * @flow
  */
 
 'use strict';
+
+import type { ReactInstance } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
 
 /**
  * Keeps track of the current owner.
@@ -23,7 +27,7 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: null,
+  current: (null: null | ReactInstance | Fiber),
 
 };
 

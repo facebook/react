@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,8 +13,6 @@
 
 'use strict';
 
-var assign = require('Object.assign');
-var keyOf = require('keyOf');
 var invariant = require('invariant');
 var hasOwnProperty = {}.hasOwnProperty;
 
@@ -22,18 +20,18 @@ function shallowCopy(x) {
   if (Array.isArray(x)) {
     return x.concat();
   } else if (x && typeof x === 'object') {
-    return assign(new x.constructor(), x);
+    return Object.assign(new x.constructor(), x);
   } else {
     return x;
   }
 }
 
-var COMMAND_PUSH = keyOf({$push: null});
-var COMMAND_UNSHIFT = keyOf({$unshift: null});
-var COMMAND_SPLICE = keyOf({$splice: null});
-var COMMAND_SET = keyOf({$set: null});
-var COMMAND_MERGE = keyOf({$merge: null});
-var COMMAND_APPLY = keyOf({$apply: null});
+var COMMAND_PUSH = '$push';
+var COMMAND_UNSHIFT = '$unshift';
+var COMMAND_SPLICE = '$splice';
+var COMMAND_SET = '$set';
+var COMMAND_MERGE = '$merge';
+var COMMAND_APPLY = '$apply';
 
 var ALL_COMMANDS_LIST = [
   COMMAND_PUSH,
@@ -67,6 +65,10 @@ function invariantArrayCase(value, spec, command) {
   );
 }
 
+/**
+ * Returns a updated shallow copy of an object without mutating the original.
+ * See https://facebook.github.io/react/docs/update.html for details.
+ */
 function update(value, spec) {
   invariant(
     typeof spec === 'object',
@@ -102,7 +104,7 @@ function update(value, spec) {
       COMMAND_MERGE,
       nextValue
     );
-    assign(nextValue, spec[COMMAND_MERGE]);
+    Object.assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {

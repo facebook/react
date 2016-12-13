@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -20,7 +20,7 @@ var warning = require('warning');
 
 /**
  * We used to allow keyed objects to serve as a collection of ReactElements,
- * or nested sets. This allowed us a way to explicitly key a set a fragment of
+ * or nested sets. This allowed us a way to explicitly key a set or fragment of
  * components. This is now being replaced with an opaque data structure.
  * The upgrade path is to call React.addons.createFragment({ key: value }) to
  * create a keyed fragment. The resulting data structure is an array.
@@ -31,8 +31,11 @@ var numericPropertyRegex = /^\d+$/;
 var warnedAboutNumeric = false;
 
 var ReactFragment = {
-  // Wrap a keyed object in an opaque proxy that warns you if you access any
-  // of its properties.
+  /**
+   * Wrap a keyed object in an opaque proxy that warns you if you access any
+   * of its properties.
+   * See https://facebook.github.io/react/docs/create-fragment.html
+   */
   create: function(object) {
     if (typeof object !== 'object' || !object || Array.isArray(object)) {
       warning(

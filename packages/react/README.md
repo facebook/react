@@ -14,10 +14,10 @@ To use React in production mode, set the environment variable `NODE_ENV` to `pro
 ```js
 var React = require('react');
 
-// Addons can be accessed individually from the "addons" directory.
-var createFragment = require('react/addons/createFragment');
-var immutabilityHelpers = require('react/addons/update');
-var CSSTransitionGroup = require('react/addons/CSSTransitionGroup');
+// Addons are in separate packages:
+var createFragment = require('react-addons-create-fragment');
+var immutabilityHelpers = require('react-addons-update');
+var CSSTransitionGroup = require('react-addons-css-transition-group');
 ```
 
 For a complete list of addons visit the [addons documentation page](https://facebook.github.io/react/docs/addons.html).

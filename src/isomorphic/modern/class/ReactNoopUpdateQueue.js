@@ -1,5 +1,5 @@
 /**
- * Copyright 2015, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -13,8 +13,9 @@
 
 var warning = require('warning');
 
-function warnTDZ(publicInstance, callerName) {
+function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
+    var constructor = publicInstance.constructor;
     warning(
       false,
       '%s(...): Can only update a mounted or mounting component. ' +
@@ -22,7 +23,7 @@ function warnTDZ(publicInstance, callerName) {
       'This is a no-op. Please check the code for the %s component.',
       callerName,
       callerName,
-      publicInstance.constructor && publicInstance.constructor.displayName || ''
+      constructor && (constructor.displayName || constructor.name) || 'ReactClass'
     );
   }
 }
@@ -67,7 +68,7 @@ var ReactNoopUpdateQueue = {
    * @internal
    */
   enqueueForceUpdate: function(publicInstance) {
-    warnTDZ(publicInstance, 'forceUpdate');
+    warnNoop(publicInstance, 'forceUpdate');
   },
 
   /**
@@ -82,7 +83,7 @@ var ReactNoopUpdateQueue = {
    * @internal
    */
   enqueueReplaceState: function(publicInstance, completeState) {
-    warnTDZ(publicInstance, 'replaceState');
+    warnNoop(publicInstance, 'replaceState');
   },
 
   /**
@@ -96,31 +97,8 @@ var ReactNoopUpdateQueue = {
    * @internal
    */
   enqueueSetState: function(publicInstance, partialState) {
-    warnTDZ(publicInstance, 'setState');
+    warnNoop(publicInstance, 'setState');
   },
-
-  /**
-   * Sets a subset of the props.
-   *
-   * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} partialProps Subset of the next props.
-   * @internal
-   */
-  enqueueSetProps: function(publicInstance, partialProps) {
-    warnTDZ(publicInstance, 'setProps');
-  },
-
-  /**
-   * Replaces all of the props.
-   *
-   * @param {ReactClass} publicInstance The instance that should rerender.
-   * @param {object} props New props.
-   * @internal
-   */
-  enqueueReplaceProps: function(publicInstance, props) {
-    warnTDZ(publicInstance, 'replaceProps');
-  },
-
 };
 
 module.exports = ReactNoopUpdateQueue;
