@@ -286,23 +286,18 @@ var ReactNoop = {
       log(
         '  '.repeat(depth + 1) + 'QUEUED UPDATES'
       );
-      let firstPendingUpdate;
-      if (updateQueue.lastProgressedUpdate) {
-        firstPendingUpdate = updateQueue.lastProgressedUpdate.next;
-      } else {
-        firstPendingUpdate = updateQueue.first;
-      }
-      if (!firstPendingUpdate) {
+      const firstUpdate = updateQueue.first;
+      if (!firstUpdate) {
         return;
       }
 
       log(
         '  '.repeat(depth + 1) + '~',
-        firstPendingUpdate && firstPendingUpdate.partialState,
-        firstPendingUpdate.callback ? 'with callback' : ''
+        firstUpdate && firstUpdate.partialState,
+        firstUpdate.callback ? 'with callback' : ''
       );
       var next;
-      while (next = firstPendingUpdate.next) {
+      while (next = firstUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,

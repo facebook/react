@@ -211,7 +211,7 @@ describe('ReactIncrementalUpdates', () => {
     // Because e is a replaceState, d gets dropped.
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('efg')]);
-    // Ensure that update d is not progressed before being replaced.
+    // Ensure that updater function d is never called.
     expect(progressedUpdates).toEqual(['e', 'f', 'g']);
   });
 

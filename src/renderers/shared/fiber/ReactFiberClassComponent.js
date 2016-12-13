@@ -19,7 +19,6 @@ var {
   getMaskedContext,
 } = require('ReactFiberContext');
 var {
-  ensureUpdateQueue,
   addUpdate,
   addReplaceUpdate,
   addForceUpdate,
@@ -46,30 +45,26 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = ensureUpdateQueue(fiber);
       const priorityLevel = getPriorityContext();
-      addUpdate(queue, partialState, priorityLevel);
+      addUpdate(fiber, partialState, priorityLevel);
       scheduleUpdateAtPriority(fiber, priorityLevel);
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = ensureUpdateQueue(fiber);
       const priorityLevel = getPriorityContext();
-      addReplaceUpdate(queue, state, priorityLevel);
+      addReplaceUpdate(fiber, state, priorityLevel);
       scheduleUpdateAtPriority(fiber, priorityLevel);
     },
     enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = ensureUpdateQueue(fiber);
       const priorityLevel = getPriorityContext();
-      addForceUpdate(queue, priorityLevel);
+      addForceUpdate(fiber, priorityLevel);
       scheduleUpdateAtPriority(fiber, priorityLevel);
     },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const queue = ensureUpdateQueue(fiber);
       const priorityLevel = getPriorityContext();
-      addCallback(queue, callback, priorityLevel);
+      addCallback(fiber, callback, priorityLevel);
       scheduleUpdateAtPriority(fiber, priorityLevel);
     },
   };

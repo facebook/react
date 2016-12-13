@@ -25,7 +25,7 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var { commitUpdateQueue } = require('ReactFiberUpdateQueue');
+var { commitCallbacks } = require('ReactFiberUpdateQueue');
 
 var {
   Placement,
@@ -417,16 +417,17 @@ module.exports = function<T, P, I, TI, C, CX>(
           }
           attachRef(current, finishedWork, instance);
         }
-        if (finishedWork.updateQueue) {
-          commitUpdateQueue(finishedWork, finishedWork.updateQueue, instance);
+        const callbackList = finishedWork.callbackList;
+        if (callbackList) {
+          commitCallbacks(finishedWork, callbackList, instance);
         }
         return;
       }
       case HostRoot: {
-        const updateQueue = finishedWork.updateQueue;
-        if (updateQueue) {
+        const callbackList = finishedWork.callbackList;
+        if (callbackList) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitUpdateQueue(finishedWork, updateQueue, instance);
+          commitCallbacks(finishedWork, callbackList, instance);
         }
         return;
       }

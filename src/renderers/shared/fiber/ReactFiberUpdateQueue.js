@@ -41,29 +41,19 @@ type Update = {
   next: Update | null,
 };
 
-// Linked-list of updates
+// Singly linked-list of updates. When an update is scheduled, it is added to
+// the queue of the current fiber and the work-in-progress fiber. The two queues
+// are separate but they share a persistent structure.
 //
-// - A "pending" update is one that has been scheduled but not yet used
-// for reconciliation.
-// - A "progressed" update is an update that was used for reconciliation, but
-// has not yet been flushed.
+// During reconciliation, updates are removed from the work-in-progress fiber,
+// but they remain on the current fiber. That ensures that if a work-in-progress
+// is aborted, the aborted updates are recovered by cloning from current.
 //
-// The queue maintains a pointer to the last progressed update in the list.
-// Updates that come after that pointer are pending. The pointer is set to the
-// end of the list during reconciliation.
+// The work-in-progress queue is always a subset of the current queue.
 //
-// Pending updates are sorted by priority then insertion. Progressed updates
-// are sorted by the order in which they were applied during reconciliation,
-// which may not be by priority: if a component bails out before the updates are
-// committed, in the next render, the progressed updates are applied in the same
-// order that they were previously, even if a higher priority update comes in.
-//
-// Once a progressed update is flushed/committed, it's removed from the queue.
+// When the tree is committed, the work-in-progress becomes the current.
 export type UpdateQueue = {
   first: Update | null,
-  // A pointer to the last progressed update in the queue. This may be null
-  // even in a non-empty queue, if all the updates are pending.
-  lastProgressedUpdate: Update | null,
   last: Update | null,
 };
 
@@ -84,98 +74,64 @@ function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
   return a - b;
 }
 
-function getFirstPendingUpdate(queue : UpdateQueue) : Update | null {
-  if (queue.lastProgressedUpdate) {
-    return queue.lastProgressedUpdate.next;
-  }
-  return queue.first;
-}
-
-function getFirstProgressedUpdate(queue : UpdateQueue) : Update | null {
-  if (queue.lastProgressedUpdate) {
-    return queue.first;
-  }
-  return null;
-}
-
 function hasPendingUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : boolean {
-  const firstPendingUpdate = getFirstPendingUpdate(queue);
-  if (!firstPendingUpdate) {
+  if (!queue.first) {
     return false;
   }
   // Return true if the first pending update has greater or equal priority.
-  return comparePriority(firstPendingUpdate.priorityLevel, priorityLevel) <= 0;
+  return comparePriority(queue.first.priorityLevel, priorityLevel) <= 0;
 }
 exports.hasPendingUpdate = hasPendingUpdate;
 
-// Ensures that a fiber and its alternate have an update queue, creating a new
-// one if needed. Returns the new or existing queue.
+// Ensures that a fiber has an update queue, creating a new one if needed.
+// Returns the new or existing queue.
 function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
   if (fiber.updateQueue) {
     // We already have an update queue.
     return fiber.updateQueue;
   }
-  const queue : UpdateQueue = {
+  const queue = {
     first: null,
-    lastProgressedUpdate: null,
     last: null,
   };
   fiber.updateQueue = queue;
-  // Add queue to the alternate as well, because when we call setState we don't
-  // know which tree is current.
-  if (fiber.alternate) {
-    fiber.alternate.updateQueue = queue;
-  }
   return queue;
 }
-exports.ensureUpdateQueue = ensureUpdateQueue;
 
-function insertUpdateIntoQueue(queue : UpdateQueue, update : Update) : void {
-  // Add a pending update to the end of the queue.
-  if (!queue.last) {
-    // The queue is empty.
-    queue.first = queue.last = update;
-    return;
+// Clones an update queue from a source fiber onto its alternate.
+function cloneUpdateQueue(alt : Fiber, fiber : Fiber) : UpdateQueue | null {
+  const sourceQueue = fiber.updateQueue;
+  if (!sourceQueue) {
+    // The source fiber does not have an update queue.
+    alt.updateQueue = null;
+    return null;
   }
-  // The queue is not empty. Insert the new update into the queue, sorted by
-  // priority then insertion order.
-  const firstPendingUpdate = getFirstPendingUpdate(queue);
-  if (!firstPendingUpdate && queue.last) {
-    // This is the first pending update. Add it to the end of the queue.
-    queue.last.next = update;
-    queue.last = update;
-    return;
-  }
+  // If the alternate already has a queue, reuse the previous object.
+  const altQueue = alt.updateQueue || {};
+  altQueue.first = sourceQueue.first;
+  altQueue.last = sourceQueue.last;
+  alt.updateQueue = altQueue;
+  return altQueue;
+}
+exports.cloneUpdateQueue = cloneUpdateQueue;
 
-  const priorityLevel = update.priorityLevel;
-  const lastPendingUpdate = queue.last;
+function cloneUpdate(update : Update) : Update {
+  return {
+    priorityLevel: update.priorityLevel,
+    partialState: update.partialState,
+    callback: update.callback,
+    isReplace: update.isReplace,
+    isForced: update.isForced,
+    next: null,
+  };
+}
 
-  let insertAfter;
-  let insertBefore;
-  if (queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0) {
-    // Fast path where the incoming update has equal or lower priority than the
-    // last pending update. We can just append it to the end of the queue.
-    insertAfter = lastPendingUpdate;
-    insertBefore = null;
-  } else {
-    // Loop through the pending updates to find the first one with lower
-    // priority than the incoming update. Insert the incoming update before
-    // that one.
-    insertAfter = queue.lastProgressedUpdate;
-    insertBefore = firstPendingUpdate;
-    while (
-      insertBefore &&
-      comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0
-    ) {
-      insertAfter = insertBefore;
-      insertBefore = insertBefore.next;
-    }
-  }
-
+function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
   if (insertAfter) {
     insertAfter.next = update;
   } else {
     // This is the first item in the queue.
+    update.next = queue.first;
     queue.first = update;
   }
 
@@ -187,12 +143,84 @@ function insertUpdateIntoQueue(queue : UpdateQueue, update : Update) : void {
   }
 }
 
+// The work-in-progress queue is a subset of the current queue (if it exists).
+// We need to insert the incoming update into both lists. However, it's possible
+// that the correct position in one list will be different from the position in
+// the other. Consider the following case:
+//
+//     Current:             3-5-6
+//     Work-in-progress:        6
+//
+// Then we receive an update with priority 4 and insert it into each list:
+//
+//     Current:             3-4-5-6
+//     Work-in-progress:        4-6
+//
+// In the current queue, the new update's `next` pointer points to the update
+// with priority 5. But in the work-in-progress queue, the pointer points to the
+// update with priority 6. Because these two queues share the same persistent
+// data structure, this won't do. (This can only happen when the incoming update
+// has higher priority than all the updates in the work-in-progress queue.)
+//
+// To solve this, in the case where the incoming update needs to be inserted
+// into two different positions, we'll make a clone of the update and insert
+// each copy into a separate queue. This forks the list while maintaining a
+// persistent stucture, because the update that is added to the work-in-progress
+// is always added to the front of the list.
+//
+// However, if incoming update is inserted into the same position of both lists,
+// we shouldn't make a copy.
+function insertUpdate(fiber : Fiber, update : Update) : void {
+  const queue1 = ensureUpdateQueue(fiber);
+  const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
+
+  const priorityLevel = update.priorityLevel;
+
+  // TODO: Fast path where last item in the queue has greater or equal priority.
+
+  let insertAfter1 = null;
+  let insertBefore1 = queue1.first;
+  while (insertBefore1 && comparePriority(insertBefore1.priorityLevel, priorityLevel) <= 0) {
+    insertAfter1 = insertBefore1;
+    insertBefore1 = insertBefore1.next;
+  }
+  const update1 = update;
+
+  let insertAfter2 = null;
+  let insertBefore2 = null;
+  let update2 = null;
+  if (queue2) {
+    insertBefore2 = queue2.first;
+    while (insertBefore2 && comparePriority(insertBefore2.priorityLevel, priorityLevel) <= 0) {
+      insertAfter2 = insertBefore2;
+      insertBefore2 = insertBefore2.next;
+    }
+
+    if (insertBefore1 === insertBefore2) {
+      // The update is inserted into the same position of both lists. There's no
+      // need to clone the update.
+      update2 = update1;
+    } else {
+      // The update is inserted into two separate positions. Make a clone of the
+      // update and insert it twice. One or the other will be dropped the next
+      // time we commit.
+      update2 = cloneUpdate(update1);
+    }
+  }
+
+  // Now we're ready to insert the updates into their queues.
+  insertUpdateIntoQueue(queue1, update1, insertAfter1, insertBefore1);
+  if (queue2 && update2) {
+    insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
+  }
+}
+
 function addUpdate(
-  queue : UpdateQueue,
+  fiber : Fiber,
   partialState : PartialState<any, any> | null,
   priorityLevel : PriorityLevel
 ) : void {
-  const update : Update = {
+  const update = {
     priorityLevel,
     partialState,
     callback: null,
@@ -200,16 +228,16 @@ function addUpdate(
     isForced: false,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update);
+  insertUpdate(fiber, update);
 }
 exports.addUpdate = addUpdate;
 
 function addReplaceUpdate(
-  queue : UpdateQueue,
+  fiber : Fiber,
   state : any | null,
   priorityLevel : PriorityLevel
 ) : void {
-  const update : Update = {
+  const update = {
     priorityLevel,
     partialState: state,
     callback: null,
@@ -217,29 +245,12 @@ function addReplaceUpdate(
     isForced: false,
     next: null,
   };
-  // Add a pending update to the end of the queue.
-  if (!queue.last) {
-    // The queue is empty.
-    queue.first = queue.last = update;
-    return;
-  }
-  // The queue is not empty. Insert the new update into the queue, sorted by
-  // priority then insertion order. Since this is a replace, drop all pending
-  // updates with equal priority. We can't drop updates with higher priority,
-  // because they might be flushed in an earlier commit. We'll drop them during
-  // the commit phase if necessary.
-  const firstPendingUpdate = getFirstPendingUpdate(queue);
-  if (!firstPendingUpdate && queue.last) {
-    // This is the first pending update. Add it to the end of the queue.
-    queue.last.next = update;
-    queue.last = update;
-    return;
-  }
 
-  // Find the last pending update with equal priority.
-  let replaceAfter = queue.lastProgressedUpdate;
-  let replaceBefore = firstPendingUpdate;
-  if (replaceBefore) {
+  // Drop all updates with equal priority
+  let queue = ensureUpdateQueue(fiber);
+  for (let i = 0; queue && i < 2; i++) {
+    let replaceAfter = null;
+    let replaceBefore = queue.first;
     let comparison = Infinity;
     while (replaceBefore &&
            (comparison = comparePriority(replaceBefore.priorityLevel, priorityLevel)) <= 0) {
@@ -248,26 +259,30 @@ function addReplaceUpdate(
       }
       replaceBefore = replaceBefore.next;
     }
+
+    if (replaceAfter) {
+      replaceAfter.next = replaceBefore;
+    } else {
+      queue.first = replaceBefore;
+    }
+
+    if (!replaceBefore) {
+      queue.last = replaceAfter;
+    }
+
+    if (fiber.alternate) {
+      queue = ensureUpdateQueue(fiber.alternate);
+    } else {
+      queue = null;
+    }
   }
 
-  if (replaceAfter) {
-    replaceAfter.next = update;
-  } else {
-    // This is the first item in the queue.
-    queue.first = update;
-  }
-
-  if (replaceBefore) {
-    update.next = replaceBefore;
-  } else {
-    // This is the last item in the queue.
-    queue.last = update;
-  }
+  insertUpdate(fiber, update);
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
-function addForceUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : void {
-  const update : Update = {
+function addForceUpdate(fiber : Fiber, priorityLevel : PriorityLevel) : void {
+  const update = {
     priorityLevel,
     partialState: null,
     callback: null,
@@ -275,23 +290,13 @@ function addForceUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : vo
     isForced: true,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update);
+  insertUpdate(fiber, update);
 }
 exports.addForceUpdate = addForceUpdate;
 
 
-function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : PriorityLevel) : void {
-  if (getFirstPendingUpdate(queue) &&
-      queue.last &&
-      (queue.last.priorityLevel === priorityLevel) &&
-      !queue.last.callback) {
-    // If pending updates already exist, and the last pending update does not
-    // have a callback, and the priority levels are equal, we can add the
-    // incoming callback to that update to avoid an extra allocation.
-    queue.last.callback = callback;
-    return;
-  }
-
+function addCallback(fiber : Fiber, callback: Callback, priorityLevel : PriorityLevel) : void {
+  // TODO: Fast path where last item in queue has equal priority.
   const update : Update = {
     priorityLevel,
     partialState: null,
@@ -300,13 +305,12 @@ function addCallback(queue : UpdateQueue, callback: Callback, priorityLevel : Pr
     isForced: false,
     next: null,
   };
-  insertUpdateIntoQueue(queue, update);
+  insertUpdate(fiber, update);
 }
 exports.addCallback = addCallback;
 
 function getPendingPriority(queue : UpdateQueue) : PriorityLevel {
-  const firstPendingUpdate = getFirstPendingUpdate(queue);
-  return firstPendingUpdate ? firstPendingUpdate.priorityLevel : NoWork;
+  return queue.first ? queue.first.priorityLevel : NoWork;
 }
 exports.getPendingPriority = getPendingPriority;
 
@@ -329,24 +333,14 @@ function beginUpdateQueue(
   priorityLevel : PriorityLevel
 ) : any {
   // Applies updates with matching priority to the previous state to create
-  // a new state object. If an update was used previously but never flushed
-  // due to a bail out, it's used again regardless of its priority.
+  // a new state object.
 
-  // Reset these flags. We'll update them while looping through the queue.
-  workInProgress.effectTag &= ~ForceUpdate;
-  workInProgress.effectTag &= ~CallbackEffect;
-
-  const prevLastProgressedUpdate = queue.lastProgressedUpdate;
   let state = prevState;
   let dontMutatePrevState = true;
   let isEmpty = true;
-  let alreadyProgressedUpdate = Boolean(prevLastProgressedUpdate);
-  let lastProgressedUpdate = null;
-  let update : Update | null = queue.first;
-  while (update && (
-    alreadyProgressedUpdate ||
-    comparePriority(update.priorityLevel, priorityLevel) <= 0
-  )) {
+  let callbackList = null;
+  let update = queue.first;
+  while (update && comparePriority(update.priorityLevel, priorityLevel) <= 0) {
     let partialState;
     if (update.isReplace) {
       // A replace should drop all previous updates in the queue, so
@@ -370,56 +364,52 @@ function beginUpdateQueue(
       workInProgress.effectTag |= ForceUpdate;
     }
     if (update.callback) {
+      if (callbackList && callbackList.last) {
+        callbackList.last.next = update;
+        callbackList.last = update;
+      } else {
+        callbackList = {
+          first: update,
+          last: update,
+        };
+      }
       workInProgress.effectTag |= CallbackEffect;
     }
-    if (update === prevLastProgressedUpdate) {
-      alreadyProgressedUpdate = false;
-    }
-    lastProgressedUpdate = update;
     update = update.next;
   }
 
-
-  // Mark the point in the queue where we stopped applying updates
-  queue.lastProgressedUpdate = lastProgressedUpdate;
-
   if (isEmpty) {
-    // None of the updates contained state. Return the original state object.
-    return prevState;
+    // None of the updates contained state. Use the original state object.
+    state = prevState;
   }
+
+  if (update) {
+    queue.first = update;
+  } else {
+    // Queue is now empty
+    workInProgress.updateQueue = null;
+  }
+
+  workInProgress.callbackList = callbackList;
+  workInProgress.memoizedState = state;
 
   return state;
 }
 exports.beginUpdateQueue = beginUpdateQueue;
 
-function commitUpdateQueue(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
-
-  if (finishedWork.effectTag & CallbackEffect) {
-    // Call the callbacks on all the non-pending updates.
-    let update = getFirstProgressedUpdate(queue);
-    while (update && update !== getFirstPendingUpdate(queue)) {
-      const callback = update.callback;
-      if (typeof callback === 'function') {
-        callback.call(context);
-      }
-      update = update.next;
+function commitCallbacks(finishedWork : Fiber, callbackList : UpdateQueue, context : mixed) {
+  const stopAfter = callbackList.last;
+  let update = callbackList.first;
+  while (update) {
+    const callback = update.callback;
+    if (typeof callback === 'function') {
+      callback.call(context);
     }
-  }
-
-  // Drop all comitted updates, leaving only the pending updates.
-  queue.first = getFirstPendingUpdate(queue);
-  queue.lastProgressedUpdate = null;
-  if (!queue.first) {
-    queue.last = queue.lastProgressedUpdate = null;
-
-    // If the list is now empty, we can remove it from the finished work
-    finishedWork.updateQueue = null;
-    if (finishedWork.alternate) {
-      // Normally we don't mutate the current tree, but we do for updates.
-      // The queue on the work in progress is always the same as the queue
-      // on the current.
-      finishedWork.alternate.updateQueue = null;
+    if (update === stopAfter) {
+      break;
     }
+    update = update.next;
   }
+  finishedWork.callbackList = null;
 }
-exports.commitUpdateQueue = commitUpdateQueue;
+exports.commitCallbacks = commitCallbacks;

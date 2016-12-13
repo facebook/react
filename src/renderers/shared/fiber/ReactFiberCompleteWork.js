@@ -173,7 +173,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       case FunctionalComponent:
         workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
-      case ClassComponent:
+      case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         if (isContextProvider(workInProgress)) {
           popContextProvider();
@@ -182,11 +182,12 @@ module.exports = function<T, P, I, TI, C, CX>(
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null
         // in the case of an update.
-        const { state, props } = workInProgress.stateNode;
-        workInProgress.memoizedState = state;
-        workInProgress.memoizedProps = props;
+        const instance = workInProgress.stateNode;
+        workInProgress.memoizedState = instance.state;
+        workInProgress.memoizedProps = instance.props;
 
         return null;
+      }
       case HostRoot: {
         workInProgress.memoizedProps = workInProgress.pendingProps;
         const fiberRoot = (workInProgress.stateNode : FiberRoot);

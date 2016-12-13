@@ -115,14 +115,12 @@
       SierpinskiTriangle.shouldComponentUpdate = function(oldProps, newProps) {
         var o = oldProps;
         var n = newProps;
-        const res = !(
+        return !(
           o.x === n.x &&
           o.y === n.y &&
           o.s === n.s &&
           o.children === n.children
         );
-        // console.log('shouldComponentUpdate', res);
-        return res;
       };
 
       class ExampleApplication extends React.Component {

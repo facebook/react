@@ -24,7 +24,7 @@ var {
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
-var { ensureUpdateQueue, addCallback } = require('ReactFiberUpdateQueue');
+var { addCallback } = require('ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
@@ -123,13 +123,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         current.alternate.pendingProps = element;
       }
       if (callback) {
-        const queue = ensureUpdateQueue(current);
         const priorityLevel = getPriorityContext();
-        addCallback(queue, callback, priorityLevel);
-        current.updateQueue = queue;
-        if (current.alternate) {
-          current.alternate.updateQueue = queue;
-        }
+        addCallback(current, callback, priorityLevel);
       }
 
       scheduleWork(root);
@@ -159,13 +154,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         current.alternate.pendingProps = element;
       }
       if (callback) {
-        const queue = ensureUpdateQueue(current);
         const priorityLevel = getPriorityContext();
-        addCallback(queue, callback, priorityLevel);
-        current.updateQueue = queue;
-        if (current.alternate) {
-          current.alternate.updateQueue = queue;
-        }
+        addCallback(current, callback, priorityLevel);
       }
 
       scheduleWork(root);
