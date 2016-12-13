@@ -71,8 +71,10 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
-  scheduleUpdateAtPriority : (fiber: Fiber, priorityLevel : PriorityLevel) => void,
-  getPriorityContext : () => PriorityLevel
+  scheduleSetState: (fiber : Fiber, partialState : any) => void,
+  scheduleReplaceState: (fiber : Fiber, state : any) => void,
+  scheduleForceUpdate: (fiber : Fiber) => void,
+  scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
 ) {
 
   const { shouldSetTextContent } = config;
@@ -89,7 +91,12 @@ module.exports = function<T, P, I, TI, C, CX>(
     mountClassInstance,
     resumeMountClassInstance,
     updateClassInstance,
-  } = ReactFiberClassComponent(scheduleUpdateAtPriority, getPriorityContext);
+  } = ReactFiberClassComponent(
+    scheduleSetState,
+    scheduleReplaceState,
+    scheduleForceUpdate,
+    scheduleUpdateCallback
+  );
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.

@@ -56,6 +56,10 @@ var {
 
 var {
   getPendingPriority,
+  addUpdate,
+  addReplaceUpdate,
+  addForceUpdate,
+  addCallback,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -72,8 +76,14 @@ var timeHeuristicForUnitOfWork = 1;
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
-  const { beginWork, beginFailedWork } =
-    ReactFiberBeginWork(config, hostContext, scheduleUpdateAtPriority, getPriorityContext);
+  const { beginWork, beginFailedWork } = ReactFiberBeginWork(
+    config,
+    hostContext,
+    scheduleSetState,
+    scheduleReplaceState,
+    scheduleForceUpdate,
+    scheduleUpdateCallback,
+  );
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
   const {
     commitPlacement,
@@ -94,6 +104,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   let priorityContext : PriorityLevel = useSyncScheduling ?
     SynchronousPriority :
     LowPriority;
+
+  // Keep track of this so we can reset the priority context if an error
+  // is thrown during reconciliation.
+  let priorityContextBeforeReconciliation : PriorityLevel = NoWork;
 
   // Keeps track of whether we're currently in a work loop. Used to batch
   // nested updates.
@@ -143,15 +157,6 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       isDeferredCallbackScheduled = true;
       hostScheduleDeferredCallback(callback);
     }
-  }
-
-  function getPriorityContext() : PriorityLevel {
-    let priorityLevel = priorityContext;
-    // If we're in a batch, downgrade sync priority to task priority
-    if (priorityLevel === SynchronousPriority && isPerformingWork) {
-      priorityLevel = TaskPriority;
-    }
-    return priorityLevel;
   }
 
   function findNextUnitOfWork() {
@@ -481,6 +486,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
+
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -491,7 +497,11 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
+
+    priorityContextBeforeReconciliation = priorityContext;
+    priorityContext = nextPriorityLevel;
     let next = beginWork(current, workInProgress, nextPriorityLevel);
+    priorityContext = priorityContextBeforeReconciliation;
 
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
@@ -513,10 +523,13 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       ReactDebugCurrentFiber.current = null;
     }
 
+
+
     return next;
   }
 
   function performFailedUnitOfWork(workInProgress : Fiber) : ?Fiber {
+
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -527,7 +540,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
+    priorityContextBeforeReconciliation = priorityContext;
+    priorityContext = nextPriorityLevel;
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
+    priorityContext = priorityContextBeforeReconciliation;
 
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
@@ -685,6 +701,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       } catch (error) {
         // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
+
+        // Reset the priority context to its value before reconcilation.
+        priorityContext = priorityContextBeforeReconciliation;
 
         // "Capture" the error by finding the nearest boundary. If there is no
         // error boundary, the nearest host container acts as one. If
@@ -1002,6 +1021,11 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function scheduleUpdateAtPriority(fiber : Fiber, priorityLevel : PriorityLevel) {
+    // If we're in a batch, downgrade sync priority to task priority
+    if (priorityLevel === SynchronousPriority && isPerformingWork) {
+      priorityLevel = TaskPriority;
+    }
+
     let node = fiber;
     let shouldContinue = true;
     while (node && shouldContinue) {
@@ -1038,6 +1062,26 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   function scheduleErrorRecovery(fiber : Fiber) {
     scheduleUpdateAtPriority(fiber, TaskPriority);
+  }
+
+  function scheduleSetState(fiber : Fiber, partialState : any) {
+    addUpdate(fiber, partialState, priorityContext);
+    scheduleUpdateAtPriority(fiber, priorityContext);
+  }
+
+  function scheduleReplaceState(fiber : Fiber, state : any) {
+    addReplaceUpdate(fiber, state, priorityContext);
+    scheduleUpdateAtPriority(fiber, priorityContext);
+  }
+
+  function scheduleForceUpdate(fiber : Fiber) {
+    addForceUpdate(fiber, priorityContext);
+    scheduleUpdateAtPriority(fiber, priorityContext);
+  }
+
+  function scheduleUpdateCallback(fiber : Fiber, callback : Function) {
+    addCallback(fiber, callback, priorityContext);
+    scheduleUpdateAtPriority(fiber, priorityContext);
   }
 
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
@@ -1088,7 +1132,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   return {
     scheduleWork: scheduleWork,
-    getPriorityContext: getPriorityContext,
+    scheduleUpdateCallback: scheduleUpdateCallback,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     syncUpdates: syncUpdates,

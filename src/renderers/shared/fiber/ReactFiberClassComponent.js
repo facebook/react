@@ -19,10 +19,6 @@ var {
   getMaskedContext,
 } = require('ReactFiberContext');
 var {
-  addUpdate,
-  addReplaceUpdate,
-  addForceUpdate,
-  addCallback,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var { hasContextChanged } = require('ReactFiberContext');
@@ -36,8 +32,10 @@ var invariant = require('invariant');
 const isArray = Array.isArray;
 
 module.exports = function(
-  scheduleUpdateAtPriority : (fiber: Fiber, priorityLevel : PriorityLevel) => void,
-  getPriorityContext : () => PriorityLevel,
+  scheduleSetState: (fiber : Fiber, partialState : any) => void,
+  scheduleReplaceState: (fiber : Fiber, state : any) => void,
+  scheduleForceUpdate: (fiber : Fiber) => void,
+  scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
 ) {
 
   // Class component state updater
@@ -45,27 +43,19 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
-      addUpdate(fiber, partialState, priorityLevel);
-      scheduleUpdateAtPriority(fiber, priorityLevel);
+      scheduleSetState(fiber, partialState);
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
-      addReplaceUpdate(fiber, state, priorityLevel);
-      scheduleUpdateAtPriority(fiber, priorityLevel);
+      scheduleReplaceState(fiber, state);
     },
     enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
-      addForceUpdate(fiber, priorityLevel);
-      scheduleUpdateAtPriority(fiber, priorityLevel);
+      scheduleForceUpdate(fiber);
     },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
-      addCallback(fiber, callback, priorityLevel);
-      scheduleUpdateAtPriority(fiber, priorityLevel);
+      scheduleUpdateCallback(fiber, callback);
     },
   };
 

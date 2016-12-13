@@ -246,22 +246,47 @@ describe('ReactIncrementalUpdates', () => {
     ]);
   });
 
+  it('gives setState during reconciliation the same priority as whatever level is currently reconciling', () => {
+    let instance;
+    let ops = [];
+
+    class Foo extends React.Component {
+      state = {};
+      componentWillReceiveProps() {
+        ops.push('componentWillReceiveProps');
+        this.setState({ b: 'b' });
+      }
+      render() {
+        ops.push('render');
+        instance = this;
+        return <span prop={Object.keys(this.state).join('')} />;
+      }
+    }
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+
+    ops = [];
+
+    ReactNoop.performAnimationWork(() => {
+      instance.setState({ a: 'a' });
+      ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
+    });
+    ReactNoop.flush();
+
+    expect(ReactNoop.getChildren()).toEqual([span('ab')]);
+    expect(ops).toEqual([
+      'componentWillReceiveProps',
+      'render',
+    ]);
+  });
+
+
   it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
     spyOn(console, 'error');
     let instance;
     let ops = [];
     class Foo extends React.Component {
       state = {};
-      componentDidMount() {
-        ops.push('componentDidMount');
-        this.setState(function a() {
-          // Force update b to have Task priority
-          ReactNoop.syncUpdates(() => {
-            this.setState({ b: 'b' });
-          });
-          return { a: 'a' };
-        });
-      }
       render() {
         ops.push('render');
         instance = this;
@@ -271,41 +296,25 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expectDev(console.error.calls.count()).toBe(1);
+
+    instance.setState(function a() {
+      ops.push('setState updater');
+      this.setState({ b: 'b' });
+      return { a: 'a' };
+    });
+
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('ab')]);
     expect(ops).toEqual([
       // Initial render
       'render',
-      'componentDidMount',
-      // Updates a and b both have Task priority. Update b is enqueued while
-      // update a is being processed, but it should be inserted into the queue
-      // as if update a is already processed. Then processing continues. Because
-      // they have the same priority, update b is processed in the same batch.
-      // So there should only be a single render below.
+      'setState updater',
+      // Update b is enqueued with the same priority as update a, so it should
+      // be flushed in the same commit.
       'render',
     ]);
 
-    ops = [];
-
-    ReactNoop.performAnimationWork(() => {
-      instance.setState(function c() {
-        // Update d happens during the begin phase, so it has low priority.
-        this.setState({ d: 'd' });
-        return { c: 'c' };
-      });
-    });
-
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('abcd')]);
-    expect(ops).toEqual([
-      // Update c has animation priority. Update d is enqueued while c is being
-      // processed with animation priority. Because d is low priority, it is not
-      // processed until the next render. So there should be two renders below.
-      'render',
-      'render',
-    ]);
-
-    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(1);
     console.error.calls.reset();
   });
 });
