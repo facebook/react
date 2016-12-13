@@ -680,17 +680,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       }
 
       // Before starting any work, check to see if there are any pending
-      // commits from the previous frame. An exception is if we're flushing
-      // Task work in a deferred batch and the pending commit does not
-      // have Task priority.
-      if (pendingCommit) {
-        const isFlushingTaskWorkInDeferredBatch =
-          priorityLevel === TaskPriority &&
-          isPerformingDeferredWork &&
-          pendingCommit.pendingWorkPriority !== TaskPriority;
-        if (!isFlushingTaskWorkInDeferredBatch) {
-          commitAllWork(pendingCommit);
-        }
+      // commits from the previous frame.
+      if (pendingCommit && !deadlineHasExpired) {
+        commitAllWork(pendingCommit);
       }
 
       // Nothing in performWork should be allowed to throw. All unsafe
