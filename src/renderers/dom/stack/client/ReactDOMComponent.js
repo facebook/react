@@ -413,7 +413,6 @@ var globalIdCounter = 1;
  */
 function ReactDOMComponent(element) {
   var tag = element.type;
-  validateDangerousTag(tag);
   this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
@@ -605,6 +604,7 @@ ReactDOMComponent.Mixin = {
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
+      validateDangerousTag(this._tag);
       var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
       var tagContent = this._createContentMarkup(transaction, props, context);
       if (!tagContent && omittedCloseTags[this._tag]) {

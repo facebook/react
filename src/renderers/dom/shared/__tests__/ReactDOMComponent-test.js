@@ -1207,22 +1207,36 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('tag sanitization', () => {
+    it('should throw when an invalid tag name is used server-side', () => {
+      var hackzor = React.createElement('script tag');
+      expect(
+        () => ReactDOMServer.renderToString(hackzor)
+      ).toThrowError(
+        'Invalid tag: script tag'
+      );
+    });
+
+    it('should throw when an attack vector is used server-side', () => {
+      var hackzor = React.createElement('div><img /><div');
+      expect(
+        () => ReactDOMServer.renderToString(hackzor)
+      ).toThrowError(
+        'Invalid tag: div><img /><div'
+      );
+    });
+
     it('should throw when an invalid tag name is used', () => {
       var hackzor = React.createElement('script tag');
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
-      ).toThrowError(
-        'Invalid tag: script tag'
-      );
+      ).toThrow();
     });
 
     it('should throw when an attack vector is used', () => {
       var hackzor = React.createElement('div><img /><div');
       expect(
         () => ReactTestUtils.renderIntoDocument(hackzor)
-      ).toThrowError(
-        'Invalid tag: div><img /><div'
-      );
+      ).toThrow();
     });
   });
 

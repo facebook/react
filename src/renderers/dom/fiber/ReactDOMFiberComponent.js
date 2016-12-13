@@ -279,21 +279,6 @@ var voidElementTags = {
   ...omittedCloseTags,
 };
 
-// We accept any tag to be rendered but since this gets injected into arbitrary
-// HTML, we want to make sure that it's a safe tag.
-// http://www.w3.org/TR/REC-xml/#NT-Name
-
-var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-var validatedTagCache = {};
-var hasOwnProperty = {}.hasOwnProperty;
-
-function validateDangerousTag(tag) {
-  if (!hasOwnProperty.call(validatedTagCache, tag)) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
-    validatedTagCache[tag] = true;
-  }
-}
-
 function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
@@ -488,8 +473,6 @@ var ReactDOMFiberComponent = {
     rootContainerElement : Element,
     parentNamespace : string | null
   ) : Element {
-    validateDangerousTag(type);
-
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var ownerDocument = rootContainerElement.ownerDocument;
