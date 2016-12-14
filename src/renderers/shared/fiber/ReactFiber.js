@@ -279,7 +279,6 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
 
   if (__DEV__) {
     alt._debugID = fiber._debugID;
-    // TODO: reassign this when an element is updated.
     alt._debugSource = fiber._debugSource;
     alt._debugOwner = fiber._debugOwner;
   }

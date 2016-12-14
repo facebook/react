@@ -272,6 +272,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       existing.ref = coerceRef(current, element);
       existing.pendingProps = element.props;
       existing.return = returnFiber;
+      if (__DEV__) {
+        existing._debugSource = element._source;
+        existing._debugOwner = element._owner;
+      }
       return existing;
     }
   }
@@ -870,6 +874,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           existing.ref = coerceRef(child, element);
           existing.pendingProps = element.props;
           existing.return = returnFiber;
+          if (__DEV__) {
+            existing._debugSource = element._source;
+            existing._debugOwner = element._owner;
+          }
           return existing;
         } else {
           deleteRemainingChildren(returnFiber, child);

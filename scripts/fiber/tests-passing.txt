@@ -483,6 +483,7 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * does not warn when the element is directly as children
 * does not warn when the child array contains non-elements
 * should give context for PropType errors in nested components.
+* should update component stack after receiving next element
 * gives a helpful error when passing null, undefined, or boolean
 * should check default prop values
 * should not check the default for explicit null
