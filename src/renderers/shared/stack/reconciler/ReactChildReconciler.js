@@ -11,10 +11,11 @@
 
 'use strict';
 
+var KeyEscapeUtils = require('KeyEscapeUtils');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 
 var instantiateReactComponent = require('instantiateReactComponent');
-var KeyEscapeUtils = require('KeyEscapeUtils');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
@@ -144,7 +145,10 @@ var ReactChildReconciler = {
         );
         nextChildren[name] = prevChild;
       } else {
-        if (prevChild) {
+        if (
+          !ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
+          prevChild
+        ) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
           ReactReconciler.unmountComponent(
             prevChild,
@@ -166,6 +170,17 @@ var ReactChildReconciler = {
           selfDebugID
         );
         mountImages.push(nextChildMountImage);
+        if (
+          ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
+          prevChild
+        ) {
+          removedNodes[name] = ReactReconciler.getHostNode(prevChild);
+          ReactReconciler.unmountComponent(
+            prevChild,
+            false, /* safely */
+            false /* skipLifecycle */
+          );
+        }
       }
     }
     // Unmount children that are no longer present.

@@ -18,11 +18,13 @@ describe('ReactMultiChild', () => {
 
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   describe('reconciliation', () => {
@@ -254,4 +256,78 @@ describe('ReactMultiChild', () => {
     ReactDOM.render(<Letters letters="EHCjpdTUuiybDvhRJwZt" />, container);
     expect(container.textContent).toBe('EHCjpdTUuiybDvhRJwZt');
   });
+
+  it('prepares new children before unmounting old', () => {
+    var log = [];
+
+    class Spy extends React.Component {
+      componentWillMount() {
+        log.push(this.props.name + ' componentWillMount');
+      }
+      render() {
+        log.push(this.props.name + ' render');
+        return <div />;
+      }
+      componentDidMount() {
+        log.push(this.props.name + ' componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push(this.props.name + ' componentWillUnmount');
+      }
+    }
+
+    // These are reference-unequal so they will be swapped even if they have
+    // matching keys
+    var SpyA = (props) => <Spy {...props} />;
+    var SpyB = (props) => <Spy {...props} />;
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <div>
+        <SpyA key="one" name="oneA" />
+        <SpyA key="two" name="twoA" />
+      </div>,
+      container
+    );
+    ReactDOM.render(
+      <div>
+        <SpyB key="one" name="oneB" />
+        <SpyB key="two" name="twoB" />
+      </div>,
+      container
+    );
+
+    expect(log).toEqual([
+      'oneA componentWillMount',
+      'oneA render',
+      'twoA componentWillMount',
+      'twoA render',
+      'oneA componentDidMount',
+      'twoA componentDidMount',
+
+      ...(
+        ReactDOMFeatureFlags.useFiber ?
+          [
+            'oneB componentWillMount',
+            'oneB render',
+            'twoB componentWillMount',
+            'twoB render',
+            'oneA componentWillUnmount',
+            'twoA componentWillUnmount',
+          ] :
+          [
+            'oneB componentWillMount',
+            'oneB render',
+            'oneA componentWillUnmount',
+            'twoB componentWillMount',
+            'twoB render',
+            'twoA componentWillUnmount',
+          ]
+      ),
+
+      'oneB componentDidMount',
+      'twoB componentDidMount',
+    ]);
+  });
+
 });
