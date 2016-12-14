@@ -13,6 +13,13 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  IndeterminateComponent,
+  FunctionalComponent,
+  ClassComponent,
+  HostComponent,
+} = ReactTypeOfWork;
 
 var getComponentName = require('getComponentName');
 var invariant = require('invariant');
@@ -193,17 +200,22 @@ function describeID(id: DebugID): string {
 }
 
 function describeFiber(fiber : Fiber) : string {
-  var owner = fiber._debugOwner;
-  var source = fiber._debugSource;
-  if (owner == null && source == null) {
-    return '';
+  switch (fiber.tag) {
+    case IndeterminateComponent:
+    case FunctionalComponent:
+    case ClassComponent:
+    case HostComponent:
+      var owner = fiber._debugOwner;
+      var source = fiber._debugSource;
+      var name = getComponentName(fiber);
+      var ownerName = null;
+      if (owner) {
+        ownerName = getComponentName(owner);
+      }
+      return describeComponentFrame(name, source, ownerName);
+    default:
+      return '';
   }
-  var name = getComponentName(fiber);
-  var ownerName = null;
-  if (owner) {
-    ownerName = getComponentName(owner);
-  }
-  return describeComponentFrame(name, source, ownerName);
 }
 
 var ReactComponentTreeHook = {
