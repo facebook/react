@@ -121,7 +121,10 @@ class ReactTestComponent {
   }
 
   getHostNode(): void {}
-  unmountComponent(): void {}
+  unmountComponent(safely, skipLifecycle): void {
+    // $FlowFixMe https://github.com/facebook/flow/issues/1805
+    this.unmountChildren(safely, skipLifecycle);
+  }
 }
 
 Object.assign(ReactTestComponent.prototype, ReactMultiChild);

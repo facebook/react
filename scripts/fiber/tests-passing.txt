@@ -1589,6 +1589,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * warns correctly for refs on SFCs
 * allows an optional createNodeMock function
 * supports unmounting when using refs
+* supports unmounting inner instances
 * supports updates when using refs
 * supports error boundaries
 
