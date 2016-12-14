@@ -40,6 +40,14 @@ function setUntrackedValue(elem, value) {
 }
 
 describe('ChangeEventPlugin', () => {
+  beforeEach(() => {
+    ChangeEventPlugin._allowSimulatedPassThrough = false;
+  });
+
+  afterEach(() => {
+    ChangeEventPlugin._allowSimulatedPassThrough = true;
+  });
+
   it('should fire change for checkbox input', () => {
     var called = 0;
 

@@ -21,14 +21,7 @@ describe('ReactDOMInput', () => {
   var ReactDOMFeatureFlags;
   var ReactLink;
   var ReactTestUtils;
-  var inputValueTracking;
 
-  function setUntrackedValue(elem, value) {
-    var tracker = inputValueTracking._getTrackerFromNode(elem);
-    var current = tracker.getValue();
-    elem.value = value;
-    tracker.setValue(current);
-  }
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -38,7 +31,6 @@ describe('ReactDOMInput', () => {
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
-    inputValueTracking = require('inputValueTracking');
     spyOn(console, 'error');
   });
 
@@ -265,7 +257,7 @@ describe('ReactDOMInput', () => {
     var container = document.createElement('div');
     var node = ReactDOM.render(stub, container);
 
-    setUntrackedValue(node, 'giraffe');
+    node.value = 'giraffe';
 
     var fakeNativeEvent = new function() {};
     fakeNativeEvent.target = node;

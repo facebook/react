@@ -1154,7 +1154,7 @@ describe('ReactDOMComponent', () => {
 
       ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.length).toBe(1);
+      expect(tracker.stopTracking.calls.count()).toBe(1);
     });
 
     it('should clean up input textarea tracking', function() {
@@ -1166,7 +1166,7 @@ describe('ReactDOMComponent', () => {
 
       ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.length).toBe(1);
+      expect(tracker.stopTracking.calls.count()).toBe(1);
     });
 
     it('unmounts children before unsetting DOM node info', function() {

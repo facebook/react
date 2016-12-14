@@ -122,8 +122,14 @@ function stopWatchingForChangeEventIE8() {
   activeElementInst = null;
 }
 
-function getInstIfValueChanged(targetInst) {
-  if (inputValueTracking.updateValueIfChanged(targetInst)) {
+function getInstIfValueChanged(targetInst, nativeEvent) {
+  var updated = inputValueTracking.updateValueIfChanged(targetInst);
+  var simulated = (
+    nativeEvent.simulated === true &&
+    ChangeEventPlugin._allowSimulatedPassThrough
+  );
+
+  if (updated || simulated) {
     return targetInst;
   }
 }
@@ -198,7 +204,7 @@ function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== 'value') {
     return;
   }
-  if (getInstIfValueChanged(activeElementInst)) {
+  if (getInstIfValueChanged(activeElementInst, nativeEvent)) {
     manualDispatchChangeEvent(nativeEvent);
   }
 }
@@ -233,7 +239,8 @@ function handleEventsForInputEventPolyfill(
 // For IE8 and IE9.
 function getTargetInstForInputEventPolyfill(
   topLevelType,
-  targetInst
+  targetInst,
+  nativeEvent
 ) {
   if (topLevelType === 'topSelectionChange' ||
       topLevelType === 'topKeyUp' ||
@@ -248,7 +255,7 @@ function getTargetInstForInputEventPolyfill(
     // keystroke if user does a key repeat (it'll be a little delayed: right
     // before the second keystroke). Other input methods (e.g., paste) seem to
     // fire selectionchange normally.
-    return getInstIfValueChanged(activeElementInst);
+    return getInstIfValueChanged(activeElementInst, nativeEvent);
   }
 }
 
@@ -269,23 +276,25 @@ function shouldUseClickEvent(elem) {
 
 function getTargetInstForClickEvent(
   topLevelType,
-  targetInst
+  targetInst,
+  nativeEvent
 ) {
 
   if (topLevelType === 'topClick') {
-    return getInstIfValueChanged(targetInst);
+    return getInstIfValueChanged(targetInst, nativeEvent);
   }
 }
 
 function getTargetInstForInputOrChangeEvent(
   topLevelType,
-  targetInst
+  targetInst,
+  nativeEvent
 ) {
   if (
     topLevelType === 'topInput' ||
     topLevelType === 'topChange'
   ) {
-    return getInstIfValueChanged(targetInst);
+    return getInstIfValueChanged(targetInst, nativeEvent);
   }
 }
 
@@ -303,6 +312,7 @@ var ChangeEventPlugin = {
 
   eventTypes: eventTypes,
 
+  _allowSimulatedPassThrough: true,
   _isInputEventSupported: isInputEventSupported,
 
   extractEvents: function(
@@ -333,7 +343,7 @@ var ChangeEventPlugin = {
     }
 
     if (getTargetInstFunc) {
-      var inst = getTargetInstFunc(topLevelType, targetInst);
+      var inst = getTargetInstFunc(topLevelType, targetInst, nativeEvent);
       if (inst) {
         var event = createAndAccumulateChangeEvent(
           inst,
