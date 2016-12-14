@@ -13,6 +13,7 @@
 
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactTestUtils;
 var ReactUpdates;
 
@@ -20,6 +21,7 @@ describe('ReactUpdates', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
     ReactUpdates = require('ReactUpdates');
   });
@@ -506,6 +508,9 @@ describe('ReactUpdates', () => {
   });
 
   it('should share reconcile transaction across different roots', () => {
+    if (ReactDOMFeatureFlags.useFiber) {
+      return;
+    }
     var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
     spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
 
@@ -539,6 +544,8 @@ describe('ReactUpdates', () => {
     // componentDidUpdate handlers is called, B's DOM should already have been
     // updated.
 
+    var bContainer = document.createElement('div');
+
     var a;
     var b;
 
@@ -553,7 +560,15 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        return <div>A{this.state.x}</div>;
+        var portal = null;
+        // If we're using Fiber, we use Portals instead to achieve this.
+        if (ReactDOMFeatureFlags.useFiber) {
+          portal = ReactDOM.unstable_createPortal(
+            <B ref={n => b = n} />,
+            bContainer
+          );
+        }
+        return <div>A{this.state.x}{portal}</div>;
       }
     }
 
@@ -566,7 +581,9 @@ describe('ReactUpdates', () => {
     }
 
     a = ReactTestUtils.renderIntoDocument(<A />);
-    b = ReactTestUtils.renderIntoDocument(<B />);
+    if (!ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.render(<B ref={n => b = n} />, bContainer);
+    }
 
     ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});
@@ -897,7 +914,6 @@ describe('ReactUpdates', () => {
 
     var component = ReactTestUtils.renderIntoDocument(<A />);
 
-    console.log('xxx', expect().toThrowError);
     expect(() => component.setState({}, 'no')).toThrowError(
       'setState(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
@@ -1076,5 +1092,15 @@ describe('ReactUpdates', () => {
       return 42;
     });
     expect(result).toEqual(42);
+  });
+
+  it('unmounts and remounts a root in the same batch', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<span>a</span>, container);
+    ReactDOM.unstable_batchedUpdates(function() {
+      ReactDOM.unmountComponentAtNode(container);
+      ReactDOM.render(<span>b</span>, container);
+    });
+    expect(container.textContent).toBe('b');
   });
 });

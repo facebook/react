@@ -13,8 +13,9 @@
 'use strict';
 
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
+import type { ReactPortal } from 'ReactPortal';
 
-export type ReactNode = ReactElement<any> | ReactCoroutine | ReactYield | ReactText | ReactFragment;
+export type ReactNode = ReactElement<any> | ReactCoroutine | ReactYield | ReactPortal | ReactText | ReactFragment;
 
 export type ReactFragment = ReactEmpty | Iterable<ReactNode>;
 

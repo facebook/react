@@ -14,9 +14,13 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
-import type { TypeOfWork } from 'ReactTypeOfWork';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
+var {
+  findCurrentUnmaskedContext,
+  isContextProvider,
+  processChildContext,
+} = require('ReactFiberContext');
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
@@ -28,44 +32,47 @@ if (__DEV__) {
 
 var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
 
+var getContextForSubtree = require('getContextForSubtree');
+
 export type Deadline = {
   timeRemaining : () => number
 };
 
-type HostChildNode<I> = { tag: TypeOfWork, output: HostChildren<I>, sibling: any };
+type OpaqueNode = Fiber;
 
-export type HostChildren<I> = null | void | I | HostChildNode<I>;
+export type HostConfig<T, P, I, TI, C, CX> = {
 
-export type HostConfig<T, P, I, TI, C> = {
+  getChildHostContext(parentHostContext : CX | null, type : T) : CX,
 
-  // TODO: We don't currently have a quick way to detect that children didn't
-  // reorder so we host will always need to check the set. We should make a flag
-  // or something so that it can bailout easily.
+  createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX | null, internalInstanceHandle : OpaqueNode) : I,
+  appendInitialChild(parentInstance : I, child : I | TI) : void,
+  finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : void,
 
-  updateContainer(containerInfo : C, children : HostChildren<I | TI>) : void,
+  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P) : boolean,
+  commitUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : void,
 
-  createInstance(type : T, props : P, children : HostChildren<I | TI>) : I,
-  prepareUpdate(instance : I, oldProps : P, newProps : P) : boolean,
-  commitUpdate(instance : I, oldProps : P, newProps : P) : void,
+  shouldSetTextContent(props : P) : boolean,
+  resetTextContent(instance : I) : void,
 
-  createTextInstance(text : string) : TI,
+  createTextInstance(text : string, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
-  appendChild(parentInstance : I, child : I | TI) : void,
-  insertBefore(parentInstance : I, child : I | TI, beforeChild : I | TI) : void,
-  removeChild(parentInstance : I, child : I | TI) : void,
+  appendChild(parentInstance : I | C, child : I | TI) : void,
+  insertBefore(parentInstance : I | C, child : I | TI, beforeChild : I | TI) : void,
+  removeChild(parentInstance : I | C, child : I | TI) : void,
 
   scheduleAnimationCallback(callback : () => void) : void,
   scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
 
+  prepareForCommit() : void,
+  resetAfterCommit() : void,
+
   useSyncScheduling ?: boolean,
 };
 
-type OpaqueNode = Fiber;
-
 export type Reconciler<C, I, TI> = {
-  mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
-  updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
+  mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>) : OpaqueNode,
+  updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>) : void,
   unmountContainer(container : OpaqueNode) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
   /* eslint-disable no-undef */
@@ -78,10 +85,17 @@ export type Reconciler<C, I, TI> = {
   getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
 
   // Use for findDOMNode/findHostNode. Legacy API.
-  findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null,
+  findHostInstance(component : Fiber) : I | TI | null,
 };
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) : Reconciler<C, I, TI> {
+getContextForSubtree._injectFiber(function(fiber : Fiber) {
+  const parentContext = findCurrentUnmaskedContext(fiber);
+  return isContextProvider(fiber) ?
+    processChildContext(fiber, parentContext) :
+    parentContext;
+});
+
+module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) : Reconciler<C, I, TI> {
 
   var {
     scheduleWork,
@@ -92,8 +106,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : C, callback: ?Function) : OpaqueNode {
-      const root = createFiberRoot(containerInfo);
+    mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
+      const context = getContextForSubtree(parentComponent);
+      const root = createFiberRoot(containerInfo, context);
       const container = root.current;
       if (callback) {
         const queue = createUpdateQueue(null);
@@ -117,7 +132,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       return container;
     },
 
-    updateContainer(element : ReactElement<any>, container : OpaqueNode, callback: ?Function) : void {
+    updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       if (callback) {
@@ -127,8 +142,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
         addCallbackToQueue(queue, callback);
         root.callbackList = queue;
       }
+      root.pendingContext = getContextForSubtree(parentComponent);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = element;
+      if (root.current.alternate) {
+        root.current.alternate.pendingProps = element;
+      }
 
       scheduleWork(root);
 
@@ -142,6 +161,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       const root : FiberRoot = (container.stateNode : any);
       // TODO: Use pending work/state instead of props.
       root.current.pendingProps = [];
+      if (root.current.alternate) {
+        root.current.alternate.pendingProps = [];
+      }
 
       scheduleWork(root);
 
@@ -165,12 +187,12 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) :
       return containerFiber.child.stateNode;
     },
 
-    findHostInstance(component : ReactComponent<any, any, any>) : I | TI | null {
-      const fiber = findCurrentHostFiber(component);
-      if (!fiber) {
+    findHostInstance(fiber : Fiber) : I | TI | null {
+      const hostFiber = findCurrentHostFiber(fiber);
+      if (!hostFiber) {
         return null;
       }
-      return fiber.stateNode;
+      return hostFiber.stateNode;
     },
 
   };

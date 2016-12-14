@@ -17,7 +17,7 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
-require('InitializeJavaScriptAppEngine');
+require('InitializeCore');
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');

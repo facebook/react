@@ -8,8 +8,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const SearchSource = require('jest').SearchSource;
-const TestRunner = require('jest').TestRunner;
+const SearchSource = require('jest-cli').SearchSource;
+const TestRunner = require('jest-cli').TestRunner;
+const TestWatcher = require('jest-cli/build/TestWatcher');
 
 const createHasteContext = require('jest-runtime').createHasteContext;
 const readConfig = require('jest-config').readConfig;
@@ -77,7 +78,7 @@ function wrapRunner(originalPath) {
   };
 }
 
-function runJest() {
+function runJest(maxWorkers) {
   return readConfig(argv, root)
     .then((config) => {
       config = Object.assign({}, config, {
@@ -91,11 +92,12 @@ function runJest() {
               hasteMap,
               config,
               {
-                maxWorkers: Math.max(os.cpus().length - 1, 1),
+                maxWorkers: maxWorkers,
                 getTestSummary: () => 'You did it!'
               }
             );
-            return runner.runTests(data.paths);
+            const watcher = new TestWatcher({isWatchMode: false});
+            return runner.runTests(data.paths, watcher);
           });
       });
     });
@@ -117,9 +119,9 @@ function formatResults(runResults, predicate) {
   return formatted.join('\n\n');
 }
 
-function recordTests(trackFacts) {
+function recordTests(maxWorkers, trackFacts) {
   process.env.REACT_DOM_JEST_USE_FIBER = true;
-  runJest()
+  runJest(maxWorkers)
     .then((runResults) => {
       const passing = formatResults(
         runResults,
@@ -167,12 +169,15 @@ function recordTests(trackFacts) {
 if (require.main === module) {
   const argv = require('yargs')
     .demand(0, 0)
+    .number('max-workers')
+    .describe('max-workers', 'Number of workers to use for jest.')
+    .default('max-workers', Math.max(os.cpus().length - 1, 1))
     .boolean('track-facts')
     .describe('track-facts', 'Use facts-tracker to record passing tests.')
     .strict()
     .help()
     .argv;
-  recordTests(argv.trackFacts);
+  recordTests(argv.maxWorkers, argv.trackFacts);
 }
 
 module.exports = {

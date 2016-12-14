@@ -48,7 +48,7 @@ ReactDOM.render(
 
 [Try it on CodePen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
 
-We wrapped JSX in parentheses and split it over multiple lines for readability. This also helps avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
+We split JSX over multiple lines for readability. While it isn't mandatory, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
 
 ### JSX is an Expression Too
 
@@ -114,7 +114,7 @@ const title = response.potentiallyMaliciousInput;
 const element = <h1>{title}</h1>;
 ```
 
-By default, React DOM escapes any values embedded in JSX before rendering them.
+By default, React DOM [escapes](http://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html) any values embedded in JSX before rendering them. Thus it ensures that you can never inject anything that's not explicitly written in your application. Everything is converted to a string before being rendered. This helps prevent [XSS (cross-site-scripting)](https://en.wikipedia.org/wiki/Cross-site_scripting) attacks.
 
 ### JSX Represents Objects
 

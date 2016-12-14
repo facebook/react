@@ -129,9 +129,10 @@ class FriendsStatusDisplay extends React.Component {
         />
       );
     }
+    var childrenToRender = this.props.prepareChildren(children);
     return (
       <div>
-        {children}
+        {childrenToRender}
       </div>
     );
   }
@@ -224,13 +225,13 @@ function verifyDomOrderingAccurate(outerContainer, statusDisplays) {
   expect(orderedDomKeys).toEqual(orderedLogicalKeys);
 }
 
-/**
- * Todo: Check that internal state is preserved across transitions
- */
-function testPropsSequence(sequence) {
+function testPropsSequenceWithPreparedChildren(sequence, prepareChildren) {
   var container = document.createElement('div');
   var parentInstance = ReactDOM.render(
-    <FriendsStatusDisplay {...sequence[0]} />,
+    <FriendsStatusDisplay
+      {...sequence[0]}
+      prepareChildren={prepareChildren}
+    />,
     container
   );
   var statusDisplays = parentInstance.getStatusDisplays();
@@ -239,7 +240,10 @@ function testPropsSequence(sequence) {
 
   for (var i = 1; i < sequence.length; i++) {
     ReactDOM.render(
-      <FriendsStatusDisplay {...sequence[i]} />,
+      <FriendsStatusDisplay
+        {...sequence[i]}
+        prepareChildren={prepareChildren}
+      />,
       container
     );
     statusDisplays = parentInstance.getStatusDisplays();
@@ -251,12 +255,31 @@ function testPropsSequence(sequence) {
   }
 }
 
+function prepareChildrenArray(childrenArray) {
+  return childrenArray;
+}
+
+function prepareChildrenIterable(childrenArray) {
+  return {
+    '@@iterator': function*() {
+      for (const child of childrenArray) {
+        yield child;
+      }
+    },
+  };
+}
+
+function testPropsSequence(sequence) {
+  testPropsSequenceWithPreparedChildren(sequence, prepareChildrenArray);
+  testPropsSequenceWithPreparedChildren(sequence, prepareChildrenIterable);
+}
+
 describe('ReactMultiChildReconcile', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
   });
 
-  it('should reset internal state if removed then readded', () => {
+  it('should reset internal state if removed then readded in an array', () => {
     // Test basics.
     var props = {
       usernameToStatus: {
@@ -266,7 +289,7 @@ describe('ReactMultiChildReconcile', () => {
 
     var container = document.createElement('div');
     var parentInstance = ReactDOM.render(
-      <FriendsStatusDisplay {...props} />,
+      <FriendsStatusDisplay {...props} prepareChildren={prepareChildrenArray} />,
       container
     );
     var statusDisplays = parentInstance.getStatusDisplays();
@@ -274,7 +297,7 @@ describe('ReactMultiChildReconcile', () => {
 
     // Now remove the child.
     ReactDOM.render(
-      <FriendsStatusDisplay />,
+      <FriendsStatusDisplay prepareChildren={prepareChildrenArray} />,
       container
     );
     statusDisplays = parentInstance.getStatusDisplays();
@@ -282,7 +305,42 @@ describe('ReactMultiChildReconcile', () => {
 
     // Now reset the props that cause there to be a child
     ReactDOM.render(
-      <FriendsStatusDisplay {...props} />,
+      <FriendsStatusDisplay {...props} prepareChildren={prepareChildrenArray} />,
+      container
+    );
+    statusDisplays = parentInstance.getStatusDisplays();
+    expect(statusDisplays.jcw).toBeTruthy();
+    expect(statusDisplays.jcw.getInternalState())
+        .not.toBe(startingInternalState);
+  });
+
+  it('should reset internal state if removed then readded in an iterable', () => {
+    // Test basics.
+    var props = {
+      usernameToStatus: {
+        jcw: 'jcwStatus',
+      },
+    };
+
+    var container = document.createElement('div');
+    var parentInstance = ReactDOM.render(
+      <FriendsStatusDisplay {...props} prepareChildren={prepareChildrenIterable} />,
+      container
+    );
+    var statusDisplays = parentInstance.getStatusDisplays();
+    var startingInternalState = statusDisplays.jcw.getInternalState();
+
+    // Now remove the child.
+    ReactDOM.render(
+      <FriendsStatusDisplay prepareChildren={prepareChildrenIterable} />,
+      container
+    );
+    statusDisplays = parentInstance.getStatusDisplays();
+    expect(statusDisplays.jcw).toBeFalsy();
+
+    // Now reset the props that cause there to be a child
+    ReactDOM.render(
+      <FriendsStatusDisplay {...props} prepareChildren={prepareChildrenIterable} />,
       container
     );
     statusDisplays = parentInstance.getStatusDisplays();

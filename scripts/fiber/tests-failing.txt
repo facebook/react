@@ -6,29 +6,8 @@ src/addons/__tests__/ReactFragment-test.js
 * should throw if a plain object even if it is in an owner
 * should throw if a plain object looks like an old element
 
-src/addons/__tests__/renderSubtreeIntoContainer-test.js
-* should pass context when rendering subtree elsewhere
-* should update context if it changes due to setState
-* should update context if it changes due to re-render
-
-src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
-* should clean-up silently after the timeout elapses
-* should keep both sets of DOM nodes around
-* should switch transitionLeave from false to true
-* should transition from one to null
-* should transition from false to one
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
-
-src/isomorphic/classic/class/__tests__/ReactBind-test.js
-* Holds reference to instance
-* works with mixins
-
-src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
-* should work with manual binding
-* works with mixins that have not opted out of autobinding
-* works with mixins that have opted out of autobinding
 
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * includes the owner name when passing null, undefined, boolean, or number
@@ -36,91 +15,22 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should give context for PropType errors in nested components.
 
-src/renderers/art/__tests__/ReactART-test.js
-* should have the correct lifecycle state
-* should render a reasonable SVG structure in SVG mode
-* should be able to reorder components
-* should be able to reorder many components
-* renders composite with lifecycle inside group
-* resolves refs before componentDidMount
-* resolves refs before componentDidUpdate
+src/renderers/dom/__tests__/ReactDOMProduction-test.js
+* should throw with an error code in production
 
-src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should set style attribute when styles exist
-
-src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
-* should store a listener correctly
-* should retrieve a listener correctly
-* should clear all handlers when asked to
-* should invoke a simple handler registered on a node
-* should not invoke handlers if ReactBrowserEventEmitter is disabled
-* should bubble simply
-* should continue bubbling if an error is thrown
-* should set currentTarget
-* should support stopPropagation()
-* should stop after first dispatch if stopPropagation
-* should not stopPropagation if false is returned
-* should invoke handlers that were removed while bubbling
-* should not invoke newly inserted handlers while bubbling
-* should have mouse enter simulated by test utils
-* should infer onTouchTap from a touchStart/End
-* should infer onTouchTap from when dragging below threshold
-* should not onTouchTap from when dragging beyond threshold
-* should listen to events only once
-* should work with event plugins without dependencies
-* should work with event plugins with dependencies
-* should bubble onTouchTap
+src/renderers/dom/shared/__tests__/ReactDOM-test.js
+* throws in render() if the mount callback is not a function
+* throws in render() if the update callback is not a function
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should handle className
-* should gracefully handle various style value types
-* should update styles when mutating style object
-* should update styles if initially null
-* should update styles if updated to null multiple times
-* should allow named slot projection on both web components and regular DOM elements
-* should remove attributes
-* should remove properties
-* should properly update custom attributes on custom elements
-* should clear a single style prop when changing `style`
-* should update arbitrary attributes for tags containing dashes
-* should update styles when `style` changes from null to object
-* should empty element when removing innerHTML
-* should transition from string content to innerHTML
-* should transition from innerHTML to string content
-* should transition from innerHTML to children in nested el
-* should transition from children to innerHTML in nested el
-* should not incur unnecessary DOM mutations for attributes
-* should not incur unnecessary DOM mutations for string properties
-* should not incur unnecessary DOM mutations for boolean properties
-* should ignore attribute whitelist for elements with the "is: attribute
-* should not update when switching between null/undefined
-* should warn against children for void elements
-* should warn against dangerouslySetInnerHTML for void elements
-* should treat menuitem as a void element but still create the closing tag
-* should validate against multiple children props
-* should validate use of dangerouslySetInnerHTML
-* should validate use of dangerouslySetInnerHTML
-* should validate against invalid styles
-* should track input values
-* should track textarea values
 * should warn for children on void elements
-* should support custom elements which extend native elements
-* should warn against children for void elements
-* should warn against dangerouslySetInnerHTML for void elements
-* should validate against multiple children props
-* should validate against invalid styles
 * should report component containing invalid styles
 * should clean up input value tracking
 * should clean up input textarea tracking
-* should throw when an invalid tag name is used
-* should throw when an attack vector is used
 * gives source code refs for unknown prop warning
 * gives source code refs for unknown prop warning for update render
 * gives source code refs for unknown prop warning for exact elements 
 * gives source code refs for unknown prop warning for exact elements in composition 
-
-src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
-* finds instances for nodes
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
@@ -128,147 +38,14 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
-src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
-* does not crash with other react inside
-* does not crash with other react outside
-* does not when event fired on unmounted tree
-
-src/renderers/dom/shared/__tests__/ReactEventListener-test.js
-* should propagate events one level down
-* should propagate events two levels down
-* should not get confused by disappearing elements
-* should batch between handlers from different roots
-
-src/renderers/dom/shared/__tests__/inputValueTracking-test.js
-* should return tracker from node
-
-src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
-* should fire change for checkbox input
-* should catch setting the value programmatically
-* should not fire change when setting the value programmatically
-* should not fire change when setting checked programmatically
-* should only fire change for checked radio button once
-* should deduplicate input value change events
-* should listen for both change and input events when supported
-* should only fire events when the value changes for range inputs
-
-src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
-* should set relatedTarget properly in iframe
-
-src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
-* should skip extraction if no listeners are present
-* should extract if an `onSelect` listener is present
-
-src/renderers/dom/shared/eventPlugins/__tests__/SimpleEventPlugin-test.js
-* A non-interactive tags click when disabled
-* A non-interactive tags clicks bubble when disabled
-* should forward clicks when it starts out not disabled
-* should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it starts out not disabled
-* should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it starts out not disabled
-* should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-* should forward clicks when it starts out not disabled
-* should not forward clicks when it starts out disabled
-* should forward clicks when it becomes not disabled
-* should not forward clicks when it becomes disabled
-* should work correctly if the listener is changed
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMIframe-test.js
-* should trigger load events
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
-* should properly control a value even if no event listener exists
-* should control a value in reentrant events
-* should control values in reentrant events with different targets
-* should display `defaultValue` of number 0
-* should display "true" for `defaultValue` of `true`
-* should display "false" for `defaultValue` of `false`
-* should update `defaultValue` for uncontrolled input
-* should update `defaultValue` for uncontrolled date/time input
-* should take `defaultValue` when changing to uncontrolled input
-* should render name attribute if it is supplied
-* should display "foobar" for `defaultValue` of `objToString`
-* should display `value` of number 0
-* should allow setting `value` to `true`
-* should allow setting `value` to `false`
-* should allow setting `value` to `objToString`
-* should not incur unnecessary DOM mutations
-* should properly control a value of number `0`
-* should have the correct target value
-* should control radio buttons
-* should control radio buttons if the tree updates during render
-* sets type, step, min, max before value always
-* sets value properly with type coming later in props
-* does not raise a validation warning when it switches types
-* resets value of date/time input to fix bugs in iOS Safari
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
-* should ignore and warn invalid children types
-* should be able to use dangerouslySetInnerHTML on option
-* should set attribute for empty value
-* should allow ignoring `value` on option
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
-* should allow setting `defaultValue`
-* should not control when using `defaultValue`
-* should allow setting `defaultValue` with multiple
-* should allow setting `value`
-* should allow setting `value` with multiple
-* should not select other options automatically
-* should reset child options selected when they are changed and `value` is set
-* should allow setting `value` with `objectToString`
-* should allow switching to multiple
-* should allow switching from multiple
-* should remember value when switching to uncontrolled
-* should remember updated value when switching to uncontrolled
-* should not control defaultValue if readding options
-* should refresh state on change
-* should select grandchild options nested inside an optgroup
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should allow setting `defaultValue`
-* should display `defaultValue` of number 0
-* should display "false" for `defaultValue` of `false`
-* should display "foobar" for `defaultValue` of `objToString`
-* should set defaultValue
-* should display `value` of number 0
-* should allow setting `value` to `giraffe`
-* should allow setting `value` to `true`
-* should allow setting `value` to `false`
-* should allow setting `value` to `objToString`
-* should take updates to `defaultValue` for uncontrolled textarea
-* should take updates to children in lieu of `defaultValue` for uncontrolled textarea
-* should not incur unnecessary DOM mutations
-* should properly control a value of number `0`
-* should treat children like `defaultValue`
-* should keep value when switching to uncontrolled element if not changed
-* should keep value when switching to uncontrolled element if changed
-* should allow booleans as children
-* should allow objects as children
-* should throw with multiple or invalid children
-
-src/renderers/dom/stack/client/__tests__/ReactDOM-test.js
-* throws in render() if the mount callback is not a function
-* throws in render() if the update callback is not a function
-
-src/renderers/dom/stack/client/__tests__/ReactMount-test.js
+src/renderers/dom/shared/__tests__/ReactMount-test.js
 * throws when given a non-node
 * throws when given a string
 * throws when given a factory
 * tracks root instances
 * marks top-level mounts
 
-src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
+src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should be able to adopt server markup
 * should not be able to unmount component from document node
 * should not be able to switch root constructors
@@ -276,28 +53,6 @@ src/renderers/dom/stack/client/__tests__/ReactRenderDocument-test.js
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
-
-src/renderers/dom/stack/client/__tests__/findDOMNode-test.js
-* findDOMNode should reject random objects
-* findDOMNode should reject unmounted objects with render func
-
-src/renderers/dom/stack/server/__tests__/ReactServerRendering-test.js
-* should generate simple markup
-* should generate simple markup for self-closing tags
-* should generate simple markup for attribute with `>` symbol
-* should generate comment markup for component returns null
-* should render composite components
-* should only execute certain lifecycle methods
-* should have the correct mounting behavior
-* should not put checksum and React ID on components
-* should not put checksum and React ID on text components
-* should only execute certain lifecycle methods
-* allows setState in componentWillMount without using DOM
-* renders components with different batching strategies
-* warns with a no-op when an async setState is triggered
-* warns with a no-op when an async replaceState is triggered
-* warns with a no-op when an async forceUpdate is triggered
-* should warn when children are mutated during render
 
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste
@@ -309,158 +64,45 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should work when measurement starts during reconciliation
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
-* uses displayName or Unknown for classic components
-* uses displayName, name, or ReactComponent for modern components
-* uses displayName, name, or Object for factory components
-* uses displayName, name, or StatelessComponent for functional components
-* reports a host tree correctly
-* reports a simple tree with composites correctly
-* reports a tree with composites correctly
-* ignores null children
-* ignores false children
-* reports text nodes as children
-* reports a single text node as a child
-* reports a single number node as a child
-* reports a zero as a child
-* skips empty nodes for multiple children
-* reports html content as no children
-* updates text of a single text child
-* updates from no children to a single text child
-* updates from a single text child to no children
-* updates from html content to a single text child
-* updates from a single text child to html content
-* updates from no children to multiple text children
-* updates from multiple text children to no children
-* updates from html content to multiple text children
-* updates from multiple text children to html content
-* updates from html content to no children
-* updates from no children to html content
-* updates from one text child to multiple text children
-* updates from multiple text children to one text child
-* updates text nodes when reordering
-* updates host nodes when reordering with keys
-* updates host nodes when reordering without keys
-* updates a single composite child of a different type
-* updates a single composite child of the same type
-* updates from no children to a single composite child
-* updates from a single composite child to no children
-* updates mixed children
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* tracks owner correctly
-* purges unmounted components automatically
-* reports update counts
-* does not report top-level wrapper as a root
-* registers inlined text nodes
 * gets created
 * can be retrieved by ID
-* works
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
-* gets recorded for host roots
-* gets recorded for composite roots
-* gets recorded when a native is mounted deeply instead of null
-* gets recorded during mount
 * gets recorded during an update
-* gets ignored if the styles are shallowly equal
-* gets recorded during mount
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during mount
-* gets recorded during an update
-* gets recorded during mount
-* gets recorded during an update
-* gets recorded during an update from text content
-* gets recorded during an update from html
-* gets recorded during an update from children
-* gets recorded during an update
-* gets recorded when composite renders to a different type
-* gets recorded when composite renders to null after a native
-* gets recorded during an update from text content
-* gets recorded during an update from html
-* gets recorded during an update from children
-* gets reported when a child is inserted
-* gets reported when a child is inserted
-* gets reported when a child is removed
 
-src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
-* should traverse two phase across component boundary
-* should traverse two phase at shallowest node
-* should traverse enter/leave to sibling - avoids parent
-* should traverse enter/leave to parent - avoids parent
-* should enter from the window
-* should enter from the window to the shallowest
-* should leave to the window
-* should leave to the window from the shallowest
-
-src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should prevent non-function listeners, at dispatch
-* should not prevent null listeners, at dispatch
-
-src/renderers/shared/stack/reconciler/__tests__/ReactComponent-test.js
+src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should throw on invalid render targets
-* should throw when supplying a ref outside of render method
-* throws usefully when rendering badly-typed elements
+* includes owner name in the error about badly-typed elements
 
-src/renderers/shared/stack/reconciler/__tests__/ReactComponentLifeCycle-test.js
+src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponent-test.js
-* should not thrash a server rendered layout with client side one
-* should react to state changes from callbacks
-* should warn about `forceUpdate` on unmounted components
-* should warn about `setState` on unmounted components
+src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
-* should support objects with prototypes as state
 
-src/renderers/shared/stack/reconciler/__tests__/ReactCompositeComponentNestedState-test.js
-* should provide up to date values for props
+src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
+* should update state when called from child cWRP
 
-src/renderers/shared/stack/reconciler/__tests__/ReactEmptyComponent-test.js
+src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
-* should be able to switch between rendering null and a normal tag
-* should be able to switch in a list of children
-* should distinguish between a script placeholder and an actual script tag
 * throws when rendering null at the top level
-* preserves the dom node during updates
 
-src/renderers/shared/stack/reconciler/__tests__/ReactMultiChildText-test.js
-* should correctly handle all possible children for render and update
-* should throw if rendering both HTML and children
+src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
+* should reorder keyed text nodes
 
-src/renderers/shared/stack/reconciler/__tests__/ReactStatelessComponent-test.js
+src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when stateless component returns array
 * should throw on string refs in pure functions
 * should warn when using non-React functions in JSX
 
-src/renderers/shared/stack/reconciler/__tests__/ReactUpdates-test.js
-* should share reconcile transaction across different roots
-* should queue mount-ready handlers across different roots
-* should queue updates from during mount
+src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
+* unmounts and remounts a root in the same batch
 
-src/renderers/shared/stack/reconciler/__tests__/refs-test.js
+src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
-
-src/test/__tests__/ReactTestUtils-test.js
-* should support injected wrapper components as DOM components
-* should change the value of an input field
-* should change the value of an input field in a component
-* should set the type of the event

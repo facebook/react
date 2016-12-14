@@ -14,7 +14,6 @@
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
-var div = React.createFactory('div');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
@@ -54,7 +53,7 @@ describe('ReactDOM', () => {
 
   it('should allow children to be passed as an argument', () => {
     var argDiv = ReactTestUtils.renderIntoDocument(
-      div(null, 'child')
+      React.DOM.div(null, 'child')
     );
     var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
@@ -62,7 +61,7 @@ describe('ReactDOM', () => {
 
   it('should overwrite props.children with children argument', () => {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
-      div({children: 'fakechild'}, 'child')
+      React.DOM.div({children: 'fakechild'}, 'child')
     );
     var conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
@@ -176,5 +175,64 @@ describe('ReactDOM', () => {
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
+  });
+
+  it('preserves focus', () => {
+    let input;
+    let input2;
+    class A extends React.Component {
+      render() {
+        return (
+          <div>
+            <input id="one" ref={(r) => input = input || r} />
+            {this.props.showTwo &&
+              <input id="two" ref={(r) => input2 = input2 || r} />}
+          </div>
+        );
+      }
+
+      componentDidUpdate() {
+        // Focus should have been restored to the original input
+        expect(document.activeElement.id).toBe('one');
+        input2.focus();
+        expect(document.activeElement.id).toBe('two');
+        log.push('input2 focused');
+      }
+    }
+
+    var log = [];
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    ReactDOM.render(<A showTwo={false} />, container);
+    input.focus();
+
+    // When the second input is added, let's simulate losing focus, which is
+    // something that could happen when manipulating DOM nodes (but is hard to
+    // deterministically force without relying intensely on React DOM
+    // implementation details)
+    var div = container.firstChild;
+    ['appendChild', 'insertBefore'].forEach((name) => {
+      var mutator = div[name];
+      div[name] = function() {
+        if (input) {
+          input.blur();
+          expect(document.activeElement.tagName).toBe('BODY');
+          log.push('input2 inserted');
+        }
+        return mutator.apply(this, arguments);
+      };
+    });
+
+    expect(document.activeElement.id).toBe('one');
+    ReactDOM.render(<A showTwo={true} />, container);
+    // input2 gets added, which causes input to get blurred. Then
+    // componentDidUpdate focuses input2 and that should make it down to here,
+    // not get overwritten by focus restoration.
+    expect(document.activeElement.id).toBe('two');
+    expect(log).toEqual([
+      'input2 inserted',
+      'input2 focused',
+    ]);
+    document.body.removeChild(container);
   });
 });

@@ -54,11 +54,11 @@ describe('ReactComponentTreeHook', () => {
       var rootDisplayNames = ReactComponentTreeTestUtils.getRootDisplayNames();
       var registeredDisplayNames = ReactComponentTreeTestUtils.getRegisteredDisplayNames();
       if (!expectedTree) {
-        expect(rootDisplayNames).toEqual([]);
-        expect(registeredDisplayNames).toEqual([]);
+        expectDev(rootDisplayNames).toEqual([]);
+        expectDev(registeredDisplayNames).toEqual([]);
       } else if (andStayMounted) {
-        expect(rootDisplayNames).toContain('Wrapper');
-        expect(registeredDisplayNames).toContain('Wrapper');
+        expectDev(rootDisplayNames).toContain('Wrapper');
+        expectDev(registeredDisplayNames).toContain('Wrapper');
       }
     }
 
@@ -1692,48 +1692,48 @@ describe('ReactComponentTreeHook', () => {
 
     ReactDOM.render(<div className="a" />, node);
     var divID = ReactComponentTreeHook.getRootIDs()[0];
-    expect(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
 
     ReactDOM.render(<span className="a" />, node);
     var spanID = ReactComponentTreeHook.getRootIDs()[0];
-    expect(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
 
     ReactDOM.render(<span className="b" />, node);
-    expect(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(1);
+    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(1);
 
     ReactDOM.render(<span className="c" />, node);
-    expect(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(2);
+    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(2);
 
     ReactDOM.unmountComponentAtNode(node);
-    expect(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expect(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
   });
 
   it('does not report top-level wrapper as a root', () => {
     var node = document.createElement('div');
 
     ReactDOM.render(<div className="a" />, node);
-    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
+    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
 
     ReactDOM.render(<div className="b" />, node);
-    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
+    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
 
     ReactDOM.unmountComponentAtNode(node);
-    expect(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
+    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
   it('registers inlined text nodes', () => {
     var node = document.createElement('div');
 
     ReactDOM.render(<div>hi</div>, node);
-    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(['div', '#text']);
+    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(['div', '#text']);
 
     ReactDOM.unmountComponentAtNode(node);
-    expect(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
   describe('stack addenda', () => {
@@ -1746,19 +1746,19 @@ describe('ReactComponentTreeHook', () => {
       var Anon = React.createClass({displayName: null, render: () => null});
       var Orange = React.createClass({render: () => null});
 
-      expect(getAddendum()).toBe(
+      expectDev(getAddendum()).toBe(
         ''
       );
-      expect(getAddendum(<div />)).toBe(
+      expectDev(getAddendum(<div />)).toBe(
         '\n    in div (at **)'
       );
-      expect(getAddendum(<Anon />)).toBe(
+      expectDev(getAddendum(<Anon />)).toBe(
         '\n    in Unknown (at **)'
       );
-      expect(getAddendum(<Orange />)).toBe(
+      expectDev(getAddendum(<Orange />)).toBe(
         '\n    in Orange (at **)'
       );
-      expect(getAddendum(React.createElement(Orange))).toBe(
+      expectDev(getAddendum(React.createElement(Orange))).toBe(
         '\n    in Orange'
       );
 
@@ -1778,20 +1778,20 @@ describe('ReactComponentTreeHook', () => {
           this.forceUpdate();
         }
         render() {
-          expect(getAddendum()).toBe(
+          expectDev(getAddendum()).toBe(
             '\n    in S (at **)' +
             '\n    in div (at **)' +
             '\n    in R (created by Q)' +
             '\n    in Q (at **)'
           );
-          expect(getAddendum(<span />)).toBe(
+          expectDev(getAddendum(<span />)).toBe(
             '\n    in span (at **)' +
             '\n    in S (at **)' +
             '\n    in div (at **)' +
             '\n    in R (created by Q)' +
             '\n    in Q (at **)'
           );
-          expect(getAddendum(React.createElement('span'))).toBe(
+          expectDev(getAddendum(React.createElement('span'))).toBe(
             '\n    in span (created by S)' +
             '\n    in S (at **)' +
             '\n    in div (at **)' +
@@ -1803,10 +1803,10 @@ describe('ReactComponentTreeHook', () => {
         }
       }
       ReactDOM.render(<Q />, document.createElement('div'));
-      expect(renders).toBe(2);
+      expectDev(renders).toBe(2);
 
       // Make sure owner is fetched for the top element too.
-      expect(getAddendum(rOwnedByQ)).toBe(
+      expectDev(getAddendum(rOwnedByQ)).toBe(
         '\n    in R (created by Q)'
       );
     });
@@ -1824,7 +1824,7 @@ describe('ReactComponentTreeHook', () => {
       }
 
       var q = ReactDOM.render(<Q />, document.createElement('div'));
-      expect(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
+      expectDev(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
         '\n    in Q (at **)'
       );
 

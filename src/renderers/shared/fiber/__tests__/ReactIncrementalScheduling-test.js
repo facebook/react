@@ -144,7 +144,7 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.flushDeferredPri(10);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    ReactNoop.flushDeferredPri(10);
+    ReactNoop.flushDeferredPri(10 + 5);
     expect(ReactNoop.getChildren()).toEqual([span('2')]);
   });
 
@@ -159,17 +159,17 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual([]);
 
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual([]);
 
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([]);
 
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
@@ -329,19 +329,19 @@ describe('ReactIncrementalScheduling', () => {
   it('splits deferred work on multiple roots', () => {
     // Schedule one root
     ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
 
     // Schedule two roots
     ReactNoop.renderToRootWithID(<span prop="a:2" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
     // First scheduled one gets processed first
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual(null);
     // Then the second one gets processed
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual(null);
@@ -351,15 +351,15 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.renderToRootWithID(<span prop="b:3" />, 'b');
     ReactNoop.renderToRootWithID(<span prop="c:3" />, 'c');
     // They get processed in the order they were scheduled
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:3')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([]);
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:3')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([]);
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:3')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:3')]);
@@ -368,7 +368,7 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.renderToRootWithID(<span prop="a:4" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="a:5" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="a:6" />, 'a');
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:6')]);
   });
 
@@ -385,18 +385,18 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.renderToRootWithID(<span prop="c:2" />, 'c');
     ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
     // Ensure it starts in the order it was scheduled
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
     // Schedule last bit of work, it will get processed the last
     ReactNoop.renderToRootWithID(<span prop="a:2" />, 'a');
     // Keep performing work in the order it was scheduled
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
@@ -440,11 +440,11 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
 
     // Finally we handle deferred root in the order it was scheduled
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
-    ReactNoop.flushDeferredPri(15);
+    ReactNoop.flushDeferredPri(15 + 5);
     expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:3')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:3')]);
@@ -483,7 +483,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ReactNoop.render(<Foo />);
 
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushDeferredPri(20 + 5);
     expect(ops).toEqual([
       'render: 0',
       'componentDidMount (before setState): 0',
@@ -496,7 +496,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ops = [];
     instance.setState({ tick: 2 });
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual([
       'render: 2',
@@ -545,7 +545,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ReactNoop.render(<Foo />);
 
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushDeferredPri(20 + 5);
     expect(ops).toEqual([
       'render: 0',
       'componentDidMount (before setState): 0',
@@ -566,7 +566,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ops = [];
     instance.setState({ tick: 2 });
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual([
       'render: 2',
@@ -586,5 +586,64 @@ describe('ReactIncrementalScheduling', () => {
       'render: 3',
       'componentDidUpdate: 3',
     ]);
+  });
+
+  it('performs Task work even after time runs out', () => {
+    class Foo extends React.Component {
+      state = { step: 1 };
+      componentDidMount() {
+        this.setState({ step: 2 }, () => {
+          this.setState({ step: 3 }, () => {
+            this.setState({ step: 4 }, () => {
+              this.setState({ step: 5 });
+            });
+          });
+        });
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.render(<Foo />);
+    // This should be just enough to complete all the work, but not enough to
+    // commit it.
+    ReactNoop.flushDeferredPri(20);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Do one more unit of work.
+    ReactNoop.flushDeferredPri(10);
+    // The updates should all be flushed with Task priority
+    expect(ReactNoop.getChildren()).toEqual([span(5)]);
+  });
+
+  it('does not perform animation work after time runs out', () => {
+    class Foo extends React.Component {
+      state = { step: 1 };
+      componentDidMount() {
+        ReactNoop.performAnimationWork(() => {
+          this.setState({ step: 2 }, () => {
+            this.setState({ step: 3 }, () => {
+              this.setState({ step: 4 }, () => {
+                this.setState({ step: 5 });
+              });
+            });
+          });
+        });
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.render(<Foo />);
+    // This should be just enough to complete all the work, but not enough to
+    // commit it.
+    ReactNoop.flushDeferredPri(20);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Do one more unit of work.
+    ReactNoop.flushDeferredPri(10);
+    // None of the updates should be flushed because they only have
+    // animation priority.
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
   });
 });

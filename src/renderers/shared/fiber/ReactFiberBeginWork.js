@@ -14,6 +14,8 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
+import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
@@ -30,15 +32,17 @@ var {
   isContextProvider,
   hasContextChanged,
   pushContextProvider,
+  pushTopLevelContextObject,
   resetContext,
 } = require('ReactFiberContext');
 var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
@@ -50,14 +54,25 @@ var {
 } = require('ReactPriorityLevel');
 var {
   Placement,
+  ContentReset,
+  Err,
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
-module.exports = function<T, P, I, TI, C>(
-  config : HostConfig<T, P, I, TI, C>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber: Fiber) => void
 ) {
+
+  const { shouldSetTextContent } = config;
+
+  const {
+    pushHostContext,
+    pushHostContainer,
+    resetHostContainer,
+  } = hostContext;
 
   const {
     adoptClassInstance,
@@ -207,15 +222,26 @@ module.exports = function<T, P, I, TI, C>(
   }
 
   function updateHostComponent(current, workInProgress) {
-    let nextChildren = workInProgress.pendingProps.children;
-    if (typeof nextChildren === 'string' || typeof nextChildren === 'number') {
+    const nextProps = workInProgress.pendingProps;
+    const prevProps = current ? current.memoizedProps : null;
+    let nextChildren = nextProps.children;
+    const isDirectTextChild = shouldSetTextContent(nextProps);
+
+    if (isDirectTextChild) {
       // We special case a direct text child of a host node. This is a common
       // case. We won't handle it as a reified child. We will instead handle
       // this in the host environment that also have access to this prop. That
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
+    } else if (
+      prevProps &&
+      shouldSetTextContent(prevProps)
+    ) {
+      // If we're switching from a direct text child to a normal child, or to
+      // empty, we need to schedule the text content to be reset.
+      workInProgress.effectTag |= ContentReset;
     }
-    if (workInProgress.pendingProps.hidden &&
+    if (nextProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
       // We'll rerender the children later at the lower priority.
@@ -251,6 +277,7 @@ module.exports = function<T, P, I, TI, C>(
       // Abort and don't process children yet.
       return null;
     } else {
+      pushHostContext(workInProgress);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -296,6 +323,27 @@ module.exports = function<T, P, I, TI, C>(
     reconcileChildren(current, workInProgress, coroutine.children);
   }
 
+  function updatePortalComponent(current, workInProgress) {
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    const nextChildren = workInProgress.pendingProps;
+    if (!current) {
+      // Portals are special because we don't append the children during mount
+      // but at commit. Therefore we need to track insertions which the normal
+      // flow doesn't do during mount. This doesn't happen at the root because
+      // the root always starts with a "current" with a null child.
+      // TODO: Consider unifying this with how the root works.
+      workInProgress.child = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.child,
+        nextChildren,
+        priorityLevel
+      );
+      markChildAsProgressed(current, workInProgress, priorityLevel);
+    } else {
+      reconcileChildren(current, workInProgress, nextChildren);
+    }
+  }
+
   /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
@@ -317,8 +365,9 @@ module.exports = function<T, P, I, TI, C>(
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
+    const isHostComponent = workInProgress.tag === HostComponent;
 
-    if (workInProgress.tag === HostComponent &&
+    if (isHostComponent &&
         workInProgress.memoizedProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // This subtree still has work, but it should be deprioritized so we need
@@ -360,14 +409,32 @@ module.exports = function<T, P, I, TI, C>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
+
     // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress, false);
+    if (isHostComponent) {
+      pushHostContext(workInProgress);
+    } else {
+      switch (workInProgress.tag) {
+        case ClassComponent:
+          if (isContextProvider(workInProgress)) {
+            pushContextProvider(workInProgress, false);
+          }
+          break;
+        case HostRoot:
+        case HostPortal:
+          pushHostContainer(workInProgress.stateNode.containerInfo);
+          break;
+      }
     }
+    // TODO: this is annoyingly duplicating non-jump codepaths.
+
     return workInProgress.child;
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
+    if (workInProgress.tag === HostPortal) {
+      pushHostContainer(workInProgress.stateNode.containerInfo);
+    }
     // TODO: What if this is currently in progress?
     // How can that happen? How is this not being cloned?
     return null;
@@ -377,6 +444,7 @@ module.exports = function<T, P, I, TI, C>(
     if (!workInProgress.return) {
       // Don't start new work with context on the stack.
       resetContext();
+      resetHostContainer();
     }
 
     if (workInProgress.pendingWorkPriority === NoWork ||
@@ -411,15 +479,23 @@ module.exports = function<T, P, I, TI, C>(
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
         return updateClassComponent(current, workInProgress);
-      case HostContainer:
+      case HostRoot: {
+        const root = (workInProgress.stateNode : FiberRoot);
+        if (root.pendingContext) {
+          pushTopLevelContextObject(
+            root.pendingContext,
+            root.pendingContext !== root.context
+          );
+        } else {
+          pushTopLevelContextObject(root.context, false);
+        }
+        pushHostContainer(workInProgress.stateNode.containerInfo);
         reconcileChildren(current, workInProgress, workInProgress.pendingProps);
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return workInProgress.child;
+      }
       case HostComponent:
-        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
-          config.beginUpdate(workInProgress.stateNode);
-        }
         return updateHostComponent(current, workInProgress);
       case HostText:
         // Nothing to do here. This is terminal. We'll do the completion step
@@ -438,6 +514,10 @@ module.exports = function<T, P, I, TI, C>(
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case HostPortal:
+        pushHostContainer(workInProgress.stateNode.containerInfo);
+        updatePortalComponent(current, workInProgress);
+        return workInProgress.child;
       case Fragment:
         updateFragment(current, workInProgress);
         return workInProgress.child;
@@ -446,8 +526,34 @@ module.exports = function<T, P, I, TI, C>(
     }
   }
 
+  function beginFailedWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+    if (workInProgress.tag !== ClassComponent &&
+        workInProgress.tag !== HostRoot) {
+      throw new Error('Invalid type of work');
+    }
+
+    // Add an error effect so we can handle the error during the commit phase
+    workInProgress.effectTag |= Err;
+
+    if (workInProgress.pendingWorkPriority === NoWork ||
+        workInProgress.pendingWorkPriority > priorityLevel) {
+      return bailoutOnLowPriority(current, workInProgress);
+    }
+
+    // If we don't bail out, we're going be recomputing our children so we need
+    // to drop our effect list.
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
+
+    // Unmount the current children as if the component rendered null
+    const nextChildren = null;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
   return {
     beginWork,
+    beginFailedWork,
   };
 
 };

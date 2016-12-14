@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
 
 // Helpers
@@ -57,28 +58,35 @@ var expectChildren = function(container, children) {
       var child = children[i];
 
       if (typeof child === 'string') {
-        openingCommentNode = outerNode.childNodes[mountIndex];
-
-        expect(openingCommentNode.nodeType).toBe(8);
-        expect(openingCommentNode.nodeValue).toMatch(/ react-text: [0-9]+ /);
-
-        if (child === '') {
-          textNode = null;
-          closingCommentNode = openingCommentNode.nextSibling;
-          mountIndex += 2;
-        } else {
-          textNode = openingCommentNode.nextSibling;
-          closingCommentNode = textNode.nextSibling;
-          mountIndex += 3;
-        }
-
-        if (textNode) {
+        if (ReactDOMFeatureFlags.useFiber) {
+          textNode = outerNode.childNodes[mountIndex];
           expect(textNode.nodeType).toBe(3);
           expect(textNode.data).toBe('' + child);
-        }
+          mountIndex++;
+        } else {
+          openingCommentNode = outerNode.childNodes[mountIndex];
 
-        expect(closingCommentNode.nodeType).toBe(8);
-        expect(closingCommentNode.nodeValue).toBe(' /react-text ');
+          expect(openingCommentNode.nodeType).toBe(8);
+          expect(openingCommentNode.nodeValue).toMatch(/ react-text: [0-9]+ /);
+
+          if (child === '') {
+            textNode = null;
+            closingCommentNode = openingCommentNode.nextSibling;
+            mountIndex += 2;
+          } else {
+            textNode = openingCommentNode.nextSibling;
+            closingCommentNode = textNode.nextSibling;
+            mountIndex += 3;
+          }
+
+          if (textNode) {
+            expect(textNode.nodeType).toBe(3);
+            expect(textNode.data).toBe('' + child);
+          }
+
+          expect(closingCommentNode.nodeType).toBe(8);
+          expect(closingCommentNode.nodeValue).toBe(' /react-text ');
+        }
       } else {
         var elementDOMNode = outerNode.childNodes[mountIndex];
         expect(elementDOMNode.tagName).toBe('DIV');

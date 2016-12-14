@@ -221,7 +221,7 @@ Like [`React.Children.map()`](#react.children.map) but does not return an array.
 #### `React.Children.count`
 
 ```javascript
-Children.count(children)
+React.Children.count(children)
 ```
 
 Returns the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.

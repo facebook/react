@@ -14,6 +14,7 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var ReactDOMFeatureFlags;
 
 describe('ReactElement', () => {
   var ComponentClass;
@@ -30,6 +31,7 @@ describe('ReactElement', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
     ComponentClass = React.createClass({
@@ -266,9 +268,9 @@ describe('ReactElement', () => {
       React.createElement(Wrapper)
     );
 
-    if (typeof element._owner.tag === 'number') { // Fiber reconciler
+    if (ReactDOMFeatureFlags.useFiber) {
       expect(element._owner.stateNode).toBe(instance);
-    } else { // Stack reconciler
+    } else {
       expect(element._owner.getPublicInstance()).toBe(instance);
     }
   });

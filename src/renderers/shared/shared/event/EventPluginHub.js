@@ -48,6 +48,31 @@ var executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
 
+function isInteractive(tag) {
+  return (
+    tag === 'button' || tag === 'input' ||
+    tag === 'select' || tag === 'textarea'
+  );
+}
+
+function shouldPreventMouseEvent(name, type, props) {
+  switch (name) {
+    case 'onClick':
+    case 'onClickCapture':
+    case 'onDoubleClick':
+    case 'onDoubleClickCapture':
+    case 'onMouseDown':
+    case 'onMouseDownCapture':
+    case 'onMouseMove':
+    case 'onMouseMoveCapture':
+    case 'onMouseUp':
+    case 'onMouseUpCapture':
+      return !!(props.disabled && isInteractive(type));
+    default:
+      return false;
+  }
+}
+
 /**
  * This is a unified interface for event plugins to be installed and configured.
  *
@@ -96,7 +121,24 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function(inst, registrationName) {
-    var listener = inst._currentElement.props[registrationName];
+    var listener;
+
+    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+    // live here; needs to be moved to a better place soon
+    if (typeof inst.tag === 'number') {
+      const props = inst.memoizedProps;
+      listener = props[registrationName];
+      if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+        return null;
+      }
+    } else {
+      const props = inst._currentElement.props;
+      listener = props[registrationName];
+      if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, props)) {
+        return null;
+      }
+    }
+
     invariant(
       !listener || typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',

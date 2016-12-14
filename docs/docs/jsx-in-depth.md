@@ -180,7 +180,7 @@ You can pass any JavaScript expression as a prop, by surrounding it with `{}`. F
 <MyComponent foo={1 + 2 + 3 + 4} />
 ```
 
-For `MyComponent`, The value of `props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
+For `MyComponent`, the value of `props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
 
 `if` statements and `for` loops are not expressions in JavaScript, so they can't be used in JSX directly. Instead, you can put these in the surrounding code. For example:
 

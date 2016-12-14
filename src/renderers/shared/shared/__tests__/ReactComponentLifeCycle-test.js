@@ -110,7 +110,7 @@ describe('ReactComponentLifeCycle', () => {
 
       render() {
         return (
-          <div></div>
+          <div />
         );
       }
     }
@@ -135,7 +135,7 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
-        return <div></div>;
+        return <div />;
       }
     }
 
@@ -160,14 +160,13 @@ describe('ReactComponentLifeCycle', () => {
           <div>{
             this.state.showHasOnDOMReadyComponent ?
             <Child /> :
-            <div> </div>
+            <div />
           }</div>
         );
       }
     }
 
-    var instance = <SwitcherParent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(<SwitcherParent />);
     expect(_testJournal).toEqual([
       'SwitcherParent:getInitialState',
       'SwitcherParent:onDOMReady',
@@ -185,7 +184,7 @@ describe('ReactComponentLifeCycle', () => {
 
       render() {
         return (
-          <div></div>
+          <div />
         );
       }
     }
@@ -204,7 +203,7 @@ describe('ReactComponentLifeCycle', () => {
 
       render() {
         return (
-          <div></div>
+          <div />
         );
       }
     }
@@ -228,7 +227,7 @@ describe('ReactComponentLifeCycle', () => {
 
       render() {
         return (
-          <div></div>
+          <div />
         );
       }
     }
@@ -517,7 +516,7 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
-        return (<div></div>);
+        return (<div />);
       }
     }
 

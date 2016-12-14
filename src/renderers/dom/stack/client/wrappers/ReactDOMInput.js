@@ -72,13 +72,12 @@ var ReactDOMInput = {
 
   mountWrapper: function(inst, props) {
     if (__DEV__) {
+      var owner = inst._currentElement._owner;
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
-        inst._currentElement._owner
+        owner ? owner.getName() : null
       );
-
-      var owner = inst._currentElement._owner;
 
       if (
         props.checked !== undefined &&
