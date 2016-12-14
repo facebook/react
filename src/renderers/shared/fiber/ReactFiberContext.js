@@ -77,6 +77,7 @@ function isContextProvider(fiber : Fiber) : boolean {
 exports.isContextProvider = isContextProvider;
 
 function popContextProvider() : void {
+  invariant(index > -1, 'Unexpected context pop');
   contextStack[index] = emptyObject;
   didPerformWorkStack[index] = false;
   index--;
