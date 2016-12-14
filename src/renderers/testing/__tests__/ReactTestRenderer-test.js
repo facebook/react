@@ -200,8 +200,8 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([
       'render Foo',
       'mount Foo',
-      'unmount Foo',
       'render Bar',
+      'unmount Foo',
       'mount Bar',
       'unmount Bar',
     ]);

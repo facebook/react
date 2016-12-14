@@ -1318,6 +1318,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should support objects with prototypes as state
 * should not warn about unmounting during unmounting
 * should only call componentWillUnmount once
+* prepares new child before unmounting old
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponentDOMMinimalism-test.js
 * should not render extra nodes for non-interpolated text
@@ -1405,6 +1406,7 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should NOT replace children with different owners
 * should replace children with different keys
 * should reorder bailed-out children
+* prepares new children before unmounting old
 
 src/renderers/shared/shared/__tests__/ReactMultiChildReconcile-test.js
 * should reset internal state if removed then readded in an array

@@ -1358,4 +1358,45 @@ describe('ReactCompositeComponent', () => {
     expect(count).toBe(1);
   });
 
+  it('prepares new child before unmounting old', () => {
+    var log = [];
+
+    class Spy extends React.Component {
+      componentWillMount() {
+        log.push(this.props.name + ' componentWillMount');
+      }
+      render() {
+        log.push(this.props.name + ' render');
+        return <div />;
+      }
+      componentDidMount() {
+        log.push(this.props.name + ' componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push(this.props.name + ' componentWillUnmount');
+      }
+    }
+
+    class Wrapper extends React.Component {
+      render() {
+        return <Spy key={this.props.name} name={this.props.name} />;
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Wrapper name="A" />, container);
+    ReactDOM.render(<Wrapper name="B" />, container);
+
+    expect(log).toEqual([
+      'A componentWillMount',
+      'A render',
+      'A componentDidMount',
+
+      'B componentWillMount',
+      'B render',
+      'A componentWillUnmount',
+      'B componentDidMount',
+    ]);
+  });
+
 });
