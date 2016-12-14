@@ -1048,7 +1048,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<X />, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-        'nor use `dangerouslySetInnerHTML`. Check the render method of X.'
+        'nor use `dangerouslySetInnerHTML`. This DOM node was rendered by `X`.'
       );
     });
 

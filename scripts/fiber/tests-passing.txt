@@ -667,6 +667,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should validate against invalid styles
 * should track input values
 * should track textarea values
+* should warn for children on void elements
 * should support custom elements which extend native elements
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
