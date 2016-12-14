@@ -242,30 +242,39 @@ Another form control which you can change it to a controlled component, is `chec
 <input type="checkbox" />
 ```
 
-You can change this checkbox to controlled component by setting the `checked` property,
-and consequently set the `onChange` event:
+You can change it to a controlled component by setting the `checked` property:
 
-```html
-<input type="checkbox" checked={this.state.value} onChange={this.handleChange} />
-```
-
-And in your JavaScript code:
-
-```js{9}
-constructor(props) {
-  super(props);
-  this.state = { value: true };
+```js{4,15-17,23}
+class AgreementForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: true};
+    
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
   
-  this.handleChange = this.handleChange.bind(this);
-}
+  handleSubmit(event) {
+    alert('Your checkbox is ' + this.state.value);
+    event.preventDefault();
+  }
+  
+  handleChange(event) {
+    this.setState({value: event.target.checked});
+  }
 
-handleChange(event) {
-  this.setState({ value: event.target.checked });
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <input type="checkbox" checked={this.state.value} onChange={this.handleChange} />
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    );
+  }
 }
 ```
-
-As you can see, you can simply get the status of your checkbox, by checking the
-`checked` property of the element (via `event.target`).
 
 [Try it on CodePen.](http://codepen.io/dashtinejad/pen/YpGrEK?editors=0010)
 
@@ -286,21 +295,41 @@ React will take control of their state, and so, whenever one of them is checked,
 the other ones will be unchecked. Like the checkbox input, you make a radio button
 as a controlled component by setting the `checked` attribute of it:
 
-```html{2-4}
-<input type="radio"
-  checked={this.state.value === 'grapefruit'}
-  onChange={this.handleChange}
-  value="grapefruit"
-/> Grapefruit
-```
+```js{4,15-17,23-26}
+class FlavorForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: 'lime'};
+    
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+  
+  handleSubmit(event) {
+    alert('Your favorite flavor is: ' + this.state.value);
+    event.preventDefault();
+  }
+  
+  handleChange(event) {
+    this.setState({value: event.target.value});
+  }
 
-And the `handleChange` method is the easy part:
-
-```js{2}
-handleChange(event) {
-  this.setState({ value: event.target.value });
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <input type="radio" checked={this.state.value === 'grapefruit'} onChange={this.handleChange} value="grapefruit" /> Grapefruit
+          <input type="radio" checked={this.state.value === 'lime'} onChange={this.handleChange} value="lime" /> Lime
+          <input type="radio" checked={this.state.value === 'coconut'} onChange={this.handleChange} value="coconut" /> Coconut
+          <input type="radio" checked={this.state.value === 'mango'} onChange={this.handleChange} value="mango" /> Mango
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    );
+  }
 }
 ```
+
 [Try it on CodePen.](http://codepen.io/dashtinejad/pen/qqaPyG?editors=0010)
 
 ## Alternatives to Controlled Components
