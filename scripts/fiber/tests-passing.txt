@@ -1333,6 +1333,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should replace state
 * should support objects with prototypes as state
 * should not warn about unmounting during unmounting
+* should warn when mutated props are passed
 * should only call componentWillUnmount once
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponentDOMMinimalism-test.js

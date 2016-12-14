@@ -180,6 +180,14 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name
       );
+      const hasMutatedProps = instance.props !== workInProgress.pendingProps;
+      warning(
+        instance.props === undefined || !hasMutatedProps,
+        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'up the same props that your component\'s constructor was passed.',
+        name,
+        name
+      );
     }
 
     const state = instance.state;

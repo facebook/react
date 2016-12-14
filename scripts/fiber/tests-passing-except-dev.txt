@@ -146,7 +146,6 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should disallow nested render calls
-* should warn when mutated props are passed
 
 src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should warn for duplicated keys with component stack info
