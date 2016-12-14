@@ -47,6 +47,327 @@ describe('ReactTestUtils', () => {
     ]);
   });
 
+
+  describe('String refs', () => {
+    describe('with no refs', () => {
+      it('should handle no refs', () => {
+        React = require('React');
+        ReactTestUtils = require('ReactTestUtils');
+
+        class SomeComponentWithoutRef extends React.Component {
+          render() {
+            return (
+              <div>
+                <span />
+              </div>
+            );
+          }
+        }
+
+        var shallowRenderer = ReactTestUtils.createRenderer();
+        expect(
+          () => shallowRenderer.render(<SomeComponentWithoutRef />)
+        ).not.toThrow();
+      });
+    });
+
+    describe('Valid tree with refs', () => {
+      const aReactComponentRef = 'aReactComponentRef';
+      const aReactComponentChildRef = 'childrenRef';
+      const aDOMElementChildRef = 'aDOMElementChildRef';
+      const aFirstLevelRef = 'aFirstLevelRef';
+      const rootElementRef = 'rootElementRef';
+      const aRefOwnedByRoot = 'aRefOwnedByChild';
+
+      let instance;
+
+      beforeAll(() => {
+        React = require('React');
+        ReactTestUtils = require('ReactTestUtils');
+
+        class SomeOtherComponent extends React.Component {
+          render = () => <h1 ref={aReactComponentChildRef}>Allo</h1>
+        }
+
+        class SomeComponent extends React.Component {
+          render = () => (
+            <div ref={rootElementRef}>
+              <SomeOtherComponent
+                ref={aReactComponentRef}
+                aProp="something"
+              >
+                <p ref={aRefOwnedByRoot} />
+              </SomeOtherComponent>
+
+              <div ref={aFirstLevelRef}>
+                <p ref={aDOMElementChildRef} />
+              </div>
+
+            </div>
+          )
+        }
+
+        var shallowRenderer = ReactTestUtils.createRenderer();
+        shallowRenderer.render(<SomeComponent />);
+        instance = shallowRenderer.getMountedInstance();
+      });
+
+      it(`should return the react component and not on the dom node when the
+      requested ref is on a react component`, () => {
+        expect(instance.refs.aReactComponentRef.props.aProp).toEqual('something');
+      });
+
+      it('should have the containing element ref available', () => {
+        expect(instance.refs.rootElementRef).toBeDefined();
+      });
+
+      it('should have the first level ref available', () => {
+        expect(instance.refs.aFirstLevelRef).toBeDefined();
+      });
+
+      it('should have a ref owned by the root even if its given as a child of a React Component', () => {
+        expect(instance.refs.aRefOwnedByChild).toBeDefined();
+      });
+
+      it('should have the DOM-nested-level ref available', () => {
+        expect(instance.refs.aDOMElementChildRef).toBeDefined();
+      });
+
+      it('should not have unexisting ref', () => {
+        expect(instance.refs.anUnexistingRef).toBeUndefined();
+      });
+
+      it('should not have a ref owned by a child React component', () => {
+        expect(instance.refs.aReactComponentChildRef).toBeUndefined();
+      });
+
+      it('should still have an already rendered ref after update', () => {
+        instance.forceUpdate();
+        expect(instance.refs.aFirstLevelRef).toBeDefined();
+      });
+    });
+
+    describe('With conditional render', () => {
+      const buttonRef = 'theButton';
+      let instance;
+
+      beforeAll(() => {
+        React = require('React');
+        ReactTestUtils = require('ReactTestUtils');
+
+        class SomeComponent extends React.Component {
+          constructor() {
+            super();
+            this.state = { clicked: false };
+            this.refSpy = jest.fn((e) => {
+              this.theButton = e;
+            });
+          }
+
+          handleButtonClick = () => {
+            this.setState({ clicked: true });
+          }
+
+          render() {
+            if (this.state.clicked) {
+              return <p ref="clicked">foo</p>;
+            }
+
+            return (
+              <button
+                ref={buttonRef}
+                onClick={this.handleButtonClick}
+              />
+            );
+          }
+        }
+
+        var shallowRenderer = ReactTestUtils.createRenderer();
+        shallowRenderer.render(<SomeComponent />);
+        instance = shallowRenderer.getMountedInstance();
+
+        instance.refs[buttonRef].props.onClick();
+      });
+
+      it('should not have unmounted refs on update', () => {
+        expect(instance.refs.theButton).toBeUndefined();
+      });
+
+      it('should have the newly monted refs available', () => {
+        expect(instance.refs.clicked).toBeDefined();
+      });
+    });
+
+    describe('Invalid tree', () => {
+      beforeAll(() => {
+        React = require('React');
+        ReactTestUtils = require('ReactTestUtils');
+      });
+
+      it('throws an error if it find more than one ref', () => {
+        const aDoubleRef = 'aDoubleRef';
+        class SomeComponent extends React.Component {
+          render = () => (
+            <div>
+              <p ref={aDoubleRef} />
+              <p ref={aDoubleRef} />
+            </div>
+          );
+        }
+
+        var shallowRenderer = ReactTestUtils.createRenderer();
+        expect(() => shallowRenderer.render(<SomeComponent />)).toThrow();
+      });
+    });
+  });
+
+  describe('Callback refs', () => {
+    describe('On first render', () => {
+      let instance;
+
+      beforeAll(() => {
+        React = require('React');
+        ReactTestUtils = require('ReactTestUtils');
+
+        class SomeOtherComponent extends React.Component {
+          render() {
+            return (
+              <p ref={(e) => {
+                this.nestedUnderCompositeChildRef = e;
+              }}>
+                This is a part of a Composite Component
+              </p>
+            );
+          }
+        }
+
+        class SomeComponent extends React.Component {
+          constructor() {
+            super();
+            this.state = { clicked: false };
+          }
+
+          handleButtonClick = () => {
+            this.setState({ clicked: true });
+          }
+
+          render() {
+            return (
+              <div ref={(e) => {
+                this.rootRef = e;
+              }}>
+                <span ref={(e) => {
+                  this.domChildRef = e;
+                }}>
+                  <p ref={(e) => {
+                    this.domChildLevel2Ref = e;
+                  }}>Some text</p>
+                </span>
+
+                <SomeOtherComponent ref={(e) => {
+                  this.compositeChildRef = e;
+                }} />
+                {this.renderConditionalButton()}
+              </div>
+            );
+          }
+
+          renderConditionalButton() {
+            if (this.state.clicked) {
+              return null;
+            }
+
+            return (
+              <button
+                ref={(e) => {
+                  this.theButton = e;
+                }}
+                onClick={this.handleButtonClick}
+              />
+            );
+          }
+        }
+
+        var shallowRenderer = ReactTestUtils.createRenderer();
+        shallowRenderer.render(<SomeComponent />);
+        instance = shallowRenderer.getMountedInstance();
+      });
+
+      it('should have the root-element ref available on the instance', () => {
+        expect(instance.rootRef).toBeDefined();
+      });
+
+      it('should have the dom-child ref available on the instance', () => {
+        expect(instance.domChildRef).toBeDefined();
+      });
+
+      it('should have the composite-child ref available on the instance', () => {
+        expect(instance.compositeChildRef).toBeDefined();
+      });
+
+      it('should not have the nested-under-composite-component ref available', () => {
+        expect(instance.nestedUnderCompositeChildRef).toBeUndefined();
+      });
+
+      it('should have the second-level-dom-child ref available', () => {
+        expect(instance.domChildLevel2Ref).toBeDefined();
+      });
+    });
+
+    describe('on conditional render', () => {
+      let instance;
+      let refCalls;
+
+      beforeAll(() => {
+        React = require('React');
+        ReactTestUtils = require('ReactTestUtils');
+
+        class SomeComponent extends React.Component {
+          constructor() {
+            super();
+            this.state = { clicked: false };
+            this.refSpy = jest.fn((e) => {
+              this.theButton = e;
+            });
+          }
+
+          handleButtonClick = () => {
+            this.setState({ clicked: true });
+          }
+
+          render() {
+            if (this.state.clicked) {
+              return <p>foo</p>;
+            }
+
+            return (
+              <button
+                ref={this.refSpy}
+                onClick={this.handleButtonClick}
+              />
+            );
+          }
+        }
+
+        var shallowRenderer = ReactTestUtils.createRenderer();
+        shallowRenderer.render(<SomeComponent />);
+        instance = shallowRenderer.getMountedInstance();
+
+        instance.theButton.props.onClick();
+        refCalls = instance.refSpy.mock.calls;
+      });
+
+      it('should have the callback-refs registered during the last render called with null', () => {
+        expect(React.isValidElement(refCalls[0][0])).toBeTruthy();
+        expect(refCalls[1][0]).toBeNull();
+      });
+
+      it('should have null as the final ref when unmounted', () => {
+        expect(instance.theButton).toBeNull();
+      });
+    });
+  });
+
   it('should shallow render a functional component', () => {
     function SomeComponent() {
       return (

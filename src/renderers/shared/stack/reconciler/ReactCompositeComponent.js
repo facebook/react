@@ -464,7 +464,8 @@ var ReactCompositeComponent = {
     hostParent,
     hostContainerInfo,
     transaction,
-    context
+    context,
+    shallowRendering
   ) {
     var markup;
     var checkpoint = transaction.checkpoint();
@@ -487,7 +488,8 @@ var ReactCompositeComponent = {
       this._renderedComponent.unmountComponent(
         true, /* safely */
         // Don't call componentWillUnmount() because they never fully mounted:
-        true /* skipLifecyle */
+        true, /* skipLifecyle */
+        shallowRendering
       );
       transaction.rollback(checkpoint);
 
@@ -509,7 +511,8 @@ var ReactCompositeComponent = {
     hostParent,
     hostContainerInfo,
     transaction,
-    context
+    context,
+    shallowRendering
   ) {
     // If not a stateless component, we now render
     if (renderedElement === undefined) {
@@ -535,7 +538,8 @@ var ReactCompositeComponent = {
       hostParent,
       hostContainerInfo,
       this._processChildContext(context),
-      debugID
+      debugID,
+      shallowRendering
     );
 
     if (__DEV__) {
@@ -558,7 +562,7 @@ var ReactCompositeComponent = {
    * @final
    * @internal
    */
-  unmountComponent: function(safely, skipLifecycle) {
+  unmountComponent: function(safely, skipLifecycle, shallowRendering) {
     if (!this._renderedComponent) {
       return;
     }
@@ -590,7 +594,8 @@ var ReactCompositeComponent = {
       ReactReconciler.unmountComponent(
         this._renderedComponent,
         safely,
-        skipLifecycle
+        skipLifecycle,
+        shallowRendering
       );
       this._renderedNodeType = null;
       this._renderedComponent = null;
@@ -1090,7 +1095,8 @@ var ReactCompositeComponent = {
     transaction,
     context,
     nextRenderedElement,
-    safely
+    safely,
+    shallowRendering
   ) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
@@ -1112,7 +1118,8 @@ var ReactCompositeComponent = {
       ReactReconciler.unmountComponent(
         prevComponentInstance,
         safely,
-        false /* skipLifecycle */
+        false, /* skipLifecycle */
+        shallowRendering
       );
 
       var nodeType = ReactNodeTypes.getType(nextRenderedElement);
@@ -1129,7 +1136,8 @@ var ReactCompositeComponent = {
         this._hostParent,
         this._hostContainerInfo,
         this._processChildContext(context),
-        debugID
+        debugID,
+        shallowRendering
       );
 
       if (__DEV__) {
