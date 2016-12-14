@@ -390,7 +390,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   function resetWorkPriority(workInProgress : Fiber) {
     let newPriority = NoWork;
 
-    // Check for pending update priority
+    // Check for pending update priority. This is usually null so it shouldn't
+    // be a perf issue.
     const queue = workInProgress.updateQueue;
     if (queue) {
       newPriority = getPendingPriority(queue);

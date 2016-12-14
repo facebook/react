@@ -21,15 +21,6 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop = require('ReactNoop');
   });
 
-  function div(...children) {
-    children = children.map(c => typeof c === 'string' ? { text: c } : c);
-    return { type: 'div', children, prop: undefined };
-  }
-
-  function span(prop) {
-    return { type: 'span', children: [], prop };
-  }
-
   it('applies updates in order of priority', () => {
     let state;
     class Foo extends React.Component {
@@ -50,8 +41,10 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
+    ReactNoop.flushDeferredPri(25);
+    expect(state).toEqual({ a: 'a' });
     ReactNoop.flush();
-    expect(Object.keys(state)).toEqual(['a', 'b', 'c']);
+    expect(state).toEqual({ a: 'a', b: 'b', c: 'c' });
   });
 
   it('applies updates with equal priority in insertion order', () => {
@@ -72,20 +65,26 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(Object.keys(state)).toEqual(['a', 'b', 'c']);
+    expect(state).toEqual({ a: 'a', b: 'b', c: 'c' });
   });
 
   it('only drops updates with equal or lesser priority when replaceState is called', () => {
     let instance;
+    let ops = [];
     const Foo = React.createClass({
       getInitialState() {
         return {};
       },
+      componentDidMount() {
+        ops.push('componentDidMount');
+      },
+      componentDidUpdate() {
+        ops.push('componentDidUpdate');
+      },
       render() {
+        ops.push('render');
         instance = this;
-        return (
-          <span prop={Object.keys(this.state).join('')} />
-        );
+        return <div />;
       },
     });
 
@@ -104,27 +103,44 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushAnimationPri();
     // Even though a replaceState has been already scheduled, it hasn't been
     // flushed yet because it has low priority.
-    expect(ReactNoop.getChildren()).toEqual([span('ab')]);
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+    expect(ops).toEqual([
+      'render',
+      'componentDidMount',
+      'render',
+      'componentDidUpdate',
+    ]);
+
+    ops = [];
 
     ReactNoop.flush();
     // Now the rest of the updates are flushed.
-    expect(ReactNoop.getChildren()).toEqual([span('cd')]);
+    expect(instance.state).toEqual({ c: 'c', d: 'd' });
+    expect(ops).toEqual([
+      'render',
+      'componentDidUpdate',
+    ]);
   });
 
   it('can abort an update, schedule additional updates, and resume', () => {
     let instance;
+    let ops = [];
     class Foo extends React.Component {
       state = {};
+      componentDidUpdate() {
+        ops.push('componentDidUpdate');
+      }
       render() {
+        ops.push('render');
         instance = this;
-        return (
-          <span prop={Object.keys(this.state).join('')} />
-        );
+        return <div />;
       }
     }
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
+
+    ops = [];
 
     let progressedUpdates = [];
     function createUpdate(letter) {
@@ -141,9 +157,14 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('c'));
 
     // Do just enough work to begin the update but not enough to flush it
-    ReactNoop.flushDeferredPri(20);
-    expect(ReactNoop.getChildren()).toEqual([span('')]);
+    ReactNoop.flushDeferredPri(15);
+    // expect(ReactNoop.getChildren()).toEqual([span('')]);
+    expect(ops).toEqual(['render']);
     expect(progressedUpdates).toEqual(['a', 'b', 'c']);
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c' });
+
+    ops = [];
+    progressedUpdates = [];
 
     instance.setState(createUpdate('f'));
     ReactNoop.performAnimationWork(() => {
@@ -152,21 +173,35 @@ describe('ReactIncrementalUpdates', () => {
     });
     instance.setState(createUpdate('g'));
 
-    // Updates a, b, and c were aborted, so they should be applied first even
-    // though they have low priority. Update f was scheduled after the render
-    // was aborted, so it should come after d and e, which have higher priority.
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual([
+      // Flushes animation work (d and e)
+      'render',
+      'componentDidUpdate',
+    ]);
+    ops = [];
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
-    expect(progressedUpdates).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(ops).toEqual([
+      // Flushes deferred work (f and g)
+      'render',
+      'componentDidUpdate',
+    ]);
+    expect(progressedUpdates).toEqual(['d', 'e', 'a', 'b', 'c', 'f', 'g']);
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd', e: 'e', f: 'f', g: 'g' });
   });
 
   it('can abort an update, schedule a replaceState, and resume', () => {
     let instance;
+    let ops = [];
     const Foo = React.createClass({
       getInitialState() {
         return {};
       },
+      componentDidUpdate() {
+        ops.push('componentDidUpdate');
+      },
       render() {
+        ops.push('render');
         instance = this;
         return (
           <span prop={Object.keys(this.state).join('')} />
@@ -176,6 +211,7 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
+    ops = [];
 
     let progressedUpdates = [];
     function createUpdate(letter) {
@@ -193,9 +229,11 @@ describe('ReactIncrementalUpdates', () => {
 
     // Do just enough work to begin the update but not enough to flush it
     ReactNoop.flushDeferredPri(20);
-    expect(ReactNoop.getChildren()).toEqual([span('')]);
+    expect(ops).toEqual(['render']);
     expect(progressedUpdates).toEqual(['a', 'b', 'c']);
+    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c' });
 
+    ops = [];
     progressedUpdates = [];
 
     instance.setState(createUpdate('f'));
@@ -205,14 +243,10 @@ describe('ReactIncrementalUpdates', () => {
     });
     instance.setState(createUpdate('g'));
 
-    // Updates a, b, and c were aborted, so they should be applied first even
-    // though they have low priority. Update f was scheduled after the render
-    // was aborted, so it should come after d and e, which have higher priority.
-    // Because e is a replaceState, d gets dropped.
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('efg')]);
     // Ensure that updater function d is never called.
     expect(progressedUpdates).toEqual(['e', 'f', 'g']);
+    expect(instance.state).toEqual({ e: 'e', f: 'f', g: 'g' });
   });
 
   it('does not call callbacks that are scheduled by another callback until a later commit', () => {
@@ -259,7 +293,7 @@ describe('ReactIncrementalUpdates', () => {
       render() {
         ops.push('render');
         instance = this;
-        return <span prop={Object.keys(this.state).join('')} />;
+        return <div />;
       }
     }
     ReactNoop.render(<Foo />);
@@ -273,7 +307,7 @@ describe('ReactIncrementalUpdates', () => {
     });
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([span('ab')]);
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
     expect(ops).toEqual([
       'componentWillReceiveProps',
       'render',
@@ -290,7 +324,7 @@ describe('ReactIncrementalUpdates', () => {
       render() {
         ops.push('render');
         instance = this;
-        return <span prop={Object.keys(this.state).join('')} />;
+        return <div />;
       }
     }
 
@@ -304,7 +338,6 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('ab')]);
     expect(ops).toEqual([
       // Initial render
       'render',
@@ -313,6 +346,7 @@ describe('ReactIncrementalUpdates', () => {
       // be flushed in the same commit.
       'render',
     ]);
+    expect(instance.state).toEqual({ a: 'a', b: 'b' });
 
     expectDev(console.error.calls.count()).toBe(1);
     console.error.calls.reset();
