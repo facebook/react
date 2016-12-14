@@ -20,6 +20,7 @@ var warning = require('warning');
 
 import type { ReactElement, Source } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
 
 function isNative(fn) {
   // Based on isNative() from Lodash
@@ -191,6 +192,20 @@ function describeID(id: DebugID): string {
   return describeComponentFrame(name, element && element._source, ownerName);
 }
 
+function describeFiber(fiber : Fiber) : string {
+  var owner = fiber._debugOwner;
+  var source = fiber._debugSource;
+  if (owner == null && source == null) {
+    return '';
+  }
+  var name = getComponentName(fiber);
+  var ownerName = null;
+  if (owner) {
+    ownerName = getComponentName(owner);
+  }
+  return describeComponentFrame(name, source, ownerName);
+}
+
 var ReactComponentTreeHook = {
   onSetChildren(id: DebugID, nextChildIDs: Array<DebugID>): void {
     var item = getItem(id);
@@ -324,10 +339,24 @@ var ReactComponentTreeHook = {
     }
 
     var currentOwner = ReactCurrentOwner.current;
-    if (currentOwner && typeof currentOwner._debugID === 'number') {
-      var id = currentOwner && currentOwner._debugID;
-      info += ReactComponentTreeHook.getStackAddendumByID(id);
+    if (currentOwner) {
+      if (typeof currentOwner.tag === 'number') {
+        const fiber = ((currentOwner : any) : Fiber);
+        info += ReactComponentTreeHook.getStackAddendumByFiber(fiber);
+      } else if (typeof currentOwner._debugID === 'number') {
+        info += ReactComponentTreeHook.getStackAddendumByID(currentOwner._debugID);
+      }
     }
+    return info;
+  },
+
+  getStackAddendumByFiber(fiber : Fiber) : string {
+    var info = '';
+    var node = fiber;
+    do {
+      info += describeFiber(node);
+      node = node.return;
+    } while (node);
     return info;
   },
 

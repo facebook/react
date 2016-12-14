@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { ReactElement } from 'ReactElementType';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
 import type { Fiber } from 'ReactFiber';
@@ -68,7 +69,7 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
-function coerceRef(current: ?Fiber, element: ReactElement<any>) {
+function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
@@ -256,7 +257,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function updateElement(
     returnFiber : Fiber,
     current : ?Fiber,
-    element : ReactElement<any>,
+    element : ReactElement,
     priority : PriorityLevel
   ) : Fiber {
     if (current == null || current.type !== element.type) {
@@ -854,7 +855,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function reconcileSingleElement(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
-    element : ReactElement<any>,
+    element : ReactElement,
     priority : PriorityLevel
   ) : Fiber {
     const key = element.key;

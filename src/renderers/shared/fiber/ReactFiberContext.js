@@ -55,8 +55,7 @@ exports.getMaskedContext = function(fiber : Fiber) {
 
   if (__DEV__) {
     const name = getComponentName(fiber);
-    const debugID = 0; // TODO: pass a real ID
-    checkReactTypeSpec(contextTypes, context, 'context', name, null, debugID);
+    checkReactTypeSpec(contextTypes, context, 'context', name, null, fiber);
   }
 
   return context;
@@ -105,8 +104,7 @@ function processChildContext(fiber : Fiber, parentContext : Object): Object {
   }
   if (__DEV__) {
     const name = getComponentName(fiber);
-    const debugID = 0; // TODO: pass a real ID
-    checkReactTypeSpec(childContextTypes, childContext, 'childContext', name, null, debugID);
+    checkReactTypeSpec(childContextTypes, childContext, 'childContext', name, null, fiber);
   }
   return {...parentContext, ...childContext};
 }

@@ -12,9 +12,6 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * includes the owner name when passing null, undefined, boolean, or number
 
-src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
-* should give context for PropType errors in nested components.
-
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
@@ -64,7 +61,6 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should work when measurement starts during reconciliation
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
-* gets created
 * can be retrieved by ID
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js

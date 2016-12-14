@@ -44,7 +44,7 @@ var loggedTypeFailures = {};
  * @param {string} location e.g. "prop", "context", "child context"
  * @param {string} componentName Name of the component for error messages.
  * @param {?object} element The React element that is being type-checked
- * @param {?number} debugID The React component instance that is being type-checked
+ * @param {?number} fiberOrDebugID The React component instance that is being type-checked
  * @private
  */
 function checkReactTypeSpec(
@@ -53,7 +53,7 @@ function checkReactTypeSpec(
   location: ReactPropTypeLocations,
   componentName,
   element,
-  debugID,
+  fiberOrDebugID,
 ) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
@@ -99,8 +99,14 @@ function checkReactTypeSpec(
           if (!ReactComponentTreeHook) {
             ReactComponentTreeHook = require('ReactComponentTreeHook');
           }
-          if (debugID !== null) {
-            componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(debugID);
+          if (fiberOrDebugID != null) {
+            if (typeof fiberOrDebugID === 'number') {
+              const debugID = fiberOrDebugID;
+              componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(debugID);
+            } else if (typeof fiberOrDebugID.tag === 'number') {
+              const fiber = fiberOrDebugID;
+              componentStackInfo = ReactComponentTreeHook.getStackAddendumByFiber(fiber);
+            }
           } else if (element !== null) {
             componentStackInfo = ReactComponentTreeHook.getCurrentStackAddendum(element);
           }

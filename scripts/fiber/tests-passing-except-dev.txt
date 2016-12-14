@@ -1,20 +1,11 @@
 src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should warn for duplicated keys with component stack info
 
-src/isomorphic/classic/__tests__/ReactContextValidator-test.js
-* should check context types
-* should check child context types
-
 src/isomorphic/classic/element/__tests__/ReactElementClone-test.js
 * should check declared prop types after clone
 
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
-* warns for keys for arrays of elements with owner info
-* warns for keys with component stack info
 * should give context for PropType errors in nested components.
-
-src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
-* warns for keys for arrays of elements with owner info
 
 src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should warn when using hyphenated style names
@@ -133,15 +124,9 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded for composite roots
 * gets recorded when a native is mounted deeply instead of null
 * gets recorded during mount
-* gets recorded during an update
-* gets ignored if the styles are shallowly equal
 * gets recorded during mount
-* gets recorded during an update
-* gets recorded as a removal during an update
 * gets recorded during mount
-* gets recorded during an update
 * gets recorded during mount
-* gets recorded during an update
 * gets recorded during an update from text content
 * gets recorded during an update from html
 * gets recorded during an update from children
@@ -176,7 +161,6 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
 * should warn when given a ref
-* should use correct name in key warning
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * attaches, detaches from fiber component with stack layer
