@@ -621,6 +621,9 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should gracefully handle various style value types
 * should not update styles when mutating a proxy style object
 * should throw when mutating style objectsd
+* should warn for unknown prop
+* should group multiple unknown prop warnings together
+* should warn for onDblClick prop
 * should not warn for "0" as a unitless style value
 * should warn nicely about NaN in style
 * should update styles if initially null
@@ -687,7 +690,10 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
 * should throw when an attack vector is used
+* should warn about incorrect casing on properties
+* should warn about incorrect casing on event handlers
 * should warn about props that are no longer supported
+* should suggest property name if available
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
@@ -698,6 +704,9 @@ src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props
+* should warn for one invalid aria-* prop
+* should warn for many invalid aria-* props
+* should warn for an improperly cased aria-* prop
 
 src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates initial namespaced markup
@@ -951,11 +960,14 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should have a this value of undefined if bind is not used
 * should warn with checked and no onChange handler with readOnly specified
 * should update defaultValue to empty string
+* should warn if value is null
 * should warn if checked and defaultChecked props are specified
 * should warn if value and defaultValue props are specified
 * should warn if controlled input switches to uncontrolled (value is undefined)
+* should warn if controlled input switches to uncontrolled (value is null)
 * should warn if controlled input switches to uncontrolled with defaultValue
 * should warn if uncontrolled input (value is undefined) switches to controlled
+* should warn if uncontrolled input (value is null) switches to controlled
 * should warn if controlled checkbox switches to uncontrolled (checked is undefined)
 * should warn if controlled checkbox switches to uncontrolled (checked is null)
 * should warn if controlled checkbox switches to uncontrolled with defaultChecked
@@ -1001,6 +1013,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
 * should not control defaultValue if readding options
+* should warn if value is null
 * should refresh state on change
 * should warn if value and defaultValue props are specified
 * should be able to safely remove select onChange
@@ -1033,6 +1046,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should allow objects as children
 * should throw with multiple or invalid children
 * should unmount
+* should warn if value is null
 * should warn if value and defaultValue are specified
 
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js

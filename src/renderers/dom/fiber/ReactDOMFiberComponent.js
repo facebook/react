@@ -34,6 +34,16 @@ var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
+
+if (__DEV__) {
+  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
+  var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+  var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var { validateProperties: validateARIAProperties } = ReactDOMInvalidARIAHook;
+  var { validateProperties: validateInputPropertes } = ReactDOMNullInputValuePropHook;
+  var { validateProperties: validateUnknownPropertes } = ReactDOMUnknownPropertyHook;
+}
+
 var didWarnShadyDOM = false;
 
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -120,6 +130,14 @@ function assertValidProps(tag : string, props : ?Object) {
     'using JSX.%s',
      getDeclarationErrorAddendum()
   );
+}
+
+if (__DEV__) {
+  var validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
+    validateInputPropertes(type, props);
+    validateUnknownPropertes(type, props);
+  };
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
@@ -515,6 +533,7 @@ var ReactDOMFiberComponent = {
 
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
+      validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
@@ -632,6 +651,10 @@ var ReactDOMFiberComponent = {
     nextRawProps : Object,
     rootContainerElement : Element
   ) : void {
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, nextRawProps);
+    }
+
     var lastProps : Object;
     var nextProps : Object;
     switch (tag) {

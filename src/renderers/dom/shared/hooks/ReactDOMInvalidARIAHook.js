@@ -13,11 +13,22 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('warning');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
+
+function getStackAddendum(debugID) {
+  if (debugID != null) {
+    // This can only happen on Stack
+    return ReactComponentTreeHook.getStackAddendumByID(debugID);
+  } else {
+    // This can only happen on Fiber
+    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+  }
+}
 
 function validateProperty(tagName, name, debugID) {
   if (
@@ -47,7 +58,7 @@ function validateProperty(tagName, name, debugID) {
         'Unknown ARIA attribute %s. Did you mean %s?%s',
         name,
         standardName,
-        ReactComponentTreeHook.getStackAddendumByID(debugID)
+        getStackAddendum(debugID)
       );
       warnedProperties[name] = true;
       return true;
@@ -57,11 +68,11 @@ function validateProperty(tagName, name, debugID) {
   return true;
 }
 
-function warnInvalidARIAProps(debugID, element) {
+function warnInvalidARIAProps(type, props, debugID) {
   const invalidProps = [];
 
-  for (var key in element.props) {
-    var isValid = validateProperty(element.type, key, debugID);
+  for (var key in props) {
+    var isValid = validateProperty(type, key, debugID);
     if (!isValid) {
       invalidProps.push(key);
     }
@@ -77,8 +88,8 @@ function warnInvalidARIAProps(debugID, element) {
       'Invalid aria prop %s on <%s> tag. ' +
       'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID)
     );
   } else if (invalidProps.length > 1) {
     warning(
@@ -86,32 +97,31 @@ function warnInvalidARIAProps(debugID, element) {
       'Invalid aria props %s on <%s> tag. ' +
       'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID)
     );
   }
 }
 
-function handleElement(debugID, element) {
-  if (element == null || typeof element.type !== 'string') {
+function validateProperties(type, props, debugID /* Stack only */) {
+  if (type.indexOf('-') >= 0 || props.is) {
     return;
   }
-  if (element.type.indexOf('-') >= 0 || element.props.is) {
-    return;
-  }
-
-  warnInvalidARIAProps(debugID, element);
+  warnInvalidARIAProps(type, props, debugID);
 }
 
 var ReactDOMInvalidARIAHook = {
+  // Fiber
+  validateProperties,
+  // Stack
   onBeforeMountComponent(debugID, element) {
-    if (__DEV__) {
-      handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
     }
   },
   onBeforeUpdateComponent(debugID, element) {
-    if (__DEV__) {
-      handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
     }
   },
 };

@@ -2,9 +2,6 @@ src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should warn for duplicated keys with component stack info
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should warn for unknown prop
-* should group multiple unknown prop warnings together
-* should warn for onDblClick prop
 * should not warn when server-side rendering `onScroll`
 * warns on invalid nesting
 * warns on invalid nesting at root
@@ -12,15 +9,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives useful context in warnings
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
-* should warn about incorrect casing on properties
-* should warn about incorrect casing on event handlers
 * should warn about class
-* should suggest property name if available
-
-src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
-* should warn for one invalid aria-* prop
-* should warn for many invalid aria-* props
-* should warn for an improperly cased aria-* prop
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup
@@ -35,17 +24,6 @@ src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should have the correct mounting behavior
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
-* should warn if value is null
-* should warn if controlled input switches to uncontrolled (value is null)
-* should warn if uncontrolled input (value is null) switches to controlled
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
-* should warn if value is null
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should warn if value is null
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
