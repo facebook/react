@@ -202,7 +202,6 @@ module.exports = function<T, P, I, TI, C, CX>(
         return null;
       case HostRoot: {
         workInProgress.memoizedProps = workInProgress.pendingProps;
-        popContextProvider();
         const fiberRoot = (workInProgress.stateNode : FiberRoot);
         if (fiberRoot.pendingContext) {
           fiberRoot.context = fiberRoot.pendingContext;
