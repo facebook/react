@@ -21,7 +21,6 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn for children on void elements
-* should report component containing invalid styles
 * should clean up input value tracking
 * should clean up input textarea tracking
 * gives source code refs for unknown prop warning

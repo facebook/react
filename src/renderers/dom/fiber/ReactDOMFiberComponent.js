@@ -25,10 +25,10 @@ var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
+var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
 var emptyFunction = require('emptyFunction');
 var focusNode = require('focusNode');
-var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
@@ -56,7 +56,7 @@ var DOC_FRAGMENT_TYPE = 11;
 
 
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentOwnerName();
+  var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
     return ' This DOM node was rendered by `' + ownerName + '`.';
   }
@@ -436,7 +436,7 @@ function updateDOMProperties(
     CSSPropertyOperations.setValueForStyles(
       domElement,
       styleUpdates,
-      componentPlaceholder // TODO: Change CSSPropertyOperations to use getCurrentOwnerName.
+      componentPlaceholder // TODO: Change CSSPropertyOperations to use getCurrentFiberOwnerName.
     );
   }
 }
@@ -529,7 +529,7 @@ var ReactDOMFiberComponent = {
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-          getCurrentOwnerName() || 'A component'
+          getCurrentFiberOwnerName() || 'A component'
         );
         didWarnShadyDOM = true;
       }

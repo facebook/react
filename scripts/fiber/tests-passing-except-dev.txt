@@ -12,7 +12,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn for unknown prop
 * should group multiple unknown prop warnings together
 * should warn for onDblClick prop
-* should emit a warning once for a named custom component using shady DOM
 * should not warn when server-side rendering `onScroll`
 * warns on invalid nesting
 * warns on invalid nesting at root

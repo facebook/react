@@ -38,8 +38,7 @@ var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 
 if (__DEV__) {
-  var ReactComponentTreeHook = require('ReactComponentTreeHook');
-  var { getStackAddendumByFiber } = ReactComponentTreeHook;
+  var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
   var warning = require('warning');
 }
 
@@ -549,7 +548,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
   function warnOnDuplicateKey(
     child : mixed,
-    returnFiber : Fiber,
     knownKeys : Set<string> | null
   ) : Set<string> | null {
     if (__DEV__) {
@@ -580,7 +578,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             '`%s`. Child keys must be unique; when two children share a key, ' +
             'only the first child will be used.%s',
             key,
-            getStackAddendumByFiber(returnFiber)
+            getCurrentFiberStackAddendum()
           );
           break;
         default:
@@ -620,7 +618,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       let knownKeys = null;
       for (let i = 0; i < newChildren.length; i++) {
         const child = newChildren[i];
-        knownKeys = warnOnDuplicateKey(child, returnFiber, knownKeys);
+        knownKeys = warnOnDuplicateKey(child, knownKeys);
       }
     }
 
@@ -776,7 +774,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       let step = newChildren.next();
       for (; !step.done; step = newChildren.next()) {
         const child = step.value;
-        knownKeys = warnOnDuplicateKey(child, returnFiber, knownKeys);
+        knownKeys = warnOnDuplicateKey(child, knownKeys);
       }
     }
 

@@ -353,22 +353,14 @@ var ReactComponentTreeHook = {
     var currentOwner = ReactCurrentOwner.current;
     if (currentOwner) {
       if (typeof currentOwner.tag === 'number') {
-        const fiber = ((currentOwner : any) : Fiber);
-        info += ReactComponentTreeHook.getStackAddendumByFiber(fiber);
+        const workInProgress = ((currentOwner : any) : Fiber);
+        // Safe because if current owner exists, we are reconciling,
+        // and it is guaranteed to be the work-in-progress version.
+        info += ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
       } else if (typeof currentOwner._debugID === 'number') {
         info += ReactComponentTreeHook.getStackAddendumByID(currentOwner._debugID);
       }
     }
-    return info;
-  },
-
-  getStackAddendumByFiber(fiber : Fiber) : string {
-    var info = '';
-    var node = fiber;
-    do {
-      info += describeFiber(node);
-      node = node.return;
-    } while (node);
     return info;
   },
 
@@ -378,6 +370,20 @@ var ReactComponentTreeHook = {
       info += describeID(id);
       id = ReactComponentTreeHook.getParentID(id);
     }
+    return info;
+  },
+
+  // This function can only be called with a work-in-progress fiber and
+  // only during begin or complete phase. Do not call it under any other
+  // circumstances.
+  getStackAddendumByWorkInProgressFiber(workInProgress : Fiber) : string {
+    var info = '';
+    var node = workInProgress;
+    do {
+      info += describeFiber(node);
+      // Otherwise this return pointer might point to the wrong tree:
+      node = node.return;
+    } while (node);
     return info;
   },
 

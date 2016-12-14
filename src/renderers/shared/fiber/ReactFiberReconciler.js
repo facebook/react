@@ -91,7 +91,7 @@ export type Reconciler<C, I, TI> = {
 getContextForSubtree._injectFiber(function(fiber : Fiber) {
   const parentContext = findCurrentUnmaskedContext(fiber);
   return isContextProvider(fiber) ?
-    processChildContext(fiber, parentContext) :
+    processChildContext(fiber, parentContext, false) :
     parentContext;
 });
 

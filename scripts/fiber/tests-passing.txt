@@ -653,6 +653,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn on upper case HTML tags, not SVG nor custom tags
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
+* should include owner rather than parent in warnings
+* should emit a warning once for a named custom component using shady DOM
 * should emit a warning once for an unnamed custom component using shady DOM
 * should treat menuitem as a void element but still create the closing tag
 * should validate against multiple children props
@@ -671,6 +673,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should validate against multiple children props
 * should warn about contentEditable and children
 * should validate against invalid styles
+* should report component containing invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
 * should warn about the `onScroll` issue when unsupported (IE8)

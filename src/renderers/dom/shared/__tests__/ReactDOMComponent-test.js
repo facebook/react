@@ -848,6 +848,33 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should include owner rather than parent in warnings', () => {
+      var container = document.createElement('div');
+
+      function Parent(props) {
+        return props.children;
+      }
+      function Owner() {
+        // We're using the input dangerouslySetInnerHTML invariant but the
+        // exact error doesn't matter as long as we have a way to verify
+        // that warnings and invariants contain owner rather than parent name.
+        return (
+          <Parent>
+            <input dangerouslySetInnerHTML={{__html: 'content'}} />
+          </Parent>
+        );
+      }
+
+      expect(function() {
+        ReactDOM.render(
+          <Owner />,
+          container
+        );
+      }).toThrowError(
+        'This DOM node was rendered by `Owner`.'
+      );
+    });
+
     it('should emit a warning once for a named custom component using shady DOM', () => {
       if (ReactDOMFeatureFlags.useCreateElement) {
         spyOn(console, 'error');

@@ -19,8 +19,8 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
 };
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
+var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
-var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -69,7 +69,7 @@ var ReactDOMTextarea = {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        getCurrentOwnerName()
+        getCurrentFiberOwnerName()
       );
       if (
         props.value !== undefined &&
