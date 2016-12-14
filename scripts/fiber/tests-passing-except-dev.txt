@@ -133,10 +133,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is removed
 
-src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
-* warns for duplicated keys
-* warns for duplicated keys with component stack info
-
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should correctly determine if a component is mounted
 * should correctly determine if a null component is mounted
@@ -148,7 +144,6 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should disallow nested render calls
 
 src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
-* should warn for duplicated keys with component stack info
 * should warn for using maps as children with owner info
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js

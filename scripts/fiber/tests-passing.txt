@@ -1279,6 +1279,12 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets ignored if the type has not changed
 * gets ignored if new html is equal
 
+src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
+* warns for duplicated array keys
+* warns for duplicated array keys with component stack info
+* warns for duplicated iterable keys
+* warns for duplicated iterable keys with component stack info
+
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should throw when supplying a ref outside of render method
 * should warn when children are mutated during render
@@ -1421,6 +1427,8 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should replace children with different constructors
 * should NOT replace children with different owners
 * should replace children with different keys
+* should warn for duplicated array keys with component stack info
+* should warn for duplicated iterable keys with component stack info
 * should reorder bailed-out children
 
 src/renderers/shared/shared/__tests__/ReactMultiChildReconcile-test.js

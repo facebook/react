@@ -50,7 +50,7 @@ var invariant = require('invariant');
 export type Fiber = {
   // __DEV__ only
   _debugID ?: DebugID,
-  _debugSource ?: Source,
+  _debugSource ?: Source | null,
   _debugOwner ?: Fiber | ReactInstance | null, // Stack compatible
 
   // These first fields are conceptually members of an Instance. This used to
@@ -169,7 +169,7 @@ if (__DEV__) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
-  var fiber = {
+  var fiber : Fiber = {
 
     // Instance
 
@@ -213,12 +213,12 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
   };
 
   if (__DEV__) {
-    (fiber : any)._debugID = debugCounter++;
-    (fiber : any)._debugSource = null;
-    (fiber : any)._debugOwner = null;
+    fiber._debugID = debugCounter++;
+    fiber._debugSource = null;
+    fiber._debugOwner = null;
   }
 
-  return (fiber : any); // Don't set dev-only fields in production
+  return fiber;
 };
 
 function shouldConstruct(Component) {
