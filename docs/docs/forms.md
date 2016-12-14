@@ -180,52 +180,24 @@ class FlavorForm extends React.Component {
 
 [Try it on CodePen.](https://codepen.io/gaearon/pen/JbbEzX?editors=0010)
 
-Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
 
-## Multi select
+You can also do multiple selection, by setting the `multiple` parameter and using an array as the value.
 
-In HTML, you can change a `select` tag to multiselect, with `multiple` attribute:
-
-```html
-<select multiple>
-  <option value="grapefruit">Grapefruit</option>
-  <option value="lime">Lime</option>
-  <option value="coconut">Coconut</option>
-  <option value="mango">Mango</option>
-</select>
-```
-
-You can use this feature on React too:
-
-```js{1}
-<select multiple={true} value={this.state.value}>
-  <option value="grapefruit">Grapefruit</option>
-  <option value="lime">Lime</option>
-  <option value="coconut">Coconut</option>
-  <option value="mango">Mango</option>
-</select>
-```
-
-Becareful, as your select tag is multiple, the value **must be an array**:
-
-```js{3}
-constructor(props) {
-  super(props);
-  this.state = { value: ['lime', 'mango'] };
-}
-```
-
-Now we have a controlled component, so we have to set an `onChange` handler for it:
-
-```html
-<select multiple={true} value={this.state.value} onChange={this.handleChange}>
-```
-
-Writing the `onChange` handler to get current `selected` options is a bit harder
-than the previous ones, we have to loop through the `options`, and get the value
-of selected ones:
-
-```js{3-8}
+```js{4,15-25,31}
+class FlavorForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: ['lime', 'mango']};
+    
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+  
+  handleSubmit(event) {
+    alert('Your favorite flavor(s): ' + this.state.value);
+    event.preventDefault();
+  }
+  
   handleChange(event) {
     var options = event.target.options;
     var value = [];
@@ -235,10 +207,33 @@ of selected ones:
       }
     }
     
-    this.setState({ value: value });
+    this.setState({value: value});
   }
+
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <select multiple={true} value={this.state.value} onChange={this.handleChange}>
+            <option value="grapefruit">Grapefruit</option>
+            <option value="lime">Lime</option>
+            <option value="coconut">Coconut</option>
+            <option value="mango">Mango</option>
+          </select>
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    );
+  }
+}
 ```
 [Try it on CodePen.](http://codepen.io/dashtinejad/pen/yVaojJ?editors=0010)
+
+
+Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
+
+
+
 
 ## Checkbox
 Another form control which you can change it to a controlled component, is `checkbox`:
