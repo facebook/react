@@ -64,6 +64,35 @@ describe('ReactDOMFiber', () => {
     expect(called).toEqual(true);
   });
 
+  it('should call a callback argument when the same element is re-rendered', () => {
+    class Foo extends React.Component {
+      render() {
+        return <div>Foo</div>;
+      }
+    }
+    const element = <Foo />;
+
+    // mounting phase
+    let called = false;
+    ReactDOM.render(
+      element,
+      container,
+      () => called = true
+    );
+    expect(called).toEqual(true);
+
+    // updating phase
+    called = false;
+    ReactDOM.unstable_batchedUpdates(() => {
+      ReactDOM.render(
+        element,
+        container,
+        () => called = true
+      );
+    });
+    expect(called).toEqual(true);
+  });
+
   if (ReactDOMFeatureFlags.useFiber) {
     it('should render a component returning strings directly from render', () => {
       const Text = ({value}) => value;

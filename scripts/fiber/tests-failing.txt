@@ -82,9 +82,6 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
 
-src/renderers/shared/shared/__tests__/ReactCompositeComponentNestedState-test.js
-* should provide up to date values for props
-
 src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
 * should update state when called from child cWRP
 

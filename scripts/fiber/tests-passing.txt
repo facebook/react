@@ -505,6 +505,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should render strings as children
 * should render numbers as children
 * should be called a callback argument
+* should call a callback argument when the same element is re-rendered
 * should render a component returning strings directly from render
 * should render a component returning numbers directly from render
 * finds the DOM Text node of a string child
@@ -1322,6 +1323,9 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponentDOMMinimalism-test.
 * should not render extra nodes for non-interpolated text
 * should not render extra nodes for non-interpolated text
 * should not render extra nodes for non-interpolated text
+
+src/renderers/shared/shared/__tests__/ReactCompositeComponentNestedState-test.js
+* should provide up to date values for props
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
 * should support setting state
