@@ -69,10 +69,10 @@ function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
     return 0;
   }
   if (a === NoWork && b !== NoWork) {
-    return -Infinity;
+    return -255;
   }
   if (a !== NoWork && b === NoWork) {
-    return Infinity;
+    return 255;
   }
   return a - b;
 }
@@ -299,7 +299,7 @@ function addReplaceUpdate(
   for (let i = 0; queue && i < 2; i++) {
     let replaceAfter = null;
     let replaceBefore = queue.first;
-    let comparison = Infinity;
+    let comparison = 255;
     while (replaceBefore &&
            (comparison = comparePriority(replaceBefore.priorityLevel, priorityLevel)) <= 0) {
       if (comparison < 0) {
