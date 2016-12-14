@@ -159,6 +159,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
+  // findNextUnitOfWork mutates the current priority context. It is reset after
+  // after the workLoop exits, so never call findNextUnitOfWork from outside
+  // the work loop.
   function findNextUnitOfWork() {
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
@@ -195,6 +198,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
     if (highestPriorityRoot) {
       nextPriorityLevel = highestPriorityLevel;
+      priorityContext = nextPriorityLevel;
       return cloneFiber(
         highestPriorityRoot.current,
         highestPriorityLevel
@@ -497,11 +501,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
-
-    priorityContextBeforeReconciliation = priorityContext;
-    priorityContext = nextPriorityLevel;
     let next = beginWork(current, workInProgress, nextPriorityLevel);
-    priorityContext = priorityContextBeforeReconciliation;
 
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
@@ -540,10 +540,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
     }
     // See if beginning this work spawns more work.
-    priorityContextBeforeReconciliation = priorityContext;
-    priorityContext = nextPriorityLevel;
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
-    priorityContext = priorityContextBeforeReconciliation;
 
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
@@ -689,6 +686,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // operations must happen within workLoop, which is extracted to a
       // separate function so that it can be optimized by the JS engine.
       try {
+        priorityContextBeforeReconciliation = priorityContext;
+        priorityContext = nextPriorityLevel;
         deadlineHasExpired = workLoop(priorityLevel, deadline, deadlineHasExpired);
       } catch (error) {
         // We caught an error during either the begin or complete phases.
@@ -724,6 +723,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         }
         // Continue performing work
         continue;
+      } finally {
+        priorityContext = priorityContextBeforeReconciliation;
       }
 
       // Stop performing work
