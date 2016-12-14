@@ -13,6 +13,8 @@ redirect_from:
   - "docs/jsx-in-depth-ko-KR.html"
 ---
 
+# Make it interactive
+
 Fundamentally, JSX just provides syntactic sugar for the `React.createElement(component, props, ...children)` function. The JSX code:
 
 ```js
