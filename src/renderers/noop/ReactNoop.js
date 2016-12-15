@@ -305,11 +305,11 @@ var ReactNoop = {
 
     function logFiber(fiber : Fiber, depth) {
       log(
-        '  '.repeat(depth) + '- ' + (fiber.type ? fiber.type.name || fiber.type : '[root]'),
+        '  '.repeat(depth) + '- ' + (fiber.type ? (fiber.type : any).name || fiber.type : '[root]'),
         '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
       );
-      if (fiber.updateQueue) {
-        logUpdateQueue(fiber.updateQueue, depth);
+      if ((fiber : any).updateQueue) {
+        logUpdateQueue((fiber : any).updateQueue, depth);
       }
       const childInProgress = fiber.progressedChild;
       if (childInProgress && childInProgress !== fiber.child) {
@@ -332,7 +332,7 @@ var ReactNoop = {
     log('HOST INSTANCES:');
     logContainer(rootContainer, 0);
     log('FIBERS:');
-    logFiber((root.stateNode : any).current, 0);
+    logFiber((root : any).stateNode.current, 0);
 
     console.log(...bufferedLog);
   },
