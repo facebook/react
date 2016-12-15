@@ -9,7 +9,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives useful context in warnings
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
-* should warn about class
+* should warn about class (ssr)
+* should suggest property name if available (ssr)
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup

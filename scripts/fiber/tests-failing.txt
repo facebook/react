@@ -22,10 +22,9 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should clean up input value tracking
 * should clean up input textarea tracking
-* gives source code refs for unknown prop warning
-* gives source code refs for unknown prop warning for update render
-* gives source code refs for unknown prop warning for exact elements 
-* gives source code refs for unknown prop warning for exact elements in composition 
+* gives source code refs for unknown prop warning (ssr)
+* gives source code refs for unknown prop warning for exact elements (ssr)
+* gives source code refs for unknown prop warning for exact elements in composition (ssr)
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
