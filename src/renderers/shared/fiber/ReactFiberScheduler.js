@@ -187,6 +187,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   function commitAllHostEffects(finishedWork : Fiber) {
     while (nextEffect) {
+      if (__DEV__) {
+        ReactDebugCurrentFiber.current = nextEffect;
+      }
+
       if (nextEffect.effectTag & ContentReset) {
         config.resetTextContent(nextEffect.stateNode);
       }
@@ -232,6 +236,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         }
       }
       nextEffect = nextEffect.nextEffect;
+    }
+
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = null;
     }
 
     // If the root itself had an effect, we perform that since it is

@@ -1,9 +1,6 @@
 src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should warn for duplicated keys with component stack info
 
-src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should warn when updating hyphenated style names
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn for unknown prop
 * should group multiple unknown prop warnings together

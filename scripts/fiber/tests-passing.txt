@@ -553,6 +553,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should set style attribute when styles exist
 * should not set style attribute when no styles exist
 * should warn when using hyphenated style names
+* should warn when updating hyphenated style names
 * warns when miscapitalizing vendored style names
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
