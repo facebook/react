@@ -1448,6 +1448,8 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * always sets the attribute when values change on text inputs
 * does not set the value attribute on number inputs if focused
 * sets the value attribute on number inputs on blur
+* an uncontrolled number input will not update the value attribute on blur
+* an uncontrolled text input will not update the value attribute on blur
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string

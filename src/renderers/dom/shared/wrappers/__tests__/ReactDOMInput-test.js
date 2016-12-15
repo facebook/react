@@ -1139,8 +1139,19 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('2');
     });
 
-    it('an uncontrolled input will not update the value attribute on blur', () => {
+    it('an uncontrolled number input will not update the value attribute on blur', () => {
       var stub = ReactTestUtils.renderIntoDocument(<input type="number" defaultValue="1" />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = 4;
+
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
+
+    it('an uncontrolled text input will not update the value attribute on blur', () => {
+      var stub = ReactTestUtils.renderIntoDocument(<input type="text" defaultValue="1" />);
       var node = ReactDOM.findDOMNode(stub);
 
       node.value = 4;

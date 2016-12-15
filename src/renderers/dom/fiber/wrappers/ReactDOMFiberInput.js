@@ -138,11 +138,8 @@ var ReactDOMInput = {
         ? props.checked
         : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
+      controlled: isControlled(props)
     };
-
-    if (__DEV__) {
-      node._wrapperState.controlled = isControlled(props);
-    }
   },
 
   updateWrapper: function(element: Element, props: Object) {
