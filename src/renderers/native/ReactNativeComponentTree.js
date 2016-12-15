@@ -39,6 +39,10 @@ function precacheNode(inst, tag) {
   instanceCache[tag] = nativeInst;
 }
 
+function precacheFiberNode(hostInst, tag) {
+  instanceCache[tag] = hostInst;
+}
+
 function uncacheNode(inst) {
   var tag = inst._rootNodeID;
   if (tag) {
@@ -46,21 +50,29 @@ function uncacheNode(inst) {
   }
 }
 
+function uncacheFiberNode(tag) {
+  delete instanceCache[tag];
+}
+
 function getInstanceFromTag(tag) {
   return instanceCache[tag] || null;
 }
 
 function getTagFromInstance(inst) {
-  invariant(inst._rootNodeID, 'All native instances should have a tag.');
-  return inst._rootNodeID;
+  // TODO (bvaughn) Clean up once Stack is deprecated
+  var tag = inst._rootNodeID || inst.stateNode._nativeTag;
+  invariant(tag, 'All native instances should have a tag.');
+  return tag;
 }
 
 var ReactNativeComponentTree = {
   getClosestInstanceFromNode: getInstanceFromTag,
   getInstanceFromNode: getInstanceFromTag,
   getNodeFromInstance: getTagFromInstance,
-  precacheNode: precacheNode,
-  uncacheNode: uncacheNode,
+  precacheFiberNode,
+  precacheNode,
+  uncacheFiberNode,
+  uncacheNode,
 };
 
 module.exports = ReactNativeComponentTree;

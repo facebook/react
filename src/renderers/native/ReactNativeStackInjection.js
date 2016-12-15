@@ -30,6 +30,7 @@ var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 
+var findNodeHandle = require('findNodeHandle');
 var invariant = require('invariant');
 
 function inject() {
@@ -60,6 +61,13 @@ function inject() {
       instantiate
     );
   };
+
+  findNodeHandle.injection.injectFindNode(
+    (instance) => instance.getHostNode()
+  );
+  findNodeHandle.injection.injectFindRootNodeID(
+    (instance) => instance._rootNodeID
+  );
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 

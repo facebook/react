@@ -50,6 +50,9 @@ import type { ReactInstance } from 'ReactInstanceType';
  * nodeHandle       N/A              rootNodeID             tag
  */
 
+let injectedFindNode;
+let injectedFindRootNodeID;
+
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     // TODO: fix this unsafe cast to work with Fiber.
@@ -82,9 +85,9 @@ function findNodeHandle(componentOrHandle: any): ?number {
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return internalInstance.getHostNode();
+    return injectedFindNode(internalInstance);
   } else {
-    var rootNodeID = component._rootNodeID;
+    var rootNodeID = injectedFindRootNodeID(component);
     if (rootNodeID) {
       return rootNodeID;
     } else {
@@ -92,7 +95,10 @@ function findNodeHandle(componentOrHandle: any): ?number {
         (
           // Native
           typeof component === 'object' &&
-          '_rootNodeID' in component
+          (
+            '_rootNodeID' in component || // TODO (bvaughn) Clean up once Stack is deprecated
+            '_nativeTag' in component
+          )
         ) || (
           // Composite
           component.render != null &&
@@ -111,5 +117,15 @@ function findNodeHandle(componentOrHandle: any): ?number {
     }
   }
 }
+
+// Fiber and stack implementations differ; each must inject a strategy
+findNodeHandle.injection = {
+  injectFindNode(findNode) {
+    injectedFindNode = findNode;
+  },
+  injectFindRootNodeID(findRootNodeID) {
+    injectedFindRootNodeID = findRootNodeID;
+  },
+};
 
 module.exports = findNodeHandle;

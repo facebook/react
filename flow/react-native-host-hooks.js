@@ -29,16 +29,35 @@ declare module 'TextInputState' {
 declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
-  declare function createView() : void;
-  declare function manageChildren() : void;
+  declare function createView(
+    reactTag : number,
+    viewName : string,
+    rootTag : number,
+    props : ?Object,
+  ) : void;
+  declare function manageChildren(
+    containerTag : number,
+    moveFromIndices : Array<number>,
+    moveToIndices : Array<number>,
+    addChildReactTags : Array<number>,
+    addAtIndices : Array<number>,
+    removeAtIndices : Array<number>
+  ) : void;
   declare function measure() : void;
   declare function measureInWindow() : void;
   declare function measureLayout() : void;
   declare function removeRootView() : void;
   declare function removeSubviewsFromContainerWithID() : void;
   declare function replaceExistingNonRootView() : void;
-  declare function setChildren() : void;
-  declare function updateView() : void;
+  declare function setChildren(
+    containerTag : number,
+    reactTags : Array<number>,
+  ) : void;
+  declare function updateView(
+    reactTag : number,
+    viewName : string,
+    props : ?Object,
+  ) : void;
 }
 declare module 'View' {
   declare var exports : typeof ReactComponent;
