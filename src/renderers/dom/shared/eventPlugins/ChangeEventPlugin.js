@@ -318,7 +318,7 @@ var ChangeEventPlugin = {
     }
 
     // When blurring, set the value attribute for number inputs
-    if (topLevelType === 'topBlur') {
+    if (topLevelType === 'topBlur' && targetNode.type === 'number') {
       targetNode.setAttribute('value', targetNode.value);
     }
   },
