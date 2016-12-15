@@ -1026,6 +1026,13 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: this._debugID,
+          type: 'update styles',
+          payload: styleUpdates,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(
         getNode(this),
         styleUpdates,

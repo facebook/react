@@ -20,7 +20,6 @@ var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
@@ -58,6 +57,7 @@ var DOC_FRAGMENT_TYPE = 11;
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
+    // TODO: also report the stack.
     return ' This DOM node was rendered by `' + ownerName + '`.';
   }
   return '';
@@ -424,19 +424,10 @@ function updateDOMProperties(
     }
   }
   if (styleUpdates) {
-    var componentPlaceholder = null;
-    if (__DEV__) {
-      // HACK
-      var internalInstance = ReactDOMComponentTree.getInstanceFromNode(domElement);
-      componentPlaceholder = {
-        _currentElement: { type: internalInstance.type, props: internalInstance.memoizedProps },
-        _debugID: internalInstance._debugID,
-      };
-    }
+    // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
     CSSPropertyOperations.setValueForStyles(
       domElement,
       styleUpdates,
-      componentPlaceholder // TODO: Change CSSPropertyOperations to use getCurrentFiberOwnerName.
     );
   }
 }

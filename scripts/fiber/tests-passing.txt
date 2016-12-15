@@ -552,6 +552,10 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should create vendor-prefixed markup correctly
 * should set style attribute when styles exist
 * should not set style attribute when no styles exist
+* should warn when using hyphenated style names
+* warns when miscapitalizing vendored style names
+* should warn about style having a trailing semicolon
+* should warn about style containing a NaN value
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
@@ -1272,8 +1276,6 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets ignored for composite roots that return null
-* gets recorded during an update
-* gets ignored if the styles are shallowly equal
 * gets recorded during an update
 * gets recorded as a removal during an update
 * gets recorded during an update
