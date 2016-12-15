@@ -138,7 +138,7 @@ var ReactDOMInput = {
         ? props.checked
         : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
-      controlled: isControlled(props)
+      controlled: isControlled(props),
     };
   },
 

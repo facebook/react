@@ -262,7 +262,7 @@ function handleControlledInputBlur(inst, node) {
   // Fiber and ReactDOM keep wrapper state in separate places
   let state = inst._wrapperState || node._wrapperState;
 
-  if (!state || node.type !== 'number' || !state.controlled) {
+  if (!state || !state.controlled || node.type !== 'number') {
     return;
   }
 
