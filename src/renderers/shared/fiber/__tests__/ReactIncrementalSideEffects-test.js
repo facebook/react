@@ -915,8 +915,41 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
     let called = false;
     instance.setState({}, () => {
+      expect(ReactNoop.getChildren()).toEqual([
+        span('foo'),
+      ]);
       called = true;
     });
+    ReactNoop.flush();
+    expect(called).toBe(true);
+  });
+
+  it('calls setState callback even if replaceState is called', () => {
+    let instance;
+    const Foo = React.createClass({
+      getInitialState: () => ({ text: 'foo' }),
+      shouldComponentUpdate(nextProps, nextState) {
+        return this.state.text !== nextState.text;
+      },
+      render() {
+        instance = this;
+        return <span prop={this.state.text} />;
+      },
+    });
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      span('foo'),
+    ]);
+    let called = false;
+    instance.setState({ text: 'bar' }, () => {
+      expect(ReactNoop.getChildren()).toEqual([
+        span('baz'),
+      ]);
+      called = true;
+    });
+    instance.replaceState({ text: 'baz' });
     ReactNoop.flush();
     expect(called).toBe(true);
   });
