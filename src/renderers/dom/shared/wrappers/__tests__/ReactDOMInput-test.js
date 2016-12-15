@@ -1138,6 +1138,17 @@ describe('ReactDOMInput', () => {
 
       expect(node.getAttribute('value')).toBe('2');
     });
+
+    it('an uncontrolled input will not update the value attribute on blur', () => {
+      var stub = ReactTestUtils.renderIntoDocument(<input type="number" defaultValue="1" />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = 4;
+
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
   });
 
 });
