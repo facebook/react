@@ -219,7 +219,7 @@ var HTMLDOMPropertyConfig = {
       // Number inputs get special treatment due to some edge cases in
       // Chrome. Let everything else assign the value attribute as normal.
       // https://github.com/facebook/react/issues/7253#issuecomment-236074326
-      if (node.type !== 'number') {
+      if (node.type !== 'number' || node.hasAttribute('value') === false) {
         node.setAttribute('value', '' + value);
       } else if (node.validity &&
                  !node.validity.badInput &&

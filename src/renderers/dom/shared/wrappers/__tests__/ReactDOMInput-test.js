@@ -1091,7 +1091,7 @@ describe('ReactDOMInput', () => {
       return React.createClass({
         getInitialState: function() {
           return {
-            value: this.props.value == null ? '' : this.props.value
+            value: this.props.value == null ? '' : this.props.value,
           };
         },
         onChange: function(event) {
@@ -1102,22 +1102,22 @@ describe('ReactDOMInput', () => {
           var value = this.state.value;
 
           return (<input type={type} value={value} onChange={this.onChange} />);
-        }
+        },
       });
     }
 
     it('always sets the attribute when values change on text inputs', function() {
-      var Input = getTestInput()
+      var Input = getTestInput();
       var stub = ReactTestUtils.renderIntoDocument(<Input type="text" />);
       var node = ReactDOM.findDOMNode(stub);
 
       ReactTestUtils.Simulate.change(node, { target: { value: '2'} });
 
       expect(node.getAttribute('value')).toBe('2');
-    })
+    });
 
     it('does not set the value attribute on number inputs if focused', () => {
-      var Input = getTestInput()
+      var Input = getTestInput();
       var stub = ReactTestUtils.renderIntoDocument(<Input type="number" value="1" />);
       var node = ReactDOM.findDOMNode(stub);
 
@@ -1129,14 +1129,12 @@ describe('ReactDOMInput', () => {
     });
 
     it('sets the value attribute on number inputs on blur', () => {
-      var Input = getTestInput()
+      var Input = getTestInput();
       var stub = ReactTestUtils.renderIntoDocument(<Input type="number" value="1" />);
       var node = ReactDOM.findDOMNode(stub);
 
-      node.focus();
-
       ReactTestUtils.Simulate.change(node, { target: { value: '2'} });
-      ReactTestUtils.SimulateNative.blur(node)
+      ReactTestUtils.SimulateNative.blur(node);
 
       expect(node.getAttribute('value')).toBe('2');
     });
