@@ -944,28 +944,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
-  function scheduleWork(root : FiberRoot) {
-    let priorityLevel = priorityContext;
-
-    // If we're in a batch, switch to task priority
-    if (priorityLevel === SynchronousPriority && isPerformingWork) {
-      priorityLevel = TaskPriority;
-    }
-
-    scheduleWorkAtPriority(root, priorityLevel);
-  }
-
-  function scheduleWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) {
-    // Set the priority on the root, without deprioritizing
-    if (root.current.pendingWorkPriority === NoWork ||
-        priorityLevel <= root.current.pendingWorkPriority) {
-      root.current.pendingWorkPriority = priorityLevel;
-    }
-    if (root.current.alternate) {
-      if (root.current.alternate.pendingWorkPriority === NoWork ||
-          priorityLevel <= root.current.alternate.pendingWorkPriority) {
-        root.current.alternate.pendingWorkPriority = priorityLevel;
-      }
+  function scheduleRoot(root : FiberRoot) {
+    const priorityLevel = root.current.pendingWorkPriority;
+    if (priorityLevel === NoWork) {
+      return;
     }
 
     if (!root.isScheduled) {
@@ -986,30 +968,6 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
       nextUnitOfWork = null;
-    }
-
-    // Depending on the priority level, either perform work now or schedule
-    // a callback to perform work later.
-    switch (priorityLevel) {
-      case SynchronousPriority:
-        // Perform work immediately
-        performWork(SynchronousPriority);
-        return;
-      case TaskPriority:
-        // If we're already performing work, Task work will be flushed before
-        // exiting the current batch. So we can skip it here.
-        if (!isPerformingWork) {
-          performWork(TaskPriority);
-        }
-        return;
-      case AnimationPriority:
-        scheduleAnimationCallback(performAnimationWork);
-        return;
-      case HighPriority:
-      case LowPriority:
-      case OffscreenPriority:
-        scheduleDeferredCallback(performDeferredWork);
-        return;
     }
   }
 
@@ -1043,7 +1001,30 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       if (!node.return) {
         if (node.tag === HostRoot) {
           const root : FiberRoot = (node.stateNode : any);
-          scheduleWorkAtPriority(root, priorityLevel);
+          scheduleRoot(root, priorityLevel);
+          // Depending on the priority level, either perform work now or
+          // schedule a callback to perform work later.
+          switch (priorityLevel) {
+            case SynchronousPriority:
+              // Perform work immediately
+              performWork(SynchronousPriority);
+              return;
+            case TaskPriority:
+              // If we're already performing work, Task work will be flushed before
+              // exiting the current batch. So we can skip it here.
+              if (!isPerformingWork) {
+                performWork(TaskPriority);
+              }
+              return;
+            case AnimationPriority:
+              scheduleAnimationCallback(performAnimationWork);
+              return;
+            case HighPriority:
+            case LowPriority:
+            case OffscreenPriority:
+              scheduleDeferredCallback(performDeferredWork);
+              return;
+          }
         } else {
           // TODO: Warn about setting state on an unmounted component.
           return;
@@ -1124,7 +1105,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   return {
-    scheduleWork: scheduleWork,
+    scheduleSetState: scheduleSetState,
     scheduleUpdateCallback: scheduleUpdateCallback,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,

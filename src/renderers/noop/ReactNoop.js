@@ -294,14 +294,16 @@ var ReactNoop = {
       log(
         '  '.repeat(depth + 1) + '~',
         firstUpdate && firstUpdate.partialState,
-        firstUpdate.callback ? 'with callback' : ''
+        firstUpdate.callback ? 'with callback' : '',
+        '[' + firstUpdate.priorityLevel + ']'
       );
       var next;
       while (next = firstUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,
-          next.callback ? 'with callback' : ''
+          next.callback ? 'with callback' : '',
+          '[' + firstUpdate.priorityLevel + ']'
         );
       }
     }
