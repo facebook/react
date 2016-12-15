@@ -258,9 +258,6 @@ describe('ReactElementValidator', () => {
     expectDev(console.error.calls.count()).toBe(0);
   });
 
-  // TODO: These warnings currently come from the composite component, but
-  // they should be moved into the ReactElementValidator.
-
   it('should give context for PropType errors in nested components.', () => {
     // In this test, we're making sure that if a proptype error is found in a
     // component, we give a small hint as to which parent instantiated that

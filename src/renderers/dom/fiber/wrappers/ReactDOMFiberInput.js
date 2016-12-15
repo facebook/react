@@ -23,8 +23,8 @@ type InputWithWrapperState = HTMLInputElement & {
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
-var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -86,7 +86,7 @@ var ReactDOMInput = {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
-        getCurrentOwnerName()
+        getCurrentFiberOwnerName()
       );
 
       if (
@@ -102,7 +102,7 @@ var ReactDOMInput = {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-          getCurrentOwnerName() || 'A component',
+          getCurrentFiberOwnerName() || 'A component',
           props.type
         );
         didWarnCheckedDefaultChecked = true;
@@ -120,7 +120,7 @@ var ReactDOMInput = {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-          getCurrentOwnerName() || 'A component',
+          getCurrentFiberOwnerName() || 'A component',
           props.type
         );
         didWarnValueDefaultValue = true;
@@ -151,7 +151,7 @@ var ReactDOMInput = {
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          getCurrentOwnerName() || 'A component',
+          getCurrentFiberOwnerName() || 'A component',
           props.type
         );
         didWarnUncontrolledToControlled = true;
@@ -163,7 +163,7 @@ var ReactDOMInput = {
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          getCurrentOwnerName() || 'A component',
+          getCurrentFiberOwnerName() || 'A component',
           props.type
         );
         didWarnControlledToUncontrolled = true;

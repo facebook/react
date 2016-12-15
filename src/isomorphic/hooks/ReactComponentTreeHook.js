@@ -13,6 +13,13 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  IndeterminateComponent,
+  FunctionalComponent,
+  ClassComponent,
+  HostComponent,
+} = ReactTypeOfWork;
 
 var getComponentName = require('getComponentName');
 var invariant = require('invariant');
@@ -20,6 +27,7 @@ var warning = require('warning');
 
 import type { ReactElement, Source } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
 
 function isNative(fn) {
   // Based on isNative() from Lodash
@@ -191,6 +199,25 @@ function describeID(id: DebugID): string {
   return describeComponentFrame(name, element && element._source, ownerName);
 }
 
+function describeFiber(fiber : Fiber) : string {
+  switch (fiber.tag) {
+    case IndeterminateComponent:
+    case FunctionalComponent:
+    case ClassComponent:
+    case HostComponent:
+      var owner = fiber._debugOwner;
+      var source = fiber._debugSource;
+      var name = getComponentName(fiber);
+      var ownerName = null;
+      if (owner) {
+        ownerName = getComponentName(owner);
+      }
+      return describeComponentFrame(name, source, ownerName);
+    default:
+      return '';
+  }
+}
+
 var ReactComponentTreeHook = {
   onSetChildren(id: DebugID, nextChildIDs: Array<DebugID>): void {
     var item = getItem(id);
@@ -324,9 +351,15 @@ var ReactComponentTreeHook = {
     }
 
     var currentOwner = ReactCurrentOwner.current;
-    if (currentOwner && typeof currentOwner._debugID === 'number') {
-      var id = currentOwner && currentOwner._debugID;
-      info += ReactComponentTreeHook.getStackAddendumByID(id);
+    if (currentOwner) {
+      if (typeof currentOwner.tag === 'number') {
+        const workInProgress = ((currentOwner : any) : Fiber);
+        // Safe because if current owner exists, we are reconciling,
+        // and it is guaranteed to be the work-in-progress version.
+        info += ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
+      } else if (typeof currentOwner._debugID === 'number') {
+        info += ReactComponentTreeHook.getStackAddendumByID(currentOwner._debugID);
+      }
     }
     return info;
   },
@@ -337,6 +370,20 @@ var ReactComponentTreeHook = {
       info += describeID(id);
       id = ReactComponentTreeHook.getParentID(id);
     }
+    return info;
+  },
+
+  // This function can only be called with a work-in-progress fiber and
+  // only during begin or complete phase. Do not call it under any other
+  // circumstances.
+  getStackAddendumByWorkInProgressFiber(workInProgress : Fiber) : string {
+    var info = '';
+    var node = workInProgress;
+    do {
+      info += describeFiber(node);
+      // Otherwise this return pointer might point to the wrong tree:
+      node = node.return;
+    } while (node);
     return info;
   },
 

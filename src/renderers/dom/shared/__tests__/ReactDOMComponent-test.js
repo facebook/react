@@ -848,6 +848,33 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should include owner rather than parent in warnings', () => {
+      var container = document.createElement('div');
+
+      function Parent(props) {
+        return props.children;
+      }
+      function Owner() {
+        // We're using the input dangerouslySetInnerHTML invariant but the
+        // exact error doesn't matter as long as we have a way to verify
+        // that warnings and invariants contain owner rather than parent name.
+        return (
+          <Parent>
+            <input dangerouslySetInnerHTML={{__html: 'content'}} />
+          </Parent>
+        );
+      }
+
+      expect(function() {
+        ReactDOM.render(
+          <Owner />,
+          container
+        );
+      }).toThrowError(
+        'This DOM node was rendered by `Owner`.'
+      );
+    });
+
     it('should emit a warning once for a named custom component using shady DOM', () => {
       if (ReactDOMFeatureFlags.useCreateElement) {
         spyOn(console, 'error');
@@ -1021,7 +1048,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<X />, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-        'nor use `dangerouslySetInnerHTML`. Check the render method of X.'
+        'nor use `dangerouslySetInnerHTML`. This DOM node was rendered by `X`.'
       );
     });
 
@@ -1409,6 +1436,13 @@ describe('ReactDOMComponent', () => {
 
     it('should warn about class', () => {
       spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(React.createElement('div', {class: 'muffins'}));
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+    });
+
+    it('should warn about class (ssr)', () => {
+      spyOn(console, 'error');
       ReactDOMServer.renderToString(React.createElement('div', {class: 'muffins'}));
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
@@ -1426,7 +1460,37 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
     });
 
+    it('should warn about props that are no longer supported (ssr)', () => {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div />);
+      expectDev(console.error.calls.count()).toBe(0);
+
+      ReactDOMServer.renderToString(<div onFocusIn={() => {}} />);
+      expectDev(console.error.calls.count()).toBe(1);
+
+      ReactDOMServer.renderToString(<div onFocusOut={() => {}} />);
+      expectDev(console.error.calls.count()).toBe(2);
+    });
+
     it('gives source code refs for unknown prop warning', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div class="paladin"/>);
+      ReactTestUtils.renderIntoDocument(<input type="text" onclick="1"/>);
+      expectDev(console.error.calls.count()).toBe(2);
+      expect(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])
+      ).toBe(
+        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)'
+      );
+      expect(
+        normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])
+      ).toBe(
+        'Warning: Unknown event handler property onclick. Did you mean ' +
+        '`onClick`?\n    in input (at **)'
+      );
+    });
+
+    it('gives source code refs for unknown prop warning (ssr)', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(<div class="paladin"/>);
       ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
@@ -1448,20 +1512,47 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
 
-      ReactDOMServer.renderToString(<div className="paladin" />, container);
+      ReactTestUtils.renderIntoDocument(<div className="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(0);
 
-      ReactDOMServer.renderToString(<div class="paladin" />, container);
+      ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expect(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])
       ).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)'
       );
-
     });
 
-    it('gives source code refs for unknown prop warning for exact elements ', () => {
+    it('gives source code refs for unknown prop warning for exact elements', () => {
+      spyOn(console, 'error');
+
+      ReactTestUtils.renderIntoDocument(
+        <div className="foo1">
+        <div class="foo2"/>
+        <div onClick="foo3"/>
+        <div onclick="foo4"/>
+        <div className="foo5"/>
+        <div className="foo6"/>
+        </div>
+      );
+
+      expectDev(console.error.calls.count()).toBe(2);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
+      var previousLine = matches[1];
+
+      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
+      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements (ssr)', () => {
       spyOn(console, 'error');
 
       ReactDOMServer.renderToString(
@@ -1489,7 +1580,58 @@ describe('ReactDOMComponent', () => {
       expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
     });
 
-    it('gives source code refs for unknown prop warning for exact elements in composition ', () => {
+    it('gives source code refs for unknown prop warning for exact elements in composition', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      class Parent extends React.Component {
+        render() {
+          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
+        }
+      }
+
+      class Child1 extends React.Component {
+        render() {
+          return <div class="paladin">Child1</div>;
+        }
+      }
+
+      class Child2 extends React.Component {
+        render() {
+          return <div>Child2</div>;
+        }
+      }
+
+      class Child3 extends React.Component {
+        render() {
+          return <div onclick="1">Child3</div>;
+        }
+      }
+
+      class Child4 extends React.Component {
+        render() {
+          return <div>Child4</div>;
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<Parent />, container);
+
+      expectDev(console.error.calls.count()).toBe(2);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
+      var previousLine = matches[1];
+
+      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
+      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
+      var currentLine = matches[1];
+
+      //verify line number has a proper relative difference,
+      //since hard coding the line number would make test too brittle
+      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+    });
+
+    it('gives source code refs for unknown prop warning for exact elements in composition (ssr)', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
 
@@ -1545,6 +1687,23 @@ describe('ReactDOMComponent', () => {
 
       ReactTestUtils.renderIntoDocument(React.createElement('label', {for: 'test'}));
       ReactTestUtils.renderIntoDocument(React.createElement('input', {type: 'text', autofocus: true}));
+
+      expectDev(console.error.calls.count()).toBe(2);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label'
+      );
+
+      expectDev(console.error.calls.argsFor(1)[0]).toBe(
+        'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input'
+      );
+    });
+
+    it('should suggest property name if available (ssr)', () => {
+      spyOn(console, 'error');
+
+      ReactDOMServer.renderToString(React.createElement('label', {for: 'test'}));
+      ReactDOMServer.renderToString(React.createElement('input', {type: 'text', autofocus: true}));
 
       expectDev(console.error.calls.count()).toBe(2);
 

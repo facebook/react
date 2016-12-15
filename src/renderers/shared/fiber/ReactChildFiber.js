@@ -12,6 +12,7 @@
 
 'use strict';
 
+import type { ReactElement } from 'ReactElementType';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
 import type { Fiber } from 'ReactFiber';
@@ -35,6 +36,11 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
+
+if (__DEV__) {
+  var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
+  var warning = require('warning');
+}
 
 const {
   cloneFiber,
@@ -68,7 +74,7 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
-function coerceRef(current: ?Fiber, element: ReactElement<any>) {
+function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
@@ -256,7 +262,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function updateElement(
     returnFiber : Fiber,
     current : ?Fiber,
-    element : ReactElement<any>,
+    element : ReactElement,
     priority : PriorityLevel
   ) : Fiber {
     if (current == null || current.type !== element.type) {
@@ -271,6 +277,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       existing.ref = coerceRef(current, element);
       existing.pendingProps = element.props;
       existing.return = returnFiber;
+      if (__DEV__) {
+        existing._debugSource = element._source;
+        existing._debugOwner = element._owner;
+      }
       return existing;
     }
   }
@@ -536,6 +546,48 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return null;
   }
 
+  function warnOnDuplicateKey(
+    child : mixed,
+    knownKeys : Set<string> | null
+  ) : Set<string> | null {
+    if (__DEV__) {
+      if (typeof child !== 'object' || child == null) {
+        return knownKeys;
+      }
+      switch (child.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+        case REACT_COROUTINE_TYPE:
+        case REACT_YIELD_TYPE:
+        case REACT_PORTAL_TYPE:
+          const key = child.key;
+          if (typeof key !== 'string') {
+            break;
+          }
+          if (knownKeys == null) {
+            knownKeys = new Set();
+            knownKeys.add(key);
+            break;
+          }
+          if (!knownKeys.has(key)) {
+            knownKeys.add(key);
+            break;
+          }
+          warning(
+            false,
+            'Encountered two children with the same key, ' +
+            '`%s`. Child keys must be unique; when two children share a key, ' +
+            'only the first child will be used.%s',
+            key,
+            getCurrentFiberStackAddendum()
+          );
+          break;
+        default:
+          break;
+      }
+    }
+    return knownKeys;
+  }
+
   function reconcileChildrenArray(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
@@ -560,6 +612,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     // If you change this code, also update reconcileChildrenIterator() which
     // uses the same algorithm.
+
+    if (__DEV__) {
+      // First, validate keys.
+      let knownKeys = null;
+      for (let i = 0; i < newChildren.length; i++) {
+        const child = newChildren[i];
+        knownKeys = warnOnDuplicateKey(child, knownKeys);
+      }
+    }
 
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;
@@ -691,11 +752,36 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function reconcileChildrenIterator(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
-    newChildren : Iterator<*>,
+    newChildrenIterable : Iterable<*>,
     priority : PriorityLevel) : ?Fiber {
 
     // This is the same implementation as reconcileChildrenArray(),
     // but using the iterator instead.
+
+    const iteratorFn = getIteratorFn(newChildrenIterable);
+    if (typeof iteratorFn !== 'function') {
+      throw new Error('An object is not an iterable.');
+    }
+
+    if (__DEV__) {
+      // First, validate keys.
+      // We'll get a different iterator later for the main pass.
+      const newChildren = iteratorFn.call(newChildrenIterable);
+      if (newChildren == null) {
+        throw new Error('An iterable object provided no iterator.');
+      }
+      let knownKeys = null;
+      let step = newChildren.next();
+      for (; !step.done; step = newChildren.next()) {
+        const child = step.value;
+        knownKeys = warnOnDuplicateKey(child, knownKeys);
+      }
+    }
+
+    const newChildren = iteratorFn.call(newChildrenIterable);
+    if (newChildren == null) {
+      throw new Error('An iterable object provided no iterator.');
+    }
 
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;
@@ -854,7 +940,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function reconcileSingleElement(
     returnFiber : Fiber,
     currentFirstChild : ?Fiber,
-    element : ReactElement<any>,
+    element : ReactElement,
     priority : PriorityLevel
   ) : Fiber {
     const key = element.key;
@@ -869,6 +955,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           existing.ref = coerceRef(child, element);
           existing.pendingProps = element.props;
           existing.return = returnFiber;
+          if (__DEV__) {
+            existing._debugSource = element._source;
+            existing._debugOwner = element._owner;
+          }
           return existing;
         } else {
           deleteRemainingChildren(returnFiber, child);
@@ -1061,16 +1151,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         );
       }
 
-      const iteratorFn = getIteratorFn(newChild);
-      if (iteratorFn) {
-        const iterator = iteratorFn.call(newChild);
-        if (iterator == null) {
-          throw new Error('An iterable object provided no iterator.');
-        }
+      if (getIteratorFn(newChild)) {
         return reconcileChildrenIterator(
           returnFiber,
           currentFirstChild,
-          iterator,
+          newChild,
           priority
         );
       }

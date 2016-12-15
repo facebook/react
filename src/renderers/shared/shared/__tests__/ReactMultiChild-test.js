@@ -154,7 +154,7 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should warn for duplicated keys with component stack info', () => {
+    it('should warn for duplicated array keys with component stack info', () => {
       spyOn(console, 'error');
 
       var container = document.createElement('div');
@@ -188,8 +188,70 @@ describe('ReactMultiChild', () => {
       );
 
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: flattenChildren(...): ' +
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Encountered two children with the same key, `1`. ' +
+        'Child keys must be unique; when two children share a key, ' +
+        'only the first child will be used.\n' +
+        '    in div (at **)\n' +
+        '    in WrapperComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)'
+      );
+    });
+
+    it('should warn for duplicated iterable keys with component stack info', () => {
+      spyOn(console, 'error');
+
+      var container = document.createElement('div');
+
+      class WrapperComponent extends React.Component {
+        render() {
+          return <div>{this.props.children}</div>;
+        }
+      }
+
+      class Parent extends React.Component {
+        render() {
+          return (
+            <div>
+              <WrapperComponent>
+                {this.props.children}
+              </WrapperComponent>
+            </div>
+          );
+        }
+      }
+
+      function createIterable(array) {
+        return {
+          '@@iterator': function() {
+            var i = 0;
+            return {
+              next() {
+                const next = {
+                  value: i < array.length ? array[i] : undefined,
+                  done: i === array.length,
+                };
+                i++;
+                return next;
+              },
+            };
+          },
+        };
+      }
+
+      ReactDOM.render(
+        <Parent>{createIterable([<div key="1"/>])}</Parent>,
+        container
+      );
+
+      ReactDOM.render(
+        <Parent>{createIterable([<div key="1"/>, <div key="1"/>])}</Parent>,
+        container
+      );
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
         'Encountered two children with the same key, `1`. ' +
         'Child keys must be unique; when two children share a key, ' +
         'only the first child will be used.\n' +

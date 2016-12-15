@@ -12,9 +12,6 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * includes the owner name when passing null, undefined, boolean, or number
 
-src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
-* should give context for PropType errors in nested components.
-
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
@@ -23,14 +20,11 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * throws in render() if the update callback is not a function
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should warn for children on void elements
-* should report component containing invalid styles
 * should clean up input value tracking
 * should clean up input textarea tracking
-* gives source code refs for unknown prop warning
-* gives source code refs for unknown prop warning for update render
-* gives source code refs for unknown prop warning for exact elements 
-* gives source code refs for unknown prop warning for exact elements in composition 
+* gives source code refs for unknown prop warning (ssr)
+* gives source code refs for unknown prop warning for exact elements (ssr)
+* gives source code refs for unknown prop warning for exact elements in composition (ssr)
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
@@ -64,7 +58,6 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should work when measurement starts during reconciliation
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
-* gets created
 * can be retrieved by ID
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js

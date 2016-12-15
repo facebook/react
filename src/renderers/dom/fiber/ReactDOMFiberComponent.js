@@ -20,21 +20,30 @@ var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
+var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
 var emptyFunction = require('emptyFunction');
 var focusNode = require('focusNode');
-var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
+
+if (__DEV__) {
+  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
+  var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+  var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var { validateProperties: validateARIAProperties } = ReactDOMInvalidARIAHook;
+  var { validateProperties: validateInputPropertes } = ReactDOMNullInputValuePropHook;
+  var { validateProperties: validateUnknownPropertes } = ReactDOMUnknownPropertyHook;
+}
+
 var didWarnShadyDOM = false;
 
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -56,8 +65,9 @@ var DOC_FRAGMENT_TYPE = 11;
 
 
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentOwnerName();
+  var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
+    // TODO: also report the stack.
     return ' This DOM node was rendered by `' + ownerName + '`.';
   }
   return '';
@@ -120,6 +130,14 @@ function assertValidProps(tag : string, props : ?Object) {
     'using JSX.%s',
      getDeclarationErrorAddendum()
   );
+}
+
+if (__DEV__) {
+  var validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
+    validateInputPropertes(type, props);
+    validateUnknownPropertes(type, props);
+  };
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
@@ -424,19 +442,10 @@ function updateDOMProperties(
     }
   }
   if (styleUpdates) {
-    var componentPlaceholder = null;
-    if (__DEV__) {
-      // HACK
-      var internalInstance = ReactDOMComponentTree.getInstanceFromNode(domElement);
-      componentPlaceholder = {
-        _currentElement: { type: internalInstance.type, props: internalInstance.memoizedProps },
-        _debugID: internalInstance._debugID,
-      };
-    }
+    // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
     CSSPropertyOperations.setValueForStyles(
       domElement,
       styleUpdates,
-      componentPlaceholder // TODO: Change CSSPropertyOperations to use getCurrentOwnerName.
     );
   }
 }
@@ -524,12 +533,13 @@ var ReactDOMFiberComponent = {
 
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
+      validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-          getCurrentOwnerName() || 'A component'
+          getCurrentFiberOwnerName() || 'A component'
         );
         didWarnShadyDOM = true;
       }
@@ -641,6 +651,10 @@ var ReactDOMFiberComponent = {
     nextRawProps : Object,
     rootContainerElement : Element
   ) : void {
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, nextRawProps);
+    }
+
     var lastProps : Object;
     var nextProps : Object;
     switch (tag) {

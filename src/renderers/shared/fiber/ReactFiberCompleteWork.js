@@ -44,6 +44,10 @@ var {
   Callback,
 } = ReactTypeOfSideEffect;
 
+if (__DEV__) {
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+}
+
 module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
@@ -167,6 +171,10 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = workInProgress;
+    }
+
     switch (workInProgress.tag) {
       case FunctionalComponent:
         workInProgress.memoizedProps = workInProgress.pendingProps;

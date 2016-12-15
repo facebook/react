@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { ReactElement, Source } from 'ReactElementType';
+import type { ReactInstance, DebugID } from 'ReactInstanceType';
 import type { ReactFragment } from 'ReactTypes';
 import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
 import type { ReactPortal } from 'ReactPortal';
@@ -46,6 +48,11 @@ var invariant = require('invariant');
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {
+  // __DEV__ only
+  _debugID ?: DebugID,
+  _debugSource ?: Source | null,
+  _debugOwner ?: Fiber | ReactInstance | null, // Stack compatible
+
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
   // but until Flow fixes its intersection bugs, we've merged them into a
@@ -145,7 +152,7 @@ export type Fiber = {
 };
 
 if (__DEV__) {
-  var debugCounter = 0;
+  var debugCounter = 1;
 }
 
 // This is a constructor of a POJO instead of a constructor function for a few
@@ -162,7 +169,7 @@ if (__DEV__) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
-  var fiber = {
+  var fiber : Fiber = {
 
     // Instance
 
@@ -204,9 +211,13 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     alternate: null,
 
   };
+
   if (__DEV__) {
-    (fiber : any)._debugID = debugCounter++;
+    fiber._debugID = debugCounter++;
+    fiber._debugSource = null;
+    fiber._debugOwner = null;
   }
+
   return fiber;
 };
 
@@ -266,6 +277,12 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
 
+  if (__DEV__) {
+    alt._debugID = fiber._debugID;
+    alt._debugSource = fiber._debugSource;
+    alt._debugOwner = fiber._debugOwner;
+  }
+
   return alt;
 };
 
@@ -274,11 +291,16 @@ exports.createHostRootFiber = function() : Fiber {
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) : Fiber {
-// $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
+exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) : Fiber {
   const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
+
+  if (__DEV__) {
+    fiber._debugSource = element._source;
+    fiber._debugOwner = element._owner;
+  }
+
   return fiber;
 };
 

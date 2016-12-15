@@ -60,6 +60,10 @@ var {
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 
+if (__DEV__) {
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+}
+
 module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
@@ -450,6 +454,10 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
+    }
+
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = workInProgress;
     }
 
     // If we don't bail out, we're going be recomputing our children so we need

@@ -1,33 +1,7 @@
 src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should warn for duplicated keys with component stack info
 
-src/isomorphic/classic/__tests__/ReactContextValidator-test.js
-* should check context types
-* should check child context types
-
-src/isomorphic/classic/element/__tests__/ReactElementClone-test.js
-* should check declared prop types after clone
-
-src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
-* warns for keys for arrays of elements with owner info
-* warns for keys with component stack info
-* should give context for PropType errors in nested components.
-
-src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
-* warns for keys for arrays of elements with owner info
-
-src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should warn when using hyphenated style names
-* should warn when updating hyphenated style names
-* warns when miscapitalizing vendored style names
-* should warn about style having a trailing semicolon
-* should warn about style containing a NaN value
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should warn for unknown prop
-* should group multiple unknown prop warnings together
-* should warn for onDblClick prop
-* should emit a warning once for a named custom component using shady DOM
 * should not warn when server-side rendering `onScroll`
 * warns on invalid nesting
 * warns on invalid nesting at root
@@ -35,15 +9,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives useful context in warnings
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
-* should warn about incorrect casing on properties
-* should warn about incorrect casing on event handlers
-* should warn about class
-* should suggest property name if available
-
-src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
-* should warn for one invalid aria-* prop
-* should warn for many invalid aria-* props
-* should warn for an improperly cased aria-* prop
+* should warn about class (ssr)
+* should suggest property name if available (ssr)
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup
@@ -58,17 +25,6 @@ src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should have the correct mounting behavior
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
-* should warn if value is null
-* should warn if controlled input switches to uncontrolled (value is null)
-* should warn if uncontrolled input (value is null) switches to controlled
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
-* should warn if value is null
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should warn if value is null
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
@@ -136,12 +92,8 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update
 * gets ignored if the styles are shallowly equal
 * gets recorded during mount
-* gets recorded during an update
-* gets recorded as a removal during an update
 * gets recorded during mount
-* gets recorded during an update
 * gets recorded during mount
-* gets recorded during an update
 * gets recorded during an update from text content
 * gets recorded during an update from html
 * gets recorded during an update from children
@@ -154,10 +106,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is removed
 
-src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
-* warns for duplicated keys
-* warns for duplicated keys with component stack info
-
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should correctly determine if a component is mounted
 * should correctly determine if a null component is mounted
@@ -167,17 +115,10 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should disallow nested render calls
-* should warn when mutated props are passed
 
 src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
-* should warn for duplicated keys with component stack info
 * should warn for using maps as children with owner info
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
 * should warn when given a ref
-* should use correct name in key warning
-
-src/renderers/shared/shared/__tests__/refs-test.js
-* attaches, detaches from fiber component with stack layer
-* attaches, detaches from stack component with fiber layer

@@ -20,14 +20,13 @@ type SelectWithWrapperState = HTMLSelectElement & {
 };
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-
-var getCurrentOwnerName = require('getCurrentOwnerName');
+var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 var warning = require('warning');
 
 var didWarnValueDefaultValue = false;
 
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentOwnerName();
+  var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
     return ' Check the render method of `' + ownerName + '`.';
   }
@@ -43,7 +42,7 @@ function checkSelectPropTypes(props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    getCurrentOwnerName()
+    getCurrentFiberOwnerName()
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {

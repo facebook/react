@@ -153,6 +153,8 @@ src/isomorphic/children/__tests__/sliceChildren-test.js
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
+* should check context types
+* should check child context types
 
 src/isomorphic/classic/class/__tests__/ReactBind-test.js
 * Holds reference to instance
@@ -266,20 +268,24 @@ src/isomorphic/classic/element/__tests__/ReactElementClone-test.js
 * does not warns for arrays of elements with keys
 * does not warn when the element is directly in rest args
 * does not warn when the array contains a non-element
+* should check declared prop types after clone
 * should ignore key and ref warning getters
 * should ignore undefined key and ref
 * should extract null key and ref
 
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * warns for keys for arrays of elements in rest args
+* warns for keys for arrays of elements with owner info
 * warns for keys for arrays with no owner or parent info
 * warns for keys for arrays of elements with no owner info
+* warns for keys with component stack info
 * does not warn for keys when passing children down
 * warns for keys for iterables of elements in rest args
 * does not warns for arrays of elements with keys
 * does not warns for iterable elements with keys
 * does not warn when the element is directly in rest args
 * does not warn when the array contains a non-element
+* should give context for PropType errors in nested components.
 * gives a helpful error when passing null, undefined, boolean, or number
 * should check default prop values
 * should not check the default for explicit null
@@ -471,12 +477,15 @@ src/isomorphic/modern/element/__tests__/ReactJSXElement-test.js
 
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * warns for keys for arrays of elements in children position
+* warns for keys for arrays of elements with owner info
 * warns for keys for iterables of elements in rest args
 * does not warns for arrays of elements with keys
 * does not warns for iterable elements with keys
 * does not warn for numeric keys in entry iterable as a child
 * does not warn when the element is directly as children
 * does not warn when the child array contains non-elements
+* should give context for PropType errors in nested components.
+* should update component stack after receiving next element
 * gives a helpful error when passing null, undefined, or boolean
 * should check default prop values
 * should not check the default for explicit null
@@ -543,6 +552,11 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should create vendor-prefixed markup correctly
 * should set style attribute when styles exist
 * should not set style attribute when no styles exist
+* should warn when using hyphenated style names
+* should warn when updating hyphenated style names
+* warns when miscapitalizing vendored style names
+* should warn about style having a trailing semicolon
+* should warn about style containing a NaN value
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
@@ -607,6 +621,9 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should gracefully handle various style value types
 * should not update styles when mutating a proxy style object
 * should throw when mutating style objectsd
+* should warn for unknown prop
+* should group multiple unknown prop warnings together
+* should warn for onDblClick prop
 * should not warn for "0" as a unitless style value
 * should warn nicely about NaN in style
 * should update styles if initially null
@@ -644,6 +661,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn on upper case HTML tags, not SVG nor custom tags
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
+* should include owner rather than parent in warnings
+* should emit a warning once for a named custom component using shady DOM
 * should emit a warning once for an unnamed custom component using shady DOM
 * should treat menuitem as a void element but still create the closing tag
 * should validate against multiple children props
@@ -656,12 +675,14 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should validate against invalid styles
 * should track input values
 * should track textarea values
+* should warn for children on void elements
 * should support custom elements which extend native elements
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
 * should validate against multiple children props
 * should warn about contentEditable and children
 * should validate against invalid styles
+* should report component containing invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
 * should warn about the `onScroll` issue when unsupported (IE8)
@@ -669,7 +690,16 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
 * should throw when an attack vector is used
+* should warn about incorrect casing on properties
+* should warn about incorrect casing on event handlers
+* should warn about class
 * should warn about props that are no longer supported
+* should warn about props that are no longer supported (ssr)
+* gives source code refs for unknown prop warning
+* gives source code refs for unknown prop warning for update render
+* gives source code refs for unknown prop warning for exact elements
+* gives source code refs for unknown prop warning for exact elements in composition
+* should suggest property name if available
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
@@ -680,6 +710,9 @@ src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props
+* should warn for one invalid aria-* prop
+* should warn for many invalid aria-* props
+* should warn for an improperly cased aria-* prop
 
 src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates initial namespaced markup
@@ -933,11 +966,14 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should have a this value of undefined if bind is not used
 * should warn with checked and no onChange handler with readOnly specified
 * should update defaultValue to empty string
+* should warn if value is null
 * should warn if checked and defaultChecked props are specified
 * should warn if value and defaultValue props are specified
 * should warn if controlled input switches to uncontrolled (value is undefined)
+* should warn if controlled input switches to uncontrolled (value is null)
 * should warn if controlled input switches to uncontrolled with defaultValue
 * should warn if uncontrolled input (value is undefined) switches to controlled
+* should warn if uncontrolled input (value is null) switches to controlled
 * should warn if controlled checkbox switches to uncontrolled (checked is undefined)
 * should warn if controlled checkbox switches to uncontrolled (checked is null)
 * should warn if controlled checkbox switches to uncontrolled with defaultChecked
@@ -983,6 +1019,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
 * should not control defaultValue if readding options
+* should warn if value is null
 * should refresh state on change
 * should warn if value and defaultValue props are specified
 * should be able to safely remove select onChange
@@ -1015,6 +1052,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should allow objects as children
 * should throw with multiple or invalid children
 * should unmount
+* should warn if value is null
 * should warn if value and defaultValue are specified
 
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
@@ -1204,6 +1242,7 @@ src/renderers/shared/fiber/__tests__/ReactTopLevelText-test.js
 * should render a component returning numbers directly from render
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
+* gets created
 * is created during mounting
 * is created when calling renderToString during render
 
@@ -1258,10 +1297,20 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets ignored for composite roots that return null
+* gets recorded during an update
+* gets recorded as a removal during an update
+* gets recorded during an update
+* gets recorded during an update
 * gets ignored if new text is equal
 * gets ignored if new text is equal
 * gets ignored if the type has not changed
 * gets ignored if new html is equal
+
+src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
+* warns for duplicated array keys
+* warns for duplicated array keys with component stack info
+* warns for duplicated iterable keys
+* warns for duplicated iterable keys with component stack info
 
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should throw when supplying a ref outside of render method
@@ -1317,6 +1366,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should replace state
 * should support objects with prototypes as state
 * should not warn about unmounting during unmounting
+* should warn when mutated props are passed
 * should only call componentWillUnmount once
 * prepares new child before unmounting old
 
@@ -1405,6 +1455,8 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should replace children with different constructors
 * should NOT replace children with different owners
 * should replace children with different keys
+* should warn for duplicated array keys with component stack info
+* should warn for duplicated iterable keys with component stack info
 * should reorder bailed-out children
 * prepares new children before unmounting old
 
@@ -1457,6 +1509,7 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should unmount stateless component
 * should pass context thru stateless component
 * should provide a null ref
+* should use correct name in key warning
 * should support default props and prop types
 * should receive context
 * should work with arrow functions
@@ -1511,6 +1564,8 @@ src/renderers/shared/shared/__tests__/refs-test.js
 * ref called correctly for stateless component when __DEV__ = false
 * ref called correctly for stateless component when __DEV__ = true
 * coerces numbers to strings
+* attaches, detaches from fiber component with stack layer
+* attaches, detaches from stack component with fiber layer
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch

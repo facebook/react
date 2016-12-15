@@ -59,6 +59,7 @@ var {
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -186,6 +187,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   function commitAllHostEffects(finishedWork : Fiber) {
     while (nextEffect) {
+      if (__DEV__) {
+        ReactDebugCurrentFiber.current = nextEffect;
+      }
+
       if (nextEffect.effectTag & ContentReset) {
         config.resetTextContent(nextEffect.stateNode);
       }
@@ -231,6 +236,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         }
       }
       nextEffect = nextEffect.nextEffect;
+    }
+
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = null;
     }
 
     // If the root itself had an effect, we perform that since it is
@@ -478,6 +487,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
 
     ReactCurrentOwner.current = null;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = null;
+    }
 
     return next;
   }
@@ -511,6 +523,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
 
     ReactCurrentOwner.current = null;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = null;
+    }
 
     return next;
   }
@@ -731,6 +746,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   function captureError(failedWork : ?Fiber, error : Error) : ?Fiber {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = null;
+    }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
 

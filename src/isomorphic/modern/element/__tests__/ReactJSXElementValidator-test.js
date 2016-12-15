@@ -15,6 +15,7 @@
 // of dynamic errors when using JSX with Flow.
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactJSXElementValidator', () => {
@@ -25,6 +26,7 @@ describe('ReactJSXElementValidator', () => {
     jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class extends React.Component {
@@ -173,9 +175,6 @@ describe('ReactJSXElementValidator', () => {
     expectDev(console.error.calls.count()).toBe(0);
   });
 
-  // TODO: These warnings currently come from the composite component, but
-  // they should be moved into the ReactElementValidator.
-
   it('should give context for PropType errors in nested components.', () => {
     // In this test, we're making sure that if a proptype error is found in a
     // component, we give a small hint as to which parent instantiated that
@@ -202,6 +201,45 @@ describe('ReactJSXElementValidator', () => {
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`.\n' +
       '    in MyComp (at **)\n' +
+      '    in ParentComp (at **)'
+    );
+  });
+
+  it('should update component stack after receiving next element', () => {
+    spyOn(console, 'error');
+    function MyComp() {
+      return null;
+    }
+    MyComp.propTypes = {
+      color: React.PropTypes.string,
+    };
+    function MiddleComp(props) {
+      return <MyComp color={props.color} />;
+    }
+    function ParentComp(props) {
+      if (props.warn) {
+        // This element has a source thanks to JSX.
+        return <MiddleComp color={42} />;
+      }
+      // This element has no source.
+      return React.createElement(MiddleComp, {color: 'blue'});
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<ParentComp warn={false} />, container);
+    ReactDOM.render(<ParentComp warn={true} />, container);
+
+    expect(console.error.calls.count()).toBe(1);
+    // The warning should have the full stack with line numbers.
+    // If it doesn't, it means we're using information from the old element.
+    expect(
+      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
+      'Warning: Failed prop type: ' +
+      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+      'expected `string`.\n' +
+      '    in MyComp (at **)\n' +
+      '    in MiddleComp (at **)\n' +
       '    in ParentComp (at **)'
     );
   });

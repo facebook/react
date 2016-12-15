@@ -88,10 +88,7 @@ function assertValidProps(component, props) {
       '%s is a void element tag and must neither have `children` nor ' +
       'use `dangerouslySetInnerHTML`.%s',
       component._tag,
-      component._currentElement._owner ?
-        ' Check the render method of ' +
-        component._currentElement._owner.getName() + '.' :
-        ''
+      getDeclarationErrorAddendum(component)
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -1029,6 +1026,13 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: this._debugID,
+          type: 'update styles',
+          payload: styleUpdates,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(
         getNode(this),
         styleUpdates,
