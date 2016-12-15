@@ -1190,27 +1190,13 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * finds no node before insertion and correct node before deletion
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
-* schedules and flushes animation work
-* schedules and flushes animation work for many roots
-* flushes all scheduled animation work
-* flushes all scheduled animation work for many roots
 * schedules and flushes deferred work
-* schedules and flushes deferred work for many roots
-* flushes scheduled deferred work fitting within deadline
-* flushes scheduled deferred work fitting within deadline for many roots
-* schedules more deferred work if it runs out of time
-* schedules more deferred work if it runs out of time with many roots
-* flushes late animation work in a deferred callback if it wins
-* flushes late animation work in a deferred callback if it wins with many roots
-* flushes late animation work in an animation callback if it wins
-* flushes late animation work in an animation callback if it wins with many roots
-* flushes all work in a deferred callback if it wins
-* flushes all work in a deferred callback if it wins with many roots
-* flushes root with late deferred work in an animation callback if it wins
-* flushes all roots with animation work in an animation callback if it wins
-* splits deferred work on multiple roots
+* schedules and flushes animation work
+* searches for work on other roots once the current root completes
+* schedules an animation callback when there`s leftover animation work
+* schedules top-level updates in order of priority
+* schedules top-level updates with same priority in order of insertion
 * works on deferred roots in the order they were scheduled
-* handles interleaved deferred and animation work
 * schedules sync updates when inside componentDidMount/Update
 * can opt-in to deferred/animation scheduling inside componentDidMount/Update
 * performs Task work even after time runs out
