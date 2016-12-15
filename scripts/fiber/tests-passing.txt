@@ -105,6 +105,7 @@ src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should handle enter/leave/enter/leave correctly
 * should handle enter/leave/enter correctly
 * should handle entering/leaving several elements at once
+* should warn for duplicated keys with component stack info
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
@@ -266,20 +267,24 @@ src/isomorphic/classic/element/__tests__/ReactElementClone-test.js
 * does not warns for arrays of elements with keys
 * does not warn when the element is directly in rest args
 * does not warn when the array contains a non-element
+* should check declared prop types after clone
 * should ignore key and ref warning getters
 * should ignore undefined key and ref
 * should extract null key and ref
 
 src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * warns for keys for arrays of elements in rest args
+* warns for keys for arrays of elements with owner info
 * warns for keys for arrays with no owner or parent info
 * warns for keys for arrays of elements with no owner info
+* warns for keys with component stack info
 * does not warn for keys when passing children down
 * warns for keys for iterables of elements in rest args
 * does not warns for arrays of elements with keys
 * does not warns for iterable elements with keys
 * does not warn when the element is directly in rest args
 * does not warn when the array contains a non-element
+* should give context for PropType errors in nested components.
 * gives a helpful error when passing null, undefined, boolean, or number
 * should check default prop values
 * should not check the default for explicit null
@@ -471,12 +476,14 @@ src/isomorphic/modern/element/__tests__/ReactJSXElement-test.js
 
 src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * warns for keys for arrays of elements in children position
+* warns for keys for arrays of elements with owner info
 * warns for keys for iterables of elements in rest args
 * does not warns for arrays of elements with keys
 * does not warns for iterable elements with keys
 * does not warn for numeric keys in entry iterable as a child
 * does not warn when the element is directly as children
 * does not warn when the child array contains non-elements
+* should give context for PropType errors in nested components.
 * gives a helpful error when passing null, undefined, or boolean
 * should check default prop values
 * should not check the default for explicit null
@@ -1204,6 +1211,7 @@ src/renderers/shared/fiber/__tests__/ReactTopLevelText-test.js
 * should render a component returning numbers directly from render
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
+* can be retrieved by ID
 * is created during mounting
 * is created when calling renderToString during render
 
@@ -1457,6 +1465,7 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should unmount stateless component
 * should pass context thru stateless component
 * should provide a null ref
+* should use correct name in key warning
 * should support default props and prop types
 * should receive context
 * should work with arrow functions
