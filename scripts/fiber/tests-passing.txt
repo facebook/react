@@ -1445,6 +1445,9 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
 * resets value of date/time input to fix bugs in iOS Safari
+* always sets the attribute when values change on text inputs
+* does not set the value attribute on number inputs if focused
+* sets the value attribute on number inputs on blur
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
