@@ -1932,4 +1932,47 @@ describe('ReactIncremental', () => {
       'ShowLocaleFn:read {"locale":"gr"}',
     ]);
   });
+
+  it('maintains the correct context index when context proviers are bailed out due to low priority', () => {
+    class Root extends React.Component {
+      render() {
+        return <Middle {...this.props} />;
+      }
+    }
+
+    let instance;
+
+    class Middle extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        instance = this;
+      }
+      shouldComponentUpdate() {
+        // Return false so that our child will get a NoWork priority (and get bailed out)
+        return false;
+      }
+      render() {
+        return <Child />;
+      }
+    }
+
+    // Child must be a context provider to trigger the bug
+    class Child extends React.Component {
+      static childContextTypes = {};
+      getChildContext() {
+        return {};
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    // Init
+    ReactNoop.render(<Root />);
+    ReactNoop.flush();
+
+    // Trigger an update in the middle of the tree
+    instance.setState({});
+    ReactNoop.flush();
+  });
 });

@@ -462,8 +462,17 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
-    if (workInProgress.tag === HostPortal) {
-      pushHostContainer(workInProgress.stateNode.containerInfo);
+    // TODO: Handle HostComponent tags here as well and call pushHostContext()?
+    // See PR 8590 discussion for context
+    switch (workInProgress.tag) {
+      case ClassComponent:
+        if (isContextProvider(workInProgress)) {
+          pushContextProvider(workInProgress, false);
+        }
+        break;
+      case HostPortal:
+        pushHostContainer(workInProgress.stateNode.containerInfo);
+        break;
     }
     // TODO: What if this is currently in progress?
     // How can that happen? How is this not being cloned?
