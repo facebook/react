@@ -24,7 +24,7 @@ function parseQuery(qstr) {
   return query;
 }
 
-var query = parseQuery(window.location.search);
+var query = parseQuery(window.location.search.slice(1));
 var version = query.version || 'local';
 
 if (version !== 'local') {
