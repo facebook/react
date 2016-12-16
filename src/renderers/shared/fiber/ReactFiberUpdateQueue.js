@@ -309,36 +309,6 @@ function addReplaceUpdate(
     next: null,
   };
 
-  // Drop all updates with equal priority
-  let queue = ensureUpdateQueue(fiber);
-  for (let i = 0; queue && i < 2; i++) {
-    let replaceAfter = null;
-    let replaceBefore = queue.first;
-    let comparison = 255;
-    while (replaceBefore &&
-           (comparison = comparePriority(replaceBefore.priorityLevel, priorityLevel)) <= 0) {
-      if (comparison < 0) {
-        replaceAfter = replaceBefore;
-      }
-      replaceBefore = replaceBefore.next;
-    }
-
-    if (replaceAfter) {
-      replaceAfter.next = replaceBefore;
-    } else {
-      queue.first = replaceBefore;
-    }
-
-    if (!replaceBefore) {
-      queue.last = replaceAfter;
-    }
-
-    if (fiber.alternate) {
-      queue = ensureUpdateQueue(fiber.alternate);
-    } else {
-      queue = null;
-    }
-  }
   if (__DEV__) {
     insertUpdate(fiber, update, 'replaceState');
   } else {
@@ -426,9 +396,7 @@ function beginUpdateQueue(
 
     let partialState;
     if (update.isReplace) {
-      // A replace should drop all previous updates in the queue, so
-      // use the original `prevState`, not the accumulated `state`
-      state = getStateFromUpdate(update, instance, prevState, props);
+      state = getStateFromUpdate(update, instance, state, props);
       dontMutatePrevState = true;
     } else {
       partialState = getStateFromUpdate(update, instance, state, props);

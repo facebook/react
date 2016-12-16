@@ -193,7 +193,19 @@ describe('ReactCompositeComponent-state', () => {
       // setState({color:'green'}) only enqueues a pending state.
       ['componentWillReceiveProps-end', 'yellow'],
       // pending state queue is processed
-      // before-setState-receiveProps never called, due to replaceState.
+    );
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      // In Stack, this is never called because replaceState drops all updates
+      // from the queue. In Fiber, we keep updates in the queue to support
+      // replaceState(prevState => newState).
+      // TODO: Fix Stack to match Fiber.
+      expected.push(
+        ['before-setState-receiveProps', 'yellow'],
+      );
+    }
+
+    expected.push(
       ['before-setState-again-receiveProps', undefined],
       ['after-setState-receiveProps', 'green'],
       ['shouldComponentUpdate-currentState', 'yellow'],
