@@ -25,6 +25,8 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
+const warning = require('warning');
+
 type PartialState<State, Props> =
   $Subtype<State> |
   (prevState: State, props: Props) => $Subtype<State>;
@@ -193,21 +195,26 @@ function insertUpdate(fiber : Fiber, update : Update, methodName : ?string) : vo
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
   // Warn if an update is scheduled from inside an updater function.
-  if (__DEV__ && typeof methodName === 'string' && (queue1.isProcessing || (queue2 && queue2.isProcessing))) {
-    if (methodName === 'setState') {
-      console.error(
-        'setState was called from inside the updater function of another' +
-        'setState. A function passed as the first argument of setState ' +
-        'should not contain any side-effects. Return a partial state object ' +
-        'instead of calling setState again. Example: ' +
-        'this.setState(function(state) { return { count: state.count + 1 }; })'
-      );
-    } else {
-      console.error(
-        `${methodName} was called from inside the updater function of ` +
-        'setState. A function passed as the first argument of setState ' +
-        'should not contain any side-effects.'
-      );
+  if (__DEV__ && typeof methodName === 'string') {
+    if (queue1.isProcessing || (queue2 && queue2.isProcessing)) {
+      if (methodName === 'setState') {
+        warning(
+          false,
+          'setState was called from inside the updater function of another' +
+          'setState. A function passed as the first argument of setState ' +
+          'should not contain any side-effects. Return a partial state ' +
+          'object instead of calling setState again. Example: ' +
+          'this.setState(function(state) { return { count: state.count + 1 }; })'
+        );
+      } else {
+        warning(
+          false,
+          '%s was called from inside the updater function of setState. A ' +
+          'function passed as the first argument of setState ' +
+          'should not contain any side-effects.',
+          methodName
+        );
+      }
     }
   }
 
