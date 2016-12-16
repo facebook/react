@@ -408,7 +408,6 @@ function beginUpdateQueue(
   // a new state object.
   let state = prevState;
   let dontMutatePrevState = true;
-  let isEmpty = true;
   let callbackList = null;
   let update = queue.first;
   while (update && comparePriority(update.priorityLevel, priorityLevel) <= 0) {
@@ -426,7 +425,6 @@ function beginUpdateQueue(
       // use the original `prevState`, not the accumulated `state`
       state = getStateFromUpdate(update, instance, prevState, props);
       dontMutatePrevState = true;
-      isEmpty = false;
     } else {
       partialState = getStateFromUpdate(update, instance, state, props);
       if (partialState) {
@@ -436,7 +434,6 @@ function beginUpdateQueue(
           state = Object.assign(state, partialState);
         }
         dontMutatePrevState = false;
-        isEmpty = false;
       }
     }
     if (update.isForced) {
@@ -447,9 +444,10 @@ function beginUpdateQueue(
         callbackList.last.next = update;
         callbackList.last = update;
       } else {
+        const callbackUpdate = cloneUpdate(update);
         callbackList = {
-          first: update,
-          last: update,
+          first: callbackUpdate,
+          last: callbackUpdate,
           hasForceUpdate: false,
         };
       }
@@ -458,18 +456,12 @@ function beginUpdateQueue(
     update = update.next;
   }
 
-  if (isEmpty) {
-    // None of the updates contained state. Use the original state object.
-    state = prevState;
-  }
-
   if (!queue.first && !queue.hasForceUpdate) {
     // Queue is now empty
     workInProgress.updateQueue = null;
   }
 
   workInProgress.callbackList = callbackList;
-  workInProgress.memoizedState = state;
 
   if (__DEV__) {
     queue.isProcessing = false;
