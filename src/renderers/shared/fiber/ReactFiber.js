@@ -43,6 +43,10 @@ var {
   NoEffect,
 } = require('ReactTypeOfSideEffect');
 
+var {
+  cloneUpdateQueue,
+} = require('ReactFiberUpdateQueue');
+
 var invariant = require('invariant');
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -100,12 +104,13 @@ export type Fiber = {
   pendingProps: any, // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
-  // A queue of local state updates.
-  updateQueue: ?UpdateQueue,
-  // The state used to create the output. This is a full state object.
+
+  // A queue of state updates and callbacks.
+  updateQueue: UpdateQueue | null,
+  // A list of callbacks that should be called during the next commit.
+  callbackList: UpdateQueue | null,
+  // The state used to create the output
   memoizedState: any,
-  // Linked list of callbacks to call after updates are committed.
-  callbackList: ?UpdateQueue,
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -194,8 +199,8 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     pendingProps: null,
     memoizedProps: null,
     updateQueue: null,
-    memoizedState: null,
     callbackList: null,
+    memoizedState: null,
 
     effectTag: NoEffect,
     nextEffect: null,
@@ -270,8 +275,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
-  alt.updateQueue = fiber.updateQueue;
-  alt.callbackList = fiber.callbackList;
+  cloneUpdateQueue(alt, fiber);
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;

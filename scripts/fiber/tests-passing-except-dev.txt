@@ -114,6 +114,8 @@ src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
+* should warn about `setState` in render
+* should warn about `setState` in getChildContext
 * should disallow nested render calls
 
 src/renderers/shared/shared/__tests__/ReactMultiChild-test.js

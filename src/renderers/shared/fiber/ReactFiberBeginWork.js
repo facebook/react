@@ -25,7 +25,10 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-
+var {
+  hasPendingUpdate,
+  beginUpdateQueue,
+} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -53,6 +56,7 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
+  Update,
   Placement,
   ContentReset,
   Err,
@@ -67,7 +71,10 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, C, CX>(
   config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
-  scheduleUpdate : (fiber: Fiber) => void
+  scheduleSetState: (fiber : Fiber, partialState : any) => void,
+  scheduleReplaceState: (fiber : Fiber, state : any) => void,
+  scheduleForceUpdate: (fiber : Fiber) => void,
+  scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
 ) {
 
   const { shouldSetTextContent } = config;
@@ -84,7 +91,12 @@ module.exports = function<T, P, I, TI, C, CX>(
     mountClassInstance,
     resumeMountClassInstance,
     updateClassInstance,
-  } = ReactFiberClassComponent(scheduleUpdate);
+  } = ReactFiberClassComponent(
+    scheduleSetState,
+    scheduleReplaceState,
+    scheduleForceUpdate,
+    scheduleUpdateCallback
+  );
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -195,24 +207,38 @@ module.exports = function<T, P, I, TI, C, CX>(
     return workInProgress.child;
   }
 
-  function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
+  function updateClassComponent(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
     let shouldUpdate;
     if (!current) {
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress);
-        mountClassInstance(workInProgress);
+        mountClassInstance(workInProgress, priorityLevel);
         shouldUpdate = true;
       } else {
         // In a resume, we'll already have an instance we can reuse.
-        shouldUpdate = resumeMountClassInstance(workInProgress);
+        shouldUpdate = resumeMountClassInstance(workInProgress, priorityLevel);
       }
     } else {
-      shouldUpdate = updateClassInstance(current, workInProgress);
+      shouldUpdate = updateClassInstance(current, workInProgress, priorityLevel);
     }
-    if (!shouldUpdate) {
+
+    // Schedule side-effects
+    if (shouldUpdate) {
+      workInProgress.effectTag |= Update;
+    } else {
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (current) {
+        const instance = current.stateNode;
+        if (instance.props !== current.memoizedProps ||
+            instance.state !== current.memoizedState) {
+          workInProgress.effectTag |= Update;
+        }
+      }
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
+
     // Rerender
     const instance = workInProgress.stateNode;
     ReactCurrentOwner.current = workInProgress;
@@ -287,7 +313,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
-  function mountIndeterminateComponent(current, workInProgress) {
+  function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
     if (current) {
       throw new Error('An indeterminate component should never have mounted.');
     }
@@ -308,7 +334,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
       adoptClassInstance(workInProgress, value);
-      mountClassInstance(workInProgress);
+      mountClassInstance(workInProgress, priorityLevel);
       ReactCurrentOwner.current = workInProgress;
       value = value.render();
     } else {
@@ -471,22 +497,31 @@ module.exports = function<T, P, I, TI, C, CX>(
       workInProgress.child = workInProgress.progressedChild;
     }
 
-    if ((workInProgress.pendingProps === null || (
-      workInProgress.memoizedProps !== null &&
-      workInProgress.pendingProps === workInProgress.memoizedProps
-      )) &&
-      workInProgress.updateQueue === null &&
-      !hasContextChanged()) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    const pendingProps = workInProgress.pendingProps;
+    const memoizedProps = workInProgress.memoizedProps;
+    const updateQueue = workInProgress.updateQueue;
+
+    // This is kept as a single expression to take advantage of short-circuiting.
+    const hasNewProps = (
+      pendingProps !== null && (            // hasPendingProps && (
+        memoizedProps === null ||           //   hasNoMemoizedProps ||
+        pendingProps !== memoizedProps      //   memoizedPropsDontMatch
+      )                                     // )
+    );
+    if (!hasNewProps) {
+      const hasUpdate = updateQueue && hasPendingUpdate(updateQueue, priorityLevel);
+      if (!hasUpdate && !hasContextChanged()) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
     }
 
     switch (workInProgress.tag) {
       case IndeterminateComponent:
-        return mountIndeterminateComponent(current, workInProgress);
+        return mountIndeterminateComponent(current, workInProgress, priorityLevel);
       case FunctionalComponent:
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
-        return updateClassComponent(current, workInProgress);
+        return updateClassComponent(current, workInProgress, priorityLevel);
       case HostRoot: {
         const root = (workInProgress.stateNode : FiberRoot);
         if (root.pendingContext) {
@@ -497,8 +532,14 @@ module.exports = function<T, P, I, TI, C, CX>(
         } else {
           pushTopLevelContextObject(root.context, false);
         }
+
+        if (updateQueue) {
+          beginUpdateQueue(workInProgress, updateQueue, null, null, null, priorityLevel);
+        }
+
         pushHostContainer(workInProgress.stateNode.containerInfo);
-        reconcileChildren(current, workInProgress, workInProgress.pendingProps);
+        reconcileChildren(current, workInProgress, pendingProps);
+
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return workInProgress.child;

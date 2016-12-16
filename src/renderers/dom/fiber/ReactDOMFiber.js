@@ -242,6 +242,8 @@ var ReactDOM = {
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
+  unstable_deferredUpdates: DOMRenderer.deferredUpdates,
+
 };
 
 module.exports = ReactDOM;

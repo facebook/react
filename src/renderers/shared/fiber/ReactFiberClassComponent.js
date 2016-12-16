@@ -13,17 +13,15 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
   getMaskedContext,
 } = require('ReactFiberContext');
 var {
-  createUpdateQueue,
-  addToQueue,
-  addCallbackToQueue,
-  mergeUpdateQueue,
+  beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
+var { hasContextChanged } = require('ReactFiberContext');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
@@ -32,53 +30,37 @@ var invariant = require('invariant');
 
 const isArray = Array.isArray;
 
-module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
-
-  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
-    fiber.updateQueue = updateQueue;
-    // Schedule update on the alternate as well, since we don't know which tree
-    // is current.
-    if (fiber.alternate) {
-      fiber.alternate.updateQueue = updateQueue;
-    }
-    scheduleUpdate(fiber);
-  }
+module.exports = function(
+  scheduleSetState: (fiber : Fiber, partialState : any) => void,
+  scheduleReplaceState: (fiber : Fiber, state : any) => void,
+  scheduleForceUpdate: (fiber : Fiber) => void,
+  scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
+) {
 
   // Class component state updater
   const updater = {
     isMounted,
     enqueueSetState(instance, partialState) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue ?
-        addToQueue(fiber.updateQueue, partialState) :
-        createUpdateQueue(partialState);
-      scheduleUpdateQueue(fiber, updateQueue);
+      scheduleSetState(fiber, partialState);
     },
     enqueueReplaceState(instance, state) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
-      scheduleUpdateQueue(fiber, updateQueue);
+      scheduleReplaceState(fiber, state);
     },
     enqueueForceUpdate(instance) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
-      updateQueue.isForced = true;
-      scheduleUpdateQueue(fiber, updateQueue);
+      scheduleForceUpdate(fiber);
     },
     enqueueCallback(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      scheduleUpdateQueue(fiber, updateQueue);
+      scheduleUpdateCallback(fiber, callback);
     },
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
-    const updateQueue = workInProgress.updateQueue;
-    if (oldProps === null || (updateQueue && updateQueue.isForced)) {
+    if (oldProps === null || (workInProgress.updateQueue && workInProgress.updateQueue.hasForceUpdate)) {
+      // If the workInProgress already has an Update effect, return true
       return true;
     }
 
@@ -226,7 +208,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   }
 
   // Invokes the mount life-cycles on a previously never rendered instance.
-  function mountClassInstance(workInProgress : Fiber) : void {
+  function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -245,14 +227,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
+        instance.state = beginUpdateQueue(
+          workInProgress,
+          updateQueue,
+          instance,
+          state,
+          props,
+          priorityLevel
+        );
       }
     }
   }
 
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
-  function resumeMountClassInstance(workInProgress : Fiber) : boolean {
+  function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -294,13 +283,20 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
-      newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
+      newInstance.state = beginUpdateQueue(
+        workInProgress,
+        newUpdateQueue,
+        newInstance,
+        newState,
+        newProps,
+        priorityLevel
+      );
     }
     return true;
   }
 
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
-  function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
+  function updateClassInstance(current : Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     const instance = workInProgress.stateNode;
 
     const oldProps = workInProgress.memoizedProps || current.memoizedProps;
@@ -332,19 +328,22 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      if (!updateQueue.hasUpdate) {
-        newState = oldState;
-      } else {
-        newState = mergeUpdateQueue(updateQueue, instance, oldState, newProps);
-      }
+      newState = beginUpdateQueue(
+        workInProgress,
+        updateQueue,
+        instance,
+        oldState,
+        newProps,
+        priorityLevel
+      );
     } else {
       newState = oldState;
     }
 
     if (oldProps === newProps &&
         oldState === newState &&
-        oldContext === newContext &&
-        updateQueue && !updateQueue.isForced) {
+        !hasContextChanged() &&
+        !(updateQueue && updateQueue.hasForceUpdate)) {
       return false;
     }
 

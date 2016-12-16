@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 const { createHostRootFiber } = require('ReactFiber');
 
@@ -26,8 +25,6 @@ export type FiberRoot = {
   isScheduled: boolean,
   // The work schedule is a linked list.
   nextScheduledRoot: ?FiberRoot,
-  // Linked list of callbacks to call after updates are committed.
-  callbackList: ?UpdateQueue,
   // Top context object, used by renderSubtreeIntoContainer
   context: Object,
   pendingContext: ?Object,

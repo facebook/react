@@ -71,12 +71,7 @@ src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
-* should warn about `setState` in render
-* should warn about `setState` in getChildContext
 * should update refs if shouldComponentUpdate gives false
-
-src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
-* should update state when called from child cWRP
 
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
