@@ -16,7 +16,6 @@ import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 const {
-  ForceUpdate,
   Callback: CallbackEffect,
 } = require('ReactTypeOfSideEffect');
 
@@ -55,6 +54,7 @@ type Update = {
 export type UpdateQueue = {
   first: Update | null,
   last: Update | null,
+  hasForceUpdate: boolean,
 
   // Dev only
   isProcessing?: boolean,
@@ -99,12 +99,14 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
     queue = {
       first: null,
       last: null,
+      hasForceUpdate: false,
       isProcessing: false,
     };
   } else {
     queue = {
       first: null,
       last: null,
+      hasForceUpdate: false,
     };
   }
 
@@ -124,6 +126,7 @@ function cloneUpdateQueue(alt : Fiber, fiber : Fiber) : UpdateQueue | null {
   const altQueue = alt.updateQueue || {};
   altQueue.first = sourceQueue.first;
   altQueue.last = sourceQueue.last;
+  altQueue.hasForceUpdate = sourceQueue.hasForceUpdate;
   alt.updateQueue = altQueue;
   return altQueue;
 }
@@ -392,6 +395,8 @@ function beginUpdateQueue(
     queue.isProcessing = true;
   }
 
+  queue.hasForceUpdate = false;
+
   // Applies updates with matching priority to the previous state to create
   // a new state object.
   let state = prevState;
@@ -428,7 +433,7 @@ function beginUpdateQueue(
       }
     }
     if (update.isForced) {
-      workInProgress.effectTag |= ForceUpdate;
+      queue.hasForceUpdate = true;
     }
     if (update.callback) {
       if (callbackList && callbackList.last) {
@@ -438,6 +443,7 @@ function beginUpdateQueue(
         callbackList = {
           first: update,
           last: update,
+          hasForceUpdate: false,
         };
       }
       workInProgress.effectTag |= CallbackEffect;
@@ -450,7 +456,7 @@ function beginUpdateQueue(
     state = prevState;
   }
 
-  if (!queue.first) {
+  if (!queue.first && !queue.hasForceUpdate) {
     // Queue is now empty
     workInProgress.updateQueue = null;
   }

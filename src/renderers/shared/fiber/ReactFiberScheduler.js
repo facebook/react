@@ -40,7 +40,6 @@ var {
   Placement,
   Update,
   PlacementAndUpdate,
-  ForceUpdate,
   Deletion,
   ContentReset,
   Callback,
@@ -224,7 +223,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
       let primaryEffectTag =
-        nextEffect.effectTag & ~(ForceUpdate | Callback | Err | ContentReset);
+        nextEffect.effectTag & ~(Callback | Err | ContentReset);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
