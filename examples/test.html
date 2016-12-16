@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>React Browser Sandbox</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      }
+
+      .header {
+        background: #222;
+        box-shadow: inset 0 -1px 3px #000;
+        overflow: hidden;
+        padding: 8px 16px;
+        line-height: 32px;
+      }
+
+      .header__inner {
+        max-width: 1000px;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+
+      .header__logo {
+        color: #efefef;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .header__logo img {
+        display: inline-block;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      .header select {
+        display: inline-block;
+        float: right;
+        margin: 8px 0;
+        vertical-align: middle;
+      }
+
+      iframe {
+        display: block;
+        height: 98%;
+        height: calc(100vh - 52px);
+        margin: 0 auto;
+        max-width: 1000px;
+        width: 100%;
+      }
+
+      .sr-only {
+        clip: rect(0, 0, 0, 0);
+        height: 0;
+        margin: -1px;
+        position: absolute;
+        width: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <form method="GET" class="header__inner" id="form">
+        <span class="header__logo">
+          <img src="https://facebook.github.io/react/img/logo.svg" alt="React Browser Sandbox" width="32" height="32" />
+          React Sandbox
+        </span>
+
+        <label for="react_version">
+          <span class="sr-only">Select a version to test</span>
+          <select id="react_version" name="version">
+            <option value="local">Local</option>
+            <option value="15.4.1">15.4.1</option>
+            <option value="15.4.0">15.4.0</option>
+            <option value="15.3.2">15.3.2</option>
+            <option value="15.3.1">15.3.1</option>
+            <option value="15.3.0">15.3.0</option>
+            <option value="15.2.1">15.2.1</option>
+            <option value="15.1.0">15.1.0</option>
+          </select>
+        </label>
+      </form>
+    </header>
+
+    <iframe id="frame" frameborder="0"></iframe>
+
+    <script>
+      var frame = document.querySelector('#frame');
+      var form  = document.querySelector('#form');
+      var select = document.querySelector("#react_version");
+      var version = window.location.search.match(/version=(.+?)($|&)/);
+
+      if (version) {
+        select.value = version[1]
+      }
+
+      frame.src = "./basic/index.html?" + window.location.search;
+
+      form.addEventListener('change', function() {
+        form.submit();
+      });
+    </script>
+  </body>
+</html>
