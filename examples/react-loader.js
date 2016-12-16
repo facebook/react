@@ -32,7 +32,14 @@ if (version !== 'local') {
   DOM_PATH = "https://unpkg.com/react-dom@" + version + "/dist/react-dom.min.js";
 }
 
-console.log('Loading', version);
+console.log('Loading ' + version);
 
-document.write("<script src='" + REACT_PATH + "'\>\</script\>");
-document.write("<script src='" + DOM_PATH + "'\>\</script\>");
+document.write("\<script src='" + REACT_PATH + "'\>\</script\>");
+
+// Versions earlier than 14 do not use ReactDOM
+if (version === 'local' || parseFloat(version, 10) > 0.13) {
+  document.write("\<script src='" + DOM_PATH + "'\>\</script\>");
+} else {
+  console.log('Aliasing React to ReactDOM for compatability.');
+  document.write('\<script\>ReactDOM = React\</script\>');
+}

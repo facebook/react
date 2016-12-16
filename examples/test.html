@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
     <title>React Browser Sandbox</title>
+
     <style>
       body {
         margin: 0;
@@ -72,13 +75,6 @@
           <span class="sr-only">Select a version to test</span>
           <select id="react_version" name="version">
             <option value="local">Local</option>
-            <option value="15.4.1">15.4.1</option>
-            <option value="15.4.0">15.4.0</option>
-            <option value="15.3.2">15.3.2</option>
-            <option value="15.3.1">15.3.1</option>
-            <option value="15.3.0">15.3.0</option>
-            <option value="15.2.1">15.2.1</option>
-            <option value="15.1.0">15.1.0</option>
           </select>
         </label>
       </form>
@@ -90,17 +86,63 @@
       var frame = document.querySelector('#frame');
       var form  = document.querySelector('#form');
       var select = document.querySelector("#react_version");
-      var version = window.location.search.match(/version=(.+?)($|&)/);
-
-      if (version) {
-        select.value = version[1]
-      }
 
       frame.src = "./basic/index.html?" + window.location.search;
 
       form.addEventListener('change', function() {
         form.submit();
       });
+
+      function getVersion () {
+        var match = window.location.search.match(/version\=(.*?)($|&)/);
+
+        return match ? match[1] : select.value;
+      }
+
+      /**
+       * Populate the dropdown
+       */
+      function addOptions (data) {
+        var version = getVersion();
+
+        JSON.parse(data).forEach(function(row) {
+          var option = document.createElement("option");
+
+          option.value = row.name.slice(1);
+          option.text = row.name;
+
+          select.options.add(option);
+        });
+
+        select.value = getVersion();
+      }
+
+      /**
+       * Fetch version information from Github
+       */
+      function fetchOptions (callback) {
+        var request = new XMLHttpRequest();
+
+        request.onload = function () {
+          if (request.readyState == 4){
+            if (request.status >= 400) {
+              return console.error('Error ' + request.status + ': Something went wrong fetching React versions from Github.')
+            }
+
+            callback(request.responseText);
+            sessionStorage.options = request.responseText;
+          }
+        }
+
+        request.open('GET', "http://api.github.com/repos/facebook/react/tags");
+        request.send();
+      }
+
+      if ('options' in sessionStorage) {
+        addOptions(sessionStorage.options);
+      } else {
+        fetchOptions(addOptions);
+      }
     </script>
   </body>
 </html>
