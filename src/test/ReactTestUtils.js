@@ -411,8 +411,8 @@ var ReactTestUtils = {
     };
   },
 
-  createRenderer: function() {
-    return new ReactShallowRenderer();
+  createRenderer: function(options) {
+    return new ReactShallowRenderer(options);
   },
 
   Simulate: null,

@@ -23,6 +23,12 @@ var emptyObject = require('emptyObject');
 var getNextDebugID = require('getNextDebugID');
 var invariant = require('invariant');
 
+var defaultOptions = {
+  createNodeMock: function() {
+    return null;
+  },
+};
+
 class NoopInternalComponent {
   constructor(element) {
     this._renderedOutput = element;
@@ -32,7 +38,9 @@ class NoopInternalComponent {
       this._debugID = getNextDebugID();
     }
   }
-  mountComponent() {}
+  mountComponent(transaction, hostParent, hostContainerInfo) {
+    this._hostContainerInfo = hostContainerInfo;
+  }
   receiveComponent(element) {
     this._renderedOutput = element;
     this._currentElement = element;
@@ -42,15 +50,24 @@ class NoopInternalComponent {
     return undefined;
   }
   getPublicInstance() {
-    return null;
+    var element = this._currentElement;
+    var hostContainerInfo = this._hostContainerInfo;
+    invariant(
+      hostContainerInfo,
+      'hostContainerInfo should be populated before ' +
+      'getPublicInstance is called.'
+    );
+    return hostContainerInfo.createNodeMock(element);
   }
 }
 
-var ShallowComponentWrapper = function(element) {
+var ShallowComponentWrapper = function(element, options) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
     this._debugID = getNextDebugID();
   }
+
+  this._options = options
 
   this.construct(element);
 };
@@ -60,7 +77,7 @@ Object.assign(
     _constructComponent:
       ReactCompositeComponent._constructComponentWithoutOwner,
     _instantiateReactComponent: function(element) {
-      return new NoopInternalComponent(element);
+      return new NoopInternalComponent(element, this._options);
     },
     _replaceNodeWithMarkup: function() {},
     _renderValidatedComponent:
@@ -77,6 +94,9 @@ function _batchedRender(renderer, element, context) {
 
 class ReactShallowRenderer {
   _instance = null;
+  constructor(options) {
+    this._options = Object.assign({}, defaultOptions, options)
+  }
   getMountedInstance() {
     return this._instance ? this._instance._instance : null;
   }
@@ -136,7 +156,8 @@ class ReactShallowRenderer {
       );
     } else {
       var instance = new ShallowComponentWrapper(element);
-      ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
+      ReactReconciler.mountComponent(instance, transaction, null, this._options, context, 0);
+      transaction.getReactMountReady().notifyAll()
       this._instance = instance;
     }
   }
