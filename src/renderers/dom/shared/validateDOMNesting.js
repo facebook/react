@@ -18,6 +18,8 @@ var warning = require('warning');
 var validateDOMNesting = emptyFunction;
 
 if (__DEV__) {
+  var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
+
   // This validation code was written based on the HTML5 parsing spec:
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   //
@@ -316,6 +318,49 @@ if (__DEV__) {
     return stack;
   };
 
+  var getOwnerInfo = function(childInstance, childTag, ancestorInstance, ancestorTag, isParent) {
+    var childOwner = childInstance && childInstance._currentElement._owner;
+    var ancestorOwner = ancestorInstance && ancestorInstance._currentElement._owner;
+
+    var childOwners = findOwnerStack(childOwner);
+    var ancestorOwners = findOwnerStack(ancestorOwner);
+
+    var minStackLen = Math.min(childOwners.length, ancestorOwners.length);
+    var i;
+
+    var deepestCommon = -1;
+    for (i = 0; i < minStackLen; i++) {
+      if (childOwners[i] === ancestorOwners[i]) {
+        deepestCommon = i;
+      } else {
+        break;
+      }
+    }
+
+    var UNKNOWN = '(unknown)';
+    var childOwnerNames = childOwners.slice(deepestCommon + 1).map(
+      (inst) => getComponentName(inst) || UNKNOWN
+    );
+    var ancestorOwnerNames = ancestorOwners.slice(deepestCommon + 1).map(
+      (inst) => getComponentName(inst) || UNKNOWN
+    );
+    var ownerInfo = [].concat(
+      // If the parent and child instances have a common owner ancestor, start
+      // with that -- otherwise we just start with the parent's owners.
+      deepestCommon !== -1 ?
+        getComponentName(childOwners[deepestCommon]) || UNKNOWN :
+        [],
+      ancestorOwnerNames,
+      ancestorTag,
+      // If we're warning about an invalid (non-parent) ancestry, add '...'
+      isParent ? [] : ['...'],
+      childOwnerNames,
+      childTag
+    ).join(' > ');
+
+    return ownerInfo;
+  };
+
   var didWarn = {};
 
   validateDOMNesting = function(
@@ -340,101 +385,74 @@ if (__DEV__) {
       isTagValidWithParent(childTag, parentTag) ? null : parentInfo;
     var invalidAncestor =
       invalidParent ? null : findInvalidAncestorForTag(childTag, ancestorInfo);
-    var problematic = invalidParent || invalidAncestor;
+    var invalidParentOrAncestor = invalidParent || invalidAncestor;
+    if (!invalidParentOrAncestor) {
+      return;
+    }
 
-    if (problematic) {
-      var ancestorTag = problematic.tag;
-      var ancestorInstance = problematic.instance;
+    var ancestorInstance = invalidParentOrAncestor.instance;
+    var ancestorTag = invalidParentOrAncestor.tag;
+    var addendum;
 
-      var childOwner = childInstance && childInstance._currentElement._owner;
-      var ancestorOwner =
-        ancestorInstance && ancestorInstance._currentElement._owner;
-
-      var childOwners = findOwnerStack(childOwner);
-      var ancestorOwners = findOwnerStack(ancestorOwner);
-
-      var minStackLen = Math.min(childOwners.length, ancestorOwners.length);
-      var i;
-
-      var deepestCommon = -1;
-      for (i = 0; i < minStackLen; i++) {
-        if (childOwners[i] === ancestorOwners[i]) {
-          deepestCommon = i;
-        } else {
-          break;
-        }
-      }
-
-      var UNKNOWN = '(unknown)';
-      var childOwnerNames = childOwners.slice(deepestCommon + 1).map(
-        (inst) => getComponentName(inst) || UNKNOWN
-      );
-      var ancestorOwnerNames = ancestorOwners.slice(deepestCommon + 1).map(
-        (inst) => getComponentName(inst) || UNKNOWN
-      );
-      var ownerInfo = [].concat(
-        // If the parent and child instances have a common owner ancestor, start
-        // with that -- otherwise we just start with the parent's owners.
-        deepestCommon !== -1 ?
-          getComponentName(childOwners[deepestCommon]) || UNKNOWN :
-          [],
-        ancestorOwnerNames,
+    if (childInstance != null) {
+      addendum = ' See ' + getOwnerInfo(
+        childInstance,
+        childTag,
+        ancestorInstance,
         ancestorTag,
-        // If we're warning about an invalid (non-parent) ancestry, add '...'
-        invalidAncestor ? ['...'] : [],
-        childOwnerNames,
-        childTag
-      ).join(' > ');
+        Boolean(invalidParent)
+      ) + '.';
+    } else {
+      addendum = getCurrentFiberStackAddendum();
+    }
 
-      var warnKey =
-        !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + ownerInfo;
-      if (didWarn[warnKey]) {
-        return;
-      }
-      didWarn[warnKey] = true;
+    var warnKey =
+      !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
+    if (didWarn[warnKey]) {
+      return;
+    }
+    didWarn[warnKey] = true;
 
-      var tagDisplayName = childTag;
-      var whitespaceInfo = '';
-      if (childTag === '#text') {
-        if (/\S/.test(childText)) {
-          tagDisplayName = 'Text nodes';
-        } else {
-          tagDisplayName = 'Whitespace text nodes';
-          whitespaceInfo =
-            ' Make sure you don\'t have any extra whitespace between tags on ' +
-            'each line of your source code.';
-        }
+    var tagDisplayName = childTag;
+    var whitespaceInfo = '';
+    if (childTag === '#text') {
+      if (/\S/.test(childText)) {
+        tagDisplayName = 'Text nodes';
       } else {
-        tagDisplayName = '<' + childTag + '>';
+        tagDisplayName = 'Whitespace text nodes';
+        whitespaceInfo =
+          ' Make sure you don\'t have any extra whitespace between tags on ' +
+          'each line of your source code.';
       }
+    } else {
+      tagDisplayName = '<' + childTag + '>';
+    }
 
-      if (invalidParent) {
-        var info = '';
-        if (ancestorTag === 'table' && childTag === 'tr') {
-          info +=
-            ' Add a <tbody> to your code to match the DOM tree generated by ' +
-            'the browser.';
-        }
-        warning(
-          false,
-          'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s ' +
-          'See %s.%s',
-          tagDisplayName,
-          ancestorTag,
-          whitespaceInfo,
-          ownerInfo,
-          info
-        );
-      } else {
-        warning(
-          false,
-          'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>. See %s.',
-          tagDisplayName,
-          ancestorTag,
-          ownerInfo
-        );
+    if (invalidParent) {
+      var info = '';
+      if (ancestorTag === 'table' && childTag === 'tr') {
+        info +=
+          ' Add a <tbody> to your code to match the DOM tree generated by ' +
+          'the browser.';
       }
+      warning(
+        false,
+        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s%s',
+        tagDisplayName,
+        ancestorTag,
+        whitespaceInfo,
+        info,
+        addendum
+      );
+    } else {
+      warning(
+        false,
+        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
+        '<%s>.%s',
+        tagDisplayName,
+        ancestorTag,
+        addendum
+      );
     }
   };
 

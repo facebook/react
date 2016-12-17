@@ -13,6 +13,8 @@
 describe('ReactDOMProduction', () => {
   var oldProcess;
 
+  var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
   var React;
   var ReactDOM;
 
@@ -193,4 +195,61 @@ describe('ReactDOMProduction', () => {
       ' for full errors and additional helpful warnings.'
     );
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    // This test is originally from ReactDOMFiber-test but we replicate it here
+    // to avoid production-only regressions because of host context differences
+    // in dev and prod.
+    it('should keep track of namespace across portals in production', () => {
+      var svgEls, htmlEls;
+      var expectSVG = {ref: el => svgEls.push(el)};
+      var expectHTML = {ref: el => htmlEls.push(el)};
+      var usePortal = function(tree) {
+        return ReactDOM.unstable_createPortal(
+          tree,
+          document.createElement('div')
+        );
+      };
+      var assertNamespacesMatch = function(tree) {
+        var container = document.createElement('div');
+        svgEls = [];
+        htmlEls = [];
+        ReactDOM.render(tree, container);
+        svgEls.forEach(el => {
+          expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+        });
+        htmlEls.forEach(el => {
+          expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+        });
+        ReactDOM.unmountComponentAtNode(container);
+        expect(container.innerHTML).toBe('');
+      };
+
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <svg {...expectSVG}>
+            <foreignObject {...expectSVG}>
+              <p {...expectHTML} />
+              {usePortal(
+                <svg {...expectSVG}>
+                  <image {...expectSVG} />
+                  <svg {...expectSVG}>
+                    <image {...expectSVG} />
+                    <foreignObject {...expectSVG}>
+                      <p {...expectHTML} />
+                    </foreignObject>
+                    {usePortal(<p {...expectHTML} />)}
+                  </svg>
+                  <image {...expectSVG} />
+                </svg>
+              )}
+              <p {...expectHTML} />
+            </foreignObject>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+    });
+  }
 });
