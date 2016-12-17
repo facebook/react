@@ -25,6 +25,8 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
+const warning = require('warning');
+
 type PartialState<State, Props> =
   $Subtype<State> |
   (prevState: State, props: Props) => $Subtype<State>;
@@ -160,6 +162,26 @@ function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
   }
 }
 
+// Returns the update after which the incoming update should be inserted into
+// the queue, or null if it should be inserted at beginning.
+function findInsertionPosition(queue, update) : Update | null {
+  const priorityLevel = update.priorityLevel;
+  let insertAfter = null;
+  let insertBefore = null;
+  if (queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0) {
+    // Fast path for the common case where the update should be inserted at
+    // the end of the queue.
+    insertAfter = queue.last;
+  } else {
+    insertBefore = queue.first;
+    while (insertBefore && comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0) {
+      insertAfter = insertBefore;
+      insertBefore = insertBefore.next;
+    }
+  }
+  return insertAfter;
+}
+
 // The work-in-progress queue is a subset of the current queue (if it exists).
 // We need to insert the incoming update into both lists. However, it's possible
 // that the correct position in one list will be different from the position in
@@ -187,78 +209,68 @@ function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
 //
 // However, if incoming update is inserted into the same position of both lists,
 // we shouldn't make a copy.
-
 function insertUpdate(fiber : Fiber, update : Update, methodName : ?string) : void {
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
   // Warn if an update is scheduled from inside an updater function.
-  if (__DEV__ && typeof methodName === 'string' && (queue1.isProcessing || (queue2 && queue2.isProcessing))) {
-    if (methodName === 'setState') {
-      console.error(
-        'setState was called from inside the updater function of another' +
-        'setState. A function passed as the first argument of setState ' +
-        'should not contain any side-effects. Return a partial state object ' +
-        'instead of calling setState again. Example: ' +
-        'this.setState(function(state) { return { count: state.count + 1 }; })'
-      );
-    } else {
-      console.error(
-        `${methodName} was called from inside the updater function of ` +
-        'setState. A function passed as the first argument of setState ' +
-        'should not contain any side-effects.'
-      );
-    }
-  }
-
-  const priorityLevel = update.priorityLevel;
-
-  let queue = queue1;
-  let insertAfter1;
-  let insertBefore1;
-  let insertAfter2;
-  let insertBefore2;
-  for (let i = 0; queue && i < 2; i++) {
-    let insertAfter = null;
-    let insertBefore = null;
-    if (queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0) {
-      // Fast path for the common case where the update should be inserted at
-      // the end of the queue.
-      insertAfter = queue.last;
-    } else {
-      insertBefore = queue.first;
-      while (insertBefore && comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0) {
-        insertAfter = insertBefore;
-        insertBefore = insertBefore.next;
+  if (__DEV__ && typeof methodName === 'string') {
+    if (queue1.isProcessing || (queue2 && queue2.isProcessing)) {
+      if (methodName === 'setState') {
+        warning(
+          false,
+          'setState was called from inside the updater function of another' +
+          'setState. A function passed as the first argument of setState ' +
+          'should not contain any side-effects. Return a partial state ' +
+          'object instead of calling setState again. Example: ' +
+          'this.setState(function(state) { return { count: state.count + 1 }; })'
+        );
+      } else {
+        warning(
+          false,
+          '%s was called from inside the updater function of setState. A ' +
+          'function passed as the first argument of setState ' +
+          'should not contain any side-effects.',
+          methodName
+        );
       }
     }
-    if (i === 0) {
-      insertAfter1 = insertAfter;
-      insertBefore1 = insertBefore;
-      queue = queue2;
-    } else {
-      insertAfter2 = insertAfter;
-      insertBefore2 = insertBefore;
-      queue = null;
-    }
   }
 
-  const update1 = update;
-  insertUpdateIntoQueue(queue1, update1, insertAfter1, insertBefore1);
+  // Find the insertion position in the first queue.
+  const insertAfter1 = findInsertionPosition(queue1, update);
+  const insertBefore1 = insertAfter1 ? insertAfter1.next : queue1.first;
 
-  if (queue2) {
-    let update2;
-    if (insertBefore1 === insertBefore2) {
-      // The update is inserted into the same position of both lists. There's no
-      // need to clone the update.
-      update2 = update1;
-    } else {
-      // The update is inserted into two separate positions. Make a clone of the
-      // update and insert it twice. One or the other will be dropped the next
-      // time we commit.
-      update2 = cloneUpdate(update1);
-    }
+  if (!queue2) {
+    // If there's no alternate queue, there's nothing else to do but insert.
+    insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
+    return;
+  }
+
+  // If there is an alternate queue, find the insertion position.
+  const insertAfter2 = findInsertionPosition(queue2, update);
+  const insertBefore2 = insertAfter2 ? insertAfter2.next : queue2.first;
+
+  // Now we can insert into the first queue. This must come after finding both
+  // insertion positions because it mutates the list.
+  insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
+
+  if (insertBefore1 !== insertBefore2) {
+    // The insertion positions are different, so we need to clone the update and
+    // insert the clone into the alternate queue.
+    const update2 = cloneUpdate(update);
     insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
+  } else {
+    // The insertion positions are the same, so when we inserted into the first
+    // queue, it also inserted into the alternate. All we need to do is update
+    // the alternate queue's `first` and `last` pointers, in case they
+    // have changed.
+    if (!insertAfter2) {
+      queue2.first = update;
+    }
+    if (!insertBefore2) {
+      queue2.last = null;
+    }
   }
 }
 
@@ -297,36 +309,6 @@ function addReplaceUpdate(
     next: null,
   };
 
-  // Drop all updates with equal priority
-  let queue = ensureUpdateQueue(fiber);
-  for (let i = 0; queue && i < 2; i++) {
-    let replaceAfter = null;
-    let replaceBefore = queue.first;
-    let comparison = 255;
-    while (replaceBefore &&
-           (comparison = comparePriority(replaceBefore.priorityLevel, priorityLevel)) <= 0) {
-      if (comparison < 0) {
-        replaceAfter = replaceBefore;
-      }
-      replaceBefore = replaceBefore.next;
-    }
-
-    if (replaceAfter) {
-      replaceAfter.next = replaceBefore;
-    } else {
-      queue.first = replaceBefore;
-    }
-
-    if (!replaceBefore) {
-      queue.last = replaceAfter;
-    }
-
-    if (fiber.alternate) {
-      queue = ensureUpdateQueue(fiber.alternate);
-    } else {
-      queue = null;
-    }
-  }
   if (__DEV__) {
     insertUpdate(fiber, update, 'replaceState');
   } else {
@@ -401,7 +383,6 @@ function beginUpdateQueue(
   // a new state object.
   let state = prevState;
   let dontMutatePrevState = true;
-  let isEmpty = true;
   let callbackList = null;
   let update = queue.first;
   while (update && comparePriority(update.priorityLevel, priorityLevel) <= 0) {
@@ -415,11 +396,8 @@ function beginUpdateQueue(
 
     let partialState;
     if (update.isReplace) {
-      // A replace should drop all previous updates in the queue, so
-      // use the original `prevState`, not the accumulated `state`
-      state = getStateFromUpdate(update, instance, prevState, props);
+      state = getStateFromUpdate(update, instance, state, props);
       dontMutatePrevState = true;
-      isEmpty = false;
     } else {
       partialState = getStateFromUpdate(update, instance, state, props);
       if (partialState) {
@@ -429,7 +407,6 @@ function beginUpdateQueue(
           state = Object.assign(state, partialState);
         }
         dontMutatePrevState = false;
-        isEmpty = false;
       }
     }
     if (update.isForced) {
@@ -440,9 +417,10 @@ function beginUpdateQueue(
         callbackList.last.next = update;
         callbackList.last = update;
       } else {
+        const callbackUpdate = cloneUpdate(update);
         callbackList = {
-          first: update,
-          last: update,
+          first: callbackUpdate,
+          last: callbackUpdate,
           hasForceUpdate: false,
         };
       }
@@ -451,18 +429,12 @@ function beginUpdateQueue(
     update = update.next;
   }
 
-  if (isEmpty) {
-    // None of the updates contained state. Use the original state object.
-    state = prevState;
-  }
-
   if (!queue.first && !queue.hasForceUpdate) {
     // Queue is now empty
     workInProgress.updateQueue = null;
   }
 
   workInProgress.callbackList = callbackList;
-  workInProgress.memoizedState = state;
 
   if (__DEV__) {
     queue.isProcessing = false;

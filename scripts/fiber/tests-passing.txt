@@ -1236,6 +1236,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * only drops updates with equal or lesser priority when replaceState is called
 * can abort an update, schedule additional updates, and resume
 * can abort an update, schedule a replaceState, and resume
+* passes accumulation of previous updates to replaceState updater function
 * does not call callbacks that are scheduled by another callback until a later commit
 * gives setState during reconciliation the same priority as whatever level is currently reconciling
 * enqueues setState inside an updater function as if the in-progress update is progressed (and warns)

@@ -203,9 +203,7 @@ describe('ReactIncrementalUpdates', () => {
       render() {
         ops.push('render');
         instance = this;
-        return (
-          <span prop={Object.keys(this.state).join('')} />
-        );
+        return <span />;
       },
     });
 
@@ -244,9 +242,29 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('g'));
 
     ReactNoop.flush();
-    // Ensure that updater function d is never called.
-    expect(progressedUpdates).toEqual(['e', 'f', 'g']);
+    expect(progressedUpdates).toEqual(['d', 'e', 'f', 'g']);
     expect(instance.state).toEqual({ e: 'e', f: 'f', g: 'g' });
+  });
+
+  it('passes accumulation of previous updates to replaceState updater function', () => {
+    let instance;
+    const Foo = React.createClass({
+      getInitialState() {
+        return {};
+      },
+      render() {
+        instance = this;
+        return <span />;
+      },
+    });
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+
+    instance.setState({ a: 'a' });
+    instance.setState({ b: 'b' });
+    instance.replaceState(previousState => ({ previousState }));
+    ReactNoop.flush();
+    expect(instance.state).toEqual({ previousState: { a: 'a', b : 'b' } });
   });
 
   it('does not call callbacks that are scheduled by another callback until a later commit', () => {
