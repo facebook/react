@@ -690,6 +690,10 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
 * should throw when an attack vector is used
+* warns on invalid nesting
+* warns on invalid nesting at root
+* warns nicely for table rows
+* gives useful context in warnings
 * should warn about incorrect casing on properties
 * should warn about incorrect casing on event handlers
 * should warn about class

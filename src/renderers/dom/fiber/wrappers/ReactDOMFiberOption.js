@@ -15,25 +15,20 @@
 var React = require('React');
 
 var warning = require('warning');
-var didWarnInvalidOptionChildren = false;
 
 function flattenChildren(children) {
   var content = '';
 
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
+  // We can silently skip them because invalid DOM nesting warning
+  // catches these cases in Fiber.
   React.Children.forEach(children, function(child) {
     if (child == null) {
       return;
     }
     if (typeof child === 'string' || typeof child === 'number') {
       content += child;
-    } else if (!didWarnInvalidOptionChildren) {
-      didWarnInvalidOptionChildren = true;
-      warning(
-        false,
-        'Only strings and numbers are supported as <option> children.'
-      );
     }
   });
 

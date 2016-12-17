@@ -3,10 +3,6 @@ src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should not warn when server-side rendering `onScroll`
-* warns on invalid nesting
-* warns on invalid nesting at root
-* warns nicely for table rows
-* gives useful context in warnings
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
 * should warn about class (ssr)

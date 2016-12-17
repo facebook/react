@@ -485,6 +485,10 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  getRootHostContext() {
+    return null;
+  },
+
   getChildHostContext() {
     return null;
   },

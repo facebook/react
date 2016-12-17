@@ -32,12 +32,13 @@ module.exports = function<T, P, I, TI, C, CX>(
 ) : HostContext<C, CX> {
   const {
     getChildHostContext,
+    getRootHostContext,
   } = config;
 
   // Context stack is reused across the subtrees.
   // We use a null sentinel on the fiber stack to separate them.
-  let contextFibers : Array<Fiber | null> | null = null;
-  let contextValues : Array<CX | null> | null = null;
+  let contextFibers : Array<Fiber | null> = [];
+  let contextValues : Array<CX | null> = [];
   let contextDepth : number = -1;
   // Current context for fast access.
   let currentContextValue : CX | null = null;
@@ -55,6 +56,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function pushHostContainer(nextRootInstance : C) {
+    const nextRootContext = getRootHostContext(nextRootInstance);
     if (rootInstance == null) {
       // We're entering a root.
       rootInstance = nextRootInstance;
@@ -64,14 +66,12 @@ module.exports = function<T, P, I, TI, C, CX>(
       portalDepth++;
       portalStack[portalDepth] = rootInstance;
       rootInstance = nextRootInstance;
-      // Delimit subtree context with a sentinel so we know where to pop later.
-      if (contextFibers != null && contextValues != null) {
-        contextDepth++;
-        contextFibers[contextDepth] = null;
-        contextValues[contextDepth] = null;
-        currentContextValue = null;
-      }
     }
+    // Push the next root or portal context.
+    contextDepth++;
+    contextFibers[contextDepth] = null;
+    contextValues[contextDepth] = nextRootContext;
+    currentContextValue = nextRootContext;
   }
 
   function popHostContainer() {
@@ -89,7 +89,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       // If we pushed any context while in a portal, we need to roll it back.
       if (contextDepth > -1) {
         contextDepth--;
-        if (contextDepth > -1 && contextValues != null) {
+        if (contextDepth > -1) {
           currentContextValue = contextValues[contextDepth];
         } else {
           currentContextValue = null;
@@ -103,15 +103,9 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function pushHostContext(fiber : Fiber) : void {
-    const nextContextValue = getChildHostContext(currentContextValue, fiber.type);
+    const nextContextValue = getChildHostContext(currentContextValue, fiber.type, rootInstance);
     if (currentContextValue === nextContextValue) {
       return;
-    }
-    if (contextFibers == null) {
-      contextFibers = [];
-    }
-    if (contextValues == null) {
-      contextValues = [];
     }
     contextDepth++;
     contextFibers[contextDepth] = fiber;
@@ -144,7 +138,6 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Reset portal stack pointer because we're starting from the very top.
     portalDepth = -1;
     // Reset current container state.
-    // Don't reset arrays because we reuse them.
     rootInstance = null;
     contextDepth = -1;
     currentContextValue = null;

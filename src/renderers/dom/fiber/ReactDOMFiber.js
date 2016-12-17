@@ -39,6 +39,15 @@ var {
 } = ReactDOMFiberComponent;
 var { precacheFiberNode } = ReactDOMComponentTree;
 
+if (__DEV__) {
+  var {
+    getChildAncestorInfo,
+    validateElementNesting,
+    validateTextNesting,
+    validateInlineTextNesting,
+  } = ReactDOMFiberComponent;
+}
+
 const DOCUMENT_NODE = 9;
 
 ReactDOMInjection.inject();
@@ -61,9 +70,29 @@ let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
-  getChildHostContext(parentHostContext : string | null, type : string) {
-    const parentNamespace = parentHostContext;
-    return getChildNamespace(parentNamespace, type);
+  getRootHostContext(rootContainerInstance) {
+    const type = rootContainerInstance.tagName.toLowerCase();
+    if (__DEV__) {
+      const namespace = getChildNamespace(null, type);
+      const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
+      const ancestorInfo = getChildAncestorInfo(null, isMountingIntoDocument ? '#document' : type);
+      return {namespace, ancestorInfo};
+    } else {
+      return getChildNamespace(null, type);
+    }
+  },
+
+  getChildHostContext(
+    parentHostContext : string,
+    type : string,
+  ) {
+    if (__DEV__) {
+      const namespace = getChildNamespace(parentHostContext.namespace, type);
+      const ancestorInfo = getChildAncestorInfo(parentHostContext.ancestorInfo, type);
+      return {namespace, ancestorInfo};
+    } else {
+      return getChildNamespace(parentHostContext, type);
+    }
   },
 
   prepareForCommit() : void {
@@ -86,7 +115,20 @@ var DOMRenderer = ReactFiberReconciler({
     hostContext : string | null,
     internalInstanceHandle : Object,
   ) : Instance {
-    const domElement : Instance = createElement(type, props, rootContainerInstance, hostContext);
+    let parentNamespace;
+    if (__DEV__) {
+      validateElementNesting(hostContext.ancestorInfo, type);
+      if (
+        typeof props.children === 'string' ||
+        typeof props.children === 'number'
+      ) {
+        validateInlineTextNesting(hostContext.ancestorInfo, type, String(props.children));
+      }
+      parentNamespace = hostContext.namespace;
+    } else {
+      parentNamespace = hostContext;
+    }
+    const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
   },
@@ -108,8 +150,17 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     type : string,
     oldProps : Props,
-    newProps : Props
+    newProps : Props,
+    hostContext : string
   ) : boolean {
+    if (__DEV__) {
+      if (oldProps.children !== newProps.children && (
+        typeof newProps.children === 'string' ||
+        typeof newProps.children === 'number'
+      )) {
+        validateInlineTextNesting(hostContext.ancestorInfo, type, String(newProps.children));
+      }
+    }
     return true;
   },
 
@@ -143,7 +194,15 @@ var DOMRenderer = ReactFiberReconciler({
     domElement.textContent = '';
   },
 
-  createTextInstance(text : string, rootContainerInstance : Container, internalInstanceHandle : Object) : TextInstance {
+  createTextInstance(
+    text : string,
+    rootContainerInstance : Container,
+    hostContext,
+    internalInstanceHandle : Object
+  ) : TextInstance {
+    if (__DEV__) {
+      validateTextNesting(hostContext.ancestorInfo, text);
+    }
     var textNode : TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
     return textNode;

@@ -40,6 +40,10 @@ var instanceCounter = 0;
 
 var NoopRenderer = ReactFiberReconciler({
 
+  getRootHostContext() {
+    return null;
+  },
+
   getChildHostContext() {
     return null;
   },
