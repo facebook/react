@@ -7,6 +7,12 @@
     <title>React Browser Sandbox</title>
 
     <style>
+      *,
+      *:before,
+      *:after {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
@@ -21,15 +27,19 @@
       }
 
       .header__inner {
+        display: table;
         max-width: 1000px;
         margin: 0 auto;
         overflow: hidden;
+        text-align: center;
+        width: 100%;
       }
 
       .header__logo {
         color: #efefef;
-        display: inline-block;
+        display: table-cell;
         vertical-align: middle;
+        white-space: nowrap;
       }
 
       .header__logo img {
@@ -38,11 +48,11 @@
         vertical-align: middle;
       }
 
-      .header select {
-        display: inline-block;
-        float: right;
-        margin: 8px 0;
+      .header-controls {
+        display: table-cell;
+        text-align: right;
         vertical-align: middle;
+        width: 100%;
       }
 
       iframe {
@@ -50,7 +60,6 @@
         height: 98%;
         height: calc(100vh - 52px);
         margin: 0 auto;
-        max-width: 1000px;
         width: 100%;
       }
 
@@ -67,16 +76,25 @@
     <header class="header">
       <form method="GET" class="header__inner" id="form">
         <span class="header__logo">
-          <img src="https://facebook.github.io/react/img/logo.svg" alt="React Browser Sandbox" width="32" height="32" />
+          <img src="https://facebook.github.io/react/img/logo.svg" alt="" width="32" height="32" />
           React Sandbox
         </span>
 
-        <label for="react_version">
-          <span class="sr-only">Select a version to test</span>
-          <select id="react_version" name="version">
-            <option value="local">Local</option>
-          </select>
-        </label>
+        <div class="header-controls">
+          <label for="example">
+            <span class="sr-only">Select an example</span>
+            <select id="example" name="example">
+              <option value="./inputs/index.html">Inputs</option>
+            </select>
+          </label>
+
+          <label for="react_version">
+            <span class="sr-only">Select a version to test</span>
+            <select id="react_version" name="version">
+              <option value="local">Local</option>
+            </select>
+          </label>
+        </div>
       </form>
     </header>
 
@@ -84,19 +102,20 @@
 
     <script>
       var frame = document.querySelector('#frame');
-      var form  = document.querySelector('#form');
+      var form = document.querySelector('#form');
       var select = document.querySelector("#react_version");
-
-      frame.src = "./basic/index.html?" + window.location.search;
-
-      form.addEventListener('change', function() {
-        form.submit();
-      });
+      var example = document.querySelector('#example');
 
       function getVersion () {
         var match = window.location.search.match(/version\=(.*?)($|&)/);
 
-        return match ? match[1] : select.value;
+        return unescape(match ? match[1] : select.value);
+      }
+
+      function getExample () {
+        var match = window.location.search.match(/example\=(.*?)($|&)/);
+
+        return unescape(match ? match[1] : example.value);
       }
 
       /**
@@ -137,6 +156,18 @@
         request.open('GET', "http://api.github.com/repos/facebook/react/tags");
         request.send();
       }
+
+      /**
+       * Update the UI with current selections
+       */
+
+      frame.src = getExample() + '?' + window.location.search;
+
+      example.value = getExample();
+
+      form.addEventListener('change', function() {
+        form.submit();
+      });
 
       if ('options' in sessionStorage) {
         addOptions(sessionStorage.options);
