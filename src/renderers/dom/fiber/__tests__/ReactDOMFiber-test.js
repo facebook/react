@@ -993,5 +993,15 @@ describe('ReactDOMFiber', () => {
         'leave parent', // Only when we leave the portal does onMouseLeave fire.
       ]);
     });
+
+    it('should not crash encountering low-priority tree', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <div hidden={true}>
+          <div />
+        </div>,
+        container
+      );
+    });
   }
 });
