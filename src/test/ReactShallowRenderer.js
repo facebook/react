@@ -23,12 +23,6 @@ var emptyObject = require('emptyObject');
 var getNextDebugID = require('getNextDebugID');
 var invariant = require('invariant');
 
-var defaultOptions = {
-  createNodeMock: function() {
-    return null;
-  },
-};
-
 class NoopInternalComponent {
   constructor(element) {
     this._renderedOutput = element;
@@ -93,7 +87,12 @@ function _batchedRender(renderer, element, context) {
 class ReactShallowRenderer {
   _instance = null;
   constructor(options) {
-    this._options = Object.assign({}, defaultOptions, options)
+    var defaultOptions = {
+      createNodeMock: function() {
+        return null;
+      },
+    };
+    this._options = Object.assign({}, defaultOptions, options);
   }
   getMountedInstance() {
     return this._instance ? this._instance._instance : null;
@@ -155,7 +154,7 @@ class ReactShallowRenderer {
     } else {
       var instance = new ShallowComponentWrapper(element);
       ReactReconciler.mountComponent(instance, transaction, null, this._options, context, 0);
-      transaction.getReactMountReady().notifyAll()
+      transaction.getReactMountReady().notifyAll();
       this._instance = instance;
     }
   }

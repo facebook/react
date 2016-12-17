@@ -144,7 +144,11 @@ describe('ReactTestUtils', () => {
     var divRef = null;
     class SomeComponent extends React.Component {
       render() {
-        return <div ref={ (node) => { divRef = node; } } />
+        return (
+          <div ref={(node) => {
+            divRef = node;
+          }} />
+        );
       }
     }
 
