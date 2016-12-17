@@ -39,8 +39,6 @@ if (__DEV__) {
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
-  var validateDOMNesting = require('validateDOMNesting');
-  var { updatedAncestorInfo } = validateDOMNesting;
   var { validateProperties: validateARIAProperties } = ReactDOMInvalidARIAHook;
   var { validateProperties: validateInputPropertes } = ReactDOMNullInputValuePropHook;
   var { validateProperties: validateUnknownPropertes } = ReactDOMUnknownPropertyHook;
@@ -732,21 +730,5 @@ var ReactDOMFiberComponent = {
   },
 
 };
-
-if (__DEV__) {
-  ReactDOMFiberComponent.getChildAncestorInfo = function(parentAncestorInfo, type) {
-    return updatedAncestorInfo(parentAncestorInfo, type, null);
-  };
-  ReactDOMFiberComponent.validateElementNesting = function(parentAncestorInfo, type) {
-    validateDOMNesting(type, null, null, parentAncestorInfo);
-  };
-  ReactDOMFiberComponent.validateTextNesting = function(parentAncestorInfo, text) {
-    validateDOMNesting(null, text, null, parentAncestorInfo);
-  };
-  ReactDOMFiberComponent.validateInlineTextNesting = function(parentAncestorInfo, type, text) {
-    const ownAncestorInfo = updatedAncestorInfo(parentAncestorInfo, type, null);
-    validateDOMNesting(null, text, null, ownAncestorInfo);
-  };
-}
 
 module.exports = ReactDOMFiberComponent;

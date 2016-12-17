@@ -40,12 +40,8 @@ var {
 var { precacheFiberNode } = ReactDOMComponentTree;
 
 if (__DEV__) {
-  var {
-    getChildAncestorInfo,
-    validateElementNesting,
-    validateTextNesting,
-    validateInlineTextNesting,
-  } = ReactDOMFiberComponent;
+  var validateDOMNesting = require('validateDOMNesting');
+  var { updatedAncestorInfo } = validateDOMNesting;
 }
 
 const DOCUMENT_NODE = 9;
@@ -75,7 +71,7 @@ var DOMRenderer = ReactFiberReconciler({
     if (__DEV__) {
       const namespace = getChildNamespace(null, type);
       const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
-      const ancestorInfo = getChildAncestorInfo(null, isMountingIntoDocument ? '#document' : type);
+      const ancestorInfo = updatedAncestorInfo(null, isMountingIntoDocument ? '#document' : type, null);
       return {namespace, ancestorInfo};
     } else {
       return getChildNamespace(null, type);
@@ -88,7 +84,7 @@ var DOMRenderer = ReactFiberReconciler({
   ) {
     if (__DEV__) {
       const namespace = getChildNamespace(parentHostContext.namespace, type);
-      const ancestorInfo = getChildAncestorInfo(parentHostContext.ancestorInfo, type);
+      const ancestorInfo = updatedAncestorInfo(parentHostContext.ancestorInfo, type, null);
       return {namespace, ancestorInfo};
     } else {
       return getChildNamespace(parentHostContext, type);
@@ -117,12 +113,13 @@ var DOMRenderer = ReactFiberReconciler({
   ) : Instance {
     let parentNamespace;
     if (__DEV__) {
-      validateElementNesting(hostContext.ancestorInfo, type);
+      validateDOMNesting(type, null, null, hostContext.ancestorInfo);
       if (
         typeof props.children === 'string' ||
         typeof props.children === 'number'
       ) {
-        validateInlineTextNesting(hostContext.ancestorInfo, type, String(props.children));
+        const ownAncestorInfo = updatedAncestorInfo(hostContext.ancestorInfo, type, null);
+        validateDOMNesting(null, String(props.children), null, ownAncestorInfo);
       }
       parentNamespace = hostContext.namespace;
     } else {
@@ -154,11 +151,12 @@ var DOMRenderer = ReactFiberReconciler({
     hostContext : string
   ) : boolean {
     if (__DEV__) {
-      if (oldProps.children !== newProps.children && (
+      if (typeof newProps.children !== typeof oldProps.children && (
         typeof newProps.children === 'string' ||
         typeof newProps.children === 'number'
       )) {
-        validateInlineTextNesting(hostContext.ancestorInfo, type, String(newProps.children));
+        const ownAncestorInfo = updatedAncestorInfo(hostContext.ancestorInfo, type, null);
+        validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
     return true;
@@ -201,7 +199,7 @@ var DOMRenderer = ReactFiberReconciler({
     internalInstanceHandle : Object
   ) : TextInstance {
     if (__DEV__) {
-      validateTextNesting(hostContext.ancestorInfo, text);
+      validateDOMNesting(null, text, null, hostContext.ancestorInfo);
     }
     var textNode : TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);

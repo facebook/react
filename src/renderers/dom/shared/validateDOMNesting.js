@@ -319,8 +319,8 @@ if (__DEV__) {
   };
 
   var getOwnerInfo = function(childInstance, childTag, ancestorInstance, ancestorTag, isParent) {
-    var childOwner = getOwner(childInstance);
-    var ancestorOwner = getOwner(ancestorInstance);
+    var childOwner = childInstance && childInstance._currentElement._owner;
+    var ancestorOwner = ancestorInstance && ancestorInstance._currentElement._owner;
 
     var childOwners = findOwnerStack(childOwner);
     var ancestorOwners = findOwnerStack(ancestorOwner);
