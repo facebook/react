@@ -130,7 +130,7 @@ describe('ReactTestUtils', () => {
     shallowRenderer.render(<SomeComponent />);
   });
 
-  it.only('can shallow render with a ref and createNodeMock', () => {
+  it('can shallow render with a ref and createNodeMock', () => {
     var mockInstance = { click: () => {} };
     function createNodeMock(element) {
       switch (element.type) {
