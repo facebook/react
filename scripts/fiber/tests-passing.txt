@@ -400,6 +400,7 @@ src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * renders using forceUpdate even when there is no state
 * will call all the normal life cycle methods
 * warns when classic properties are defined on the instance, but does not invoke them.
+* does not warn about getInitialState() on class components if state is also defined.
 * should warn when misspelling shouldComponentUpdate
 * should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
@@ -422,6 +423,7 @@ src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * renders using forceUpdate even when there is no state
 * will call all the normal life cycle methods
 * warns when classic properties are defined on the instance, but does not invoke them.
+* does not warn about getInitialState() on class components if state is also defined.
 * should warn when misspelling shouldComponentUpdate
 * should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
@@ -449,6 +451,7 @@ src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * renders using forceUpdate even when there is no state
 * will call all the normal life cycle methods
 * warns when classic properties are defined on the instance, but does not invoke them.
+* does not warn about getInitialState() on class components if state is also defined.
 * should warn when misspelling shouldComponentUpdate
 * should warn when misspelling componentWillReceiveProps
 * should throw AND warn when trying to access classic APIs
