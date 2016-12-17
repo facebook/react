@@ -67,8 +67,6 @@ var ShallowComponentWrapper = function(element, options) {
     this._debugID = getNextDebugID();
   }
 
-  this._options = options
-
   this.construct(element);
 };
 Object.assign(
@@ -77,7 +75,7 @@ Object.assign(
     _constructComponent:
       ReactCompositeComponent._constructComponentWithoutOwner,
     _instantiateReactComponent: function(element) {
-      return new NoopInternalComponent(element, this._options);
+      return new NoopInternalComponent(element);
     },
     _replaceNodeWithMarkup: function() {},
     _renderValidatedComponent:
