@@ -56,6 +56,7 @@ var STYLE = 'style';
 var HTML = '__html';
 
 var {
+  html: HTML_NAMESPACE,
   svg: SVG_NAMESPACE,
   mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
@@ -451,26 +452,26 @@ function updateDOMProperties(
 }
 
 // Assumes there is no parent namespace.
-function getIntrinsicNamespace(type : string) : string | null {
+function getIntrinsicNamespace(type : string) : string {
   switch (type) {
     case 'svg':
       return SVG_NAMESPACE;
     case 'math':
       return MATH_NAMESPACE;
     default:
-      return null;
+      return HTML_NAMESPACE;
   }
 }
 
 var ReactDOMFiberComponent = {
-  getChildNamespace(parentNamespace : string | null, type : string) : string | null {
-    if (parentNamespace == null) {
-      // No parent namespace: potential entry point.
+  getChildNamespace(parentNamespace : string | null, type : string) : string {
+    if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
+      // No (or default) parent namespace: potential entry point.
       return getIntrinsicNamespace(type);
     }
     if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
       // We're leaving SVG.
-      return null;
+      return HTML_NAMESPACE;
     }
     // By default, pass namespace below.
     return parentNamespace;
@@ -480,14 +481,17 @@ var ReactDOMFiberComponent = {
     type : string,
     props : Object,
     rootContainerElement : Element,
-    parentNamespace : string | null
+    parentNamespace : string
   ) : Element {
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
-    var namespaceURI = parentNamespace || getIntrinsicNamespace(type);
-    if (namespaceURI == null) {
+    var namespaceURI = parentNamespace;
+    if (namespaceURI === HTML_NAMESPACE) {
+      namespaceURI = getIntrinsicNamespace(type);
+    }
+    if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
         warning(
           type === type.toLowerCase() ||
@@ -649,7 +653,7 @@ var ReactDOMFiberComponent = {
     tag : string,
     lastRawProps : Object,
     nextRawProps : Object,
-    rootContainerElement : Element
+    rootContainerElement : Element,
   ) : void {
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, nextRawProps);

@@ -18,6 +18,7 @@ require('art/modes/current').setCurrent(
 const Mode = require('art/modes/current');
 const Transform = require('art/core/transform');
 const invariant = require('fbjs/lib/invariant');
+const emptyObject = require('emptyObject');
 const React = require('React');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 
@@ -485,8 +486,12 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  getRootHostContext() {
+    return emptyObject;
+  },
+
   getChildHostContext() {
-    return null;
+    return emptyObject;
   },
 
   scheduleAnimationCallback: window.requestAnimationFrame,

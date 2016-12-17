@@ -40,19 +40,20 @@ type OpaqueNode = Fiber;
 
 export type HostConfig<T, P, I, TI, C, CX> = {
 
-  getChildHostContext(parentHostContext : CX | null, type : T) : CX,
+  getRootHostContext(rootContainerInstance : C) : CX,
+  getChildHostContext(parentHostContext : CX, type : T) : CX,
 
-  createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX | null, internalInstanceHandle : OpaqueNode) : I,
+  createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX, internalInstanceHandle : OpaqueNode) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,
   finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : void,
 
-  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P) : boolean,
+  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, hostContext : CX) : boolean,
   commitUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : void,
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
 
-  createTextInstance(text : string, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : TI,
+  createTextInstance(text : string, rootContainerInstance : C, hostContext : CX, internalInstanceHandle : OpaqueNode) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
   appendChild(parentInstance : I | C, child : I | TI) : void,

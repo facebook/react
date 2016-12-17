@@ -213,7 +213,8 @@ module.exports = function<T, P, I, TI, C, CX>(
             newProps = workInProgress.memoizedProps || oldProps;
           }
           const instance : I = workInProgress.stateNode;
-          if (prepareUpdate(instance, type, oldProps, newProps)) {
+          const currentHostContext = getHostContext();
+          if (prepareUpdate(instance, type, oldProps, newProps, currentHostContext)) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
           }
@@ -278,7 +279,8 @@ module.exports = function<T, P, I, TI, C, CX>(
             }
           }
           const rootContainerInstance = getRootHostContainer();
-          const textInstance = createTextInstance(newText, rootContainerInstance, workInProgress);
+          const currentHostContext = getHostContext();
+          const textInstance = createTextInstance(newText, rootContainerInstance, currentHostContext, workInProgress);
           workInProgress.stateNode = textInstance;
         }
         workInProgress.memoizedProps = newText;
