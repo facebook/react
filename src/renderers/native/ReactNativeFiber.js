@@ -29,6 +29,7 @@ const ReactPortal = require('ReactPortal');
 const UIManager = require('UIManager');
 
 const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
+const emptyObject = require('emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('invariant');
 
@@ -138,7 +139,7 @@ const NativeRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-    hostContext : string | null,
+    hostContext : Object,
     internalInstanceHandle : Object
   ) : Instance {
     const tag = ReactNativeTagHandles.allocateTag();
@@ -174,6 +175,7 @@ const NativeRenderer = ReactFiberReconciler({
   createTextInstance(
     text : string,
     rootContainerInstance : Container,
+    hostContext : Object,
     internalInstanceHandle : Object,
   ) : TextInstance {
     const tag = ReactNativeTagHandles.allocateTag();
@@ -210,11 +212,12 @@ const NativeRenderer = ReactFiberReconciler({
     );
   },
 
-  getChildHostContext(
-    parentHostContext : string | null,
-    type : string
-  ) {
-    return parentHostContext;
+  getRootHostContext() {
+    return emptyObject;
+  },
+
+  getChildHostContext() {
+    return emptyObject;
   },
 
   insertBefore(

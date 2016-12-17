@@ -27,6 +27,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var {
   AnimationPriority,
 } = require('ReactPriorityLevel');
+var emptyObject = require('emptyObject');
 
 var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
@@ -41,11 +42,11 @@ var instanceCounter = 0;
 var NoopRenderer = ReactFiberReconciler({
 
   getRootHostContext() {
-    return null;
+    return emptyObject;
   },
 
   getChildHostContext() {
-    return null;
+    return emptyObject;
   },
 
   createInstance(type : string, props : Props) : Instance {
@@ -85,7 +86,12 @@ var NoopRenderer = ReactFiberReconciler({
 
   resetTextContent(instance : Instance) : void {},
 
-  createTextInstance(text : string, rootContainerInstance : Container, internalInstanceHandle : Object) : TextInstance {
+  createTextInstance(
+    text : string,
+    rootContainerInstance : Container,
+    hostContext : Object,
+    internalInstanceHandle : Object
+  ) : TextInstance {
     var inst = { text : text, id: instanceCounter++ };
     // Hide from unit tests
     Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });

@@ -359,7 +359,7 @@ if (__DEV__) {
     ).join(' > ');
 
     return ownerInfo;
-  }
+  };
 
   var didWarn = {};
 

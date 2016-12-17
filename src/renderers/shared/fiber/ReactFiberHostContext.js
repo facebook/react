@@ -17,7 +17,7 @@ import type { HostConfig } from 'ReactFiberReconciler';
 
 export type HostContext<C, CX> = {
   getRootHostContainer() : C,
-  getHostContext() : CX | null,
+  getHostContext() : CX,
 
   pushHostContext(fiber : Fiber) : void,
   popHostContext(fiber : Fiber) : void,
@@ -98,11 +98,17 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
-  function getHostContext() : CX | null {
+  function getHostContext() : CX {
+    if (currentContextValue == null) {
+      throw new Error('Expected host context to exist.');
+    }
     return currentContextValue;
   }
 
   function pushHostContext(fiber : Fiber) : void {
+    if (currentContextValue == null) {
+      throw new Error('Expected root host context to exist.');
+    }
     const nextContextValue = getChildHostContext(currentContextValue, fiber.type, rootInstance);
     if (currentContextValue === nextContextValue) {
       return;

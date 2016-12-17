@@ -57,38 +57,45 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
-type Props = { className ?: string };
+type Props = { children ?: mixed };
 type Instance = Element;
 type TextInstance = Text;
+
+type HostContextDev = {
+  namespace : string,
+  ancestorInfo : mixed,
+};
+type HostContextProd = string;
+type HostContext = HostContextDev | HostContextProd;
 
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
 
 var DOMRenderer = ReactFiberReconciler({
 
-  getRootHostContext(rootContainerInstance) {
+  getRootHostContext(rootContainerInstance : Container) : HostContext {
     const type = rootContainerInstance.tagName.toLowerCase();
     if (__DEV__) {
       const namespace = getChildNamespace(null, type);
       const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
       const ancestorInfo = updatedAncestorInfo(null, isMountingIntoDocument ? '#document' : type, null);
       return {namespace, ancestorInfo};
-    } else {
-      return getChildNamespace(null, type);
     }
+    return getChildNamespace(null, type);
   },
 
   getChildHostContext(
-    parentHostContext : string,
+    parentHostContext : HostContext,
     type : string,
-  ) {
+  ) : HostContext {
     if (__DEV__) {
-      const namespace = getChildNamespace(parentHostContext.namespace, type);
-      const ancestorInfo = updatedAncestorInfo(parentHostContext.ancestorInfo, type, null);
+      const parentHostContextDev = ((parentHostContext : any) : HostContextDev);
+      const namespace = getChildNamespace(parentHostContextDev.namespace, type);
+      const ancestorInfo = updatedAncestorInfo(parentHostContextDev.ancestorInfo, type, null);
       return {namespace, ancestorInfo};
-    } else {
-      return getChildNamespace(parentHostContext, type);
     }
+    const parentNamespace = ((parentHostContext : any) : HostContextProd);
+    return getChildNamespace(parentNamespace, type);
   },
 
   prepareForCommit() : void {
@@ -108,23 +115,24 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-    hostContext : string | null,
+    hostContext : HostContext,
     internalInstanceHandle : Object,
   ) : Instance {
-    let parentNamespace;
+    let parentNamespace : string;
     if (__DEV__) {
       // TODO: take namespace into account when validating.
-      validateDOMNesting(type, null, null, hostContext.ancestorInfo);
+      const hostContextDev = ((hostContext : any) : HostContextDev);
+      validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
       if (
         typeof props.children === 'string' ||
         typeof props.children === 'number'
       ) {
-        const ownAncestorInfo = updatedAncestorInfo(hostContext.ancestorInfo, type, null);
+        const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
         validateDOMNesting(null, String(props.children), null, ownAncestorInfo);
       }
-      parentNamespace = hostContext.namespace;
+      parentNamespace = hostContextDev.namespace;
     } else {
-      parentNamespace = hostContext;
+      parentNamespace = ((hostContext : any) : HostContextProd);
     }
     const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
@@ -149,14 +157,15 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
-    hostContext : string
+    hostContext : HostContext,
   ) : boolean {
     if (__DEV__) {
+      const hostContextDev = ((hostContext : any) : HostContextDev);
       if (typeof newProps.children !== typeof oldProps.children && (
         typeof newProps.children === 'string' ||
         typeof newProps.children === 'number'
       )) {
-        const ownAncestorInfo = updatedAncestorInfo(hostContext.ancestorInfo, type, null);
+        const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
         validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
@@ -196,11 +205,12 @@ var DOMRenderer = ReactFiberReconciler({
   createTextInstance(
     text : string,
     rootContainerInstance : Container,
-    hostContext,
+    hostContext : HostContext,
     internalInstanceHandle : Object
   ) : TextInstance {
     if (__DEV__) {
-      validateDOMNesting(null, text, null, hostContext.ancestorInfo);
+      const hostContextDev = ((hostContext : any) : HostContextDev);
+      validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
     }
     var textNode : TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
