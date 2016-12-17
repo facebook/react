@@ -104,7 +104,8 @@ module.exports = function(
       );
       const noGetInitialStateOnES6 = (
         !instance.getInitialState ||
-        instance.getInitialState.isReactClassApproved
+        instance.getInitialState.isReactClassApproved ||
+        instance.state
       );
       warning(
         noGetInitialStateOnES6,

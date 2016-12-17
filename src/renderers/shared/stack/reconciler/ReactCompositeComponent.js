@@ -271,7 +271,8 @@ var ReactCompositeComponent = {
       // catch them here, at initialization time, instead.
       warning(
         !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved,
+        inst.getInitialState.isReactClassApproved ||
+        inst.state,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a state property instead?',

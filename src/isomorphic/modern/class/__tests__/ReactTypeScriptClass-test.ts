@@ -454,6 +454,24 @@ describe('ReactTypeScriptClass', function() {
     );
   });
 
+  it('does not warn about getInitialState() on class components ' +
+     'if state is also defined.', () => {
+    spyOn(console, 'error');
+
+    class Example extends React.Component {
+      state = {};
+      getInitialState() {
+        return {};
+      }
+      render() {
+        return React.createElement('span', {className: 'foo'});
+      }
+    }
+
+    test(React.createElement(Example), 'SPAN', 'foo');
+    expect((<any>console.error).calls.count()).toBe(0);
+  });
+
   it('should warn when misspelling shouldComponentUpdate', function() {
     spyOn(console, 'error');
 
