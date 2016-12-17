@@ -198,10 +198,11 @@ var ReactNoop = {
 
   unmountRootWithID(rootID : string) {
     const root = roots.get(rootID);
-    roots.delete(rootID);
-    rootContainers.delete(rootID);
     if (root) {
-      NoopRenderer.unmountContainer(root);
+      NoopRenderer.updateContainer(null, root, null, () => {
+        roots.delete(rootID);
+        rootContainers.delete(rootID);
+      });
     }
   },
 
