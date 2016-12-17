@@ -354,6 +354,21 @@ describe('ReactES6Class', () => {
     );
   });
 
+  it('does not warn about getInitialState() on class components if state is also defined.', () => {
+    spyOn(console, 'error');
+    class Foo extends React.Component {
+      state = this.getInitialState();
+      getInitialState() {
+        return {};
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<Foo />, 'SPAN', 'foo');
+    expect(console.error.calls.count()).toBe(0);
+  });
+
   it('should warn when misspelling shouldComponentUpdate', () => {
     spyOn(console, 'error');
 
