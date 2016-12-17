@@ -61,7 +61,7 @@ class NoopInternalComponent {
   }
 }
 
-var ShallowComponentWrapper = function(element, options) {
+var ShallowComponentWrapper = function(element) {
   // TODO: Consolidate with instantiateReactComponent
   if (__DEV__) {
     this._debugID = getNextDebugID();
