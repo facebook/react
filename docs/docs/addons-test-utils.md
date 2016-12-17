@@ -304,10 +304,10 @@ Same as [`scryRenderedComponentsWithType()`](#scryrenderedcomponentswithtype) bu
 ### `createRenderer()`
 
 ```javascript
-createRenderer()
+createRenderer([options])
 ```
 
-Call this in your tests to create a [shallow renderer](#shallow-rendering).
+Call this in your tests to create a [shallow renderer](#shallow-rendering). Optionally pass `{createNodeMock: element => mock}` as an optional argument for creating mock refs.
 
 * * *
 
