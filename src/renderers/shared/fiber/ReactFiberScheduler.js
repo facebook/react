@@ -59,6 +59,7 @@ var {
   addReplaceUpdate,
   addForceUpdate,
   addCallback,
+  addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -1058,6 +1059,12 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     scheduleUpdateAtPriority(fiber, priorityContext);
   }
 
+  // TODO: This indirection will be removed as part of #8585
+  function scheduleTopLevelSetState(fiber : Fiber, partialState : any) {
+    addTopLevelUpdate(fiber, partialState, priorityContext);
+    scheduleUpdateAtPriority(fiber, priorityContext);
+  }
+
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
     const previousPriorityContext = priorityContext;
     priorityContext = priorityLevel;
@@ -1105,7 +1112,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   return {
-    scheduleSetState: scheduleSetState,
+    scheduleTopLevelSetState: scheduleTopLevelSetState,
     scheduleUpdateCallback: scheduleUpdateCallback,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,

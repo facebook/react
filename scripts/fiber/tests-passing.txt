@@ -1550,6 +1550,7 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
 * unstable_batchedUpdates should return value from a callback
+* unmounts and remounts a root in the same batch
 
 src/renderers/shared/shared/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent
