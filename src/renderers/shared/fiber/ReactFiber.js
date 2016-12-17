@@ -33,6 +33,7 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
+  PromiseComponent,
 } = ReactTypeOfWork;
 
 var {
@@ -335,13 +336,18 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
     fiber = createFiber(HostComponent, key);
     fiber.type = type;
   } else if (typeof type === 'object' && type !== null) {
-    // Currently assumed to be a continuation and therefore is a fiber already.
-    // TODO: The yield system is currently broken for updates in some cases.
-    // The reified yield stores a fiber, but we don't know which fiber that is;
-    // the current or a workInProgress? When the continuation gets rendered here
-    // we don't know if we can reuse that fiber or if we need to clone it.
-    // There is probably a clever way to restructure this.
-    fiber = ((type : any) : Fiber);
+    if (typeof type.then === 'function') {
+      fiber = createFiber(PromiseComponent, key);
+      fiber.type = type;
+    } else {
+      // Currently assumed to be a continuation and therefore is a fiber already.
+      // TODO: The yield system is currently broken for updates in some cases.
+      // The reified yield stores a fiber, but we don't know which fiber that is;
+      // the current or a workInProgress? When the continuation gets rendered here
+      // we don't know if we can reuse that fiber or if we need to clone it.
+      // There is probably a clever way to restructure this.
+      fiber = ((type : any) : Fiber);
+    }
   } else {
     invariant(
       false,

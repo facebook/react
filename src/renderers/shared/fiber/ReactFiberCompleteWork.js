@@ -38,6 +38,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  PromiseComponent,
 } = ReactTypeOfWork;
 var {
   Update,
@@ -303,6 +304,8 @@ module.exports = function<T, P, I, TI, C, CX>(
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
         popHostContainer();
+        return null;
+      case PromiseComponent:
         return null;
 
       // Error cases

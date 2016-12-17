@@ -1247,6 +1247,10 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * gives setState during reconciliation the same priority as whatever level is currently reconciling
 * enqueues setState inside an updater function as if the in-progress update is progressed (and warns)
 
+src/renderers/shared/fiber/__tests__/ReactPromiseComponent-test.js
+* supports promise as element type
+* can update a promise component with new props
+
 src/renderers/shared/fiber/__tests__/ReactTopLevelFragment-test.js
 * should render a simple fragment at the top of a component
 * should preserve state when switching from a single child
