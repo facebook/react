@@ -8,6 +8,6 @@ global.requestAnimationFrame = function(callback) {
 
 global.requestIdleCallback = function(callback) {
   setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } })
+    callback({ timeRemaining() { return Infinity; } });
   });
 };
