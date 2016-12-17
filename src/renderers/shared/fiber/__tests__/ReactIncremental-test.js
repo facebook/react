@@ -1650,6 +1650,31 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"en","route":"/about"}',
       'ShowBoth {"locale":"en"}',
     ]);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="zh">
+        <ShowLocale />
+        <Router route="/about">
+          <Indirection />
+        </Router>
+        <ShowBoth />
+      </Intl>
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"zh"}',
+      'Router {}',
+      'Indirection {}',
+      'ShowLocale {"locale":"zh"}',
+      'ShowRoute {"route":"/about"}',
+      'ShowNeither {}',
+      'Intl {}',
+      'ShowBoth {"locale":"ru","route":"/about"}',
+      'ShowBoth {"locale":"zh","route":"/about"}',
+      'ShowBoth {"locale":"zh"}',
+    ]);
   });
 
   it('does not leak own context into context provider', () => {
