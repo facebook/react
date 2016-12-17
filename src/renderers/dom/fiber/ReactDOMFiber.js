@@ -113,6 +113,7 @@ var DOMRenderer = ReactFiberReconciler({
   ) : Instance {
     let parentNamespace;
     if (__DEV__) {
+      // TODO: take namespace into account when validating.
       validateDOMNesting(type, null, null, hostContext.ancestorInfo);
       if (
         typeof props.children === 'string' ||
