@@ -65,17 +65,6 @@ var fourArgumentPooler = function(a1, a2, a3, a4) {
   }
 };
 
-var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4, a5);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3, a4, a5);
-  }
-};
-
 var standardReleaser = function(instance) {
   var Klass = this;
   invariant(
@@ -127,7 +116,6 @@ var PooledClass = {
   twoArgumentPooler: (twoArgumentPooler: Pooler),
   threeArgumentPooler: (threeArgumentPooler: Pooler),
   fourArgumentPooler: (fourArgumentPooler: Pooler),
-  fiveArgumentPooler: (fiveArgumentPooler: Pooler),
 };
 
 module.exports = PooledClass;
