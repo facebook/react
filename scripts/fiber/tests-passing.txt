@@ -1250,6 +1250,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 src/renderers/shared/fiber/__tests__/ReactPromiseComponent-test.js
 * supports promise as element type
 * can update a promise component with new props
+* blocks work at the same or lower priority from committing until promise resolves
+* does not block higher-priority work from committing
 
 src/renderers/shared/fiber/__tests__/ReactTopLevelFragment-test.js
 * should render a simple fragment at the top of a component

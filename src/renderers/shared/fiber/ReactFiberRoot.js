@@ -13,8 +13,10 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { BlockInfo } from 'ReactFiberBlocking';
 
 const { createHostRootFiber } = require('ReactFiber');
+const { createBlockInfo } = require('ReactFiberBlocking');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -28,6 +30,7 @@ export type FiberRoot = {
   // Top context object, used by renderSubtreeIntoContainer
   context: Object,
   pendingContext: ?Object,
+  blockInfo: BlockInfo,
 };
 
 exports.createFiberRoot = function(containerInfo : any, context : Object) : FiberRoot {
@@ -42,6 +45,7 @@ exports.createFiberRoot = function(containerInfo : any, context : Object) : Fibe
     callbackList: null,
     context: context,
     pendingContext: null,
+    blockInfo: createBlockInfo(),
   };
   uninitializedFiber.stateNode = root;
   return root;

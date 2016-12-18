@@ -28,6 +28,7 @@ var {
   cloneChildFibers,
 } = require('ReactChildFiber');
 var {
+  addUpdate,
   hasPendingUpdate,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
@@ -66,6 +67,10 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
+var {
+  block,
+  unblock,
+} = require('ReactFiberBlocking');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -78,6 +83,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   scheduleReplaceState: (fiber : Fiber, state : any) => void,
   scheduleForceUpdate: (fiber : Fiber) => void,
   scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
+  scheduleUpdateAtPriority: (fiber : Fiber, priorityLevel : PriorityLevel) => void,
 ) {
 
   const { shouldSetTextContent } = config;
@@ -380,7 +386,8 @@ module.exports = function<T, P, I, TI, C, CX>(
   function updatePromiseComponent(current, workInProgress) {
     const info : (PromiseComponentInfo | null) = workInProgress.stateNode;
     const pendingProps = workInProgress.pendingProps;
-    // const priorityLevel = workInProgress.pendingWorkPriority;
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    const promise = workInProgress.type;
 
     if (info === null) {
       // This is a new promise component.
@@ -390,34 +397,42 @@ module.exports = function<T, P, I, TI, C, CX>(
       };
       workInProgress.stateNode = newInfo;
 
-      const promise = workInProgress.type;
-      const childProps = pendingProps;
+      // Block the tree from committing at this priority level
+      const blockInfo = block(workInProgress, promise, priorityLevel);
 
       // When the promise resolves, schedule an update to render the children.
       promise
         .then(childElementType => {
           newInfo.childElementType = childElementType;
           newInfo.isResolved = true;
-          // TODO: Use correct priority
-          scheduleSetState(workInProgress, { childProps });
+          // Unblock the tree
+          if (blockInfo) {
+            unblock(blockInfo, promise);
+          }
+          addUpdate(workInProgress, { childProps: pendingProps }, priorityLevel);
+          scheduleUpdateAtPriority(workInProgress, priorityLevel);
         })
         .catch(error => {
+          if (blockInfo) {
+            unblock(blockInfo, promise);
+          }
           // TODO: Capture error
         });
 
       // Bail out.
       return null;
     } else if (!info.isResolved) {
+      // Block the tree from committing at this priority level
+      block(workInProgress, promise, priorityLevel);
       return null;
     } else {
       if (pendingProps) {
         // Insert the incoming props into the priority queue.
-        // TODO: Use correct priority
-        scheduleSetState(workInProgress, { childProps: pendingProps });
+        addUpdate(workInProgress, { childProps: pendingProps }, priorityLevel);
+        scheduleUpdateAtPriority(workInProgress, priorityLevel);
       }
 
       const ChildElementType = info.childElementType;
-      const priorityLevel = workInProgress.pendingWorkPriority;
       const queue = workInProgress.updateQueue;
       const prevState = workInProgress.memoizedState;
 
@@ -568,6 +583,12 @@ module.exports = function<T, P, I, TI, C, CX>(
     // to drop our effect list.
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
+
+    if (workInProgress.blockedChild) {
+      // This work was previously completed, but was blocked from committing.
+      // Reuse the blocked work.
+      workInProgress.child = workInProgress.blockedChild;
+    }
 
     if (workInProgress.progressedPriority === priorityLevel) {
       // If we have progressed work on this priority level already, we can

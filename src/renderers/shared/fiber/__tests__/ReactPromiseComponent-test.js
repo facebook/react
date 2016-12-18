@@ -65,4 +65,85 @@ describe('ReactPromiseComponent', () => {
       expect(ReactNoop.getChildren()).toEqual([span(2)]);
     });
   });
+
+  it('blocks work at the same or lower priority from committing until promise resolves', () => {
+    function Foo(props) {
+      return <span prop="Hi" />;
+    }
+    const PromiseForFoo = Promise.resolve(Foo);
+
+    function Bar() {
+      return <span prop="Yo" />;
+    }
+
+    function Parent() {
+      return [
+        <PromiseForFoo />,
+        <Bar />,
+      ];
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+    // Promise has not resolved yet. All work in the tree is blocked.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    return PromiseForFoo.then(() => {
+      ReactNoop.flush();
+      // The promise has resolved. The tree is no longer blocked.
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Hi'),
+        span('Yo'),
+      ]);
+    });
+  });
+
+  it('does not block higher-priority work from committing', () => {
+    function Foo(props) {
+      return <span prop="Hi" />;
+    }
+    const PromiseForFoo = Promise.resolve(Foo);
+
+    let instance;
+    class Bar extends React.Component {
+      state = { step: 1 };
+      render() {
+        instance = this;
+        return <span prop={'step: ' + this.state.step} />;
+      }
+    }
+
+    function Parent() {
+      return [
+        <PromiseForFoo />,
+        <Bar />,
+      ];
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+    // Promise has not resolved yet. All work in the tree is blocked.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    ReactNoop.performAnimationWork(() => {
+      instance.setState({ step: 2 });
+    });
+    ReactNoop.flush();
+    // We performed a high priority update, which unblocks the tree.
+    expect(ReactNoop.getChildren()).toEqual([span('step: 2')]);
+
+    instance.setState({ step: 3 });
+    ReactNoop.flush();
+    // Low pri updates are still blocked.
+    expect(ReactNoop.getChildren()).toEqual([span('step: 2')]);
+
+    return PromiseForFoo.then(() => {
+      ReactNoop.flush();
+      // The promise has resolved. The tree is no longer blocked.
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Hi'),
+        span('step: 3'),
+      ]);
+    });
+  });
 });
