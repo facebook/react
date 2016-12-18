@@ -407,6 +407,7 @@ src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
+* supports Promise for setState method
 
 src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * preserves the name of the class for use in error messages
@@ -430,6 +431,7 @@ src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
+* supports Promise for setState method
 
 src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 * should render
@@ -458,6 +460,7 @@ src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
+* supports Promise for setState method
 
 src/isomorphic/modern/element/__tests__/ReactJSXElement-test.js
 * returns a complete element according to spec

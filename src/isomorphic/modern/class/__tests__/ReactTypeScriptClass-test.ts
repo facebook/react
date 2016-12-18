@@ -300,6 +300,22 @@ class ClassicRefs extends React.Component {
   }
 }
 
+// it supports Promise for setState method
+var setStatePromiseRenderCount = 0;
+class StatePromise extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {bar: props.initialValue};
+  }
+  changeStateAndGetPromise() {
+    return this.setState({bar: 'bar'});
+  }
+  render() {
+    setStatePromiseRenderCount++;
+    return React.createElement('div', { className: this.state.bar });
+  }
+}
+
 // Describe the actual test cases.
 
 describe('ReactTypeScriptClass', function() {
@@ -533,6 +549,18 @@ describe('ReactTypeScriptClass', function() {
     );
     var node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
+  });
+
+	it('supports Promise for setState method', function() {
+    var instance = test(
+      React.createElement(StatePromise, {initialValue: 'foo'}),
+      'DIV',
+      'foo'
+    );
+    instance.changeStateAndGetPromise()
+    .then(function() {
+      expect(setStatePromiseRenderCount).toBe(2);
+    });
   });
 
 });
