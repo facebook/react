@@ -267,6 +267,7 @@ describe('ReactIncremental', () => {
     ReactNoop.performAnimationWork(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
+    ReactNoop.render(<Foo text="bar" />);
     ReactNoop.flushAnimationPri();
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);

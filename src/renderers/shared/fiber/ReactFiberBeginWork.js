@@ -542,15 +542,12 @@ module.exports = function<T, P, I, TI, C, CX>(
           pushTopLevelContextObject(root.context, false);
         }
 
-        pushHostContainer(root.containerInfo);
-
         if (updateQueue) {
-          const prevState = workInProgress.memoizedState;
-          const state = beginUpdateQueue(workInProgress, updateQueue, null, prevState, null, priorityLevel);
-          const element = state.element;
-          reconcileChildren(current, workInProgress, element);
-          workInProgress.memoizedState = state;
+          beginUpdateQueue(workInProgress, updateQueue, null, null, null, priorityLevel);
         }
+
+        pushHostContainer(workInProgress.stateNode.containerInfo);
+        reconcileChildren(current, workInProgress, pendingProps);
 
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.

@@ -329,7 +329,7 @@ const NativeRenderer = ReactFiberReconciler({
     // But creates an additional child Fiber for raw text children.
     // No additional native views are created though.
     // It's not clear to me which is better so I'm deferring for now.
-    // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
+    // More context @ github.com/facebook/react/pull/8560#discussion_r92111303 
     return false;
   },
 
@@ -375,9 +375,8 @@ const ReactNative = {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      NativeRenderer.updateContainer(null, root, null, () => {
-        roots.delete(containerTag);
-      });
+      roots.delete(containerTag);
+      NativeRenderer.unmountContainer(root);
     }
   },
 
