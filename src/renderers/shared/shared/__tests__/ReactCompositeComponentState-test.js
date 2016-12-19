@@ -169,16 +169,22 @@ describe('ReactCompositeComponent-state', () => {
       // componentDidMount() called setState({color:'yellow'}), which is async.
       // The update doesn't happen until the next flush.
       ['componentDidMount-end', 'orange'],
+      ['setState-sunrise', 'orange'],
+      ['setState-orange', 'orange'],
     ];
 
-    // The setState callbacks in componentWillMount, and the initial callback
-    // passed to ReactDOM.render, should be flushed right after component
-    // did mount:
-    expected.push(
-      ['setState-sunrise', 'orange'], // 1
-      ['setState-orange', 'orange'], // 2
-      ['initial-callback', 'orange'], // 3
-      ['shouldComponentUpdate-currentState', 'orange'],
+    // In Fiber, the initial callback is not enqueued until after any work
+    // scheduled by lifecycles has flushed (same semantics as a regular setState
+    // callback outside of a batch). In Stack, the initial render is scheduled
+    // inside of batchedUpdates, so the callback gets flushed right after
+    // componentDidMount.
+    // TODO: We should fix this, in both Stack and Fiber, so that the behavior
+    // is consistent regardless of whether you're in a batch.
+    if (!ReactDOMFeatureFlags.useFiber) {
+      expected.push(['initial-callback', 'orange']);
+    }
+
+    expected.push(['shouldComponentUpdate-currentState', 'orange'],
       ['shouldComponentUpdate-nextState', 'yellow'],
       ['componentWillUpdate-currentState', 'orange'],
       ['componentWillUpdate-nextState', 'yellow'],
@@ -187,6 +193,10 @@ describe('ReactCompositeComponent-state', () => {
       ['componentDidUpdate-prevState', 'orange'],
       ['setState-yellow', 'yellow'],
     );
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      expected.push(['initial-callback', 'yellow']);
+    }
 
     expected.push(
       ['componentWillReceiveProps-start', 'yellow'],

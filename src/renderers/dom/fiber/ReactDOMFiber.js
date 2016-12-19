@@ -259,7 +259,7 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
-function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, children : ReactNodeList, containerNode : DOMContainerElement | Document, callback: ?Function) {
   let container : DOMContainerElement =
     containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
   let root;
@@ -268,9 +268,9 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, parentComponent, callback);
+    root = container._reactRootContainer = DOMRenderer.mountContainer(children, container, parentComponent, callback);
   } else {
-    DOMRenderer.updateContainer(element, root = container._reactRootContainer, parentComponent, callback);
+    DOMRenderer.updateContainer(children, root = container._reactRootContainer, parentComponent, callback);
   }
   return DOMRenderer.getPublicRootInstance(root);
 }
@@ -292,13 +292,9 @@ var ReactDOM = {
 
   unmountComponentAtNode(container : DOMContainerElement) {
     warnAboutUnstableUse();
-    const root = container._reactRootContainer;
-    if (root) {
-      // TODO: Is it safe to reset this now or should I wait since this
-      // unmount could be deferred?
+    return renderSubtreeIntoContainer(null, null, container, () => {
       container._reactRootContainer = null;
-      DOMRenderer.unmountContainer(root);
-    }
+    });
   },
 
   findDOMNode: findDOMNode,

@@ -198,10 +198,11 @@ var ReactNoop = {
 
   unmountRootWithID(rootID : string) {
     const root = roots.get(rootID);
-    roots.delete(rootID);
-    rootContainers.delete(rootID);
     if (root) {
-      NoopRenderer.unmountContainer(root);
+      NoopRenderer.updateContainer(null, root, null, () => {
+        roots.delete(rootID);
+        rootContainers.delete(rootID);
+      });
     }
   },
 
@@ -304,14 +305,16 @@ var ReactNoop = {
       log(
         '  '.repeat(depth + 1) + '~',
         firstUpdate && firstUpdate.partialState,
-        firstUpdate.callback ? 'with callback' : ''
+        firstUpdate.callback ? 'with callback' : '',
+        '[' + firstUpdate.priorityLevel + ']'
       );
       var next;
       while (next = firstUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,
-          next.callback ? 'with callback' : ''
+          next.callback ? 'with callback' : '',
+          '[' + firstUpdate.priorityLevel + ']'
         );
       }
     }

@@ -357,7 +357,11 @@ class Surface extends Component {
   }
 
   componentWillUnmount() {
-    ARTRenderer.unmountContainer(this._mountNode);
+    ARTRenderer.updateContainer(
+      null,
+      this._mountNode,
+      this,
+    );
   }
 
   render() {

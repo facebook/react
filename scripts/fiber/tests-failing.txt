@@ -90,7 +90,6 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
-* unmounts and remounts a root in the same batch
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
