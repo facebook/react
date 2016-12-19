@@ -654,7 +654,6 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.unmountRootWithID('d');
     ReactNoop.unmountRootWithID('e');
     ReactNoop.unmountRootWithID('f');
-    ReactNoop.flush();
     expect(ReactNoop.getChildren('a')).toEqual(null);
     expect(ReactNoop.getChildren('b')).toEqual(null);
     expect(ReactNoop.getChildren('c')).toEqual(null);
