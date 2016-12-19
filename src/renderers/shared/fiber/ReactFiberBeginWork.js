@@ -19,6 +19,7 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { PromiseComponentInfo } from 'ReactFiberPromiseComponent';
+import type { BlockInfo } from 'ReactFiberBlocking';
 
 var React = require('React');
 var {
@@ -67,10 +68,6 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var {
-  block,
-  unblock,
-} = require('ReactFiberBlocking');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -84,6 +81,10 @@ module.exports = function<T, P, I, TI, C, CX>(
   scheduleForceUpdate: (fiber : Fiber) => void,
   scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
   scheduleUpdateAtPriority: (fiber : Fiber, priorityLevel : PriorityLevel) => void,
+  block : (fiber : Fiber, promise : Promise<any>, priorityLevel : PriorityLevel) => BlockInfo | null,
+  unblock : (info : BlockInfo, promise : Promise<any>) => void,
+  setBlockingContext : (wasBlocked : boolean) => void,
+  getBlockingContext : () => boolean,
 ) {
 
   const { shouldSetTextContent } = config;
@@ -570,6 +571,12 @@ module.exports = function<T, P, I, TI, C, CX>(
       resetHostContainer();
     }
 
+    if (workInProgress.tag === HostRoot) {
+      // If we're at the root, set the correct blocking context
+      const root : FiberRoot = workInProgress.stateNode;
+      setBlockingContext(root.blockInfo.wasBlocked);
+    }
+
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
@@ -584,13 +591,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
 
-    if (workInProgress.blockedChild) {
-      // This work was previously completed, but was blocked from committing.
-      // Reuse the blocked work.
-      workInProgress.child = workInProgress.blockedChild;
-    }
-
-    if (workInProgress.progressedPriority === priorityLevel) {
+    if (workInProgress.progressedPriority === priorityLevel || getBlockingContext()) {
       // If we have progressed work on this priority level already, we can
       // proceed this that as the child.
       workInProgress.child = workInProgress.progressedChild;

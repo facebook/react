@@ -16,7 +16,7 @@ import type { Fiber } from 'ReactFiber';
 import type { BlockInfo } from 'ReactFiberBlocking';
 
 const { createHostRootFiber } = require('ReactFiber');
-const { createBlockInfo } = require('ReactFiberBlocking');
+const { NoWork } = require('ReactPriorityLevel');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -45,7 +45,11 @@ exports.createFiberRoot = function(containerInfo : any, context : Object) : Fibe
     callbackList: null,
     context: context,
     pendingContext: null,
-    blockInfo: createBlockInfo(),
+    blockInfo: {
+      blockers: null,
+      blockingPriority: NoWork,
+      wasBlocked: false,
+    },
   };
   uninitializedFiber.stateNode = root;
   return root;

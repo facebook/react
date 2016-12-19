@@ -128,8 +128,6 @@ export type Fiber = {
   // This will be used to quickly determine if a subtree has no pending changes.
   pendingWorkPriority: PriorityLevel,
 
-  blockedChild: ?Fiber,
-
   // This value represents the priority level that was last used to process this
   // component. This indicates whether it is better to continue from the
   // progressed work or if it is better to continue from the current state.
@@ -210,7 +208,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     firstEffect: null,
     lastEffect: null,
 
-    blockedChild: null,
     pendingWorkPriority: NoWork,
     progressedPriority: NoWork,
     progressedChild: null,
@@ -273,7 +270,6 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
 
   alt.stateNode = fiber.stateNode;
   alt.child = fiber.child;
-  alt.blockedChild = fiber.blockedChild;
   alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
   alt.index = fiber.index; // This should always be overridden.
   alt.ref = fiber.ref;

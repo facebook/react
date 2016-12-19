@@ -22,6 +22,7 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactFiberBlocking = require('ReactFiberBlocking');
 
 var { cloneFiber } = require('ReactFiber');
 
@@ -65,11 +66,6 @@ var {
   unwindContext,
 } = require('ReactFiberContext');
 
-var {
-  markTreeAsBlocked,
-  markTreeAsUnblocked,
-} = require('ReactFiberBlocking');
-
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -80,6 +76,14 @@ var timeHeuristicForUnitOfWork = 1;
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
+  const {
+    markTreeAsBlocked,
+    markTreeAsUnblocked,
+    block,
+    unblock,
+    setBlockingContext,
+    getBlockingContext,
+  } = ReactFiberBlocking();
   const { beginWork, beginFailedWork } = ReactFiberBeginWork(
     config,
     hostContext,
@@ -88,6 +92,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     scheduleForceUpdate,
     scheduleUpdateCallback,
     scheduleUpdateAtPriority,
+    block,
+    unblock,
+    setBlockingContext,
+    getBlockingContext,
   );
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
   const {
@@ -334,27 +342,24 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     root.current = finishedWork;
 
     const blockInfo = root.blockInfo;
-    if (blockInfo.blockers) {
-      if (blockInfo.blockingPriority !== NoWork &&
-          blockInfo.blockingPriority <= priorityLevel) {
-        // This root is blocked from committing by one or more pending promises.
-        markTreeAsBlocked(finishedWork);
+    if (blockInfo.blockingPriority !== NoWork &&
+        blockInfo.blockingPriority <= priorityLevel) {
+      // This root is blocked from committing by one or more pending promises.
+      blockInfo.wasBlocked = true;
 
-        // Swap the root's child for its alternate so that the blocked work
-        // remains in the work-in-progress tree.
+      // Swap the root's child for its alternate so that the blocked work
+      // remains in the work-in-progress tree.
+      if (finishedWork.child) {
+        finishedWork.child = finishedWork.child.alternate;
         if (finishedWork.child) {
-          finishedWork.child = finishedWork.child.alternate;
-          if (finishedWork.child) {
-            finishedWork.child.return = finishedWork.alternate;
-          }
+          finishedWork.child.return = finishedWork.alternate;
         }
-        return;
-      } else {
-        // We're perofmring work at a higher priority than the blocking
-        // priority. Clear all the blocked work and continue committing.
-        markTreeAsUnblocked(finishedWork);
       }
+      return;
     }
+    // We're perofmring work at a higher priority than the blocking
+    // priority. Mark this root as unblocked and continue committing.
+    blockInfo.wasBlocked = false;
 
     // Updates that occur during the commit phase should have Task priority
     const previousPriorityContext = priorityContext;
