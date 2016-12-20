@@ -924,4 +924,11 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(() => ReactNoop.flush()).toThrow('Error in host config.');
     });
   });
+
+  it('handles error thrown by top-level callback', () => {
+    ReactNoop.render(<div />, () => {
+      throw new Error('Error!');
+    });
+    expect(() => ReactNoop.flush()).toThrow('Error!');
+  });
 });
