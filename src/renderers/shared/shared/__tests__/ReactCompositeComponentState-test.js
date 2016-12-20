@@ -171,20 +171,8 @@ describe('ReactCompositeComponent-state', () => {
       ['componentDidMount-end', 'orange'],
       ['setState-sunrise', 'orange'],
       ['setState-orange', 'orange'],
-    ];
-
-    // In Fiber, the initial callback is not enqueued until after any work
-    // scheduled by lifecycles has flushed (same semantics as a regular setState
-    // callback outside of a batch). In Stack, the initial render is scheduled
-    // inside of batchedUpdates, so the callback gets flushed right after
-    // componentDidMount.
-    // TODO: We should fix this, in both Stack and Fiber, so that the behavior
-    // is consistent regardless of whether you're in a batch.
-    if (!ReactDOMFeatureFlags.useFiber) {
-      expected.push(['initial-callback', 'orange']);
-    }
-
-    expected.push(['shouldComponentUpdate-currentState', 'orange'],
+      ['initial-callback', 'orange'],
+      ['shouldComponentUpdate-currentState', 'orange'],
       ['shouldComponentUpdate-nextState', 'yellow'],
       ['componentWillUpdate-currentState', 'orange'],
       ['componentWillUpdate-nextState', 'yellow'],
@@ -192,18 +180,11 @@ describe('ReactCompositeComponent-state', () => {
       ['componentDidUpdate-currentState', 'yellow'],
       ['componentDidUpdate-prevState', 'orange'],
       ['setState-yellow', 'yellow'],
-    );
-
-    if (ReactDOMFeatureFlags.useFiber) {
-      expected.push(['initial-callback', 'yellow']);
-    }
-
-    expected.push(
       ['componentWillReceiveProps-start', 'yellow'],
       // setState({color:'green'}) only enqueues a pending state.
       ['componentWillReceiveProps-end', 'yellow'],
       // pending state queue is processed
-    );
+    ];
 
     if (ReactDOMFeatureFlags.useFiber) {
       // In Stack, this is never called because replaceState drops all updates

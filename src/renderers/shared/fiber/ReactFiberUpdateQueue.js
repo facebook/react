@@ -284,12 +284,13 @@ function insertUpdate(fiber : Fiber, update : Update, methodName : ?string) : Up
 function addUpdate(
   fiber : Fiber,
   partialState : PartialState<any, any> | null,
+  callback : Callback | null,
   priorityLevel : PriorityLevel
 ) : void {
   const update = {
     priorityLevel,
     partialState,
-    callback: null,
+    callback,
     isReplace: false,
     isForced: false,
     isTopLevelUnmount: false,
@@ -306,12 +307,13 @@ exports.addUpdate = addUpdate;
 function addReplaceUpdate(
   fiber : Fiber,
   state : any | null,
+  callback : Callback | null,
   priorityLevel : PriorityLevel
 ) : void {
   const update = {
     priorityLevel,
     partialState: state,
-    callback: null,
+    callback,
     isReplace: true,
     isForced: false,
     isTopLevelUnmount: false,
@@ -326,11 +328,15 @@ function addReplaceUpdate(
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
-function addForceUpdate(fiber : Fiber, priorityLevel : PriorityLevel) : void {
+function addForceUpdate(
+  fiber : Fiber,
+  callback : Callback | null,
+  priorityLevel : PriorityLevel
+) : void {
   const update = {
     priorityLevel,
     partialState: null,
-    callback: null,
+    callback,
     isReplace: false,
     isForced: true,
     isTopLevelUnmount: false,
@@ -345,7 +351,11 @@ function addForceUpdate(fiber : Fiber, priorityLevel : PriorityLevel) : void {
 exports.addForceUpdate = addForceUpdate;
 
 
-function addCallback(fiber : Fiber, callback: Callback, priorityLevel : PriorityLevel) : void {
+function addCallback(
+  fiber : Fiber,
+  callback: Callback,
+  priorityLevel : PriorityLevel
+) : void {
   const update : Update = {
     priorityLevel,
     partialState: null,
@@ -367,14 +377,18 @@ exports.getPendingPriority = getPendingPriority;
 function addTopLevelUpdate(
   fiber : Fiber,
   partialState : PartialState<any, any>,
+  callback : Callback | null,
   priorityLevel : PriorityLevel
 ) : void {
-  const isTopLevelUnmount = partialState === null;
+  const isTopLevelUnmount = Boolean(
+    partialState &&
+    partialState.element === null
+  );
 
   const update = {
     priorityLevel,
     partialState,
-    callback: null,
+    callback,
     isReplace: false,
     isForced: false,
     isTopLevelUnmount,
