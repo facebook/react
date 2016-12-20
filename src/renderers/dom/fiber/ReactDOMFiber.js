@@ -35,6 +35,7 @@ var {
   createElement,
   getChildNamespace,
   setInitialProperties,
+  diffProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
 var { precacheFiberNode } = ReactDOMComponentTree;
@@ -208,7 +209,7 @@ var DOMRenderer = ReactFiberReconciler({
     newProps : Props,
     rootContainerInstance : Container,
     hostContext : HostContext,
-  ) : null | Object {
+  ) : null | Array<mixed> {
     if (__DEV__) {
       const hostContextDev = ((hostContext : any) : HostContextDev);
       if (typeof newProps.children !== typeof oldProps.children && (
@@ -219,7 +220,7 @@ var DOMRenderer = ReactFiberReconciler({
         validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
-    return {};
+    return diffProperties(domElement, type, oldProps, newProps, rootContainerInstance);
   },
 
   commitMount(
@@ -234,7 +235,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitUpdate(
     domElement : Instance,
-    updatePayload : Object,
+    updatePayload : Array<mixed>,
     type : string,
     oldProps : Props,
     newProps : Props,
@@ -242,10 +243,9 @@ var DOMRenderer = ReactFiberReconciler({
   ) : void {
     // Update the internal instance handle so that we know which props are
     // the current ones.
-    // TODO: Fix this hack.
-    var rootContainerInstance = (domElement : any);
     precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
+    // Apply the diff to the DOM node.
+    updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },
 
   shouldSetTextContent(props : Props) : boolean {
