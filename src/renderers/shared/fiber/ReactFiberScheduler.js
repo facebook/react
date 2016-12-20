@@ -141,6 +141,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   // Error boundaries that captured an error during the current commit.
   let commitPhaseBoundaries : Set<Fiber> | null = null;
   let firstUncaughtError : Error | null = null;
+  let fatalError : Error | null = null;
 
   let isCommitting : boolean = false;
   let isUnmounting : boolean = false;
@@ -670,7 +671,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
-    while (priorityLevel !== NoWork) {
+    while (priorityLevel !== NoWork && !fatalError) {
       if (priorityLevel >= HighPriority && !deadline) {
         throw new Error(
           'Cannot perform deferred work without a deadline.'
@@ -769,7 +770,13 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     capturedErrors = null;
     failedBoundaries = null;
 
-    // It's now safe to throw the first uncaught error.
+    // It's now safe to throw errors.
+    if (fatalError) {
+      let e = fatalError;
+      fatalError = null;
+      firstUncaughtError = null;
+      throw e;
+    }
     if (firstUncaughtError) {
       let e = firstUncaughtError;
       firstUncaughtError = null;
@@ -795,6 +802,13 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // ignore the work itself and only search through the parents.
       if (failedWork.tag === HostRoot) {
         boundary = failedWork;
+
+        if (isFailedBoundary(failedWork)) {
+          // If this root already failed, there must have been an error when
+          // attempting to unmount it. This is a worst-case scenario and
+          // should only be possible if there's a bug in the renderer.
+          fatalError = error;
+        }
       } else {
         let node = failedWork.return;
         while (node && !boundary) {

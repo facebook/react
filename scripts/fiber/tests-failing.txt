@@ -64,7 +64,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update
 
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
-* should throw on invalid render targets
 * includes owner name in the error about badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js

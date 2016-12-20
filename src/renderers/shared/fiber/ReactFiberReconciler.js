@@ -143,10 +143,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       if (__DEV__) {
         if (ReactFiberInstrumentation.debugTool) {
           if (element === null) {
-            ReactFiberInstrumentation.debugTool.onUpdateContainer(root);
-          } else {
-            // This is an unmount
             ReactFiberInstrumentation.debugTool.onUnmountContainer(root);
+          } else {
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(root);
           }
         }
       }

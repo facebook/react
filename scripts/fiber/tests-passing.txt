@@ -1319,6 +1319,7 @@ src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
 * warns for duplicated iterable keys with component stack info
 
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
+* should throw on invalid render targets
 * should throw when supplying a ref outside of render method
 * should warn when children are mutated during render
 * should warn when children are mutated during update

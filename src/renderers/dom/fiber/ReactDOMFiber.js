@@ -71,6 +71,31 @@ type HostContext = HostContextDev | HostContextProd;
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
 
+var ELEMENT_NODE_TYPE = 1;
+var DOC_NODE_TYPE = 9;
+var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
+
+/**
+ * True if the supplied DOM node is a valid node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid DOM node.
+ * @internal
+ */
+function isValidContainer(node) {
+  return !!(node && (
+    node.nodeType === ELEMENT_NODE_TYPE ||
+    node.nodeType === DOC_NODE_TYPE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+  ));
+}
+
+function validateContainer(container) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+}
+
 var DOMRenderer = ReactFiberReconciler({
 
   getRootHostContext(rootContainerInstance : Container) : HostContext {
@@ -260,6 +285,8 @@ function warnAboutUnstableUse() {
 }
 
 function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, children : ReactNodeList, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  validateContainer(containerNode);
+
   let container : DOMContainerElement =
     containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
   let root;
@@ -278,7 +305,7 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
 var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
-    warnAboutUnstableUse();
+    validateContainer(container);
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
@@ -292,9 +319,11 @@ var ReactDOM = {
 
   unmountComponentAtNode(container : DOMContainerElement) {
     warnAboutUnstableUse();
-    return renderSubtreeIntoContainer(null, null, container, () => {
-      container._reactRootContainer = null;
-    });
+    if (container._reactRootContainer) {
+      return renderSubtreeIntoContainer(null, null, container, () => {
+        container._reactRootContainer = null;
+      });
+    }
   },
 
   findDOMNode: findDOMNode,
