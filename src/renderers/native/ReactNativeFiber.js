@@ -122,10 +122,10 @@ const NativeRenderer = ReactFiberReconciler({
 
   commitUpdate(
     instance : Instance,
+    updatePayloadTODO : Object,
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Object,
     internalInstanceHandle : Object
   ) : void {
     const viewConfig = instance.viewConfig;
@@ -149,7 +149,7 @@ const NativeRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-    hostContext : Object,
+    hostContext : {||},
     internalInstanceHandle : Object
   ) : Instance {
     const tag = ReactNativeTagHandles.allocateTag();
@@ -185,7 +185,7 @@ const NativeRenderer = ReactFiberReconciler({
   createTextInstance(
     text : string,
     rootContainerInstance : Container,
-    hostContext : Object,
+    hostContext : {||},
     internalInstanceHandle : Object,
   ) : TextInstance {
     const tag = ReactNativeTagHandles.allocateTag();
@@ -224,11 +224,11 @@ const NativeRenderer = ReactFiberReconciler({
     return false;
   },
 
-  getRootHostContext() {
+  getRootHostContext() : {||} {
     return emptyObject;
   },
 
-  getChildHostContext() {
+  getChildHostContext() : {||} {
     return emptyObject;
   },
 
@@ -290,9 +290,11 @@ const NativeRenderer = ReactFiberReconciler({
     instance : Instance,
     type : string,
     oldProps : Props,
-    newProps : Props
-  ) : boolean {
-    return true;
+    newProps : Props,
+    rootContainerInstance : Container,
+    hostContext : {||}
+  ) : null | Object {
+    return emptyObject;
   },
 
   removeChild(

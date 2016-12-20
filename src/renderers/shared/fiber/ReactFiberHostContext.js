@@ -34,8 +34,8 @@ export type HostContext<C, CX> = {
   resetHostContainer() : void,
 };
 
-module.exports = function<T, P, I, TI, PI, C, CX>(
-  config : HostConfig<T, P, I, TI, PI, C, CX>
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>
 ) : HostContext<C, CX> {
   const {
     getChildHostContext,

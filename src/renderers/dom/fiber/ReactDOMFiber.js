@@ -206,8 +206,9 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
+    rootContainerInstance : Container,
     hostContext : HostContext,
-  ) : boolean {
+  ) : null | Object {
     if (__DEV__) {
       const hostContextDev = ((hostContext : any) : HostContextDev);
       if (typeof newProps.children !== typeof oldProps.children && (
@@ -218,7 +219,7 @@ var DOMRenderer = ReactFiberReconciler({
         validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
-    return true;
+    return {};
   },
 
   commitMount(
@@ -233,14 +234,16 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitUpdate(
     domElement : Instance,
+    updatePayload : Object,
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
     // Update the internal instance handle so that we know which props are
     // the current ones.
+    // TODO: Fix this hack.
+    var rootContainerInstance = (domElement : any);
     precacheFiberNode(internalInstanceHandle, domElement);
     updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
   },

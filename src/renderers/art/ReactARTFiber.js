@@ -42,6 +42,8 @@ const TYPES = {
   TEXT: 'Text',
 };
 
+const UPDATE_SIGNAL = {};
+
 /** Helper Methods */
 
 function addEventListeners(instance, type, listener) {
@@ -418,7 +420,7 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  commitUpdate(instance, type, oldProps, newProps) {
+  commitUpdate(instance, updatePayload, type, oldProps, newProps) {
     instance._applyProps(instance, newProps, oldProps);
   },
 
@@ -482,7 +484,7 @@ const ARTRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(domElement, type, oldProps, newProps) {
-    return true;
+    return UPDATE_SIGNAL;
   },
 
   removeChild(parentInstance, child) {
