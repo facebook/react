@@ -746,10 +746,14 @@ var ReactDOMFiberComponent = {
           // We eagerly listen to this even though we haven't committed yet.
           ensureListeningTo(rootContainerElement, propKey);
         }
-        if (!updatePayload && lastProp !== nextProp) {
+        if (!updatePayload /*&& lastProp !== nextProp*/) {
           // This is a special case. If any listener updates we need to ensure
           // that the "current" fiber pointer gets updated so we need a commit
           // to update this element.
+          // TODO: It turns out that we always need to update if there are
+          // listeners. In fact, even this is not enough because not updating
+          // the "current" pointer will make it so that work in progress
+          // listeners can fire before they're mounted.
           updatePayload = [];
         }
       } else {

@@ -127,6 +127,10 @@ var EventPluginHub = {
     // live here; needs to be moved to a better place soon
     if (typeof inst.tag === 'number') {
       const props = inst.memoizedProps;
+      if (!props) {
+        // Work in progress.
+        return null;
+      }
       listener = props[registrationName];
       if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
         return null;
