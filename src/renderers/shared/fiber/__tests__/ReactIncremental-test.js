@@ -1975,4 +1975,51 @@ describe('ReactIncremental', () => {
     instance.setState({});
     ReactNoop.flush();
   });
+
+  it('maintains the correct context index when unwinding due to an error ocurring during render', () => {
+    class Root extends React.Component {
+      unstable_handleError(error) {
+        // If context is pushed/popped correctly,
+        // This method will be used to handle the intentionally-thrown Error.
+      }
+      render() {
+        return <ContextProvider depth={1} />;
+      }
+    }
+
+    let instance;
+
+    class ContextProvider extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {};
+        if (props.depth === 1) {
+          instance = this;
+        }
+      }
+      static childContextTypes = {};
+      getChildContext() {
+        return {};
+      }
+      render() {
+        if (this.state.throwError) {
+          throw Error();
+        }
+        return this.props.depth < 4
+          ? <ContextProvider depth={this.props.depth + 1} />
+          : <div/>;
+      }
+    }
+
+    // Init
+    ReactNoop.render(<Root />);
+    ReactNoop.flush();
+
+    // Trigger an update in the middle of the tree
+    // This is necessary to reproduce the error as it curently exists.
+    instance.setState({
+      throwError: true,
+    });
+    ReactNoop.flush();
+  });
 });
