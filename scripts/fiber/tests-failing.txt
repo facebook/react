@@ -64,7 +64,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update
 
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
-* should throw on invalid render targets
 * includes owner name in the error about badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
@@ -90,7 +89,6 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * throws in setState if the update callback is not a function
 * throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
-* unmounts and remounts a root in the same batch
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs

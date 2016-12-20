@@ -15,6 +15,7 @@
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { ReactNodeList } from 'ReactTypes';
 
 var {
   findCurrentUnmaskedContext,
@@ -70,9 +71,8 @@ export type HostConfig<T, P, I, TI, C, CX> = {
 };
 
 export type Reconciler<C, I, TI> = {
-  mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>) : OpaqueNode,
-  updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>) : void,
-  unmountContainer(container : OpaqueNode) : void,
+  mountContainer(element : ReactNodeList, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>) : OpaqueNode,
+  updateContainer(element : ReactNodeList, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
   /* eslint-disable no-undef */
   // FIXME: ESLint complains about type parameter
@@ -98,7 +98,7 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) : Reconciler<C, I, TI> {
 
   var {
-    scheduleWork,
+    scheduleTopLevelSetState,
     scheduleUpdateCallback,
     performWithPriority,
     batchedUpdates,
@@ -108,24 +108,15 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
+    mountContainer(element : ReactNodeList, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
       const context = getContextForSubtree(parentComponent);
       const root = createFiberRoot(containerInfo, context);
       const current = root.current;
 
-      // TODO: Use the updateQueue and scheduleUpdate, instead of pendingProps.
-      // TODO: This should not override the pendingWorkPriority if there is
-      // higher priority work in the subtree.
-
-      current.pendingProps = element;
-      if (current.alternate) {
-        current.alternate.pendingProps = element;
-      }
+      scheduleTopLevelSetState(current, { element });
       if (callback) {
         scheduleUpdateCallback(current, callback);
       }
-
-      scheduleWork(root);
 
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onMountContainer(root);
@@ -137,44 +128,26 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       return current;
     },
 
-    updateContainer(element : ReactElement<any>, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
+    updateContainer(element : ReactNodeList, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       const current = root.current;
 
       root.pendingContext = getContextForSubtree(parentComponent);
 
-      // TODO: Use the updateQueue and scheduleUpdate, instead of pendingProps.
-      // TODO: This should not override the pendingWorkPriority if there is
-      // higher priority work in the subtree.
-      current.pendingProps = element;
-      if (current.alternate) {
-        current.alternate.pendingProps = element;
-      }
+      scheduleTopLevelSetState(current, { element });
       if (callback) {
         scheduleUpdateCallback(current, callback);
       }
 
-      scheduleWork(root);
-
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onUpdateContainer(root);
-      }
-    },
-
-    unmountContainer(container : OpaqueNode) : void {
-      // TODO: If this is a nested container, this won't be the root.
-      const root : FiberRoot = (container.stateNode : any);
-      // TODO: Use pending work/state instead of props.
-      root.current.pendingProps = [];
-      if (root.current.alternate) {
-        root.current.alternate.pendingProps = [];
-      }
-
-      scheduleWork(root);
-
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onUnmountContainer(root);
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          if (element === null) {
+            ReactFiberInstrumentation.debugTool.onUnmountContainer(root);
+          } else {
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(root);
+          }
+        }
       }
     },
 

@@ -59,6 +59,7 @@ var {
   addReplaceUpdate,
   addForceUpdate,
   addCallback,
+  addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -140,6 +141,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   // Error boundaries that captured an error during the current commit.
   let commitPhaseBoundaries : Set<Fiber> | null = null;
   let firstUncaughtError : Error | null = null;
+  let fatalError : Error | null = null;
 
   let isCommitting : boolean = false;
   let isUnmounting : boolean = false;
@@ -669,7 +671,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
-    while (priorityLevel !== NoWork) {
+    while (priorityLevel !== NoWork && !fatalError) {
       if (priorityLevel >= HighPriority && !deadline) {
         throw new Error(
           'Cannot perform deferred work without a deadline.'
@@ -768,7 +770,13 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     capturedErrors = null;
     failedBoundaries = null;
 
-    // It's now safe to throw the first uncaught error.
+    // It's now safe to throw errors.
+    if (fatalError) {
+      let e = fatalError;
+      fatalError = null;
+      firstUncaughtError = null;
+      throw e;
+    }
     if (firstUncaughtError) {
       let e = firstUncaughtError;
       firstUncaughtError = null;
@@ -794,6 +802,13 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // ignore the work itself and only search through the parents.
       if (failedWork.tag === HostRoot) {
         boundary = failedWork;
+
+        if (isFailedBoundary(failedWork)) {
+          // If this root already failed, there must have been an error when
+          // attempting to unmount it. This is a worst-case scenario and
+          // should only be possible if there's a bug in the renderer.
+          fatalError = error;
+        }
       } else {
         let node = failedWork.return;
         while (node && !boundary) {
@@ -944,28 +959,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
-  function scheduleWork(root : FiberRoot) {
-    let priorityLevel = priorityContext;
-
-    // If we're in a batch, switch to task priority
-    if (priorityLevel === SynchronousPriority && isPerformingWork) {
-      priorityLevel = TaskPriority;
-    }
-
-    scheduleWorkAtPriority(root, priorityLevel);
-  }
-
-  function scheduleWorkAtPriority(root : FiberRoot, priorityLevel : PriorityLevel) {
-    // Set the priority on the root, without deprioritizing
-    if (root.current.pendingWorkPriority === NoWork ||
-        priorityLevel <= root.current.pendingWorkPriority) {
-      root.current.pendingWorkPriority = priorityLevel;
-    }
-    if (root.current.alternate) {
-      if (root.current.alternate.pendingWorkPriority === NoWork ||
-          priorityLevel <= root.current.alternate.pendingWorkPriority) {
-        root.current.alternate.pendingWorkPriority = priorityLevel;
-      }
+  function scheduleRoot(root : FiberRoot) {
+    const priorityLevel = root.current.pendingWorkPriority;
+    if (priorityLevel === NoWork) {
+      return;
     }
 
     if (!root.isScheduled) {
@@ -986,30 +983,6 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
       nextUnitOfWork = null;
-    }
-
-    // Depending on the priority level, either perform work now or schedule
-    // a callback to perform work later.
-    switch (priorityLevel) {
-      case SynchronousPriority:
-        // Perform work immediately
-        performWork(SynchronousPriority);
-        return;
-      case TaskPriority:
-        // If we're already performing work, Task work will be flushed before
-        // exiting the current batch. So we can skip it here.
-        if (!isPerformingWork) {
-          performWork(TaskPriority);
-        }
-        return;
-      case AnimationPriority:
-        scheduleAnimationCallback(performAnimationWork);
-        return;
-      case HighPriority:
-      case LowPriority:
-      case OffscreenPriority:
-        scheduleDeferredCallback(performDeferredWork);
-        return;
     }
   }
 
@@ -1043,7 +1016,30 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       if (!node.return) {
         if (node.tag === HostRoot) {
           const root : FiberRoot = (node.stateNode : any);
-          scheduleWorkAtPriority(root, priorityLevel);
+          scheduleRoot(root, priorityLevel);
+          // Depending on the priority level, either perform work now or
+          // schedule a callback to perform work later.
+          switch (priorityLevel) {
+            case SynchronousPriority:
+              // Perform work immediately
+              performWork(SynchronousPriority);
+              return;
+            case TaskPriority:
+              // If we're already performing work, Task work will be flushed before
+              // exiting the current batch. So we can skip it here.
+              if (!isPerformingWork) {
+                performWork(TaskPriority);
+              }
+              return;
+            case AnimationPriority:
+              scheduleAnimationCallback(performAnimationWork);
+              return;
+            case HighPriority:
+            case LowPriority:
+            case OffscreenPriority:
+              scheduleDeferredCallback(performDeferredWork);
+              return;
+          }
         } else {
           // TODO: Warn about setting state on an unmounted component.
           return;
@@ -1074,6 +1070,12 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   function scheduleUpdateCallback(fiber : Fiber, callback : Function) {
     addCallback(fiber, callback, priorityContext);
+    scheduleUpdateAtPriority(fiber, priorityContext);
+  }
+
+  // TODO: This indirection will be removed as part of #8585
+  function scheduleTopLevelSetState(fiber : Fiber, partialState : any) {
+    addTopLevelUpdate(fiber, partialState, priorityContext);
     scheduleUpdateAtPriority(fiber, priorityContext);
   }
 
@@ -1124,7 +1126,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   return {
-    scheduleWork: scheduleWork,
+    scheduleTopLevelSetState: scheduleTopLevelSetState,
     scheduleUpdateCallback: scheduleUpdateCallback,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,

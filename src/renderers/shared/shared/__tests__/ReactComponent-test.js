@@ -30,13 +30,13 @@ describe('ReactComponent', () => {
     expect(function() {
       ReactDOM.render(<div />, [container]);
     }).toThrowError(
-      '_registerComponent(...): Target container is not a DOM element.'
+      /Target container is not a DOM element./
     );
 
     expect(function() {
       ReactDOM.render(<div />, null);
     }).toThrowError(
-      '_registerComponent(...): Target container is not a DOM element.'
+      /Target container is not a DOM element./
     );
   });
 

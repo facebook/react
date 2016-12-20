@@ -71,6 +71,31 @@ type HostContext = HostContextDev | HostContextProd;
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
 
+var ELEMENT_NODE_TYPE = 1;
+var DOC_NODE_TYPE = 9;
+var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
+
+/**
+ * True if the supplied DOM node is a valid node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid DOM node.
+ * @internal
+ */
+function isValidContainer(node) {
+  return !!(node && (
+    node.nodeType === ELEMENT_NODE_TYPE ||
+    node.nodeType === DOC_NODE_TYPE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+  ));
+}
+
+function validateContainer(container) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+}
+
 var DOMRenderer = ReactFiberReconciler({
 
   getRootHostContext(rootContainerInstance : Container) : HostContext {
@@ -259,7 +284,9 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
-function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, children : ReactNodeList, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  validateContainer(containerNode);
+
   let container : DOMContainerElement =
     containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
   let root;
@@ -268,9 +295,9 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, parentComponent, callback);
+    root = container._reactRootContainer = DOMRenderer.mountContainer(children, container, parentComponent, callback);
   } else {
-    DOMRenderer.updateContainer(element, root = container._reactRootContainer, parentComponent, callback);
+    DOMRenderer.updateContainer(children, root = container._reactRootContainer, parentComponent, callback);
   }
   return DOMRenderer.getPublicRootInstance(root);
 }
@@ -278,7 +305,7 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
 var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
-    warnAboutUnstableUse();
+    validateContainer(container);
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
@@ -292,12 +319,10 @@ var ReactDOM = {
 
   unmountComponentAtNode(container : DOMContainerElement) {
     warnAboutUnstableUse();
-    const root = container._reactRootContainer;
-    if (root) {
-      // TODO: Is it safe to reset this now or should I wait since this
-      // unmount could be deferred?
-      container._reactRootContainer = null;
-      DOMRenderer.unmountContainer(root);
+    if (container._reactRootContainer) {
+      return renderSubtreeIntoContainer(null, null, container, () => {
+        container._reactRootContainer = null;
+      });
     }
   },
 

@@ -1183,6 +1183,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * recovers from uncaught reconciler errors
 * unmounts components with uncaught errors
 * does not interrupt unmounting if detaching a ref throws
+* handles error thrown by host config while working on failed root
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
@@ -1190,27 +1191,13 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * finds no node before insertion and correct node before deletion
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
-* schedules and flushes animation work
-* schedules and flushes animation work for many roots
-* flushes all scheduled animation work
-* flushes all scheduled animation work for many roots
 * schedules and flushes deferred work
-* schedules and flushes deferred work for many roots
-* flushes scheduled deferred work fitting within deadline
-* flushes scheduled deferred work fitting within deadline for many roots
-* schedules more deferred work if it runs out of time
-* schedules more deferred work if it runs out of time with many roots
-* flushes late animation work in a deferred callback if it wins
-* flushes late animation work in a deferred callback if it wins with many roots
-* flushes late animation work in an animation callback if it wins
-* flushes late animation work in an animation callback if it wins with many roots
-* flushes all work in a deferred callback if it wins
-* flushes all work in a deferred callback if it wins with many roots
-* flushes root with late deferred work in an animation callback if it wins
-* flushes all roots with animation work in an animation callback if it wins
-* splits deferred work on multiple roots
+* schedules and flushes animation work
+* searches for work on other roots once the current root completes
+* schedules an animation callback when there`s leftover animation work
+* schedules top-level updates in order of priority
+* schedules top-level updates with same priority in order of insertion
 * works on deferred roots in the order they were scheduled
-* handles interleaved deferred and animation work
 * schedules sync updates when inside componentDidMount/Update
 * can opt-in to deferred/animation scheduling inside componentDidMount/Update
 * performs Task work even after time runs out
@@ -1333,6 +1320,7 @@ src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
 * warns for duplicated iterable keys with component stack info
 
 src/renderers/shared/shared/__tests__/ReactComponent-test.js
+* should throw on invalid render targets
 * should throw when supplying a ref outside of render method
 * should warn when children are mutated during render
 * should warn when children are mutated during update
@@ -1573,6 +1561,7 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
 * unstable_batchedUpdates should return value from a callback
+* unmounts and remounts a root in the same batch
 
 src/renderers/shared/shared/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent

@@ -654,6 +654,7 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.unmountRootWithID('d');
     ReactNoop.unmountRootWithID('e');
     ReactNoop.unmountRootWithID('f');
+    ReactNoop.flush();
     expect(ReactNoop.getChildren('a')).toEqual(null);
     expect(ReactNoop.getChildren('b')).toEqual(null);
     expect(ReactNoop.getChildren('c')).toEqual(null);
@@ -915,5 +916,12 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
     // Because there was an error, entire tree should unmount
     expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('handles error thrown by host config while working on failed root', () => {
+    ReactNoop.simulateErrorInHostConfig(() => {
+      ReactNoop.render(<span />);
+      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
+    });
   });
 });
