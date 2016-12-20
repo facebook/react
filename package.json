@@ -49,7 +49,7 @@
     "eslint-plugin-react-internal": "file:eslint-rules",
     "fbjs": "^0.8.5",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.36.0",
+    "flow-bin": "^0.37.0",
     "glob": "^6.0.1",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
