@@ -599,24 +599,30 @@ var ReactDOMFiberComponent = {
       validatePropertiesInDevelopment(tag, nextRawProps);
     }
 
+    var updatePayload : null | Array<any> = null;
+
     var lastProps : Object;
     var nextProps : Object;
     switch (tag) {
       case 'input':
         lastProps = ReactDOMFiberInput.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberInput.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       case 'option':
         lastProps = ReactDOMFiberOption.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberOption.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       case 'select':
         lastProps = ReactDOMFiberSelect.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberSelect.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       case 'textarea':
         lastProps = ReactDOMFiberTextarea.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberTextarea.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       default:
         lastProps = lastRawProps;
@@ -634,7 +640,6 @@ var ReactDOMFiberComponent = {
     var propKey;
     var styleName;
     var styleUpdates = null;
-    var updatePayload : null | Array<any> = null;
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey) ||
