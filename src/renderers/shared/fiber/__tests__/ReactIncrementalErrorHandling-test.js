@@ -917,4 +917,11 @@ describe('ReactIncrementalErrorHandling', () => {
     // Because there was an error, entire tree should unmount
     expect(ReactNoop.getChildren()).toEqual([]);
   });
+
+  it('handles error thrown by host config while working on failed root', () => {
+    ReactNoop.simulateErrorInHostConfig(() => {
+      ReactNoop.render(<span />);
+      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
+    });
+  });
 });

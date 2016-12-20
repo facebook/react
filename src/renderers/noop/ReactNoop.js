@@ -39,9 +39,14 @@ type TextInstance = {| text: string, id: number |};
 
 var instanceCounter = 0;
 
+var failInBeginPhase = false;
+
 var NoopRenderer = ReactFiberReconciler({
 
   getRootHostContext() {
+    if (failInBeginPhase) {
+      throw new Error('Error in host config.');
+    }
     return emptyObject;
   },
 
@@ -351,6 +356,15 @@ var ReactNoop = {
     logFiber((root.stateNode : any).current, 0);
 
     console.log(...bufferedLog);
+  },
+
+  simulateErrorInHostConfig(fn : () => void) {
+    failInBeginPhase = true;
+    try {
+      fn();
+    } finally {
+      failInBeginPhase = false;
+    }
   },
 
 };
