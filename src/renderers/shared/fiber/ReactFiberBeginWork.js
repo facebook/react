@@ -169,6 +169,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   function updateFragment(current, workInProgress) {
     var nextChildren = workInProgress.pendingProps;
     reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
   }
 
   function updateFunctionalComponent(current, workInProgress) {
@@ -238,6 +239,30 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Put context on the stack because we will work on children
     if (isContextProvider(workInProgress)) {
       pushContextProvider(workInProgress, true);
+    }
+    return workInProgress.child;
+  }
+
+  function updateHostRoot(current, workInProgress, priorityLevel) {
+    const root = (workInProgress.stateNode : FiberRoot);
+    if (root.pendingContext) {
+      pushTopLevelContextObject(
+        root.pendingContext,
+        root.pendingContext !== root.context
+      );
+    } else {
+      pushTopLevelContextObject(root.context, false);
+    }
+
+    pushHostContainer(root.containerInfo);
+
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue) {
+      const prevState = workInProgress.memoizedState;
+      const state = beginUpdateQueue(workInProgress, updateQueue, null, prevState, null, priorityLevel);
+      const element = state.element;
+      reconcileChildren(current, workInProgress, element);
+      workInProgress.memoizedState = state;
     }
     return workInProgress.child;
   }
@@ -342,9 +367,13 @@ module.exports = function<T, P, I, TI, C, CX>(
       throw new Error('Should be resolved by now');
     }
     reconcileChildren(current, workInProgress, coroutine.children);
+    // This doesn't take arbitrary time so we could synchronously just begin
+    // eagerly do the work of workInProgress.child as an optimization.
+    return workInProgress.child;
   }
 
   function updatePortalComponent(current, workInProgress) {
+    pushHostContainer(workInProgress.stateNode.containerInfo);
     const priorityLevel = workInProgress.pendingWorkPriority;
     const nextChildren = workInProgress.pendingProps;
     if (!current) {
@@ -363,6 +392,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     } else {
       reconcileChildren(current, workInProgress, nextChildren);
     }
+    return workInProgress.child;
   }
 
   /*
@@ -517,31 +547,8 @@ module.exports = function<T, P, I, TI, C, CX>(
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
         return updateClassComponent(current, workInProgress, priorityLevel);
-      case HostRoot: {
-        const root = (workInProgress.stateNode : FiberRoot);
-        if (root.pendingContext) {
-          pushTopLevelContextObject(
-            root.pendingContext,
-            root.pendingContext !== root.context
-          );
-        } else {
-          pushTopLevelContextObject(root.context, false);
-        }
-
-        pushHostContainer(root.containerInfo);
-
-        if (updateQueue) {
-          const prevState = workInProgress.memoizedState;
-          const state = beginUpdateQueue(workInProgress, updateQueue, null, prevState, null, priorityLevel);
-          const element = state.element;
-          reconcileChildren(current, workInProgress, element);
-          workInProgress.memoizedState = state;
-        }
-
-        // A yield component is just a placeholder, we can just run through the
-        // next one immediately.
-        return workInProgress.child;
-      }
+      case HostRoot:
+        return updateHostRoot(current, workInProgress, priorityLevel);
       case HostComponent:
         return updateHostComponent(current, workInProgress);
       case HostText:
@@ -553,21 +560,15 @@ module.exports = function<T, P, I, TI, C, CX>(
         workInProgress.tag = CoroutineComponent;
         // Intentionally fall through since this is now the same.
       case CoroutineComponent:
-        updateCoroutineComponent(current, workInProgress);
-        // This doesn't take arbitrary time so we could synchronously just begin
-        // eagerly do the work of workInProgress.child as an optimization.
-        return workInProgress.child;
+        return updateCoroutineComponent(current, workInProgress);
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
       case HostPortal:
-        pushHostContainer(workInProgress.stateNode.containerInfo);
-        updatePortalComponent(current, workInProgress);
-        return workInProgress.child;
+        return updatePortalComponent(current, workInProgress);
       case Fragment:
-        updateFragment(current, workInProgress);
-        return workInProgress.child;
+        return updateFragment(current, workInProgress);
       default:
         throw new Error('Unknown unit of work tag');
     }
