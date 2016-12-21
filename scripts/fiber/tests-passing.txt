@@ -1343,6 +1343,7 @@ src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should not throw when updating an auxiliary component
 * should allow state updates in componentDidMount
 * should call nested lifecycle methods in the right order
+* calls effects on module-pattern component
 
 src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
