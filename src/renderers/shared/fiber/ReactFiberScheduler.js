@@ -58,6 +58,7 @@ var {
 } = require('ReactFiberUpdateQueue');
 
 var {
+  resetContext,
   unwindContext,
 } = require('ReactFiberContext');
 
@@ -153,6 +154,11 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
+  function resetContextStack() {
+    resetContext();
+    resetHostContainer();
+  }
+
   // findNextUnitOfWork mutates the current priority context. It is reset after
   // after the workLoop exits, so never call findNextUnitOfWork from outside
   // the work loop.
@@ -193,6 +199,14 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     if (highestPriorityRoot) {
       nextPriorityLevel = highestPriorityLevel;
       priorityContext = nextPriorityLevel;
+
+      // Before we start any new work, let's make sure that we have a fresh
+      // stack to work from.
+      // TODO: This call is burried a bit too deep. It would be nice to have
+      // a single point which happens right before any new work and
+      // unfortunately this is it.
+      resetContextStack();
+
       return cloneFiber(
         highestPriorityRoot.current,
         highestPriorityLevel
@@ -346,9 +360,6 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
 
     resetAfterCommit();
-    // We didn't pop the host root in the complete phase because we still needed
-    // it for the commitUpdate() calls, but now we can reset host context.
-    resetHostContainer();
 
     // In the second pass we'll perform all life-cycles and ref callbacks.
     // Life-cycles happen as a separate pass so that all placements, updates,
