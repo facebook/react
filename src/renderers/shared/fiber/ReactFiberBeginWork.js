@@ -229,7 +229,10 @@ module.exports = function<T, P, I, TI, C, CX>(
     } else {
       shouldUpdate = updateClassInstance(current, workInProgress, priorityLevel);
     }
+    return finishClassComponent(current, workInProgress, shouldUpdate);
+  }
 
+  function finishClassComponent(current : ?Fiber, workInProgress : Fiber, shouldUpdate : boolean) {
     // Schedule side-effects
     if (shouldUpdate) {
       workInProgress.effectTag |= Update;
@@ -411,14 +414,13 @@ module.exports = function<T, P, I, TI, C, CX>(
       workInProgress.tag = ClassComponent;
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, priorityLevel);
-      ReactCurrentOwner.current = workInProgress;
-      value = value.render();
+      return finishClassComponent(current, workInProgress, true);
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
+      reconcileChildren(current, workInProgress, value);
+      return workInProgress.child;
     }
-    reconcileChildren(current, workInProgress, value);
-    return workInProgress.child;
   }
 
   function updateCoroutineComponent(current, workInProgress) {
