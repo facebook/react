@@ -117,7 +117,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   let nextUnitOfWork : ?Fiber = null;
   let nextPriorityLevel : PriorityLevel = NoWork;
 
-  // The next fiber with an effect, during the commit phase.
+  // The next fiber with an effect that we're currently committing.
   let nextEffect : ?Fiber = null;
 
   let pendingCommit : ?Fiber = null;
@@ -210,7 +210,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     return null;
   }
 
-  function commitAllHostEffects(finishedWork : Fiber) {
+  function commitAllHostEffects() {
     while (nextEffect) {
       if (__DEV__) {
         ReactDebugCurrentFiber.current = nextEffect;
@@ -267,16 +267,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
     }
-
-    // If the root itself had an effect, we perform that since it is
-    // not part of the effect list.
-    if (finishedWork.effectTag !== NoEffect) {
-      const current = finishedWork.alternate;
-      commitWork(current, finishedWork);
-    }
   }
 
-  function commitAllLifeCycles(finishedWork : Fiber) {
+  function commitAllLifeCycles() {
     while (nextEffect) {
       const current = nextEffect.alternate;
       // Use Task priority for lifecycle updates
@@ -297,16 +290,6 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // Ensure that we reset the effectTag here so that we can rely on effect
       // tags to reason about the current life-cycle.
       nextEffect = next;
-    }
-
-    // If the root itself had an effect, we perform that since it is
-    // not part of the effect list.
-    if (finishedWork.effectTag !== NoEffect) {
-      const current = finishedWork.alternate;
-      commitLifeCycles(current, finishedWork);
-      if (finishedWork.effectTag & Err) {
-        commitErrorHandling(finishedWork);
-      }
     }
   }
 
@@ -331,25 +314,42 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
 
+    let firstEffect;
+    if (finishedWork.effectTag !== NoEffect) {
+      // A fiber's effect list consists only of its children, not itself. So if
+      // the root has an effect, we need to add it to the end of the list. The
+      // resulting list is the set that would belong to the root's parent, if
+      // it had one; that is, all the effects in the tree including the root.
+      if (finishedWork.lastEffect) {
+        finishedWork.lastEffect.nextEffect = finishedWork;
+        firstEffect = finishedWork.firstEffect;
+      } else {
+        firstEffect = finishedWork;
+      }
+    } else {
+      // There is no effect on the root.
+      firstEffect = finishedWork.firstEffect;
+    }
+
     prepareForCommit();
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
     // ref unmounts.
-    nextEffect = finishedWork.firstEffect;
-    while (true) {
+    nextEffect = firstEffect;
+    while (nextEffect) {
       try {
         commitAllHostEffects(finishedWork);
       } catch (error) {
+        if (!nextEffect) {
+          throw new Error('Should have nextEffect.');
+        }
         captureError(nextEffect, error);
         // Clean-up
-        isUnmounting = false;
         if (nextEffect) {
           nextEffect = nextEffect.nextEffect;
-          continue;
         }
       }
-      break;
     }
 
     resetAfterCommit();
@@ -360,20 +360,19 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     // In the second pass we'll perform all life-cycles and ref callbacks.
     // Life-cycles happen as a separate pass so that all placements, updates,
     // and deletions in the entire tree have already been invoked.
-    nextEffect = finishedWork.firstEffect;
-    while (true) {
+    nextEffect = firstEffect;
+    while (nextEffect) {
       try {
         commitAllLifeCycles(finishedWork, nextEffect);
       } catch (error) {
-        captureError(nextEffect || null, error);
-        if (nextEffect) {
-          const next = nextEffect.nextEffect;
-          nextEffect.nextEffect = null;
-          nextEffect = next;
+        if (!nextEffect) {
+          throw new Error('Should have nextEffect.');
         }
-        continue;
+        captureError(nextEffect, error);
+        if (nextEffect) {
+          nextEffect = nextEffect.nextEffect;
+        }
       }
-      break;
     }
 
     isCommitting = false;
@@ -694,6 +693,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       } catch (error) {
         // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
+        if (!failedWork) {
+          throw new Error('Should have nextUnitOfWork.');
+        }
 
         // Reset the priority context to its value before reconcilation.
         priorityContext = priorityContextBeforeReconciliation;
@@ -785,7 +787,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   // Returns the boundary that captured the error, or null if the error is ignored
-  function captureError(failedWork : ?Fiber, error : Error) : ?Fiber {
+  function captureError(failedWork : Fiber, error : Error) : ?Fiber {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     if (__DEV__) {
@@ -796,59 +798,57 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
     // Search for the nearest error boundary.
     let boundary : ?Fiber = null;
-    if (failedWork) {
-      // Host containers are a special case. If the failed work itself is a host
-      // container, then it acts as its own boundary. In all other cases, we
-      // ignore the work itself and only search through the parents.
-      if (failedWork.tag === HostRoot) {
-        boundary = failedWork;
+    // Host containers are a special case. If the failed work itself is a host
+    // container, then it acts as its own boundary. In all other cases, we
+    // ignore the work itself and only search through the parents.
+    if (failedWork.tag === HostRoot) {
+      boundary = failedWork;
 
-        if (isFailedBoundary(failedWork)) {
-          // If this root already failed, there must have been an error when
-          // attempting to unmount it. This is a worst-case scenario and
-          // should only be possible if there's a bug in the renderer.
-          fatalError = error;
-        }
-      } else {
-        let node = failedWork.return;
-        while (node && !boundary) {
-          if (node.tag === ClassComponent) {
-            const instance = node.stateNode;
-            if (typeof instance.unstable_handleError === 'function') {
-              if (isFailedBoundary(node)) {
-                // This boundary is already in a failed state. The error should
-                // propagate to the next boundary — except in the
-                // following cases:
+      if (isFailedBoundary(failedWork)) {
+        // If this root already failed, there must have been an error when
+        // attempting to unmount it. This is a worst-case scenario and
+        // should only be possible if there's a bug in the renderer.
+        fatalError = error;
+      }
+    } else {
+      let node = failedWork.return;
+      while (node && !boundary) {
+        if (node.tag === ClassComponent) {
+          const instance = node.stateNode;
+          if (typeof instance.unstable_handleError === 'function') {
+            if (isFailedBoundary(node)) {
+              // This boundary is already in a failed state. The error should
+              // propagate to the next boundary — except in the
+              // following cases:
 
-                // If we're currently unmounting, that means this error was
-                // thrown while unmounting a failed subtree. We should ignore
-                // the error.
-                if (isUnmounting) {
-                  return null;
-                }
-
-                // If we're in the commit phase, we should check to see if
-                // this boundary already captured an error during this commit.
-                // This case exists because multiple errors can be thrown during
-                // a single commit without interruption.
-                if (commitPhaseBoundaries && (
-                  commitPhaseBoundaries.has(node) ||
-                  (node.alternate) && commitPhaseBoundaries.has(node.alternate)
-                )) {
-                  // If so, we should ignore this error.
-                  return null;
-                }
-              } else {
-                // Found an error boundary!
-                boundary = node;
+              // If we're currently unmounting, that means this error was
+              // thrown while unmounting a failed subtree. We should ignore
+              // the error.
+              if (isUnmounting) {
+                return null;
               }
+
+              // If we're in the commit phase, we should check to see if
+              // this boundary already captured an error during this commit.
+              // This case exists because multiple errors can be thrown during
+              // a single commit without interruption.
+              if (commitPhaseBoundaries && (
+                commitPhaseBoundaries.has(node) ||
+                (node.alternate) && commitPhaseBoundaries.has(node.alternate)
+              )) {
+                // If so, we should ignore this error.
+                return null;
+              }
+            } else {
+              // Found an error boundary!
+              boundary = node;
             }
-          } else if (node.tag === HostRoot) {
-            // Treat the root like a no-op error boundary.
-            boundary = node;
           }
-          node = node.return;
+        } else if (node.tag === HostRoot) {
+          // Treat the root like a no-op error boundary.
+          boundary = node;
         }
+        node = node.return;
       }
     }
 
