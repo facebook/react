@@ -444,6 +444,17 @@ module.exports = function<T, P, I, TI, C, CX>(
           }
           break;
         case HostRoot:
+          const root = (workInProgress.stateNode : FiberRoot);
+          if (root.pendingContext) {
+            pushTopLevelContextObject(
+              root.pendingContext,
+              root.pendingContext !== root.context
+            );
+          } else {
+            pushTopLevelContextObject(root.context, false);
+          }
+          pushHostContainer(root.containerInfo);
+          break;
         case HostPortal:
           pushHostContainer(workInProgress.stateNode.containerInfo);
           break;

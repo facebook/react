@@ -196,6 +196,61 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
+  it('should receive context if portal content calls setState', () => {
+    var container = document.createElement('div');
+    document.body.appendChild(container);
+    var portal = document.createElement('div');
+    var instance;
+
+    class Component extends React.Component {
+      static contextTypes = {
+        foo: React.PropTypes.string.isRequired,
+        getFoo: React.PropTypes.func.isRequired,
+      };
+
+      render() {
+        instance = this;
+        return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
+      }
+    }
+
+    class Parent extends React.Component {
+      static childContextTypes = {
+        foo: React.PropTypes.string.isRequired,
+        getFoo: React.PropTypes.func.isRequired,
+      };
+
+      getChildContext() {
+        return {
+          foo: this.props.bar,
+          getFoo: () => this.props.bar,
+        };
+      }
+
+      render() {
+        return null;
+      }
+
+      componentDidMount() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+      }
+
+      componentDidUpdate() {
+        renderSubtreeIntoContainer(this, <Component />, portal);
+      }
+    }
+
+    ReactDOM.render(<Parent bar="initial" />, container);
+    expect(portal.firstChild.innerHTML).toBe('initial-initial');
+    instance.setState({});
+    expect(portal.firstChild.innerHTML).toBe('initial-initial');
+
+    ReactDOM.render(<Parent bar="changed" />, container);
+    expect(portal.firstChild.innerHTML).toBe('changed-changed');
+    instance.setState({});
+    expect(portal.firstChild.innerHTML).toBe('changed-changed');
+  });
+
   it('should render portal with non-context-provider parent', () => {
     var container = document.createElement('div');
     document.body.appendChild(container);
