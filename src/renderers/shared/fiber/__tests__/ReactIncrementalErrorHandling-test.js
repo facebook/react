@@ -752,7 +752,9 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(
       'Element type is invalid: expected a string (for built-in components) or ' +
-      'a class/function (for composite components) but got: undefined.'
+      'a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -794,7 +796,9 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(
       'Element type is invalid: expected a string (for built-in components) or ' +
-      'a class/function (for composite components) but got: undefined.'
+      'a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -807,7 +811,9 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
-      'a class/function (for composite components) but got: undefined.'
+      'a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in.'
     );
 
     ReactNoop.render(<span prop="hi" />);
