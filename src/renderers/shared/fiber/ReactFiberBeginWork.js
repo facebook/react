@@ -18,7 +18,10 @@ import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { PromiseComponentInfo } from 'ReactFiberPromiseComponent';
+import type { BlockInfo } from 'ReactFiberBlocking';
 
+var React = require('React');
 var {
   mountChildFibersInPlace,
   reconcileChildFibers,
@@ -26,6 +29,7 @@ var {
   cloneChildFibers,
 } = require('ReactChildFiber');
 var {
+  addUpdate,
   hasPendingUpdate,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
@@ -50,6 +54,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
+  PromiseComponent,
 } = ReactTypeOfWork;
 var {
   NoWork,
@@ -75,6 +80,11 @@ module.exports = function<T, P, I, TI, C, CX>(
   scheduleReplaceState: (fiber : Fiber, state : any) => void,
   scheduleForceUpdate: (fiber : Fiber) => void,
   scheduleUpdateCallback: (fiber : Fiber, callback : Function) => void,
+  scheduleUpdateAtPriority: (fiber : Fiber, priorityLevel : PriorityLevel) => void,
+  block : (fiber : Fiber, promise : Promise<any>, priorityLevel : PriorityLevel) => BlockInfo | null,
+  unblock : (info : BlockInfo, promise : Promise<any>) => void,
+  setBlockingContext : (wasBlocked : boolean) => void,
+  getBlockingContext : () => boolean,
 ) {
 
   const { shouldSetTextContent } = config;
@@ -374,6 +384,81 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
+  function updatePromiseComponent(current, workInProgress) {
+    const info : (PromiseComponentInfo | null) = workInProgress.stateNode;
+    const pendingProps = workInProgress.pendingProps;
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    const promise = workInProgress.type;
+
+    if (info === null) {
+      // This is a new promise component.
+      const newInfo : PromiseComponentInfo = {
+        isResolved: false,
+        childElementType: null,
+      };
+      workInProgress.stateNode = newInfo;
+
+      // Block the tree from committing at this priority level
+      const blockInfo = block(workInProgress, promise, priorityLevel);
+
+      // When the promise resolves, schedule an update to render the children.
+      promise
+        .then(childElementType => {
+          newInfo.childElementType = childElementType;
+          newInfo.isResolved = true;
+          // Unblock the tree
+          if (blockInfo) {
+            unblock(blockInfo, promise);
+          }
+          addUpdate(workInProgress, { childProps: pendingProps }, priorityLevel);
+          scheduleUpdateAtPriority(workInProgress, priorityLevel);
+        })
+        .catch(error => {
+          if (blockInfo) {
+            unblock(blockInfo, promise);
+          }
+          // TODO: Capture error
+        });
+
+      // Bail out.
+      return null;
+    } else if (!info.isResolved) {
+      // Block the tree from committing at this priority level
+      block(workInProgress, promise, priorityLevel);
+      return null;
+    } else {
+      if (pendingProps) {
+        // Insert the incoming props into the priority queue.
+        addUpdate(workInProgress, { childProps: pendingProps }, priorityLevel);
+        scheduleUpdateAtPriority(workInProgress, priorityLevel);
+      }
+
+      const ChildElementType = info.childElementType;
+      const queue = workInProgress.updateQueue;
+      const prevState = workInProgress.memoizedState;
+
+      let state;
+      if (queue) {
+        state = beginUpdateQueue(workInProgress, queue, null, prevState, null, priorityLevel);
+      } else {
+        state = prevState;
+      }
+      if (!state) {
+        throw new Error('Should have state by now.');
+      }
+      // Right now memoization usually happens in the complete phase, but we
+      // don't have access to the state there. (Class components cheat by
+      // reading from the instance.) This is inconsistent, but all memoization
+      // will eventually move to the begin phase, anyway.
+      workInProgress.memoizedState = state;
+      const nextChildProps = state.childProps;
+      // TODO: Set current owner
+      const nextChildren = <ChildElementType {...nextChildProps} />;
+      reconcileChildren(current, workInProgress, nextChildren);
+      return workInProgress.child;
+    }
+  }
+
   /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
@@ -486,6 +571,12 @@ module.exports = function<T, P, I, TI, C, CX>(
       resetHostContainer();
     }
 
+    if (workInProgress.tag === HostRoot) {
+      // If we're at the root, set the correct blocking context
+      const root : FiberRoot = workInProgress.stateNode;
+      setBlockingContext(root.blockInfo.wasBlocked);
+    }
+
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
@@ -500,7 +591,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
 
-    if (workInProgress.progressedPriority === priorityLevel) {
+    if (workInProgress.progressedPriority === priorityLevel || getBlockingContext()) {
       // If we have progressed work on this priority level already, we can
       // proceed this that as the child.
       workInProgress.child = workInProgress.progressedChild;
@@ -582,6 +673,8 @@ module.exports = function<T, P, I, TI, C, CX>(
       case Fragment:
         updateFragment(current, workInProgress);
         return workInProgress.child;
+      case PromiseComponent:
+        return updatePromiseComponent(current, workInProgress);
       default:
         throw new Error('Unknown unit of work tag');
     }

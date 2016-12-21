@@ -22,6 +22,7 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactFiberBlocking = require('ReactFiberBlocking');
 
 var { cloneFiber } = require('ReactFiber');
 
@@ -76,6 +77,14 @@ var timeHeuristicForUnitOfWork = 1;
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) {
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
+  const {
+    markTreeAsBlocked,
+    markTreeAsUnblocked,
+    block,
+    unblock,
+    setBlockingContext,
+    getBlockingContext,
+  } = ReactFiberBlocking();
   const { beginWork, beginFailedWork } = ReactFiberBeginWork(
     config,
     hostContext,
@@ -83,6 +92,11 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     scheduleReplaceState,
     scheduleForceUpdate,
     scheduleUpdateCallback,
+    scheduleUpdateAtPriority,
+    block,
+    unblock,
+    setBlockingContext,
+    getBlockingContext,
   );
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
   const {
@@ -121,6 +135,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   let nextEffect : ?Fiber = null;
 
   let pendingCommit : ?Fiber = null;
+  let pendingCommitPriority : PriorityLevel = NoWork;
 
   // Linked list of roots with scheduled work on them.
   let nextScheduledRoot : ?FiberRoot = null;
@@ -293,7 +308,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
-  function commitAllWork(finishedWork : Fiber) {
+  function commitAllWork(finishedWork : Fiber, priorityLevel : PriorityLevel) {
     // We keep track of this so that captureError can collect any boundaries
     // that capture an error during the commit phase. The reason these aren't
     // local to this function is because errors that occur during cWU are
@@ -301,6 +316,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     isCommitting = true;
 
     pendingCommit = null;
+    pendingCommitPriority = NoWork;
     const root : FiberRoot = (finishedWork.stateNode : any);
     if (root.current === finishedWork) {
       throw new Error(
@@ -309,6 +325,26 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       );
     }
     root.current = finishedWork;
+
+    const blockInfo = root.blockInfo;
+    if (blockInfo.blockingPriority !== NoWork &&
+        blockInfo.blockingPriority <= priorityLevel) {
+      // This root is blocked from committing by one or more pending promises.
+      blockInfo.wasBlocked = true;
+
+      // Swap the root's child for its alternate so that the blocked work
+      // remains in the work-in-progress tree.
+      if (finishedWork.child) {
+        finishedWork.child = finishedWork.child.alternate;
+        if (finishedWork.child) {
+          finishedWork.child.return = finishedWork.alternate;
+        }
+      }
+      return;
+    }
+    // We're perofmring work at a higher priority than the blocking
+    // priority. Mark this root as unblocked and continue committing.
+    blockInfo.wasBlocked = false;
 
     // Updates that occur during the commit phase should have Task priority
     const previousPriorityContext = priorityContext;
@@ -481,9 +517,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         // that we just completed the root so they can handle that case correctly.
         if (nextPriorityLevel < HighPriority) {
           // Otherwise, we should commit immediately.
-          commitAllWork(workInProgress);
+          commitAllWork(workInProgress, nextPriorityLevel);
         } else {
           pendingCommit = workInProgress;
+          pendingCommitPriority = nextPriorityLevel;
         }
         return null;
       }
@@ -626,7 +663,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
           if (!nextUnitOfWork && pendingCommit) {
             // If we have time, we should commit the work now.
             if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-              commitAllWork(pendingCommit);
+              commitAllWork(pendingCommit, nextPriorityLevel);
               nextUnitOfWork = findNextUnitOfWork();
               // Clear any errors that were scheduled during the commit phase.
               clearErrors();
@@ -680,7 +717,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // Before starting any work, check to see if there are any pending
       // commits from the previous frame.
       if (pendingCommit && !deadlineHasExpired) {
-        commitAllWork(pendingCommit);
+        commitAllWork(pendingCommit, pendingCommitPriority);
       }
 
       // Nothing in performWork should be allowed to throw. All unsafe
