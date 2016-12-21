@@ -14,14 +14,13 @@
 
 import type { Fiber } from 'ReactFiber';
 
-export type StackCursor = {|
-  current: any
+export type StackCursor<T> = {|
+  current: T
 |};
 
-const emptyObject = require('emptyObject');
 const warning = require('warning');
 
-const valueStack : Array<Object> = [];
+const valueStack : Array<any> = [];
 
 if (__DEV__) {
   var fiberStack : Array<Fiber | null> = [];
@@ -29,9 +28,9 @@ if (__DEV__) {
 
 let index = -1;
 
-exports.createCursor = function() : StackCursor {
+exports.createCursor = function<T>(defaultValue : T) : StackCursor<T> {
   return {
-    current: null,
+    current: defaultValue,
   };
 };
 
@@ -39,8 +38,8 @@ exports.isEmpty = function() : boolean {
   return index === -1;
 };
 
-exports.pop = function(
-  cursor : StackCursor,
+exports.pop = function<T>(
+  cursor : StackCursor<T>,
   fiber: Fiber | null, // TODO (bvaughn) Tighten up this type to only accept Fiber
 ) : void {
   if (index < 0) {
@@ -56,21 +55,21 @@ exports.pop = function(
     }
   }
 
-  valueStack[index] = emptyObject;
+  valueStack[index] = null;
 
   if (__DEV__) {
-    fiberStack[index] = emptyObject;
+    fiberStack[index] = null;
   }
 
   index--;
 
   cursor.current = index > -1
     ? valueStack[index]
-    : null;
+    : (null : any);
 };
 
-exports.push = function(
-  cursor : StackCursor,
+exports.push = function<T>(
+  cursor : StackCursor<T>,
   value : any,
   fiber: Fiber | null, // TODO (bvaughn) Tighten up this type to only accept Fiber
 ) : void {
@@ -85,18 +84,18 @@ exports.push = function(
   }
 };
 
-exports.reset = function(
-  cursor : StackCursor,
+exports.reset = function<T>(
+  cursor : StackCursor<T>,
 ) : void {
   while (index > -1) {
-    valueStack[index] = emptyObject;
+    valueStack[index] = null;
 
     if (__DEV__) {
-      fiberStack[index] = emptyObject;
+      fiberStack[index] = null;
     }
 
     index--;
   }
 
-  cursor.current = null;
+  cursor.current = (null : any);
 };

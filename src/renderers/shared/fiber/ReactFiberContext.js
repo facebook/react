@@ -36,11 +36,11 @@ if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
 }
 
-let contextStackCursor : StackCursor = createCursor();
-let didPerformWorkStackCursor : StackCursor = createCursor();
+let contextStackCursor : StackCursor<?Object> = createCursor((null: ?Object));
+let didPerformWorkStackCursor : StackCursor<?boolean> = createCursor((null: ?boolean));
 
 function getUnmaskedContext() {
-  return contextStackCursor.current;
+  return contextStackCursor.current || emptyObject;
 }
 
 exports.getMaskedContext = function(workInProgress : Fiber) {
@@ -52,6 +52,7 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
 
   const unmaskedContext = getUnmaskedContext();
   const context = {};
+
   for (let key in contextTypes) {
     context[key] = unmaskedContext[key];
   }

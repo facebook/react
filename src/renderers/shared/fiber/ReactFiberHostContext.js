@@ -16,6 +16,8 @@ import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { StackCursor } from 'ReactFiberStack';
 
+const emptyObject = require('emptyObject');
+
 const {
   createCursor,
   pop,
@@ -41,8 +43,8 @@ module.exports = function<T, P, I, TI, C, CX>(
     getRootHostContext,
   } = config;
 
-  let contextStackCursor : StackCursor = createCursor();
-  let rootInstanceStackCursor : StackCursor = createCursor();
+  let contextStackCursor : StackCursor<?CX> = createCursor((null: ?CX));
+  let rootInstanceStackCursor : StackCursor<?C> = createCursor((null: ?C));
 
   function getRootHostContainer() : C {
     if (rootInstanceStackCursor.current == null) {
@@ -81,7 +83,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       throw new Error('Expected root host context to exist.');
     }
 
-    const context = contextStackCursor.current;
+    const context = contextStackCursor.current || emptyObject;
     const rootInstance = rootInstanceStackCursor.current;
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
