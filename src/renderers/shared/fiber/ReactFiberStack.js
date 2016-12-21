@@ -40,7 +40,7 @@ exports.isEmpty = function() : boolean {
 
 exports.pop = function<T>(
   cursor : StackCursor<T>,
-  fiber: Fiber | null, // TODO (bvaughn) Tighten up this type to only accept Fiber
+  fiber: Fiber,
 ) : void {
   if (index < 0) {
     if (__DEV__) {
@@ -71,7 +71,7 @@ exports.pop = function<T>(
 exports.push = function<T>(
   cursor : StackCursor<T>,
   value : any,
-  fiber: Fiber | null, // TODO (bvaughn) Tighten up this type to only accept Fiber
+  fiber: Fiber,
 ) : void {
   cursor.current = value;
 

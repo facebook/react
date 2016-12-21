@@ -28,9 +28,9 @@ const {
 export type HostContext<C, CX> = {
   getHostContext() : CX,
   getRootHostContainer() : C,
-  popHostContainer() : void,
+  popHostContainer(fiber : Fiber) : void,
   popHostContext(fiber : Fiber) : void,
-  pushHostContainer(container : C) : void,
+  pushHostContainer(fiber : Fiber, container : C) : void,
   pushHostContext(fiber : Fiber) : void,
   resetHostContainer() : void,
 };
@@ -53,21 +53,21 @@ module.exports = function<T, P, I, TI, C, CX>(
     return rootInstanceStackCursor.current;
   }
 
-  // TODO (bvaughn) Pass the host container fiber to push()
-  function pushHostContainer(nextRootInstance : C) {
+  function pushHostContainer(fiber : Fiber, nextRootInstance : C) {
     // Push current root instance onto the stack;
     // This allows us to reset root when portals are popped.
-    push(rootInstanceStackCursor, nextRootInstance, null);
+    push(rootInstanceStackCursor, nextRootInstance, fiber);
 
     const nextRootContext = getRootHostContext(nextRootInstance);
 
-    push(contextStackCursor, nextRootContext, null);
+    // TODO (bvaughn) Push context-providing Fiber with its own cursor
+    push(contextStackCursor, nextRootContext, fiber);
   }
 
-  // TODO (bvaughn) Pass the host container fiber to pop()
-  function popHostContainer() {
-    pop(contextStackCursor, null);
-    pop(rootInstanceStackCursor, null);
+  function popHostContainer(fiber : Fiber) {
+    pop(contextStackCursor, fiber);
+    // TODO (bvaughn) Pop context-providing Fiber with its own cursor
+    pop(rootInstanceStackCursor, fiber);
   }
 
   function getHostContext() : CX {
@@ -91,6 +91,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       return;
     }
 
+    // TODO (bvaughn) Push context-providing Fiber with its own cursor
     push(contextStackCursor, nextContext, fiber);
   }
 
@@ -99,6 +100,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       return;
     }
 
+    // TODO (bvaughn) Check context-providing Fiber and only pop if it matches
     pop(contextStackCursor, fiber);
   }
 

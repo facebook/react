@@ -303,7 +303,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
-        popHostContainer();
+        popHostContainer(workInProgress);
         return null;
 
       // Error cases
