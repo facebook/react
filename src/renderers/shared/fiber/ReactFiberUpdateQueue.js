@@ -350,25 +350,6 @@ function addForceUpdate(
 }
 exports.addForceUpdate = addForceUpdate;
 
-
-function addCallback(
-  fiber : Fiber,
-  callback: Callback,
-  priorityLevel : PriorityLevel
-) : void {
-  const update : Update = {
-    priorityLevel,
-    partialState: null,
-    callback,
-    isReplace: false,
-    isForced: false,
-    isTopLevelUnmount: false,
-    next: null,
-  };
-  insertUpdate(fiber, update);
-}
-exports.addCallback = addCallback;
-
 function getPendingPriority(queue : UpdateQueue) : PriorityLevel {
   return queue.first ? queue.first.priorityLevel : NoWork;
 }

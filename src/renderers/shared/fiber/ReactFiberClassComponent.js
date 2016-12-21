@@ -22,7 +22,6 @@ var {
   addUpdate,
   addReplaceUpdate,
   addForceUpdate,
-  addCallback,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var { hasContextChanged } = require('ReactFiberContext');
@@ -58,12 +57,6 @@ module.exports = function(
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
       addForceUpdate(fiber, callback || null, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
-    },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
-      addCallback(fiber, callback || null, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
   };
