@@ -58,10 +58,15 @@ describe('ReactIncremental', () => {
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
     expect(renderCallbackCalled).toBe(false);
-    // Do one step of work.
+    // Do first step of work.
     ReactNoop.flushDeferredPri(7 + 5);
     expect(fooCalled).toBe(true);
     expect(barCalled).toBe(false);
+    expect(renderCallbackCalled).toBe(false);
+    // Do second step of work
+    ReactNoop.flushDeferredPri(7 + 5 + 5);
+    expect(fooCalled).toBe(true);
+    expect(barCalled).toBe(true);
     expect(renderCallbackCalled).toBe(false);
     // Do the rest of the work.
     ReactNoop.flushDeferredPri(50);
