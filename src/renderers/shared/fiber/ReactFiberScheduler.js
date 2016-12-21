@@ -17,6 +17,11 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
+var {
+  isContextProvider,
+  popContextProvider,
+} = require('ReactFiberContext');
+
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
@@ -59,7 +64,6 @@ var {
 
 var {
   resetContext,
-  unwindContext,
 } = require('ReactFiberContext');
 
 if (__DEV__) {
@@ -724,8 +728,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
           // from the root. Can't do that until then because without memoized
           // props, the nodes higher up in the tree will rerender unnecessarily.
           if (failedWork) {
-            unwindContext(failedWork, boundary);
-            unwindHostContext(failedWork, boundary);
+            unwindContexts(failedWork, boundary);
           }
           nextUnitOfWork = completeUnitOfWork(boundary);
         }
@@ -945,18 +948,23 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
-  function unwindHostContext(from : Fiber, to: Fiber) {
+  function unwindContexts(from : Fiber, to: Fiber) {
     let node = from;
     while (node && (node !== to) && (node.alternate !== to)) {
       switch (node.tag) {
+        case ClassComponent:
+          if (isContextProvider(node)) {
+            popContextProvider(node);
+          }
+          break;
         case HostComponent:
           popHostContext(node);
           break;
         case HostRoot:
-          popHostContainer();
+          popHostContainer(node);
           break;
         case HostPortal:
-          popHostContainer();
+          popHostContainer(node);
           break;
       }
       node = node.return;

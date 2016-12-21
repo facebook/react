@@ -159,13 +159,3 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {
   }
   return node.stateNode.context;
 };
-
-exports.unwindContext = function(from : Fiber, to: Fiber) {
-  let node = from;
-  while (node && (node !== to) && (node.alternate !== to)) {
-    if (isContextProvider(node)) {
-      popContextProvider(node);
-    }
-    node = node.return;
-  }
-};
