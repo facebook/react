@@ -48,10 +48,11 @@ module.exports = function<T, P, I, TI, C, CX>(
   let rootInstanceStackCursor : StackCursor<?C> = createCursor((null: ?C));
 
   function getRootHostContainer() : C {
-    if (rootInstanceStackCursor.current == null) {
+    const rootInstance = rootInstanceStackCursor.current;
+    if (rootInstance == null) {
       throw new Error('Expected root container to exist.');
     }
-    return rootInstanceStackCursor.current;
+    return rootInstance;
   }
 
   function pushHostContainer(fiber : Fiber, nextRootInstance : C) {
@@ -74,20 +75,20 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function getHostContext() : CX {
-    if (contextStackCursor.current == null) {
+    const context = contextStackCursor.current;
+    if (context == null) {
       throw new Error('Expected host context to exist.');
     }
-
-    return contextStackCursor.current;
+    return context;
   }
 
   function pushHostContext(fiber : Fiber) : void {
-    if (rootInstanceStackCursor.current == null) {
+    const rootInstance = rootInstanceStackCursor.current;
+    if (rootInstance == null) {
       throw new Error('Expected root host context to exist.');
     }
 
     const context = contextStackCursor.current || emptyObject;
-    const rootInstance = rootInstanceStackCursor.current;
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
     // Don't push this Fiber's context unless it's unique.
