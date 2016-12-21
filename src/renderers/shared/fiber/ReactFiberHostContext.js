@@ -44,6 +44,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   } = config;
 
   let contextStackCursor : StackCursor<?CX> = createCursor((null: ?CX));
+  let contextFiberStackCursor : StackCursor<?Fiber> = createCursor((null: ?Fiber));
   let rootInstanceStackCursor : StackCursor<?C> = createCursor((null: ?C));
 
   function getRootHostContainer() : C {
@@ -60,13 +61,15 @@ module.exports = function<T, P, I, TI, C, CX>(
 
     const nextRootContext = getRootHostContext(nextRootInstance);
 
-    // TODO (bvaughn) Push context-providing Fiber with its own cursor
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
     push(contextStackCursor, nextRootContext, fiber);
   }
 
   function popHostContainer(fiber : Fiber) {
     pop(contextStackCursor, fiber);
-    // TODO (bvaughn) Pop context-providing Fiber with its own cursor
+    pop(contextFiberStackCursor, fiber);
     pop(rootInstanceStackCursor, fiber);
   }
 
@@ -87,21 +90,26 @@ module.exports = function<T, P, I, TI, C, CX>(
     const rootInstance = rootInstanceStackCursor.current;
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
+    // Don't push this Fiber's context unless it's unique.
     if (context === nextContext) {
       return;
     }
 
-    // TODO (bvaughn) Push context-providing Fiber with its own cursor
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
     push(contextStackCursor, nextContext, fiber);
   }
 
   function popHostContext(fiber : Fiber) : void {
-    if (contextStackCursor.current == null) {
+    // Do not pop unless this Fiber provided the current context.
+    // pushHostContext() only pushes Fibers that provide unique contexts.
+    if (contextFiberStackCursor.current !== fiber) {
       return;
     }
 
-    // TODO (bvaughn) Check context-providing Fiber and only pop if it matches
     pop(contextStackCursor, fiber);
+    pop(contextFiberStackCursor, fiber);
   }
 
   function resetHostContainer() {
