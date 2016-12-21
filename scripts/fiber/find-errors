@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const jscodeshift = require('jscodeshift');
+const Runner = require('jscodeshift/dist/Runner');
+const path = require('path');
+
+const options = {
+  path: [path.join(process.cwd(), 'src')],
+  dry: true,
+  cpus: 1,
+  transform: path.join(__dirname, 'jscodeshift-find-error.js'),
+};
+
+process.env.JSCODESHIFT_PRINT_LEVEL = (
+  process.argv.some(arg => /quiet/.test(arg)) ? 'quiet' :
+  process.argv.some(arg => /files-only/.test(arg)) ? 'files' :
+  ''
+);
+console.log('Detecting Errors to convert to invariant calls.');
+Runner.run(
+  options.transform,
+  options.path,
+  options
+).then((results) => {
+  console.log(
+    '%s throw statements to to convert to `invariant`',
+    results.stats.error
+  );
+});
