@@ -541,6 +541,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * findDOMNode should find dom element after expanding a fragment
 * should bubble events from the portal to the parent
 * should not onMouseLeave when staying in the portal
+* should not crash encountering low-priority tree
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
