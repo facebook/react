@@ -36,7 +36,6 @@ var {
   hasContextChanged,
   pushContextProvider,
   pushTopLevelContextObject,
-  resetContext,
 } = require('ReactFiberContext');
 var {
   IndeterminateComponent,
@@ -80,7 +79,6 @@ module.exports = function<T, P, I, TI, C, CX>(
   const {
     pushHostContext,
     pushHostContainer,
-    resetHostContainer,
   } = hostContext;
 
   const {
@@ -437,6 +435,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (isHostComponent) {
       pushHostContext(workInProgress);
     } else {
+      // TODO: Unify this switch with the other branches above.
       switch (workInProgress.tag) {
         case ClassComponent:
           if (isContextProvider(workInProgress)) {
@@ -473,12 +472,6 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
-    if (!workInProgress.return) {
-      // Don't start new work with context on the stack.
-      resetContext();
-      resetHostContainer();
-    }
-
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);

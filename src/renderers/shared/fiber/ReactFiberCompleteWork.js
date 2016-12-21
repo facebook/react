@@ -189,6 +189,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         return null;
       }
       case HostRoot: {
+        // TODO: Pop the host container after #8607 lands.
         workInProgress.memoizedProps = workInProgress.pendingProps;
         const fiberRoot = (workInProgress.stateNode : FiberRoot);
         if (fiberRoot.pendingContext) {
