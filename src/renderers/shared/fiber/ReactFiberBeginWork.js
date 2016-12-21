@@ -290,6 +290,8 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function updateHostComponent(current, workInProgress) {
+    pushHostContext(workInProgress);
+
     let nextProps = workInProgress.pendingProps;
     const prevProps = current ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
@@ -303,6 +305,24 @@ module.exports = function<T, P, I, TI, C, CX>(
         }
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
+      if (memoizedProps.hidden &&
+          workInProgress.pendingWorkPriority !== OffscreenPriority) {
+        // This subtree still has work, but it should be deprioritized so we need
+        // to bail out and not do any work yet.
+        // TODO: It would be better if this tree got its correct priority set
+        // during scheduleUpdate instead because otherwise we'll start a higher
+        // priority reconciliation first before we can get down here. However,
+        // that is a bit tricky since workInProgress and current can have
+        // different "hidden" settings.
+        let child = workInProgress.progressedChild;
+        while (child) {
+          // To ensure that this subtree gets its priority reset, the children
+          // need to be reset.
+          child.pendingWorkPriority = OffscreenPriority;
+          child = child.sibling;
+        }
+        return null;
+      }
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -359,7 +379,6 @@ module.exports = function<T, P, I, TI, C, CX>(
       // Abort and don't process children yet.
       return null;
     } else {
-      pushHostContext(workInProgress);
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     }
@@ -474,28 +493,6 @@ module.exports = function<T, P, I, TI, C, CX>(
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
     const priorityLevel = workInProgress.pendingWorkPriority;
-    const isHostComponent = workInProgress.tag === HostComponent;
-
-    if (isHostComponent &&
-        workInProgress.memoizedProps.hidden &&
-        workInProgress.pendingWorkPriority !== OffscreenPriority) {
-      // This subtree still has work, but it should be deprioritized so we need
-      // to bail out and not do any work yet.
-      // TODO: It would be better if this tree got its correct priority set
-      // during scheduleUpdate instead because otherwise we'll start a higher
-      // priority reconciliation first before we can get down here. However,
-      // that is a bit tricky since workInProgress and current can have
-      // different "hidden" settings.
-      let child = workInProgress.progressedChild;
-      while (child) {
-        // To ensure that this subtree gets its priority reset, the children
-        // need to be reset.
-        child.pendingWorkPriority = OffscreenPriority;
-        child = child.sibling;
-      }
-      return null;
-    }
-
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
     // Fiber's priority and its children yet - we don't know without doing lots
@@ -519,23 +516,18 @@ module.exports = function<T, P, I, TI, C, CX>(
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
 
-    // Put context on the stack because we will work on children
-    if (isHostComponent) {
-      pushHostContext(workInProgress);
-    } else {
-      // TODO: Unify this switch with the other branches above.
-      switch (workInProgress.tag) {
-        case ClassComponent:
-          if (isContextProvider(workInProgress)) {
-            pushContextProvider(workInProgress, false);
-          }
-          break;
-        case HostRoot:
-        case HostPortal:
-          pushHostContainer(workInProgress.stateNode.containerInfo);
-          break;
-      }
+    switch (workInProgress.tag) {
+      case ClassComponent:
+        if (isContextProvider(workInProgress)) {
+          pushContextProvider(workInProgress, false);
+        }
+        break;
+      case HostRoot:
+      case HostPortal:
+        pushHostContainer(workInProgress.stateNode.containerInfo);
+        break;
     }
+
     // TODO: this is annoyingly duplicating non-jump codepaths.
 
     return workInProgress.child;
