@@ -168,6 +168,15 @@ module.exports = function<T, P, I, TI, C, CX>(
 
   function updateFragment(current, workInProgress) {
     var nextChildren = workInProgress.pendingProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextChildren === null) {
+        nextChildren = current && current.memoizedProps;
+      }
+    } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
   }
@@ -282,8 +291,22 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function updateHostComponent(current, workInProgress) {
-    const nextProps = workInProgress.pendingProps;
+    let nextProps = workInProgress.pendingProps;
     const prevProps = current ? current.memoizedProps : null;
+    const memoizedProps = workInProgress.memoizedProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextProps === null) {
+        nextProps = prevProps;
+        if (!nextProps) {
+          throw new Error('We should always have pending or current props.');
+        }
+      }
+    } else if (nextProps === null || memoizedProps === nextProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
     let nextChildren = nextProps.children;
     const isDirectTextChild = shouldSetTextContent(nextProps);
 
@@ -376,11 +399,20 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function updateCoroutineComponent(current, workInProgress) {
-    var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
-    if (!coroutine) {
-      throw new Error('Should be resolved by now');
+    var nextCoroutine = (workInProgress.pendingProps : null | ReactCoroutine);
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextCoroutine === null) {
+        nextCoroutine = current && current.memoizedProps;
+        if (!nextCoroutine) {
+          throw new Error('We should always have pending or current props.');
+        }
+      }
+    } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    reconcileChildren(current, workInProgress, coroutine.children);
+    reconcileChildren(current, workInProgress, nextCoroutine.children);
     // This doesn't take arbitrary time so we could synchronously just begin
     // eagerly do the work of workInProgress.child as an optimization.
     return workInProgress.child;
@@ -389,7 +421,20 @@ module.exports = function<T, P, I, TI, C, CX>(
   function updatePortalComponent(current, workInProgress) {
     pushHostContainer(workInProgress.stateNode.containerInfo);
     const priorityLevel = workInProgress.pendingWorkPriority;
-    const nextChildren = workInProgress.pendingProps;
+    let nextChildren = workInProgress.pendingProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextChildren === null) {
+        nextChildren = current && current.memoizedProps;
+        if (!nextChildren) {
+          throw new Error('We should always have pending or current props.');
+        }
+      }
+    } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
     if (!current) {
       // Portals are special because we don't append the children during mount
       // but at commit. Therefore we need to track insertions which the normal
@@ -534,24 +579,6 @@ module.exports = function<T, P, I, TI, C, CX>(
       // If we have progressed work on this priority level already, we can
       // proceed this that as the child.
       workInProgress.child = workInProgress.progressedChild;
-    }
-
-    const pendingProps = workInProgress.pendingProps;
-    const memoizedProps = workInProgress.memoizedProps;
-    const updateQueue = workInProgress.updateQueue;
-
-    // This is kept as a single expression to take advantage of short-circuiting.
-    const hasNewProps = (
-      pendingProps !== null && (            // hasPendingProps && (
-        memoizedProps === null ||           //   hasNoMemoizedProps ||
-        pendingProps !== memoizedProps      //   memoizedPropsDontMatch
-      )                                     // )
-    );
-    if (!hasNewProps) {
-      const hasUpdate = updateQueue && hasPendingUpdate(updateQueue, priorityLevel);
-      if (!hasUpdate && !hasContextChanged()) {
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
     }
 
     switch (workInProgress.tag) {
