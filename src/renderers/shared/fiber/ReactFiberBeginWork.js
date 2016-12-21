@@ -243,6 +243,11 @@ module.exports = function<T, P, I, TI, C, CX>(
           workInProgress.effectTag |= Update;
         }
       }
+
+      // Don't forget to push the context before returning.
+      if (isContextProvider(workInProgress)) {
+        pushContextProvider(workInProgress, false);
+      }
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -515,21 +520,6 @@ module.exports = function<T, P, I, TI, C, CX>(
 
     cloneChildFibers(current, workInProgress);
     markChildAsProgressed(current, workInProgress, priorityLevel);
-
-    switch (workInProgress.tag) {
-      case ClassComponent:
-        if (isContextProvider(workInProgress)) {
-          pushContextProvider(workInProgress, false);
-        }
-        break;
-      case HostRoot:
-      case HostPortal:
-        pushHostContainer(workInProgress.stateNode.containerInfo);
-        break;
-    }
-
-    // TODO: this is annoyingly duplicating non-jump codepaths.
-
     return workInProgress.child;
   }
 
