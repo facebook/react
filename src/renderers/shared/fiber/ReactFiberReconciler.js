@@ -18,6 +18,10 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { ReactNodeList } from 'ReactTypes';
 
 var {
+  addTopLevelUpdate,
+} = require('ReactFiberUpdateQueue');
+
+var {
   findCurrentUnmaskedContext,
   isContextProvider,
   processChildContext,
@@ -98,13 +102,20 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
 module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) : Reconciler<C, I, TI> {
 
   var {
-    scheduleTopLevelSetState,
-    scheduleUpdateCallback,
+    scheduleUpdate,
+    getPriorityContext,
     performWithPriority,
     batchedUpdates,
     syncUpdates,
     deferredUpdates,
   } = ReactFiberScheduler(config);
+
+  function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
+    const priorityLevel = getPriorityContext();
+    const nextState = { element };
+    addTopLevelUpdate(current, nextState, callback || null, priorityLevel);
+    scheduleUpdate(current, priorityLevel);
+  }
 
   return {
 
@@ -113,10 +124,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       const root = createFiberRoot(containerInfo, context);
       const current = root.current;
 
-      scheduleTopLevelSetState(current, { element });
-      if (callback) {
-        scheduleUpdateCallback(current, callback);
-      }
+      scheduleTopLevelUpdate(current, element, callback);
 
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onMountContainer(root);
@@ -135,10 +143,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
       root.pendingContext = getContextForSubtree(parentComponent);
 
-      scheduleTopLevelSetState(current, { element });
-      if (callback) {
-        scheduleUpdateCallback(current, callback);
-      }
+      scheduleTopLevelUpdate(current, element, callback);
 
       if (__DEV__) {
         if (ReactFiberInstrumentation.debugTool) {

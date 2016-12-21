@@ -55,11 +55,6 @@ var {
 
 var {
   getPendingPriority,
-  addUpdate,
-  addReplaceUpdate,
-  addForceUpdate,
-  addCallback,
-  addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -79,10 +74,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   const { beginWork, beginFailedWork } = ReactFiberBeginWork(
     config,
     hostContext,
-    scheduleSetState,
-    scheduleReplaceState,
-    scheduleForceUpdate,
-    scheduleUpdateCallback,
+    scheduleUpdate,
+    getPriorityContext,
   );
   const { completeWork } = ReactFiberCompleteWork(config, hostContext);
   const {
@@ -986,7 +979,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
-  function scheduleUpdateAtPriority(fiber : Fiber, priorityLevel : PriorityLevel) {
+  function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
     // If we're in a batch, downgrade sync priority to task priority
     if (priorityLevel === SynchronousPriority && isPerformingWork) {
       priorityLevel = TaskPriority;
@@ -1049,34 +1042,15 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
   }
 
+  function getPriorityContext() : PriorityLevel {
+    if (priorityContext === SynchronousPriority && isPerformingWork) {
+      return TaskPriority;
+    }
+    return priorityContext;
+  }
+
   function scheduleErrorRecovery(fiber : Fiber) {
-    scheduleUpdateAtPriority(fiber, TaskPriority);
-  }
-
-  function scheduleSetState(fiber : Fiber, partialState : any) {
-    addUpdate(fiber, partialState, priorityContext);
-    scheduleUpdateAtPriority(fiber, priorityContext);
-  }
-
-  function scheduleReplaceState(fiber : Fiber, state : any) {
-    addReplaceUpdate(fiber, state, priorityContext);
-    scheduleUpdateAtPriority(fiber, priorityContext);
-  }
-
-  function scheduleForceUpdate(fiber : Fiber) {
-    addForceUpdate(fiber, priorityContext);
-    scheduleUpdateAtPriority(fiber, priorityContext);
-  }
-
-  function scheduleUpdateCallback(fiber : Fiber, callback : Function) {
-    addCallback(fiber, callback, priorityContext);
-    scheduleUpdateAtPriority(fiber, priorityContext);
-  }
-
-  // TODO: This indirection will be removed as part of #8585
-  function scheduleTopLevelSetState(fiber : Fiber, partialState : any) {
-    addTopLevelUpdate(fiber, partialState, priorityContext);
-    scheduleUpdateAtPriority(fiber, priorityContext);
+    scheduleUpdate(fiber, TaskPriority);
   }
 
   function performWithPriority(priorityLevel : PriorityLevel, fn : Function) {
@@ -1126,8 +1100,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   return {
-    scheduleTopLevelSetState: scheduleTopLevelSetState,
-    scheduleUpdateCallback: scheduleUpdateCallback,
+    scheduleUpdate: scheduleUpdate,
+    getPriorityContext: getPriorityContext,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     syncUpdates: syncUpdates,
