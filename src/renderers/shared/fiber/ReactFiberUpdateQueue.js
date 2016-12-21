@@ -80,15 +80,6 @@ function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
   return a - b;
 }
 
-function hasPendingUpdate(queue : UpdateQueue, priorityLevel : PriorityLevel) : boolean {
-  if (!queue.first) {
-    return false;
-  }
-  // Return true if the first pending update has greater or equal priority.
-  return comparePriority(queue.first.priorityLevel, priorityLevel) <= 0;
-}
-exports.hasPendingUpdate = hasPendingUpdate;
-
 // Ensures that a fiber has an update queue, creating a new one if needed.
 // Returns the new or existing queue.
 function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {

@@ -26,7 +26,6 @@ var {
   cloneChildFibers,
 } = require('ReactChildFiber');
 var {
-  hasPendingUpdate,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
