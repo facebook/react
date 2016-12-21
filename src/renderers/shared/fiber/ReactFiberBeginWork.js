@@ -267,11 +267,18 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (updateQueue) {
       const prevState = workInProgress.memoizedState;
       const state = beginUpdateQueue(workInProgress, updateQueue, null, prevState, null, priorityLevel);
+      if (prevState === state) {
+        // If the state is the same as before, that's a bailout because we had
+        // no work matching this priority.
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
       const element = state.element;
       reconcileChildren(current, workInProgress, element);
       workInProgress.memoizedState = state;
+      return workInProgress.child;
     }
-    return workInProgress.child;
+    // If there is no update queue, that's a bailout because the root has no props.
+    return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
 
   function updateHostComponent(current, workInProgress) {
