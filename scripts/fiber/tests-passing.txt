@@ -286,7 +286,7 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * does not warn when the element is directly in rest args
 * does not warn when the array contains a non-element
 * should give context for PropType errors in nested components.
-* gives a helpful error when passing null, undefined, boolean, or number
+* gives a helpful error when passing invalid types
 * should check default prop values
 * should not check the default for explicit null
 * should check declared prop types

@@ -256,21 +256,26 @@ describe('ReactJSXElementValidator', () => {
     void <True />;
     void <Num />;
     expectDev(console.error.calls.count()).toBe(4);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: undefined. You likely forgot to export your ' +
+      'component from the file it\'s defined in.'
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: null.'
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expectDev(console.error.calls.argsFor(2)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: boolean.'
     );
-    expectDev(console.error.calls.argsFor(3)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expectDev(console.error.calls.argsFor(3)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: number.'
     );
     void <Div />;
     expectDev(console.error.calls.count()).toBe(4);

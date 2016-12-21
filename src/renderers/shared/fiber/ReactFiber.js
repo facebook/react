@@ -334,7 +334,11 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key);
     fiber.type = type;
-  } else if (typeof type === 'object' && type !== null) {
+  } else if (
+    typeof type === 'object' &&
+    type !== null &&
+    typeof type.tag === 'number'
+  ) {
     // Currently assumed to be a continuation and therefore is a fiber already.
     // TODO: The yield system is currently broken for updates in some cases.
     // The reified yield stores a fiber, but we don't know which fiber that is;
@@ -343,12 +347,26 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
     // There is probably a clever way to restructure this.
     fiber = ((type : any) : Fiber);
   } else {
+    let info = '';
+    if (__DEV__) {
+      if (
+        type === undefined ||
+        typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0
+      ) {
+        info +=
+          ' You likely forgot to export your component from the file ' +
+          'it\'s defined in.';
+      }
+    }
+    // TODO: Stack also includes owner name in the message.
     invariant(
       false,
       'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: %s.',
+      'or a class/function (for composite components) but got: %s.%s',
       type == null ? type : typeof type,
-      // TODO: Stack also includes owner name in the message.
+      info,
     );
   }
   return fiber;
