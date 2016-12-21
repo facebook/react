@@ -55,6 +55,10 @@ exports.pop = function<T>(
     }
   }
 
+  cursor.current = index > 0
+    ? valueStack[index]
+    : (null : any);
+
   valueStack[index] = null;
 
   if (__DEV__) {
@@ -62,10 +66,6 @@ exports.pop = function<T>(
   }
 
   index--;
-
-  cursor.current = index > -1
-    ? valueStack[index]
-    : (null : any);
 };
 
 exports.push = function<T>(
@@ -73,15 +73,15 @@ exports.push = function<T>(
   value : any,
   fiber: Fiber,
 ) : void {
-  cursor.current = value;
-
   index++;
 
-  valueStack[index] = value;
+  valueStack[index] = cursor.current;
 
   if (__DEV__) {
     fiberStack[index] = fiber;
   }
+
+  cursor.current = value;
 };
 
 exports.reset = function<T>(
