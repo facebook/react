@@ -13,6 +13,7 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
+import type { StackCursor } from 'ReactFiberStack';
 
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
@@ -24,20 +25,22 @@ var {
   ClassComponent,
   HostRoot,
 } = require('ReactTypeOfWork');
+const {
+  createCursor,
+  pop,
+  push,
+  reset,
+} = require('ReactFiberStack');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
 }
 
-let index = -1;
-const contextStack : Array<Object> = [];
-const didPerformWorkStack : Array<boolean> = [];
+let contextStackCursor : StackCursor = createCursor();
+let didPerformWorkStackCursor : StackCursor = createCursor();
 
 function getUnmaskedContext() {
-  if (index === -1) {
-    return emptyObject;
-  }
-  return contextStack[index];
+  return contextStackCursor.current;
 }
 
 exports.getMaskedContext = function(workInProgress : Fiber) {
@@ -62,7 +65,7 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
 };
 
 exports.hasContextChanged = function() : boolean {
-  return index > -1 && didPerformWorkStack[index];
+  return Boolean(didPerformWorkStackCursor.current);
 };
 
 function isContextProvider(fiber : Fiber) : boolean {
@@ -75,19 +78,17 @@ function isContextProvider(fiber : Fiber) : boolean {
 }
 exports.isContextProvider = isContextProvider;
 
-function popContextProvider() : void {
-  invariant(index > -1, 'Unexpected context pop');
-  contextStack[index] = emptyObject;
-  didPerformWorkStack[index] = false;
-  index--;
+function popContextProvider(fiber : Fiber) : void {
+  pop(didPerformWorkStackCursor, fiber);
+  pop(contextStackCursor, fiber);
 }
 exports.popContextProvider = popContextProvider;
 
-exports.pushTopLevelContextObject = function(context : Object, didChange : boolean) : void {
-  invariant(index === -1, 'Unexpected context found on stack');
-  index++;
-  contextStack[index] = context;
-  didPerformWorkStack[index] = didChange;
+exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, didChange : boolean) : void {
+  invariant(contextStackCursor.cursor == null, 'Unexpected context found on stack');
+
+  push(contextStackCursor, context, fiber);
+  push(didPerformWorkStackCursor, didChange, fiber);
 };
 
 function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
@@ -129,13 +130,13 @@ exports.pushContextProvider = function(workInProgress : Fiber, didPerformWork : 
     instance.__reactInternalMemoizedMergedChildContext = mergedContext;
   }
 
-  index++;
-  contextStack[index] = mergedContext;
-  didPerformWorkStack[index] = didPerformWork;
+  push(contextStackCursor, mergedContext, workInProgress);
+  push(didPerformWorkStackCursor, didPerformWork, workInProgress);
 };
 
 exports.resetContext = function() : void {
-  index = -1;
+  reset(contextStackCursor);
+  reset(didPerformWorkStackCursor);
 };
 
 exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {
@@ -162,7 +163,7 @@ exports.unwindContext = function(from : Fiber, to: Fiber) {
   let node = from;
   while (node && (node !== to) && (node.alternate !== to)) {
     if (isContextProvider(node)) {
-      popContextProvider();
+      popContextProvider(node);
     }
     node = node.return;
   }
