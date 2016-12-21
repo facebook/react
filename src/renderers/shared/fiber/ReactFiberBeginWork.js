@@ -174,26 +174,33 @@ module.exports = function<T, P, I, TI, C, CX>(
 
   function updateFunctionalComponent(current, workInProgress) {
     var fn = workInProgress.type;
-    var props = workInProgress.pendingProps;
-    var context = getMaskedContext(workInProgress);
+    var nextProps = workInProgress.pendingProps;
 
-    // TODO: Disable this before release, since it is not part of the public API
-    // I use this for testing to compare the relative overhead of classes.
-    if (typeof fn.shouldComponentUpdate === 'function') {
-      if (workInProgress.memoizedProps !== null) {
-        if (!fn.shouldComponentUpdate(workInProgress.memoizedProps, props)) {
-          return bailoutOnAlreadyFinishedWork(current, workInProgress);
-        }
+    const memoizedProps = workInProgress.memoizedProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextProps === null) {
+        nextProps = current && current.memoizedProps;
       }
+    } else if (nextProps === null || memoizedProps === nextProps || (
+        // TODO: Disable this before release, since it is not part of the public API
+        // I use this for testing to compare the relative overhead of classes.
+        typeof fn.shouldComponentUpdate === 'function' &&
+        !fn.shouldComponentUpdate(memoizedProps, nextProps)
+      )) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
+
+    var context = getMaskedContext(workInProgress);
 
     var nextChildren;
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      nextChildren = fn(props, context);
+      nextChildren = fn(nextProps, context);
     } else {
-      nextChildren = fn(props, context);
+      nextChildren = fn(nextProps, context);
     }
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
