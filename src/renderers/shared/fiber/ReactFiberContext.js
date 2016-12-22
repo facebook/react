@@ -48,7 +48,10 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
   }
 
   const hasOwnContext = isContextProvider(workInProgress);
-  // If it is a context provider then use the previous context instead.
+  // If the fiber is a context provider itself, by the time we read its context
+  // we have already pushed its own child context on the stack. A context
+  // provider should not "see" its own child context. Therefore we read the
+  // previous (parent) context instead for context providers.
   const unmaskedContext = hasOwnContext ?
     getPrevious(contextStackCursor) :
     contextStackCursor.current;
