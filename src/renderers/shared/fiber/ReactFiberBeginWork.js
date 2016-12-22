@@ -255,13 +255,17 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
 
     // Rerender
-    const instance = workInProgress.stateNode;
-    ReactCurrentOwner.current = workInProgress;
-    const nextChildren = instance.render();
-    reconcileChildren(current, workInProgress, nextChildren);
-    // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress, true);
+    try {
+      const instance = workInProgress.stateNode;
+      ReactCurrentOwner.current = workInProgress;
+      const nextChildren = instance.render();
+      reconcileChildren(current, workInProgress, nextChildren);
+    } finally {
+      // Put context on the stack because we will work on children.
+      // Push even if Error in render() because unwindContext() always pops.
+      if (isContextProvider(workInProgress)) {
+        pushContextProvider(workInProgress, true);
+      }
     }
     return workInProgress.child;
   }
