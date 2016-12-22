@@ -1125,6 +1125,15 @@ src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should render a coroutine
 * should unmount a composite in a coroutine
 
+src/renderers/shared/fiber/__tests__/ReactFiberStack-test.js
+* should create a cursor with a default value
+* should create multiple independent cursors
+* should manage the stack for a single cursor
+* should manage the stack for multiple cursors
+* should warn if ReactFiberStack.pop is called when the stack is empty as this implies a logical error
+* should warn if ReactFiberStack.pop is called with the wrong Fiber as this implies a sequencing error
+* should reset the stack to empty state
+
 src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should render a simple component
 * should render a simple component, in steps if needed
