@@ -6,6 +6,10 @@
     <title>Inputs</title>
 
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
       }
@@ -18,16 +22,11 @@
         margin-bottom: 4px;
       }
 
-      h1 {
-        text-align: center;
-      }
-
       .field {
         padding: 8px;
       }
 
       form {
-        display: flex;
         max-width: 900px;
         margin: 0 auto;
         width: 100%;
@@ -36,8 +35,8 @@
       fieldset {
         border: 1px solid #aaa;
         padding: 16px;
-        flex-grow: 1;
-        flex-basis: 50%;
+        float: left;
+        width: 49%;
       }
     </style>
   </head>
@@ -47,7 +46,7 @@
     <script src="../react-loader.js"></script>
 
     <script type="text/babel">
-      var Inputs = React.createClass({
+      var Test = React.createClass({
 
         getInitialState() {
           return {
@@ -101,24 +100,21 @@
           ]
 
           return (
-            <div>
-              <h1>Input Kitchen Sink</h1>
-              <form onSubmit={e=>e.preventDefault()}>
-                <fieldset>
-                  <legend>Controlled</legend>
-                  {types.map(this.renderControlled)}
-                </fieldset>
-                <fieldset>
-                  <legend>Uncontrolled</legend>
-                  {types.map(this.renderUncontrolled)}
-                </fieldset>
-              </form>
-            </div>
+            <form onSubmit={e=>e.preventDefault()}>
+              <fieldset>
+                <legend>Controlled</legend>
+                {types.map(this.renderControlled)}
+              </fieldset>
+              <fieldset>
+                <legend>Uncontrolled</legend>
+                {types.map(this.renderUncontrolled)}
+              </fieldset>
+            </form>
           )
         }
       })
 
-      ReactDOM.render(<Inputs />, document.getElementById('container'))
+      ReactDOM.render(<Test />, document.getElementById('container'))
     </script>
   </body>
 </html>

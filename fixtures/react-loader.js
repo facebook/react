@@ -9,7 +9,7 @@
 
 var REACT_PATH = '../../build/react.js';
 var DOM_PATH = '../../build/react-dom.js';
-var BABEL_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.19.0/babel.js'
+var BABEL_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.19.0/babel.js';
 
 function parseQuery(qstr) {
   var query = {};

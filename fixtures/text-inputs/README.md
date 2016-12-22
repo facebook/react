@@ -1,7 +1,7 @@
-# Inputs
+# Text Inputs
 
-This fixture should help identify edge cases with inputs. There are a couple of
-important concepts to be aware of when working on inputs in React.
+There are a couple of important concepts to be aware of when working on text
+inputs in React.
 
 ## `defaultValue` vs `value`
 
@@ -47,3 +47,16 @@ input.defaultValue = 1
 
 **React detaches all inputs**. This prevents `value` from accidentally updating if
 `defaultValue` changes.
+
+## Form reset events
+
+React does not support `form.reset()` for controlled inputs. This is a feature,
+not a bug. `form.reset()` works by reverting an input's `value` _property_ to
+that of the current `defaultValue`. Since React assigns the value `attribute`
+every time a controlled input's value changes, controlled inputs will never
+"revert" back to their original display value.
+
+## Number inputs
+
+Chrome (55) and Safari (10) change the display value of number inputs any time
+the value property or attribute are changed.

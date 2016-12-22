@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title>Selects</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      }
+
+      form {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      fieldset {
+        border: 1px solid #ccc;
+        display: inline-block;
+        padding: 20px;
+        width: 45%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">Loading...</div>
+
+    <script src="../react-loader.js"></script>
+
+    <script type="text/babel">
+      class Test extends React.Component {
+
+        constructor (props, context) {
+          super(props, context)
+
+          this.state = { value: '' }
+        }
+
+        onChange (event) {
+          this.setState({ value: event.target.value })
+        }
+
+        render() {
+          return (
+            <form>
+              <fieldset>
+                <legend>Controlled</legend>
+                <select value={this.state.value} onChange={this.onChange.bind(this)}>
+                  <option value="">Select a color</option>
+                  <option value="red">Red</option>
+                  <option value="blue">Blue</option>
+                  <option value="gree">Green</option>
+                </select>
+              </fieldset>
+
+              <fieldset>
+                <legend>Uncontrolled</legend>
+                <select defaultValue="">
+                  <option value="">Select a color</option>
+                  <option value="red">Red</option>
+                  <option value="blue">Blue</option>
+                  <option value="gree">Green</option>
+                </select>
+              </fieldset>
+            </form>
+          )
+        }
+      }
+
+      ReactDOM.render(<Test />, document.getElementById('container'))
+    </script>
+  </body>
+</html>

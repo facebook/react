@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title>Textarea</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      }
+
+      textarea {
+        display: block;
+        min-height: 250px;
+        width: 100%;
+      }
+
+      form {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      fieldset {
+        border: 1px solid #ccc;
+        display: inline-block;
+        padding: 20px;
+        vertical-align: top;
+        width: 45%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">Loading...</div>
+
+    <script src="../react-loader.js"></script>
+
+    <script type="text/babel">
+      class Test extends React.Component {
+
+        constructor (props, context) {
+          super(props, context)
+
+          this.state = { value: '' }
+        }
+
+        onChange (event) {
+          this.setState({ value: event.target.value })
+        }
+
+        render() {
+          return (
+            <form>
+              <fieldset>
+                <legend>Controlled</legend>
+                <textarea value={this.state.value} onChange={this.onChange.bind(this)} />
+              </fieldset>
+
+              <fieldset>
+                <legend>Uncontrolled</legend>
+                <textarea defaultValue="" />
+              </fieldset>
+            </form>
+          )
+        }
+      }
+
+      ReactDOM.render(<Test />, document.getElementById('container'))
+    </script>
+  </body>
+</html>
