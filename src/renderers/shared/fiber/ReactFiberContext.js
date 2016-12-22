@@ -29,7 +29,6 @@ const {
   createCursor,
   pop,
   push,
-  reset,
 } = require('ReactFiberStack');
 
 if (__DEV__) {
@@ -136,8 +135,6 @@ exports.pushContextProvider = function(workInProgress : Fiber, didPerformWork : 
 };
 
 exports.resetContext = function() : void {
-  reset();
-
   contextStackCursor.current = null;
   didPerformWorkStackCursor.current = false;
 };

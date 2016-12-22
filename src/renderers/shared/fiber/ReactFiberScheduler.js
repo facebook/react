@@ -21,6 +21,7 @@ var {
   isContextProvider,
   popContextProvider,
 } = require('ReactFiberContext');
+const { reset } = require('ReactFiberStack');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
@@ -159,6 +160,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function resetContextStack() {
+    // Reset the stack
+    reset();
+    // Reset the cursors
     resetContext();
     resetHostContainer();
   }

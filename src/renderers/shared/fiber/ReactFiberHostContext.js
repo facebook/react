@@ -22,7 +22,6 @@ const {
   createCursor,
   pop,
   push,
-  reset,
 } = require('ReactFiberStack');
 
 export type HostContext<C, CX> = {
@@ -114,8 +113,6 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function resetHostContainer() {
-    reset();
-
     contextStackCursor.current = null;
     rootInstanceStackCursor.current = null;
   }
