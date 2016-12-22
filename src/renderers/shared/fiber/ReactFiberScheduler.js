@@ -18,7 +18,6 @@ import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
-  isContextProvider,
   popContextProvider,
 } = require('ReactFiberContext');
 const { reset } = require('ReactFiberStack');
@@ -957,9 +956,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     while (node && (node !== to) && (node.alternate !== to)) {
       switch (node.tag) {
         case ClassComponent:
-          if (isContextProvider(node)) {
-            popContextProvider(node);
-          }
+          popContextProvider(node);
           break;
         case HostComponent:
           popHostContext(node);

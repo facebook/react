@@ -31,7 +31,6 @@ var {
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
-  isContextProvider,
   hasContextChanged,
   pushContextProvider,
   pushTopLevelContextObject,
@@ -219,10 +218,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
-    const hasContext = isContextProvider(workInProgress);
-    if (hasContext) {
-      pushContextProvider(workInProgress);
-    }
+    const hasContext = pushContextProvider(workInProgress);
 
     let shouldUpdate;
     if (!current) {
@@ -431,11 +427,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       // Push context providers early to prevent context stack mismatches.
       // During mounting we don't know the child context yet as the instance doesn't exist.
       // We will invalidate the child context in finishClassComponent() right after rendering.
-      const hasContext = isContextProvider(workInProgress);
-      if (hasContext) {
-        pushContextProvider(workInProgress);
-      }
-
+      const hasContext = pushContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, priorityLevel);
       return finishClassComponent(current, workInProgress, true, hasContext);
@@ -554,9 +546,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {
       case ClassComponent:
-        if (isContextProvider(workInProgress)) {
-          pushContextProvider(workInProgress);
-        }
+        pushContextProvider(workInProgress);
         break;
       case HostPortal:
         pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);

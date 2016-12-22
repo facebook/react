@@ -21,7 +21,6 @@ import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
 var {
-  isContextProvider,
   popContextProvider,
 } = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -175,9 +174,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         return null;
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
-        if (isContextProvider(workInProgress)) {
-          popContextProvider(workInProgress);
-        }
+        popContextProvider(workInProgress);
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null

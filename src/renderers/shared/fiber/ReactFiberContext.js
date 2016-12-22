@@ -81,6 +81,9 @@ function isContextProvider(fiber : Fiber) : boolean {
 exports.isContextProvider = isContextProvider;
 
 function popContextProvider(fiber : Fiber) : void {
+  if (!isContextProvider(fiber)) {
+    return;
+  }
   pop(didPerformWorkStackCursor, fiber);
   pop(contextStackCursor, fiber);
 }
@@ -119,7 +122,11 @@ function processChildContext(fiber : Fiber, parentContext : ?Object, isReconcili
 }
 exports.processChildContext = processChildContext;
 
-exports.pushContextProvider = function(workInProgress : Fiber) : void {
+exports.pushContextProvider = function(workInProgress : Fiber) : boolean {
+  if (!isContextProvider(workInProgress)) {
+    return false;
+  }
+
   const instance = workInProgress.stateNode;
   // We push the context as early as possible to ensure stack integrity.
   // If the instance does not exist yet, we will push null at first,
@@ -130,6 +137,7 @@ exports.pushContextProvider = function(workInProgress : Fiber) : void {
   ) || null;
   push(contextStackCursor, memoizedMergedChildContext, workInProgress);
   push(didPerformWorkStackCursor, false, workInProgress);
+  return true;
 };
 
 exports.invalidateContextProvider = function(workInProgress : Fiber) : void {
