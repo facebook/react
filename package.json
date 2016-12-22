@@ -66,6 +66,7 @@
     "jest-config": "^17.0.2",
     "jest-jasmine2": "^17.0.2",
     "jest-runtime": "^17.0.2",
+    "jscodeshift": "^0.3.30",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.0",
