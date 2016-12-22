@@ -1157,7 +1157,8 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * provides context when reusing work
 * reads context when setState is below the provider
 * reads context when setState is above the provider
-* maintains the correct context index when context proviers are bailed out due to low priority
+* maintains the correct context when providers bail out due to low priority
+* maintains the correct context when unwinding due to an error in render
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during full deferred mounting
@@ -1413,6 +1414,8 @@ src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
 * renders an error state if child throws in render
 * renders an error state if child throws in constructor
 * renders an error state if child throws in componentWillMount
+* renders an error state if context provider throws in componentWillMount
+* renders an error state if module-style context provider throws in componentWillMount
 * mounts the error message if mounting fails
 * propagates errors on retry on mounting
 * propagates errors inside boundary during componentWillMount
