@@ -9,7 +9,7 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "17.0.2",
+    "babel-jest": "18.0.0",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
@@ -62,10 +62,10 @@
     "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest-cli": "17.0.2",
-    "jest-config": "^17.0.2",
-    "jest-jasmine2": "^17.0.2",
-    "jest-runtime": "^17.0.2",
+    "jest-cli": "18.0.0",
+    "jest-config": "^18.0.0",
+    "jest-jasmine2": "^18.0.0",
+    "jest-runtime": "^18.0.0",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.0",
@@ -100,12 +100,12 @@
     ],
     "rootDir": "",
     "transform": {
-      ".*": "scripts/jest/preprocessor.js"
+      ".*": "./scripts/jest/preprocessor.js"
     },
     "setupFiles": [
-      "scripts/jest/environment.js"
+      "./scripts/jest/environment.js"
     ],
-    "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
+    "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
     "testRegex": "/__tests__/",
     "moduleFileExtensions": [
       "js",
