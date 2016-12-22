@@ -114,8 +114,10 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function resetHostContainer() {
-    reset(contextStackCursor);
-    reset(rootInstanceStackCursor);
+    reset();
+
+    contextStackCursor.current = null;
+    rootInstanceStackCursor.current = null;
   }
 
   return {

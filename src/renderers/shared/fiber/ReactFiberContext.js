@@ -37,7 +37,7 @@ if (__DEV__) {
 }
 
 let contextStackCursor : StackCursor<?Object> = createCursor((null: ?Object));
-let didPerformWorkStackCursor : StackCursor<?boolean> = createCursor((null: ?boolean));
+let didPerformWorkStackCursor : StackCursor<boolean> = createCursor(false);
 
 function getUnmaskedContext() {
   return contextStackCursor.current || emptyObject;
@@ -66,7 +66,7 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
 };
 
 exports.hasContextChanged = function() : boolean {
-  return Boolean(didPerformWorkStackCursor.current);
+  return didPerformWorkStackCursor.current;
 };
 
 function isContextProvider(fiber : Fiber) : boolean {
@@ -136,8 +136,10 @@ exports.pushContextProvider = function(workInProgress : Fiber, didPerformWork : 
 };
 
 exports.resetContext = function() : void {
-  reset(contextStackCursor);
-  reset(didPerformWorkStackCursor);
+  reset();
+
+  contextStackCursor.current = null;
+  didPerformWorkStackCursor.current = false;
 };
 
 exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {

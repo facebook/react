@@ -55,9 +55,7 @@ exports.pop = function<T>(
     }
   }
 
-  cursor.current = index > 0
-    ? valueStack[index]
-    : (null : any);
+  cursor.current = valueStack[index];
 
   valueStack[index] = null;
 
@@ -70,7 +68,7 @@ exports.pop = function<T>(
 
 exports.push = function<T>(
   cursor : StackCursor<T>,
-  value : any,
+  value : T,
   fiber: Fiber,
 ) : void {
   index++;
@@ -84,9 +82,7 @@ exports.push = function<T>(
   cursor.current = value;
 };
 
-exports.reset = function<T>(
-  cursor : StackCursor<T>,
-) : void {
+exports.reset = function() : void {
   while (index > -1) {
     valueStack[index] = null;
 
@@ -96,6 +92,4 @@ exports.reset = function<T>(
 
     index--;
   }
-
-  cursor.current = (null : any);
 };
