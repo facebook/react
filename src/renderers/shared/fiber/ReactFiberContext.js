@@ -145,9 +145,7 @@ exports.pushContextProvider = function(workInProgress : Fiber) : boolean {
 
 exports.invalidateContextProvider = function(workInProgress : Fiber) : void {
   const instance = workInProgress.stateNode;
-  if (instance == null) {
-    throw new Error('Expected to have an instance by this point.');
-  }
+  invariant(instance, 'Expected to have an instance by this point.');
   const parentContext = getPrevious(contextStackCursor);
   const mergedContext = processChildContext(workInProgress, parentContext, true);
   instance.__reactInternalMemoizedMergedChildContext = mergedContext;
