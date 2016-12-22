@@ -43,10 +43,7 @@ exports.getPrevious = function<T>(
     }
     return null;
   }
-  if (index === 0) {
-    return null;
-  }
-  return valueStack[index - 1];
+  return valueStack[index];
 };
 
 exports.isEmpty = function() : boolean {
