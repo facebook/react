@@ -33,7 +33,6 @@ var {
   updateProperties,
 } = ReactTestFiberComponent;
 
-var DEFAULT_ROOT_ID = '<default>';
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance : Container) : HostContext {
     return {};
@@ -194,9 +193,6 @@ var TestRenderer = ReactFiberReconciler({
   useSyncScheduling: true,
 });
 
-const rootContainers = new Map();
-const roots = new Map();
-
 var defaultTestOptions = {
   createNodeMock: function() {
     return null;
@@ -224,43 +220,29 @@ var toJSON = (instance) => {
 };
 
 var ReactTestFiberRenderer = {
-  toJSON(rootID : string = DEFAULT_ROOT_ID) {
-    const root = roots.get(rootID);
-    const rootContainer = rootContainers.get(rootID);
-    if (!root || !rootContainer) {
-      console.log('Nothing rendered yet.');
-      return;
-    }
-
-    const hostInstance = TestRenderer.findHostInstance(root);
-    if (hostInstance === null) {
-      return hostInstance;
-    }
-
-    return toJSON(hostInstance);
-  },
-
-  create(element, rootID = DEFAULT_ROOT_ID, callback) {
-    const container = { rootID: rootID, children: [], createNodeMock: defaultTestOptions.createNodeMock };
-    rootContainers.set(rootID, container);
-    const root = TestRenderer.mountContainer(element, container, null, callback);
-    roots.set(rootID, root);
+  create(element) {
+    var container = { rootID: '<default>', children: [], createNodeMock: defaultTestOptions.createNodeMock };
+    var root = TestRenderer.mountContainer(element, container, null, null);
     return {
       toJSON() {
-        return ReactTestFiberRenderer.toJSON(rootID);
+        const hostInstance = TestRenderer.findHostInstance(root);
+        if (hostInstance === null) {
+          return hostInstance;
+        }
+
+        return toJSON(hostInstance);
       },
-      update(element) {
-        const root = roots.get(rootID);
-        TestRenderer.updateContainer(element, root, null, callback);
+      update(newElement) {
+        TestRenderer.updateContainer(newElement, root, null, null);
       },
       unmount() {
         TestRenderer.updateContainer(null, root, null, () => {
-          rootContainers.delete(rootID);
-          roots.delete(rootID, root);
+          container = null;
+          root = null;
         });
       },
       getInstance() {
-        return TestRenderer.getPublicRootInstance(roots.get(rootID));
+        return TestRenderer.getPublicRootInstance(root);
       },
     };
   },
