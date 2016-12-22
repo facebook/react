@@ -267,7 +267,10 @@ function handleControlledInputBlur(inst, node) {
   }
 
   // If controlled, assign the value attribute to the current value on blur
-  node.setAttribute('value', '' + node.value);
+  let value = '' + node.value;
+  if (node.getAttribute('value') !== value) {
+    node.setAttribute('value', value);
+  }
 }
 
 /**
