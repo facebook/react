@@ -194,6 +194,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     } else if (nextProps === null || memoizedProps === nextProps || (
         // TODO: Disable this before release, since it is not part of the public API
         // I use this for testing to compare the relative overhead of classes.
+        memoizedProps !== null &&
         typeof fn.shouldComponentUpdate === 'function' &&
         !fn.shouldComponentUpdate(memoizedProps, nextProps)
       )) {
