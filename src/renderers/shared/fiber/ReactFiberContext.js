@@ -27,18 +27,34 @@ var {
 } = require('ReactTypeOfWork');
 const {
   createCursor,
-  getPrevious,
   pop,
   push,
-  replace,
 } = require('ReactFiberStack');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
 }
 
-let contextStackCursor : StackCursor<?Object> = createCursor((null: ?Object));
+// A cursor to the current merged context object on the stack.
+let contextStackCursor : StackCursor<Object> = createCursor(emptyObject);
+// A cursor to a boolean indicating whether the context has changed.
 let didPerformWorkStackCursor : StackCursor<boolean> = createCursor(false);
+// Keep track of the previous context object that was on the stack.
+// We use this to get access to the parent context after we have already
+// pushed the next context provider, and now need to merge their contexts.
+let previousContext : Object = emptyObject;
+
+function getUnmaskedContext(workInProgress : Fiber) : Object {
+  const hasOwnContext = isContextProvider(workInProgress);
+  if (hasOwnContext) {
+    // If the fiber is a context provider itself, when we read its context
+    // we have already pushed its own child context on the stack. A context
+    // provider should not "see" its own child context. Therefore we read the
+    // previous (parent) context instead for a context provider.
+    return previousContext;
+  }
+  return contextStackCursor.current;
+}
 
 exports.getMaskedContext = function(workInProgress : Fiber) {
   const type = workInProgress.type;
@@ -47,20 +63,10 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
     return emptyObject;
   }
 
-  const hasOwnContext = isContextProvider(workInProgress);
-  // If the fiber is a context provider itself, by the time we read its context
-  // we have already pushed its own child context on the stack. A context
-  // provider should not "see" its own child context. Therefore we read the
-  // previous (parent) context instead for context providers.
-  const unmaskedContext = hasOwnContext ?
-    getPrevious(contextStackCursor) :
-    contextStackCursor.current;
-
+  const unmaskedContext = getUnmaskedContext(workInProgress);
   const context = {};
-  if (unmaskedContext != null) {
-    for (let key in contextTypes) {
-      context[key] = unmaskedContext[key];
-    }
+  for (let key in contextTypes) {
+    context[key] = unmaskedContext[key];
   }
 
   if (__DEV__) {
@@ -87,6 +93,7 @@ function popContextProvider(fiber : Fiber) : void {
   if (!isContextProvider(fiber)) {
     return;
   }
+
   pop(didPerformWorkStackCursor, fiber);
   pop(contextStackCursor, fiber);
 }
@@ -99,7 +106,7 @@ exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, di
   push(didPerformWorkStackCursor, didChange, fiber);
 };
 
-function processChildContext(fiber : Fiber, parentContext : ?Object, isReconciling : boolean): Object {
+function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
   const childContext = instance.getChildContext();
@@ -137,24 +144,36 @@ exports.pushContextProvider = function(workInProgress : Fiber) : boolean {
   const memoizedMergedChildContext = (
     instance &&
     instance.__reactInternalMemoizedMergedChildContext
-  ) || null;
+  ) || emptyObject;
+
+  // Remember the parent context so we can merge with it later.
+  previousContext = contextStackCursor.current;
   push(contextStackCursor, memoizedMergedChildContext, workInProgress);
   push(didPerformWorkStackCursor, false, workInProgress);
+
   return true;
 };
 
 exports.invalidateContextProvider = function(workInProgress : Fiber) : void {
   const instance = workInProgress.stateNode;
   invariant(instance, 'Expected to have an instance by this point.');
-  const parentContext = getPrevious(contextStackCursor);
-  const mergedContext = processChildContext(workInProgress, parentContext, true);
+
+  // Merge parent and own context.
+  const mergedContext = processChildContext(workInProgress, previousContext, true);
   instance.__reactInternalMemoizedMergedChildContext = mergedContext;
-  replace(contextStackCursor, mergedContext, workInProgress);
-  replace(didPerformWorkStackCursor, true, workInProgress);
+
+  // Replace the old (or empty) context with the new one.
+  // It is important to unwind the context in the reverse order.
+  pop(didPerformWorkStackCursor, workInProgress);
+  pop(contextStackCursor, workInProgress);
+  // Now push the new context and mark that it has changed.
+  push(contextStackCursor, mergedContext, workInProgress);
+  push(didPerformWorkStackCursor, true, workInProgress);
 };
 
 exports.resetContext = function() : void {
-  contextStackCursor.current = null;
+  previousContext = emptyObject;
+  contextStackCursor.current = emptyObject;
   didPerformWorkStackCursor.current = false;
 };
 

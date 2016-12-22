@@ -34,18 +34,6 @@ exports.createCursor = function<T>(defaultValue : T) : StackCursor<T> {
   };
 };
 
-exports.getPrevious = function<T>(
-  cursor : StackCursor<T>,
-) : T | null {
-  if (index < 0) {
-    if (__DEV__) {
-      warning(false, 'Unexpected read of previous.');
-    }
-    return null;
-  }
-  return valueStack[index];
-};
-
 exports.isEmpty = function() : boolean {
   return index === -1;
 };
@@ -89,27 +77,6 @@ exports.push = function<T>(
 
   if (__DEV__) {
     fiberStack[index] = fiber;
-  }
-
-  cursor.current = value;
-};
-
-exports.replace = function<T>(
-  cursor : StackCursor<T>,
-  value : T,
-  fiber: Fiber,
-) : void {
-  if (index < 0) {
-    if (__DEV__) {
-      warning(false, 'Unexpected replace.');
-    }
-    return;
-  }
-
-  if (__DEV__) {
-    if (fiber !== fiberStack[index]) {
-      warning(false, 'Unexpected Fiber replaced.');
-    }
   }
 
   cursor.current = value;
