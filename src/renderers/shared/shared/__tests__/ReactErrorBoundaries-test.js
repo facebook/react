@@ -733,6 +733,58 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
+  it('renders an error state if context provider throws in componentWillMount', () => {
+    class BrokenComponentWillMountWithContext extends React.Component {
+      static childContextTypes = {foo: React.PropTypes.number};
+      getChildContext() {
+        return {foo: 42};
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+      componentWillMount() {
+        throw new Error('Hello');
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenComponentWillMountWithContext />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
+
+  it('renders an error state if module-style context provider throws in componentWillMount', () => {
+    function BrokenComponentWillMountWithContext() {
+      return {
+        getChildContext() {
+          return {foo: 42};
+        },
+        render() {
+          return <div>{this.props.children}</div>;
+        },
+        componentWillMount() {
+          throw new Error('Hello');
+        },
+      };
+    }
+    BrokenComponentWillMountWithContext.childContextTypes = {
+      foo: React.PropTypes.number,
+    };
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenComponentWillMountWithContext />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
+
   it('mounts the error message if mounting fails', () => {
     function renderError(error) {
       return (

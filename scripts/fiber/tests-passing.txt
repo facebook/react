@@ -1413,6 +1413,8 @@ src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
 * renders an error state if child throws in render
 * renders an error state if child throws in constructor
 * renders an error state if child throws in componentWillMount
+* renders an error state if context provider throws in componentWillMount
+* renders an error state if module-style context provider throws in componentWillMount
 * mounts the error message if mounting fails
 * propagates errors on retry on mounting
 * propagates errors inside boundary during componentWillMount

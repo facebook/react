@@ -27,8 +27,10 @@ var {
 } = require('ReactTypeOfWork');
 const {
   createCursor,
+  getPrevious,
   pop,
   push,
+  replace,
 } = require('ReactFiberStack');
 
 if (__DEV__) {
@@ -38,10 +40,6 @@ if (__DEV__) {
 let contextStackCursor : StackCursor<?Object> = createCursor((null: ?Object));
 let didPerformWorkStackCursor : StackCursor<boolean> = createCursor(false);
 
-function getUnmaskedContext() {
-  return contextStackCursor.current || emptyObject;
-}
-
 exports.getMaskedContext = function(workInProgress : Fiber) {
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
@@ -49,11 +47,17 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
     return emptyObject;
   }
 
-  const unmaskedContext = getUnmaskedContext();
-  const context = {};
+  const hasOwnContext = isContextProvider(workInProgress);
+  // If it is a context provider then use the previous context instead.
+  const unmaskedContext = hasOwnContext ?
+    getPrevious(contextStackCursor) :
+    contextStackCursor.current;
 
-  for (let key in contextTypes) {
-    context[key] = unmaskedContext[key];
+  const context = {};
+  if (unmaskedContext != null) {
+    for (let key in contextTypes) {
+      context[key] = unmaskedContext[key];
+    }
   }
 
   if (__DEV__) {
@@ -71,9 +75,7 @@ exports.hasContextChanged = function() : boolean {
 function isContextProvider(fiber : Fiber) : boolean {
   return (
     fiber.tag === ClassComponent &&
-    // Instance might be null, if the fiber errored during construction
-    fiber.stateNode &&
-    typeof fiber.stateNode.getChildContext === 'function'
+    fiber.type.childContextTypes != null
   );
 }
 exports.isContextProvider = isContextProvider;
@@ -91,7 +93,7 @@ exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, di
   push(didPerformWorkStackCursor, didChange, fiber);
 };
 
-function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
+function processChildContext(fiber : Fiber, parentContext : ?Object, isReconciling : boolean): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
   const childContext = instance.getChildContext();
@@ -117,21 +119,29 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
 }
 exports.processChildContext = processChildContext;
 
-exports.pushContextProvider = function(workInProgress : Fiber, didPerformWork : boolean) : void {
+exports.pushContextProvider = function(workInProgress : Fiber) : void {
   const instance = workInProgress.stateNode;
-  const memoizedMergedChildContext = instance.__reactInternalMemoizedMergedChildContext;
-  const canReuseMergedChildContext = !didPerformWork && memoizedMergedChildContext != null;
+  // We push the context as early as possible to ensure stack integrity.
+  // If the instance does not exist yet, we will push null at first,
+  // and replace it on the stack later when invalidating the context.
+  const memoizedMergedChildContext = (
+    instance &&
+    instance.__reactInternalMemoizedMergedChildContext
+  ) || null;
+  push(contextStackCursor, memoizedMergedChildContext, workInProgress);
+  push(didPerformWorkStackCursor, false, workInProgress);
+};
 
-  let mergedContext = null;
-  if (canReuseMergedChildContext) {
-    mergedContext = memoizedMergedChildContext;
-  } else {
-    mergedContext = processChildContext(workInProgress, getUnmaskedContext(), true);
-    instance.__reactInternalMemoizedMergedChildContext = mergedContext;
+exports.invalidateContextProvider = function(workInProgress : Fiber) : void {
+  const instance = workInProgress.stateNode;
+  if (instance == null) {
+    throw new Error('Expected to have an instance by this point.');
   }
-
-  push(contextStackCursor, mergedContext, workInProgress);
-  push(didPerformWorkStackCursor, didPerformWork, workInProgress);
+  const parentContext = getPrevious(contextStackCursor);
+  const mergedContext = processChildContext(workInProgress, parentContext, true);
+  instance.__reactInternalMemoizedMergedChildContext = mergedContext;
+  replace(contextStackCursor, mergedContext, workInProgress);
+  replace(didPerformWorkStackCursor, true, workInProgress);
 };
 
 exports.resetContext = function() : void {

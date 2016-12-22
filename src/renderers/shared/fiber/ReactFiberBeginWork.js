@@ -35,6 +35,7 @@ var {
   hasContextChanged,
   pushContextProvider,
   pushTopLevelContextObject,
+  invalidateContextProvider,
 } = require('ReactFiberContext');
 var {
   IndeterminateComponent,
@@ -215,6 +216,14 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function updateClassComponent(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+    // Push context providers early to prevent context stack mismatches.
+    // During mounting we don't know the child context yet as the instance doesn't exist.
+    // We will invalidate the child context in finishClassComponent() right after rendering.
+    const hasContext = isContextProvider(workInProgress);
+    if (hasContext) {
+      pushContextProvider(workInProgress);
+    }
+
     let shouldUpdate;
     if (!current) {
       if (!workInProgress.stateNode) {
@@ -229,10 +238,15 @@ module.exports = function<T, P, I, TI, C, CX>(
     } else {
       shouldUpdate = updateClassInstance(current, workInProgress, priorityLevel);
     }
-    return finishClassComponent(current, workInProgress, shouldUpdate);
+    return finishClassComponent(current, workInProgress, shouldUpdate, hasContext);
   }
 
-  function finishClassComponent(current : ?Fiber, workInProgress : Fiber, shouldUpdate : boolean) {
+  function finishClassComponent(
+    current : ?Fiber,
+    workInProgress : Fiber,
+    shouldUpdate : boolean,
+    hasContext : boolean,
+  ) {
     // Schedule side-effects
     if (shouldUpdate) {
       workInProgress.effectTag |= Update;
@@ -246,11 +260,6 @@ module.exports = function<T, P, I, TI, C, CX>(
           workInProgress.effectTag |= Update;
         }
       }
-
-      // Don't forget to push the context before returning.
-      if (isContextProvider(workInProgress)) {
-        pushContextProvider(workInProgress, false);
-      }
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -259,9 +268,10 @@ module.exports = function<T, P, I, TI, C, CX>(
     ReactCurrentOwner.current = workInProgress;
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
-    // Put context on the stack because we will work on children
-    if (isContextProvider(workInProgress)) {
-      pushContextProvider(workInProgress, true);
+
+    // The context might have changed so we need to recalculate it.
+    if (hasContext) {
+      invalidateContextProvider(workInProgress);
     }
     return workInProgress.child;
   }
@@ -417,9 +427,18 @@ module.exports = function<T, P, I, TI, C, CX>(
     if (typeof value === 'object' && value && typeof value.render === 'function') {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
+
+      // Push context providers early to prevent context stack mismatches.
+      // During mounting we don't know the child context yet as the instance doesn't exist.
+      // We will invalidate the child context in finishClassComponent() right after rendering.
+      const hasContext = isContextProvider(workInProgress);
+      if (hasContext) {
+        pushContextProvider(workInProgress);
+      }
+
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, priorityLevel);
-      return finishClassComponent(current, workInProgress, true);
+      return finishClassComponent(current, workInProgress, true, hasContext);
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
@@ -536,7 +555,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     switch (workInProgress.tag) {
       case ClassComponent:
         if (isContextProvider(workInProgress)) {
-          pushContextProvider(workInProgress, false);
+          pushContextProvider(workInProgress);
         }
         break;
       case HostPortal:
