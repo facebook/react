@@ -20,10 +20,16 @@
         width: 100%;
       }
 
-      form {
+      .container {
         max-width: 900px;
         margin: 0 auto;
         text-align: center;
+      }
+
+      .output {
+        word-wrap: break-word;
+        max-width: 780px;
+        margin: auto;
       }
 
       fieldset {
@@ -33,6 +39,7 @@
         vertical-align: top;
         width: 45%;
       }
+
     </style>
   </head>
   <body>
@@ -55,17 +62,23 @@
 
         render() {
           return (
-            <form>
-              <fieldset>
-                <legend>Controlled</legend>
-                <textarea value={this.state.value} onChange={this.onChange.bind(this)} />
-              </fieldset>
+            <div className='container'>
+              <form>
+                <fieldset>
+                  <legend>Controlled</legend>
+                  <textarea value={this.state.value} onChange={this.onChange.bind(this)} />
+                </fieldset>
 
-              <fieldset>
-                <legend>Uncontrolled</legend>
-                <textarea defaultValue="" />
-              </fieldset>
-            </form>
+                <fieldset>
+                  <legend>Uncontrolled</legend>
+                  <textarea defaultValue="" />
+                </fieldset>
+              </form>
+              <h4>Controlled Output:</h4>
+                <div className='output'>
+                  {this.state.value}
+                </div>
+            </div>
           )
         }
       }
