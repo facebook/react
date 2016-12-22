@@ -280,7 +280,8 @@ module.exports = function<T, P, I, TI, C, CX>(
         root.pendingContext,
         root.pendingContext !== root.context
       );
-    } else {
+    } else if (root.context) {
+      // Should always be set
       pushTopLevelContextObject(
         workInProgress,
         root.context,

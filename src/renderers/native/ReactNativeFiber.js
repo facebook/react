@@ -361,12 +361,10 @@ const ReactNative = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = NativeRenderer.mountContainer(element, containerTag, null, callback);
-
+      root = NativeRenderer.createContainer(containerTag);
       roots.set(containerTag, root);
-    } else {
-      NativeRenderer.updateContainer(element, root, null, callback);
     }
+    NativeRenderer.updateContainer(element, root, null, callback);
 
     return NativeRenderer.getPublicRootInstance(root);
   },
