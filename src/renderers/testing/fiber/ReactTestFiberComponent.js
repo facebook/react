@@ -11,23 +11,34 @@
  * @flow
  */
 
+var instanceCounter = 0;
+
 var ReactTestFiberComponent = {
   createElement(type, rawProps, rootContainerInstance) {
-    console.log('ReactTestFiberComponent#createElement');
     const {children, ...props} = rawProps;
-
-    return {
+    var inst = {
+      id: instanceCounter++,
       type: type,
+      children: typeof children === 'undefined' ? null : Array.isArray(children) ? children : [children],
       props: props,
-      children: children || null,
-      $$typeof: 'lol'
     };
+    // Hide from unit tests
+    Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
+    Object.defineProperty(inst, '$$typeof', {
+      value: Symbol.for('react.test.json'),
+    });
+    // todo: something like this?
+    // const mockInst = rootContainerInstance.createNodeMock(inst);
+    return inst;
   },
   setInitialProperties() {
-    console.log('ReactTestFiberComponent#setInitialProperties');
+    throw new Error('TODO: setInitialProperties');
   },
-  updateProperties() {
-    console.log('ReactTestFiberComponent#updateProperties');
+  updateProperties(element, type, oldProps, newProps) {
+    const {children, ...props} = newProps;
+    element.type = type;
+    element.props = props;
+    element.children = typeof children === 'undefined' ? null : Array.isArray(children) ? children : [children];
   },
 };
 
