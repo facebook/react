@@ -328,9 +328,10 @@ class Surface extends Component {
 
     this._surface = Mode.Surface(+width, +height, this._tagRef);
 
-    this._mountNode = ARTRenderer.mountContainer(
+    this._mountNode = ARTRenderer.createContainer(this._surface);
+    ARTRenderer.updateContainer(
       this.props.children,
-      this._surface,
+      this._mountNode,
       this,
     );
   }

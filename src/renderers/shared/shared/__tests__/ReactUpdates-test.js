@@ -1105,4 +1105,41 @@ describe('ReactUpdates', () => {
     });
     expect(container.textContent).toBe('b');
   });
+
+  it('handles reentrant mounting in synchronous mode', () => {
+    var mounts = 0;
+    class Editor extends React.Component {
+      render() {
+        return <div>{this.props.text}</div>;
+      }
+      componentDidMount() {
+        mounts++;
+        // This should be called only once but we guard just in case.
+        if (!this.props.rendered) {
+          this.props.onChange({rendered: true});
+        }
+      }
+    }
+
+    var container = document.createElement('div');
+    function render() {
+      ReactDOM.render(
+        <Editor
+          onChange={(newProps) => {
+            props = {...props, ...newProps};
+            render();
+          }}
+          {...props}
+        />,
+        container
+      );
+    }
+
+    var props = {text: 'hello', rendered: false};
+    render();
+    props = {...props, text: 'goodbye'};
+    render();
+    expect(container.textContent).toBe('goodbye');
+    expect(mounts).toBe(1);
+  });
 });

@@ -289,16 +289,15 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
 
   let container : DOMContainerElement =
     containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
-  let root;
-  if (!container._reactRootContainer) {
+  let root = container._reactRootContainer;
+  if (!root) {
     // First clear any existing content.
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.mountContainer(children, container, parentComponent, callback);
-  } else {
-    DOMRenderer.updateContainer(children, root = container._reactRootContainer, parentComponent, callback);
+    root = container._reactRootContainer = DOMRenderer.createContainer(container);
   }
+  DOMRenderer.updateContainer(children, root, parentComponent, callback);
   return DOMRenderer.getPublicRootInstance(root);
 }
 

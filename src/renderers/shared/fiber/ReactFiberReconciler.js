@@ -75,7 +75,7 @@ export type HostConfig<T, P, I, TI, C, CX> = {
 };
 
 export type Reconciler<C, I, TI> = {
-  mountContainer(element : ReactNodeList, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>) : OpaqueNode,
+  createContainer(containerInfo : C) : OpaqueNode,
   updateContainer(element : ReactNodeList, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
   /* eslint-disable no-undef */
@@ -119,16 +119,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   return {
 
-    mountContainer(element : ReactNodeList, containerInfo : C, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : OpaqueNode {
-      const context = getContextForSubtree(parentComponent);
-      const root = createFiberRoot(containerInfo, context);
+    createContainer(containerInfo : C) : OpaqueNode {
+      const root = createFiberRoot(containerInfo);
       const current = root.current;
-
-      scheduleTopLevelUpdate(current, element, callback);
-
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onMountContainer(root);
-      }
 
       // It may seem strange that we don't return the root here, but that will
       // allow us to have containers that are in the middle of the tree instead
@@ -141,19 +134,26 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       const root : FiberRoot = (container.stateNode : any);
       const current = root.current;
 
-      root.pendingContext = getContextForSubtree(parentComponent);
-
-      scheduleTopLevelUpdate(current, element, callback);
-
       if (__DEV__) {
         if (ReactFiberInstrumentation.debugTool) {
-          if (element === null) {
+          if (current.alternate === null) {
+            ReactFiberInstrumentation.debugTool.onMountContainer(root);
+          } else if (element === null) {
             ReactFiberInstrumentation.debugTool.onUnmountContainer(root);
           } else {
             ReactFiberInstrumentation.debugTool.onUpdateContainer(root);
           }
         }
       }
+
+      const context = getContextForSubtree(parentComponent);
+      if (root.context === null) {
+        root.context = context;
+      } else {
+        root.pendingContext = context;
+      }
+
+      scheduleTopLevelUpdate(current, element, context, callback);
     },
 
     performWithPriority,
