@@ -65,6 +65,7 @@ var {
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var ReactComponentTreeHook = require('ReactComponentTreeHook');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -137,6 +138,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   let firstUncaughtError : Error | null = null;
   let fatalError : Error | null = null;
 
+  if (__DEV__) {
+    var errorStacks : Map<Error, string> = new Map();
+  }
+
   let isCommitting : boolean = false;
   let isUnmounting : boolean = false;
 
@@ -206,6 +211,10 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // a single point which happens right before any new work and
       // unfortunately this is it.
       resetContextStack();
+
+      if (__DEV__) {
+        errorStacks.clear();
+      }
 
       return cloneFiber(
         highestPriorityRoot.current,
@@ -781,11 +790,23 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       let e = fatalError;
       fatalError = null;
       firstUncaughtError = null;
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          const stackInfo = errorStacks.get(e);
+          ReactFiberInstrumentation.debugTool.onUncaughtError(e, stackInfo);
+        }
+      }
       throw e;
     }
     if (firstUncaughtError) {
       let e = firstUncaughtError;
       firstUncaughtError = null;
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          const stackInfo = errorStacks.get(e);
+          ReactFiberInstrumentation.debugTool.onUncaughtError(e, stackInfo);
+        }
+      }
       throw e;
     }
   }
@@ -799,6 +820,16 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
+
+    if (__DEV__) {
+      let stackInfo = ReactComponentTreeHook
+        .getStackAddendumByWorkInProgressFiber(failedWork);
+      errorStacks.set(
+        error,
+        // Trim leading newline
+        stackInfo.substring(1)
+      );
+    }
 
     // Search for the nearest error boundary.
     let boundary : ?Fiber = null;
