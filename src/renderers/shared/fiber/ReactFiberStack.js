@@ -14,9 +14,9 @@
 
 import type { Fiber } from 'ReactFiber';
 
-export type StackCursor<T> = {|
+export type StackCursor<T> = {
   current: T
-|};
+};
 
 const warning = require('warning');
 
