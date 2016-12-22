@@ -14,16 +14,23 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { HostConfig } from 'ReactFiberReconciler';
+import type { StackCursor } from 'ReactFiberStack';
+
+const emptyObject = require('emptyObject');
+
+const {
+  createCursor,
+  pop,
+  push,
+} = require('ReactFiberStack');
 
 export type HostContext<C, CX> = {
-  getRootHostContainer() : C,
   getHostContext() : CX,
-
-  pushHostContext(fiber : Fiber) : void,
+  getRootHostContainer() : C,
+  popHostContainer(fiber : Fiber) : void,
   popHostContext(fiber : Fiber) : void,
-
-  pushHostContainer(container : C) : void,
-  popHostContainer() : void,
+  pushHostContainer(fiber : Fiber, container : C) : void,
+  pushHostContext(fiber : Fiber) : void,
   resetHostContainer() : void,
 };
 
@@ -35,129 +42,88 @@ module.exports = function<T, P, I, TI, C, CX>(
     getRootHostContext,
   } = config;
 
-  // Context stack is reused across the subtrees.
-  // We use a null sentinel on the fiber stack to separate them.
-  let contextFibers : Array<Fiber | null> = [];
-  let contextValues : Array<CX | null> = [];
-  let contextDepth : number = -1;
-  // Current context for fast access.
-  let currentContextValue : CX | null = null;
-  // Current root instance for fast access.
-  let rootInstance : C | null = null;
-  // A stack of outer root instances if we're in a portal.
-  let portalStack : Array<C | null> = [];
-  let portalDepth : number = -1;
+  let contextStackCursor : StackCursor<?CX> = createCursor((null: ?CX));
+  let contextFiberStackCursor : StackCursor<?Fiber> = createCursor((null: ?Fiber));
+  let rootInstanceStackCursor : StackCursor<?C> = createCursor((null: ?C));
 
   function getRootHostContainer() : C {
+    const rootInstance = rootInstanceStackCursor.current;
     if (rootInstance == null) {
       throw new Error('Expected root container to exist.');
     }
     return rootInstance;
   }
 
-  function pushHostContainer(nextRootInstance : C) {
+  function pushHostContainer(fiber : Fiber, nextRootInstance : C) {
+    // Push current root instance onto the stack;
+    // This allows us to reset root when portals are popped.
+    push(rootInstanceStackCursor, nextRootInstance, fiber);
+
     const nextRootContext = getRootHostContext(nextRootInstance);
-    if (rootInstance == null) {
-      // We're entering a root.
-      rootInstance = nextRootInstance;
-    } else {
-      // We're entering a portal.
-      // Save the current root to the portal stack.
-      portalDepth++;
-      portalStack[portalDepth] = rootInstance;
-      rootInstance = nextRootInstance;
-    }
-    // Push the next root or portal context.
-    contextDepth++;
-    contextFibers[contextDepth] = null;
-    contextValues[contextDepth] = nextRootContext;
-    currentContextValue = nextRootContext;
+
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
+    push(contextStackCursor, nextRootContext, fiber);
   }
 
-  function popHostContainer() {
-    if (portalDepth === -1) {
-      // We're popping the root.
-      rootInstance = null;
-      currentContextValue = null;
-      contextDepth = -1;
-    } else {
-      // We're popping a portal.
-      // Restore the root instance.
-      rootInstance = portalStack[portalDepth];
-      portalStack[portalDepth] = null;
-      portalDepth--;
-      // If we pushed any context while in a portal, we need to roll it back.
-      if (contextDepth > -1) {
-        contextDepth--;
-        if (contextDepth > -1) {
-          currentContextValue = contextValues[contextDepth];
-        } else {
-          currentContextValue = null;
-        }
-      }
-    }
+  function popHostContainer(fiber : Fiber) {
+    pop(contextStackCursor, fiber);
+    pop(contextFiberStackCursor, fiber);
+    pop(rootInstanceStackCursor, fiber);
   }
 
   function getHostContext() : CX {
-    if (currentContextValue == null) {
+    const context = contextStackCursor.current;
+    if (context == null) {
       throw new Error('Expected host context to exist.');
     }
-    return currentContextValue;
+    return context;
   }
 
   function pushHostContext(fiber : Fiber) : void {
-    if (currentContextValue == null) {
+    const rootInstance = rootInstanceStackCursor.current;
+    if (rootInstance == null) {
       throw new Error('Expected root host context to exist.');
     }
-    const nextContextValue = getChildHostContext(currentContextValue, fiber.type, rootInstance);
-    if (currentContextValue === nextContextValue) {
+
+    const context = contextStackCursor.current || emptyObject;
+    const nextContext = getChildHostContext(context, fiber.type, rootInstance);
+
+    // Don't push this Fiber's context unless it's unique.
+    if (context === nextContext) {
       return;
     }
-    contextDepth++;
-    contextFibers[contextDepth] = fiber;
-    contextValues[contextDepth] = nextContextValue;
-    currentContextValue = nextContextValue;
+
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
+    push(contextStackCursor, nextContext, fiber);
   }
 
   function popHostContext(fiber : Fiber) : void {
-    if (contextDepth === -1) {
-      return;
-    }
-    if (contextFibers == null || contextValues == null) {
-      throw new Error('Expected host context stacks to exist when index is more than -1.');
-    }
-    if (fiber !== contextFibers[contextDepth]) {
+    // Do not pop unless this Fiber provided the current context.
+    // pushHostContext() only pushes Fibers that provide unique contexts.
+    if (contextFiberStackCursor.current !== fiber) {
       return;
     }
 
-    contextFibers[contextDepth] = null;
-    contextValues[contextDepth] = null;
-    contextDepth--;
-    if (contextDepth > -1) {
-      currentContextValue = contextValues[contextDepth];
-    } else {
-      currentContextValue = null;
-    }
+    pop(contextStackCursor, fiber);
+    pop(contextFiberStackCursor, fiber);
   }
 
   function resetHostContainer() {
-    // Reset portal stack pointer because we're starting from the very top.
-    portalDepth = -1;
-    // Reset current container state.
-    rootInstance = null;
-    contextDepth = -1;
-    currentContextValue = null;
+    contextStackCursor.current = null;
+    rootInstanceStackCursor.current = null;
   }
 
   return {
-    getRootHostContainer,
     getHostContext,
-
-    pushHostContext,
-    popHostContext,
-
-    pushHostContainer,
+    getRootHostContainer,
     popHostContainer,
+    popHostContext,
+    pushHostContainer,
+    pushHostContext,
     resetHostContainer,
   };
 };

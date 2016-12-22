@@ -176,7 +176,7 @@ module.exports = function<T, P, I, TI, C, CX>(
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         if (isContextProvider(workInProgress)) {
-          popContextProvider();
+          popContextProvider(workInProgress);
         }
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
@@ -303,7 +303,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
-        popHostContainer();
+        popHostContainer(workInProgress);
         return null;
 
       // Error cases

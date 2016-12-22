@@ -270,14 +270,19 @@ module.exports = function<T, P, I, TI, C, CX>(
     const root = (workInProgress.stateNode : FiberRoot);
     if (root.pendingContext) {
       pushTopLevelContextObject(
+        workInProgress,
         root.pendingContext,
         root.pendingContext !== root.context
       );
     } else {
-      pushTopLevelContextObject(root.context, false);
+      pushTopLevelContextObject(
+        workInProgress,
+        root.context,
+        false
+      );
     }
 
-    pushHostContainer(root.containerInfo);
+    pushHostContainer(workInProgress, root.containerInfo);
 
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue) {
@@ -444,7 +449,7 @@ module.exports = function<T, P, I, TI, C, CX>(
   }
 
   function updatePortalComponent(current, workInProgress) {
-    pushHostContainer(workInProgress.stateNode.containerInfo);
+    pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
     const priorityLevel = workInProgress.pendingWorkPriority;
     let nextChildren = workInProgress.pendingProps;
     if (hasContextChanged()) {
@@ -535,7 +540,7 @@ module.exports = function<T, P, I, TI, C, CX>(
         }
         break;
       case HostPortal:
-        pushHostContainer(workInProgress.stateNode.containerInfo);
+        pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
         break;
     }
     // TODO: What if this is currently in progress?
