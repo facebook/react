@@ -58,5 +58,8 @@ every time a controlled input's value changes, controlled inputs will never
 
 ## Number inputs
 
-Chrome (55) and Safari (10) change the display value of number inputs any time
-the value property or attribute are changed.
+Chrome (55) and Safari (10) attempt to "correct" the value of number inputs any
+time the value property or attribute are changed. This leads to some edge documented
+here:
+
+https://github.com/facebook/react/pull/7359#issuecomment-256499693
