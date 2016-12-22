@@ -153,7 +153,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         root.pendingContext = context;
       }
 
-      scheduleTopLevelUpdate(current, element, context, callback);
+      scheduleTopLevelUpdate(current, element, callback);
     },
 
     performWithPriority,
