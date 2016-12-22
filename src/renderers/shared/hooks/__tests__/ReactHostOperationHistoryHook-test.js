@@ -20,7 +20,7 @@ describe('ReactHostOperationHistoryHook', () => {
   var ReactHostOperationHistoryHook;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactPerf = require('ReactPerf');

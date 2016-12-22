@@ -47,7 +47,7 @@ function isTagStackValid(stack) {
 
 describe('ReactContextValidator', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     validateDOMNesting = require('validateDOMNesting');
   });

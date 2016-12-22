@@ -26,7 +26,7 @@ describe('ReactPropTypesProduction', function() {
       env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
     };
 
-    jest.resetModuleRegistry();
+    jest.resetModules();
     PropTypes = require('ReactPropTypes');
     React = require('React');
     ReactPropTypeLocations = require('ReactPropTypeLocations');
@@ -200,7 +200,7 @@ describe('ReactPropTypesProduction', function() {
 
   describe('Custom validator', function() {
     beforeEach(function() {
-      jest.resetModuleRegistry();
+      jest.resetModules();
     });
 
     it('should not have been called', function() {

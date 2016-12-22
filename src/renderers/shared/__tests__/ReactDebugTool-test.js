@@ -15,7 +15,7 @@ describe('ReactDebugTool', () => {
   var ReactDebugTool;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     ReactDebugTool = require('ReactDebugTool');
   });
 

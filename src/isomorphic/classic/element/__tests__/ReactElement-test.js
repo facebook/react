@@ -21,7 +21,7 @@ describe('ReactElement', () => {
   var originalSymbol;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     // Delete the native Symbol if we have one to ensure we test the
     // unpolyfilled environment.
@@ -500,7 +500,7 @@ describe('ReactElement', () => {
       return OTHER_SYMBOL;
     };
 
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
 
@@ -533,7 +533,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
   var Child;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');

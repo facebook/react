@@ -17,7 +17,7 @@ var ReactCoroutine;
 
 describe('ReactCoroutine', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
     ReactCoroutine = require('ReactCoroutine');

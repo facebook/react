@@ -23,7 +23,7 @@ describe('ReactChildReconciler', () => {
   }
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');

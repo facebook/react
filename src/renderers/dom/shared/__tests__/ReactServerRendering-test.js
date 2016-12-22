@@ -25,7 +25,7 @@ var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactDOMServer', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');

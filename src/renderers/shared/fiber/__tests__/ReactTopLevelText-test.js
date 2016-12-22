@@ -18,7 +18,7 @@ var ReactNoop;
 // probably move to one of the other test files once it is official.
 describe('ReactTopLevelText', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
   });

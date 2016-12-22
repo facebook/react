@@ -40,7 +40,7 @@ describe('BeforeInputEventPlugin', function() {
 
   function initialize(simulator) {
     // Need to delete cached modules before executing simulator
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     // Initialize variables in the scope of BeforeInputEventPlugin
     simulator();

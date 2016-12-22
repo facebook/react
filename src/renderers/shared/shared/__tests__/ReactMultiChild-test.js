@@ -21,7 +21,7 @@ describe('ReactMultiChild', () => {
   var ReactDOMFeatureFlags;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');

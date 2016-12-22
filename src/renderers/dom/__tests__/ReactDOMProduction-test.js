@@ -25,7 +25,7 @@ describe('ReactDOMProduction', () => {
       env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
     };
 
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
   });

@@ -18,7 +18,7 @@ describe('EventPluginHub', () => {
   var ReactTestUtils;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
