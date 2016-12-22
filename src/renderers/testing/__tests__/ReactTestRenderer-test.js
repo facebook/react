@@ -56,17 +56,18 @@ describe('ReactTestRenderer', () => {
     }
   });
 
-  it.only('can render a composite component', () => {
+  it('can render a composite component', () => {
     class Component extends React.Component {
       render() {
         return (
-          <Child />
+          <div className="purple">
+            <Child />
+          </div>
         );
       }
     }
 
     var Child = () => {
-      renders++;
       return <moo />;
     };
 
@@ -75,13 +76,36 @@ describe('ReactTestRenderer', () => {
       type: 'div',
       props: { className: 'purple' },
       children: [
-        7,
         { type: 'moo', props: {}, children: null },
       ],
     });
   });
 
-  it.only('renders some basics with an update', () => {
+  it.skip('lol', () => {
+    class Component extends React.Component {
+      render() {
+        return (
+          <div className="purple">
+            <div ref={div => console.log('div ref', div)} />
+            <Child ref={child => console.log('child ref', child)} />
+          </div>
+        );
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        return (
+          <div className="green" />
+        )
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Component />);
+    renderer.toJSON();
+  });
+
+  it.skip('renders some basics with an update', () => {
     var renders = 0;
 
     class Component extends React.Component {
@@ -92,7 +116,7 @@ describe('ReactTestRenderer', () => {
         return (
           <div className="purple">
             {this.state.x}
-            <Child />
+            <Child ref={child => console.log('boo bboo boooo', child)} />
             <Null />
           </div>
         );
@@ -207,7 +231,7 @@ describe('ReactTestRenderer', () => {
     });
   });
 
-  it.skip('does the full lifecycle', () => {
+  it('does the full lifecycle', () => {
     var log = [];
     class Log extends React.Component {
       render() {
@@ -236,7 +260,7 @@ describe('ReactTestRenderer', () => {
     ]);
   });
 
-  it.skip('gives a ref to native components', () => {
+  it('gives a ref to native components', () => {
     var log = [];
     ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
     expect(log).toEqual([null]);
@@ -343,7 +367,8 @@ describe('ReactTestRenderer', () => {
     ]);
   });
 
-  it.skip('supports unmounting when using refs', () => {
+  // this is only passing in Fiber because refs aren't actually working
+  it('supports unmounting when using refs', () => {
     class Foo extends React.Component {
       render() {
         return <div ref="foo" />;
@@ -356,7 +381,7 @@ describe('ReactTestRenderer', () => {
     expect(() => inst.unmount()).not.toThrow();
   });
 
-  it.skip('supports unmounting inner instances', () => {
+  it('supports unmounting inner instances', () => {
     let count = 0;
     class Foo extends React.Component {
       componentWillUnmount() {

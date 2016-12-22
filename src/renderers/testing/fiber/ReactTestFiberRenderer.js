@@ -26,7 +26,7 @@ type ReactTestRendererJSON = {
   $$typeof?: any
 }
 
-var createElement = (type, rawProps) => {
+var createElement = (type, rawProps, rootContainerInstance) => {
   const {children, ...props} = rawProps;
   var inst = {
     id: instanceCounter++,
@@ -39,6 +39,8 @@ var createElement = (type, rawProps) => {
   Object.defineProperty(inst, '$$typeof', {
     value: Symbol.for('react.test.json'),
   });
+  // todo: something like this?
+  // const mockInst = rootContainerInstance.createNodeMock(inst);
   return inst;
 };
 
@@ -83,13 +85,12 @@ var TestRenderer = ReactFiberReconciler({
     hostContext : HostContext,
     internalInstanceHandle : Object,
   ) : Instance {
-    const inst = createElement(type, props);
+    const inst = createElement(type, props, rootContainerInstance);
     return inst;
   },
 
   appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
     const appliedChild = child.text ? String(child.text) : child;
-    console.log(child);
     if (parentInstance.children == null) {
       parentInstance.children = appliedChild;
     } else if (Array.isArray(parentInstance.children)) {
@@ -203,6 +204,13 @@ var TestRenderer = ReactFiberReconciler({
     parentInstance.children.splice(index, 1);
   },
 
+  getPublicInstance(
+    privateInstance : Instance | Container,
+    hostContainerInfo
+  ) {
+    console.log('TODO: implement me for getNodeMock');
+  },
+
   scheduleAnimationCallback: window.requestAnimationFrame,
 
   scheduleDeferredCallback: window.requestIdleCallback,
@@ -212,6 +220,32 @@ var TestRenderer = ReactFiberReconciler({
 
 const rootContainers = new Map();
 const roots = new Map();
+
+var defaultTestOptions = {
+  createNodeMock: function() {
+    return null;
+  },
+};
+
+var toJSON = (instance) => {
+  var {children, ...json} = instance;
+  Object.defineProperty(json, '$$typeof', {value: Symbol.for('react.test.json')});
+
+  var childrenJSON = [];
+  if (children) {
+    children.forEach((child) => {
+      if (child.$$typeof === Symbol.for('react.element')) {
+        // childrenJSON.push(toJSON(child));
+        // skip maybe console.log('TODO: getPublicInstance');
+        // probably recurse
+      } else {
+        childrenJSON.push(child);
+      }
+    });
+  }
+  json.children = childrenJSON.length ? childrenJSON : null;
+  return json;
+};
 
 var ReactTestFiberRenderer = {
   toJSON(rootID : string = DEFAULT_ROOT_ID) {
@@ -223,12 +257,15 @@ var ReactTestFiberRenderer = {
     }
 
     const hostInstance = TestRenderer.findHostInstance(root);
-    console.log(hostInstance);
-    return hostInstance;
+    if (hostInstance === null) {
+      return hostInstance;
+    }
+
+    return toJSON(hostInstance);
   },
 
   create(element, rootID = DEFAULT_ROOT_ID, callback) {
-    const container = { rootID: rootID, children: [] };
+    const container = { rootID: rootID, children: [], createNodeMock: defaultTestOptions.createNodeMock };
     rootContainers.set(rootID, container);
     const root = TestRenderer.mountContainer(element, container, null, callback);
     roots.set(rootID, root);
@@ -239,6 +276,12 @@ var ReactTestFiberRenderer = {
       update(element) {
         const root = roots.get(rootID);
         TestRenderer.updateContainer(element, root, null, callback);
+      },
+      unmount() {
+        TestRenderer.updateContainer(null, root, null, () => {
+          rootContainers.delete(rootID);
+          roots.delete(rootID, root);
+        });
       },
       getInstance() {
         return TestRenderer.getPublicRootInstance(roots.get(rootID));
