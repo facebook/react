@@ -15,7 +15,6 @@
 
 var invariant = require('invariant');
 var ReactFiberReconciler = require('ReactFiberReconciler');
-var ReactTestFiberComponent = require('ReactTestFiberComponent');
 
 import type { ReactElement } from 'ReactElementType';
 import type { ReactInstance } from 'ReactInstanceType';
@@ -27,11 +26,35 @@ type ReactTestRendererJSON = {
   $$typeof?: any
 }
 
-var {
-  createElement,
-  setInitialProperties,
-  updateProperties,
-} = ReactTestFiberComponent;
+let instanceCounter = 0;
+var createElement = (type, rawProps, rootContainerInstance) => {
+  const {children, ...props} = rawProps;
+  var inst = {
+    id: instanceCounter++,
+    type: type,
+    children: typeof children === 'undefined' ? null : Array.isArray(children) ? children : [children],
+    props: props,
+  };
+  // Hide from unit tests
+  Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
+  Object.defineProperty(inst, '$$typeof', {
+    value: Symbol.for('react.test.json'),
+  });
+  // todo: something like this?
+  // const mockInst = rootContainerInstance.createNodeMock(inst);
+  return inst;
+};
+
+var setInitialProperties = () => {
+  throw new Error('TODO: setInitialProperties');
+};
+
+var updateProperties = (element, type, oldProps, newProps) => {
+  const {children, ...props} = newProps;
+  element.type = type;
+  element.props = props;
+  element.children = typeof children === 'undefined' ? null : Array.isArray(children) ? children : [children];
+};
 
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance : Container) : HostContext {
