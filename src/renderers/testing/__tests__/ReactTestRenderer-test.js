@@ -12,8 +12,7 @@
 'use strict';
 
 var React = require('React');
-// var ReactTestRenderer = require('ReactTestRenderer');
-var ReactTestRenderer = require('ReactTestFiberRenderer');
+var ReactTestRenderer = require('ReactTestRenderer');
 
 describe('ReactTestRenderer', () => {
   function normalizeCodeLocInfo(str) {
