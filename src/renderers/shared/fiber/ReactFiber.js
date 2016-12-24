@@ -49,6 +49,10 @@ var {
 
 var invariant = require('invariant');
 
+if (__DEV__) {
+  var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
+}
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {
@@ -359,8 +363,11 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
           ' You likely forgot to export your component from the file ' +
           'it\'s defined in.';
       }
+      const ownerName = getCurrentFiberOwnerName();
+      if (ownerName) {
+        info += ' Check the render method of `' + ownerName + '`.';
+      }
     }
-    // TODO: Stack also includes owner name in the message.
     invariant(
       false,
       'Element type is invalid: expected a string (for built-in components) ' +

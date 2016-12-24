@@ -9,9 +9,6 @@ src/addons/__tests__/ReactFragment-test.js
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
-src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
-* includes the owner name when passing null, undefined, boolean, or number
-
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
@@ -62,9 +59,6 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update
-
-src/renderers/shared/shared/__tests__/ReactComponent-test.js
-* includes owner name in the error about badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup

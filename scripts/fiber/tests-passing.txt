@@ -287,6 +287,7 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * does not warn when the array contains a non-element
 * should give context for PropType errors in nested components.
 * gives a helpful error when passing invalid types
+* includes the owner name when passing null, undefined, boolean, or number
 * should check default prop values
 * should not check the default for explicit null
 * should check declared prop types
@@ -1334,6 +1335,7 @@ src/renderers/shared/shared/__tests__/ReactComponent-test.js
 * should call refs at the correct time
 * fires the callback after a component is rendered
 * throws usefully when rendering badly-typed elements
+* includes owner name in the error about badly-typed elements
 
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should not reuse an instance when it has been unmounted
