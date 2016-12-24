@@ -48,6 +48,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     appendChild,
     insertBefore,
     removeChild,
+    getPublicInstance,
   } = config;
 
   const {
@@ -82,6 +83,13 @@ module.exports = function<T, P, I, TI, C, CX>(
       if (currentRef && currentRef !== finishedWork.ref) {
         currentRef(null);
       }
+    }
+  }
+
+  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
+    const ref = finishedWork.ref;
+    if (ref && (!current || current.ref !== ref)) {
+      ref(getPublicInstance(instance));
     }
   }
 

@@ -229,6 +229,12 @@ var TestRenderer = ReactFiberReconciler({
   scheduleDeferredCallback: window.requestIdleCallback,
 
   useSyncScheduling: true,
+
+  getPublicInstance(ref) {
+    const createNodeMock = ref.rootContainerInstance.createNodeMock;
+    return createNodeMock(ref);
+  },
+
 });
 
 var defaultTestOptions = {
