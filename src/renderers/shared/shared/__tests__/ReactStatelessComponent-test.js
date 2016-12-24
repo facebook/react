@@ -165,11 +165,21 @@ describe('ReactStatelessComponent', () => {
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail.\n' +
-      '    in Parent (at **)'
-    );
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n' +
+        '    in StatelessComponent (at **)\n' +
+        '    in Parent (at **)'
+      );
+    } else {
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n' +
+        '    in Parent (at **)'
+      );
+    }
   });
 
   it('should provide a null ref', () => {

@@ -1069,7 +1069,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('invokes ref callbacks after insertion/update/unmount', () => {
-
+    spyOn(console, 'error');
     var classInstance = null;
 
     var ops = [];
