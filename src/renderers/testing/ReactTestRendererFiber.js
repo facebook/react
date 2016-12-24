@@ -250,7 +250,8 @@ var ReactTestFiberRenderer = {
       createNodeMock = options.createNodeMock;
     }
     var container = new TestContainer('<default>', createNodeMock);
-    var root = TestRenderer.mountContainer(element, container, null, null);
+    var root = TestRenderer.createContainer(container);
+    TestRenderer.updateContainer(element, root, null, null);
     return {
       toJSON() {
         const hostInstance = TestRenderer.findHostInstance(root);
