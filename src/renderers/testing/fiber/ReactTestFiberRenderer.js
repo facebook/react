@@ -27,34 +27,96 @@ type ReactTestRendererJSON = {
 }
 
 let instanceCounter = 0;
-var createElement = (type, rawProps, rootContainerInstance) => {
-  const {children, ...props} = rawProps;
-  var inst = {
-    id: instanceCounter++,
-    type: type,
-    children: typeof children === 'undefined' ? null : Array.isArray(children) ? children : [children],
-    props: props,
-  };
-  // Hide from unit tests
-  Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
-  Object.defineProperty(inst, '$$typeof', {
-    value: Symbol.for('react.test.json'),
-  });
-  // todo: something like this?
-  // const mockInst = rootContainerInstance.createNodeMock(inst);
-  return inst;
-};
 
-var setInitialProperties = () => {
-  throw new Error('TODO: setInitialProperties');
-};
+class TestContainer {
+  constructor(rootID, createNodeMock) {
+    this.rootID = rootID;
+    this.createNodeMock = createNodeMock;
+  }
+  appendChild(child) {}
+  insertBefore(beforeChild, child) {}
+  removeChild(child) {}
+  toJSON() {}
+}
 
-var updateProperties = (element, type, oldProps, newProps) => {
-  const {children, ...props} = newProps;
-  element.type = type;
-  element.props = props;
-  element.children = typeof children === 'undefined' ? null : Array.isArray(children) ? children : [children];
-};
+class TestComponent {
+  constructor(type, props, rootContainerInstance) {
+    this.id = instanceCounter++;
+    this.type = type;
+    this.props = props;
+    this.children = [];
+    this.rootContainerInstance = rootContainerInstance;
+
+    Object.defineProperty(this, 'id', { value: this.id, enumerable: false });
+    Object.defineProperty(this, '$$typeof', {
+      value: Symbol.for('react.test.json'),
+    });
+  }
+
+  appendChild(child) {
+    const index = this.children.indexOf(child);
+    if (index !== -1) {
+      this.children.splice(index, 1);
+    }
+    this.children.push(child);
+  }
+
+  removeChild(child) {
+    const index = this.children.indexOf(child);
+    if (index === -1) {
+      throw new Error('This child does not exist.');
+    }
+    this.children.splice(index, 1);
+  }
+
+  insertBefore(beforeChild, child) {
+    const index = this.children.indexOf(child);
+    if (index !== -1) {
+      this.children.splice(index, 1);
+    }
+    const beforeIndex = this.children.indexOf(beforeChild);
+    if (beforeIndex === -1) {
+      throw new Error('This child does not exist.');
+    }
+    this.children.splice(beforeIndex, 0, child);
+  }
+
+  update(type, props) {
+    // console.log('update', type, props, this.children);
+    // need to manually update text nodes
+    this.type = type;
+    this.props = props;
+  }
+
+  toJSON() {
+    // eslint-disable ignore the children
+    const {children, ...props} = this.props;
+    // eslint-enable
+    const json = {
+      type: this.type,
+      props: props,
+      children: null,
+    };
+
+    Object.defineProperty(json, '$$typeof', {value: Symbol.for('react.test.json')});
+    if (typeof children === 'string') {
+      json.children = [children];
+    } else {
+      var childrenJSON = [];
+      this.children.forEach((child) => {
+        if (typeof child.toJSON === 'function') {
+          childrenJSON.push(child.toJSON());
+        } else if (typeof child.text !== 'undefined') {
+          childrenJSON.push(isNaN(+child.text) ? child.text : +child.text);
+        }
+      });
+      json.children = childrenJSON.length ? childrenJSON : null;
+    }
+    return json;
+  }
+}
+
+type Instance = TestComponent;
 
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance : Container) : HostContext {
@@ -83,20 +145,11 @@ var TestRenderer = ReactFiberReconciler({
     hostContext : HostContext,
     internalInstanceHandle : Object,
   ) : Instance {
-    const inst = createElement(type, props, rootContainerInstance);
-    return inst;
+    return new TestComponent(type, props, rootContainerInstance);
   },
 
   appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
-    const appliedChild = child.text ? String(child.text) : child;
-    if (parentInstance.children == null) {
-      parentInstance.children = appliedChild;
-    } else if (Array.isArray(parentInstance.children)) {
-      parentInstance.children =
-        parentInstance.children.concat(appliedChild);
-    } else {
-      // parentInstance.children = appliedChild;
-    }
+    parentInstance.appendChild(child);
   },
 
   finalizeInitialChildren(
@@ -127,10 +180,7 @@ var TestRenderer = ReactFiberReconciler({
     rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
-    // Update the internal instance handle so that we know which props are
-    // the current ones.
-    // precacheFiberNode(internalInstanceHandle, testElement);
-    updateProperties(instance, type, oldProps, newProps);
+    instance.update(type, newProps);
   },
 
   shouldSetTextContent(props : Props) : boolean {
@@ -148,7 +198,6 @@ var TestRenderer = ReactFiberReconciler({
     hostContext : HostContext,
     internalInstanceHandle : Object
   ) : TextInstance {
-    // return text;
     var inst = { text : text, id: instanceCounter++ };
     // Hide from unit tests
     Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
@@ -160,15 +209,7 @@ var TestRenderer = ReactFiberReconciler({
   },
 
   appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
-    if (parentInstance.children === null) {
-      parentInstance.children = [child];
-    } else {
-      const index = parentInstance.children.indexOf(child);
-      if (index !== -1) {
-        parentInstance.children.splice(index, 1);
-      }
-      parentInstance.children.push(child);
-    }
+    parentInstance.appendChild(child);
   },
 
   insertBefore(
@@ -176,37 +217,11 @@ var TestRenderer = ReactFiberReconciler({
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
   ) : void {
-    console.log('insertBefore');
-    if (parentInstance.children === null) {
-      throw new Error('This child does not exist.');
-    }
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    const beforeIndex = parentInstance.children.indexOf(beforeChild);
-    if (beforeIndex === -1) {
-      throw new Error('This child does not exist.');
-    }
-    parentInstance.children.splice(beforeIndex, 0, child);
+    parentInstance.insertBefore(beforeChild, child);
   },
 
   removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
-    if (parentInstance.children === null) {
-      throw new Error('This child does not exist.');
-    }
-    const index = parentInstance.children.indexOf(child);
-    if (index === -1) {
-      throw new Error('This child does not exist.');
-    }
-    parentInstance.children.splice(index, 1);
-  },
-
-  getPublicInstance(
-    privateInstance : Instance | Container,
-    hostContainerInfo
-  ) {
-    console.log('TODO: implement me for getNodeMock');
+    parentInstance.removeChild(child);
   },
 
   scheduleAnimationCallback: window.requestAnimationFrame,
@@ -222,29 +237,13 @@ var defaultTestOptions = {
   },
 };
 
-var toJSON = (instance) => {
-  var {children, ...json} = instance;
-  Object.defineProperty(json, '$$typeof', {value: Symbol.for('react.test.json')});
-
-  var childrenJSON = [];
-  if (children) {
-    children.forEach((child) => {
-      if (child.$$typeof === Symbol.for('react.element')) {
-        // childrenJSON.push(toJSON(child));
-        // skip maybe console.log('TODO: getPublicInstance');
-        // probably recurse
-      } else {
-        childrenJSON.push(child);
-      }
-    });
-  }
-  json.children = childrenJSON.length ? childrenJSON : null;
-  return json;
-};
-
 var ReactTestFiberRenderer = {
-  create(element) {
-    var container = { rootID: '<default>', children: [], createNodeMock: defaultTestOptions.createNodeMock };
+  create(element, options) {
+    var createNodeMock = defaultTestOptions.createNodeMock;
+    if (options && typeof options.createNodeMock === 'function') {
+      createNodeMock = options.createNodeMock;
+    }
+    var container = new TestContainer('<default>', createNodeMock);
     var root = TestRenderer.mountContainer(element, container, null, null);
     return {
       toJSON() {
@@ -252,9 +251,9 @@ var ReactTestFiberRenderer = {
         if (hostInstance === null) {
           return hostInstance;
         }
-
-        return toJSON(hostInstance);
+        return hostInstance.toJSON();
       },
+
       update(newElement) {
         TestRenderer.updateContainer(newElement, root, null, null);
       },
