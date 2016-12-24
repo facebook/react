@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactTestRenderer', () => {
   function normalizeCodeLocInfo(str) {
@@ -80,31 +81,7 @@ describe('ReactTestRenderer', () => {
     });
   });
 
-  it.skip('lol', () => {
-    class Component extends React.Component {
-      render() {
-        return (
-          <div className="purple">
-            <div ref={div => console.log('div ref', div)} />
-            <Child ref={child => console.log('child ref', child)} />
-          </div>
-        );
-      }
-    }
-
-    class Child extends React.Component {
-      render() {
-        return (
-          <div className="green" />
-        )
-      }
-    }
-
-    var renderer = ReactTestRenderer.create(<Component />);
-    renderer.toJSON();
-  });
-
-  it.skip('renders some basics with an update', () => {
+  it('renders some basics with an update', () => {
     var renders = 0;
 
     class Component extends React.Component {
@@ -115,7 +92,7 @@ describe('ReactTestRenderer', () => {
         return (
           <div className="purple">
             {this.state.x}
-            <Child ref={child => console.log('boo bboo boooo', child)} />
+            <Child />
             <Null />
           </div>
         );
@@ -194,7 +171,7 @@ describe('ReactTestRenderer', () => {
     });
   });
 
-  it.skip('updates children', () => {
+  it('updates children', () => {
     var renderer = ReactTestRenderer.create(
       <div>
         <span key="a">A</span>
@@ -265,7 +242,7 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([null]);
   });
 
-  it.skip('warns correctly for refs on SFCs', () => {
+  it('warns correctly for refs on SFCs', () => {
     spyOn(console, 'error');
     function Bar() {
       return <div>Hello, world</div>;
@@ -291,7 +268,7 @@ describe('ReactTestRenderer', () => {
     );
   });
 
-  it.skip('allows an optional createNodeMock function', () => {
+  it('allows an optional createNodeMock function', () => {
     var mockDivInstance = { appendChild: () => {} };
     var mockInputInstance = { focus: () => {} };
     var mockListItemInstance = { click: () => {} };
@@ -398,7 +375,7 @@ describe('ReactTestRenderer', () => {
     expect(count).toEqual(1);
   });
 
-  it.skip('supports updates when using refs', () => {
+  it('supports updates when using refs', () => {
     const log = [];
     const createNodeMock = element => {
       log.push(element.type);
@@ -420,7 +397,7 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual(['div', 'div', 'span']);
   });
 
-  it.skip('supports error boundaries', () => {
+  it('supports error boundaries', () => {
     var log = [];
     class Angry extends React.Component {
       render() {
@@ -470,12 +447,21 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['Happy Birthday!'],
     });
-    expect(log).toEqual([
-      'Boundary render',
-      'Angry render',
-      'Boundary render',
-      'Boundary componentDidMount',
-    ]);
+    if (ReactDOMFeatureFlags.useFiber) {
+      expect(log).toEqual([
+        'Boundary render',
+        'Angry render',
+        'Boundary componentDidMount',
+        'Boundary render',
+      ]);
+    } else {
+      expect(log).toEqual([
+        'Boundary render',
+        'Angry render',
+        'Boundary render',
+        'Boundary componentDidMount',
+      ]);
+    }
   });
 
 });
