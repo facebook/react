@@ -349,7 +349,8 @@ describe('ReactElementValidator', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null. Check the render method of `ParentComp`.'
+      'components) but got: null. Check the render method of `ParentComp`.' +
+      '\n    in ParentComp'
     );
   });
 

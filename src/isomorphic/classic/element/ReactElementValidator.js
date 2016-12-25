@@ -228,6 +228,8 @@ var ReactElementValidator = {
           info += getDeclarationErrorAddendum();
         }
 
+        info += ReactComponentTreeHook.getCurrentStackAddendum();
+
         warning(
           false,
           'React.createElement: type is invalid -- expected a string (for ' +
