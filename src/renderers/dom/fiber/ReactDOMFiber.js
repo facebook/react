@@ -99,14 +99,16 @@ function validateContainer(container) {
 var DOMRenderer = ReactFiberReconciler({
 
   getRootHostContext(rootContainerInstance : Container) : HostContext {
-    const type = rootContainerInstance.tagName.toLowerCase();
+    const ownNamespace = rootContainerInstance.namespaceURI || null;
+    const type = rootContainerInstance.tagName;
+    const namespace = getChildNamespace(ownNamespace, type);
     if (__DEV__) {
-      const namespace = getChildNamespace(null, type);
       const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
-      const ancestorInfo = updatedAncestorInfo(null, isMountingIntoDocument ? '#document' : type, null);
+      const validatedTag = isMountingIntoDocument ? '#document' : type.toLowerCase();
+      const ancestorInfo = updatedAncestorInfo(null, validatedTag, null);
       return {namespace, ancestorInfo};
     }
-    return getChildNamespace(null, type);
+    return namespace;
   },
 
   getChildHostContext(
