@@ -256,26 +256,38 @@ describe('ReactJSXElementValidator', () => {
     void <True />;
     void <Num />;
     expectDev(console.error.calls.count()).toBe(4);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(
+      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in.'
+      'component from the file it\'s defined in. ' +
+      'Check your code (at **).'
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(
+      console.error.calls.argsFor(1)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null.'
+      'components) but got: null. ' +
+      'Check your code (at **).'
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toBe(
+    expectDev(
+      console.error.calls.argsFor(2)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: boolean.'
+      'components) but got: boolean. ' +
+      'Check your code (at **).'
     );
-    expectDev(console.error.calls.argsFor(3)[0]).toBe(
+    expectDev(
+      console.error.calls.argsFor(3)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+    ).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: number.'
+      'components) but got: number. ' +
+      'Check your code (at **).'
     );
     void <Div />;
     expectDev(console.error.calls.count()).toBe(4);
