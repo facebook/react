@@ -157,4 +157,17 @@ describe('ReactDOMSVG', () => {
     });
   });
 
+  it('can render SVG into a non-React SVG tree', () => {
+    var outerSVGRoot = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    var container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    outerSVGRoot.appendChild(container);
+    var image;
+    ReactDOM.render(
+      <image ref={el => image = el} />,
+      container
+    );
+    expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(image.tagName).toBe('image');
+  });
+
 });
