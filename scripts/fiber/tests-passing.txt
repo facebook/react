@@ -1403,6 +1403,7 @@ src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should distinguish between a script placeholder and an actual script tag
 * should have findDOMNode return null when multiple layers of composite components render to the same null placeholder
 * works when switching components
+* can render null at the top level
 * does not break when updating during mount
 * preserves the dom node during updates
 

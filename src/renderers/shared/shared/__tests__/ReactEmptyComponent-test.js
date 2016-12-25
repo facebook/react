@@ -246,14 +246,20 @@ describe('ReactEmptyComponent', () => {
     expect(assertions).toBe(3);
   });
 
-  it('throws when rendering null at the top level', () => {
-    // TODO: This should actually work since `null` is a valid ReactNode
+  it('can render null at the top level', () => {
     var div = document.createElement('div');
-    expect(function() {
+
+    if (ReactDOMFeatureFlags.useFiber) {
       ReactDOM.render(null, div);
-    }).toThrowError(
-      'ReactDOM.render(): Invalid component element.'
-    );
+      expect(div.innerHTML).toBe('');
+    } else {
+      // Stack does not implement this.
+      expect(function() {
+        ReactDOM.render(null, div);
+      }).toThrowError(
+        'ReactDOM.render(): Invalid component element.'
+      );
+    }
   });
 
   it('does not break when updating during mount', () => {
