@@ -48,7 +48,7 @@ function getSourceInfoErrorAddendum(elementProps) {
     var source = elementProps.__source;
     var fileName = source.fileName.replace(/^.*[\\\/]/, '');
     var lineNumber = source.lineNumber;
-    return ' Check your code (at ' + fileName + ':' + lineNumber + ').';
+    return ' Check your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
 }

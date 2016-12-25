@@ -20,7 +20,7 @@ var ReactTestUtils;
 
 describe('ReactJSXElementValidator', () => {
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return str && str.replace(/at .+?:\d+/g, 'at **');
   }
 
   var Component;
@@ -261,25 +261,25 @@ describe('ReactJSXElementValidator', () => {
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
       'component from the file it\'s defined in. ' +
-      'Check your code (at **).'
+      'Check your code at **.'
     );
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: null. ' +
-      'Check your code (at **).'
+      'Check your code at **.'
     );
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: boolean. ' +
-      'Check your code (at **).'
+      'Check your code at **.'
     );
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: number. ' +
-      'Check your code (at **).'
+      'Check your code at **.'
     );
     void <Div />;
     expectDev(console.error.calls.count()).toBe(4);

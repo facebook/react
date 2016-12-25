@@ -20,7 +20,7 @@ var ReactTestUtils;
 
 describe('ReactElementValidator', () => {
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return str && str.replace(/at .+?:\d+/g, 'at **');
   }
 
   var ComponentClass;
@@ -551,7 +551,7 @@ describe('ReactElementValidator', () => {
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in. Check your code (at **).'
+      'component from the file it\'s defined in. Check your code at **.'
     );
   });
 
