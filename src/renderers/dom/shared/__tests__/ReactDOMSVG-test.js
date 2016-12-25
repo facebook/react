@@ -170,4 +170,17 @@ describe('ReactDOMSVG', () => {
     expect(image.tagName).toBe('image');
   });
 
+  it('can render HTML into a foreignObject in non-React SVG tree', () => {
+    var outerSVGRoot = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    var container = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    outerSVGRoot.appendChild(container);
+    var div;
+    ReactDOM.render(
+      <div ref={el => div = el} />,
+      container
+    );
+    expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(div.tagName).toBe('DIV');
+  });
+
 });
