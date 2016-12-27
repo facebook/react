@@ -457,10 +457,17 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       if (__DEV__) {
+        let info = '';
+        const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+        if (ownerName) {
+          info += ' Check the render method of `' + ownerName + '`.';
+        }
+
         warning(
           !workInProgress.ref,
           'Stateless function components cannot be given refs. ' +
-          'Attempts to access this ref will fail.%s',
+          'Attempts to access this ref will fail.%s%s',
+          info,
           ReactDebugCurrentFiber.getCurrentFiberStackAddendum()
         );
       }

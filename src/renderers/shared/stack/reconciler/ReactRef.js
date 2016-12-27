@@ -28,11 +28,18 @@ if (__DEV__) {
 function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
     if (__DEV__) {
+      let info = '';
+      const ownerName = owner && owner.getName();
+      if (ownerName) {
+        info += ' Check the render method of `' + ownerName + '`.';
+      }
+
       warning(
         /* $FlowFixMe component._compositeType really exists I swear. */
         component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
         'Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.%s',
+        'Attempts to access this ref will fail.%s%s',
+        info,
         ReactComponentTreeHook.getStackAddendumByID((owner || component)._debugID)
       );
     }

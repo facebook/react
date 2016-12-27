@@ -1248,11 +1248,18 @@ var ReactCompositeComponent = {
     invariant(inst != null, 'Stateless function components cannot have refs.');
     var publicComponentInstance = component.getPublicInstance();
     if (__DEV__) {
+      let info = '';
+      const ownerName = this.getName();
+      if (ownerName) {
+        info += ' Check the render method of `' + ownerName + '`.';
+      }
+
       warning(
         publicComponentInstance != null ||
         component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
-        'Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.%s',
+        'Stateless function components cannot be given refs. Attempts to ' +
+        'access this ref will fail.%s%s',
+        info,
         ReactComponentTreeHook.getStackAddendumByID(this._debugID)
       );
     }

@@ -169,14 +169,17 @@ describe('ReactStatelessComponent', () => {
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n' +
+        'Attempts to access this ref will fail. Check the render method ' +
+        'of `Parent`.\n' +
         '    in StatelessComponent (at **)\n' +
+        '    in div (at **)\n' +
         '    in Parent (at **)'
       );
     } else {
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n' +
+        'Attempts to access this ref will fail. Check the render method ' +
+        'of `Parent`.\n' +
         '    in Parent (at **)'
       );
     }
@@ -203,14 +206,17 @@ describe('ReactStatelessComponent', () => {
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n' +
+        'Attempts to access this ref will fail. Check the render method ' +
+        'of `Parent`.\n' +
         '    in StatelessComponent (at **)\n' +
+        '    in div (at **)\n' +
         '    in Parent (at **)'
       );
     } else {
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n' +
+        'Attempts to access this ref will fail. Check the render method ' +
+        'of `Parent`.\n' +
         '    in Parent (at **)'
       );
     }
