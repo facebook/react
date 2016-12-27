@@ -151,7 +151,7 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
-  it('should warn when given a ref', () => {
+  it('should warn when given a string ref', () => {
     spyOn(console, 'error');
 
     class Parent extends React.Component {
@@ -159,6 +159,40 @@ describe('ReactStatelessComponent', () => {
 
       render() {
         return <div><StatelessComponent name="A" ref="stateless"/></div>;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Parent/>);
+
+    expectDev(console.error.calls.count()).toBe(1);
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n' +
+        '    in StatelessComponent (at **)\n' +
+        '    in Parent (at **)'
+      );
+    } else {
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n' +
+        '    in Parent (at **)'
+      );
+    }
+  });
+
+  it('should warn when given a function ref', () => {
+    spyOn(console, 'error');
+    var ref = jasmine.createSpy().and.callFake((arg) => {
+      expect(arg).toBe(null);
+    });
+
+    class Parent extends React.Component {
+      static displayName = 'Parent';
+
+      render() {
+        return <div><StatelessComponent name="A" ref={ref} /></div>;
       }
     }
 

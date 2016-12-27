@@ -457,14 +457,12 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       if (__DEV__) {
-        if (workInProgress.ref && workInProgress.ref._stringRef) {
-          warning(
-            !workInProgress.ref,
-            'Stateless function components cannot be given refs. ' +
-            'Attempts to access this ref will fail.%s',
-            ReactDebugCurrentFiber.getCurrentFiberStackAddendum()
-          );
-        }
+        warning(
+          !workInProgress.ref,
+          'Stateless function components cannot be given refs. ' +
+          'Attempts to access this ref will fail.%s',
+          ReactDebugCurrentFiber.getCurrentFiberStackAddendum()
+        );
       }
       reconcileChildren(current, workInProgress, value);
       return workInProgress.child;

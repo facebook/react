@@ -19,8 +19,23 @@ import type { ReactElement } from 'ReactElementType';
 
 var ReactRef = {};
 
+if (__DEV__) {
+  var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
+  var ReactComponentTreeHook = require('ReactComponentTreeHook');
+  var warning = require('warning');
+}
+
 function attachRef(ref, component, owner) {
   if (typeof ref === 'function') {
+    if (__DEV__) {
+      warning(
+        /* $FlowFixMe component._compositeType really exists I swear. */
+        component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
+        'Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.%s',
+        ReactComponentTreeHook.getStackAddendumByID((owner || component)._debugID)
+      );
+    }
     ref(component.getPublicInstance());
   } else {
     // Legacy ref
