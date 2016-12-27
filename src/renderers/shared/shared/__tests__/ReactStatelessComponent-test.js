@@ -14,16 +14,21 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var ReactDOMFeatureFlags;
 
 function StatelessComponent(props) {
   return <div>{props.name}</div>;
 }
 
 describe('ReactStatelessComponent', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -153,17 +158,17 @@ describe('ReactStatelessComponent', () => {
       static displayName = 'Parent';
 
       render() {
-        return <StatelessComponent name="A" ref="stateless"/>;
+        return <div><StatelessComponent name="A" ref="stateless"/></div>;
       }
     }
 
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Stateless function components cannot be given refs ' +
-      '(See ref "stateless" in StatelessComponent created by Parent). ' +
-      'Attempts to access this ref will fail.'
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail.\n' +
+      '    in Parent (at **)'
     );
   });
 

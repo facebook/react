@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
@@ -1257,12 +1258,9 @@ var ReactCompositeComponent = {
       warning(
         publicComponentInstance != null ||
         component._compositeType !== CompositeTypes.StatelessFunctional,
-        'Stateless function components cannot be given refs ' +
-        '(See ref "%s" in %s created by %s). ' +
-        'Attempts to access this ref will fail.',
-        ref,
-        componentName,
-        this.getName()
+        'Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.%s',
+        ReactComponentTreeHook.getStackAddendumByID(this._debugID)
       );
     }
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
