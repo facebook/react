@@ -1564,6 +1564,9 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * should queue updates from during mount
 * calls componentWillReceiveProps setState callback properly
 * does not call render after a component as been deleted
+* throws in setState if the update callback is not a function
+* throws in replaceState if the update callback is not a function
+* throws in forceUpdate if the update callback is not a function
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
 * unstable_batchedUpdates should return value from a callback
