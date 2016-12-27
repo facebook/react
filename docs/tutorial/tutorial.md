@@ -93,7 +93,7 @@ After: You should see a number in each square in the rendered output.
 Let's make the Square component fill in an "X" when you click it. Try changing the opening tag returned in the `render()` function of the `Square` class to:
 
 ```html
-<button className="square" onClick={() => alert('click')}>
+<button className="square" onClick={() => alert('click')} />
 ```
 
 This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.
@@ -187,6 +187,8 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 
 ```javascript
 <button className="square" onClick={() => this.props.onClick()}>
+  {this.props.value}
+</button>
 ```
 
 This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
