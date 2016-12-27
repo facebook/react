@@ -13,8 +13,9 @@
 
 'use strict';
 
-var invariant = require('invariant');
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var emptyObject = require('emptyObject');
+var invariant = require('invariant');
 
 import type { ReactElement } from 'ReactElementType';
 import type { ReactInstance } from 'ReactInstanceType';
@@ -120,14 +121,14 @@ type Instance = TestComponent;
 
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance : Container) : HostContext {
-    return {};
+    return emptyObject;
   },
 
   getChildHostContext(
     parentHostContext : HostContext,
     type : string,
   ) : HostContext {
-    return {};
+    return emptyObject;
   },
 
   prepareForCommit() : void {
