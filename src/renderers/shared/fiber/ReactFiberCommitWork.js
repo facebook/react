@@ -40,6 +40,7 @@ module.exports = function<T, P, I, TI, C, CX>(
 ) {
 
   const {
+    commitMount,
     commitUpdate,
     resetTextContent,
     commitTextUpdate,
@@ -434,6 +435,21 @@ module.exports = function<T, P, I, TI, C, CX>(
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
         attachRef(current, finishedWork, instance);
+
+        // Renderers may schedule work to be done after host components are mounted
+        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
+        // These effects should only be committed when components are first mounted,
+        // aka when there is no current/alternate.
+        if (
+          !current &&
+          finishedWork.effectTag & Update
+        ) {
+          const type = finishedWork.type;
+          const props = finishedWork.memoizedProps;
+          const rootContainerInstance = getRootHostContainer();
+          commitMount(instance, type, props, rootContainerInstance, finishedWork);
+        }
+
         return;
       }
       case HostText: {

@@ -110,6 +110,16 @@ const NativeRenderer = ReactFiberReconciler({
     );
   },
 
+  commitMount(
+    instance : Instance,
+    type : string,
+    newProps : Props,
+    rootContainerInstance : Object,
+    internalInstanceHandle : Object
+  ) : void {
+    // Noop
+  },
+
   commitUpdate(
     instance : Instance,
     type : string,
@@ -197,7 +207,7 @@ const NativeRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-  ) : void {
+  ) : boolean {
     // Map from child objects to native tags.
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
@@ -210,6 +220,8 @@ const NativeRenderer = ReactFiberReconciler({
       parentInstance._nativeTag, // containerTag
       nativeTags // reactTags
     );
+
+    return false;
   },
 
   getRootHostContext() {

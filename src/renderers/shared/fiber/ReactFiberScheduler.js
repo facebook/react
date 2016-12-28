@@ -371,6 +371,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     // In the second pass we'll perform all life-cycles and ref callbacks.
     // Life-cycles happen as a separate pass so that all placements, updates,
     // and deletions in the entire tree have already been invoked.
+    // This pass also triggers any renderer-specific initial effects.
     nextEffect = firstEffect;
     while (nextEffect) {
       try {

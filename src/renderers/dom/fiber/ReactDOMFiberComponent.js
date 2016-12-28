@@ -27,7 +27,6 @@ var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
 var emptyFunction = require('emptyFunction');
-var focusNode = require('focusNode');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
@@ -605,36 +604,18 @@ var ReactDOMFiberComponent = {
       isCustomComponentTag
     );
 
-    // TODO: All these autoFocus won't work because the component is not in the
-    // DOM yet. We need a special effect to handle this.
     switch (tag) {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
         inputValueTracking.trackNode((domElement : any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
-        if (props.autoFocus) {
-          focusNode(domElement);
-        }
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
         inputValueTracking.trackNode((domElement : any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
-        if (props.autoFocus) {
-          focusNode(domElement);
-        }
-        break;
-      case 'select':
-        if (props.autoFocus) {
-          focusNode(domElement);
-        }
-        break;
-      case 'button':
-        if (props.autoFocus) {
-          focusNode(domElement);
-        }
         break;
       case 'option':
         ReactDOMFiberOption.postMountWrapper(domElement, rawProps);
