@@ -33,8 +33,8 @@ function getCurrentFiberOwnerName() : string | null {
     }
     switch (fiber.tag) {
       case IndeterminateComponent:
-      case FunctionalComponent:
       case ClassComponent:
+      case FunctionalComponent:
         return getComponentName(fiber);
       case HostComponent:
         if (fiber._debugOwner != null) {
