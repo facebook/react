@@ -138,6 +138,20 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
+  it('should warn when stateless component returns undefined', () => {
+    spyOn(console, 'error');
+    function NotAComponent() {
+    }
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+    }).toThrow();
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'NotAComponent(...): A valid React element (or null) must be returned. ' +
+      'You may have returned undefined, an array or some other invalid object.'
+    );
+  });
+
   it('should throw on string refs in pure functions', () => {
     function Child() {
       return <div ref="me" />;
