@@ -237,6 +237,7 @@ describe('ReactTestRenderer', () => {
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. Attempts ' +
       'to access this ref will fail. Check the render method of `Foo`.\n' +
+      '    in Bar (at **)\n' +
       '    in Foo (at **)'
     );
   });

@@ -14,7 +14,6 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactDOMFeatureFlags;
 
 function StatelessComponent(props) {
   return <div>{props.name}</div>;
@@ -28,7 +27,6 @@ describe('ReactStatelessComponent', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -165,24 +163,14 @@ describe('ReactStatelessComponent', () => {
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
     expectDev(console.error.calls.count()).toBe(1);
-
-    if (ReactDOMFeatureFlags.useFiber) {
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. Check the render method ' +
-        'of `Parent`.\n' +
-        '    in StatelessComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Parent (at **)'
-      );
-    } else {
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. Check the render method ' +
-        'of `Parent`.\n' +
-        '    in Parent (at **)'
-      );
-    }
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail. Check the render method ' +
+      'of `Parent`.\n' +
+      '    in StatelessComponent (at **)\n' +
+      '    in div (at **)\n' +
+      '    in Parent (at **)'
+    );
   });
 
   it('should warn when given a function ref', () => {
@@ -202,24 +190,14 @@ describe('ReactStatelessComponent', () => {
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
     expectDev(console.error.calls.count()).toBe(1);
-
-    if (ReactDOMFeatureFlags.useFiber) {
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. Check the render method ' +
-        'of `Parent`.\n' +
-        '    in StatelessComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Parent (at **)'
-      );
-    } else {
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail. Check the render method ' +
-        'of `Parent`.\n' +
-        '    in Parent (at **)'
-      );
-    }
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail. Check the render method ' +
+      'of `Parent`.\n' +
+      '    in StatelessComponent (at **)\n' +
+      '    in div (at **)\n' +
+      '    in Parent (at **)'
+    );
   });
 
   it('should provide a null ref', () => {

@@ -22,27 +22,37 @@ var ReactRef = {};
 if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
   var ReactComponentTreeHook = require('ReactComponentTreeHook');
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('warning');
 }
 
 function attachRef(ref, component, owner) {
-  if (typeof ref === 'function') {
-    if (__DEV__) {
-      let info = '';
-      const ownerName = owner && owner.getName();
+  if (__DEV__) {
+    let info = '';
+    if (owner) {
+      let ownerName;
+      if (typeof owner.getName === 'function') {
+        ownerName = owner.getName();
+      } else {
+        // if we're working on stack inside of fiber
+        ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+      }
       if (ownerName) {
         info += ' Check the render method of `' + ownerName + '`.';
       }
-
-      warning(
-        /* $FlowFixMe component._compositeType really exists I swear. */
-        component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
-        'Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.%s%s',
-        info,
-        ReactComponentTreeHook.getStackAddendumByID((owner || component)._debugID)
-      );
     }
+
+    warning(
+      /* $FlowFixMe component._compositeType really exists I swear. */
+      component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
+      'Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail.%s%s',
+      info,
+      ReactComponentTreeHook.getStackAddendumByID(component._debugID)
+    );
+  }
+
+  if (typeof ref === 'function') {
     ref(component.getPublicInstance());
   } else {
     // Legacy ref
