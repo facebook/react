@@ -52,13 +52,14 @@ We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/)
 To install React with Yarn, run:
 
 ```bash
+yarn init
 yarn add react react-dom
 ```
 
 To install React with npm, run:
-(Note: You may need to run ```npm init``` from your project's root directory before you run the command below so that package.json is created if not already present)
 
 ```bash
+npm init
 npm install --save react react-dom
 ```
 
