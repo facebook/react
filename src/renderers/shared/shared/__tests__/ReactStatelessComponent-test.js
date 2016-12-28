@@ -123,30 +123,24 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
-  it('should warn when stateless component returns array', () => {
-    spyOn(console, 'error');
+  it('should throw when stateless component returns array', () => {
     function NotAComponent() {
       return [<div />, <div />];
     }
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    }).toThrowError(
       'NotAComponent(...): A valid React element (or null) must be returned. ' +
       'You may have returned undefined, an array or some other invalid object.'
     );
   });
 
-  it('should warn when stateless component returns undefined', () => {
-    spyOn(console, 'error');
+  it('should throw when stateless component returns undefined', () => {
     function NotAComponent() {
     }
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    }).toThrowError(
       'NotAComponent(...): A valid React element (or null) must be returned. ' +
       'You may have returned undefined, an array or some other invalid object.'
     );

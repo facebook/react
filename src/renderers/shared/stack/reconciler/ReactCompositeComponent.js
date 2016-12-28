@@ -39,25 +39,8 @@ function StatelessComponent(Component) {
 StatelessComponent.prototype.render = function() {
   var Component = ReactInstanceMap.get(this)._currentElement.type;
   var element = Component(this.props, this.context, this.updater);
-  warnIfInvalidElement(Component, element);
   return element;
 };
-
-function warnIfInvalidElement(Component, element) {
-  if (__DEV__) {
-    warning(
-      element === null || element === false || React.isValidElement(element),
-      '%s(...): A valid React element (or null) must be returned. You may have ' +
-      'returned undefined, an array or some other invalid object.',
-      Component.displayName || Component.name || 'Component'
-    );
-    warning(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a functional component.',
-      Component.displayName || Component.name || 'Component'
-    );
-  }
-}
 
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
@@ -205,7 +188,13 @@ var ReactCompositeComponent = {
     // Support functional components
     if (!doConstruct && (inst == null || inst.render == null)) {
       renderedElement = inst;
-      warnIfInvalidElement(Component, renderedElement);
+      if (__DEV__) {
+        warning(
+          !Component.childContextTypes,
+          '%s(...): childContextTypes cannot be defined on a functional component.',
+          Component.displayName || Component.name || 'Component'
+        );
+      }
       invariant(
         inst === null ||
         inst === false ||
