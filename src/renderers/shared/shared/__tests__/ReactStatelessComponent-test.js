@@ -15,6 +15,8 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 function StatelessComponent(props) {
   return <div>{props.name}</div>;
 }
@@ -123,17 +125,20 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
-  it('should throw when stateless component returns array', () => {
-    function NotAComponent() {
-      return [<div />, <div />];
-    }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrowError(
-      'NotAComponent(...): A valid React element (or null) must be returned. ' +
-      'You may have returned undefined, an array or some other invalid object.'
-    );
-  });
+  if (!ReactDOMFeatureFlags.useFiber) {
+    // Stack doesn't support fragments
+    it('should throw when stateless component returns array', () => {
+      function NotAComponent() {
+        return [<div />, <div />];
+      }
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+      }).toThrowError(
+        'NotAComponent(...): A valid React element (or null) must be returned. ' +
+        'You may have returned undefined, an array or some other invalid object.'
+      );
+    });
+  }
 
   it('should throw when stateless component returns undefined', () => {
     function NotAComponent() {
