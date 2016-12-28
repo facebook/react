@@ -126,11 +126,6 @@ var EventPluginHub = {
     // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
     // live here; needs to be moved to a better place soon
     if (typeof inst.tag === 'number') {
-      // TODO: This is not safe because we might want the *other* Fiber's
-      // props depending on which is the current one. This will usually be the
-      // current Fiber but if we're walking up the tree using TreeTraversal for
-      // bubbling, we will not be guaranteed to walk up the current tree when
-      // a Fiber has been reused.
       const props = inst.memoizedProps;
       listener = props[registrationName];
       if (shouldPreventMouseEvent(registrationName, inst.type, props)) {

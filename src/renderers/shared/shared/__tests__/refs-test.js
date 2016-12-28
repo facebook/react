@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
 
 /**
@@ -110,7 +111,7 @@ var expectClickLogsLengthToBe = function(instance, length) {
 
 describe('reactiverefs', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
@@ -156,7 +157,7 @@ describe('reactiverefs', () => {
 describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -292,7 +293,7 @@ describe('ref swapping', () => {
 
 describe('string refs between fiber and stack', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
@@ -334,12 +335,14 @@ describe('string refs between fiber and stack', () => {
     ReactDOMFiber.unmountComponentAtNode(container);
     expect(a.refs.span).toBe(undefined);
     expect(layerMounted).toBe(true);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: You are using React DOM Fiber which is an experimental ' +
-      'renderer. It is likely to have bugs, breaking changes and is ' +
-      'unsupported.'
-    );
+    if (!ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: You are using React DOM Fiber which is an experimental ' +
+        'renderer. It is likely to have bugs, breaking changes and is ' +
+        'unsupported.'
+      );
+    }
   });
 
   it('attaches, detaches from stack component with fiber layer', () => {
@@ -379,11 +382,13 @@ describe('string refs between fiber and stack', () => {
     ReactDOM.unmountComponentAtNode(container);
     expect(a.refs.span).toBe(undefined);
     expect(layerMounted).toBe(true);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: You are using React DOM Fiber which is an experimental ' +
-      'renderer. It is likely to have bugs, breaking changes and is ' +
-      'unsupported.'
-    );
+    if (!ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: You are using React DOM Fiber which is an experimental ' +
+        'renderer. It is likely to have bugs, breaking changes and is ' +
+        'unsupported.'
+      );
+    }
   });
 });

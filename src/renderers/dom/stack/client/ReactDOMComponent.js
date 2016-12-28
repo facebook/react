@@ -88,10 +88,7 @@ function assertValidProps(component, props) {
       '%s is a void element tag and must neither have `children` nor ' +
       'use `dangerouslySetInnerHTML`.%s',
       component._tag,
-      component._currentElement._owner ?
-        ' Check the render method of ' +
-        component._currentElement._owner.getName() + '.' :
-        ''
+      getDeclarationErrorAddendum(component)
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -413,7 +410,6 @@ var globalIdCounter = 1;
  */
 function ReactDOMComponent(element) {
   var tag = element.type;
-  validateDangerousTag(tag);
   this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
@@ -524,6 +520,15 @@ ReactDOMComponent.Mixin = {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
+      if (__DEV__) {
+        warning(
+          isCustomComponent(this._tag, props) ||
+          this._tag === this._currentElement.type,
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          'in React.',
+          this._currentElement.type
+        );
+      }
       if (this._tag === 'svg') {
         namespaceURI = DOMNamespaces.svg;
       } else if (this._tag === 'math') {
@@ -596,6 +601,7 @@ ReactDOMComponent.Mixin = {
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
+      validateDangerousTag(this._tag);
       var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
       var tagContent = this._createContentMarkup(transaction, props, context);
       if (!tagContent && omittedCloseTags[this._tag]) {
@@ -787,8 +793,9 @@ ReactDOMComponent.Mixin = {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
+      const innerHTMLContent = innerHTML.__html;
+      if (innerHTMLContent != null && innerHTMLContent !== '') {
+        DOMLazyTree.queueHTML(lazyTree, innerHTMLContent);
       }
     } else {
       var contentToUse =
@@ -1019,6 +1026,13 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: this._debugID,
+          type: 'update styles',
+          payload: styleUpdates,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(
         getNode(this),
         styleUpdates,

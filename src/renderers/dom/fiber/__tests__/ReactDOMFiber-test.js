@@ -14,6 +14,7 @@
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactTestUtils = require('ReactTestUtils');
 
 describe('ReactDOMFiber', () => {
   var container;
@@ -60,6 +61,35 @@ describe('ReactDOMFiber', () => {
       container,
       () => called = true
     );
+    expect(called).toEqual(true);
+  });
+
+  it('should call a callback argument when the same element is re-rendered', () => {
+    class Foo extends React.Component {
+      render() {
+        return <div>Foo</div>;
+      }
+    }
+    const element = <Foo />;
+
+    // mounting phase
+    let called = false;
+    ReactDOM.render(
+      element,
+      container,
+      () => called = true
+    );
+    expect(called).toEqual(true);
+
+    // updating phase
+    called = false;
+    ReactDOM.unstable_batchedUpdates(() => {
+      ReactDOM.render(
+        element,
+        container,
+        () => called = true
+      );
+    });
     expect(called).toEqual(true);
   });
 
@@ -188,6 +218,39 @@ describe('ReactDOMFiber', () => {
   }
 
   if (ReactDOMFeatureFlags.useFiber) {
+    var svgEls, htmlEls, mathEls;
+    var expectSVG = {ref: el => svgEls.push(el)};
+    var expectHTML = {ref: el => htmlEls.push(el)};
+    var expectMath = {ref: el => mathEls.push(el)};
+
+    var usePortal = function(tree) {
+      return ReactDOM.unstable_createPortal(
+        tree,
+        document.createElement('div')
+      );
+    };
+
+    var assertNamespacesMatch = function(tree) {
+      container = document.createElement('div');
+      svgEls = [];
+      htmlEls = [];
+      mathEls = [];
+
+      ReactDOM.render(tree, container);
+      svgEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      });
+      htmlEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+      });
+      mathEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
+      });
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+    };
+
     it('should render one portal', () => {
       var portalContainer = document.createElement('div');
 
@@ -331,6 +394,348 @@ describe('ReactDOMFiber', () => {
       expect(portalContainer2.innerHTML).toBe('');
       expect(portalContainer3.innerHTML).toBe('');
       expect(container.innerHTML).toBe('');
+    });
+
+    it('should reconcile portal children', () => {
+      var portalContainer = document.createElement('div');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <div>portal:1</div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal:1</div>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <div>portal:2</div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal:2</div>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            <p>portal:3</p>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('<p>portal:3</p>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            ['Hi', 'Bye'],
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('HiBye');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            ['Bye', 'Hi'],
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('ByeHi');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(
+            null,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('<div></div>');
+    });
+
+    it('should keep track of namespace across portals (simple)', () => {
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <image {...expectSVG} />
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
+        <math {...expectMath}>
+          <mi {...expectMath} />
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+          <mi {...expectMath} />
+        </math>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <p {...expectHTML} />
+          {usePortal(
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <p {...expectHTML} />
+        </div>
+      );
+    });
+
+    it('should keep track of namespace across portals (medium)', () => {
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <image {...expectSVG} />
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+          <image {...expectSVG} />
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <math {...expectMath}>
+            <mi {...expectMath} />
+            {usePortal(
+              <svg {...expectSVG}>
+                <image {...expectSVG} />
+              </svg>
+            )}
+          </math>
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <math {...expectMath}>
+          <mi {...expectMath} />
+          {usePortal(
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+              <foreignObject {...expectSVG}>
+                <p {...expectHTML} />
+                <math {...expectMath}>
+                  <mi {...expectMath} />
+                </math>
+                <p {...expectHTML} />
+              </foreignObject>
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <mi {...expectMath} />
+        </math>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          {usePortal(
+            <svg {...expectSVG}>
+              {usePortal(
+                <div {...expectHTML} />
+              )}
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <svg {...expectSVG}>
+            {usePortal(
+              <div {...expectHTML} />
+            )}
+            <image {...expectSVG} />
+          </svg>
+          <image {...expectSVG} />
+        </svg>
+      );
+    });
+
+    it('should keep track of namespace across portals (complex)', () => {
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          {usePortal(
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+            </svg>
+          )}
+          <p {...expectHTML} />
+          <svg {...expectSVG}>
+            <image {...expectSVG} />
+          </svg>
+          <svg {...expectSVG}>
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+            </svg>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <svg {...expectSVG}>
+            <svg {...expectSVG}>
+              <image {...expectSVG} />
+              {usePortal(
+                <svg {...expectSVG}>
+                  <image {...expectSVG} />
+                  <svg {...expectSVG}>
+                    <image {...expectSVG} />
+                  </svg>
+                  <image {...expectSVG} />
+                </svg>
+              )}
+              <image {...expectSVG} />
+              <foreignObject {...expectSVG}>
+                <p {...expectHTML} />
+                {usePortal(<p {...expectHTML} />)}
+                <p {...expectHTML} />
+              </foreignObject>
+            </svg>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <svg {...expectSVG}>
+            <foreignObject {...expectSVG}>
+              <p {...expectHTML} />
+              {usePortal(
+                <svg {...expectSVG}>
+                  <image {...expectSVG} />
+                  <svg {...expectSVG}>
+                    <image {...expectSVG} />
+                    <foreignObject {...expectSVG}>
+                      <p {...expectHTML} />
+                    </foreignObject>
+                    {usePortal(<p {...expectHTML} />)}
+                  </svg>
+                  <image {...expectSVG} />
+                </svg>
+              )}
+              <p {...expectHTML} />
+            </foreignObject>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+    });
+
+    it('should unwind namespaces on uncaught errors', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      expect(() => {
+        assertNamespacesMatch(
+          <svg {...expectSVG}>
+            <BrokenRender />
+          </svg>
+        );
+      }).toThrow('Hello');
+      assertNamespacesMatch(
+        <div {...expectHTML} />
+      );
+    });
+
+    it('should unwind namespaces on caught errors', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        unstable_handleError(error) {
+          this.setState({error});
+        }
+        render() {
+          if (this.state.error) {
+            return <p {...expectHTML} />;
+          }
+          return this.props.children;
+        }
+      }
+
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <foreignObject {...expectSVG}>
+            <ErrorBoundary>
+              <math {...expectMath}>
+                <BrokenRender />
+              </math>
+            </ErrorBoundary>
+          </foreignObject>
+          <image {...expectSVG} />
+        </svg>
+      );
+      assertNamespacesMatch(
+        <div {...expectHTML} />
+      );
+    });
+
+    it('should unwind namespaces on caught errors in a portal', () => {
+      function BrokenRender() {
+        throw new Error('Hello');
+      }
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        unstable_handleError(error) {
+          this.setState({error});
+        }
+        render() {
+          if (this.state.error) {
+            return <image {...expectSVG} />;
+          }
+          return this.props.children;
+        }
+      }
+
+      assertNamespacesMatch(
+        <svg {...expectSVG}>
+          <ErrorBoundary>
+            {usePortal(
+              <div {...expectHTML}>
+                <math {...expectMath}>
+                  <BrokenRender />)
+                </math>
+              </div>
+            )}
+          </ErrorBoundary>
+          {usePortal(
+            <div {...expectHTML} />
+          )}
+        </svg>
+      );
     });
 
     it('should pass portal context when rendering subtree elsewhere', () => {
@@ -480,6 +885,122 @@ describe('ReactDOMFiber', () => {
 
       var b = ReactDOM.findDOMNode(myNodeB);
       expect(b.tagName).toBe('SPAN');
+    });
+
+    it('should bubble events from the portal to the parent', () => {
+      var portalContainer = document.createElement('div');
+
+      var ops = [];
+      var portal = null;
+
+      ReactDOM.render(
+        <div onClick={() => ops.push('parent clicked')}>
+          {ReactDOM.unstable_createPortal(
+            <div onClick={() => ops.push('portal clicked')} ref={n => portal = n}>
+              portal
+            </div>,
+            portalContainer
+          )}
+        </div>,
+        container
+      );
+
+      expect(portal.tagName).toBe('DIV');
+
+      var fakeNativeEvent = {};
+      ReactTestUtils.simulateNativeEventOnNode(
+        'topClick',
+        portal,
+        fakeNativeEvent
+      );
+
+      expect(ops).toEqual([
+        'portal clicked',
+        'parent clicked',
+      ]);
+    });
+
+    it('should not onMouseLeave when staying in the portal', () => {
+      var portalContainer = document.createElement('div');
+
+      var ops = [];
+      var firstTarget = null;
+      var secondTarget = null;
+      var thirdTarget = null;
+
+      function simulateMouseMove(from, to) {
+        if (from) {
+          ReactTestUtils.simulateNativeEventOnNode(
+            'topMouseOut',
+            from,
+            {
+              target: from,
+              relatedTarget: to,
+            }
+          );
+        }
+        if (to) {
+          ReactTestUtils.simulateNativeEventOnNode(
+            'topMouseOver',
+            to,
+            {
+              target: to,
+              relatedTarget: from,
+            }
+          );
+        }
+      }
+
+      ReactDOM.render(
+        <div>
+          <div
+            onMouseEnter={() => ops.push('enter parent')}
+            onMouseLeave={() => ops.push('leave parent')}>
+            <div ref={n => firstTarget = n} />
+            {ReactDOM.unstable_createPortal(
+              <div
+                onMouseEnter={() => ops.push('enter portal')}
+                onMouseLeave={() => ops.push('leave portal')}
+                ref={n => secondTarget = n}>
+                portal
+              </div>,
+              portalContainer
+            )}
+          </div>
+          <div ref={n => thirdTarget = n} />
+        </div>,
+        container
+      );
+
+      simulateMouseMove(null, firstTarget);
+      expect(ops).toEqual([
+        'enter parent',
+      ]);
+
+      ops = [];
+
+      simulateMouseMove(firstTarget, secondTarget);
+      expect(ops).toEqual([
+        // Parent did not invoke leave because we're still inside the portal.
+        'enter portal',
+      ]);
+
+      ops = [];
+
+      simulateMouseMove(secondTarget, thirdTarget);
+      expect(ops).toEqual([
+        'leave portal',
+        'leave parent', // Only when we leave the portal does onMouseLeave fire.
+      ]);
+    });
+
+    it('should not crash encountering low-priority tree', () => {
+      ReactDOM.render(
+        <div hidden={true}>
+          <div />
+        </div>,
+        container
+      );
     });
   }
 });

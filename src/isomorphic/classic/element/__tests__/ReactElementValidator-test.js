@@ -26,7 +26,7 @@ describe('ReactElementValidator', () => {
   var ComponentClass;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -258,9 +258,6 @@ describe('ReactElementValidator', () => {
     expectDev(console.error.calls.count()).toBe(0);
   });
 
-  // TODO: These warnings currently come from the composite component, but
-  // they should be moved into the ReactElementValidator.
-
   it('should give context for PropType errors in nested components.', () => {
     // In this test, we're making sure that if a proptype error is found in a
     // component, we give a small hint as to which parent instantiated that
@@ -289,35 +286,49 @@ describe('ReactElementValidator', () => {
     );
   });
 
-  it('gives a helpful error when passing null, undefined, boolean, or number', () => {
+  it('gives a helpful error when passing invalid types', () => {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
     React.createElement(true);
     React.createElement(123);
-    expectDev(console.error.calls.count()).toBe(4);
+    React.createElement({x: 17});
+    React.createElement({});
+    expectDev(console.error.calls.count()).toBe(6);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: undefined. You likely forgot to export your ' +
+      'component from the file it\'s defined in.'
     );
     expectDev(console.error.calls.argsFor(1)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: null.'
     );
     expectDev(console.error.calls.argsFor(2)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: boolean.'
     );
     expectDev(console.error.calls.argsFor(3)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: number.'
+    );
+    expectDev(console.error.calls.argsFor(4)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: object.'
+    );
+    expectDev(console.error.calls.argsFor(5)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: object. You likely forgot to export your ' +
+      'component from the file it\'s defined in.'
     );
     React.createElement('div');
-    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(6);
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {
@@ -336,10 +347,9 @@ describe('ReactElementValidator', () => {
     );
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components). Check the render method of ' +
-      '`ParentComp`.'
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: null. Check the render method of `ParentComp`.'
     );
   });
 
@@ -537,9 +547,10 @@ describe('ReactElementValidator', () => {
     void <Foo>{[<div />]}</Foo>;
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: React.createElement: type should not be null, undefined, ' +
-      'boolean, or number. It should be a string (for DOM elements) or a ' +
-      'ReactClass (for composite components).'
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: undefined. You likely forgot to export your ' +
+      'component from the file it\'s defined in.'
     );
   });
 

@@ -6,19 +6,13 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule getCurrentOwnerName
- * @flow
+ * @providesModule ReactNativeFeatureFlags
  */
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var getComponentName = require('getComponentName');
-
-module.exports = function() : null | string {
-  if (ReactCurrentOwner.current) {
-    return getComponentName(ReactCurrentOwner.current);
-  } else {
-    return null;
-  }
+var ReactNativeFeatureFlags = {
+  useFiber: false,
 };
+
+module.exports = ReactNativeFeatureFlags;

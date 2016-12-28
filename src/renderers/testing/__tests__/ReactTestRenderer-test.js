@@ -200,8 +200,8 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([
       'render Foo',
       'mount Foo',
-      'unmount Foo',
       'render Bar',
+      'unmount Foo',
       'mount Bar',
       'unmount Bar',
     ]);
@@ -324,6 +324,24 @@ describe('ReactTestRenderer', () => {
       {createNodeMock: () => 'foo'}
     );
     expect(() => inst.unmount()).not.toThrow();
+  });
+
+  it('supports unmounting inner instances', () => {
+    let count = 0;
+    class Foo extends React.Component {
+      componentWillUnmount() {
+        count++;
+      }
+      render() {
+        return <div />;
+      }
+    }
+    const inst = ReactTestRenderer.create(
+      <div><Foo /></div>,
+      {createNodeMock: () => 'foo'}
+    );
+    expect(() => inst.unmount()).not.toThrow();
+    expect(count).toEqual(1);
   });
 
   it('supports updates when using refs', () => {

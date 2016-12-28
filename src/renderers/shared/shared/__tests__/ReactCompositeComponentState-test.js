@@ -13,6 +13,7 @@
 
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 
 var TestComponent;
 
@@ -22,6 +23,7 @@ describe('ReactCompositeComponent-state', () => {
     React = require('React');
 
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
     TestComponent = React.createClass({
       peekAtState: function(from, state) {
@@ -167,15 +169,9 @@ describe('ReactCompositeComponent-state', () => {
       // componentDidMount() called setState({color:'yellow'}), which is async.
       // The update doesn't happen until the next flush.
       ['componentDidMount-end', 'orange'],
-    ];
-
-    // The setState callbacks in componentWillMount, and the initial callback
-    // passed to ReactDOM.render, should be flushed right after component
-    // did mount:
-    expected.push(
-      ['setState-sunrise', 'orange'], // 1
-      ['setState-orange', 'orange'], // 2
-      ['initial-callback', 'orange'], // 3
+      ['setState-sunrise', 'orange'],
+      ['setState-orange', 'orange'],
+      ['initial-callback', 'orange'],
       ['shouldComponentUpdate-currentState', 'orange'],
       ['shouldComponentUpdate-nextState', 'yellow'],
       ['componentWillUpdate-currentState', 'orange'],
@@ -184,14 +180,23 @@ describe('ReactCompositeComponent-state', () => {
       ['componentDidUpdate-currentState', 'yellow'],
       ['componentDidUpdate-prevState', 'orange'],
       ['setState-yellow', 'yellow'],
-    );
-
-    expected.push(
       ['componentWillReceiveProps-start', 'yellow'],
       // setState({color:'green'}) only enqueues a pending state.
       ['componentWillReceiveProps-end', 'yellow'],
       // pending state queue is processed
-      // before-setState-receiveProps never called, due to replaceState.
+    ];
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      // In Stack, this is never called because replaceState drops all updates
+      // from the queue. In Fiber, we keep updates in the queue to support
+      // replaceState(prevState => newState).
+      // TODO: Fix Stack to match Fiber.
+      expected.push(
+        ['before-setState-receiveProps', 'yellow'],
+      );
+    }
+
+    expected.push(
       ['before-setState-again-receiveProps', undefined],
       ['after-setState-receiveProps', 'green'],
       ['shouldComponentUpdate-currentState', 'yellow'],
@@ -225,6 +230,90 @@ describe('ReactCompositeComponent-state', () => {
     );
 
     expect(stateListener.mock.calls.join('\n')).toEqual(expected.join('\n'));
+  });
+
+
+  it('should call componentDidUpdate of children first', () => {
+    var container = document.createElement('div');
+
+    var ops = [];
+
+    var child = null;
+    var parent = null;
+
+    class Child extends React.Component {
+      state = {bar:false};
+      componentDidMount() {
+        child = this;
+      }
+      componentDidUpdate() {
+        ops.push('child did update');
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    var shouldUpdate = true;
+
+    class Intermediate extends React.Component {
+      shouldComponentUpdate() {
+        return shouldUpdate;
+      }
+      render() {
+        return <Child />;
+      }
+    }
+
+    class Parent extends React.Component {
+      state = {foo:false};
+      componentDidMount() {
+        parent = this;
+      }
+      componentDidUpdate() {
+        ops.push('parent did update');
+      }
+      render() {
+        return <Intermediate />;
+      }
+    }
+
+    ReactDOM.render(<Parent />, container);
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      parent.setState({ foo: true });
+      child.setState({ bar: true });
+    });
+    // When we render changes top-down in a batch, children's componentDidUpdate
+    // happens before the parent.
+    expect(ops).toEqual([
+      'child did update',
+      'parent did update',
+    ]);
+
+    shouldUpdate = false;
+
+    ops = [];
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      parent.setState({ foo: false });
+      child.setState({ bar: false });
+    });
+    // We expect the same thing to happen if we bail out in the middle.
+    expect(ops).toEqual(
+      ReactDOMFeatureFlags.useFiber ?
+        [
+          // Fiber works as expected
+          'child did update',
+          'parent did update',
+        ] : [
+          // Stack treats these as two separate updates and therefore the order
+          // is inverse.
+          'parent did update',
+          'child did update',
+        ]
+    );
+
   });
 
   it('should batch unmounts', () => {

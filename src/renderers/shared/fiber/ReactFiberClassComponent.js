@@ -13,17 +13,18 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
   getMaskedContext,
 } = require('ReactFiberContext');
 var {
-  createUpdateQueue,
-  addToQueue,
-  addCallbackToQueue,
-  mergeUpdateQueue,
+  addUpdate,
+  addReplaceUpdate,
+  addForceUpdate,
+  beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
+var { hasContextChanged } = require('ReactFiberContext');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var shallowEqual = require('shallowEqual');
@@ -32,53 +33,71 @@ var invariant = require('invariant');
 
 const isArray = Array.isArray;
 
-module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
-
-  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
-    fiber.updateQueue = updateQueue;
-    // Schedule update on the alternate as well, since we don't know which tree
-    // is current.
-    if (fiber.alternate) {
-      fiber.alternate.updateQueue = updateQueue;
-    }
-    scheduleUpdate(fiber);
+function formatUnexpectedArgument(arg) {
+  var type = typeof arg;
+  if (type !== 'object') {
+    return type;
   }
+  var displayName = arg.constructor && arg.constructor.name || type;
+  var keys = Object.keys(arg);
+  if (keys.length > 0 && keys.length < 20) {
+    return `${displayName} (keys: ${keys.join(', ')})`;
+  }
+  return displayName;
+}
+
+function validateCallback(callback, callerName) {
+  if (typeof callback !== 'function') {
+    invariant(
+      false,
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      formatUnexpectedArgument(callback)
+    );
+  }
+}
+
+module.exports = function(
+  scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
+  getPriorityContext : () => PriorityLevel,
+) {
 
   // Class component state updater
   const updater = {
     isMounted,
-    enqueueSetState(instance, partialState) {
+    enqueueSetState(instance, partialState, callback) {
+      if (callback) {
+        validateCallback(callback, 'setState');
+      }
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue ?
-        addToQueue(fiber.updateQueue, partialState) :
-        createUpdateQueue(partialState);
-      scheduleUpdateQueue(fiber, updateQueue);
+      const priorityLevel = getPriorityContext();
+      addUpdate(fiber, partialState, callback || null, priorityLevel);
+      scheduleUpdate(fiber, priorityLevel);
     },
-    enqueueReplaceState(instance, state) {
+    enqueueReplaceState(instance, state, callback) {
+      if (callback) {
+        validateCallback(callback, 'replaceState');
+      }
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
-      scheduleUpdateQueue(fiber, updateQueue);
+      const priorityLevel = getPriorityContext();
+      addReplaceUpdate(fiber, state, callback || null, priorityLevel);
+      scheduleUpdate(fiber, priorityLevel);
     },
-    enqueueForceUpdate(instance) {
+    enqueueForceUpdate(instance, callback) {
+      if (callback) {
+        validateCallback(callback, 'forceUpdate');
+      }
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
-      updateQueue.isForced = true;
-      scheduleUpdateQueue(fiber, updateQueue);
-    },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      scheduleUpdateQueue(fiber, updateQueue);
+      const priorityLevel = getPriorityContext();
+      addForceUpdate(fiber, callback || null, priorityLevel);
+      scheduleUpdate(fiber, priorityLevel);
     },
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
-    const updateQueue = workInProgress.updateQueue;
-    if (oldProps === null || (updateQueue && updateQueue.isForced)) {
+    if (oldProps === null || (workInProgress.updateQueue && workInProgress.updateQueue.hasForceUpdate)) {
+      // If the workInProgress already has an Update effect, return true
       return true;
     }
 
@@ -122,7 +141,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       );
       const noGetInitialStateOnES6 = (
         !instance.getInitialState ||
-        instance.getInitialState.isReactClassApproved
+        instance.getInitialState.isReactClassApproved ||
+        instance.state
       );
       warning(
         noGetInitialStateOnES6,
@@ -180,6 +200,14 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name
       );
+      const hasMutatedProps = instance.props !== workInProgress.pendingProps;
+      warning(
+        instance.props === undefined || !hasMutatedProps,
+        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'up the same props that your component\'s constructor was passed.',
+        name,
+        name
+      );
     }
 
     const state = instance.state;
@@ -218,7 +246,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   }
 
   // Invokes the mount life-cycles on a previously never rendered instance.
-  function mountClassInstance(workInProgress : Fiber) : void {
+  function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -237,14 +265,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
+        instance.state = beginUpdateQueue(
+          workInProgress,
+          updateQueue,
+          instance,
+          state,
+          props,
+          priorityLevel
+        );
       }
     }
   }
 
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
-  function resumeMountClassInstance(workInProgress : Fiber) : boolean {
+  function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -286,13 +321,20 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
-      newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
+      newInstance.state = beginUpdateQueue(
+        workInProgress,
+        newUpdateQueue,
+        newInstance,
+        newState,
+        newProps,
+        priorityLevel
+      );
     }
     return true;
   }
 
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
-  function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
+  function updateClassInstance(current : Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     const instance = workInProgress.stateNode;
 
     const oldProps = workInProgress.memoizedProps || current.memoizedProps;
@@ -324,19 +366,22 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      if (!updateQueue.hasUpdate) {
-        newState = oldState;
-      } else {
-        newState = mergeUpdateQueue(updateQueue, instance, oldState, newProps);
-      }
+      newState = beginUpdateQueue(
+        workInProgress,
+        updateQueue,
+        instance,
+        oldState,
+        newProps,
+        priorityLevel
+      );
     } else {
       newState = oldState;
     }
 
     if (oldProps === newProps &&
         oldState === newState &&
-        oldContext === newContext &&
-        updateQueue && !updateQueue.isForced) {
+        !hasContextChanged() &&
+        !(updateQueue && updateQueue.hasForceUpdate)) {
       return false;
     }
 

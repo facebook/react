@@ -20,21 +20,30 @@ var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
+var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
 var emptyFunction = require('emptyFunction');
 var focusNode = require('focusNode');
-var getCurrentOwnerName = require('getCurrentOwnerName');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
 var warning = require('warning');
+
+if (__DEV__) {
+  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
+  var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
+  var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var { validateProperties: validateARIAProperties } = ReactDOMInvalidARIAHook;
+  var { validateProperties: validateInputPropertes } = ReactDOMNullInputValuePropHook;
+  var { validateProperties: validateUnknownPropertes } = ReactDOMUnknownPropertyHook;
+}
+
 var didWarnShadyDOM = false;
 
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -46,13 +55,20 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
+var {
+  html: HTML_NAMESPACE,
+  svg: SVG_NAMESPACE,
+  mathml: MATH_NAMESPACE,
+} = DOMNamespaces;
+
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
 
 
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentOwnerName();
+  var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
+    // TODO: also report the stack.
     return ' This DOM node was rendered by `' + ownerName + '`.';
   }
   return '';
@@ -115,6 +131,14 @@ function assertValidProps(tag : string, props : ?Object) {
     'using JSX.%s',
      getDeclarationErrorAddendum()
   );
+}
+
+if (__DEV__) {
+  var validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
+    validateInputPropertes(type, props);
+    validateUnknownPropertes(type, props);
+  };
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
@@ -274,21 +298,6 @@ var voidElementTags = {
   ...omittedCloseTags,
 };
 
-// We accept any tag to be rendered but since this gets injected into arbitrary
-// HTML, we want to make sure that it's a safe tag.
-// http://www.w3.org/TR/REC-xml/#NT-Name
-
-var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-var validatedTagCache = {};
-var hasOwnProperty = {}.hasOwnProperty;
-
-function validateDangerousTag(tag) {
-  if (!hasOwnProperty.call(validatedTagCache, tag)) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
-    validatedTagCache[tag] = true;
-  }
-}
-
 function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
@@ -434,63 +443,66 @@ function updateDOMProperties(
     }
   }
   if (styleUpdates) {
-    var componentPlaceholder = null;
-    if (__DEV__) {
-      // HACK
-      var internalInstance = ReactDOMComponentTree.getInstanceFromNode(domElement);
-      componentPlaceholder = {
-        _currentElement: { type: internalInstance.type, props: internalInstance.memoizedProps },
-        _debugID: internalInstance._debugID,
-      };
-    }
+    // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
     CSSPropertyOperations.setValueForStyles(
       domElement,
       styleUpdates,
-      componentPlaceholder // TODO: Change CSSPropertyOperations to use getCurrentOwnerName.
     );
   }
 }
 
-var ReactDOMFiberComponent = {
+// Assumes there is no parent namespace.
+function getIntrinsicNamespace(type : string) : string {
+  switch (type) {
+    case 'svg':
+      return SVG_NAMESPACE;
+    case 'math':
+      return MATH_NAMESPACE;
+    default:
+      return HTML_NAMESPACE;
+  }
+}
 
-  // TODO: Use this to keep track of changes to the host context and use this
-  // to determine whether we switch to svg and back.
-  // TODO: Does this need to check the current namespace? In case these tags
-  // happen to be valid in some other namespace.
-  isNewHostContainer(tag : string) {
-    return tag === 'svg' || tag === 'foreignobject';
+var ReactDOMFiberComponent = {
+  getChildNamespace(parentNamespace : string | null, type : string) : string {
+    if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
+      // No (or default) parent namespace: potential entry point.
+      return getIntrinsicNamespace(type);
+    }
+    if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
+      // We're leaving SVG.
+      return HTML_NAMESPACE;
+    }
+    // By default, pass namespace below.
+    return parentNamespace;
   },
 
   createElement(
-    tag : string,
+    type : string,
     props : Object,
-    rootContainerElement : Element
+    rootContainerElement : Element,
+    parentNamespace : string
   ) : Element {
-    validateDangerousTag(tag);
-    // TODO:
-    // tag.toLowerCase(); Do we need to apply lower case only on non-custom elements?
-
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var namespaceURI = rootContainerElement.namespaceURI;
-    if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg &&
-        rootContainerElement.tagName === 'foreignObject') {
-      namespaceURI = DOMNamespaces.html;
-    }
-    if (namespaceURI === DOMNamespaces.html) {
-      if (tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
-      } else if (tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
-      }
-      // TODO: Make this a new root container element.
-    }
-
     var ownerDocument = rootContainerElement.ownerDocument;
     var domElement : Element;
-    if (namespaceURI === DOMNamespaces.html) {
-      if (tag === 'script') {
+    var namespaceURI = parentNamespace;
+    if (namespaceURI === HTML_NAMESPACE) {
+      namespaceURI = getIntrinsicNamespace(type);
+    }
+    if (namespaceURI === HTML_NAMESPACE) {
+      if (__DEV__) {
+        warning(
+          type === type.toLowerCase() ||
+          isCustomComponent(type, props),
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          'in React.',
+          type
+        );
+      }
+
+      if (type === 'script') {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
         var div = ownerDocument.createElement('div');
@@ -499,17 +511,17 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild : any) : HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        domElement = ownerDocument.createElement(tag, props.is);
+        domElement = ownerDocument.createElement(type, props.is);
       } else {
         // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
         // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-        domElement = ownerDocument.createElement(tag);
+        domElement = ownerDocument.createElement(type);
       }
     } else {
       domElement = ownerDocument.createElementNS(
         namespaceURI,
-        tag
+        type
       );
     }
 
@@ -525,12 +537,13 @@ var ReactDOMFiberComponent = {
 
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
+      validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-          getCurrentOwnerName() || 'A component'
+          getCurrentFiberOwnerName() || 'A component'
         );
         didWarnShadyDOM = true;
       }
@@ -640,8 +653,12 @@ var ReactDOMFiberComponent = {
     tag : string,
     lastRawProps : Object,
     nextRawProps : Object,
-    rootContainerElement : Element
+    rootContainerElement : Element,
   ) : void {
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, nextRawProps);
+    }
+
     var lastProps : Object;
     var nextProps : Object;
     switch (tag) {

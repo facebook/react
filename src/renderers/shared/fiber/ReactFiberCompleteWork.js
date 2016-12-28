@@ -14,13 +14,13 @@
 
 import type { ReactCoroutine } from 'ReactCoroutine';
 import type { Fiber } from 'ReactFiber';
+import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
 var {
-  isContextProvider,
   popContextProvider,
 } = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -40,26 +40,35 @@ var {
 } = ReactTypeOfWork;
 var {
   Update,
-  Callback,
 } = ReactTypeOfSideEffect;
 
-module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
+if (__DEV__) {
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+}
 
-  const createInstance = config.createInstance;
-  const appendInitialChild = config.appendInitialChild;
-  const finalizeInitialChildren = config.finalizeInitialChildren;
-  const createTextInstance = config.createTextInstance;
-  const prepareUpdate = config.prepareUpdate;
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
+  hostContext : HostContext<C, CX>,
+) {
+  const {
+    createInstance,
+    createTextInstance,
+    appendInitialChild,
+    finalizeInitialChildren,
+    prepareUpdate,
+  } = config;
+
+  const {
+    getRootHostContainer,
+    popHostContext,
+    getHostContext,
+    popHostContainer,
+  } = hostContext;
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
     // an UpdateAndPlacement.
     workInProgress.effectTag |= Update;
-  }
-
-  function markCallback(workInProgress : Fiber) {
-    // Tag the fiber with a callback effect.
-    workInProgress.effectTag |= Callback;
   }
 
   function appendAllYields(yields : Array<ReifiedYield>, workInProgress : Fiber) {
@@ -155,53 +164,40 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
   }
 
   function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+    if (__DEV__) {
+      ReactDebugCurrentFiber.current = workInProgress;
+    }
+
     switch (workInProgress.tag) {
       case FunctionalComponent:
         workInProgress.memoizedProps = workInProgress.pendingProps;
         return null;
-      case ClassComponent:
+      case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
-        if (isContextProvider(workInProgress)) {
-          popContextProvider();
-        }
+        popContextProvider(workInProgress);
         // Don't use the state queue to compute the memoized state. We already
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null
-        // in the case of an update
-        const { state, props } = workInProgress.stateNode;
-        const updateQueue = workInProgress.updateQueue;
-        workInProgress.memoizedState = state;
-        workInProgress.memoizedProps = props;
-        if (current) {
-          if (current.memoizedProps !== workInProgress.memoizedProps ||
-              current.memoizedState !== workInProgress.memoizedState ||
-              updateQueue && updateQueue.isForced) {
-            markUpdate(workInProgress);
-          }
-        } else {
-          markUpdate(workInProgress);
-        }
-        if (updateQueue && updateQueue.hasCallback) {
-          // Transfer update queue to callbackList field so callbacks can be
-          // called during commit phase.
-          workInProgress.callbackList = updateQueue;
-          markCallback(workInProgress);
-        }
+        // in the case of an update.
+        const instance = workInProgress.stateNode;
+        workInProgress.memoizedState = instance.state;
+        workInProgress.memoizedProps = instance.props;
+
         return null;
+      }
       case HostRoot: {
+        // TODO: Pop the host container after #8607 lands.
         workInProgress.memoizedProps = workInProgress.pendingProps;
-        popContextProvider();
         const fiberRoot = (workInProgress.stateNode : FiberRoot);
         if (fiberRoot.pendingContext) {
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-        // TODO: Only mark this as an update if we have any pending callbacks
-        // on it.
-        markUpdate(workInProgress);
         return null;
       }
       case HostComponent:
+        popHostContext(workInProgress);
+        const type = workInProgress.type;
         let newProps = workInProgress.pendingProps;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
@@ -215,7 +211,8 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             newProps = workInProgress.memoizedProps || oldProps;
           }
           const instance : I = workInProgress.stateNode;
-          if (prepareUpdate(instance, oldProps, newProps)) {
+          const currentHostContext = getHostContext();
+          if (prepareUpdate(instance, type, oldProps, newProps, currentHostContext)) {
             // This returns true if there was something to update.
             markUpdate(workInProgress);
           }
@@ -229,14 +226,21 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
             }
           }
 
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getHostContext();
           // TODO: Move createInstance to beginWork and keep it on a context
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
-          // Finally, finalizeInitialChildren here in completeWork.
-          const instance = createInstance(workInProgress.type, newProps, workInProgress);
+          const instance = createInstance(
+            type,
+            newProps,
+            rootContainerInstance,
+            currentHostContext,
+            workInProgress
+          );
           appendAllChildren(instance, workInProgress);
-          finalizeInitialChildren(instance, workInProgress.type, newProps);
+          finalizeInitialChildren(instance, type, newProps, rootContainerInstance);
 
           workInProgress.stateNode = instance;
           if (workInProgress.ref) {
@@ -272,7 +276,9 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
               return null;
             }
           }
-          const textInstance = createTextInstance(newText, workInProgress);
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getHostContext();
+          const textInstance = createTextInstance(newText, rootContainerInstance, currentHostContext, workInProgress);
           workInProgress.stateNode = textInstance;
         }
         workInProgress.memoizedProps = newText;
@@ -294,6 +300,7 @@ module.exports = function<T, P, I, TI, C>(config : HostConfig<T, P, I, TI, C>) {
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         workInProgress.memoizedProps = workInProgress.pendingProps;
+        popHostContainer(workInProgress);
         return null;
 
       // Error cases

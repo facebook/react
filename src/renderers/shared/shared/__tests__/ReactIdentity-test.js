@@ -19,7 +19,7 @@ var ReactTestUtils;
 describe('ReactIdentity', () => {
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');

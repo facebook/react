@@ -150,7 +150,7 @@ var NativeMethodsMixin = {
     );
 
     UIManager.updateView(
-      findNodeHandle(this),
+      (findNodeHandle(this) : any),
       this.viewConfig.uiViewClassName,
       updatePayload
     );

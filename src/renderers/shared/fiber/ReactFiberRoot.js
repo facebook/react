@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
 
 const { createHostRootFiber } = require('ReactFiber');
 
@@ -26,14 +25,12 @@ export type FiberRoot = {
   isScheduled: boolean,
   // The work schedule is a linked list.
   nextScheduledRoot: ?FiberRoot,
-  // Linked list of callbacks to call after updates are committed.
-  callbackList: ?UpdateQueue,
   // Top context object, used by renderSubtreeIntoContainer
-  context: Object,
+  context: ?Object,
   pendingContext: ?Object,
 };
 
-exports.createFiberRoot = function(containerInfo : any, context : Object) : FiberRoot {
+exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber();
@@ -43,7 +40,7 @@ exports.createFiberRoot = function(containerInfo : any, context : Object) : Fibe
     isScheduled: false,
     nextScheduledRoot: null,
     callbackList: null,
-    context: context,
+    context: null,
     pendingContext: null,
   };
   uninitializedFiber.stateNode = root;

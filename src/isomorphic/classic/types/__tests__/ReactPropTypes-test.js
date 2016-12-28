@@ -837,7 +837,7 @@ describe('ReactPropTypes', () => {
 
   describe('Custom validator', () => {
     beforeEach(() => {
-      jest.resetModuleRegistry();
+      jest.resetModules();
     });
 
     it('should have been called with the right params', () => {

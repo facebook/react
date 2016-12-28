@@ -20,7 +20,7 @@ var WebComponents;
 
 describe('ReactMount', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -230,7 +230,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn if the unmounted node was rendered by another copy of React', () => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     var ReactDOMOther = require('ReactDOM');
     var container = document.createElement('div');
 

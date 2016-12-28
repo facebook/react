@@ -23,7 +23,7 @@ describe('ReactComponentTreeHook', () => {
   var Text;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactNative = require('ReactNative');

@@ -16,10 +16,15 @@ var ReactNoop;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
   });
+
+  function div(...children) {
+    children = children.map(c => typeof c === 'string' ? { text: c } : c);
+    return { type: 'div', children, prop: undefined };
+  }
 
   function span(prop) {
     return { type: 'span', children: [], prop };
@@ -132,10 +137,6 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-    ]);
-    ops = [];
-    ReactNoop.flushDeferredPri(25);
-    expect(ops).toEqual([
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
     ]);
@@ -653,6 +654,7 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.unmountRootWithID('d');
     ReactNoop.unmountRootWithID('e');
     ReactNoop.unmountRootWithID('f');
+    ReactNoop.flush();
     expect(ReactNoop.getChildren('a')).toEqual(null);
     expect(ReactNoop.getChildren('b')).toEqual(null);
     expect(ReactNoop.getChildren('c')).toEqual(null);
@@ -750,7 +752,9 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(
       'Element type is invalid: expected a string (for built-in components) or ' +
-      'a class/function (for composite components) but got: undefined.'
+      'a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in. Check the render method of `BrokenRender`.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -792,7 +796,9 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(
       'Element type is invalid: expected a string (for built-in components) or ' +
-      'a class/function (for composite components) but got: undefined.'
+      'a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in. Check the render method of `BrokenRender`.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -805,7 +811,9 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
-      'a class/function (for composite components) but got: undefined.'
+      'a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in.'
     );
 
     ReactNoop.render(<span prop="hi" />);
@@ -863,5 +871,70 @@ describe('ReactIncrementalErrorHandling', () => {
       'BrokenRenderAndUnmount componentWillUnmount',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('does not interrupt unmounting if detaching a ref throws', () => {
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentWillUnmount() {
+        ops.push('Bar unmount');
+      }
+      render() {
+        return <span prop="Bar" />;
+      }
+    }
+
+    function barRef(inst) {
+      if (inst === null) {
+        ops.push('barRef detach');
+        throw new Error('Detach error');
+      }
+      ops.push('barRef attach');
+    }
+
+    function Foo(props) {
+      return (
+        <div>
+          {props.hide ? null : <Bar ref={barRef} />}
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['barRef attach']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('Bar'),
+      ),
+    ]);
+
+    ops = [];
+
+    // Unmount
+    ReactNoop.render(<Foo hide={true} />);
+    expect(() => ReactNoop.flush()).toThrow('Detach error');
+    expect(ops).toEqual([
+      'barRef detach',
+      // Bar should unmount even though its ref threw an error while detaching
+      'Bar unmount',
+    ]);
+    // Because there was an error, entire tree should unmount
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
+  it('handles error thrown by host config while working on failed root', () => {
+    ReactNoop.simulateErrorInHostConfig(() => {
+      ReactNoop.render(<span />);
+      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
+    });
+  });
+
+  it('handles error thrown by top-level callback', () => {
+    ReactNoop.render(<div />, () => {
+      throw new Error('Error!');
+    });
+    expect(() => ReactNoop.flush()).toThrow('Error!');
   });
 });

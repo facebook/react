@@ -14,7 +14,7 @@ var reactProdInvariant;
 
 describe('reactProdInvariant', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     reactProdInvariant = require('reactProdInvariant');
   });
 

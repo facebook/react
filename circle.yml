@@ -40,14 +40,8 @@ dependencies:
 
 test:
   override:
-    - ./node_modules/.bin/gulp lint
-    - ./node_modules/.bin/gulp flow
-    - ./scripts/circleci/test_coverage.sh
-    - ./scripts/circleci/test_fiber.sh
-    - ./scripts/circleci/test_html_generation.sh
-    - ./scripts/circleci/track_stats.sh
-    - ./node_modules/.bin/grunt build
-    - ./node_modules/.bin/gulp react:extract-errors
+    - ./scripts/circleci/test_entry_point.sh:
+        parallel: true
 
 deployment:
   staging:

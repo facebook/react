@@ -28,7 +28,7 @@ var UNMOUNT_INVARIANT_MESSAGE =
 
 describe('rendering React components at document', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactDOM = require('ReactDOM');

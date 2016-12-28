@@ -15,7 +15,7 @@ var KeyEscapeUtils;
 
 describe('KeyEscapeUtils', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     KeyEscapeUtils = require('KeyEscapeUtils');
   });

@@ -33,7 +33,7 @@ describe('ReactErrorBoundaries', () => {
   var ErrorBoundary;
   var ErrorMessage;
   var NoopErrorBoundary;
-  var RethrowErrorBoundary;
+  var RetryErrorBoundary;
   var Normal;
 
   beforeEach(() => {
@@ -484,32 +484,33 @@ describe('ReactErrorBoundaries', () => {
       },
     };
 
-    RethrowErrorBoundary = class extends React.Component {
+    RetryErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
-        log.push('RethrowErrorBoundary constructor');
+        log.push('RetryErrorBoundary constructor');
       }
       render() {
-        log.push('RethrowErrorBoundary render');
+        log.push('RetryErrorBoundary render');
         return <BrokenRender />;
       }
       componentWillMount() {
-        log.push('RethrowErrorBoundary componentWillMount');
+        log.push('RetryErrorBoundary componentWillMount');
       }
       componentDidMount() {
-        log.push('RethrowErrorBoundary componentDidMount');
+        log.push('RetryErrorBoundary componentDidMount');
       }
       componentWillUnmount() {
-        log.push('RethrowErrorBoundary componentWillUnmount');
+        log.push('RetryErrorBoundary componentWillUnmount');
       }
       unstable_handleError(error) {
-        if (!ReactDOMFeatureFlags.useFiber) {
-          log.push('RethrowErrorBoundary unstable_handleError [*]');
+        if (ReactDOMFeatureFlags.useFiber) {
+          log.push('RetryErrorBoundary unstable_handleError [!]');
+          // In Fiber, calling setState() (and failing) is treated as a rethrow.
+          this.setState({});
+        } else {
+          log.push('RetryErrorBoundary unstable_handleError [*]');
           // In Stack, not calling setState() is treated as a rethrow.
-          return;
         }
-        log.push('RethrowErrorBoundary unstable_handleError [!]');
-        throw error;
       }
     };
 
@@ -732,6 +733,58 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
+  it('renders an error state if context provider throws in componentWillMount', () => {
+    class BrokenComponentWillMountWithContext extends React.Component {
+      static childContextTypes = {foo: React.PropTypes.number};
+      getChildContext() {
+        return {foo: 42};
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+      componentWillMount() {
+        throw new Error('Hello');
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenComponentWillMountWithContext />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
+
+  it('renders an error state if module-style context provider throws in componentWillMount', () => {
+    function BrokenComponentWillMountWithContext() {
+      return {
+        getChildContext() {
+          return {foo: 42};
+        },
+        render() {
+          return <div>{this.props.children}</div>;
+        },
+        componentWillMount() {
+          throw new Error('Hello');
+        },
+      };
+    }
+    BrokenComponentWillMountWithContext.childContextTypes = {
+      foo: React.PropTypes.number,
+    };
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenComponentWillMountWithContext />
+      </ErrorBoundary>,
+      container
+    );
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
+
   it('mounts the error message if mounting fails', () => {
     function renderError(error) {
       return (
@@ -788,9 +841,9 @@ describe('ReactErrorBoundaries', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
-        <RethrowErrorBoundary>
+        <RetryErrorBoundary>
           <BrokenRender />
-        </RethrowErrorBoundary>
+        </RetryErrorBoundary>
       </ErrorBoundary>,
       container
     );
@@ -799,20 +852,24 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
-      'RethrowErrorBoundary constructor',
-      'RethrowErrorBoundary componentWillMount',
-      'RethrowErrorBoundary render',
+      'RetryErrorBoundary constructor',
+      'RetryErrorBoundary componentWillMount',
+      'RetryErrorBoundary render',
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       ...(ReactDOMFeatureFlags.useFiber ? [
-        // In Fiber, noop error boundaries render null
-        'RethrowErrorBoundary componentDidMount',
+        // In Fiber, failed error boundaries render null before attempting to recover
+        'RetryErrorBoundary componentDidMount',
+        'RetryErrorBoundary unstable_handleError [!]',
         'ErrorBoundary componentDidMount',
-        'RethrowErrorBoundary unstable_handleError [!]',
-        // The error got rethrown here.
+        // Retry
+        'RetryErrorBoundary render',
+        'BrokenRender constructor',
+        'BrokenRender componentWillMount',
+        'BrokenRender render [!]',
         // This time, the error propagates to the higher boundary
-        'RethrowErrorBoundary componentWillUnmount',
+        'RetryErrorBoundary componentWillUnmount',
         'ErrorBoundary unstable_handleError',
         // Render the error
         'ErrorBoundary componentWillUpdate',
@@ -821,8 +878,8 @@ describe('ReactErrorBoundaries', () => {
       ] : [
         // The first error boundary catches the error.
         // However, it doesn't adjust its state so next render will also fail.
-        'RethrowErrorBoundary unstable_handleError [*]',
-        'RethrowErrorBoundary render',
+        'RetryErrorBoundary unstable_handleError [*]',
+        'RetryErrorBoundary render',
         'BrokenRender constructor',
         'BrokenRender componentWillMount',
         'BrokenRender render [!]',
@@ -904,9 +961,9 @@ describe('ReactErrorBoundaries', () => {
       ...(ReactDOMFeatureFlags.useFiber ? [
         // Finish mounting with null children
         'BrokenRenderErrorBoundary componentDidMount',
-        'ErrorBoundary componentDidMount',
         // Attempt to handle the error
         'BrokenRenderErrorBoundary unstable_handleError',
+        'ErrorBoundary componentDidMount',
         'BrokenRenderErrorBoundary render error [!]',
         // Boundary fails with new error, propagate to next boundary
         'BrokenRenderErrorBoundary componentWillUnmount',
@@ -2044,15 +2101,15 @@ describe('ReactErrorBoundaries', () => {
         'OuterErrorBoundary componentDidUpdate',
         // After the commit phase, attempt to recover from any errors that
         // were captured
+        'BrokenComponentDidUpdate componentWillUnmount',
+        'BrokenComponentDidUpdate componentWillUnmount',
         'InnerUnmountBoundary unstable_handleError',
+        'InnerUpdateBoundary unstable_handleError',
         'InnerUnmountBoundary componentWillUpdate',
         'InnerUnmountBoundary render error',
-        'BrokenComponentDidUpdate componentWillUnmount',
-        'BrokenComponentDidUpdate componentWillUnmount',
-        'InnerUnmountBoundary componentDidUpdate',
-        'InnerUpdateBoundary unstable_handleError',
         'InnerUpdateBoundary componentWillUpdate',
         'InnerUpdateBoundary render error',
+        'InnerUnmountBoundary componentDidUpdate',
         'InnerUpdateBoundary componentDidUpdate',
       ]);
 

@@ -23,7 +23,7 @@ describe('ReactEventListener', () => {
   var handleTopLevel;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMComponentTree = require('ReactDOMComponentTree');

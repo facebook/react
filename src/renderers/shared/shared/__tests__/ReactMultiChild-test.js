@@ -18,11 +18,13 @@ describe('ReactMultiChild', () => {
 
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   describe('reconciliation', () => {
@@ -152,7 +154,7 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should warn for duplicated keys with component stack info', () => {
+    it('should warn for duplicated array keys with component stack info', () => {
       spyOn(console, 'error');
 
       var container = document.createElement('div');
@@ -186,8 +188,70 @@ describe('ReactMultiChild', () => {
       );
 
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: flattenChildren(...): ' +
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Encountered two children with the same key, `1`. ' +
+        'Child keys must be unique; when two children share a key, ' +
+        'only the first child will be used.\n' +
+        '    in div (at **)\n' +
+        '    in WrapperComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)'
+      );
+    });
+
+    it('should warn for duplicated iterable keys with component stack info', () => {
+      spyOn(console, 'error');
+
+      var container = document.createElement('div');
+
+      class WrapperComponent extends React.Component {
+        render() {
+          return <div>{this.props.children}</div>;
+        }
+      }
+
+      class Parent extends React.Component {
+        render() {
+          return (
+            <div>
+              <WrapperComponent>
+                {this.props.children}
+              </WrapperComponent>
+            </div>
+          );
+        }
+      }
+
+      function createIterable(array) {
+        return {
+          '@@iterator': function() {
+            var i = 0;
+            return {
+              next() {
+                const next = {
+                  value: i < array.length ? array[i] : undefined,
+                  done: i === array.length,
+                };
+                i++;
+                return next;
+              },
+            };
+          },
+        };
+      }
+
+      ReactDOM.render(
+        <Parent>{createIterable([<div key="1"/>])}</Parent>,
+        container
+      );
+
+      ReactDOM.render(
+        <Parent>{createIterable([<div key="1"/>, <div key="1"/>])}</Parent>,
+        container
+      );
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
         'Encountered two children with the same key, `1`. ' +
         'Child keys must be unique; when two children share a key, ' +
         'only the first child will be used.\n' +
@@ -254,4 +318,78 @@ describe('ReactMultiChild', () => {
     ReactDOM.render(<Letters letters="EHCjpdTUuiybDvhRJwZt" />, container);
     expect(container.textContent).toBe('EHCjpdTUuiybDvhRJwZt');
   });
+
+  it('prepares new children before unmounting old', () => {
+    var log = [];
+
+    class Spy extends React.Component {
+      componentWillMount() {
+        log.push(this.props.name + ' componentWillMount');
+      }
+      render() {
+        log.push(this.props.name + ' render');
+        return <div />;
+      }
+      componentDidMount() {
+        log.push(this.props.name + ' componentDidMount');
+      }
+      componentWillUnmount() {
+        log.push(this.props.name + ' componentWillUnmount');
+      }
+    }
+
+    // These are reference-unequal so they will be swapped even if they have
+    // matching keys
+    var SpyA = (props) => <Spy {...props} />;
+    var SpyB = (props) => <Spy {...props} />;
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      <div>
+        <SpyA key="one" name="oneA" />
+        <SpyA key="two" name="twoA" />
+      </div>,
+      container
+    );
+    ReactDOM.render(
+      <div>
+        <SpyB key="one" name="oneB" />
+        <SpyB key="two" name="twoB" />
+      </div>,
+      container
+    );
+
+    expect(log).toEqual([
+      'oneA componentWillMount',
+      'oneA render',
+      'twoA componentWillMount',
+      'twoA render',
+      'oneA componentDidMount',
+      'twoA componentDidMount',
+
+      ...(
+        ReactDOMFeatureFlags.useFiber ?
+          [
+            'oneB componentWillMount',
+            'oneB render',
+            'twoB componentWillMount',
+            'twoB render',
+            'oneA componentWillUnmount',
+            'twoA componentWillUnmount',
+          ] :
+          [
+            'oneB componentWillMount',
+            'oneB render',
+            'oneA componentWillUnmount',
+            'twoB componentWillMount',
+            'twoB render',
+            'twoA componentWillUnmount',
+          ]
+      ),
+
+      'oneB componentDidMount',
+      'twoB componentDidMount',
+    ]);
+  });
+
 });

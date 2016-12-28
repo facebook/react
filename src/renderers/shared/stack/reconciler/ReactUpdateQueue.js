@@ -112,40 +112,6 @@ var ReactUpdateQueue = {
     }
   },
 
-  /**
-   * Enqueue a callback that will be executed after all the pending updates
-   * have processed.
-   *
-   * @param {ReactClass} publicInstance The instance to use as `this` context.
-   * @param {?function} callback Called after state is updated.
-   * @param {string} callerName Name of the calling function in the public API.
-   * @internal
-   */
-  enqueueCallback: function(publicInstance, callback, callerName) {
-    ReactUpdateQueue.validateCallback(callback, callerName);
-    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
-
-    // Previously we would throw an error if we didn't have an internal
-    // instance. Since we want to make it a no-op instead, we mirror the same
-    // behavior we have in other enqueue* methods.
-    // We also need to ignore callbacks in componentWillMount. See
-    // enqueueUpdates.
-    if (!internalInstance) {
-      return null;
-    }
-
-    if (internalInstance._pendingCallbacks) {
-      internalInstance._pendingCallbacks.push(callback);
-    } else {
-      internalInstance._pendingCallbacks = [callback];
-    }
-    // TODO: The callback here is ignored when setState is called from
-    // componentWillMount. Either fix it or disallow doing so completely in
-    // favor of getInitialState. Alternatively, we can disallow
-    // componentWillMount during server-side rendering.
-    enqueueUpdate(internalInstance);
-  },
-
   enqueueCallbackInternal: function(internalInstance, callback) {
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
@@ -166,9 +132,11 @@ var ReactUpdateQueue = {
    * `componentWillUpdate` and `componentDidUpdate`.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
+   * @param {?function} callback Called after component is updated.
+   * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueForceUpdate: function(publicInstance) {
+  enqueueForceUpdate: function(publicInstance, callback, callerName) {
     var internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'forceUpdate'
@@ -176,6 +144,15 @@ var ReactUpdateQueue = {
 
     if (!internalInstance) {
       return;
+    }
+
+    if (callback) {
+      ReactUpdateQueue.validateCallback(callback, callerName);
+      if (internalInstance._pendingCallbacks) {
+        internalInstance._pendingCallbacks.push(callback);
+      } else {
+        internalInstance._pendingCallbacks = [callback];
+      }
     }
 
     internalInstance._pendingForceUpdate = true;
@@ -192,9 +169,11 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} completeState Next state.
+   * @param {?function} callback Called after state is updated.
+   * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueReplaceState: function(publicInstance, completeState) {
+  enqueueReplaceState: function(publicInstance, completeState, callback, callerName) {
     var internalInstance = getInternalInstanceReadyForUpdate(
       publicInstance,
       'replaceState'
@@ -207,6 +186,15 @@ var ReactUpdateQueue = {
     internalInstance._pendingStateQueue = [completeState];
     internalInstance._pendingReplaceState = true;
 
+    if (callback) {
+      ReactUpdateQueue.validateCallback(callback, callerName);
+      if (internalInstance._pendingCallbacks) {
+        internalInstance._pendingCallbacks.push(callback);
+      } else {
+        internalInstance._pendingCallbacks = [callback];
+      }
+    }
+
     enqueueUpdate(internalInstance);
   },
 
@@ -218,9 +206,11 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} partialState Next partial state to be merged with state.
+   * @param {?function} callback Called after state is updated.
+   * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueSetState: function(publicInstance, partialState) {
+  enqueueSetState: function(publicInstance, partialState, callback, callerName) {
     if (__DEV__) {
       ReactInstrumentation.debugTool.onSetState();
       warning(
@@ -243,6 +233,15 @@ var ReactUpdateQueue = {
       internalInstance._pendingStateQueue ||
       (internalInstance._pendingStateQueue = []);
     queue.push(partialState);
+
+    if (callback) {
+      ReactUpdateQueue.validateCallback(callback, callerName);
+      if (internalInstance._pendingCallbacks) {
+        internalInstance._pendingCallbacks.push(callback);
+      } else {
+        internalInstance._pendingCallbacks = [callback];
+      }
+    }
 
     enqueueUpdate(internalInstance);
   },

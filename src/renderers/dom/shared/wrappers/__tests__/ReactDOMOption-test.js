@@ -13,13 +13,19 @@
 
 
 describe('ReactDOMOption', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactTestUtils;
 
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -33,15 +39,18 @@ describe('ReactDOMOption', () => {
 
   it('should ignore and warn invalid children types', () => {
     spyOn(console, 'error');
-    var stub = <option>{1} <div /> {2}</option>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = ReactDOM.findDOMNode(stub);
+    var el = <option>{1} <div /> {2}</option>;
+    var node = ReactTestUtils.renderIntoDocument(el);
     expect(node.innerHTML).toBe('1  2');
-    ReactTestUtils.renderIntoDocument(<option>{1} <div /> {2}</option>);
+    ReactTestUtils.renderIntoDocument(el);
     // only warn once
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Only strings and numbers are supported as <option> children.'
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+      ReactDOMFeatureFlags.useFiber ?
+        '<div> cannot appear as a child of <option>.\n' +
+        '    in div (at **)\n' +
+        '    in option (at **)' :
+        'Only strings and numbers are supported as <option> children.'
     );
   });
 

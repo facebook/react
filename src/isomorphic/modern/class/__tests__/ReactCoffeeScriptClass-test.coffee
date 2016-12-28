@@ -319,6 +319,25 @@ describe 'ReactCoffeeScriptClass', ->
     )
     undefined
 
+  it 'does not warn about getInitialState() on class components
+      if state is also defined.', ->
+    spyOn console, 'error'
+    class Foo extends React.Component
+      constructor: (props) ->
+        super props
+        @state = bar: @props.initialValue
+
+      getInitialState: ->
+        {}
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(Foo), 'SPAN', 'foo'
+    expect(console.error.calls.count()).toBe 0
+    undefined
+
   it 'should warn when misspelling shouldComponentUpdate', ->
     spyOn console, 'error'
     class NamedComponent extends React.Component

@@ -15,6 +15,7 @@ var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
@@ -270,7 +271,8 @@ var ReactCompositeComponent = {
       // catch them here, at initialization time, instead.
       warning(
         !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved,
+        inst.getInitialState.isReactClassApproved ||
+        inst.state,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a state property instead?',
@@ -780,6 +782,16 @@ var ReactCompositeComponent = {
         this._context
       );
     } else {
+      var callbacks = this._pendingCallbacks;
+      this._pendingCallbacks = null;
+      if (callbacks) {
+        for (var j = 0; j < callbacks.length; j++) {
+          transaction.getReactMountReady().enqueue(
+            callbacks[j],
+            this.getPublicInstance()
+          );
+        }
+      }
       this._updateBatchNumber = null;
     }
   },
@@ -848,6 +860,11 @@ var ReactCompositeComponent = {
       }
     }
 
+    // If updating happens to enqueue any new updates, we shouldn't execute new
+    // callbacks until the next render happens, so stash the callbacks first.
+    var callbacks = this._pendingCallbacks;
+    this._pendingCallbacks = null;
+
     var nextState = this._processPendingState(nextProps, nextContext);
     var shouldUpdate = true;
 
@@ -900,6 +917,15 @@ var ReactCompositeComponent = {
       inst.props = nextProps;
       inst.state = nextState;
       inst.context = nextContext;
+    }
+
+    if (callbacks) {
+      for (var j = 0; j < callbacks.length; j++) {
+        transaction.getReactMountReady().enqueue(
+          callbacks[j],
+          this.getPublicInstance()
+        );
+      }
     }
   },
 
@@ -1085,11 +1111,14 @@ var ReactCompositeComponent = {
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(
-        prevComponentInstance,
-        safely,
-        false /* skipLifecycle */
-      );
+
+      if (!ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
+        ReactReconciler.unmountComponent(
+          prevComponentInstance,
+          safely,
+          false /* skipLifecycle */
+        );
+      }
 
       var nodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedNodeType = nodeType;
@@ -1107,6 +1136,14 @@ var ReactCompositeComponent = {
         this._processChildContext(context),
         debugID
       );
+
+      if (ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
+        ReactReconciler.unmountComponent(
+          prevComponentInstance,
+          safely,
+          false /* skipLifecycle */
+        );
+      }
 
       if (__DEV__) {
         if (debugID !== 0) {

@@ -367,7 +367,7 @@ function deleteAllListeners(node) {
 describe('ResponderEventPlugin', () => {
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     EventPluginHub = require('EventPluginHub');
     EventPluginUtils = require('EventPluginUtils');

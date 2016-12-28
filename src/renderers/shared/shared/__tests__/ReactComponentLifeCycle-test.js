@@ -95,7 +95,7 @@ function getLifeCycleState(instance): ComponentLifeCycle {
  */
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
@@ -592,6 +592,57 @@ describe('ReactComponentLifeCycle', () => {
     expect(log).toEqual([
       'outer componentWillUnmount',
       'inner componentWillUnmount',
+    ]);
+  });
+
+  it('calls effects on module-pattern component', function() {
+    const log = [];
+
+    function Parent() {
+      return {
+        render() {
+          expect(typeof this.props).toBe('object');
+          log.push('render');
+          return <Child />;
+        },
+        componentWillMount() {
+          log.push('will mount');
+        },
+        componentDidMount() {
+          log.push('did mount');
+        },
+        componentDidUpdate() {
+          log.push('did update');
+        },
+        getChildContext() {
+          return {x: 2};
+        },
+      };
+    }
+    Parent.childContextTypes = {
+      x: React.PropTypes.number,
+    };
+    function Child(props, context) {
+      expect(context.x).toBe(2);
+      return <div />;
+    }
+    Child.contextTypes = {
+      x: React.PropTypes.number,
+    };
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Parent ref={(c) => c && log.push('ref')} />, div);
+    ReactDOM.render(<Parent ref={(c) => c && log.push('ref')} />, div);
+
+    expect(log).toEqual([
+      'will mount',
+      'render',
+      'did mount',
+      'ref',
+
+      'render',
+      'did update',
+      'ref',
     ]);
   });
 });

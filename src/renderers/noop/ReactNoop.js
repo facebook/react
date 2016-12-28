@@ -27,6 +27,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var {
   AnimationPriority,
 } = require('ReactPriorityLevel');
+var emptyObject = require('emptyObject');
 
 var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
@@ -38,7 +39,20 @@ type TextInstance = {| text: string, id: number |};
 
 var instanceCounter = 0;
 
+var failInBeginPhase = false;
+
 var NoopRenderer = ReactFiberReconciler({
+
+  getRootHostContext() {
+    if (failInBeginPhase) {
+      throw new Error('Error in host config.');
+    }
+    return emptyObject;
+  },
+
+  getChildHostContext() {
+    return emptyObject;
+  },
 
   createInstance(type : string, props : Props) : Instance {
     const inst = {
@@ -60,11 +74,11 @@ var NoopRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props) : boolean {
+  prepareUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : boolean {
     return true;
   },
 
-  commitUpdate(instance : Instance, oldProps : Props, newProps : Props) : void {
+  commitUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : void {
     instance.prop = newProps.prop;
   },
 
@@ -77,7 +91,12 @@ var NoopRenderer = ReactFiberReconciler({
 
   resetTextContent(instance : Instance) : void {},
 
-  createTextInstance(text : string) : TextInstance {
+  createTextInstance(
+    text : string,
+    rootContainerInstance : Container,
+    hostContext : Object,
+    internalInstanceHandle : Object
+  ) : TextInstance {
     var inst = { text : text, id: instanceCounter++ };
     // Hide from unit tests
     Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
@@ -169,25 +188,23 @@ var ReactNoop = {
   },
 
   renderToRootWithID(element : ReactElement<any>, rootID : string, callback : ?Function) {
-    if (!roots.has(rootID)) {
+    let root = roots.get(rootID);
+    if (!root) {
       const container = { rootID: rootID, children: [] };
       rootContainers.set(rootID, container);
-      const root = NoopRenderer.mountContainer(element, container, null, callback);
+      root = NoopRenderer.createContainer(container);
       roots.set(rootID, root);
-    } else {
-      const root = roots.get(rootID);
-      if (root) {
-        NoopRenderer.updateContainer(element, root, null, callback);
-      }
     }
+    NoopRenderer.updateContainer(element, root, null, callback);
   },
 
   unmountRootWithID(rootID : string) {
     const root = roots.get(rootID);
-    roots.delete(rootID);
-    rootContainers.delete(rootID);
     if (root) {
-      NoopRenderer.unmountContainer(root);
+      NoopRenderer.updateContainer(null, root, null, () => {
+        roots.delete(rootID);
+        rootContainers.delete(rootID);
+      });
     }
   },
 
@@ -280,21 +297,26 @@ var ReactNoop = {
 
     function logUpdateQueue(updateQueue : UpdateQueue, depth) {
       log(
-        '  '.repeat(depth + 1) + 'QUEUED UPDATES',
-        updateQueue.isReplace ? 'is replace' : '',
-        updateQueue.isForced ? 'is forced' : ''
+        '  '.repeat(depth + 1) + 'QUEUED UPDATES'
       );
+      const firstUpdate = updateQueue.first;
+      if (!firstUpdate) {
+        return;
+      }
+
       log(
         '  '.repeat(depth + 1) + '~',
-        updateQueue.partialState,
-        updateQueue.callback ? 'with callback' : ''
+        firstUpdate && firstUpdate.partialState,
+        firstUpdate.callback ? 'with callback' : '',
+        '[' + firstUpdate.priorityLevel + ']'
       );
       var next;
-      while (next = updateQueue.next) {
+      while (next = firstUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,
-          next.callback ? 'with callback' : ''
+          next.callback ? 'with callback' : '',
+          '[' + firstUpdate.priorityLevel + ']'
         );
       }
     }
@@ -331,6 +353,15 @@ var ReactNoop = {
     logFiber((root.stateNode : any).current, 0);
 
     console.log(...bufferedLog);
+  },
+
+  simulateErrorInHostConfig(fn : () => void) {
+    failInBeginPhase = true;
+    try {
+      fn();
+    } finally {
+      failInBeginPhase = false;
+    }
   },
 
 };

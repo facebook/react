@@ -97,12 +97,13 @@ In React components declared as ES6 classes, methods follow the same semantics a
 class SayHello extends React.Component {
   constructor(props) {
     super(props);
+    this.state = { message: 'Hello!' };
     // This line is important!
     this.handleClick = this.handleClick.bind(this);
   }
 
   handleClick() {
-    alert('Hello!');
+    alert(this.state.message);
   }
 
   render() {
@@ -120,8 +121,12 @@ With `React.createClass()`, this is not necessary because it binds all methods:
 
 ```javascript
 var SayHello = React.createClass({
+  getInitialState: function() {
+    return { message: 'Hello!' };
+  },
+  
   handleClick: function() {
-    alert('Hello!');
+    alert(this.state.message);
   },
 
   render: function() {
@@ -141,10 +146,14 @@ If the boilerplate code is too unattractive to you, you may enable the **experim
 
 ```javascript
 class SayHello extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { message: 'Hello!' };
+  }
   // WARNING: this syntax is experimental!
   // Using an arrow here binds the method:
   handleClick = () => {
-    alert('Hello!');
+    alert(this.state.message);
   }
 
   render() {
