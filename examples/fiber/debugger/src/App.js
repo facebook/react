@@ -110,6 +110,7 @@ class App extends Component {
           ]
         }));
       },
+      onUncaughtError() {},
     };
     window.React = React;
     window.ReactNoop = ReactNoop;
