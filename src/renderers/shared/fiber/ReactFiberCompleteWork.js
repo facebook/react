@@ -239,8 +239,15 @@ module.exports = function<T, P, I, TI, C, CX>(
             currentHostContext,
             workInProgress
           );
+
           appendAllChildren(instance, workInProgress);
-          finalizeInitialChildren(instance, type, newProps, rootContainerInstance);
+
+          // Certain renderers require commit-time effects for initial mount.
+          // (eg DOM renderer supports auto-focus for certain elements).
+          // Make sure such renderers get scheduled for later work.
+          if (finalizeInitialChildren(instance, type, newProps, rootContainerInstance)) {
+            workInProgress.effectTag |= Update;
+          }
 
           workInProgress.stateNode = instance;
           if (workInProgress.ref) {

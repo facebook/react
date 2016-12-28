@@ -96,6 +96,20 @@ function validateContainer(container) {
   }
 }
 
+function shouldAutoFocusHostComponent(
+  type : string,
+  props : Props,
+) : boolean {
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      return !!(props : any).autoFocus;
+  }
+  return false;
+}
+
 var DOMRenderer = ReactFiberReconciler({
 
   getRootHostContext(rootContainerInstance : Container) : HostContext {
@@ -173,8 +187,9 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-  ) : void {
+  ) : boolean {
     setInitialProperties(domElement, type, props, rootContainerInstance);
+    return shouldAutoFocusHostComponent(type, props);
   },
 
   prepareUpdate(
@@ -195,6 +210,18 @@ var DOMRenderer = ReactFiberReconciler({
       }
     }
     return true;
+  },
+
+  commitMount(
+    domElement : Instance,
+    type : string,
+    newProps : Props,
+    rootContainerInstance : Container,
+    internalInstanceHandle : Object,
+  ) : void {
+    if (shouldAutoFocusHostComponent(type, newProps)) {
+      (domElement : any).focus();
+    }
   },
 
   commitUpdate(

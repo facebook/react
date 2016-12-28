@@ -414,6 +414,10 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  commitMount(instance, type, newProps) {
+    // Noop
+  },
+
   commitUpdate(instance, type, oldProps, newProps) {
     instance._applyProps(instance, newProps, oldProps);
   },
@@ -457,7 +461,7 @@ const ARTRenderer = ReactFiberReconciler({
   },
 
   finalizeInitialChildren(domElement, type, props) {
-    // Noop
+    return false;
   },
 
   insertBefore(parentInstance, child, beforeChild) {
