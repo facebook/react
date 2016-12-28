@@ -20,11 +20,18 @@ import type { HostConfig } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
+  isValidElement,
+} = require('React');
+var {
   mountChildFibersInPlace,
   reconcileChildFibers,
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
+var {
+  isCoroutine,
+  isYield,
+} = require('ReactCoroutine');
 var {
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
@@ -50,6 +57,9 @@ var {
   Fragment,
 } = ReactTypeOfWork;
 var {
+  isPortal,
+} = require('ReactPortal');
+var {
   NoWork,
   OffscreenPriority,
 } = require('ReactPriorityLevel');
@@ -61,6 +71,8 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
+
+var invariant = require('invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -87,6 +99,46 @@ module.exports = function<T, P, I, TI, C, CX>(
     resumeMountClassInstance,
     updateClassInstance,
   } = ReactFiberClassComponent(scheduleUpdate, getPriorityContext);
+
+  function isValidNode(node) {
+    switch (typeof node) {
+      case 'string':
+      case 'number':
+        return true;
+      case 'boolean':
+        return node === false;
+      case 'object':
+        return (
+          node === null ||
+          Array.isArray(node) ||
+          isValidElement(node) ||
+          isPortal(node) ||
+          isCoroutine(node) ||
+          isYield(node)
+        );
+      case 'undefined':
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  function throwInvalidNodeError() {
+    // TODO: report the node type and/or object keys.
+    var info = '';
+    if (__DEV__) {
+      var name = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+      if (name) {
+        info += ' Check the render method of `' + name + '`.';
+      }
+    }
+    invariant(
+      false,
+      'A valid React element, null, or an array must be returned. ' +
+      'You may have returned undefined or some other invalid object.%s',
+      info
+    );
+  }
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -211,6 +263,9 @@ module.exports = function<T, P, I, TI, C, CX>(
     } else {
       nextChildren = fn(nextProps, context);
     }
+    if (!isValidNode(nextChildren)) {
+      throwInvalidNodeError();
+    }
     reconcileChildren(current, workInProgress, nextChildren);
     return workInProgress.child;
   }
@@ -263,7 +318,19 @@ module.exports = function<T, P, I, TI, C, CX>(
     // Rerender
     const instance = workInProgress.stateNode;
     ReactCurrentOwner.current = workInProgress;
-    const nextChildren = instance.render();
+    let nextChildren = instance.render();
+    if (__DEV__) {
+      // We allow auto-mocks to proceed as if they're returning null.
+      if (nextChildren === undefined &&
+          instance.render._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        nextChildren = null;
+      }
+    }
+    if (!isValidNode(nextChildren)) {
+      throwInvalidNodeError();
+    }
     reconcileChildren(current, workInProgress, nextChildren);
 
     // The context might have changed so we need to recalculate it.
@@ -433,11 +500,13 @@ module.exports = function<T, P, I, TI, C, CX>(
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, priorityLevel);
       return finishClassComponent(current, workInProgress, true, hasContext);
-    } else {
+    } else if (isValidNode(value)) {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       reconcileChildren(current, workInProgress, value);
       return workInProgress.child;
+    } else {
+      throwInvalidNodeError();
     }
   }
 

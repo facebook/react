@@ -142,8 +142,14 @@ describe('ReactStatelessComponent', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrowError(
-      'NotAComponent(...): A valid React element (or null) must be returned. ' +
-      'You may have returned undefined, an array or some other invalid object.'
+      ReactDOMFeatureFlags.useFiber ? (
+        'A valid React element, null, or an array must be returned. ' +
+        'You may have returned undefined or some other invalid object. ' +
+        'Check the render method of `NotAComponent`.'
+      ) : (
+        'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
+        'have returned undefined, an array or some other invalid object.'
+      )
     );
   });
 
