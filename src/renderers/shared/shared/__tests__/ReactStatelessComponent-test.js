@@ -388,18 +388,4 @@ describe('ReactStatelessComponent', () => {
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
   });
 
-  it('should warn when using non-React functions in JSX', () => {
-    spyOn(console, 'error');
-    function NotAComponent() {
-      return [<div />, <div />];
-    }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
-      'have returned undefined, an array or some other invalid object.'
-    );
-  });
 });
