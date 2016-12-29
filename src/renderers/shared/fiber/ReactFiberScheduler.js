@@ -107,9 +107,11 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   // is thrown during reconciliation.
   let priorityContextBeforeReconciliation : PriorityLevel = NoWork;
 
-  // Keeps track of whether we're currently in a work loop. Used to batch
-  // nested updates.
+  // Keeps track of whether we're currently in a work loop.
   let isPerformingWork : boolean = false;
+
+  // Keeps track of whether sync updates should be downgraded to task updates.
+  let shouldDeferSyncUpdates : boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -678,6 +680,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     const previousPriorityContext = priorityContext;
     const previousPriorityContextBeforeReconciliation = priorityContextBeforeReconciliation;
     const previousIsPerformingWork = isPerformingWork;
+    const previousShouldDeferSyncUpdates = shouldDeferSyncUpdates;
     const previousNextEffect = nextEffect;
     const previousCommitPhaseBoundaries = commitPhaseBoundaries;
     const previousFirstUncaughtError = firstUncaughtError;
@@ -688,6 +691,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     priorityContext = NoWork;
     priorityContextBeforeReconciliation = NoWork;
     isPerformingWork = true;
+    shouldDeferSyncUpdates = true;
     nextEffect = null;
     commitPhaseBoundaries = null;
     firstUncaughtError = null;
@@ -804,6 +808,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     priorityContext = previousPriorityContext;
     priorityContextBeforeReconciliation = previousPriorityContextBeforeReconciliation;
     isPerformingWork = previousIsPerformingWork;
+    shouldDeferSyncUpdates = previousShouldDeferSyncUpdates;
     nextEffect = previousNextEffect;
     commitPhaseBoundaries = previousCommitPhaseBoundaries;
     firstUncaughtError = previousFirstUncaughtError;
@@ -1058,15 +1063,11 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
           // schedule a callback to perform work later.
           switch (priorityLevel) {
             case SynchronousPriority:
-              // Perform work immediately
               performWork(SynchronousPriority);
               return;
             case TaskPriority:
-              // If we're already performing work, Task work will be flushed before
-              // exiting the current batch. So we can skip it here.
-              if (!isPerformingWork) {
-                performWork(TaskPriority);
-              }
+              // TODO: If we're not already performing work, schedule a
+              // deferred callback.
               return;
             case AnimationPriority:
               scheduleAnimationCallback(performAnimationWork);
@@ -1087,7 +1088,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function getPriorityContext() : PriorityLevel {
-    if (priorityContext === SynchronousPriority && isPerformingWork) {
+    // If we're in a batch, downgrade sync priority to task priority
+    if (priorityContext === SynchronousPriority && shouldDeferSyncUpdates) {
       return TaskPriority;
     }
     return priorityContext;
@@ -1108,16 +1110,15 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function batchedUpdates<A, R>(fn : (a: A) => R, a : A) : R {
-    const previousIsPerformingWork = isPerformingWork;
-    // Simulate that we're performing work so that sync work is batched
-    isPerformingWork = true;
+    const previousShouldDeferSyncUpdates = shouldDeferSyncUpdates;
+    shouldDeferSyncUpdates = true;
     try {
       return fn(a);
     } finally {
-      isPerformingWork = previousIsPerformingWork;
-      // If we're not already performing work, we need to flush any task work
+      shouldDeferSyncUpdates = previousShouldDeferSyncUpdates;
+      // If we're not already inside a batch, we need to flush any task work
       // that was created by the user-provided function.
-      if (!isPerformingWork) {
+      if (!shouldDeferSyncUpdates) {
         performWork(TaskPriority);
       }
     }
@@ -1125,11 +1126,14 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
   function syncUpdates<A>(fn : () => A) : A {
     const previousPriorityContext = priorityContext;
+    const previousShouldDeferSyncUpdates = shouldDeferSyncUpdates;
     priorityContext = SynchronousPriority;
+    shouldDeferSyncUpdates = false;
     try {
       return fn();
     } finally {
       priorityContext = previousPriorityContext;
+      shouldDeferSyncUpdates = previousShouldDeferSyncUpdates;
     }
   }
 
