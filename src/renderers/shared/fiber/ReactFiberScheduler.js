@@ -705,39 +705,40 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       } catch (error) {
         // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
-        if (!failedWork) {
-          throw new Error('Should have nextUnitOfWork.');
-        }
+        if (failedWork) {
+          // Reset the priority context to its value before reconcilation.
+          priorityContext = priorityContextBeforeReconciliation;
 
-        // Reset the priority context to its value before reconcilation.
-        priorityContext = priorityContextBeforeReconciliation;
+          // "Capture" the error by finding the nearest boundary. If there is no
+          // error boundary, the nearest host container acts as one. If
+          // captureError returns null, the error was intentionally ignored.
+          const maybeBoundary = captureError(failedWork, error);
+          if (maybeBoundary) {
+            const boundary = maybeBoundary;
 
-        // "Capture" the error by finding the nearest boundary. If there is no
-        // error boundary, the nearest host container acts as one. If
-        // captureError returns null, the error was intentionally ignored.
-        const maybeBoundary = captureError(failedWork, error);
-        if (maybeBoundary) {
-          const boundary = maybeBoundary;
+            // Complete the boundary as if it rendered null. This will unmount
+            // the failed tree.
+            beginFailedWork(boundary.alternate, boundary, priorityLevel);
 
-          // Complete the boundary as if it rendered null. This will unmount
-          // the failed tree.
-          beginFailedWork(boundary.alternate, boundary, priorityLevel);
-
-          // The next unit of work is now the boundary that captured the error.
-          // Conceptually, we're unwinding the stack. We need to unwind the
-          // context stack, too, from the failed work to the boundary that
-          // captured the error.
-          // TODO: If we set the memoized props in beginWork instead of
-          // completeWork, rather than unwind the stack, we can just restart
-          // from the root. Can't do that until then because without memoized
-          // props, the nodes higher up in the tree will rerender unnecessarily.
-          if (failedWork) {
+            // The next unit of work is now the boundary that captured the error.
+            // Conceptually, we're unwinding the stack. We need to unwind the
+            // context stack, too, from the failed work to the boundary that
+            // captured the error.
+            // TODO: If we set the memoized props in beginWork instead of
+            // completeWork, rather than unwind the stack, we can just restart
+            // from the root. Can't do that until then because without memoized
+            // props, the nodes higher up in the tree will rerender unnecessarily.
             unwindContexts(failedWork, boundary);
+            nextUnitOfWork = completeUnitOfWork(boundary);
           }
-          nextUnitOfWork = completeUnitOfWork(boundary);
+          // Continue performing work
+          continue;
+        } else if (!fatalError) {
+          // There is no current unit of work. This is a worst-case scenario
+          // and should only be possible if there's a bug in the renderer, e.g.
+          // inside resetAfterCommit.
+          fatalError = error;
         }
-        // Continue performing work
-        continue;
       } finally {
         priorityContext = priorityContextBeforeReconciliation;
       }
@@ -900,6 +901,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function hasCapturedError(fiber : Fiber) : boolean {
+    // TODO: capturedErrors should store the boundary instance, to avoid needing
+    // to check the alternate.
     return Boolean(
       capturedErrors &&
       (capturedErrors.has(fiber) || (fiber.alternate && capturedErrors.has(fiber.alternate)))
@@ -907,11 +910,12 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function isFailedBoundary(fiber : Fiber) : boolean {
-    const res = Boolean(
+    // TODO: failedBoundaries should store the boundary instance, to avoid
+    // needing to check the alternate.
+    return Boolean(
       failedBoundaries &&
       (failedBoundaries.has(fiber) || (fiber.alternate && failedBoundaries.has(fiber.alternate)))
     );
-    return res;
   }
 
   function commitErrorHandling(effectfulFiber : Fiber) {
