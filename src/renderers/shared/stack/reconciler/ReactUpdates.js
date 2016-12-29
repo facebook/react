@@ -164,11 +164,9 @@ var flushBatchedUpdates = function() {
   // componentDidUpdate) but we need to check here too in order to catch
   // updates enqueued by setState callbacks.
   while (dirtyComponents.length) {
-    if (dirtyComponents.length) {
-      var transaction = ReactUpdatesFlushTransaction.getPooled();
-      transaction.perform(runBatchedUpdates, null, transaction);
-      ReactUpdatesFlushTransaction.release(transaction);
-    }
+    var transaction = ReactUpdatesFlushTransaction.getPooled();
+    transaction.perform(runBatchedUpdates, null, transaction);
+    ReactUpdatesFlushTransaction.release(transaction);
   }
 };
 
