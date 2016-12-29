@@ -672,10 +672,29 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
-    if (isPerformingWork) {
-      throw new Error('performWork was called recursively.');
-    }
+    // If performWork is called recursively, we need to save the previous state
+    // of the scheduler so it can be restored before the function exits.
+    // Recursion is only possible when using syncUpdates.
+    const previousPriorityContext = priorityContext;
+    const previousPriorityContextBeforeReconciliation = priorityContextBeforeReconciliation;
+    const previousIsPerformingWork = isPerformingWork;
+    const previousNextEffect = nextEffect;
+    const previousCommitPhaseBoundaries = commitPhaseBoundaries;
+    const previousFirstUncaughtError = firstUncaughtError;
+    const previousFatalError = fatalError;
+    const previousIsCommitting = isCommitting;
+    const previousIsUnmounting = isUnmounting;
+
+    priorityContext = NoWork;
+    priorityContextBeforeReconciliation = NoWork;
     isPerformingWork = true;
+    nextEffect = null;
+    commitPhaseBoundaries = null;
+    firstUncaughtError = null;
+    fatalError = null;
+    isCommitting = false;
+    isUnmounting = false;
+
     const isPerformingDeferredWork = Boolean(deadline);
     let deadlineHasExpired = false;
 
@@ -779,22 +798,22 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       }
     }
 
-    // We're done performing work. Time to clean up.
-    isPerformingWork = false;
-    capturedErrors = null;
-    failedBoundaries = null;
+    const errorToThrow = fatalError || firstUncaughtError;
 
-    // It's now safe to throw errors.
-    if (fatalError) {
-      let e = fatalError;
-      fatalError = null;
-      firstUncaughtError = null;
-      throw e;
-    }
-    if (firstUncaughtError) {
-      let e = firstUncaughtError;
-      firstUncaughtError = null;
-      throw e;
+    // We're done performing work. Restore the previous state of the scheduler.
+    priorityContext = previousPriorityContext;
+    priorityContextBeforeReconciliation = previousPriorityContextBeforeReconciliation;
+    isPerformingWork = previousIsPerformingWork;
+    nextEffect = previousNextEffect;
+    commitPhaseBoundaries = previousCommitPhaseBoundaries;
+    firstUncaughtError = previousFirstUncaughtError;
+    fatalError = previousFatalError;
+    isCommitting = previousIsCommitting;
+    isUnmounting = previousIsUnmounting;
+
+    // It's safe to throw any unhandled errors.
+    if (errorToThrow) {
+      throw errorToThrow;
     }
   }
 
