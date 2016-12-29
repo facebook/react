@@ -322,9 +322,15 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.createContainer(container);
+    const newRoot = DOMRenderer.createContainer(container);
+    root = container._reactRootContainer = newRoot;
+    // Initial mount is always sync, even if we're in a batch.
+    DOMRenderer.syncUpdates(() => {
+      DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
+    });
+  } else {
+    DOMRenderer.updateContainer(children, root, parentComponent, callback);
   }
-  DOMRenderer.updateContainer(children, root, parentComponent, callback);
   return DOMRenderer.getPublicRootInstance(root);
 }
 
@@ -346,8 +352,11 @@ var ReactDOM = {
   unmountComponentAtNode(container : DOMContainerElement) {
     warnAboutUnstableUse();
     if (container._reactRootContainer) {
-      return renderSubtreeIntoContainer(null, null, container, () => {
-        container._reactRootContainer = null;
+      // Unmount is always sync, even if we're in a batch.
+      return DOMRenderer.syncUpdates(() => {
+        return renderSubtreeIntoContainer(null, null, container, () => {
+          container._reactRootContainer = null;
+        });
       });
     }
   },
