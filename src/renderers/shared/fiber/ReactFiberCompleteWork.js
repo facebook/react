@@ -46,8 +46,8 @@ if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 }
 
-module.exports = function<T, P, I, TI, C, CX>(
-  config : HostConfig<T, P, I, TI, C, CX>,
+module.exports = function<T, P, I, TI, C, CX, CI>(
+  config : HostConfig<T, P, I, TI, C, CX, CI>,
   hostContext : HostContext<C, CX>,
 ) {
   const {
