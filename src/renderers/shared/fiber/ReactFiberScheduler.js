@@ -69,6 +69,7 @@ var {
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var warning = require('warning');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -1029,8 +1030,17 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
   }
 
   function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
-    // If we're in a batch, downgrade sync priority to task priority
-    if (priorityLevel === SynchronousPriority && isPerformingWork) {
+    // Detect if a synchronous update is made during render (or begin phase).
+    if (priorityLevel === SynchronousPriority && isPerformingWork && !isCommitting) {
+      if (__DEV__) {
+        warning(
+          false,
+          'Render methods should be a pure function of props and state; ' +
+          'triggering nested component updates from render is not allowed. ' +
+          'If necessary, trigger nested updates in componentDidUpdate.'
+        );
+      }
+      // Downgrade to Task priority to prevent an infinite loop.
       priorityLevel = TaskPriority;
     }
 
