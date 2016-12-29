@@ -300,6 +300,34 @@ describe('ReactDOMComponent', () => {
       ).toBe(false);
     });
 
+    it('can dangerouslySetInnerHTML with falsy value.', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: 'textContent'}} />,
+        container
+      );
+      expect(container.textContent).toEqual('textContent');
+
+      ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: 0}} />,
+        container
+      );
+      expect(container.textContent).toEqual('0');
+
+      ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: ''}} />,
+        container
+      );
+      expect(container.textContent).toEqual('');
+
+      ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: false}} />,
+        container
+      );
+      expect(container.textContent).toEqual('false');
+    });
+
     it('should remove attributes', () => {
       var container = document.createElement('div');
       ReactDOM.render(<img height="17" />, container);

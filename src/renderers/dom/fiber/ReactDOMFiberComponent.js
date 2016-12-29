@@ -398,13 +398,10 @@ function updateDOMProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
       var lastHtml = lastProp ? lastProp[HTML] : undefined;
-      if (nextHtml) {
-        if (lastHtml) {
-          if (lastHtml !== nextHtml) {
-            setInnerHTML(domElement, '' + nextHtml);
-          }
-        } else {
-          setInnerHTML(domElement, nextHtml);
+      // Intentional use of != to avoid catching zero/false.
+      if (nextHtml != null) {
+        if (lastHtml !== nextHtml) {
+          setInnerHTML(domElement, '' + nextHtml);
         }
       } else {
         // TODO: It might be too late to clear this if we have children
