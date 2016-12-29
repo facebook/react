@@ -16,6 +16,7 @@ describe('ReactPerf', () => {
   var ReactDOM;
   var ReactPerf;
   var ReactTestUtils;
+  var ReactDOMFeatureFlags;
   var emptyFunction;
 
   var App;
@@ -38,6 +39,7 @@ describe('ReactPerf', () => {
     ReactDOM = require('ReactDOM');
     ReactPerf = require('ReactPerf');
     ReactTestUtils = require('ReactTestUtils');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     emptyFunction = require('emptyFunction');
 
     App = class extends React.Component {
@@ -614,7 +616,7 @@ describe('ReactPerf', () => {
       }
     }
     class EvilPortal extends React.Component {
-      componentWillMount() {
+      componentDidMount() {
         var portalContainer = document.createElement('div');
         ReactDOM.render(<Evil />, portalContainer);
       }
@@ -645,6 +647,10 @@ describe('ReactPerf', () => {
     var container = document.createElement('div');
     var thrownErr = new Error('Muhaha!');
 
+    if (ReactDOMFeatureFlags.useFiber) {
+      spyOn(console, 'error');
+    }
+
     class Evil extends React.Component {
       componentWillMount() {
         throw thrownErr;
@@ -679,6 +685,15 @@ describe('ReactPerf', () => {
     }
     ReactDOM.unmountComponentAtNode(container);
     ReactPerf.stop();
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      // A sync `render` inside cWM will print a warning. That should be the
+      // only warning.
+      expect(console.error.calls.count()).toEqual(1);
+      expect(console.error.calls.argsFor(0)[0]).toMatch(
+        /Render methods should be a pure function of props and state/
+      );
+    }
   });
 
   it('should not print errant warnings if portal throws in componentDidMount()', () => {
@@ -694,7 +709,7 @@ describe('ReactPerf', () => {
       }
     }
     class EvilPortal extends React.Component {
-      componentWillMount() {
+      componentDidMount() {
         var portalContainer = document.createElement('div');
         ReactDOM.render(<Evil />, portalContainer);
       }

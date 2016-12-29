@@ -67,9 +67,10 @@ type HostContextDev = {
 };
 type HostContextProd = string;
 type HostContext = HostContextDev | HostContextProd;
-
-let eventsEnabled : ?boolean = null;
-let selectionInformation : ?mixed = null;
+type CommitInfo = {
+  eventsEnabled: boolean,
+  selectionInformation: mixed,
+};
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
@@ -137,17 +138,18 @@ var DOMRenderer = ReactFiberReconciler({
     return getChildNamespace(parentNamespace, type);
   },
 
-  prepareForCommit() : void {
-    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
+  prepareForCommit() : CommitInfo {
+    const eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     ReactBrowserEventEmitter.setEnabled(false);
-    selectionInformation = ReactInputSelection.getSelectionInformation();
+    return {
+      eventsEnabled,
+      selectionInformation: ReactInputSelection.getSelectionInformation(),
+    };
   },
 
-  resetAfterCommit() : void {
-    ReactInputSelection.restoreSelection(selectionInformation);
-    selectionInformation = null;
-    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
-    eventsEnabled = null;
+  resetAfterCommit(commitInfo : CommitInfo) : void {
+    ReactInputSelection.restoreSelection(commitInfo.selectionInformation);
+    ReactBrowserEventEmitter.setEnabled(commitInfo.eventsEnabled);
   },
 
   createInstance(
@@ -322,9 +324,15 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.createContainer(container);
+    const newRoot = DOMRenderer.createContainer(container);
+    root = container._reactRootContainer = newRoot;
+    // Initial mount is always sync, even if we're in a batch.
+    DOMRenderer.syncUpdates(() => {
+      DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
+    });
+  } else {
+    DOMRenderer.updateContainer(children, root, parentComponent, callback);
   }
-  DOMRenderer.updateContainer(children, root, parentComponent, callback);
   return DOMRenderer.getPublicRootInstance(root);
 }
 
@@ -346,8 +354,11 @@ var ReactDOM = {
   unmountComponentAtNode(container : DOMContainerElement) {
     warnAboutUnstableUse();
     if (container._reactRootContainer) {
-      return renderSubtreeIntoContainer(null, null, container, () => {
-        container._reactRootContainer = null;
+      // Unmount is always sync, even if we're in a batch.
+      return DOMRenderer.syncUpdates(() => {
+        return renderSubtreeIntoContainer(null, null, container, () => {
+          container._reactRootContainer = null;
+        });
       });
     }
   },

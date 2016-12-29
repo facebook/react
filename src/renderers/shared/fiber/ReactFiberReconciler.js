@@ -43,7 +43,7 @@ export type Deadline = {
 
 type OpaqueNode = Fiber;
 
-export type HostConfig<T, P, I, TI, C, CX> = {
+export type HostConfig<T, P, I, TI, C, CX, CI> = {
 
   getRootHostContext(rootContainerInstance : C) : CX,
   getChildHostContext(parentHostContext : CX, type : T) : CX,
@@ -69,8 +69,8 @@ export type HostConfig<T, P, I, TI, C, CX> = {
   scheduleAnimationCallback(callback : () => void) : void,
   scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
 
-  prepareForCommit() : void,
-  resetAfterCommit() : void,
+  prepareForCommit() : CI,
+  resetAfterCommit(commitInfo : CI) : void,
 
   useSyncScheduling ?: boolean,
 };
@@ -100,7 +100,7 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
     parentContext;
 });
 
-module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) : Reconciler<C, I, TI> {
+module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, TI, C, CX, CI>) : Reconciler<C, I, TI> {
 
   var {
     scheduleUpdate,

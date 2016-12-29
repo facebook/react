@@ -1142,4 +1142,26 @@ describe('ReactUpdates', () => {
     expect(container.textContent).toBe('goodbye');
     expect(mounts).toBe(1);
   });
+
+  it('mounts and unmounts are sync even in a batch', () => {
+    var container1 = document.createElement('div');
+    var container2 = document.createElement('div');
+
+    let called = false;
+    class Foo extends React.Component {
+      componentDidMount() {
+        called = true;
+        ReactDOM.render(<div>Hello</div>, container2);
+        expect(container2.textContent).toEqual('Hello');
+        ReactDOM.unmountComponentAtNode(container2);
+        expect(container2.textContent).toEqual('');
+      }
+      render() {
+        return <div>{this.props.step}</div>;
+      }
+    }
+
+    ReactDOM.render(<Foo />, container1);
+    expect(called).toEqual(true);
+  });
 });

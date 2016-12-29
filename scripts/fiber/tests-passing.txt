@@ -1207,6 +1207,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * can opt-in to deferred/animation scheduling inside componentDidMount/Update
 * performs Task work even after time runs out
 * does not perform animation work after time runs out
+* can force synchronous updates with syncUpdates, even inside batchedUpdates
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance
@@ -1576,6 +1577,7 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 * unstable_batchedUpdates should return value from a callback
 * unmounts and remounts a root in the same batch
 * handles reentrant mounting in synchronous mode
+* mounts and unmounts are sync even in a batch
 
 src/renderers/shared/shared/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent
