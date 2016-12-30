@@ -1,0 +1,50 @@
+//************************************************************************//
+// Helper function for linear/radial-gradient-parsers.
+// Source: http://sassmeister.com/gist/9647408
+//************************************************************************//
+@function _str-to-num($string) {
+  // Matrices
+  $strings: '0' '1' '2' '3' '4' '5' '6' '7' '8' '9';
+  $numbers:  0   1   2   3   4   5   6   7   8   9;
+
+  // Result
+  $result: 0;
+  $divider: 0;
+  $minus: false;
+
+  // Looping through all characters
+  @for $i from 1 through str-length($string) {
+    $character: str-slice($string, $i, $i);
+    $index: index($strings, $character);
+
+    @if $character == '-' {
+      $minus: true;
+    }
+
+    @else if $character == '.' {
+      $divider: 1;
+    }
+
+    @else {
+      @if not $index {
+        $result: if($minus, $result * -1, $result);
+        @return _convert-units($result, str-slice($string, $i));
+      }
+
+      $number: nth($numbers, $index);
+
+      @if $divider == 0 {
+        $result: $result * 10;
+      }
+
+      @else {
+        // Move the decimal dot to the left
+        $divider: $divider * 10;
+        $number: $number / $divider;
+      }
+
+      $result: $result + $number;
+    }
+  }
+  @return if($minus, $result * -1, $result);
+}

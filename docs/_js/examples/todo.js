@@ -1,57 +1,58 @@
-/**
- * @jsx React.DOM
- */
+var TODO_COMPONENT = `
+class TodoApp extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.state = {items: [], text: ''};
+  }
 
-var TODO_COMPONENT = "\
-/** @jsx React.DOM */\n\
-var TodoList = React.createClass({\n\
-  render: function() {\n\
-    var items = this.props.items.map(function(item) {\n\
-      return <li>{item}</li>;\n\
-    });\n\
-    return <ul>{items}</ul>;\n\
-  }\n\
-});\n\
-\n\
-var TodoCreate = React.createClass({\n\
-  handleSubmit: function() {\n\
-    var textInput = this.refs.textInput.getDOMNode();\n\
-    this.props.onCreate(textInput.value);\n\
-    textInput.value = '';\n\
-    return false;\n\
-  },\n\
-  render: function() {\n\
-    return (\n\
-      <form onSubmit={this.handleSubmit.bind(this)}>\n\
-        <input type=\"text\" ref=\"textInput\" />\n\
-        <button>Add</button>\n\
-      </form>\n\
-    );\n\
-  }\n\
-});\n\
-\n\
-var TodoApp = React.createClass({\n\
-  getInitialState: function() {\n\
-    return {items: []};\n\
-  },\n\
-  onItemCreate: function(value) {\n\
-    this.setState({items: this.state.items.concat([value])});\n\
-  },\n\
-  render: function() {\n\
-    return (\n\
-      <div>\n\
-        <h3>TODO</h3>\n\
-        <TodoList items={this.state.items} />\n\
-        <TodoCreate onCreate={this.onItemCreate.bind(this)} />\n\
-      </div>\n\
-    );\n\
-  }\n\
-});\n\
-\n\
-React.renderComponent(<TodoApp />, mountNode);\
-";
+  render() {
+    return (
+      <div>
+        <h3>TODO</h3>
+        <TodoList items={this.state.items} />
+        <form onSubmit={this.handleSubmit}>
+          <input onChange={this.handleChange} value={this.state.text} />
+          <button>{'Add #' + (this.state.items.length + 1)}</button>
+        </form>
+      </div>
+    );
+  }
 
-React.renderComponent(
+  handleChange(e) {
+    this.setState({text: e.target.value});
+  }
+
+  handleSubmit(e) {
+    e.preventDefault();
+    var newItem = {
+      text: this.state.text,
+      id: Date.now()
+    };
+    this.setState((prevState) => ({
+      items: prevState.items.concat(newItem),
+      text: ''
+    }));
+  }
+}
+
+class TodoList extends React.Component {
+  render() {
+    return (
+      <ul>
+        {this.props.items.map(item => (
+          <li key={item.id}>{item.text}</li>
+        ))}
+      </ul>
+    );
+  }
+}
+
+ReactDOM.render(<TodoApp />, mountNode);
+`.trim();
+
+ReactDOM.render(
   <ReactPlayground codeText={TODO_COMPONENT} />,
   document.getElementById('todoExample')
 );

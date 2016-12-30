@@ -6,7 +6,6 @@ $textColorLight: lighten($textColor, 20%);
 html {
   font-family: $helvetica;
   font-family: proxima-nova, $helvetica;
-  font-weight: 300;
   color: $textColor;
   line-height: 1.28;
 }
@@ -69,7 +68,7 @@ h3 {
 }
 
 h4 {
-  font-size: 17px;
+  font-size: 16px;
 }
 
 h5 {
@@ -113,8 +112,6 @@ li {
   line-height: 20px;
 }
 
-
-
 a {
   color: $linkColor;
   text-decoration: none;
@@ -133,4 +130,6 @@ a {
   text-align: center;
 }
 
-
+input {
+  font-family: inherit;
+}

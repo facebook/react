@@ -1,29 +1,37 @@
 /**
- * Copyright 2013 Facebook, Inc.
+ * Copyright 2013-present, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule reactComponentExpect
- * @nolint
  */
 
-var ReactComponent = require('ReactComponent');
-var ReactTestUtils = require('ReactTestUtils');
+'use strict';
 
-var copyProperties = require('copyProperties');
+var ReactInstanceMap = require('ReactInstanceMap');
+var ReactTestUtils = require('ReactTestUtils');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+
+var {
+  HostText,
+} = ReactTypeOfWork;
+
+var invariant = require('invariant');
+
+// Fiber doesn't actually have an instance for empty components
+// but we'll pretend it does while we keep compatibility with Stack.
+var fiberNullInstance = {
+  type: null,
+  child: null,
+  sibling: null,
+  tag: 99,
+};
 
 function reactComponentExpect(instance) {
-  if (instance instanceof reactComponentExpect) {
+  if (instance instanceof reactComponentExpectInternal) {
     return instance;
   }
 
@@ -31,18 +39,40 @@ function reactComponentExpect(instance) {
     return new reactComponentExpect(instance);
   }
 
-  this._instance = instance;
-  this.toBeValidReactComponent();
+  expect(instance).not.toBeNull();
+  expect(instance).not.toBeUndefined();
+
+  invariant(
+    ReactTestUtils.isCompositeComponent(instance),
+    'reactComponentExpect(...): instance must be a composite component'
+  );
+  var internalInstance = ReactInstanceMap.get(instance);
+
+  expect(typeof internalInstance).toBe('object');
+  expect(typeof internalInstance.constructor).toBe('function');
+  expect(ReactTestUtils.isElement(internalInstance)).toBe(false);
+
+  return new reactComponentExpectInternal(internalInstance);
 }
 
-copyProperties(reactComponentExpect.prototype, {
+function reactComponentExpectInternal(internalInstance) {
+  this._instance = internalInstance;
+}
+
+Object.assign(reactComponentExpectInternal.prototype, {
   // Getters -------------------------------------------------------------------
 
   /**
    * @instance: Retrieves the backing instance.
    */
   instance: function() {
-    return this._instance;
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      return this._instance.stateNode;
+    } else {
+      // Stack reconciler
+      return this._instance.getPublicInstance();
+    }
   },
 
   /**
@@ -61,7 +91,16 @@ copyProperties(reactComponentExpect.prototype, {
    */
   expectRenderedChild: function() {
     this.toBeCompositeComponent();
-    return new reactComponentExpect(this.instance()._renderedComponent);
+    var child = null;
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      child = this._instance.child || fiberNullInstance;
+    } else {
+      // Stack reconciler
+      child = this._instance._renderedComponent;
+    }
+    // TODO: Hide ReactEmptyComponent instances here?
+    return new reactComponentExpectInternal(child);
   },
 
   /**
@@ -71,68 +110,127 @@ copyProperties(reactComponentExpect.prototype, {
     // Currently only dom components have arrays of children, but that will
     // change soon.
     this.toBeDOMComponent();
-    var renderedChildren = this.instance()._renderedChildren || {};
-    var nonEmptyCount = 0;
-    var name;
-    for (name in renderedChildren) {
-      if (!renderedChildren.hasOwnProperty(name)) {
-        continue;
-      }
-      if (renderedChildren[name]) {
-        if (nonEmptyCount === childIndex) {
-          return new reactComponentExpect(renderedChildren[name]);
+
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      var child = this._instance.child;
+      var i = 0;
+      while (child) {
+        if (i === childIndex) {
+          return new reactComponentExpectInternal(child);
         }
-        nonEmptyCount++;
+        child = child.sibling;
+        i++;
+      }
+    } else {
+      // Stack reconciler
+      var renderedChildren =
+        this._instance._renderedChildren || {};
+      for (var name in renderedChildren) {
+        if (!renderedChildren.hasOwnProperty(name)) {
+          continue;
+        }
+        if (renderedChildren[name]) {
+          if (renderedChildren[name]._mountIndex === childIndex) {
+            return new reactComponentExpectInternal(renderedChildren[name]);
+          }
+        }
       }
     }
     throw new Error('Child:' + childIndex + ' is not found');
   },
 
-  toBeDOMComponentWithChildCount: function(n) {
+  toBeDOMComponentWithChildCount: function(count) {
     this.toBeDOMComponent();
-    expect(this.instance()._renderedChildren).toBeTruthy();
-    var len = Object.keys(this.instance()._renderedChildren).length;
-    expect(len).toBe(n);
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      var child = this._instance.child;
+      var i = 0;
+      while (child) {
+        child = child.sibling;
+        i++;
+      }
+      expect(i).toBe(count);
+    } else {
+      // Stack reconciler
+      var renderedChildren = this._instance._renderedChildren;
+      if (count > 0) {
+        expect(renderedChildren).toBeTruthy();
+        expect(Object.keys(renderedChildren).length).toBe(count);
+      } else if (renderedChildren) {
+        expect(Object.keys(renderedChildren).length).toBe(0);
+      }
+    }
     return this;
   },
 
   toBeDOMComponentWithNoChildren: function() {
-    this.toBeDOMComponent();
-    expect(this.instance()._renderedChildren).toBeFalsy();
+    this.toBeDOMComponentWithChildCount(0);
     return this;
   },
 
   // Matchers ------------------------------------------------------------------
+
+  toBeComponentOfType: function(constructor) {
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      expect(
+        this._instance.type === constructor
+      ).toBe(true);
+    } else {
+      // Stack reconciler
+      expect(
+        this._instance._currentElement.type === constructor
+      ).toBe(true);
+    }
+    return this;
+  },
 
   /**
    * A component that is created with React.createClass. Just duck typing
    * here.
    */
   toBeCompositeComponent: function() {
-    this.toBeValidReactComponent();
-    expect(ReactTestUtils.isCompositeComponent(this.instance())).toBe(true);
+    // TODO: this code predates functional components
+    // and doesn't work with them.
+    expect(
+      typeof this.instance() === 'object' &&
+      typeof this.instance().render === 'function'
+    ).toBe(true);
     return this;
   },
 
-  toBeCompositeComponentWithType: function(convenienceConstructor) {
-    expect(ReactTestUtils.isCompositeComponentWithType(
-      this.instance(),
-      convenienceConstructor
-    )).toBe(true);
+  toBeCompositeComponentWithType: function(constructor) {
+    this.toBeCompositeComponent();
+    this.toBeComponentOfType(constructor);
     return this;
   },
 
-  toBeTextComponent: function() {
-    expect(ReactTestUtils.isTextComponent(this.instance())).toBe(true);
+  toBeTextComponentWithValue: function(val) {
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      expect(this._instance.tag === HostText).toBe(true);
+      var actualVal = this._instance.memoizedProps;
+      expect(typeof actualVal === 'string' || typeof actualVal === 'number').toBe(true);
+      expect(String(actualVal)).toBe(val);
+    } else {
+      // Fiber reconciler
+      var elementType = typeof this._instance._currentElement;
+      expect(elementType === 'string' || elementType === 'number').toBe(true);
+      expect(this._instance._stringText).toBe(val);
+    }
     return this;
   },
 
-  /**
-   * Falsy values are valid components - the vanished component that is.
-   */
-  toBeValidReactComponent: function() {
-    expect(ReactComponent.isValidComponent(this.instance())).toBe(true);
-    return this;
+  toBeEmptyComponent: function() {
+    if (typeof this._instance.tag === 'number') {
+      // Fiber reconciler
+      expect(this._instance).toBe(fiberNullInstance);
+    } else {
+      // Stack reconciler
+      var element = this._instance._currentElement;
+      expect(element === null || element === false).toBe(true);
+    }
   },
 
   toBePresent: function() {
@@ -146,12 +244,6 @@ copyProperties(reactComponentExpect.prototype, {
    */
   toBeDOMComponent: function() {
     expect(ReactTestUtils.isDOMComponent(this.instance())).toBe(true);
-    return this;
-  },
-
-  toBeDOMComponentWithTag: function(tag) {
-    this.toBeDOMComponent();
-    expect(this.instance().tagName).toBe(tag.toUpperCase());
     return this;
   },
 
@@ -184,7 +276,23 @@ copyProperties(reactComponentExpect.prototype, {
         .toEqual(propNameToExpectedValue[propName]);
     }
     return this;
-  }
+  },
+
+  /**
+   * Check a set of props are equal to a set of expected values - only works
+   * with scalars.
+   */
+  scalarContextEqual: function(contextNameToExpectedValue) {
+    expect(this.instance()).toBeTruthy();
+    for (var contextName in contextNameToExpectedValue) {
+      if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
+        continue;
+      }
+      expect(this.instance().context[contextName])
+        .toEqual(contextNameToExpectedValue[contextName]);
+    }
+    return this;
+  },
 });
 
 module.exports = reactComponentExpect;

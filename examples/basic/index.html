@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <meta charset="utf-8">
     <title>Basic Example</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
@@ -10,27 +10,21 @@
     <div id="container">
       <p>
         To install React, follow the instructions on
-        <a href="http://www.github.com/facebook/react.js/">GitHub</a>.
+        <a href="https://github.com/facebook/react/">GitHub</a>.
       </p>
       <p>
-        If you can see this, React is not working right.
+        If you can see this, React is <strong>not</strong> working right.
         If you checked out the source from GitHub make sure to run <code>grunt</code>.
       </p>
     </div>
     <h4>Example Details</h4>
-    <ul>
-      <li>
-        This is built with
-        <a href="https://github.com/substack/node-browserify">browserify</a>.
-      </li>
-    </ul>
+    <p>This is written in vanilla JavaScript (without JSX) and transformed in the browser.</p>
     <p>
-    </p>
-    <p>
-      Learn more at
-      <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+      Learn more about React at
+      <a href="https://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
     <script src="../../build/react.js"></script>
+    <script src="../../build/react-dom.js"></script>
     <script>
       var ExampleApplication = React.createClass({
         render: function() {
@@ -42,10 +36,14 @@
           return React.DOM.p(null, message);
         }
       });
+
+      // Call React.createFactory instead of directly call ExampleApplication({...}) in React.render
+      var ExampleApplicationFactory = React.createFactory(ExampleApplication);
+
       var start = new Date().getTime();
       setInterval(function() {
-        React.renderComponent(
-          ExampleApplication({elapsed: new Date().getTime() - start}),
+        ReactDOM.render(
+          ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
           document.getElementById('container')
         );
       }, 50);

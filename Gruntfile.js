@@ -1,73 +1,202 @@
 'use strict';
 
-var exec = require('child_process').exec;
-var jsxTask = require('./grunt/tasks/jsx');
-var browserifyTask = require('./grunt/tasks/browserify');
-var wrapupTask = require('./grunt/tasks/wrapup');
-var phantomTask = require('./grunt/tasks/phantom');
-var releaseTasks = require('./grunt/tasks/release');
+var path = require('path');
+
+var GULP_EXE = 'gulp';
+if (process.platform === 'win32') {
+  GULP_EXE += '.cmd';
+}
 
 module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    copy: require('./grunt/config/copy'),
-    jsx: require('./grunt/config/jsx/jsx'),
     browserify: require('./grunt/config/browserify'),
-    wrapup: require('./grunt/config/wrapup'),
-    phantom: require('./grunt/config/phantom'),
-    clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js'],
-    jshint: require('./grunt/config/jshint'),
-    compare_size: require('./grunt/config/compare_size')
+    npm: require('./grunt/config/npm'),
+    clean: [
+      './build',
+      './*.gem',
+      './docs/_site',
+      './examples/shared/*.js',
+      '.module-cache',
+    ],
+    'compare_size': require('./grunt/config/compare_size'),
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-compare-size');
-  grunt.loadNpmTasks('grunt-contrib-compress');
+  function spawnGulp(args, opts, done) {
 
-  // Alias 'jshint' to 'lint' to better match the workflow we know
-  grunt.registerTask('lint', ['jshint']);
+    grunt.util.spawn({
+      // This could be more flexible (require.resolve & lookup bin in package)
+      // but if it breaks we'll fix it then.
+      cmd: path.join('node_modules', '.bin', GULP_EXE),
+      args: args,
+      opts: Object.assign({stdio: 'inherit'}, opts),
+    }, function(err, result, code) {
+      if (err) {
+        grunt.fail.fatal('Something went wrong running gulp: ', result);
+      }
+      done(code === 0);
+    });
+  }
 
-  // Register jsx:debug and :release tasks.
-  grunt.registerMultiTask('jsx', jsxTask);
+  Object.keys(grunt.file.readJSON('package.json').devDependencies)
+    .filter(function(npmTaskName) {
+      return npmTaskName.indexOf('grunt-') === 0;
+    })
+    .filter(function(npmTaskName) {
+      return npmTaskName !== 'grunt-cli';
+    })
+    .forEach(function(npmTaskName) {
+      grunt.loadNpmTasks(npmTaskName);
+    });
 
-  // Our own browserify-based tasks to build a single JS file build
-  grunt.registerMultiTask('browserify', browserifyTask);
+  grunt.registerTask('eslint', function() {
+    // Use gulp here.
+    spawnGulp(['eslint'], null, this.async());
+  });
 
-  // Similar to Browserify, use WrapUp to generate single JS file that
-  // defines global variables instead of using require.
-  grunt.registerMultiTask('wrapup', wrapupTask);
+  grunt.registerTask('lint', ['eslint']);
 
-  grunt.registerMultiTask('phantom', phantomTask);
+  grunt.registerTask('flow', function() {
+    // Use gulp here.
+    spawnGulp(['flow'], null, this.async());
+  });
 
-  grunt.registerTask('build:basic', ['jsx:debug', 'browserify:basic']);
-  grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
-  grunt.registerTask('build:min', ['jsx:release', 'browserify:min']);
-  grunt.registerTask('build:test', [
-    'jsx:debug',
-    'jsx:test',
-    'browserify:test'
+  grunt.registerTask('delete-build-modules', function() {
+    // Use gulp here.
+    spawnGulp(['react:clean'], null, this.async());
+  });
+
+  // Our own browserify-based tasks to build a single JS file build.
+  grunt.registerMultiTask('browserify', require('./grunt/tasks/browserify'));
+
+  grunt.registerMultiTask('npm', require('./grunt/tasks/npm'));
+
+  var npmReactTasks = require('./grunt/tasks/npm-react');
+  grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
+  grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
+
+  var npmReactDOMTasks = require('./grunt/tasks/npm-react-dom');
+  grunt.registerTask('npm-react-dom:release', npmReactDOMTasks.buildRelease);
+  grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
+
+  var npmReactNativeTasks = require('./grunt/tasks/npm-react-native');
+  grunt.registerTask('npm-react-native:release', npmReactNativeTasks.buildRelease);
+  grunt.registerTask('npm-react-native:pack', npmReactNativeTasks.packRelease);
+
+  var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
+  grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
+  grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
+
+  var npmReactTestRendererTasks = require('./grunt/tasks/npm-react-test');
+  grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
+
+  var npmReactNoopRendererTasks = require('./grunt/tasks/npm-react-noop');
+  grunt.registerTask('npm-react-noop:release', npmReactNoopRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-noop:pack', npmReactNoopRendererTasks.packRelease);
+
+  grunt.registerTask('version-check', function() {
+    // Use gulp here.
+    spawnGulp(['version-check'], null, this.async());
+  });
+
+  grunt.registerTask('build:basic', [
+    'build-modules',
+    'version-check',
+    'browserify:basic',
+  ]);
+  grunt.registerTask('build:addons', [
+    'build-modules',
+    'browserify:addons',
+  ]);
+  grunt.registerTask('build:min', [
+    'build-modules',
+    'version-check',
+    'browserify:min',
+  ]);
+  grunt.registerTask('build:addons-min', [
+    'build-modules',
+    'browserify:addonsMin',
+  ]);
+  grunt.registerTask('build:dom', [
+    'build-modules',
+    'version-check',
+    'browserify:dom',
+  ]);
+  grunt.registerTask('build:dom-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domMin',
+  ]);
+  grunt.registerTask('build:dom-server', [
+    'build-modules',
+    'version-check',
+    'browserify:domServer',
+  ]);
+  grunt.registerTask('build:dom-server-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domServerMin',
+  ]);
+  grunt.registerTask('build:dom-fiber', [
+    'build-modules',
+    'version-check',
+    'browserify:domFiber',
+  ]);
+  grunt.registerTask('build:dom-fiber-min', [
+    'build-modules',
+    'version-check',
+    'browserify:domFiberMin',
+  ]);
+  grunt.registerTask('build:npm-react', [
+    'version-check',
+    'build-modules',
+    'npm-react:release',
   ]);
 
-  grunt.registerTask('test', ['build:test', 'phantom:run']);
+  var jestTasks = require('./grunt/tasks/jest');
+  grunt.registerTask('jest:normal', jestTasks.normal);
+  grunt.registerTask('jest:coverage', jestTasks.coverage);
+
+  grunt.registerTask('test', ['jest:normal']);
+  grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
-  // in order so we can take advantage of that and only run jsx:debug once.
+  // in order so we can take advantage of that and only run build-modules once.
   grunt.registerTask('build', [
-    'jsx:debug',
+    'delete-build-modules',
+    'build-modules',
+    'version-check',
     'browserify:basic',
-    'browserify:transformer',
-    'jsx:release',
+    'browserify:addons',
     'browserify:min',
-    'copy:react_docs',
-    'compare_size'
+    'browserify:addonsMin',
+    'browserify:dom',
+    'browserify:domMin',
+    'browserify:domServer',
+    'browserify:domServerMin',
+    'browserify:domFiber',
+    'browserify:domFiberMin',
+    'npm-react:release',
+    'npm-react:pack',
+    'npm-react-dom:release',
+    'npm-react-dom:pack',
+    'npm-react-native:release',
+    'npm-react-native:pack',
+    'npm-react-addons:release',
+    'npm-react-addons:pack',
+    'npm-react-test:release',
+    'npm-react-test:pack',
+    'npm-react-noop:release',
+    'npm-react-noop:pack',
+    'compare_size',
   ]);
 
   // Automate the release!
+  var releaseTasks = require('./grunt/tasks/release');
   grunt.registerTask('release:setup', releaseTasks.setup);
   grunt.registerTask('release:bower', releaseTasks.bower);
   grunt.registerTask('release:docs', releaseTasks.docs);
@@ -78,22 +207,17 @@ module.exports = function(grunt) {
     'release:setup',
     'clean',
     'build',
-    'gem:only',
     'release:bower',
     'release:starter',
     'compress',
     'release:docs',
-    'release:msg'
+    'release:msg',
   ]);
 
-  // `gem` task to build the react-source gem
-  grunt.registerTask('gem', ['build', 'gem:only']);
-
-  grunt.registerTask('gem:only', function() {
-    var done = this.async();
-    exec('gem build react-source.gemspec', done);
+  grunt.registerTask('build-modules', function() {
+    spawnGulp(['react:modules'], null, this.async());
   });
 
-  // The default task - build - to keep setup easy
+  // The default task - build - to keep setup easy.
   grunt.registerTask('default', ['build']);
 };

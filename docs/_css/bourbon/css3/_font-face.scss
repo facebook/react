@@ -1,6 +1,6 @@
 // Order of the includes matters, and it is: normal, bold, italic, bold+italic.
 
-@mixin font-face($font-family, $file-path, $weight: normal, $style: normal, $asset-pipeline: false ) {
+@mixin font-face($font-family, $file-path, $weight: normal, $style: normal, $asset-pipeline: $asset-pipeline) {
   @font-face {
     font-family: $font-family;
     font-weight: $weight;

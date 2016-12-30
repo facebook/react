@@ -1,28 +1,25 @@
 ---
-layout: page
+layout: hero
 title: A JavaScript library for building user interfaces
 id: home
 ---
+
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>The &quot;V&quot; in MVC</h3>
-      <p>
-        Write reusable UI components in JavaScript. Read and write to any data source.
-      </p>
+      <h3>Declarative</h3>
+      <p>React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes.</p>
+      <p>Declarative views make your code more predictable and easier to debug.</p>
     </div>
     <div class="marketing-col">
-      <h3>Fast &amp; Declarative</h3>
-      <p>
-        Describe how you want your component to look. React will automatically compute
-        the fastest way to keep the UI up-to-date when the data changes.
-      </p>
+      <h3>Component-Based</h3>
+      <p>Build encapsulated components that manage their own state, then compose them to make complex UIs.</p>
+      <p>Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep state out of the DOM.</p>
     </div>
     <div class="marketing-col">
-      <h3>Flexible</h3>
-      <p>
-        React works with the libraries and frameworks that you already know.
-      </p>
+      <h3>Learn Once, Write Anywhere</h3>
+      <p>We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code.</p>
+      <p>React can also render on the server using Node and power mobile apps using <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
     </div>
   </div>
 </section>
@@ -33,31 +30,35 @@ id: home
       <h3>A Simple Component</h3>
       <p>
         React components implement a `render()` method that takes input data and
-        returns what to display. This example constructs the component using an
-        XML-like syntax called JSX, but <strong>JSX is optional; you don&apos;t
-        need to use it</strong>. Input data is passed to the component as XML
-        attributes, and `render()` accesses this data via `this.props`.
+        returns what to display. This example uses an XML-like syntax called
+        JSX. Input data that is passed into the component can be accessed by
+        `render()` via `this.props`.
+      </p>
+      <p>
+        <strong>JSX is optional and not required to use React.</strong> Try
+        clicking on "Compiled JS" to see the raw JavaScript code produced by
+        the JSX compiler.
       </p>
       <div id="helloExample"></div>
     </div>
     <div class="example">
       <h3>A Stateful Component</h3>
       <p>
-        In addition to taking data from its creator (accessed via `this.props`),
-        a component can maintain internal state data (accessed via
-        `this.state`). When a component's state data changes, the rendered
-        markup will be updated by re-invoking `render()`. <strong>This example
-        doesn&apos;t use JSX</strong>, but you could if you wanted to.
+        In addition to taking input data (accessed via `this.props`), a
+        component can maintain internal state data (accessed via `this.state`).
+        When a component's state data changes, the rendered markup will be
+        updated by re-invoking `render()`.
       </p>
       <div id="timerExample"></div>
     </div>
     <div class="example">
       <h3>An Application</h3>
       <p>
-        Using properties and state, we can put together a small Todo
-        application. React provides an interface to the DOM via `refs`. Although
-        event handlers appear to be rendered inline, they will be
-        collected and implemented using event delegation.
+        Using `props` and `state`, we can put together a small Todo application.
+        This example uses `state` to track the current list of items as well as
+        the text that the user has entered. Although event handlers appear to be
+        rendered inline, they will be collected and implemented using event
+        delegation.
       </p>
       <div id="todoExample"></div>
     </div>
@@ -65,21 +66,22 @@ id: home
       <h3>A Component Using External Plugins</h3>
       <p>
         React is flexible and provides hooks that allow you to interface with
-        other libraries and frameworks. This example uses Showdown, an external
-        Markdown library, to convert the textarea's value in real-time.
+        other libraries and frameworks. This example uses **remarkable**, an
+        external Markdown library, to convert the textarea's value in real time.
       </p>
       <div id="markdownExample"></div>
     </div>
   </div>
-  <script type="text/javascript" src="js/examples/hello.js"></script>
-  <script type="text/javascript" src="js/examples/timer.js"></script>
-  <script type="text/javascript" src="js/examples/todo.js"></script>
-  <script type="text/javascript" src="js/examples/markdown.js"></script>
+  <script src="/react/js/remarkable.min.js"></script>
+  <script src="/react/js/examples/hello.js"></script>
+  <script src="/react/js/examples/timer.js"></script>
+  <script src="/react/js/examples/todo.js"></script>
+  <script src="/react/js/examples/markdown.js"></script>
 </section>
 <hr class="home-divider" />
 <section class="home-bottom-section">
   <div class="buttons-unit">
-    <a href="docs/getting-started.html" class="button">Get Started</a>
-    <a href="downloads.html" class="button">Download React v{{site.react_version}}</a>
+    <a href="docs/hello-world.html" class="button">Get Started</a>
+    <a href="tutorial/tutorial.html" class="button">Take the Tutorial</a>
   </div>
 </section>

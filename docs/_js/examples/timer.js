@@ -1,29 +1,35 @@
-/**
- * @jsx React.DOM
- */
+var TIMER_COMPONENT = `
+class Timer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {secondsElapsed: 0};
+  }
 
-var TIMER_COMPONENT = "\
-var Timer = React.createClass({\n\
-  getInitialState: function() {\n\
-    return {secondsElapsed: 0};\n\
-  },\n\
-  tick: React.autoBind(function() {\n\
-    this.setState({secondsElapsed: this.state.secondsElapsed + 1});\n\
-  }),\n\
-  componentDidMount: function() {\n\
-    setInterval(this.tick, 1000);\n\
-  },\n\
-  render: function() {\n\
-    return React.DOM.div({},\n\
-      'Seconds Elapsed: ' + this.state.secondsElapsed\n\
-    );\n\
-  }\n\
-});\n\
-\n\
-React.renderComponent(Timer({}), mountNode);\
-";
+  tick() {
+    this.setState((prevState) => ({
+      secondsElapsed: prevState.secondsElapsed + 1
+    }));
+  }
 
-React.renderComponent(
+  componentDidMount() {
+    this.interval = setInterval(() => this.tick(), 1000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  render() {
+    return (
+      <div>Seconds Elapsed: {this.state.secondsElapsed}</div>
+    );
+  }
+}
+
+ReactDOM.render(<Timer />, mountNode);
+`.trim();
+
+ReactDOM.render(
   <ReactPlayground codeText={TIMER_COMPONENT} />,
   document.getElementById('timerExample')
 );

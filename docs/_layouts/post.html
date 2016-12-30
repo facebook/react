@@ -1,12 +1,12 @@
 ---
 layout: default
+sectionid: blog
 ---
 
-<section class="content wrap">
-  <h2>{{ page.title }}</h2>
-  <p class="meta">{{ page.date | date_to_string }}</p>
+<section class="content wrap blogContent">
 
-  <div id="post">
-  {{ content }}
+  <div class="inner-content">
+    {% include blog_post.html isPermalink="true" page=page content=content %}
   </div>
+  {% include nav_blog.html %}
 </section>

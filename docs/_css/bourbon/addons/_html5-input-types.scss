@@ -20,29 +20,19 @@ $inputs-list: 'input[type="email"]',
               'input[type="time"]',
               'input[type="week"]';
 
-$unquoted-inputs-list: ();
-@each $input-type in $inputs-list {
-  $unquoted-inputs-list: append($unquoted-inputs-list, unquote($input-type), comma);
-}
-
-$all-text-inputs: $unquoted-inputs-list;
-
+// Bare inputs
+//************************************************************************//
+$all-text-inputs: assign-inputs($inputs-list);
 
 // Hover Pseudo-class
 //************************************************************************//
-$all-text-inputs-hover: ();
-@each $input-type in $unquoted-inputs-list {
-      $input-type-hover: $input-type + ":hover";
-      $all-text-inputs-hover: append($all-text-inputs-hover, $input-type-hover, comma);
-}
+$all-text-inputs-hover: assign-inputs($inputs-list, hover);
 
 // Focus Pseudo-class
 //************************************************************************//
-$all-text-inputs-focus: ();
-@each $input-type in $unquoted-inputs-list {
-      $input-type-focus: $input-type + ":focus";
-      $all-text-inputs-focus: append($all-text-inputs-focus, $input-type-focus, comma);
-}
+$all-text-inputs-focus: assign-inputs($inputs-list, focus);
+
+
 
 // You must use interpolation on the variable:
 // #{$all-text-inputs}
@@ -52,5 +42,45 @@ $all-text-inputs-focus: ();
 // Example
 //************************************************************************//
 //   #{$all-text-inputs}, textarea {
+//     border: 1px solid red;
+//   }
+
+
+
+//************************************************************************//
+// Generate a variable ($all-button-inputs) with a list of all html5
+// input types that have a button-based input, excluding button.
+//************************************************************************//
+$inputs-button-list: 'input[type="button"]',
+                     'input[type="reset"]',
+                     'input[type="submit"]';
+
+// Bare inputs
+//************************************************************************//
+$all-button-inputs: assign-inputs($inputs-button-list);
+
+// Hover Pseudo-class
+//************************************************************************//
+$all-button-inputs-hover: assign-inputs($inputs-button-list, hover);
+
+// Focus Pseudo-class
+//************************************************************************//
+$all-button-inputs-focus: assign-inputs($inputs-button-list, focus);
+
+// Active Pseudo-class
+//************************************************************************//
+$all-button-inputs-active: assign-inputs($inputs-button-list, active);
+
+
+
+// You must use interpolation on the variable:
+// #{$all-button-inputs}
+// #{$all-button-inputs-hover}
+// #{$all-button-inputs-focus}
+// #{$all-button-inputs-active}
+
+// Example
+//************************************************************************//
+//   #{$all-button-inputs}, button {
 //     border: 1px solid red;
 //   }
