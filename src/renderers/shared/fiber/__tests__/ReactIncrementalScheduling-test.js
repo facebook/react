@@ -340,14 +340,4 @@ describe('ReactIncrementalScheduling', () => {
     // animation priority.
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
   });
-
-  it('can force synchronous updates with syncUpdates, even inside batchedUpdates', done => {
-    ReactNoop.batchedUpdates(() => {
-      ReactNoop.syncUpdates(() => {
-        ReactNoop.render(<span />);
-        expect(ReactNoop.getChildren()).toEqual([span()]);
-        done();
-      });
-    });
-  });
 });
