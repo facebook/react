@@ -1165,25 +1165,22 @@ describe('ReactUpdates', () => {
     expect(called).toEqual(true);
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    // TODO: Should we add this feature to stack, too?
-    it('does not re-render if state update is null', () => {
-      let container = document.createElement('div');
+  it('does not re-render if state update is null', () => {
+    let container = document.createElement('div');
 
-      let instance;
-      let ops = [];
-      class Foo extends React.Component {
-        render() {
-          instance = this;
-          ops.push('render');
-          return <div />;
-        }
+    let instance;
+    let ops = [];
+    class Foo extends React.Component {
+      render() {
+        instance = this;
+        ops.push('render');
+        return <div />;
       }
-      ReactDOM.render(<Foo />, container);
+    }
+    ReactDOM.render(<Foo />, container);
 
-      ops = [];
-      instance.setState(() => null);
-      expect(ops).toEqual([]);
-    });
-  }
+    ops = [];
+    instance.setState(() => null);
+    expect(ops).toEqual([]);
+  });
 });
