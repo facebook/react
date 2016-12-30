@@ -55,7 +55,6 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 var {
-  Update,
   Placement,
   ContentReset,
   Err,
@@ -91,7 +90,12 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     mountClassInstance,
     resumeMountClassInstance,
     updateClassInstance,
-  } = ReactFiberClassComponent(scheduleUpdate, getPriorityContext);
+  } = ReactFiberClassComponent(
+    scheduleUpdate,
+    getPriorityContext,
+    memoizeProps,
+    memoizeState,
+  );
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -176,12 +180,13 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextChildren === null) {
-        nextChildren = current && current.memoizedProps;
+        nextChildren = workInProgress.memoizedProps;
       }
     } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextChildren);
     return workInProgress.child;
   }
 
@@ -202,16 +207,20 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextProps === null) {
-        nextProps = current && current.memoizedProps;
+        nextProps = memoizedProps;
       }
-    } else if (nextProps === null || memoizedProps === nextProps || (
-        // TODO: Disable this before release, since it is not part of the public API
-        // I use this for testing to compare the relative overhead of classes.
-        memoizedProps !== null &&
-        typeof fn.shouldComponentUpdate === 'function' &&
-        !fn.shouldComponentUpdate(memoizedProps, nextProps)
-      )) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    } else {
+      if (nextProps == null || memoizedProps === nextProps) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      // TODO: Disable this before release, since it is not part of the public API
+      // I use this for testing to compare the relative overhead of classes.
+      if (typeof fn.shouldComponentUpdate === 'function' &&
+          !fn.shouldComponentUpdate(memoizedProps, nextProps)) {
+        // Memoize props even if shouldComponentUpdate returns false
+        memoizeProps(workInProgress, nextProps);
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
     }
 
     var unmaskedContext = getUnmaskedContext(workInProgress);
@@ -226,6 +235,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       nextChildren = fn(nextProps, context);
     }
     reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
 
@@ -258,31 +268,23 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     shouldUpdate : boolean,
     hasContext : boolean,
   ) {
-    // Schedule side-effects
-
     // Refs should update even if shouldComponentUpdate returns false
     markRef(current, workInProgress);
 
-    if (shouldUpdate) {
-      workInProgress.effectTag |= Update;
-    } else {
-      // If an update was already in progress, we should schedule an Update
-      // effect even though we're bailing out, so that cWU/cDU are called.
-      if (current) {
-        const instance = current.stateNode;
-        if (instance.props !== current.memoizedProps ||
-            instance.state !== current.memoizedState) {
-          workInProgress.effectTag |= Update;
-        }
-      }
+    if (!shouldUpdate) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    // Rerender
     const instance = workInProgress.stateNode;
+
+    // Rerender
     ReactCurrentOwner.current = workInProgress;
     const nextChildren = instance.render();
     reconcileChildren(current, workInProgress, nextChildren);
+    // Memoize props and state using the values we just used to render.
+    // TODO: Restructure so we never read values from the instance.
+    memoizeState(workInProgress, instance.state);
+    memoizeProps(workInProgress, instance.props);
 
     // The context might have changed so we need to recalculate it.
     if (hasContext) {
@@ -321,7 +323,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       }
       const element = state.element;
       reconcileChildren(current, workInProgress, element);
-      workInProgress.memoizedState = state;
+      memoizeState(workInProgress, state);
       return workInProgress.child;
     }
     // If there is no update queue, that's a bailout because the root has no props.
@@ -338,7 +340,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextProps === null) {
-        nextProps = prevProps;
+        nextProps = memoizedProps;
         if (!nextProps) {
           throw new Error('We should always have pending or current props.');
         }
@@ -403,6 +405,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
 
       // Reconcile the children and stash them for later work.
       reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
+      memoizeProps(workInProgress, nextProps);
       workInProgress.child = current ? current.child : null;
 
       if (!current) {
@@ -422,8 +425,20 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       return null;
     } else {
       reconcileChildren(current, workInProgress, nextChildren);
+      memoizeProps(workInProgress, nextProps);
       return workInProgress.child;
     }
+  }
+
+  function updateHostText(current, workInProgress) {
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = workInProgress.memoizedProps;
+    }
+    memoizeProps(workInProgress, nextProps);
+    // Nothing to do here. This is terminal. We'll do the completion step
+    // immediately after.
+    return null;
   }
 
   function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
@@ -484,6 +499,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         }
       }
       reconcileChildren(current, workInProgress, value);
+      memoizeProps(workInProgress, props);
       return workInProgress.child;
     }
   }
@@ -503,6 +519,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     reconcileChildren(current, workInProgress, nextCoroutine.children);
+    memoizeProps(workInProgress, nextCoroutine);
     // This doesn't take arbitrary time so we could synchronously just begin
     // eagerly do the work of workInProgress.child as an optimization.
     return workInProgress.child;
@@ -537,9 +554,11 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         nextChildren,
         priorityLevel
       );
+      memoizeProps(workInProgress, nextChildren);
       markChildAsProgressed(current, workInProgress, priorityLevel);
     } else {
       reconcileChildren(current, workInProgress, nextChildren);
+      memoizeProps(workInProgress, nextChildren);
     }
     return workInProgress.child;
   }
@@ -606,6 +625,18 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     return null;
   }
 
+  function memoizeProps(workInProgress : Fiber, nextProps : any) {
+    workInProgress.memoizedProps = nextProps;
+    // Reset the pending props
+    workInProgress.pendingProps = null;
+  }
+
+  function memoizeState(workInProgress : Fiber, nextState : any) {
+    workInProgress.memoizedState = nextState;
+    // Don't reset the updateQueue, in case there are pending updates. Resetting
+    // is handled by beginUpdateQueue.
+  }
+
   function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
@@ -639,9 +670,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       case HostComponent:
         return updateHostComponent(current, workInProgress);
       case HostText:
-        // Nothing to do here. This is terminal. We'll do the completion step
-        // immediately after.
-        return null;
+        return updateHostText(current, workInProgress);
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;
@@ -683,6 +712,14 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     // Unmount the current children as if the component rendered null
     const nextChildren = null;
     reconcileChildren(current, workInProgress, nextChildren);
+
+    if (workInProgress.tag === ClassComponent) {
+      const instance = workInProgress.stateNode;
+      workInProgress.memoizedProps = instance.props;
+      workInProgress.memoizedState = instance.state;
+      workInProgress.pendingProps = null;
+    }
+
     return workInProgress.child;
   }
 

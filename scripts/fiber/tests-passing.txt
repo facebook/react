@@ -36,6 +36,7 @@ scripts/error-codes/__tests__/invertObject-test.js
 
 src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
 * provides a default shouldComponentUpdate implementation
+* does not do a deep comparison
 
 src/addons/__tests__/ReactFragment-test.js
 * warns for numeric keys on objects as children
@@ -1143,6 +1144,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can resume work in a bailed subtree within one pass
 * can reuse work done after being preempted
 * can reuse work if shouldComponentUpdate is false, after being preempted
+* memoizes work even if shouldComponentUpdate returns false
 * can update in the middle of a tree using setState
 * can queue multiple state updates
 * can use updater form of setState

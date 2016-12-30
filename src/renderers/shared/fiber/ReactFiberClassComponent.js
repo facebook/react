@@ -16,6 +16,9 @@ import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
+  Update,
+} = require('ReactTypeOfSideEffect');
+var {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
@@ -40,6 +43,8 @@ const isArray = Array.isArray;
 module.exports = function(
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
   getPriorityContext : () => PriorityLevel,
+  memoizeProps: (workInProgress : Fiber, props : any) => void,
+  memoizeState: (workInProgress : Fiber, state : any) => void,
 ) {
 
   // Class component state updater
@@ -65,7 +70,7 @@ module.exports = function(
     },
   };
 
-  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState, newContext) {
+  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, oldState, newState, newContext) {
     if (oldProps === null || (workInProgress.updateQueue && workInProgress.updateQueue.hasForceUpdate)) {
       // If the workInProgress already has an Update effect, return true
       return true;
@@ -91,7 +96,7 @@ module.exports = function(
     if (type.prototype && type.prototype.isPureReactComponent) {
       return (
         !shallowEqual(oldProps, newProps) ||
-        !shallowEqual(instance.state, newState)
+        !shallowEqual(oldState, newState)
       );
     }
 
@@ -198,6 +203,27 @@ module.exports = function(
     }
   }
 
+
+  function markUpdate(workInProgress) {
+    workInProgress.effectTag |= Update;
+  }
+
+  function markUpdateIfAlreadyInProgress(current: ?Fiber, workInProgress : Fiber) {
+    // If an update was already in progress, we should schedule an Update
+    // effect even though we're bailing out, so that cWU/cDU are called.
+    if (current) {
+      if (workInProgress.memoizedProps !== current.memoizedProps ||
+          workInProgress.memoizedState !== current.memoizedState) {
+        markUpdate(workInProgress);
+      }
+    }
+  }
+
+  function resetInputPointers(workInProgress : Fiber, instance : any) {
+    instance.props = workInProgress.memoizedProps;
+    instance.state = workInProgress.memoizedState;
+  }
+
   function adoptClassInstance(workInProgress : Fiber, instance : any) : void {
     instance.updater = updater;
     workInProgress.stateNode = instance;
@@ -226,6 +252,7 @@ module.exports = function(
 
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
+    markUpdate(workInProgress);
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -261,6 +288,10 @@ module.exports = function(
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
+    markUpdate(workInProgress);
+    const instance = workInProgress.stateNode;
+    resetInputPointers(workInProgress, instance);
+
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -282,9 +313,15 @@ module.exports = function(
       workInProgress,
       workInProgress.memoizedProps,
       newProps,
+      workInProgress.memoizedState,
       newState,
       newContext
     )) {
+      // Update the existing instance's state, props, and context pointers even
+      // though we're bailing out.
+      instance.props = newProps;
+      instance.state = newState;
+      instance.context = newContext;
       return false;
     }
 
@@ -318,8 +355,9 @@ module.exports = function(
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
   function updateClassInstance(current : Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     const instance = workInProgress.stateNode;
+    resetInputPointers(workInProgress, instance);
 
-    const oldProps = workInProgress.memoizedProps || current.memoizedProps;
+    const oldProps = workInProgress.memoizedProps;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
       // If there aren't any new props, then we'll reuse the memoized props.
@@ -365,28 +403,40 @@ module.exports = function(
         oldState === newState &&
         !hasContextChanged() &&
         !(updateQueue && updateQueue.hasForceUpdate)) {
+      markUpdateIfAlreadyInProgress(current, workInProgress);
       return false;
     }
 
-    if (!checkShouldComponentUpdate(
+    const shouldUpdate = checkShouldComponentUpdate(
       workInProgress,
       oldProps,
       newProps,
+      oldState,
       newState,
       newContext
-    )) {
-      // TODO: Should this get the new props/state updated regardless?
-      return false;
+    );
+
+    if (shouldUpdate) {
+      markUpdate(workInProgress);
+      if (typeof instance.componentWillUpdate === 'function') {
+        instance.componentWillUpdate(newProps, newState, newContext);
+      }
+    } else {
+      markUpdateIfAlreadyInProgress(current, workInProgress);
+
+      // If shouldComponentUpdate returned false, we should still update the
+      // memoized props/state to indicate that this work can be reused.
+      memoizeProps(workInProgress, newProps);
+      memoizeState(workInProgress, newState);
     }
 
-    if (typeof instance.componentWillUpdate === 'function') {
-      instance.componentWillUpdate(newProps, newState, newContext);
-    }
-
+    // Update the existing instance's state, props, and context pointers even
+    // if shouldComponentUpdate returns false.
     instance.props = newProps;
     instance.state = newState;
     instance.context = newContext;
-    return true;
+
+    return shouldUpdate;
   }
 
   return {

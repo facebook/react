@@ -1,6 +1,3 @@
-src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
-* does not do a deep comparison
-
 src/addons/__tests__/ReactFragment-test.js
 * should throw if a plain object is used as a child
 * should throw if a plain object even if it is in an owner

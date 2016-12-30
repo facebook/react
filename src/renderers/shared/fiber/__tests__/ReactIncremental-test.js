@@ -628,6 +628,43 @@ describe('ReactIncremental', () => {
 
   });
 
+  it('memoizes work even if shouldComponentUpdate returns false', () => {
+    let ops = [];
+    class Foo extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        // this.props is the memoized props. So this should return true for
+        // every update except the first one.
+        const shouldUpdate = this.props.step !== 1;
+        ops.push('shouldComponentUpdate: ' + shouldUpdate);
+        return shouldUpdate;
+      }
+      render() {
+        ops.push('render');
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo step={1} />);
+    ReactNoop.flush();
+
+    ops = [];
+    ReactNoop.render(<Foo step={2} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'shouldComponentUpdate: false',
+    ]);
+
+    ops = [];
+    ReactNoop.render(<Foo step={3} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // If the memoized props were not updated during last bail out, sCU will
+      // keep returning false.
+      'shouldComponentUpdate: true',
+      'render',
+    ]);
+  });
+
   it('can update in the middle of a tree using setState', () => {
     let instance;
     class Bar extends React.Component {
@@ -873,13 +910,13 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo step={1} />);
     ReactNoop.flushDeferredPri(50);
-    // A completed and was reused. B completed but couldn't be reused because
-    // props differences. C didn't complete and therefore couldn't be reused.
-    // D never even started so it needed a new instance.
-    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:C', 'Bar:D']);
+    // A was memoized and reused. B was memoized but couldn't be reused because
+    // props differences. C was memoized and reused. D never even started so it
+    // needed a new instance.
+    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:D']);
 
     // We expect each rerender to correspond to a new instance.
-    expect(instances.size).toBe(6);
+    expect(instances.size).toBe(5);
   });
 
   it('gets new props when setting state on a partly updated component', () => {
@@ -935,7 +972,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     ReactNoop.flush();
-    expect(ops).toEqual(['Bar:A-1', 'Baz', 'Baz']);
+    expect(ops).toEqual(['Bar:A-1', 'Baz']);
   });
 
   it('calls componentWillMount twice if the initial render is aborted', () => {
