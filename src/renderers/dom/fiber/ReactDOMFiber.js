@@ -326,8 +326,8 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     }
     const newRoot = DOMRenderer.createContainer(container);
     root = container._reactRootContainer = newRoot;
-    // Initial mount is always sync, even if we're in a batch.
-    DOMRenderer.syncUpdates(() => {
+    // Initial mount should not be batched.
+    DOMRenderer.unbatchedUpdates(() => {
       DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
     });
   } else {
@@ -354,8 +354,8 @@ var ReactDOM = {
   unmountComponentAtNode(container : DOMContainerElement) {
     warnAboutUnstableUse();
     if (container._reactRootContainer) {
-      // Unmount is always sync, even if we're in a batch.
-      return DOMRenderer.syncUpdates(() => {
+      // Unmount should not be batched.
+      return DOMRenderer.unbatchedUpdates(() => {
         return renderSubtreeIntoContainer(null, null, container, () => {
           container._reactRootContainer = null;
         });

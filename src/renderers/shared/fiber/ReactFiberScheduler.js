@@ -1094,16 +1094,23 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     }
   }
 
-  function syncUpdates<A>(fn : () => A) : A {
-    const previousPriorityContext = priorityContext;
+  function unbatchedUpdates<A>(fn : () => A) : A {
     const previousIsBatchingUpdates = isBatchingUpdates;
-    priorityContext = SynchronousPriority;
     isBatchingUpdates = false;
     try {
       return fn();
     } finally {
-      priorityContext = previousPriorityContext;
       isBatchingUpdates = previousIsBatchingUpdates;
+    }
+  }
+
+  function syncUpdates<A>(fn : () => A) : A {
+    const previousPriorityContext = priorityContext;
+    priorityContext = SynchronousPriority;
+    try {
+      return fn();
+    } finally {
+      priorityContext = previousPriorityContext;
     }
   }
 
@@ -1122,6 +1129,7 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     getPriorityContext: getPriorityContext,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
+    unbatchedUpdates: unbatchedUpdates,
     syncUpdates: syncUpdates,
     deferredUpdates: deferredUpdates,
   };
