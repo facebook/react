@@ -85,6 +85,7 @@ In HTML, a `<textarea>` element defines its text by its children:
   Hello there, this is some text in a text area
 </textarea>
 ```
+As you can see, the `value="B"` attribute on the select tag sets the current value of the select.
 
 In React, a `<textarea>` uses a `value` attribute instead. This way, a form using a `<textarea>` can be written very similarly to a form that uses a single-line input:
 
