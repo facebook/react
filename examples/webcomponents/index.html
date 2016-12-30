@@ -36,19 +36,18 @@
     <script type="text/babel">
 
       // Define WebComponent
-      var proto = Object.create(HTMLElement.prototype, {
-        attachedCallback: {
-          value: function() {
-            var mountPoint = document.createElement('span');
-            this.createShadowRoot().appendChild(mountPoint);
+      class XSearch extends HTMLElement {
+        constructor() {
+          super();
+          var mountPoint = document.createElement('span');
+          this.attachShadow({mode: 'open'}).appendChild(mountPoint);
 
-            var name = this.getAttribute('name');
-            var url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
-            ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
-          }
+          var name = this.getAttribute('name');
+          var url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
+          ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
         }
-      });
-      document.registerElement('x-search', {prototype: proto});
+      };
+      customElements.define('x-search', XSearch);
 
       // Define React Component
       class HelloMessage extends React.Component {
