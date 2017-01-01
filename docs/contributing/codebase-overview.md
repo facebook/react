@@ -224,7 +224,7 @@ module.exports = ReactDOMComponent;
 
 The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
 
-Equivalent code in ES6 would like this:
+Equivalent code in ES6 would look like this:
 
 ```js
 class ReactDOMComponent {
@@ -331,7 +331,7 @@ Renderers are located in [`src/renderers`](https://github.com/facebook/react/tre
 
 The only other officially supported renderer is [`react-art`](https://github.com/reactjs/react-art). To avoid accidentally breaking it as we make changes to React, we checked it in as [`src/renderers/art`](https://github.com/facebook/react/tree/master/src/renderers/art) and run its test suite. Nevertheless, its [GitHub repository](https://github.com/reactjs/react-art) still acts as the source of truth.
 
-While it is [technically possible](https://github.com/iamdustan/tiny-react-renderer) to create custom React renderer, this is currently not officially supported. There is no stable public contract for custom renderers yet which is another reason why we keep them all in a single place.
+While it is [technically possible](https://github.com/iamdustan/tiny-react-renderer) to create custom React renderers, this is currently not officially supported. There is no stable public contract for custom renderers yet which is another reason why we keep them all in a single place.
 
 >**Note:**
 >
@@ -363,7 +363,7 @@ Regardless of the platform, both `<div>` and `<View>` handle managing multiple c
 
 User-defined ("composite") components should behave the same way with all renderers. This is why the stack reconciler provides a shared implementation in [`ReactCompositeComponent`](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js). It is always the same regardless of the renderer.
 
-Composite components also implement [mounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181), [updating](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703), and [unmounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524). However, unlike host components, `ReactCompositeComponent` needs to behave differently depending on user's code. This is why it calls methods, such as `render()` and `componentDidMount()`, on the user-supplied class.
+Composite components also implement [mounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181), [updating](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703), and [unmounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524). However, unlike host components, `ReactCompositeComponent` needs to behave differently depending on the user's code. This is why it calls methods, such as `render()` and `componentDidMount()`, on the user-supplied class.
 
 During an update, `ReactCompositeComponent` checks whether the `render()` output has a different `type` or `key` than the last time. If neither `type` nor `key` has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance and mounts a new one. This is described in the [reconciliation algorithm](/react/docs/reconciliation.html).
 
