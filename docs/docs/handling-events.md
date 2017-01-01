@@ -123,7 +123,7 @@ If you aren't using property initializer syntax, you can use an [arrow function]
 
 ```js{7-9}
 class LoggingButton extends React.Component {
-  handleClick() {
+  handleClick(e) {
     console.log('this is:', this);
   }
 
