@@ -180,17 +180,11 @@ describe('ReactDOMProduction', () => {
 
   it('should throw with an error code in production', () => {
     expect(function() {
-      class Component extends React.Component {
-        render() {
-          return undefined;
-        }
-      }
-
       var container = document.createElement('div');
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(<input><div/></input>, container);
     }).toThrowError(
-      'Minified React error #109; visit ' +
-      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
+      'Minified React error #137; visit ' +
+      'http://facebook.github.io/react/docs/error-decoder.html?invariant=137&args[]=input&args[]=' +
       ' for the full message or use the non-minified dev environment' +
       ' for full errors and additional helpful warnings.'
     );
