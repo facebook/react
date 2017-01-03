@@ -7,8 +7,8 @@
  * (Loads React 15.4.1)
  */
 
-var REACT_PATH = '../../build/react.js';
-var DOM_PATH = '../../build/react-dom.js';
+var REACT_PATH = 'react.js';
+var DOM_PATH = 'react-dom.js';
 var BABEL_PATH = 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.19.0/babel.js';
 
 function parseQuery(qstr) {
@@ -25,8 +25,10 @@ function parseQuery(qstr) {
   return query;
 }
 
-var query = parseQuery(window.location.search.slice(1));
+var query = parseQuery(window.location.search);
 var version = query.version || 'local';
+
+console.log(query)
 
 if (version !== 'local') {
   REACT_PATH = 'https://unpkg.com/react@' + version + '/dist/react.min.js';
