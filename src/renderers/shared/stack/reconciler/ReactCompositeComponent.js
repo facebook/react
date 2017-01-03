@@ -867,8 +867,9 @@ var ReactCompositeComponent = {
 
     var nextState = this._processPendingState(nextProps, nextContext);
     var shouldUpdate = true;
-
     if (!this._pendingForceUpdate) {
+      var prevState = inst.state;
+      shouldUpdate = willReceive || nextState !== prevState;
       if (inst.shouldComponentUpdate) {
         if (__DEV__) {
           shouldUpdate = measureLifeCyclePerf(
@@ -944,15 +945,21 @@ var ReactCompositeComponent = {
       return queue[0];
     }
 
-    var nextState = Object.assign({}, replace ? queue[0] : inst.state);
+    var nextState = replace ? queue[0] : inst.state;
+    var dontMutate = true;
     for (var i = replace ? 1 : 0; i < queue.length; i++) {
       var partial = queue[i];
-      Object.assign(
-        nextState,
-        typeof partial === 'function' ?
-          partial.call(inst, nextState, props, context) :
-          partial
-      );
+      let partialState = typeof partial === 'function' ?
+        partial.call(inst, nextState, props, context) :
+        partial;
+      if (partialState) {
+        if (dontMutate) {
+          dontMutate = false;
+          nextState = Object.assign({}, nextState, partialState);
+        } else {
+          Object.assign(nextState, partialState);
+        }
+      }
     }
 
     return nextState;

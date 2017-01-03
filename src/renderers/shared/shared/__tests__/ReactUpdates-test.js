@@ -13,9 +13,9 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactTestUtils;
 var ReactUpdates;
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
@@ -1152,5 +1152,24 @@ describe('ReactUpdates', () => {
       expect(container.textContent).toEqual('');
       done();
     });
+  });
+
+  it('does not re-render if state update is null', () => {
+    let container = document.createElement('div');
+
+    let instance;
+    let ops = [];
+    class Foo extends React.Component {
+      render() {
+        instance = this;
+        ops.push('render');
+        return <div />;
+      }
+    }
+    ReactDOM.render(<Foo />, container);
+
+    ops = [];
+    instance.setState(() => null);
+    expect(ops).toEqual([]);
   });
 });
