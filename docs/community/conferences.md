@@ -14,6 +14,11 @@ January 20-21 in Dornbirn, Austria
 
 [Website](http://agent.sh/)
 
+### React.js Conf 2017
+March 13-14 in Santa Clara, CA
+
+[Website](http://conf.reactjs.org/)
+
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
