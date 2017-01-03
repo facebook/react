@@ -33,31 +33,6 @@ var invariant = require('invariant');
 
 const isArray = Array.isArray;
 
-function formatUnexpectedArgument(arg) {
-  var type = typeof arg;
-  if (type !== 'object') {
-    return type;
-  }
-  var displayName = arg.constructor && arg.constructor.name || type;
-  var keys = Object.keys(arg);
-  if (keys.length > 0 && keys.length < 20) {
-    return `${displayName} (keys: ${keys.join(', ')})`;
-  }
-  return displayName;
-}
-
-function validateCallback(callback, callerName) {
-  if (typeof callback !== 'function') {
-    invariant(
-      false,
-      '%s(...): Expected the last optional `callback` argument to be a ' +
-      'function. Instead received: %s.',
-      callerName,
-      formatUnexpectedArgument(callback)
-    );
-  }
-}
-
 module.exports = function(
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
   getPriorityContext : () => PriorityLevel,
@@ -67,27 +42,18 @@ module.exports = function(
   const updater = {
     isMounted,
     enqueueSetState(instance, partialState, callback) {
-      if (callback) {
-        validateCallback(callback, 'setState');
-      }
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
       addUpdate(fiber, partialState, callback || null, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueReplaceState(instance, state, callback) {
-      if (callback) {
-        validateCallback(callback, 'replaceState');
-      }
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
       addReplaceUpdate(fiber, state, callback || null, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueForceUpdate(instance, callback) {
-      if (callback) {
-        validateCallback(callback, 'forceUpdate');
-      }
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
       addForceUpdate(fiber, callback || null, priorityLevel);
