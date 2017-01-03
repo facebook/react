@@ -33,6 +33,7 @@ var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+var validateCallback = require('validateCallback');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
@@ -432,7 +433,7 @@ var ReactMount = {
   },
 
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
-    ReactUpdateQueue.validateCallback(callback, 'ReactDOM.render');
+    validateCallback(callback, 'ReactDOM.render');
     invariant(
       React.isValidElement(nextElement),
       'ReactDOM.render(): Invalid component element.%s',

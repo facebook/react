@@ -25,6 +25,7 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
+const validateCallback = require('validateCallback');
 const warning = require('warning');
 
 type PartialState<State, Props> =
@@ -204,12 +205,14 @@ function findInsertionPosition(queue, update) : Update | null {
 // we shouldn't make a copy.
 //
 // If the update is cloned, it returns the cloned update.
-function insertUpdate(fiber : Fiber, update : Update, methodName : ?string) : Update | null {
+function insertUpdate(fiber : Fiber, update : Update, methodName : string) : Update | null {
+  validateCallback(update.callback, methodName);
+
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
   // Warn if an update is scheduled from inside an updater function.
-  if (__DEV__ && typeof methodName === 'string') {
+  if (__DEV__) {
     if (queue1.isProcessing || (queue2 && queue2.isProcessing)) {
       if (methodName === 'setState') {
         warning(
@@ -287,11 +290,7 @@ function addUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  if (__DEV__) {
-    insertUpdate(fiber, update, 'setState');
-  } else {
-    insertUpdate(fiber, update);
-  }
+  insertUpdate(fiber, update, 'setState');
 }
 exports.addUpdate = addUpdate;
 
@@ -310,12 +309,7 @@ function addReplaceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-
-  if (__DEV__) {
-    insertUpdate(fiber, update, 'replaceState');
-  } else {
-    insertUpdate(fiber, update);
-  }
+  insertUpdate(fiber, update, 'replaceState');
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
@@ -333,11 +327,7 @@ function addForceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  if (__DEV__) {
-    insertUpdate(fiber, update, 'forceUpdate');
-  } else {
-    insertUpdate(fiber, update);
-  }
+  insertUpdate(fiber, update, 'forceUpdate');
 }
 exports.addForceUpdate = addForceUpdate;
 
@@ -366,7 +356,7 @@ function addTopLevelUpdate(
     isTopLevelUnmount,
     next: null,
   };
-  const update2 = insertUpdate(fiber, update);
+  const update2 = insertUpdate(fiber, update, 'render');
 
   if (isTopLevelUnmount) {
     // Drop all updates that are lower-priority, so that the tree is not

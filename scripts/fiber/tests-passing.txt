@@ -620,6 +620,8 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * should overwrite props.children with children argument
 * should purge the DOM cache when removing nodes
 * allow React.DOM factories to be called without warnings
+* throws in render() if the mount callback is not a function
+* throws in render() if the update callback is not a function
 * preserves focus
 * calls focus() on autoFocus elements after they have been mounted to the DOM
 
