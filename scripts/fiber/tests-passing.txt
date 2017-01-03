@@ -1207,7 +1207,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * can opt-in to deferred/animation scheduling inside componentDidMount/Update
 * performs Task work even after time runs out
 * does not perform animation work after time runs out
-* can force synchronous updates with syncUpdates, even inside batchedUpdates
+* can opt-out of batching using unbatchedUpdates
+* nested updates are always deferred, even inside unbatchedUpdates
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance

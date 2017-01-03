@@ -264,6 +264,8 @@ var ReactNoop = {
 
   batchedUpdates: NoopRenderer.batchedUpdates,
 
+  unbatchedUpdates: NoopRenderer.unbatchedUpdates,
+
   syncUpdates: NoopRenderer.syncUpdates,
 
   // Logs the current state of the tree.

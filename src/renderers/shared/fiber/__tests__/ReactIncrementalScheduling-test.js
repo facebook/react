@@ -341,13 +341,70 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
   });
 
-  it('can force synchronous updates with syncUpdates, even inside batchedUpdates', done => {
-    ReactNoop.batchedUpdates(() => {
-      ReactNoop.syncUpdates(() => {
-        ReactNoop.render(<span />);
-        expect(ReactNoop.getChildren()).toEqual([span()]);
-        done();
+  it('can opt-out of batching using unbatchedUpdates', () => {
+    // syncUpdates gives synchronous priority to updates
+    ReactNoop.syncUpdates(() => {
+      // batchedUpdates downgrades sync updates to task priority
+      ReactNoop.batchedUpdates(() => {
+        ReactNoop.render(<span prop={0} />);
+        expect(ReactNoop.getChildren()).toEqual([]);
+        // Should not have flushed yet because we're still batching
+
+        // unbatchedUpdates reverses the effect of batchedUpdates, so sync
+        // updates are not batched
+        ReactNoop.unbatchedUpdates(() => {
+          ReactNoop.render(<span prop={1} />);
+          expect(ReactNoop.getChildren()).toEqual([span(1)]);
+          ReactNoop.render(<span prop={2} />);
+          expect(ReactNoop.getChildren()).toEqual([span(2)]);
+        });
+
+        ReactNoop.render(<span prop={3} />);
+        expect(ReactNoop.getChildren()).toEqual([span(2)]);
       });
+      // Remaining update is now flushed
+      expect(ReactNoop.getChildren()).toEqual([span(3)]);
     });
+  });
+
+  it('nested updates are always deferred, even inside unbatchedUpdates', () => {
+    let instance;
+    let ops = [];
+    class Foo extends React.Component {
+      state = { step: 0 };
+      componentDidUpdate() {
+        ops.push('componentDidUpdate: ' + this.state.step);
+        if (this.state.step === 1) {
+          ReactNoop.unbatchedUpdates(() => {
+            // This is a nested state update, so it should not be
+            // flushed synchronously, even though we wrapped it
+            // in unbatchedUpdates.
+            this.setState({ step: 2 });
+          });
+          expect(ReactNoop.getChildren()).toEqual([span(1)]);
+        }
+      }
+      render() {
+        ops.push('render: ' + this.state.step);
+        instance = this;
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span(0)]);
+
+    ReactNoop.syncUpdates(() => {
+      instance.setState({ step: 1 });
+      expect(ReactNoop.getChildren()).toEqual([span(2)]);
+    });
+
+    expect(ops).toEqual([
+      'render: 0',
+      'render: 1',
+      'componentDidUpdate: 1',
+      'render: 2',
+      'componentDidUpdate: 2',
+    ]);
   });
 });

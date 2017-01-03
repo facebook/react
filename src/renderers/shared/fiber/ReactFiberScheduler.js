@@ -69,7 +69,6 @@ var {
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var warning = require('warning');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -111,8 +110,8 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
   // Keeps track of whether we're currently in a work loop.
   let isPerformingWork : boolean = false;
 
-  // Keeps track of whether sync updates should be downgraded to task updates.
-  let shouldDeferSyncUpdates : boolean = false;
+  // Keeps track of whether we should should batch sync updates.
+  let isBatchingUpdates : boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork : ?Fiber = null;
@@ -675,31 +674,10 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
-    // If performWork is called recursively, we need to save the previous state
-    // of the scheduler so it can be restored before the function exits.
-    // Recursion is only possible when using syncUpdates.
-    const previousPriorityContext = priorityContext;
-    const previousPriorityContextBeforeReconciliation = priorityContextBeforeReconciliation;
-    const previousIsPerformingWork = isPerformingWork;
-    const previousShouldDeferSyncUpdates = shouldDeferSyncUpdates;
-    const previousNextEffect = nextEffect;
-    const previousCommitPhaseBoundaries = commitPhaseBoundaries;
-    const previousFirstUncaughtError = firstUncaughtError;
-    const previousFatalError = fatalError;
-    const previousIsCommitting = isCommitting;
-    const previousIsUnmounting = isUnmounting;
-
-    priorityContext = NoWork;
-    priorityContextBeforeReconciliation = NoWork;
+    if (isPerformingWork) {
+      throw new Error('performWork was called recursively.');
+    }
     isPerformingWork = true;
-    shouldDeferSyncUpdates = true;
-    nextEffect = null;
-    commitPhaseBoundaries = null;
-    firstUncaughtError = null;
-    fatalError = null;
-    isCommitting = false;
-    isUnmounting = false;
-
     const isPerformingDeferredWork = Boolean(deadline);
     let deadlineHasExpired = false;
 
@@ -805,17 +783,12 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
 
     const errorToThrow = fatalError || firstUncaughtError;
 
-    // We're done performing work. Restore the previous state of the scheduler.
-    priorityContext = previousPriorityContext;
-    priorityContextBeforeReconciliation = previousPriorityContextBeforeReconciliation;
-    isPerformingWork = previousIsPerformingWork;
-    shouldDeferSyncUpdates = previousShouldDeferSyncUpdates;
-    nextEffect = previousNextEffect;
-    commitPhaseBoundaries = previousCommitPhaseBoundaries;
-    firstUncaughtError = previousFirstUncaughtError;
-    fatalError = previousFatalError;
-    isCommitting = previousIsCommitting;
-    isUnmounting = previousIsUnmounting;
+    // We're done performing work. Time to clean up.
+    isPerformingWork = false;
+    fatalError = null;
+    firstUncaughtError = null;
+    capturedErrors = null;
+    failedBoundaries = null;
 
     // It's safe to throw any unhandled errors.
     if (errorToThrow) {
@@ -1030,20 +1003,6 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
   }
 
   function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
-    // Detect if a synchronous update is made during render (or begin phase).
-    if (priorityLevel === SynchronousPriority && isPerformingWork && !isCommitting) {
-      if (__DEV__) {
-        warning(
-          false,
-          'Render methods should be a pure function of props and state; ' +
-          'triggering nested component updates from render is not allowed. ' +
-          'If necessary, trigger nested updates in componentDidUpdate.'
-        );
-      }
-      // Downgrade to Task priority to prevent an infinite loop.
-      priorityLevel = TaskPriority;
-    }
-
     let node = fiber;
     let shouldContinue = true;
     while (node && shouldContinue) {
@@ -1098,8 +1057,9 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
   }
 
   function getPriorityContext() : PriorityLevel {
-    // If we're in a batch, downgrade sync priority to task priority
-    if (priorityContext === SynchronousPriority && shouldDeferSyncUpdates) {
+    // If we're in a batch, or if we're already performing work, downgrade sync
+    // priority to task priority
+    if (priorityContext === SynchronousPriority && (isPerformingWork || isBatchingUpdates)) {
       return TaskPriority;
     }
     return priorityContext;
@@ -1120,30 +1080,37 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
   }
 
   function batchedUpdates<A, R>(fn : (a: A) => R, a : A) : R {
-    const previousShouldDeferSyncUpdates = shouldDeferSyncUpdates;
-    shouldDeferSyncUpdates = true;
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    isBatchingUpdates = true;
     try {
       return fn(a);
     } finally {
-      shouldDeferSyncUpdates = previousShouldDeferSyncUpdates;
+      isBatchingUpdates = previousIsBatchingUpdates;
       // If we're not already inside a batch, we need to flush any task work
       // that was created by the user-provided function.
-      if (!shouldDeferSyncUpdates) {
+      if (!isPerformingWork && !isBatchingUpdates) {
         performWork(TaskPriority);
       }
     }
   }
 
+  function unbatchedUpdates<A>(fn : () => A) : A {
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    isBatchingUpdates = false;
+    try {
+      return fn();
+    } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
+    }
+  }
+
   function syncUpdates<A>(fn : () => A) : A {
     const previousPriorityContext = priorityContext;
-    const previousShouldDeferSyncUpdates = shouldDeferSyncUpdates;
     priorityContext = SynchronousPriority;
-    shouldDeferSyncUpdates = false;
     try {
       return fn();
     } finally {
       priorityContext = previousPriorityContext;
-      shouldDeferSyncUpdates = previousShouldDeferSyncUpdates;
     }
   }
 
@@ -1162,6 +1129,7 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     getPriorityContext: getPriorityContext,
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
+    unbatchedUpdates: unbatchedUpdates,
     syncUpdates: syncUpdates,
     deferredUpdates: deferredUpdates,
   };

@@ -82,6 +82,7 @@ export type Reconciler<C, I, TI> = {
   /* eslint-disable no-undef */
   // FIXME: ESLint complains about type parameter
   batchedUpdates<A>(fn : () => A) : A,
+  unbatchedUpdates<A>(fn : () => A) : A,
   syncUpdates<A>(fn : () => A) : A,
   deferredUpdates<A>(fn : () => A) : A,
   /* eslint-enable no-undef */
@@ -107,6 +108,7 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     getPriorityContext,
     performWithPriority,
     batchedUpdates,
+    unbatchedUpdates,
     syncUpdates,
     deferredUpdates,
   } = ReactFiberScheduler(config);
@@ -160,6 +162,8 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     performWithPriority,
 
     batchedUpdates,
+
+    unbatchedUpdates,
 
     syncUpdates,
 

@@ -18,7 +18,6 @@ describe('ReactComponentTreeHook', () => {
   var ReactInstanceMap;
   var ReactComponentTreeHook;
   var ReactComponentTreeTestUtils;
-  var ReactDOMFeatureFlags;
 
   beforeEach(() => {
     jest.resetModules();
@@ -29,7 +28,6 @@ describe('ReactComponentTreeHook', () => {
     ReactInstanceMap = require('ReactInstanceMap');
     ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   function assertTreeMatches(pairs) {
@@ -1843,9 +1841,6 @@ describe('ReactComponentTreeHook', () => {
       // https://github.com/facebook/react/issues/7187
       var el = document.createElement('div');
       var portalEl = document.createElement('div');
-      if (ReactDOMFeatureFlags.useFiber) {
-        spyOn(console, 'error');
-      }
       class Foo extends React.Component {
         componentWillMount() {
           ReactDOM.render(<div />, portalEl);
@@ -1855,14 +1850,6 @@ describe('ReactComponentTreeHook', () => {
         }
       }
       ReactDOM.render(<Foo />, el);
-      if (ReactDOMFeatureFlags.useFiber) {
-        // A sync `render` inside cWM will print a warning. That should be the
-        // only warning.
-        expect(console.error.calls.count()).toEqual(1);
-        expect(console.error.calls.argsFor(0)[0]).toMatch(
-          /Render methods should be a pure function of props and state/
-        );
-      }
     });
 
     it('is created when calling renderToString during render', () => {
