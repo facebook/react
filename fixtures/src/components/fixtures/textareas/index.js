@@ -5,7 +5,7 @@ const TextAreaFixtures = React.createClass({
     return { value: '' };
   },
   onChange(event) {
-    this.setState({ value: event.target.value })
+    this.setState({ value: event.target.value });
   },
   render() {
     return (
