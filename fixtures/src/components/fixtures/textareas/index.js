@@ -24,7 +24,7 @@ const TextAreaFixtures = React.createClass({
 
         <div className="container">
           <h4>Controlled Output:</h4>
-          <div className='output'>
+          <div className="output">
             {this.state.value}
           </div>
         </div>

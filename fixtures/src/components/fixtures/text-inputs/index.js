@@ -13,7 +13,7 @@ const TextInputFixtures = React.createClass({
     let onChange = e => {
       let value = e.target.value;
       if (type === 'number') {
-        value = value === '' ? '' : parseFloat(value, 10) || 0
+        value = value === '' ? '' : parseFloat(value, 10) || 0;
       }
       this.setState({
         [type] : value,
@@ -46,7 +46,7 @@ const TextInputFixtures = React.createClass({
     let types = [
       'text', 'email', 'number', 'url', 'tel',
       'color', 'date', 'datetime-local',
-      'time', 'month', 'week', 'range', 'password'
+      'time', 'month', 'week', 'range', 'password',
     ];
     return (
       <form onSubmit={event => event.preventDefault()}>
