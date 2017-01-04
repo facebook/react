@@ -59,9 +59,6 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
-src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
-* should update refs if shouldComponentUpdate gives false
-
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 

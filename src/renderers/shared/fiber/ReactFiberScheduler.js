@@ -49,6 +49,7 @@ var {
   ContentReset,
   Callback,
   Err,
+  Ref,
 } = require('ReactTypeOfSideEffect');
 
 var {
@@ -88,6 +89,7 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     commitDeletion,
     commitWork,
     commitLifeCycles,
+    commitRef,
   } = ReactFiberCommitWork(config, hostContext, captureError);
   const {
     scheduleAnimationCallback: hostScheduleAnimationCallback,
@@ -241,7 +243,7 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
       let primaryEffectTag =
-        nextEffect.effectTag & ~(Callback | Err | ContentReset);
+        nextEffect.effectTag & ~(Callback | Err | ContentReset | Ref);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
@@ -291,6 +293,10 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
       // Use Task priority for lifecycle updates
       if (nextEffect.effectTag & (Update | Callback)) {
         commitLifeCycles(current, nextEffect);
+      }
+
+      if (nextEffect.effectTag & Ref) {
+        commitRef(nextEffect);
       }
 
       if (nextEffect.effectTag & Err) {
