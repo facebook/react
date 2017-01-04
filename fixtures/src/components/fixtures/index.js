@@ -20,7 +20,7 @@ const FixturesPage = React.createClass({
       case '/textareas':
         return <TextAreaFixtures />;
       default:
-        return <span />;
+        return <p>Please select a text fixture.</p>
     }
   },
 });
