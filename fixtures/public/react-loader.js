@@ -10,6 +10,15 @@
 var REACT_PATH = 'react.js';
 var DOM_PATH = 'react-dom.js';
 
+// Patch console.log for IE9
+if (typeof console === 'undefined') {
+  console = {
+    log: function () {},
+    warn: function () {},
+    error: function () {},
+  }
+}
+
 function parseQuery(qstr) {
   var query = {};
 
