@@ -84,13 +84,6 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
     }
   }
 
-  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
-    const ref = finishedWork.ref;
-    if (ref && (!current || current.ref !== ref)) {
-      ref(instance);
-    }
-  }
-
   function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
     while (parent) {
@@ -416,7 +409,6 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
               instance.componentDidUpdate(prevProps, prevState);
             }
           }
-          attachRef(current, finishedWork, instance);
         }
         const callbackList = finishedWork.callbackList;
         if (callbackList) {
@@ -434,7 +426,6 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
       }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
-        attachRef(current, finishedWork, instance);
 
         // Renderers may schedule work to be done after host components are mounted
         // (eg DOM renderer may schedule auto-focus for inputs and form controls).
@@ -465,11 +456,23 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
     }
   }
 
+  function commitRef(finishedWork : Fiber) {
+    if (finishedWork.tag !== ClassComponent && finishedWork.tag !== HostComponent) {
+      return;
+    }
+    const ref = finishedWork.ref;
+    if (ref) {
+      const instance = finishedWork.stateNode;
+      ref(instance);
+    }
+  }
+
   return {
     commitPlacement,
     commitDeletion,
     commitWork,
     commitLifeCycles,
+    commitRef,
   };
 
 };

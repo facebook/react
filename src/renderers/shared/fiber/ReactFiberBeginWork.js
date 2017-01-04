@@ -58,6 +58,7 @@ var {
   Placement,
   ContentReset,
   Err,
+  Ref,
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
@@ -180,6 +181,14 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
     return workInProgress.child;
   }
 
+  function markRef(current : ?Fiber, workInProgress : Fiber) {
+    const ref = workInProgress.ref;
+    if (ref && (!current || current.ref !== ref)) {
+      // Schedule a Ref effect
+      workInProgress.effectTag |= Ref;
+    }
+  }
+
   function updateFunctionalComponent(current, workInProgress) {
     var fn = workInProgress.type;
     var nextProps = workInProgress.pendingProps;
@@ -245,6 +254,10 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
     hasContext : boolean,
   ) {
     // Schedule side-effects
+
+    // Refs should update even if shouldComponentUpdate returns false
+    markRef(current, workInProgress);
+
     if (shouldUpdate) {
       workInProgress.effectTag |= Update;
     } else {
@@ -364,6 +377,9 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
       // empty, we need to schedule the text content to be reset.
       workInProgress.effectTag |= ContentReset;
     }
+
+    markRef(current, workInProgress);
+
     if (nextProps.hidden &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.

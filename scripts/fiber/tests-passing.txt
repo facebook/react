@@ -1380,6 +1380,7 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should trigger componentWillReceiveProps for context changes
 * only renders once if updated in componentWillReceiveProps
 * only renders once if updated in componentWillReceiveProps when batching
+* should update refs if shouldComponentUpdate gives false
 * should allow access to findDOMNode in componentWillUnmount
 * context should be passed down from the parent
 * should replace state
