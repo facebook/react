@@ -13,7 +13,7 @@ const TextAreaFixtures = React.createClass({
         <form>
           <fieldset>
             <legend>Controlled</legend>
-            <textarea value={this.state.value} onChange={this.onChange.bind(this)} />
+            <textarea value={this.state.value} onChange={this.onChange} />
           </fieldset>
 
           <fieldset>

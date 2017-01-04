@@ -12,7 +12,7 @@ const RangeInputs = React.createClass({
       <form>
         <fieldset>
           <legend>Controlled</legend>
-          <input type="range" value={this.state.value} onChange={this.onChange.bind(this)} />
+          <input type="range" value={this.state.value} onChange={this.onChange} />
           <span className="hint">Value: {this.state.value}</span>
         </fieldset>
 
