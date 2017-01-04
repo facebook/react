@@ -12,6 +12,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prestart": "cp ../build/{react,react-dom}.js public/",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
