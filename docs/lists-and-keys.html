@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
       </ul>
     </div>
   </div>
@@ -103,7 +103,7 @@
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/GjPyQr?editors=0011">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/GjPyQr?editors=0011">Try it on CodePen.</a></p>
 
 <p>This code displays a bullet list of numbers between 1 and 5.</p>
 <h3><a class="anchor" name="basic-list-component"></a>Basic List Component <a class="hash-link" href="#basic-list-component">#</a></h3>
@@ -147,7 +147,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/jrXYRR?editors=0011">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/jrXYRR?editors=0011">Try it on CodePen.</a></p>
 <h2><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h2>
 <p>Keys help React identify which items have changed, are added, or are removed. Keys should be given to the elements inside the array to give the elements a stable identity:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">];</span>
@@ -234,7 +234,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/rthor/pen/QKzJKG?editors=0010">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/rthor/pen/QKzJKG?editors=0010">Try it on CodePen.</a></p>
 
 <p>A good rule of thumb is that elements inside the <code>map()</code> call need keys.</p>
 <h3><a class="anchor" name="keys-must-only-be-unique-among-siblings"></a>Keys Must Only Be Unique Among Siblings <a class="hash-link" href="#keys-must-only-be-unique-among-siblings">#</a></h3>
@@ -273,7 +273,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/NRZYGN?editors=0010">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/NRZYGN?editors=0010">Try it on CodePen.</a></p>
 
 <p>Keys serve as a hint to React but they don&#39;t get passed to your components. If you need the same value in your component, pass it explicitly as a prop with a different name:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">posts</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">post</span><span class="p">)</span> <span class="o">=&gt;</span>
@@ -312,7 +312,7 @@
   <span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/BLvYrB?editors=0010">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/BLvYrB?editors=0010">Try it on CodePen.</a></p>
 
 <p>Sometimes this results in clearer code, but this style can also be abused. Like in JavaScript, it is up to you to decide whether it is worth extracting a variable for readability. Keep in mind that if the <code>map()</code> body is too nested, it might be a good time to <a href="/react/docs/components-and-props.html#extracting-components">extract a component</a>.</p>
 
@@ -453,6 +453,11 @@
         
           <li>
             <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
             
           </li>
         
@@ -610,7 +615,7 @@
     <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
   </a>
   <section class="copyright">
-    Copyright © 2016 Facebook Inc.
+    Copyright © 2017 Facebook Inc.
   </section>
 </footer>
 

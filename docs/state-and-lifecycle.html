@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
       </ul>
     </div>
   </div>
@@ -419,7 +419,7 @@
 <p>This also works for user-defined components:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">FormattedDate</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">date</span><span class="p">}</span> <span class="o">/&gt;</span>
 </code></pre></div>
-<p>The <code>FormattedDate</code> component would receive the <code>date</code> in its props and wouldn&#39;t know whether it came from the <code>Clock</code>&#39;s state, the props, or was typed by hand:</p>
+<p>The <code>FormattedDate</code> component would receive the <code>date</code> in its props and wouldn&#39;t know whether it came from the <code>Clock</code>&#39;s state, from the <code>Clock</code>&#39;s props, or was typed by hand:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">FormattedDate</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h2</span><span class="o">&gt;</span><span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toLocaleTimeString</span><span class="p">()}.</span><span class="o">&lt;</span><span class="err">/h2&gt;;</span>
 <span class="p">}</span>
@@ -592,6 +592,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -746,7 +751,7 @@
     <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
   </a>
   <section class="copyright">
-    Copyright © 2016 Facebook Inc.
+    Copyright © 2017 Facebook Inc.
   </section>
 </footer>
 

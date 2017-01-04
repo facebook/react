@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
       </ul>
     </div>
   </div>
@@ -241,7 +241,7 @@
 
 <p><img src="/react/img/tutorial/tictac-numbers.png" alt="React Devtools"></p>
 <h2><a class="anchor" name="an-interactive-component"></a>An Interactive Component <a class="hash-link" href="#an-interactive-component">#</a></h2>
-<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the tag returned in the <code>render()</code> function of the <code>Square</code> class to:</p>
+<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the opening tag returned in the <code>render()</code> function of the <code>Square</code> class to:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;button</span> <span class="na">className=</span><span class="s">&quot;square&quot;</span> <span class="na">onClick=</span><span class="s">{()</span> <span class="err">=</span><span class="nt">&gt;</span> alert(&#39;click&#39;)}&gt;
 </code></pre></div>
 <p>This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.</p>
@@ -337,7 +337,7 @@
 <span class="c1">// Now player is unchanged, but newPlayer is {score: 2, name: &#39;Jeff&#39;}</span>
 
 <span class="c1">// Or if you are using object spread, you can write:</span>
-<span class="c1">// var newPlayer = {score: 2, ...player};</span>
+<span class="c1">// var newPlayer = {...player, score: 2};</span>
 </code></pre></div>
 <p>The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.</p>
 <h4><a class="anchor" name="tracking-changes"></a>Tracking Changes <a class="hash-link" href="#tracking-changes">#</a></h4>
@@ -615,7 +615,7 @@
     <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
   </a>
   <section class="copyright">
-    Copyright © 2016 Facebook Inc.
+    Copyright © 2017 Facebook Inc.
   </section>
 </footer>
 

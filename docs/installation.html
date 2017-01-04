@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
       </ul>
     </div>
   </div>
@@ -100,17 +100,19 @@ npm start
 
 <ul>
 <li>A <strong>package manager</strong>, such as <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a>. It lets you take advantage of a vast ecosystem of third-party packages, and easily install or update them.</li>
-<li>A <strong>bundler</strong>, such as <a href="https://webpack.github.io/">webpack</a> or <a href="http://browserify.org/">Browserify</a>. It lets you write modular code and bundle it together into small packages to optimize load time.</li>
+<li>A <strong>bundler</strong>, such as <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a>. It lets you write modular code and bundle it together into small packages to optimize load time.</li>
 <li>A <strong>compiler</strong> such as <a href="http://babeljs.io/">Babel</a>. It lets you write modern JavaScript code that still works in older browsers.</li>
 </ul>
 <h3><a class="anchor" name="installing-react"></a>Installing React <a class="hash-link" href="#installing-react">#</a></h3>
 <p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
 <p>To install React with Yarn, run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react react-dom
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn init
+yarn add react react-dom
 </code></pre></div>
 <p>To install React with npm, run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react react-dom
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm init
+npm install --save react react-dom
 </code></pre></div>
 <p>Both Yarn and npm download packages from the <a href="http://npmjs.com/">npm registry</a>.</p>
 <h3><a class="anchor" name="enabling-es6-and-jsx"></a>Enabling ES6 and JSX <a class="hash-link" href="#enabling-es6-and-jsx">#</a></h3>
@@ -118,7 +120,7 @@ npm start
 
 <p>The <a href="https://babeljs.io/docs/setup/">Babel setup instructions</a> explain how to configure Babel in many different build environments. Make sure you install <a href="http://babeljs.io/docs/plugins/preset-react/#basic-setup-with-the-cli-"><code>babel-preset-react</code></a> and <a href="http://babeljs.io/docs/plugins/preset-es2015/#basic-setup-with-the-cli-"><code>babel-preset-es2015</code></a> and enable them in your <a href="http://babeljs.io/docs/usage/babelrc/"><code>.babelrc</code> configuration</a>, and you&#39;re good to go.</p>
 <h3><a class="anchor" name="hello-world-with-es6-and-jsx"></a>Hello World with ES6 and JSX <a class="hash-link" href="#hello-world-with-es6-and-jsx">#</a></h3>
-<p>We recommend using a bundler like <a href="https://webpack.github.io/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
+<p>We recommend using a bundler like <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
 
 <p>The smallest React example looks like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
@@ -291,6 +293,11 @@ npm start
             
           </li>
         
+          <li>
+            <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -445,7 +452,7 @@ npm start
     <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
   </a>
   <section class="copyright">
-    Copyright © 2016 Facebook Inc.
+    Copyright © 2017 Facebook Inc.
   </section>
 </footer>
 

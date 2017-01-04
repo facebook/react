@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
       </ul>
     </div>
   </div>
@@ -248,7 +248,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 </code></pre></div>
 <p>The <code>Mixin</code> in this code has no relation to React <code>mixins</code> feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.</p>
 
-<p>Equivalent code in ES6 would like this:</p>
+<p>Equivalent code in ES6 would look like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactDOMComponent</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">_currentElement</span> <span class="o">=</span> <span class="nx">element</span><span class="p">;</span>
@@ -341,7 +341,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 
 <p>The only other officially supported renderer is <a href="https://github.com/reactjs/react-art"><code>react-art</code></a>. To avoid accidentally breaking it as we make changes to React, we checked it in as <a href="https://github.com/facebook/react/tree/master/src/renderers/art"><code>src/renderers/art</code></a> and run its test suite. Nevertheless, its <a href="https://github.com/reactjs/react-art">GitHub repository</a> still acts as the source of truth.</p>
 
-<p>While it is <a href="https://github.com/iamdustan/tiny-react-renderer">technically possible</a> to create custom React renderer, this is currently not officially supported. There is no stable public contract for custom renderers yet which is another reason why we keep them all in a single place.</p>
+<p>While it is <a href="https://github.com/iamdustan/tiny-react-renderer">technically possible</a> to create custom React renderers, this is currently not officially supported. There is no stable public contract for custom renderers yet which is another reason why we keep them all in a single place.</p>
 
 <blockquote>
 <p><strong>Note:</strong></p>
@@ -367,7 +367,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 <h4><a class="anchor" name="composite-components"></a>Composite Components <a class="hash-link" href="#composite-components">#</a></h4>
 <p>User-defined (&quot;composite&quot;) components should behave the same way with all renderers. This is why the stack reconciler provides a shared implementation in <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js"><code>ReactCompositeComponent</code></a>. It is always the same regardless of the renderer.</p>
 
-<p>Composite components also implement <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181">mounting</a>, <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703">updating</a>, and <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524">unmounting</a>. However, unlike host components, <code>ReactCompositeComponent</code> needs to behave differently depending on user&#39;s code. This is why it calls methods, such as <code>render()</code> and <code>componentDidMount()</code>, on the user-supplied class.</p>
+<p>Composite components also implement <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181">mounting</a>, <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703">updating</a>, and <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524">unmounting</a>. However, unlike host components, <code>ReactCompositeComponent</code> needs to behave differently depending on the user&#39;s code. This is why it calls methods, such as <code>render()</code> and <code>componentDidMount()</code>, on the user-supplied class.</p>
 
 <p>During an update, <code>ReactCompositeComponent</code> checks whether the <code>render()</code> output has a different <code>type</code> or <code>key</code> than the last time. If neither <code>type</code> nor <code>key</code> has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance and mounts a new one. This is described in the <a href="/react/docs/reconciliation.html">reconciliation algorithm</a>.</p>
 <h4><a class="anchor" name="recursion"></a>Recursion <a class="hash-link" href="#recursion">#</a></h4>
@@ -545,6 +545,11 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
             
           </li>
         
+          <li>
+            <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -699,7 +704,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
     <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
   </a>
   <section class="copyright">
-    Copyright © 2016 Facebook Inc.
+    Copyright © 2017 Facebook Inc.
   </section>
 </footer>
 

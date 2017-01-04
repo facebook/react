@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.0</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
       </ul>
     </div>
   </div>
@@ -106,7 +106,7 @@
 </span><span class="hll">  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 </span><span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/ZpVxNq?editors=0011">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/ZpVxNq?editors=0011">Try it on CodePen.</a></p>
 
 <p>This example renders a different greeting depending on the value of <code>isLoggedIn</code> prop.</p>
 <h3><a class="anchor" name="element-variables"></a>Element Variables <a class="hash-link" href="#element-variables">#</a></h3>
@@ -172,7 +172,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/QKzAgB?editors=0010">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/QKzAgB?editors=0010">Try it on CodePen.</a></p>
 
 <p>While declaring a variable and using an <code>if</code> statement is a fine way to conditionally render a component, sometimes you might want to use a shorter syntax. There are a few ways to inline conditions in JSX, explained below.</p>
 <h3><a class="anchor" name="inline-if-with-logical-ampamp-operator"></a>Inline If with Logical &amp;&amp; Operator <a class="hash-link" href="#inline-if-with-logical-ampamp-operator">#</a></h3>
@@ -276,7 +276,9 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/gaearon/pen/Xjoqwm?editors=0010">Try it out on CodePen.</a></p>
+<p><a href="https://codepen.io/gaearon/pen/Xjoqwm?editors=0010">Try it on CodePen.</a></p>
+
+<p>Returning <code>null</code> from a component&#39;s <code>render</code> method does not affect the firing of the component&#39;s lifecycle methods. For instance, <code>componentWillUpdate</code> and <code>componentDidUpdate</code> will still be called.</p>
 
 
     <div class="docs-prevnext">
@@ -415,6 +417,11 @@
         
           <li>
             <a href="/react/docs/web-components.html">Web Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
             
           </li>
         
@@ -572,7 +579,7 @@
     <img src="/react/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/>
   </a>
   <section class="copyright">
-    Copyright © 2016 Facebook Inc.
+    Copyright © 2017 Facebook Inc.
   </section>
 </footer>
 
