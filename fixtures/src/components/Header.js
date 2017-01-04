@@ -9,7 +9,7 @@ const Header = React.createClass({
     return { version, versions };
   },
   componentWillMount() {
-    fetch('http://api.github.com/repos/facebook/react/tags')
+    fetch('https://api.github.com/repos/facebook/react/tags', { mode: 'cors' })
       .then(res => res.json())
       .then(tags => {
         let versions = tags.map(tag => tag.name.slice(1));
