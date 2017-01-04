@@ -1,29 +1,3 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
-}
-
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
-}
-
-.App-intro {
-  font-size: large;
-}
-
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-
 *,
 *:before,
 *:after {
@@ -31,9 +5,9 @@
 }
 
 body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
 select {
@@ -43,15 +17,15 @@ select {
 .header {
   background: #222;
   box-shadow: inset 0 -1px 3px #000;
+  line-height: 32px;
   overflow: hidden;
   padding: 8px 16px;
-  line-height: 32px;
 }
 
 .header__inner {
   display: table;
-  max-width: 1000px;
   margin: 0 auto;
+  max-width: 1000px;
   overflow: hidden;
   text-align: center;
   width: 100%;
@@ -77,18 +51,36 @@ select {
   width: 100%;
 }
 
-iframe {
-  display: block;
-  height: 98%;
-  height: calc(100vh - 72px);
-  margin: 20px auto 0;
-  width: 100%;
-}
-
 .sr-only {
   clip: rect(0, 0, 0, 0);
   height: 0;
   margin: -1px;
   position: absolute;
   width: 0;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 900px;
+  overflow: hidden;
+  padding: 20px;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.field {
+  padding: 8px;
+}
+
+fieldset {
+  border: 1px solid #aaa;
+  float: left;
+  padding: 16px;
+  width: 49%;
 }

@@ -1,5 +1,4 @@
 const React = window.React;
-import '../../../styles/TextInputs.css';
 
 const TextInputFixtures = React.createClass({
   getInitialState() {

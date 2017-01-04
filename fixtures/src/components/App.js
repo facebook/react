@@ -1,7 +1,8 @@
 const React = window.React;
 import Header from './Header';
 import Fixtures from './fixtures';
-import '../styles/App.css';
+
+import '../style.css';
 
 const App = React.createClass({
   render() {

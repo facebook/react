@@ -9,8 +9,8 @@ const TextAreaFixtures = React.createClass({
   },
   render() {
     return (
-      <div className="container">
-        <form>
+      <div>
+        <form className="container">
           <fieldset>
             <legend>Controlled</legend>
             <textarea value={this.state.value} onChange={this.onChange} />
@@ -21,10 +21,13 @@ const TextAreaFixtures = React.createClass({
             <textarea defaultValue="" />
           </fieldset>
         </form>
-        <h4>Controlled Output:</h4>
+
+        <div className="container">
+          <h4>Controlled Output:</h4>
           <div className='output'>
             {this.state.value}
           </div>
+        </div>
       </div>
     );
   },
