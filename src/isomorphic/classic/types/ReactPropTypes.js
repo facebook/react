@@ -187,6 +187,11 @@ function createChainableTypeChecker(validate) {
   var chainedCheckType = checkType.bind(null, false);
   chainedCheckType.isRequired = checkType.bind(null, true);
 
+  chainedCheckType.isRequired.struct = Object.assign({}, validate.struct);
+  chainedCheckType.isRequired.struct.isRequired = true;
+
+  chainedCheckType.struct = validate.struct;
+
   return chainedCheckType;
 }
 
@@ -209,11 +214,18 @@ function createPrimitiveTypeChecker(expectedType) {
     }
     return null;
   }
+  validate.struct = {
+    type: expectedType,
+  };
   return createChainableTypeChecker(validate);
 }
 
 function createAnyTypeChecker() {
-  return createChainableTypeChecker(emptyFunction.thatReturnsNull);
+  var validate = emptyFunction.thatReturnsNull;
+  validate.struct = {
+    type: 'any',
+  };
+  return createChainableTypeChecker(validate);
 }
 
 function createArrayOfTypeChecker(typeChecker) {
@@ -246,6 +258,11 @@ function createArrayOfTypeChecker(typeChecker) {
     }
     return null;
   }
+  validate.struct = {
+    type: 'arrayOf',
+    struct: typeChecker.struct,
+  };
+
   return createChainableTypeChecker(validate);
 }
 
@@ -262,6 +279,9 @@ function createElementTypeChecker() {
     }
     return null;
   }
+  validate.struct = {
+    type: 'element',
+  };
   return createChainableTypeChecker(validate);
 }
 
@@ -279,6 +299,10 @@ function createInstanceTypeChecker(expectedClass) {
     }
     return null;
   }
+  validate.struct = {
+    type: 'instanceOf',
+    struct: expectedClass,
+  };
   return createChainableTypeChecker(validate);
 }
 
@@ -303,6 +327,10 @@ function createEnumTypeChecker(expectedValues) {
       `supplied to \`${componentName}\`, expected one of ${valuesString}.`
     );
   }
+  validate.struct = {
+    type: 'oneOf',
+    struct: expectedValues,
+  };
   return createChainableTypeChecker(validate);
 }
 
@@ -338,6 +366,10 @@ function createObjectOfTypeChecker(typeChecker) {
     }
     return null;
   }
+  validate.struct = {
+    type: 'objectOf',
+    struct: typeChecker.struct,
+  };
   return createChainableTypeChecker(validate);
 }
 
@@ -363,6 +395,10 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
       `\`${componentName}\`.`
     );
   }
+  validate.struct = {
+    type: 'oneOfType',
+    struct: arrayOfTypeCheckers.map(prop => prop.struct),
+  };
   return createChainableTypeChecker(validate);
 }
 
@@ -377,6 +413,9 @@ function createNodeChecker() {
     }
     return null;
   }
+  validate.struct = {
+    type: 'node',
+  };
   return createChainableTypeChecker(validate);
 }
 
@@ -409,6 +448,14 @@ function createShapeTypeChecker(shapeTypes) {
     }
     return null;
   }
+  validate.struct = {
+    type: 'shape',
+    struct: Object.keys(shapeTypes).reduce(function(struct, key) {
+      struct[key] = shapeTypes[key].struct;
+      return struct;
+    }, {}),
+  };
+
   return createChainableTypeChecker(validate);
 }
 
