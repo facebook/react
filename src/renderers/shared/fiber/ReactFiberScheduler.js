@@ -40,6 +40,7 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 
 var { cloneFiber } = require('ReactFiber');
@@ -628,6 +629,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       nextUnitOfWork = findNextUnitOfWork();
     }
 
+    let hostRootTimeMarker;
+    if (
+      ReactFeatureFlags.logTopLevelRenders &&
+      nextUnitOfWork &&
+      nextUnitOfWork.tag === HostRoot &&
+      nextUnitOfWork.child
+    ) {
+      const componentName = getComponentName(nextUnitOfWork.child) || '';
+      hostRootTimeMarker = 'React update: ' + componentName;
+      console.time(hostRootTimeMarker);
+    }
+
     // If there's a deadline, and we're not performing Task work, perform work
     // using this loop that checks the deadline on every iteration.
     if (deadline && priorityLevel > TaskPriority) {
@@ -671,6 +684,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           clearErrors();
         }
       }
+    }
+
+    if (hostRootTimeMarker) {
+      console.timeEnd(hostRootTimeMarker);
     }
 
     return deadlineHasExpired;
