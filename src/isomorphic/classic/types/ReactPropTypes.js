@@ -67,6 +67,9 @@ var warning = require('warning');
  */
 
 var ANONYMOUS = '<<anonymous>>';
+var CUSTOM_PROP_STRUCT = {
+  type: 'custom',
+};
 
 var ReactPropTypes;
 
@@ -186,6 +189,10 @@ function createChainableTypeChecker(validate) {
 
   var chainedCheckType = checkType.bind(null, false);
   chainedCheckType.isRequired = checkType.bind(null, true);
+
+  if (!validate.struct) {
+    validate.struct = CUSTOM_PROP_STRUCT;
+  }
 
   chainedCheckType.isRequired.struct = Object.assign({}, validate.struct);
   chainedCheckType.isRequired.struct.isRequired = true;
@@ -397,7 +404,7 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
   }
   validate.struct = {
     type: 'oneOfType',
-    struct: arrayOfTypeCheckers.map(prop => prop.struct),
+    struct: arrayOfTypeCheckers.map(prop => prop.struct || CUSTOM_PROP_STRUCT),
   };
   return createChainableTypeChecker(validate);
 }
@@ -451,7 +458,7 @@ function createShapeTypeChecker(shapeTypes) {
   validate.struct = {
     type: 'shape',
     struct: Object.keys(shapeTypes).reduce(function(struct, key) {
-      struct[key] = shapeTypes[key].struct;
+      struct[key] = shapeTypes[key].struct || CUSTOM_PROP_STRUCT;
       return struct;
     }, {}),
   };

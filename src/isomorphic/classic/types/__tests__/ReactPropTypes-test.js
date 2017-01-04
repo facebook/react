@@ -1207,6 +1207,27 @@ describe('ReactPropTypes', () => {
       }
     );
 
+    it('should set correct struct for custom props',
+      () => {
+        var customProp = PropTypes.shape({
+          foo: (props, propName, componentName) => true,
+          bar: (props, propName, componentName) => true,
+        });
+
+        expect(customProp.struct).toEqual({
+          type: 'shape',
+          struct: {
+            foo: {
+              type: 'custom',
+            },
+            bar: {
+              type: 'custom',
+            },
+          },
+        });
+      }
+    );
+
     it('should set correct struct for complex properties',
       () => {
         var complexProp = PropTypes.arrayOf(
