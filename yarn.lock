@@ -115,19 +115,6 @@ aproba@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/aproba/-/aproba-1.0.4.tgz#2713680775e7614c8ba186c065d4e2e52d1072c0"
 
-archiver@^0.16.0:
-  version "0.16.0"
-  resolved "https://registry.yarnpkg.com/archiver/-/archiver-0.16.0.tgz#bb570346899d0865eb77ed66727ab3c634fc1a50"
-  dependencies:
-    async "~1.4.2"
-    buffer-crc32 "~0.2.1"
-    glob "~5.0.0"
-    lazystream "~0.1.0"
-    lodash "~3.10.0"
-    readable-stream "~1.0.26"
-    tar-stream "~1.2.1"
-    zip-stream "~0.6.0"
-
 archy@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/archy/-/archy-1.0.0.tgz#f9c8c13757cc1dd7bc379ac77b2c62a5c2868c40"
@@ -267,10 +254,6 @@ async@~0.1.22:
 async@~0.2.6:
   version "0.2.10"
   resolved "https://registry.yarnpkg.com/async/-/async-0.2.10.tgz#b6bbe0b0674b9d719708ca38de8c237cb526c3d1"
-
-async@~1.4.2:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/async/-/async-1.4.2.tgz#6c9edcb11ced4f0dd2f2d40db0d49a109c088aab"
 
 asynckit@^0.4.0:
   version "0.4.0"
@@ -912,7 +895,7 @@ binary-extensions@^1.0.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.7.0.tgz#6c1610db163abfb34edfe42fa423343a1e01185d"
 
-bl@^1.0.0, bl@~1.1.2:
+bl@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/bl/-/bl-1.1.2.tgz#fdca871a99713aa00d19e3bbba41c44787a65398"
   dependencies:
@@ -1111,10 +1094,6 @@ bser@^1.0.2:
   resolved "https://registry.yarnpkg.com/bser/-/bser-1.0.2.tgz#381116970b2a6deea5646dd15dd7278444b56169"
   dependencies:
     node-int64 "^0.4.0"
-
-buffer-crc32@~0.2.1:
-  version "0.2.6"
-  resolved "https://registry.yarnpkg.com/buffer-crc32/-/buffer-crc32-0.2.6.tgz#612b318074fc6c4c30504b297247a1f91641253b"
 
 buffer-shims@^1.0.0:
   version "1.0.0"
@@ -1364,15 +1343,6 @@ commoner@~0.10.3:
     q "^1.1.2"
     recast "^0.10.0"
 
-compress-commons@~0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/compress-commons/-/compress-commons-0.3.0.tgz#97093e2e193f7567fa13203d4b8defcd5971a519"
-  dependencies:
-    buffer-crc32 "~0.2.1"
-    crc32-stream "~0.3.1"
-    node-int64 "~0.4.0"
-    readable-stream "~1.0.26"
-
 concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
@@ -1432,13 +1402,6 @@ coveralls@^2.11.6:
     log-driver "1.2.5"
     minimist "1.2.0"
     request "2.75.0"
-
-crc32-stream@~0.3.1:
-  version "0.3.4"
-  resolved "https://registry.yarnpkg.com/crc32-stream/-/crc32-stream-0.3.4.tgz#73bc25b45fac1db6632231a7bfce8927e9f06552"
-  dependencies:
-    buffer-crc32 "~0.2.1"
-    readable-stream "~1.0.24"
 
 "crc32@>= 0.2.2":
   version "0.2.2"
@@ -1730,12 +1693,6 @@ encoding@^0.1.11:
   resolved "https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz#538b66f3ee62cd1ab51ec323829d1f9480c74beb"
   dependencies:
     iconv-lite "~0.4.13"
-
-end-of-stream@^1.0.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.1.0.tgz#e9353258baa9108965efc41cb0ef8ade2f3cfb07"
-  dependencies:
-    once "~1.3.0"
 
 end-of-stream@~0.1.5:
   version "0.1.5"
@@ -2358,7 +2315,7 @@ glob2base@^0.0.12:
   dependencies:
     find-index "^0.1.1"
 
-glob@5.x, glob@^5.0.15, glob@^5.0.5, glob@~5.0.0:
+glob@5.x, glob@^5.0.15, glob@^5.0.5:
   version "5.0.15"
   resolved "https://registry.yarnpkg.com/glob/-/glob-5.0.15.tgz#1bc936b9e02f4a603fcc222ecf7633d30b8b93b1"
   dependencies:
@@ -2503,14 +2460,6 @@ grunt-contrib-clean@^0.6.0:
   resolved "https://registry.yarnpkg.com/grunt-contrib-clean/-/grunt-contrib-clean-0.6.0.tgz#f532dba4b8212674c7c013e146bda6638b9048f6"
   dependencies:
     rimraf "~2.2.1"
-
-grunt-contrib-compress@^0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/grunt-contrib-compress/-/grunt-contrib-compress-0.14.0.tgz#556dae0bed3d8ccd7b4cfcbcc6bbdacdffb2be77"
-  dependencies:
-    archiver "^0.16.0"
-    chalk "^1.0.0"
-    pretty-bytes "^2.0.1"
 
 grunt-legacy-log-utils@~0.1.1:
   version "0.1.1"
@@ -3436,12 +3385,6 @@ lazy-cache@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/lazy-cache/-/lazy-cache-1.0.4.tgz#a1d78fc3a50474cb80845d3b3b6e1da49a446e8e"
 
-lazystream@~0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/lazystream/-/lazystream-0.1.0.tgz#1b25d63c772a4c20f0a5ed0a9d77f484b6e16920"
-  dependencies:
-    readable-stream "~1.0.2"
-
 lcid@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/lcid/-/lcid-1.0.0.tgz#308accafa0bc483a3867b4b6f2b9506251d1b835"
@@ -3653,7 +3596,7 @@ lodash.templatesettings@^3.0.0:
     lodash._reinterpolate "^3.0.0"
     lodash.escape "^3.0.0"
 
-lodash@^3.10.0, lodash@^3.2.0, lodash@^3.9.3, lodash@~3.10.0, lodash@~3.10.1:
+lodash@^3.10.0, lodash@^3.2.0, lodash@^3.9.3:
   version "3.10.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
 
@@ -3733,7 +3676,7 @@ marked@^0.3.6:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/marked/-/marked-0.3.6.tgz#b2c6c618fccece4ef86c4fc6cb8a7cbf5aeda8d7"
 
-meow@^3.1.0, meow@^3.3.0:
+meow@^3.3.0:
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/meow/-/meow-3.7.0.tgz#72cb668b425228290abbfa856892587308a801fb"
   dependencies:
@@ -3909,7 +3852,7 @@ node-fetch@^1.0.1:
     encoding "^0.1.11"
     is-stream "^1.0.1"
 
-node-int64@^0.4.0, node-int64@~0.4.0:
+node-int64@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
 
@@ -4222,14 +4165,6 @@ preserve@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
 
-pretty-bytes@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/pretty-bytes/-/pretty-bytes-2.0.1.tgz#155ec4d0036f41391e7045d6dbe4963d525d264f"
-  dependencies:
-    get-stdin "^4.0.1"
-    meow "^3.1.0"
-    number-is-nan "^1.0.0"
-
 pretty-format@^18.0.0:
   version "18.0.0"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-18.0.0.tgz#5f45c59fe2ed6749d46765429679670b08b21137"
@@ -4345,7 +4280,7 @@ read-pkg@^1.0.0:
     normalize-package-data "^2.3.2"
     path-type "^1.0.0"
 
-"readable-stream@>=1.0.33-1 <1.1.0-0", readable-stream@~1.0.2, readable-stream@~1.0.24, readable-stream@~1.0.26:
+"readable-stream@>=1.0.33-1 <1.1.0-0":
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
   dependencies:
@@ -4363,7 +4298,7 @@ read-pkg@^1.0.0:
     isarray "0.0.1"
     string_decoder "~0.10.x"
 
-readable-stream@^2.0.0, "readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.1.0:
+"readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.1.0:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.2.2.tgz#a9e6fec3c7dda85f8bb1b3ba7028604556fc825e"
   dependencies:
@@ -4955,15 +4890,6 @@ tar-pack@~3.3.0:
     tar "~2.2.1"
     uid-number "~0.0.6"
 
-tar-stream@~1.2.1:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/tar-stream/-/tar-stream-1.2.2.tgz#9632f23d98fd33d41661bbdec05489120dec6028"
-  dependencies:
-    bl "^1.0.0"
-    end-of-stream "^1.0.0"
-    readable-stream "^2.0.0"
-    xtend "^4.0.0"
-
 tar@~2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/tar/-/tar-2.2.1.tgz#8e4d2a256c0e2185c6b18ad694aec968b83cb1d1"
@@ -5420,11 +5346,3 @@ yargs@~3.27.0:
     os-locale "^1.4.0"
     window-size "^0.1.2"
     y18n "^3.2.0"
-
-zip-stream@~0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/zip-stream/-/zip-stream-0.6.0.tgz#ee933aed996fb18b344a91ae3b5d264cec5e812b"
-  dependencies:
-    compress-commons "~0.3.0"
-    lodash "~3.10.1"
-    readable-stream "~1.0.26"
