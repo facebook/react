@@ -72,15 +72,21 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should still throw when rendering to undefined', () => {
-    class Component extends React.Component {
+    class MyComponent extends React.Component {
       render() {}
     }
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
+      ReactTestUtils.renderIntoDocument(<MyComponent />);
     }).toThrowError(
-      'Component.render(): A valid React element (or null) must be returned. You may ' +
-      'have returned undefined, an array or some other invalid object.'
+      ReactDOMFeatureFlags.useFiber ? (
+        'A valid React element, null, or an array must be returned. ' +
+        'You may have returned undefined or some other invalid object. ' +
+        'Check the render method of `MyComponent`.'
+      ) : (
+        'MyComponent.render(): A valid React element (or null) must be returned. You may ' +
+        'have returned undefined, an array or some other invalid object.'
+      )
     );
   });
 

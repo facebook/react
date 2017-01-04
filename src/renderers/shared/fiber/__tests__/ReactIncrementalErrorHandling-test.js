@@ -496,6 +496,7 @@ describe('ReactIncrementalErrorHandling', () => {
       if (props.throw) {
         throw new Error('Hello');
       }
+      return null;
     }
 
     function Foo() {
