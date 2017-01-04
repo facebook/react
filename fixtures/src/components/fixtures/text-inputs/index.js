@@ -46,7 +46,7 @@ const TextInputFixtures = React.createClass({
     let types = [
       'text', 'email', 'number', 'url', 'tel',
       'color', 'date', 'datetime-local',
-      'time', 'month', 'week', 'range', 'password',
+      'time', 'month', 'week', 'range', 'password'
     ];
     return (
       <form onSubmit={event => event.preventDefault()}>
