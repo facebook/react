@@ -1,6 +1,3 @@
-src/addons/transitions/__tests__/ReactTransitionGroup-test.js
-* should warn for duplicated keys with component stack info
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should not warn when server-side rendering `onScroll`
 * should warn about incorrect casing on properties (ssr)

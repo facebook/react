@@ -105,6 +105,7 @@ src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should handle enter/leave/enter/leave correctly
 * should handle enter/leave/enter correctly
 * should handle entering/leaving several elements at once
+* should warn for duplicated keys
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
