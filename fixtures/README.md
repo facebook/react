@@ -37,6 +37,7 @@ open http://localhost:9000/fixtures/globals.html
 open http://localhost:9000/fixtures/requirejs.html
 open http://localhost:9000/fixtures/systemjs.html
 open http://localhost:9000/fixtures/browserify/index.html
+open http://localhost:9000/fixtures/brunch/index.html
 open http://localhost:9000/fixtures/rjs/index.html
 open http://localhost:9000/fixtures/systemjs-builder/index.html
 open http://localhost:9000/fixtures/webpack/index.html
