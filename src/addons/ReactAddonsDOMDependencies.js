@@ -18,14 +18,20 @@ exports.getReactDOM = function() {
 };
 
 if (__DEV__) {
-  var ReactPerf = require('ReactPerf');
-  var ReactTestUtils = require('ReactTestUtils');
+  var ReactPerf;
+  var ReactTestUtils;
 
   exports.getReactPerf = function() {
+    if (!ReactPerf) {
+      ReactPerf = require('ReactPerf');
+    }
     return ReactPerf;
   };
 
   exports.getReactTestUtils = function() {
+    if (!ReactTestUtils) {
+      ReactTestUtils = require('ReactTestUtils');
+    }
     return ReactTestUtils;
   };
 }
