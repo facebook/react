@@ -12,14 +12,9 @@
 'use strict';
 
 var ReactDOM = require('ReactDOM');
-var ReactInstanceMap = require('ReactInstanceMap');
 
 exports.getReactDOM = function() {
   return ReactDOM;
-};
-
-exports.getReactInstanceMap = function() {
-  return ReactInstanceMap;
 };
 
 if (__DEV__) {
