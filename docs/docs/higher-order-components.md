@@ -148,7 +148,7 @@ function withSubscription(WrappedComponent, selectData) {
 
     handleChange() {
       this.setState({
-        comments: selectData(DataSource, this.props)
+        data: selectData(DataSource, this.props)
       });
     }
 
