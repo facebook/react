@@ -41,7 +41,6 @@ class ReactTransitionGroup extends React.Component {
   };
 
   componentWillMount() {
-    this.currentlyTransitioningKeys = {};
     this.keysToEnter = [];
     this.keysToLeave = [];
   }
@@ -80,16 +79,14 @@ class ReactTransitionGroup extends React.Component {
 
     for (key in nextChildMapping) {
       var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
-      if (nextChildMapping[key] && !hasPrev &&
-          !this.currentlyTransitioningKeys[key]) {
+      if (nextChildMapping[key] && !hasPrev) {
         this.keysToEnter.push(key);
       }
     }
 
     for (key in prevChildMapping) {
       var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
-      if (prevChildMapping[key] && !hasNext &&
-          !this.currentlyTransitioningKeys[key]) {
+      if (prevChildMapping[key] && !hasNext) {
         this.keysToLeave.push(key);
       }
     }
@@ -100,16 +97,22 @@ class ReactTransitionGroup extends React.Component {
   componentDidUpdate() {
     var keysToEnter = this.keysToEnter;
     this.keysToEnter = [];
-    keysToEnter.forEach(this.performEnter);
+    keysToEnter.forEach((key) => {
+      if (this.refs[key].canTransition()) {
+        this.performEnter(key);
+      }
+    });
 
     var keysToLeave = this.keysToLeave;
     this.keysToLeave = [];
-    keysToLeave.forEach(this.performLeave);
+    keysToLeave.forEach((key) => {
+      if (this.refs[key].canTransition()) {
+        this.performLeave(key);
+      }
+    });
   }
 
   performAppear = (key) => {
-    this.currentlyTransitioningKeys[key] = true;
-
     var component = this.refs[key];
 
     if (component.componentWillAppear) {
@@ -126,8 +129,6 @@ class ReactTransitionGroup extends React.Component {
     if (component.componentDidAppear) {
       component.componentDidAppear();
     }
-
-    delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping;
     if (__DEV__) {
@@ -148,8 +149,6 @@ class ReactTransitionGroup extends React.Component {
   };
 
   performEnter = (key) => {
-    this.currentlyTransitioningKeys[key] = true;
-
     var component = this.refs[key];
 
     if (component.componentWillEnter) {
@@ -166,8 +165,6 @@ class ReactTransitionGroup extends React.Component {
     if (component.componentDidEnter) {
       component.componentDidEnter();
     }
-
-    delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping;
     if (__DEV__) {
@@ -188,8 +185,6 @@ class ReactTransitionGroup extends React.Component {
   };
 
   performLeave = (key) => {
-    this.currentlyTransitioningKeys[key] = true;
-
     var component = this.refs[key];
     if (component.componentWillLeave) {
       component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
@@ -207,8 +202,6 @@ class ReactTransitionGroup extends React.Component {
     if (component.componentDidLeave) {
       component.componentDidLeave();
     }
-
-    delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping;
     if (__DEV__) {

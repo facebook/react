@@ -55,6 +55,7 @@ class ReactCSSTransitionGroup extends React.Component {
     transitionAppear: React.PropTypes.bool,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool,
+    transitionQueue: React.PropTypes.bool,
     transitionAppearTimeout: createTransitionTimeoutPropValidator('Appear'),
     transitionEnterTimeout: createTransitionTimeoutPropValidator('Enter'),
     transitionLeaveTimeout: createTransitionTimeoutPropValidator('Leave'),
@@ -64,6 +65,7 @@ class ReactCSSTransitionGroup extends React.Component {
     transitionAppear: false,
     transitionEnter: true,
     transitionLeave: true,
+    transitionQueue: true
   };
 
   _wrapChild = (child) => {
@@ -77,6 +79,7 @@ class ReactCSSTransitionGroup extends React.Component {
         appear: this.props.transitionAppear,
         enter: this.props.transitionEnter,
         leave: this.props.transitionLeave,
+        queue: this.props.transitionQueue,
         appearTimeout: this.props.transitionAppearTimeout,
         enterTimeout: this.props.transitionEnterTimeout,
         leaveTimeout: this.props.transitionLeaveTimeout,

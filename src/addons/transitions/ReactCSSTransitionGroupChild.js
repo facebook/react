@@ -48,14 +48,24 @@ var ReactCSSTransitionGroupChild = React.createClass({
     appear: React.PropTypes.bool,
     enter: React.PropTypes.bool,
     leave: React.PropTypes.bool,
+    queue: React.PropTypes.bool,
     appearTimeout: React.PropTypes.number,
     enterTimeout: React.PropTypes.number,
     leaveTimeout: React.PropTypes.number,
   },
-
+  canTransition: function() {
+	  return !this.props.queue || !this._currentTransition;
+  },
+  endCurrentTransition: function() {
+	  if (this._currentTransition) {
+      var cb = this._currentTransition;
+	    delete this._currentTransition;
+	    cb();
+    }
+  },
   transition: function(animationType, finishCallback, userSpecifiedDelay) {
     var node = ReactAddonsDOMDependencies.getReactDOM().findDOMNode(this);
-
+    this.endCurrentTransition();
     if (!node) {
       if (finishCallback) {
         finishCallback();
@@ -66,8 +76,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var className = this.props.name[animationType] || this.props.name + '-' + animationType;
     var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
     var timeout = null;
-
+    var _this = this;
+    
     var endListener = function(e) {
+      delete _this._currentTransition;
       if (e && e.target !== node) {
         return;
       }
@@ -85,7 +97,8 @@ var ReactCSSTransitionGroupChild = React.createClass({
         finishCallback();
       }
     };
-
+    this._currentTransition = endListener;
+    
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.

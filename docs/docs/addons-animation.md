@@ -222,6 +222,29 @@ You can disable animating `enter` or `leave` animations if you want. For example
 >
 > When using `ReactCSSTransitionGroup`, there's no way for your components to be notified when a transition has ended or to perform any more complex logic around animation. If you want more fine-grained control, you can use the lower-level `ReactTransitionGroup` API which provides the hooks you need to do custom transitions.
 
+### Animation Queue
+
+Animations are queued by default. This is, if a component is removed before `enter` or `appear` animations end, `leave` animation will be queued, and will be fired when the first animation is finished.
+
+You can disable this behaviour by setting the `transitionQueue` property to false:
+```javascript{10}
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+
+function TransitionNoQueue(props) {
+  return (
+    <div>
+      <ReactCSSTransitionGroup
+        transitionName="noqueue"
+        transitionQueue={false}
+        transitionEnterTimeout={300}
+        transitionLeaveTimeout={300}>
+        <div>Instant leave animation</div>
+      </ReactCSSTransitionGroup>
+    </div>
+  );
+}
+```
+
 * * *
 
 ## Low-level API: ReactTransitionGroup
