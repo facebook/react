@@ -1,0 +1,40 @@
+<html>
+  <body>
+    <script src="https://unpkg.com/requirejs@2.3.2/require.js"></script>
+    <style>
+      .example-appear {
+        opacity: 0.01;
+      }
+
+      .example-appear.example-appear-active {
+        opacity: 1;
+        transition: opacity .5s ease-in;
+      }
+    </style>
+    <div id="container"></div>
+    <script>
+      requirejs.config({
+        paths: {
+          react: '../build/react-with-addons',
+          'react-dom': '../build/react-dom'
+        }
+      });
+
+      require(['react', 'react-dom'], function(React, ReactDOM) {
+        var CSSTransitionGroup = React.addons.CSSTransitionGroup;
+        ReactDOM.render(
+          React.createElement(CSSTransitionGroup, {
+            transitionName: 'example',
+            transitionAppear: true,
+            transitionAppearTimeout: 500,
+            transitionEnterTimeout: 0,
+            transitionLeaveTimeout: 0,
+          }, React.createElement('h1', null,
+            'Hello World!'
+          )),
+          document.getElementById('container')
+        );
+      });
+    </script>
+  </body>
+</html>

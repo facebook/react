@@ -20,10 +20,6 @@ var ReactTransitionGroup;
 describe('ReactTransitionGroup', () => {
   var container;
 
-  function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -296,7 +292,7 @@ describe('ReactTransitionGroup', () => {
     ]);
   });
 
-  it('should warn for duplicated keys with component stack info', () => {
+  it('should warn for duplicated keys', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
@@ -315,13 +311,11 @@ describe('ReactTransitionGroup', () => {
       'Child keys must be unique; when two children share a key, ' +
       'only the first child will be used.'
     );
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+    expect(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
-      '    in ReactTransitionGroup (at **)\n' +
-      '    in Component (at **)'
+      'only the first child will be used.'
     );
   });
 });
