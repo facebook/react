@@ -11,10 +11,16 @@
 
 'use strict';
 
+var ReactDOM;
+
 function getReactDOM() {
-  var ReactWithAddonsUMDEntry = require('ReactWithAddonsUMDEntry');
-  // This is injected by the ReactDOM UMD build:
-  return ReactWithAddonsUMDEntry.__SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  if (!ReactDOM) {
+    // This is safe to use because current module only exists in the addons build:
+    var ReactWithAddonsUMDEntry = require('ReactWithAddonsUMDEntry');
+    // This is injected by the ReactDOM UMD build:
+    ReactDOM = ReactWithAddonsUMDEntry.__SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  }
+  return ReactDOM;
 }
 
 exports.getReactDOM = getReactDOM;
