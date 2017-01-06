@@ -218,21 +218,26 @@ describe('ReactJSXElementValidator', () => {
     void <True />;
     void <Num />;
     expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: undefined. You likely forgot to export your ' +
+      'component from the file it\'s defined in.'
     );
-    expect(console.error.calls.argsFor(1)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expect(console.error.calls.argsFor(1)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: null.'
     );
-    expect(console.error.calls.argsFor(2)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expect(console.error.calls.argsFor(2)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: boolean.'
     );
-    expect(console.error.calls.argsFor(3)[0]).toContain(
-      'type should not be null, undefined, boolean, or number. It should be ' +
-      'a string (for DOM elements) or a ReactClass (for composite components).'
+    expect(console.error.calls.argsFor(3)[0]).toBe(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+      '(for built-in components) or a class/function (for composite ' +
+      'components) but got: number.'
     );
     void <Div />;
     expect(console.error.calls.count()).toBe(4);

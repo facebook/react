@@ -42,6 +42,28 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
+  it('only assigns defaultValue if it changes', () => {
+    class Test extends React.Component {
+      render() {
+        return (<input defaultValue="0" />);
+      }
+    }
+
+    var component = ReactTestUtils.renderIntoDocument(<Test />);
+    var node = ReactDOM.findDOMNode(component);
+
+    Object.defineProperty(node, 'defaultValue', {
+      get() {
+        return '0';
+      },
+      set(value) {
+        throw new Error(`defaultValue was assigned ${value}, but it did not change!`);
+      },
+    });
+
+    component.forceUpdate();
+  });
+
   it('should display "true" for `defaultValue` of `true`', () => {
     var stub = <input type="text" defaultValue={true} />;
     stub = ReactTestUtils.renderIntoDocument(stub);

@@ -327,7 +327,9 @@ describe('ReactComponent', () => {
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: undefined.'
+      'or a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in.'
     );
 
     var Y = null;
@@ -338,6 +340,25 @@ describe('ReactComponent', () => {
 
     // One warning for each element creation
     expect(console.error.calls.count()).toBe(2);
+  });
+
+  it('includes owner name in the error about badly-typed elements', () => {
+    spyOn(console, 'error');
+
+    function Foo() {
+      var X = undefined;
+      return <X />;
+    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toThrowError(
+      'Element type is invalid: expected a string (for built-in components) ' +
+      'or a class/function (for composite components) but got: undefined. ' +
+      'You likely forgot to export your component from the file it\'s ' +
+      'defined in. Check the render method of `Foo`.'
+    );
+
+    // One warning for each element creation
+    expect(console.error.calls.count()).toBe(1);
   });
 
 });
