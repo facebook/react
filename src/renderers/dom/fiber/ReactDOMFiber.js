@@ -352,6 +352,10 @@ var ReactDOM = {
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {
+    invariant(
+      isValidContainer(container),
+      'unmountComponentAtNode(...): Target container is not a DOM element.'
+    );
     warnAboutUnstableUse();
     if (container._reactRootContainer) {
       // Unmount should not be batched.

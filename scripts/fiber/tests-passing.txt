@@ -752,6 +752,7 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 * should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
+* throws when given a non-node
 * should render different components in same root
 * should unmount and remount if the key changes
 * should reuse markup if rendering to the same target twice
