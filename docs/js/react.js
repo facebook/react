@@ -1,5 +1,5 @@
  /**
-  * React v15.4.1
+  * React v15.4.2
   */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.React = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
@@ -129,17 +129,6 @@ var fourArgumentPooler = function (a1, a2, a3, a4) {
   }
 };
 
-var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4, a5);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3, a4, a5);
-  }
-};
-
 var standardReleaser = function (instance) {
   var Klass = this;
   !(instance instanceof Klass) ? "development" !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -179,8 +168,7 @@ var PooledClass = {
   oneArgumentPooler: oneArgumentPooler,
   twoArgumentPooler: twoArgumentPooler,
   threeArgumentPooler: threeArgumentPooler,
-  fourArgumentPooler: fourArgumentPooler,
-  fiveArgumentPooler: fiveArgumentPooler
+  fourArgumentPooler: fourArgumentPooler
 };
 
 module.exports = PooledClass;
@@ -2360,7 +2348,14 @@ var ReactElementValidator = {
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
-      "development" !== 'production' ? warning(false, 'React.createElement: type should not be null, undefined, boolean, or ' + 'number. It should be a string (for DOM elements) or a ReactClass ' + '(for composite components).%s', getDeclarationErrorAddendum()) : void 0;
+      if (typeof type !== 'function' && typeof type !== 'string') {
+        var info = '';
+        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
+          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
+        }
+        info += getDeclarationErrorAddendum();
+        "development" !== 'production' ? warning(false, 'React.createElement: type is invalid -- expected a string (for ' + 'built-in components) or a class/function (for composite ' + 'components) but got: %s.%s', type == null ? type : typeof type, info) : void 0;
+      }
     }
 
     var element = ReactElement.createElement.apply(this, arguments);
@@ -3081,7 +3076,7 @@ module.exports = ReactUMDEntry;
 
 'use strict';
 
-module.exports = '15.4.1';
+module.exports = '15.4.2';
 },{}],20:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-present, Facebook, Inc.
@@ -3574,12 +3569,18 @@ module.exports = emptyObject;
  * will remain to ensure logic does not differ in production.
  */
 
-function invariant(condition, format, a, b, c, d, e, f) {
-  if ("development" !== 'production') {
+var validateFormat = function validateFormat(format) {};
+
+if ("development" !== 'production') {
+  validateFormat = function validateFormat(format) {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
-  }
+  };
+}
+
+function invariant(condition, format, a, b, c, d, e, f) {
+  validateFormat(format);
 
   if (!condition) {
     var error;
