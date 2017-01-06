@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
       </ul>
     </div>
   </div>
@@ -210,7 +210,7 @@
 
     <span class="nx">handleChange</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-        <span class="nx">comments</span><span class="o">:</span> <span class="nx">selectData</span><span class="p">(</span><span class="nx">DataSource</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">)</span>
+        <span class="nx">data</span><span class="o">:</span> <span class="nx">selectData</span><span class="p">(</span><span class="nx">DataSource</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">)</span>
       <span class="p">});</span>
     <span class="p">}</span>
 
@@ -244,7 +244,7 @@
 <span class="c1">// EnhancedComponent will log whenever props are received</span>
 <span class="kr">const</span> <span class="nx">EnhancedComponent</span> <span class="o">=</span> <span class="nx">logProps</span><span class="p">(</span><span class="nx">InputComponent</span><span class="p">);</span>
 </code></pre></div>
-<p>There are a few problems with this. One is that the input component cannot be reused separately from the enhanced component. More crucially, if you apply another HOC to <code>EnhancedComponent</code> that <em>also</em> mutates <code>shouldComponentUpdate</code>, the first HOC&#39;s functionality will be overridden! This HOC also won&#39;t work with function components, which do not have lifecycle methods.</p>
+<p>There are a few problems with this. One is that the input component cannot be reused separately from the enhanced component. More crucially, if you apply another HOC to <code>EnhancedComponent</code> that <em>also</em> mutates <code>componentWillReceiveProps</code>, the first HOC&#39;s functionality will be overridden! This HOC also won&#39;t work with function components, which do not have lifecycle methods.</p>
 
 <p>Mutating HOCs are a leaky abstraction—the consumer must know how they are implemented in order to avoid conflicts with other HOCs.</p>
 
