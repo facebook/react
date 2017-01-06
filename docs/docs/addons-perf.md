@@ -27,6 +27,10 @@ See these articles by the [Benchling Engineering Team](http://benchling.engineer
 
  - ["Performance Engineering with React"](http://benchling.engineering/performance-engineering-with-react/)
  - ["A Deep Dive into React Perf Debugging"](http://benchling.engineering/deep-dive-react-perf-debugging/)
+ 
+For a quick introduction to benchmarking components with `Perf`, see this tutorial:
+ 
+ - ["How To Benchmark React Components"](https://medium.com/code-life/how-to-benchmark-react-components-the-quick-and-dirty-guide-f595baf1014c)
 
 ### Development vs. Production Builds
 
