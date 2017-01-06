@@ -1,7 +1,6 @@
 'use strict';
 
 const chalk = require('chalk');
-const promisify = require('es6-promisify');
 const pify = require('pify');
 
 const git = require('./utils/git');
