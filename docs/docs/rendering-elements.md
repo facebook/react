@@ -45,7 +45,7 @@ ReactDOM.render(
 
 [Try it on CodePen.](http://codepen.io/gaearon/pen/rrpgNB?editors=1010)
 
-It displays "Hello World" on the page.
+It displays "Hello, world" on the page.
 
 ## Updating the Rendered Element
 
