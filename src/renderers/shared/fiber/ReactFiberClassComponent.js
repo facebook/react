@@ -222,7 +222,9 @@ module.exports = function(
     }
 
     instance.props = props;
-    instance.state = state;
+    // Shallow clone the initial state object to prevent accidental
+    // modification
+    instance.state = state ? Object.assign({}, state) : state;
     instance.context = getMaskedContext(workInProgress);
 
     if (typeof instance.componentWillMount === 'function') {
