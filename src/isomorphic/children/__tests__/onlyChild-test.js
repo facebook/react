@@ -84,7 +84,7 @@ describe('onlyChild', () => {
   });
 
 
-  it('should return the only child', () => {
+  it('should not throw when passed non-interpolated single child', () => {
     expect(function() {
       var instance =
         <WrapComponent>
@@ -92,6 +92,14 @@ describe('onlyChild', () => {
         </WrapComponent>;
       onlyChild(instance.props.children);
     }).not.toThrow();
+  });
+
+  it('should return the only child', () => {
+    var instance =
+      <WrapComponent>
+        <span />
+      </WrapComponent>;
+    expect(onlyChild(instance.props.children)).toEqual(<span />);
   });
 
 });
