@@ -31,6 +31,7 @@ var {
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
+  getUnmaskedContext,
   hasContextChanged,
   pushContextProvider,
   pushTopLevelContextObject,
@@ -210,7 +211,8 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    var context = getMaskedContext(workInProgress);
+    var unmaskedContext = getUnmaskedContext(workInProgress);
+    var context = getMaskedContext(workInProgress, unmaskedContext);
 
     var nextChildren;
 
@@ -427,7 +429,8 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
     }
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
-    var context = getMaskedContext(workInProgress);
+    var unmaskedContext = getUnmaskedContext(workInProgress);
+    var context = getMaskedContext(workInProgress, unmaskedContext);
 
     var value;
 

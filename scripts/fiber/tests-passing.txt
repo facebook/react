@@ -1165,6 +1165,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * reads context when setState is above the provider
 * maintains the correct context when providers bail out due to low priority
 * maintains the correct context when unwinding due to an error in render
+* should not recreate masked context unless inputs have changed
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during full deferred mounting
