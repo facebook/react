@@ -8,56 +8,40 @@ redirect_from:
   - "docs/events-ko-KR.html"
 ---
 
-Handling events with React elements is very similar to handling events on DOM elements. There are some syntactic differences:
-
-* React events are named using camelCase, rather than lowercase.
-* With JSX you pass a function as the event handler, rather than a string.
-
-For example, the HTML:
-
-```html
-<button onclick="activateLasers()">
-  Activate Lasers
+To listen for an event in React, add an event listener to the element where it is rendered:
+```js(1)
+<button onClick={handleClick}>
+  Activate the lasers!
 </button>
 ```
 
-is slightly different in React:
+Note there are two syntactic differences between React and regular event handling:
+* React event names use camelCase instead of lowercase. `onClick`, not `onclick`
+* The event handler is passed as a function, instead of a string.
 
-```js{1}
-<button onClick={activateLasers}>
-  Activate Lasers
+in HTML:
+```html
+<button onclick="handleClick()">
+  Activate the lasers!
 </button>
 ```
 
-Another difference is that you cannot return `false` to prevent default behavior in React. You must call `preventDefault` explicitly. For example, with plain HTML, to prevent the default link behavior of opening a new page, you can write:
+### Preventing default behavior
+Another difference in React is that an element's default behavior during an event cannot be prevented by returning `false`. `preventDefault` must be called explicitly:
 
-```html
-<a href="#" onclick="console.log('The link was clicked.'); return false">
-  Click me
-</a>
-```
-
-In React, this could instead be:
-
-```js{2-5,8}
-function ActionLink() {
-  function handleClick(e) {
-    e.preventDefault();
-    console.log('The link was clicked.');
-  }
-
-  return (
-    <a href="#" onClick={handleClick}>
-      Click me
-    </a>
-  );
+```js
+function handleClick (e) {
+  e.preventDefault();
+  console.log("The element was clicked.");
 }
 ```
 
-Here, `e` is a synthetic event. React defines these synthetic events according to the [W3C spec](https://www.w3.org/TR/DOM-Level-3-Events/), so you don't need to worry about cross-browser compatibility. See the [`SyntheticEvent`](/react/docs/events.html) reference guide to learn more.
+### Synthetic events
+In the example above, `e` is a "synthetic event." React defines these synthetic events according to the [W3C spec](https://www.w3.org/TR/DOM-Level-3-Events/), so cross-browser compatibility is not an issue. See the [`SyntheticEvent`](/react/docs/events.html) reference guide to learn more.
 
 When using React you should generally not need to call `addEventListener` to add listeners to a DOM element after it is created. Instead, just provide a listener when the element is initially rendered.
 
+### Common pitfall when using ES6 class syntax
 When you define a component using an [ES6 class](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes), a common pattern is for an event handler to be a method on the class. For example, this `Toggle` component renders a button that lets the user toggle between "ON" and "OFF" states:
 
 ```js{6,7,10-14,18}
@@ -139,3 +123,4 @@ class LoggingButton extends React.Component {
 ```
 
 The problem with this syntax is that a different callback is created each time the `LoggingButton` renders. In most cases, this is fine. However, if this callback is passed as a prop to lower components, those components might do an extra re-rendering. We generally recommend binding in the constructor to avoid this sort of performance problem.
+
