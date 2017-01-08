@@ -228,20 +228,15 @@ function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
   if (inComposition(topLevelType)) {
     return;
   } else if (
-    topLevelType === 'topInput' &&
-    lastTopLevelType === 'topCompositionEnd'
+    topLevelType === 'topInput' && lastTopLevelType === 'topCompositionEnd'
   ) {
     return getInstIfValueChanged(targetInst);
   } else if (
-    // Webkit fires 'compositionEnd' event after 'input' event.
-    topLevelType === 'topKeyUp' &&
-    lastTopLevelType === 'topCompositionEnd'
+    topLevelType === 'topKeyUp' && lastTopLevelType === 'topCompositionEnd'
   ) {
+    // Chrome fires 'compositionEnd' event after 'input' event.
     return getInstIfValueChanged(targetInst);
-  } else if (
-    topLevelType === 'topInput' ||
-    topLevelType === 'topChange'
-  ) {
+  } else if (topLevelType === 'topInput' || topLevelType === 'topChange') {
     return getInstIfValueChanged(targetInst);
   }
 }
