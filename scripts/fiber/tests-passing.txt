@@ -1143,6 +1143,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can resume work in a subtree even when a parent bails out
 * can resume work in a bailed subtree within one pass
 * can reuse work done after being preempted
+* can reuse work that began but did not complete, after being preempted
 * can reuse work if shouldComponentUpdate is false, after being preempted
 * memoizes work even if shouldComponentUpdate returns false
 * can update in the middle of a tree using setState

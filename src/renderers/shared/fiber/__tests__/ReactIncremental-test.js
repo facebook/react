@@ -541,6 +541,85 @@ describe('ReactIncremental', () => {
 
   });
 
+  it('can reuse work that began but did not complete, after being preempted', () => {
+    let ops = [];
+    let child;
+    let sibling;
+
+    function GreatGrandchild() {
+      ops.push('GreatGrandchild');
+      return <div />;
+    }
+
+    function Grandchild() {
+      ops.push('Grandchild');
+      return <GreatGrandchild />;
+    }
+
+    class Child extends React.Component {
+      state = { step: 0 };
+      render() {
+        child = this;
+        ops.push('Child');
+        return <Grandchild />;
+      }
+    }
+
+    class Sibling extends React.Component {
+      render() {
+        ops.push('Sibling');
+        sibling = this;
+        return <div />;
+      }
+    }
+
+    function Parent() {
+      ops.push('Parent');
+      return [
+        // The extra div is necessary because when Parent bails out during the
+        // high priority update, its progressedPriority is set to high.
+        // So its direct children cannot be reused when we resume at
+        // low priority. I think this would be fixed by changing
+        // pendingWorkPriority and progressedPriority to be the priority of
+        // the children only, not including the fiber itself.
+        <div><Child /></div>,
+        <Sibling />,
+      ];
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+    ops = [];
+
+    // Begin working on a low priority update to Child, but stop before
+    // GreatGrandchild. Child and Grandchild begin but don't complete.
+    child.setState({ step: 1 });
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual([
+      'Child',
+      'Grandchild',
+    ]);
+
+    // Interrupt the current low pri work with a high pri update elsewhere in
+    // the tree.
+    ops = [];
+    ReactNoop.performAnimationWork(() => {
+      sibling.setState({});
+    });
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual(['Sibling']);
+
+    // Continue the low pri work. The work on Child and GrandChild was memoized
+    // so they should not be worked on again.
+    ops = [];
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // No Child
+      // No Grandchild
+      'GreatGrandchild',
+    ]);
+  });
+
   it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
 
     var ops = [];

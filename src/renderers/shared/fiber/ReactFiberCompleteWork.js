@@ -266,7 +266,6 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
           const textInstance = createTextInstance(newText, rootContainerInstance, currentHostContext, workInProgress);
           workInProgress.stateNode = textInstance;
         }
-        workInProgress.memoizedProps = newText;
         return null;
       case CoroutineComponent:
         return moveCoroutineToHandlerPhase(current, workInProgress);
