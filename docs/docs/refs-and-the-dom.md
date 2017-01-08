@@ -50,7 +50,7 @@ class CustomTextInput extends React.Component {
 }
 ```
 
-React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts. Additionally, each `ref` callback will be called twice during each render, first with `null` and then again with the DOM element. This is because internally the actual callback instance get reset and React treats it as a different function. Note that this probably should not matter in the usual usecase of refs.
+React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts. Additionally, if the `ref` callback is defined as an inline function, it will get called twice during each render pass, first with `null` and then again with the DOM element. This is because internally, a new instance of the function is created with each render, so React needs to reset the old instance and set-up the new one. This can be avoided by defining the ref callback as a property on the class, but note that it shouldn't matter in the average `ref` use case.
 
 Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. The preferred way is to set the property in the `ref` callback, e.g. `ref={(element) => { this.myElement = element; }}`. 
 
