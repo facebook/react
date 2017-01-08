@@ -981,8 +981,7 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
     }
   }
 
-  function scheduleRoot(root : FiberRoot) {
-    const priorityLevel = root.current.pendingWorkPriority;
+  function scheduleRoot(root : FiberRoot, priorityLevel : PriorityLevel) {
     if (priorityLevel === NoWork) {
       return;
     }
@@ -999,16 +998,16 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
         lastScheduledRoot = root;
       }
     }
+  }
 
+  function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
     if (priorityLevel <= nextPriorityLevel) {
       // We must reset the current unit of work pointer so that we restart the
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
       nextUnitOfWork = null;
     }
-  }
 
-  function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
     let node = fiber;
     let shouldContinue = true;
     while (node && shouldContinue) {
@@ -1017,14 +1016,14 @@ module.exports = function<T, P, I, TI, C, CX, CI>(config : HostConfig<T, P, I, T
       // matches) we can exit safely knowing that the rest of the path is correct.
       shouldContinue = false;
       if (node.pendingWorkPriority === NoWork ||
-          node.pendingWorkPriority >= priorityLevel) {
+          node.pendingWorkPriority > priorityLevel) {
         // Priority did not match. Update and keep going.
         shouldContinue = true;
         node.pendingWorkPriority = priorityLevel;
       }
       if (node.alternate) {
         if (node.alternate.pendingWorkPriority === NoWork ||
-            node.alternate.pendingWorkPriority >= priorityLevel) {
+            node.alternate.pendingWorkPriority > priorityLevel) {
           // Priority did not match. Update and keep going.
           shouldContinue = true;
           node.alternate.pendingWorkPriority = priorityLevel;
