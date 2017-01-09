@@ -55,15 +55,26 @@ function getUnmaskedContext(workInProgress : Fiber) : Object {
   }
   return contextStackCursor.current;
 }
+exports.getUnmaskedContext = getUnmaskedContext;
 
-exports.getMaskedContext = function(workInProgress : Fiber) {
+exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Object) {
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
   if (!contextTypes) {
     return emptyObject;
   }
 
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  // Avoid recreating masked context unless unmasked context has changed.
+  // Failing to do this will result in unnecessary calls to componentWillReceiveProps.
+  // This may trigger infinite loops if componentWillReceiveProps calls setState.
+  const instance = workInProgress.stateNode;
+  if (
+    instance &&
+    instance.__reactInternalMemoizedUnmaskedChildContext === unmaskedContext
+  ) {
+    return instance.__reactInternalMemoizedMaskedChildContext;
+  }
+
   const context = {};
   for (let key in contextTypes) {
     context[key] = unmaskedContext[key];
@@ -72,6 +83,12 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
   if (__DEV__) {
     const name = getComponentName(workInProgress);
     checkReactTypeSpec(contextTypes, context, 'context', name, null, workInProgress);
+  }
+
+  // Cache unmasked context so we can avoid recreating masked context unless necessary.
+  if (instance) {
+    instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
+    instance.__reactInternalMemoizedMaskedChildContext = context;
   }
 
   return context;

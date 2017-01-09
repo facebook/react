@@ -2021,4 +2021,50 @@ describe('ReactIncremental', () => {
     });
     ReactNoop.flush();
   });
+
+  it('should not recreate masked context unless inputs have changed', () => {
+    const ops = [];
+
+    let scuCounter = 0;
+
+    class MyComponent extends React.Component {
+      static contextTypes = {};
+      componentDidMount(prevProps, prevState) {
+        ops.push('componentDidMount');
+        this.setState({ setStateInCDU: true });
+      }
+      componentDidUpdate(prevProps, prevState) {
+        ops.push('componentDidUpdate');
+        if (this.state.setStateInCDU) {
+          this.setState({ setStateInCDU: false });
+        }
+      }
+      componentWillReceiveProps(nextProps) {
+        ops.push('componentWillReceiveProps');
+        this.setState({ setStateInCDU: true });
+      }
+      render() {
+        ops.push('render');
+        return null;
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        ops.push('shouldComponentUpdate');
+        return scuCounter++ < 5; // Don't let test hang
+      }
+    }
+
+    ReactNoop.render(<MyComponent />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'render',
+      'componentDidMount',
+      'shouldComponentUpdate',
+      'render',
+      'componentDidUpdate',
+      'shouldComponentUpdate',
+      'render',
+      'componentDidUpdate',
+    ]);
+  });
 });

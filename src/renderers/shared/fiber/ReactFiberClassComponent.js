@@ -17,6 +17,7 @@ import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
   getMaskedContext,
+  getUnmaskedContext,
 } = require('ReactFiberContext');
 var {
   addUpdate,
@@ -204,10 +205,17 @@ module.exports = function(
   function constructClassInstance(workInProgress : Fiber) : any {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
-    const context = getMaskedContext(workInProgress);
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+    const context = getMaskedContext(workInProgress, unmaskedContext);
     const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
     checkClassInstance(workInProgress);
+
+    // Cache unmasked context so we can avoid recreating masked context unless necessary.
+    // ReactFiberContext usually updates this cache but can't for newly-created instances.
+    instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
+    instance.__reactInternalMemoizedMaskedChildContext = context;
+
     return instance;
   }
 
@@ -221,9 +229,11 @@ module.exports = function(
       throw new Error('There must be pending props for an initial mount.');
     }
 
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+
     instance.props = props;
     instance.state = state;
-    instance.context = getMaskedContext(workInProgress);
+    instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {
       instance.componentWillMount();
@@ -256,7 +266,8 @@ module.exports = function(
         throw new Error('There should always be pending or memoized props.');
       }
     }
-    const newContext = getMaskedContext(workInProgress);
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
     // TODO: Should we deal with a setState that happened after the last
     // componentWillMount and before this componentWillMount? Probably
@@ -277,7 +288,7 @@ module.exports = function(
     const newInstance = constructClassInstance(workInProgress);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
-    newInstance.context = getMaskedContext(workInProgress);
+    newInstance.context = newContext;
 
     if (typeof newInstance.componentWillMount === 'function') {
       newInstance.componentWillMount();
@@ -314,7 +325,8 @@ module.exports = function(
       }
     }
     const oldContext = instance.context;
-    const newContext = getMaskedContext(workInProgress);
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
     // Note: During these life-cycles, instance.props/instance.state are what
     // ever the previously attempted to render - not the "current". However,
