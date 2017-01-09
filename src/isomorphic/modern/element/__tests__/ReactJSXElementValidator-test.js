@@ -19,6 +19,10 @@ var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactJSXElementValidator', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/at .+?:\d+/g, 'at **');
+  }
+
   var Component;
   var RequiredPropComponent;
 
@@ -194,9 +198,7 @@ describe('ReactJSXElementValidator', () => {
       }
     }
     ReactTestUtils.renderIntoDocument(<ParentComp />);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`.\n' +
@@ -232,9 +234,7 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     // The warning should have the full stack with line numbers.
     // If it doesn't, it means we're using information from the old element.
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`.\n' +
@@ -256,26 +256,30 @@ describe('ReactJSXElementValidator', () => {
     void <True />;
     void <Num />;
     expectDev(console.error.calls.count()).toBe(4);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in.'
+      'component from the file it\'s defined in. ' +
+      'Check your code at **.'
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null.'
+      'components) but got: null. ' +
+      'Check your code at **.'
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: boolean.'
+      'components) but got: boolean. ' +
+      'Check your code at **.'
     );
-    expectDev(console.error.calls.argsFor(3)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: number.'
+      'components) but got: number. ' +
+      'Check your code at **.'
     );
     void <Div />;
     expectDev(console.error.calls.count()).toBe(4);
@@ -289,9 +293,7 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
@@ -304,9 +306,7 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
@@ -320,18 +320,14 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
     expectDev(console.error.calls.count()).toBe(2);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
       'The prop `prop` is marked as required in `RequiredPropComponent`, but ' +
       'its value is `undefined`.\n' +
       '    in RequiredPropComponent (at **)'
     );
 
-    expect(
-      console.error.calls.argsFor(1)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`RequiredPropComponent`, expected `string`.\n' +
