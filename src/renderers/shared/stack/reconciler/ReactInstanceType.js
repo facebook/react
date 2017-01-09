@@ -13,6 +13,7 @@
 'use strict';
 
 import type {ReactElement} from 'ReactElementType';
+import type {CompositeComponentTypes} from 'ReactCompositeComponentTypes';
 
 export type DebugID = number;
 
@@ -34,6 +35,7 @@ export type ReactInstance = {
   attachRef: (ref: string, component: ReactInstance) => void,
   detachRef: (ref: string) => void,
   _rootNodeID: number,
+  _compositeType: CompositeComponentTypes,
 
   // ReactDOMComponent
   _tag: string,

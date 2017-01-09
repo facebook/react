@@ -10,11 +10,10 @@
  * @flow
  */
 
+export type CompositeComponentTypes = 0 | 1 | 2;
 
-var CompositeTypes = {
+module.exports = {
   ImpureClass: 0,
   PureClass: 1,
   StatelessFunctional: 2,
 };
-
-module.exports = CompositeTypes;

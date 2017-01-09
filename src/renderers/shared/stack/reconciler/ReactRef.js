@@ -43,7 +43,6 @@ function attachRef(ref, component, owner) {
     }
 
     warning(
-      /* $FlowFixMe component._compositeType really exists I swear. */
       component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
       'Stateless function components cannot be given refs. ' +
       'Attempts to access this ref will fail.%s%s',
