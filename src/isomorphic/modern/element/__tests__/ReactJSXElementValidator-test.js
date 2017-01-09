@@ -15,9 +15,14 @@
 // of dynamic errors when using JSX with Flow.
 
 var React;
+var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactJSXElementValidator', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/at .+?:\d+/g, 'at **');
+  }
+
   var Component;
   var RequiredPropComponent;
 
@@ -25,6 +30,7 @@ describe('ReactJSXElementValidator', () => {
     jest.resetModuleRegistry();
 
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class extends React.Component {
@@ -195,13 +201,48 @@ describe('ReactJSXElementValidator', () => {
       }
     }
     ReactTestUtils.renderIntoDocument(<ParentComp />);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`.\n' +
       '    in MyComp (at **)\n' +
+      '    in ParentComp (at **)'
+    );
+  });
+
+  it('should update component stack after receiving next element', () => {
+    spyOn(console, 'error');
+    function MyComp() {
+      return null;
+    }
+    MyComp.propTypes = {
+      color: React.PropTypes.string,
+    };
+    function MiddleComp(props) {
+      return <MyComp color={props.color} />;
+    }
+    function ParentComp(props) {
+      if (props.warn) {
+        // This element has a source thanks to JSX.
+        return <MiddleComp color={42} />;
+      }
+      // This element has no source.
+      return React.createElement(MiddleComp, {color: 'blue'});
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<ParentComp warn={false} />, container);
+    ReactDOM.render(<ParentComp warn={true} />, container);
+
+    expect(console.error.calls.count()).toBe(1);
+    // The warning should have the full stack with line numbers.
+    // If it doesn't, it means we're using information from the old element.
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Failed prop type: ' +
+      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+      'expected `string`.\n' +
+      '    in MyComp (at **)\n' +
+      '    in MiddleComp (at **)\n' +
       '    in ParentComp (at **)'
     );
   });
@@ -218,26 +259,30 @@ describe('ReactJSXElementValidator', () => {
     void <True />;
     void <Num />;
     expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in.'
+      'component from the file it\'s defined in. ' +
+      'Check your code at **.'
     );
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null.'
+      'components) but got: null. ' +
+      'Check your code at **.'
     );
-    expect(console.error.calls.argsFor(2)[0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: boolean.'
+      'components) but got: boolean. ' +
+      'Check your code at **.'
     );
-    expect(console.error.calls.argsFor(3)[0]).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: number.'
+      'components) but got: number. ' +
+      'Check your code at **.'
     );
     void <Div />;
     expect(console.error.calls.count()).toBe(4);
@@ -251,9 +296,7 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent />);
 
     expect(console.error.calls.count()).toBe(1);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
@@ -266,9 +309,7 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={null} />);
 
     expect(console.error.calls.count()).toBe(1);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
       '    in RequiredPropComponent (at **)'
@@ -282,18 +323,14 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop={42} />);
 
     expect(console.error.calls.count()).toBe(2);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
       'The prop `prop` is marked as required in `RequiredPropComponent`, but ' +
       'its value is `undefined`.\n' +
       '    in RequiredPropComponent (at **)'
     );
 
-    expect(
-      console.error.calls.argsFor(1)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
-    ).toBe(
+    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed prop type: ' +
       'Invalid prop `prop` of type `number` supplied to ' +
       '`RequiredPropComponent`, expected `string`.\n' +
