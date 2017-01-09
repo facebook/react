@@ -50,7 +50,7 @@ var {
 var invariant = require('invariant');
 
 if (__DEV__) {
-  var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
+  var getComponentName = require('getComponentName');
 }
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -300,7 +300,12 @@ exports.createHostRootFiber = function() : Fiber {
 };
 
 exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) : Fiber {
-  const fiber = createFiberFromElementType(element.type, element.key);
+  let owner = null;
+  if (__DEV__) {
+    owner = element._owner;
+  }
+
+  const fiber = createFiberFromElementType(element.type, element.key, owner);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
 
@@ -328,7 +333,7 @@ exports.createFiberFromText = function(content : string, priorityLevel : Priorit
   return fiber;
 };
 
-function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
+function createFiberFromElementType(type : mixed, key : null | string, debugOwner : null | Fiber | ReactInstance) : Fiber {
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
@@ -363,7 +368,7 @@ function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
           ' You likely forgot to export your component from the file ' +
           'it\'s defined in.';
       }
-      const ownerName = getCurrentFiberOwnerName();
+      const ownerName = debugOwner ? getComponentName(debugOwner) : null;
       if (ownerName) {
         info += ' Check the render method of `' + ownerName + '`.';
       }
