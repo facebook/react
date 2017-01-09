@@ -78,14 +78,16 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
-      const ownerFiber : ?(Fiber | ReactInstance) = (element._owner : any);
+      const owner : ?(Fiber | ReactInstance) = (element._owner : any);
       let inst;
-      if (ownerFiber) {
-        if ((ownerFiber : any).tag === ClassComponent) {
-          inst = (ownerFiber : any).stateNode;
+      if (owner) {
+        if (typeof owner.tag === 'number') {
+          const ownerFiber = ((owner : any) : Fiber);
+          invariant(ownerFiber.tag === ClassComponent, 'Stateless function components cannot have refs.');
+          inst = ownerFiber.stateNode;
         } else {
           // Stack
-          inst = (ownerFiber : any).getPublicInstance();
+          inst = (owner : any).getPublicInstance();
         }
       }
       invariant(inst, 'Missing owner for string ref %s', mixedRef);
