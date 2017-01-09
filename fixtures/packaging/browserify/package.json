@@ -5,6 +5,6 @@
     "browserify": "^13.3.0"
   },
   "scripts": {
-    "build": "rm -f output.js && NODE_PATH=../../build/packages browserify ./input.js -o output.js"
+    "build": "rm -f output.js && NODE_PATH=../../../build/packages browserify ./input.js -o output.js"
   }
 }
