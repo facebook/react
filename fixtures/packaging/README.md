@@ -16,7 +16,7 @@ First, build React and the fixtures:
 cd react
 npm run build
 
-cd fixtures
+cd fixtures/packaging
 node build-all.js
 ```
 
@@ -24,7 +24,7 @@ Then run a local server at the root of the repo, e.g.
 
 ```
 npm i -g pushstate-server
-cd ..
+cd ../..
 pushstate-server .
 ```
 
