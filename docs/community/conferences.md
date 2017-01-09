@@ -19,6 +19,11 @@ March 13-14 in Santa Clara, CA
 
 [Website](http://conf.reactjs.org/)
 
+### React London 2017
+March 28th at the [QEII Centre, London](http://qeiicentre.london/)
+
+[Website](http://react.london/)
+
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
