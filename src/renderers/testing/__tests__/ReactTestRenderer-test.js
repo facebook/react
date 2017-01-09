@@ -15,6 +15,9 @@ var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
 
 describe('ReactTestRenderer', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
   it('renders a simple component', () => {
     function Link() {
@@ -231,10 +234,11 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<Baz />);
     ReactTestRenderer.create(<Foo />);
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Stateless function components cannot be given refs ' +
-      '(See ref "foo" in Bar created by Foo). ' +
-      'Attempts to access this ref will fail.'
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. Attempts ' +
+      'to access this ref will fail. Check the render method of `Foo`.\n' +
+      '    in Bar (at **)\n' +
+      '    in Foo (at **)'
     );
   });
 

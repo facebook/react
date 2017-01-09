@@ -739,9 +739,8 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
     const InvalidType = undefined;
-    const brokenElement = <InvalidType />;
     function BrokenRender(props) {
-      return brokenElement;
+      return <InvalidType />;
     }
 
     ReactNoop.render(
@@ -776,9 +775,8 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     const InvalidType = undefined;
-    const brokenElement = <InvalidType />;
     function BrokenRender(props) {
-      return props.fail ? brokenElement : <span />;
+      return props.fail ? <InvalidType /> : <span />;
     }
 
     ReactNoop.render(

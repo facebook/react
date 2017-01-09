@@ -63,6 +63,7 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
+var warning = require('warning');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -455,6 +456,23 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
+      if (__DEV__) {
+        if (workInProgress.ref != null) {
+          let info = '';
+          const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+          if (ownerName) {
+            info += ' Check the render method of `' + ownerName + '`.';
+          }
+
+          warning(
+            false,
+            'Stateless function components cannot be given refs. ' +
+            'Attempts to access this ref will fail.%s%s',
+            info,
+            ReactDebugCurrentFiber.getCurrentFiberStackAddendum()
+          );
+        }
+      }
       reconcileChildren(current, workInProgress, value);
       return workInProgress.child;
     }

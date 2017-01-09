@@ -13,6 +13,7 @@
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
@@ -32,12 +33,6 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
-
-var CompositeTypes = {
-  ImpureClass: 0,
-  PureClass: 1,
-  StatelessFunctional: 2,
-};
 
 function StatelessComponent(Component) {
 }
@@ -220,12 +215,12 @@ var ReactCompositeComponent = {
         Component.displayName || Component.name || 'Component'
       );
       inst = new StatelessComponent(Component);
-      this._compositeType = CompositeTypes.StatelessFunctional;
+      this._compositeType = ReactCompositeComponentTypes.StatelessFunctional;
     } else {
       if (isPureComponent(Component)) {
-        this._compositeType = CompositeTypes.PureClass;
+        this._compositeType = ReactCompositeComponentTypes.PureClass;
       } else {
-        this._compositeType = CompositeTypes.ImpureClass;
+        this._compositeType = ReactCompositeComponentTypes.ImpureClass;
       }
     }
 
@@ -881,7 +876,7 @@ var ReactCompositeComponent = {
           shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
         }
       } else {
-        if (this._compositeType === CompositeTypes.PureClass) {
+        if (this._compositeType === ReactCompositeComponentTypes.PureClass) {
           shouldUpdate =
             !shallowEqual(prevProps, nextProps) ||
             !shallowEqual(inst.state, nextState);
@@ -1215,7 +1210,7 @@ var ReactCompositeComponent = {
    */
   _renderValidatedComponent: function() {
     var renderedElement;
-    if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
+    if (__DEV__ || this._compositeType !== ReactCompositeComponentTypes.StatelessFunctional) {
       ReactCurrentOwner.current = this;
       try {
         renderedElement =
@@ -1251,20 +1246,6 @@ var ReactCompositeComponent = {
     var inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
     var publicComponentInstance = component.getPublicInstance();
-    if (__DEV__) {
-      var componentName = component && component.getName ?
-        component.getName() : 'a component';
-      warning(
-        publicComponentInstance != null ||
-        component._compositeType !== CompositeTypes.StatelessFunctional,
-        'Stateless function components cannot be given refs ' +
-        '(See ref "%s" in %s created by %s). ' +
-        'Attempts to access this ref will fail.',
-        ref,
-        componentName,
-        this.getName()
-      );
-    }
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
     refs[ref] = publicComponentInstance;
   },
@@ -1307,7 +1288,7 @@ var ReactCompositeComponent = {
    */
   getPublicInstance: function() {
     var inst = this._instance;
-    if (this._compositeType === CompositeTypes.StatelessFunctional) {
+    if (this._compositeType === ReactCompositeComponentTypes.StatelessFunctional) {
       return null;
     }
     return inst;

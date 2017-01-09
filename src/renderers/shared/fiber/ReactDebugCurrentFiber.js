@@ -15,12 +15,6 @@
 import type { Fiber } from 'ReactFiber';
 
 if (__DEV__) {
-  var {
-    IndeterminateComponent,
-    FunctionalComponent,
-    ClassComponent,
-    HostComponent,
-  } = require('ReactTypeOfWork');
   var getComponentName = require('getComponentName');
   var { getStackAddendumByWorkInProgressFiber } = require('ReactComponentTreeHook');
 }
@@ -31,18 +25,8 @@ function getCurrentFiberOwnerName() : string | null {
     if (fiber == null) {
       return null;
     }
-    switch (fiber.tag) {
-      case IndeterminateComponent:
-      case FunctionalComponent:
-      case ClassComponent:
-        return getComponentName(fiber);
-      case HostComponent:
-        if (fiber._debugOwner != null) {
-          return getComponentName(fiber._debugOwner);
-        }
-        return null;
-      default:
-        return null;
+    if (fiber._debugOwner != null) {
+      return getComponentName(fiber._debugOwner);
     }
   }
   return null;

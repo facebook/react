@@ -20,6 +20,9 @@ function StatelessComponent(props) {
 }
 
 describe('ReactStatelessComponent', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
   beforeEach(() => {
     React = require('React');
@@ -146,24 +149,60 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
-  it('should warn when given a ref', () => {
+  it('should warn when given a string ref', () => {
     spyOn(console, 'error');
 
-    class Parent extends React.Component {
-      static displayName = 'Parent';
+    function Indirection(props) {
+      return <div>{props.children}</div>;
+    }
 
+    class Parent extends React.Component {
       render() {
-        return <StatelessComponent name="A" ref="stateless"/>;
+        return <Indirection><StatelessComponent name="A" ref="stateless"/></Indirection>;
       }
     }
 
     ReactTestUtils.renderIntoDocument(<Parent/>);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Stateless function components cannot be given refs ' +
-      '(See ref "stateless" in StatelessComponent created by Parent). ' +
-      'Attempts to access this ref will fail.'
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail. Check the render method ' +
+      'of `Parent`.\n' +
+      '    in StatelessComponent (at **)\n' +
+      '    in div (at **)\n' +
+      '    in Indirection (at **)\n' +
+      '    in Parent (at **)'
+    );
+  });
+
+  it('should warn when given a function ref', () => {
+    spyOn(console, 'error');
+    var ref = jasmine.createSpy().and.callFake((arg) => {
+      expect(arg).toBe(null);
+    });
+
+    function Indirection(props) {
+      return <div>{props.children}</div>;
+    }
+
+    class Parent extends React.Component {
+      render() {
+        return <Indirection><StatelessComponent name="A" ref={ref} /></Indirection>;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Parent/>);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail. Check the render method ' +
+      'of `Parent`.\n' +
+      '    in StatelessComponent (at **)\n' +
+      '    in div (at **)\n' +
+      '    in Indirection (at **)\n' +
+      '    in Parent (at **)'
     );
   });
 

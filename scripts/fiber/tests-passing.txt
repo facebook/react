@@ -1535,6 +1535,9 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should update stateless component
 * should unmount stateless component
 * should pass context thru stateless component
+* should throw on string refs in pure functions
+* should warn when given a string ref
+* should warn when given a function ref
 * should provide a null ref
 * should use correct name in key warning
 * should support default props and prop types

@@ -19,7 +19,34 @@ import type { ReactElement } from 'ReactElementType';
 
 var ReactRef = {};
 
+if (__DEV__) {
+  var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
+  var ReactComponentTreeHook = require('ReactComponentTreeHook');
+  var warning = require('warning');
+}
+
 function attachRef(ref, component, owner) {
+  if (__DEV__) {
+    let info = '';
+    if (owner) {
+      let ownerName;
+      if (typeof owner.getName === 'function') {
+        ownerName = owner.getName();
+      }
+      if (ownerName) {
+        info += ' Check the render method of `' + ownerName + '`.';
+      }
+    }
+
+    warning(
+      component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
+      'Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail.%s%s',
+      info,
+      ReactComponentTreeHook.getStackAddendumByID(component._debugID)
+    );
+  }
+
   if (typeof ref === 'function') {
     ref(component.getPublicInstance());
   } else {

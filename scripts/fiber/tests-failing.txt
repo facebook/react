@@ -66,7 +66,6 @@ src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn when stateless component returns array
-* should throw on string refs in pure functions
 * should warn when using non-React functions in JSX
 
 src/renderers/shared/shared/__tests__/ReactUpdates-test.js
