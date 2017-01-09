@@ -50,7 +50,7 @@ class CustomTextInput extends React.Component {
 }
 ```
 
-React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts. Additionally, if the `ref` callback is defined as an inline function, it will get called twice during each render pass, first with `null` and then again with the DOM element. This is because internally, a new instance of the function is created with each render, so React needs to reset the old instance and set-up the new one. This can be avoided by defining the ref callback as a property on the class, but note that it shouldn't matter in the average `ref` use case.
+React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts.
 
 Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. The preferred way is to set the property in the `ref` callback, e.g. `ref={(element) => { this.myElement = element; }}`. 
 
@@ -102,3 +102,7 @@ function CustomTextInput(props) {
 ### Don't Overuse Refs
 
 Your first inclination may be to use refs to "make things happen" in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to "own" that state is at a higher level in the hierarchy. See the [Lifting State Up](/react/docs/lifting-state-up.html) guide for examples of this.
+
+### Caveats
+
+If the `ref` callback is defined as an inline function, it will get called twice during each render pass, first with `null` and then again with the DOM element, additionally to the mount/unmount call. This is because a new instance of the function is created with each render, so React needs to reset the old instance and set-up the new one. This side-effect of inline callback function can be avoided by defining the ref callback as a property on the class, but note that it shouldn't matter in the average `ref` use case.
