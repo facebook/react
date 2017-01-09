@@ -2,6 +2,13 @@ Work-in-progress benchmarks.
 
 ## Running the suite
 
+### One-click benchmark runner
+```
+./scripts/bench/benchmark-runner [--dev]
+```
+It takes bundles from your local `build` folder and compares them with React's latest master build (from http://react.zpao.com/builds/master/latest/). Notice that it doesn't build React by default; you can run `npm run build` manually before invoking the benchmark runner (like `npm run build && ./scripts/bench/benchmark-runner`).
+
+### Run the suite manually
 You'll need two folders to compare, each of them containing `react.min.js` and `react-dom-server.min.js`. You can run `npm run build` at the repo root to get a `build` folder with these files.
 
 For example, if you want to compare a stable verion against master, you can create folders called `build-stable` and `build-master` and use the benchmark scripts like this:

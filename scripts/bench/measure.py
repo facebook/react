@@ -71,10 +71,13 @@ def _run_js_in_node(js, env):
 
 
 def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
+    react_core_path = "%s/%s" % (react_path, "react.js" if os.environ["DEV"] == "true" else "react.min.js")
+    react_dom_path = "%s/%s" % (react_path, "react-dom-server.js" if os.environ["DEV"] == "true" else "react-dom-server.min.js")
+
     return engine(
         """
-            var reactCode = readFile(ENV.react_path + '/react.min.js');
-            var reactDOMServerCode = readFile(ENV.react_path + '/react-dom-server.min.js');
+            var reactCode = readFile(ENV.react_core_path);
+            var reactDOMServerCode = readFile(ENV.react_dom_path);
             var START = now();
             globalEval(reactCode);
             globalEval(reactDOMServerCode);
@@ -112,7 +115,8 @@ def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
             'bench_name': bench_name,
             'bench_path': bench_path,
             'measure_warm': measure_warm,
-            'react_path': react_path,
+            'react_core_path': react_core_path,
+            'react_dom_path': react_dom_path,
         },
     )
 
@@ -172,4 +176,3 @@ def _main():
 
 if __name__ == '__main__':
     sys.exit(_main())
-

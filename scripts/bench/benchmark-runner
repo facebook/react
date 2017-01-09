@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+'use strict';
+
+const shell = require('shelljs');
+const path = require('path');
+
+const benchRoot = __dirname;
+const projectRoot = path.resolve(benchRoot, '../..');
+const arenaRoot = path.resolve(benchRoot, 'arena');
+
+const __DEV__ = process.argv[2] === '--dev';
+
+const files = __DEV__ ?
+  ['react.js', 'react-dom-server.js'] :
+  ['react.min.js', 'react-dom-server.min.js'];
+
+function cleanUp() {
+  shell.rm('-rf', arenaRoot);
+  shell.mkdir(arenaRoot);
+}
+
+cleanUp();
+
+shell.mkdir(path.join(arenaRoot, 'build-latest-master'));
+files.forEach((name) => {
+  shell.exec(
+    `wget http://react.zpao.com/builds/master/latest/${name}`,
+    {cwd: path.join(arenaRoot, 'build-latest-master')}
+  );
+});
+
+shell.mkdir(path.join(arenaRoot, 'build-test'));
+shell.cp(
+  files.map((name) => path.join(projectRoot, 'build', name)),
+  path.join(arenaRoot, 'build-test')
+);
+
+shell.exec([
+  `DEV=${__DEV__} ./measure.py arena/build-latest-master arena/master.txt arena/build-test arena/test.txt && `,
+  './analyze.py arena/master.txt arena/test.txt',
+].join(''), {cwd: benchRoot});
+
+cleanUp();
