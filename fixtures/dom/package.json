@@ -1,5 +1,5 @@
 {
-  "name": "_fixtures",
+  "name": "react-fixtures",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
