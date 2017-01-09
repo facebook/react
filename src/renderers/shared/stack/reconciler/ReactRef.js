@@ -22,7 +22,6 @@ var ReactRef = {};
 if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
   var ReactComponentTreeHook = require('ReactComponentTreeHook');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('warning');
 }
 
@@ -33,9 +32,6 @@ function attachRef(ref, component, owner) {
       let ownerName;
       if (typeof owner.getName === 'function') {
         ownerName = owner.getName();
-      } else {
-        // if we're working on stack inside of fiber
-        ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
       }
       if (ownerName) {
         info += ' Check the render method of `' + ownerName + '`.';
