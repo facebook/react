@@ -59,6 +59,7 @@ export type UpdateQueue = {
   first: Update | null,
   last: Update | null,
   hasForceUpdate: boolean,
+  callbackList: null | Array<Callback>,
 
   // Dev only
   isProcessing?: boolean,
@@ -95,6 +96,7 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
       first: null,
       last: null,
       hasForceUpdate: false,
+      callbackList: null,
       isProcessing: false,
     };
   } else {
@@ -102,6 +104,7 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
       first: null,
       last: null,
       hasForceUpdate: false,
+      callbackList: null,
     };
   }
 
@@ -122,6 +125,8 @@ function cloneUpdateQueue(alt : Fiber, fiber : Fiber) : UpdateQueue | null {
   altQueue.first = sourceQueue.first;
   altQueue.last = sourceQueue.last;
   altQueue.hasForceUpdate = sourceQueue.hasForceUpdate;
+  altQueue.callbackList = sourceQueue.callbackList;
+  altQueue.isProcessing = sourceQueue.isProcessing;
   alt.updateQueue = altQueue;
   return altQueue;
 }
@@ -438,28 +443,19 @@ function beginUpdateQueue(
     // Second condition ignores top-level unmount callbacks if they are not the
     // last update in the queue, since a subsequent update will cause a remount.
     if (update.callback && !(update.isTopLevelUnmount && update.next)) {
-      const callbackUpdate = cloneUpdate(update);
-      if (callbackList && callbackList.last) {
-        callbackList.last.next = callbackUpdate;
-        callbackList.last = callbackUpdate;
-      } else {
-        callbackList = {
-          first: callbackUpdate,
-          last: callbackUpdate,
-          hasForceUpdate: false,
-        };
-      }
+      callbackList = callbackList || [];
+      callbackList.push(update.callback);
       workInProgress.effectTag |= CallbackEffect;
     }
     update = update.next;
   }
 
-  if (!queue.first && !queue.hasForceUpdate) {
-    // Queue is now empty
+  queue.callbackList = callbackList;
+
+  if (!queue.first && !callbackList && !queue.hasForceUpdate) {
+    // The queue is empty and there are no callbacks. We can reset it.
     workInProgress.updateQueue = null;
   }
-
-  workInProgress.callbackList = callbackList;
 
   if (__DEV__) {
     queue.isProcessing = false;
@@ -469,19 +465,14 @@ function beginUpdateQueue(
 }
 exports.beginUpdateQueue = beginUpdateQueue;
 
-function commitCallbacks(finishedWork : Fiber, callbackList : UpdateQueue, context : mixed) {
-  const stopAfter = callbackList.last;
-  let update = callbackList.first;
-  while (update) {
-    const callback = update.callback;
-    if (typeof callback === 'function') {
-      callback.call(context);
-    }
-    if (update === stopAfter) {
-      break;
-    }
-    update = update.next;
+function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
+  const callbackList = queue.callbackList;
+  if (!callbackList) {
+    return;
   }
-  finishedWork.callbackList = null;
+  for (let i = 0; i < callbackList.length; i++) {
+    const callback = callbackList[i];
+    callback.call(context);
+  }
 }
 exports.commitCallbacks = commitCallbacks;

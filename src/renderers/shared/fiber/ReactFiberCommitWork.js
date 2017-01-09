@@ -30,6 +30,7 @@ var { commitCallbacks } = require('ReactFiberUpdateQueue');
 var {
   Placement,
   Update,
+  Callback,
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
@@ -410,17 +411,16 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
             }
           }
         }
-        const callbackList = finishedWork.callbackList;
-        if (callbackList) {
-          commitCallbacks(finishedWork, callbackList, instance);
+        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue) {
+          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
-        const callbackList = finishedWork.callbackList;
-        if (callbackList) {
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, callbackList, instance);
+          commitCallbacks(finishedWork, updateQueue, instance);
         }
         return;
       }
