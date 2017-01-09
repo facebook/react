@@ -152,11 +152,13 @@ describe('ReactStatelessComponent', () => {
   it('should warn when given a string ref', () => {
     spyOn(console, 'error');
 
-    class Parent extends React.Component {
-      static displayName = 'Parent';
+    function Indirection(props) {
+      return <div>{props.children}</div>;
+    }
 
+    class Parent extends React.Component {
       render() {
-        return <div><StatelessComponent name="A" ref="stateless"/></div>;
+        return <Indirection><StatelessComponent name="A" ref="stateless"/></Indirection>;
       }
     }
 
@@ -169,6 +171,7 @@ describe('ReactStatelessComponent', () => {
       'of `Parent`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +
+      '    in Indirection (at **)\n' +
       '    in Parent (at **)'
     );
   });
@@ -179,11 +182,13 @@ describe('ReactStatelessComponent', () => {
       expect(arg).toBe(null);
     });
 
-    class Parent extends React.Component {
-      static displayName = 'Parent';
+    function Indirection(props) {
+      return <div>{props.children}</div>;
+    }
 
+    class Parent extends React.Component {
       render() {
-        return <div><StatelessComponent name="A" ref={ref} /></div>;
+        return <Indirection><StatelessComponent name="A" ref={ref} /></Indirection>;
       }
     }
 
@@ -196,6 +201,7 @@ describe('ReactStatelessComponent', () => {
       'of `Parent`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +
+      '    in Indirection (at **)\n' +
       '    in Parent (at **)'
     );
   });

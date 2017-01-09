@@ -352,16 +352,25 @@ describe('ReactComponent', () => {
   it('includes owner name in the error about badly-typed elements', () => {
     spyOn(console, 'error');
 
+    var X = undefined;
+
+    function Indirection(props) {
+      return <div>{props.children}</div>;
+    }
+
+    function Bar() {
+      return <Indirection><X /></Indirection>;
+    }
+
     function Foo() {
-      var X = undefined;
-      return <X />;
+      return <Bar />;
     }
 
     expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
       'or a class/function (for composite components) but got: undefined. ' +
       'You likely forgot to export your component from the file it\'s ' +
-      'defined in. Check the render method of `Foo`.'
+      'defined in. Check the render method of `Bar`.'
     );
 
     // One warning for each element creation
