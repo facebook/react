@@ -16,8 +16,10 @@ import type { Fiber } from 'ReactFiber';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
+  cacheContext,
   getMaskedContext,
   getUnmaskedContext,
+  isContextConsumer,
 } = require('ReactFiberContext');
 var {
   addUpdate,
@@ -28,6 +30,7 @@ var {
 var { hasContextChanged } = require('ReactFiberContext');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
+var emptyObject = require('emptyObject');
 var shallowEqual = require('shallowEqual');
 var warning = require('warning');
 var invariant = require('invariant');
@@ -206,15 +209,17 @@ module.exports = function(
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
-    const context = getMaskedContext(workInProgress, unmaskedContext);
+    const needsContext = isContextConsumer(workInProgress);
+    const context = needsContext ? getMaskedContext(workInProgress, unmaskedContext) : emptyObject;
     const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
     checkClassInstance(workInProgress);
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
-    instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
-    instance.__reactInternalMemoizedMaskedChildContext = context;
+    if (needsContext) {
+      cacheContext(workInProgress, unmaskedContext, context);
+    }
 
     return instance;
   }

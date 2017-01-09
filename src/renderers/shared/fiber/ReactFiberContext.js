@@ -57,6 +57,13 @@ function getUnmaskedContext(workInProgress : Fiber) : Object {
 }
 exports.getUnmaskedContext = getUnmaskedContext;
 
+function cacheContext(workInProgress : Fiber, unmaskedContext : Object, maskedContext : Object) {
+  const instance = workInProgress.stateNode;
+  instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
+  instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
+}
+exports.cacheContext = cacheContext;
+
 exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Object) {
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
@@ -86,9 +93,9 @@ exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Ob
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
+  // Context is created before the class component is instantiated so check for instance.
   if (instance) {
-    instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
-    instance.__reactInternalMemoizedMaskedChildContext = context;
+    cacheContext(workInProgress, unmaskedContext, context);
   }
 
   return context;
@@ -97,6 +104,14 @@ exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Ob
 exports.hasContextChanged = function() : boolean {
   return didPerformWorkStackCursor.current;
 };
+
+function isContextConsumer(fiber : Fiber) : boolean {
+  return (
+    fiber.tag === ClassComponent &&
+    fiber.type.contextTypes != null
+  );
+}
+exports.isContextConsumer = isContextConsumer;
 
 function isContextProvider(fiber : Fiber) : boolean {
   return (
