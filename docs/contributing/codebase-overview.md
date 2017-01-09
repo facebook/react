@@ -113,7 +113,7 @@ One way to think about it is that the condition should reflect the normal situat
 
 It is a good idea to avoid spamming the console with duplicate warnings:
 
-````js
+```js
 var warning = require('warning');
 
 var didWarnAboutMath = false;
