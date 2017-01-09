@@ -11,7 +11,7 @@ Your working copy of React **should be up to date**. Check out the `master` bran
 ## Cloning the Release Manager
 
 **If this is your first time using the Release Manager**, you need to set it up.
-Skip this section if you ever did this before.
+Skip this section if you’ve done this before.
 
 The Release Manager is also located inside the React repository so you need to **clone it to a separate folder**. Call it something other than `react` so that you don’t confuse it with the working copy.
 
