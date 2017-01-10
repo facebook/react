@@ -348,14 +348,6 @@ function Hello(props) {
 Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, `props.children` works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as `props.children`:
 
 ```js{4,13}
-function ListOfTenThings() {
-  return (
-    <Repeat numTimes={10}>
-      {(index) => <div key={index}>This is item {index} in the list</div>}
-    </Repeat>
-  );
-}
-
 // Calls the children callback numTimes to produce a repeated component
 function Repeat(props) {
   let items = [];
@@ -363,6 +355,14 @@ function Repeat(props) {
     items.push(props.children(i));
   }
   return <div>{items}</div>;
+}
+
+function ListOfTenThings() {
+  return (
+    <Repeat numTimes={10}>
+      {(index) => <div key={index}>This is item {index} in the list</div>}
+    </Repeat>
+  );
 }
 ```
 
