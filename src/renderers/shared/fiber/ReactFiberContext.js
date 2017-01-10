@@ -17,6 +17,7 @@ import type { StackCursor } from 'ReactFiberStack';
 
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
+var warning = require('warning');
 var {
   getComponentName,
   isFiberMounted,
@@ -141,6 +142,18 @@ exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, di
 function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
+
+  // TODO (bvaughn) Replace this behavior with an invariant() in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  if (typeof instance.getChildContext !== 'function') {
+    warning(
+      false,
+      'getChildContext() is not defined for %s',
+      getComponentName(fiber),
+    );
+    return parentContext;
+  }
+
   const childContext = instance.getChildContext();
   for (let contextKey in childContext) {
     invariant(

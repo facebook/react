@@ -289,4 +289,71 @@ describe('ReactContextValidator', () => {
     expectDev(console.error.calls.count()).toBe(2);
   });
 
+  // TODO (bvaughn) Remove this test and the associated behavior in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  it('should warn (but not error) if getChildContext method is missing', () => {
+    spyOn(console, 'error');
+
+    var MyComponent = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string.isRequired,
+      },
+
+      render: function() {
+        return <div />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<MyComponent/>);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: getChildContext() is not defined for MyComponent'
+    );
+  });
+
+  // TODO (bvaughn) Remove this test and the associated behavior in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  it('should pass parent context if getChildContext method is missing', () => {
+    spyOn(console, 'error');
+
+    var ParentContextProvider = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.number,
+      },
+      getChildContext: function() {
+        return {
+          foo: 'FOO',
+        };
+      },
+      render: function() {
+        return <MiddleMissingContext />;
+      },
+    });
+
+    var MiddleMissingContext = React.createClass({
+      childContextTypes: {
+        bar: React.PropTypes.string.isRequired,
+      },
+      render: function() {
+        return <ChildContextConsumer />;
+      },
+    });
+
+    var childContext;
+    var ChildContextConsumer = React.createClass({
+      contextTypes: {
+        bar: React.PropTypes.string.isRequired,
+        foo: React.PropTypes.string.isRequired,
+      },
+      render: function() {
+        childContext = this.context;
+        return <div />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<ParentContextProvider/>);
+    expect(childContext.bar).toBeUndefined();
+    expect(childContext.foo).toBe('FOO');
+  });
+
 });

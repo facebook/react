@@ -698,6 +698,14 @@ var ReactCompositeComponent = {
         );
       }
       return Object.assign({}, currentContext, childContext);
+    } else {
+      if (__DEV__) {
+        warning(
+          !Component.childContextTypes,
+          'getChildContext() is not defined for %s',
+          this.getName(),
+        );
+      }
     }
     return currentContext;
   },
