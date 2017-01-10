@@ -163,7 +163,6 @@ describe('ReactStatelessComponent', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Parent/>);
-
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
@@ -174,13 +173,13 @@ describe('ReactStatelessComponent', () => {
       '    in Indirection (at **)\n' +
       '    in Parent (at **)'
     );
+
+    ReactTestUtils.renderIntoDocument(<Parent/>);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn when given a function ref', () => {
     spyOn(console, 'error');
-    var ref = jasmine.createSpy().and.callFake((arg) => {
-      expect(arg).toBe(null);
-    });
 
     function Indirection(props) {
       return <div>{props.children}</div>;
@@ -188,12 +187,17 @@ describe('ReactStatelessComponent', () => {
 
     class Parent extends React.Component {
       render() {
-        return <Indirection><StatelessComponent name="A" ref={ref} /></Indirection>;
+        return (
+          <Indirection>
+            <StatelessComponent name="A" ref={(arg) => {
+              expect(arg).toBe(null);
+            }} />
+          </Indirection>
+        );
       }
     }
 
     ReactTestUtils.renderIntoDocument(<Parent/>);
-
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
@@ -204,6 +208,9 @@ describe('ReactStatelessComponent', () => {
       '    in Indirection (at **)\n' +
       '    in Parent (at **)'
     );
+
+    ReactTestUtils.renderIntoDocument(<Parent/>);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should provide a null ref', () => {
