@@ -1010,10 +1010,10 @@ describe('ReactIncrementalSideEffects', () => {
 
     class Wrapper extends React.Component {
       render() {
-        if(this.props.show) {
-          return <div>{this.props.children}<Bar key="c" name="C"/></div>
+        if (this.props.show) {
+          return <div>{this.props.children}<Bar key="c" name="C"/></div>;
         } else {
-          return <div>{this.props.children}</div>
+          return <div>{this.props.children}</div>;
         }
       }
     }
@@ -1030,7 +1030,7 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flush();
     expect(ops).toEqual(['mount: A', 'mount: C']);
 
-    ops = []
+    ops = [];
     ReactNoop.render(<Foo show={false} />);
     ReactNoop.flush();
     expect(ops).toEqual(['unmount: C']);
@@ -1055,10 +1055,10 @@ describe('ReactIncrementalSideEffects', () => {
 
     class Wrapper extends React.Component {
       render() {
-        if(this.props.show) {
-          return <div>{this.props.children}<Bar key="c" name="C"/></div>
+        if (this.props.show) {
+          return <div>{this.props.children}<Bar key="c" name="C"/></div>;
         } else {
-          return <div>{this.props.children}</div>
+          return <div>{this.props.children}</div>;
         }
       }
     }
@@ -1076,7 +1076,7 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flush();
     expect(ops).toEqual(['mount: A', 'mount: B', 'mount: C']);
 
-    ops = []
+    ops = [];
     ReactNoop.render(<Foo show={false} />);
     ReactNoop.flush();
     expect(ops).toEqual(['unmount: C']);
