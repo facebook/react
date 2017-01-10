@@ -159,7 +159,6 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should check child context types
 * should warn (but not error) if getChildContext method is missing
 * should pass parent context if getChildContext method is missing
-* should only warn about missing getChildContext once per component type
 
 src/isomorphic/classic/class/__tests__/ReactBind-test.js
 * Holds reference to instance
