@@ -289,7 +289,6 @@ describe('ref swapping', () => {
     const a = ReactTestUtils.renderIntoDocument(<A />);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
-
 });
 
 describe('string refs between fiber and stack', () => {
