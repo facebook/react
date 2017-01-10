@@ -105,4 +105,4 @@ Your first inclination may be to use refs to "make things happen" in your app. I
 
 ### Caveats
 
-If the `ref` callback is defined as an inline function, it will get called twice during each render pass, first with `null` and then again with the DOM element, additionally to the mount/unmount call. This is because a new instance of the function is created with each render, so React needs to reset the old instance and set-up the new one. This side-effect of inline callback function can be avoided by defining the ref callback as a property on the class, but note that it shouldn't matter in the average `ref` use case.
+If the `ref` callback is defined as an inline function, it will get called twice during each render pass, first with `null` and then again with the DOM element. This is because a new instance of the function is created with each render, so React needs to clear the old ref and set up the new one. You can avoid this by defining the ref callback as a bound method on the class, but note that it shouldn't matter in most cases.
