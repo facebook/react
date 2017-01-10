@@ -27,24 +27,26 @@ if (__DEV__) {
 
 function attachRef(ref, component, owner) {
   if (__DEV__) {
-    let info = '';
-    if (owner) {
-      let ownerName;
-      if (typeof owner.getName === 'function') {
-        ownerName = owner.getName();
+    if (component._compositeType === ReactCompositeComponentTypes.StatelessFunctional) {
+      let info = '';
+      if (owner) {
+        let ownerName;
+        if (typeof owner.getName === 'function') {
+          ownerName = owner.getName();
+        }
+        if (ownerName) {
+          info += ' Check the render method of `' + ownerName + '`.';
+        }
       }
-      if (ownerName) {
-        info += ' Check the render method of `' + ownerName + '`.';
-      }
-    }
 
-    warning(
-      component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
-      'Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail.%s%s',
-      info,
-      ReactComponentTreeHook.getStackAddendumByID(component._debugID)
-    );
+      warning(
+        false,
+        'Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.%s%s',
+        info,
+        ReactComponentTreeHook.getStackAddendumByID(component._debugID)
+      );
+    }
   }
 
   if (typeof ref === 'function') {
