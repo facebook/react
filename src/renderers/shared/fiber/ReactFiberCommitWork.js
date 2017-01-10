@@ -463,7 +463,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     }
     const ref = finishedWork.ref;
     if (ref) {
-      const instance = (getPublicInstance(finishedWork.stateNode) : any);
+      const instance = getPublicInstance(finishedWork.stateNode);
       ref(instance);
     }
   }
