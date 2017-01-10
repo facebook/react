@@ -14,6 +14,7 @@
 'use strict';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('emptyObject');
 
 import type { TestRendererOptions } from 'ReactTestMount';
@@ -317,11 +318,7 @@ var ReactTestFiberRenderer = {
   },
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates() {
-    throw new Error(
-      'The unstable_batchedUpdates API no longer exists maybe hopefully'
-    );
-  },
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
   /* eslint-enable camelcase */
 };
 
