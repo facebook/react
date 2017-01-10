@@ -52,7 +52,9 @@ class CustomTextInput extends React.Component {
 
 React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts.
 
-Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. If you are currently using `this.refs.myRefName` to access refs, we recommend using this pattern instead.
+Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. The preferred way is to set the property in the `ref` callback like in the above example. There is even a shorter way to write it: `ref={input => this.textInput = input}`. 
+
+If you worked with React before, you might be familiar with an older API where the `ref` attribute is a string, like `"textInput"`, and the DOM node is accessed as `this.refs.textInput`. We advise against it because string refs have [some issues](https://github.com/facebook/react/pull/8333#issuecomment-271648615), are considered legacy, and **are likely to be removed in one of the future releases**. If you're currently using `this.refs.textInput` to access refs, we recommend the callback pattern instead.
 
 When the `ref` attribute is used on a custom component, the `ref` callback receives the mounted instance of the component as its argument. For example, if we wanted to wrap the `CustomTextInput` above to simulate it being clicked immediately after mounting:
 
@@ -100,3 +102,7 @@ function CustomTextInput(props) {
 ### Don't Overuse Refs
 
 Your first inclination may be to use refs to "make things happen" in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to "own" that state is at a higher level in the hierarchy. See the [Lifting State Up](/react/docs/lifting-state-up.html) guide for examples of this.
+
+### Caveats
+
+If the `ref` callback is defined as an inline function, it will get called twice during updates, first with `null` and then again with the DOM element. This is because a new instance of the function is created with each render, so React needs to clear the old ref and set up the new one. You can avoid this by defining the `ref` callback as a bound method on the class, but note that it shouldn't matter in most cases.
