@@ -113,21 +113,25 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
 }
 
 // Clones an update queue from a source fiber onto its alternate.
-function cloneUpdateQueue(alt : Fiber, fiber : Fiber) : UpdateQueue | null {
-  const sourceQueue = fiber.updateQueue;
-  if (!sourceQueue) {
+function cloneUpdateQueue(current : Fiber, workInProgress : Fiber) : UpdateQueue | null {
+  const currentQueue = current.updateQueue;
+  if (!currentQueue) {
     // The source fiber does not have an update queue.
-    alt.updateQueue = null;
+    workInProgress.updateQueue = null;
     return null;
   }
   // If the alternate already has a queue, reuse the previous object.
-  const altQueue = alt.updateQueue || {};
-  altQueue.first = sourceQueue.first;
-  altQueue.last = sourceQueue.last;
-  altQueue.hasForceUpdate = sourceQueue.hasForceUpdate;
-  altQueue.callbackList = sourceQueue.callbackList;
-  altQueue.isProcessing = sourceQueue.isProcessing;
-  alt.updateQueue = altQueue;
+  const altQueue = workInProgress.updateQueue || {};
+  altQueue.first = currentQueue.first;
+  altQueue.last = currentQueue.last;
+
+  // These fields are invalid by the time we clone from current. Reset them.
+  altQueue.hasForceUpdate = false;
+  altQueue.callbackList = null;
+  altQueue.isProcessing = false;
+
+  workInProgress.updateQueue = altQueue;
+
   return altQueue;
 }
 exports.cloneUpdateQueue = cloneUpdateQueue;

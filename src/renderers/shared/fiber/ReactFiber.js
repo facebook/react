@@ -277,7 +277,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
-  cloneUpdateQueue(alt, fiber);
+  cloneUpdateQueue(fiber, alt);
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;
