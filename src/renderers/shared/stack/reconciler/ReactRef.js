@@ -23,28 +23,40 @@ if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
   var ReactComponentTreeHook = require('ReactComponentTreeHook');
   var warning = require('warning');
+
+  var warnedAboutStatelessRefs = {};
 }
 
 function attachRef(ref, component, owner) {
   if (__DEV__) {
-    let info = '';
-    if (owner) {
+    if (component._compositeType === ReactCompositeComponentTypes.StatelessFunctional) {
+      let info = '';
       let ownerName;
-      if (typeof owner.getName === 'function') {
-        ownerName = owner.getName();
+      if (owner) {
+        if (typeof owner.getName === 'function') {
+          ownerName = owner.getName();
+        }
+        if (ownerName) {
+          info += ' Check the render method of `' + ownerName + '`.';
+        }
       }
-      if (ownerName) {
-        info += ' Check the render method of `' + ownerName + '`.';
+
+      let warningKey = ownerName || component._debugID;
+      let element = component._currentElement;
+      if (element && element._source) {
+        warningKey = element._source.fileName + ':' + element._source.lineNumber;
+      }
+      if (!warnedAboutStatelessRefs[warningKey]) {
+        warnedAboutStatelessRefs[warningKey] = true;
+        warning(
+          false,
+          'Stateless function components cannot be given refs. ' +
+          'Attempts to access this ref will fail.%s%s',
+          info,
+          ReactComponentTreeHook.getStackAddendumByID(component._debugID)
+        );
       }
     }
-
-    warning(
-      component._compositeType !== ReactCompositeComponentTypes.StatelessFunctional,
-      'Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail.%s%s',
-      info,
-      ReactComponentTreeHook.getStackAddendumByID(component._debugID)
-    );
   }
 
   if (typeof ref === 'function') {

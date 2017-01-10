@@ -25,6 +25,7 @@ describe('ReactStatelessComponent', () => {
   }
 
   beforeEach(() => {
+    jest.resetModuleRegistry();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
@@ -156,54 +157,131 @@ describe('ReactStatelessComponent', () => {
       return <div>{props.children}</div>;
     }
 
-    class Parent extends React.Component {
+    class ParentUsingStringRef extends React.Component {
       render() {
-        return <Indirection><StatelessComponent name="A" ref="stateless"/></Indirection>;
+        return (
+          <Indirection>
+            <StatelessComponent name="A" ref="stateless" />
+          </Indirection>
+        );
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent/>);
-
+    ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
       'Attempts to access this ref will fail. Check the render method ' +
-      'of `Parent`.\n' +
+      'of `ParentUsingStringRef`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +
       '    in Indirection (at **)\n' +
-      '    in Parent (at **)'
+      '    in ParentUsingStringRef (at **)'
     );
+
+    ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn when given a function ref', () => {
     spyOn(console, 'error');
-    var ref = jasmine.createSpy().and.callFake((arg) => {
-      expect(arg).toBe(null);
-    });
 
     function Indirection(props) {
       return <div>{props.children}</div>;
     }
 
-    class Parent extends React.Component {
+    class ParentUsingFunctionRef extends React.Component {
       render() {
-        return <Indirection><StatelessComponent name="A" ref={ref} /></Indirection>;
+        return (
+          <Indirection>
+            <StatelessComponent name="A" ref={(arg) => {
+              expect(arg).toBe(null);
+            }} />
+          </Indirection>
+        );
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent/>);
-
+    ReactTestUtils.renderIntoDocument(<ParentUsingFunctionRef />);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
       'Attempts to access this ref will fail. Check the render method ' +
-      'of `Parent`.\n' +
+      'of `ParentUsingFunctionRef`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +
       '    in Indirection (at **)\n' +
-      '    in Parent (at **)'
+      '    in ParentUsingFunctionRef (at **)'
     );
+
+    ReactTestUtils.renderIntoDocument(<ParentUsingFunctionRef />);
+    expectDev(console.error.calls.count()).toBe(1);
+  });
+
+  it('deduplicates ref warnings based on element or owner', () => {
+    spyOn(console, 'error');
+
+    // Prevent the Babel transform adding a displayName.
+    var createClassWithoutDisplayName = React.createClass;
+
+    // When owner uses JSX, we can use exact line location to dedupe warnings
+    var AnonymousParentUsingJSX = createClassWithoutDisplayName({
+      render() {
+        return <StatelessComponent name="A" ref={() => {}} />;
+      },
+    });
+    const instance1 = ReactTestUtils.renderIntoDocument(<AnonymousParentUsingJSX />);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: Stateless function components cannot be given refs.'
+    );
+    // Should be deduped (offending element is on the same line):
+    instance1.forceUpdate();
+    // Should also be deduped (offending element is on the same line):
+    ReactTestUtils.renderIntoDocument(<AnonymousParentUsingJSX />);
+    expectDev(console.error.calls.count()).toBe(1);
+    console.error.calls.reset();
+
+    // When owner doesn't use JSX, and is anonymous, we warn once per internal instance.
+    var AnonymousParentNotUsingJSX = createClassWithoutDisplayName({
+      render() {
+        return React.createElement(StatelessComponent, {name: 'A', 'ref': () => {}});
+      },
+    });
+    const instance2 = ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: Stateless function components cannot be given refs.'
+    );
+    // Should be deduped (same internal instance):
+    instance2.forceUpdate();
+    expectDev(console.error.calls.count()).toBe(1);
+    // Could not be deduped (different internal instance):
+    ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />);
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(1)[0]).toContain(
+      'Warning: Stateless function components cannot be given refs.'
+    );
+    console.error.calls.reset();
+
+    // When owner doesn't use JSX, but is named, we warn once per owner name
+    class NamedParentNotUsingJSX extends React.Component {
+      render() {
+        return React.createElement(StatelessComponent, {name: 'A', 'ref': () => {}});
+      }
+    }
+    const instance3 = ReactTestUtils.renderIntoDocument(<NamedParentNotUsingJSX />);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: Stateless function components cannot be given refs.'
+    );
+    // Should be deduped (same owner name):
+    instance3.forceUpdate();
+    expectDev(console.error.calls.count()).toBe(1);
+    // Should also be deduped (same owner name):
+    ReactTestUtils.renderIntoDocument(<NamedParentNotUsingJSX />);
+    expectDev(console.error.calls.count()).toBe(1);
+    console.error.calls.reset();
   });
 
   it('should provide a null ref', () => {

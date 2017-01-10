@@ -67,6 +67,8 @@ var warning = require('warning');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+
+  var warnedAboutStatelessRefs = {};
 }
 
 module.exports = function<T, P, I, TI, C, CX, CI>(
@@ -464,13 +466,21 @@ module.exports = function<T, P, I, TI, C, CX, CI>(
             info += ' Check the render method of `' + ownerName + '`.';
           }
 
-          warning(
-            false,
-            'Stateless function components cannot be given refs. ' +
-            'Attempts to access this ref will fail.%s%s',
-            info,
-            ReactDebugCurrentFiber.getCurrentFiberStackAddendum()
-          );
+          let warningKey = ownerName || workInProgress._debugID || '';
+          const debugSource = workInProgress._debugSource;
+          if (debugSource) {
+            warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
+          }
+          if (!warnedAboutStatelessRefs[warningKey]) {
+            warnedAboutStatelessRefs[warningKey] = true;
+            warning(
+              false,
+              'Stateless function components cannot be given refs. ' +
+              'Attempts to access this ref will fail.%s%s',
+              info,
+              ReactDebugCurrentFiber.getCurrentFiberStackAddendum()
+            );
+          }
         }
       }
       reconcileChildren(current, workInProgress, value);
