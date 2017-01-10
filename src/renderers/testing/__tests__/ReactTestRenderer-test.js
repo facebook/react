@@ -343,7 +343,6 @@ describe('ReactTestRenderer', () => {
     ]);
   });
 
-  // this is only passing in Fiber because refs aren't actually working
   it('supports unmounting when using refs', () => {
     class Foo extends React.Component {
       render() {

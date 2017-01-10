@@ -289,6 +289,28 @@ describe('ref swapping', () => {
     const a = ReactTestUtils.renderIntoDocument(<A />);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
+
+  it('supports updates with unmounts correctly when using refs', () => {
+    const ReactDOM = require('ReactDOM');
+    const container = document.createElement('div');
+    const log = [];
+    const ref = element => {
+      const result = element == null ? null : element.nodeName.toLowerCase();
+      log.push(result);
+      return result;
+    };
+    class Foo extends React.Component {
+      render() {
+        return this.props.useDiv
+          ? <div ref={ref}/>
+          : <span ref={ref} />;
+      }
+    }
+    ReactDOM.render(<Foo useDiv={true} />, container);
+    ReactDOM.render(<Foo useDiv={false} />, container);
+    expect(log).toEqual(['div', null, 'span']);
+  });
+
 });
 
 describe('string refs between fiber and stack', () => {

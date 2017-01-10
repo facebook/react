@@ -28,11 +28,9 @@ type ReactTestRendererJSON = {
 let instanceCounter = 0;
 
 class TestContainer {
-  rootID: string;
   createNodeMock: Function;
 
-  constructor(rootID, createNodeMock) {
-    this.rootID = rootID;
+  constructor(createNodeMock) {
     this.createNodeMock = createNodeMock;
   }
   appendChild(child) {}
@@ -91,16 +89,12 @@ class TestComponent {
   }
 
   update(type, props) {
-    // console.log('update', type, props, this.children);
-    // need to manually update text nodes
     this.type = type;
     this.props = props;
   }
 
   toJSON() {
-    // eslint-disable ignore the children
     const {children, ...props} = this.props;
-    // eslint-enable
     const json: ReactTestRendererJSON = {
       type: this.type,
       props: props,
@@ -115,8 +109,6 @@ class TestComponent {
       this.children.forEach((child) => {
         if (typeof child.toJSON === 'function') {
           childrenJSON.push(child.toJSON());
-        } else if (typeof child.text !== 'undefined') {
-          childrenJSON.push();
         }
       });
       json.children = childrenJSON.length ? childrenJSON : null;
@@ -172,8 +164,6 @@ var TestRenderer = ReactFiberReconciler({
     props : Props,
     rootContainerInstance : Container,
   ) : boolean {
-    // console.log('finalizeInitialChildren');
-    // setInitialProperties(testElement, type, props, rootContainerInstance);
     return false;
   },
 
@@ -215,7 +205,9 @@ var TestRenderer = ReactFiberReconciler({
     );
   },
 
-  resetTextContent(testElement : Instance) : void {},
+  resetTextContent(testElement : Instance) : void {
+    // Noop
+  },
 
   createTextInstance(
     text : string,
@@ -254,9 +246,13 @@ var TestRenderer = ReactFiberReconciler({
     parentInstance.removeChild(child);
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback(fn : Function) : void {
+    setTimeout(fn);
+  },
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback(fn: Function) : void {
+    setTimeout(fn, 0, {timeRemaining: Infinity});
+  },
 
   useSyncScheduling: true,
 
@@ -279,7 +275,7 @@ var ReactTestFiberRenderer = {
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
-    var container = new TestContainer('<default>', createNodeMock);
+    var container = new TestContainer(createNodeMock);
     var root = TestRenderer.createContainer(container);
     if (root) {
       TestRenderer.updateContainer(element, root, null, null);
