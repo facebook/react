@@ -26,8 +26,6 @@ type ReactTestRendererJSON = {
   $$typeof?: any
 }
 
-let instanceCounter = 0;
-
 class TestContainer {
   createNodeMock: Function;
 
@@ -41,7 +39,6 @@ class TestContainer {
 }
 
 class TestComponent {
-  id: number;
   props: Object;
   type: string;
   rootContainerInstance: TestContainer;
@@ -49,13 +46,11 @@ class TestComponent {
   $$typeof: Symbol;
 
   constructor(type, props, rootContainerInstance) {
-    this.id = instanceCounter++;
     this.type = type;
     this.props = props;
     this.children = [];
     this.rootContainerInstance = rootContainerInstance;
 
-    Object.defineProperty(this, 'id', { value: this.id, enumerable: false });
     Object.defineProperty(this, '$$typeof', {
       value: Symbol.for('react.test.json'),
     });
@@ -106,13 +101,9 @@ class TestComponent {
     if (typeof children === 'string') {
       json.children = [children];
     } else {
-      var childrenJSON = [];
-      this.children.forEach((child) => {
-        if (typeof child.toJSON === 'function') {
-          childrenJSON.push(child.toJSON());
-        }
-      });
-      json.children = childrenJSON.length ? childrenJSON : null;
+      json.children = this.children.length
+        ? this.children.map(child => child.toJSON())
+        : null;
     }
     return json;
   }
@@ -123,7 +114,6 @@ type Props = Object;
 type Instance = TestComponent;
 type TextInstance = {
   text: string | number,
-  id: number,
   rootContainerInstance: Container,
   toJSON(): string | number,
 };
@@ -200,10 +190,7 @@ var TestRenderer = ReactFiberReconciler({
   },
 
   shouldSetTextContent(props : Props) : boolean {
-    return (
-      typeof props.children === 'string' ||
-      typeof props.children === 'number'
-    );
+    return false;
   },
 
   resetTextContent(testElement : Instance) : void {
@@ -218,12 +205,9 @@ var TestRenderer = ReactFiberReconciler({
   ) : TextInstance {
     var inst = {
       text : text,
-      id: instanceCounter++,
       rootContainerInstance,
       toJSON: () => isNaN(+inst.text) ? inst.text : +inst.text,
     };
-    // Hide from unit tests
-    Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
     return inst;
   },
 
@@ -278,9 +262,8 @@ var ReactTestFiberRenderer = {
     }
     var container = new TestContainer(createNodeMock);
     var root = TestRenderer.createContainer(container);
-    if (root) {
-      TestRenderer.updateContainer(element, root, null, null);
-    }
+    TestRenderer.updateContainer(element, root, null, null);
+
     return {
       toJSON() {
         if (root == null) {
@@ -303,10 +286,9 @@ var ReactTestFiberRenderer = {
         if (root == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null, () => {
-          container = null;
-          root = null;
-        });
+        TestRenderer.updateContainer(null, root, null);
+        container = null;
+        root = null;
       },
       getInstance() {
         if (root == null) {

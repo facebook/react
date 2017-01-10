@@ -462,4 +462,50 @@ describe('ReactTestRenderer', () => {
     }
   });
 
+  it('can update text nodes', () => {
+    class Component extends React.Component {
+      render() {
+        return (
+          <div>
+            {this.props.children}
+          </div>
+        );
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Component>Hi</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['Hi'],
+      props: {},
+    });
+    renderer.update(<Component>{['Hi', 'Bye']}</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['Hi', 'Bye'],
+      props: {},
+    });
+    renderer.update(<Component>Bye</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['Bye'],
+      props: {},
+    });
+    renderer.update(<Component>{42}</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: [42],
+      props: {},
+    });
+    renderer.update(<Component><div /></Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: [{
+        type: 'div',
+        children: null,
+        props: {},
+      }],
+      props: {},
+    });
+  });
 });
