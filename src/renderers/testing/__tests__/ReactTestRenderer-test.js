@@ -392,8 +392,7 @@ describe('ReactTestRenderer', () => {
       {createNodeMock}
     );
     inst.update(<Foo useDiv={false} />);
-    // It's called with 'div' twice (mounting and unmounting)
-    expect(log).toEqual(['div', 'div', 'span']);
+    expect(log).toEqual(['div', 'span']);
   });
 
   it('supports error boundaries', () => {

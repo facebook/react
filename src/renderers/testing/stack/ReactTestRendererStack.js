@@ -50,17 +50,21 @@ function getRenderedHostOrTextFromComponent(component) {
   return component;
 }
 
+var UNSET = {};
+
 class ReactTestComponent {
   _currentElement: ReactElement;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
   _hostContainerInfo: null | Object;
+  _nodeMock: Object;
 
   constructor(element: ReactElement) {
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
     this._hostContainerInfo = null;
+    this._nodeMock = UNSET;
   }
 
   mountComponent(
@@ -93,7 +97,10 @@ class ReactTestComponent {
       'hostContainerInfo should be populated before ' +
       'getPublicInstance is called.'
     );
-    return hostContainerInfo.createNodeMock(element);
+    if (this._nodeMock === UNSET) {
+      this._nodeMock = hostContainerInfo.createNodeMock(element);
+    }
+    return this._nodeMock;
   }
 
   toJSON(): ReactTestRendererJSON {
