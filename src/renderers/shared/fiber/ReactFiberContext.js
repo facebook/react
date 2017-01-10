@@ -34,6 +34,7 @@ const {
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var warningAboutMissingGetChildContext = {};
 }
 
 // A cursor to the current merged context object on the stack.
@@ -146,11 +147,18 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
   // TODO (bvaughn) Replace this behavior with an invariant() in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   if (typeof instance.getChildContext !== 'function') {
-    warning(
-      false,
-      'getChildContext() is not defined for %s',
-      getComponentName(fiber),
-    );
+    if (__DEV__) {
+      const componentName = getComponentName(fiber);
+      
+      if (!warningAboutMissingGetChildContext[componentName]) {
+        warningAboutMissingGetChildContext[componentName] = true;
+        warning(
+          false,
+          'getChildContext() is not defined for %s',
+          componentName,
+        );
+      }
+    }
     return parentContext;
   }
 

@@ -24,6 +24,7 @@ var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var warningAboutMissingGetChildContext = {};
 }
 
 var emptyObject = require('emptyObject');
@@ -700,11 +701,16 @@ var ReactCompositeComponent = {
       return Object.assign({}, currentContext, childContext);
     } else {
       if (__DEV__) {
-        warning(
-          !Component.childContextTypes,
-          'getChildContext() is not defined for %s',
-          this.getName(),
-        );
+        const componentName = this.getName();
+        
+        if (!warningAboutMissingGetChildContext[componentName]) {
+          warningAboutMissingGetChildContext[componentName] = true;
+          warning(
+            !Component.childContextTypes,
+            'getChildContext() is not defined for %s',
+            componentName,
+          );
+        }
       }
     }
     return currentContext;

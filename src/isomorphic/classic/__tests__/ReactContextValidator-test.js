@@ -356,4 +356,38 @@ describe('ReactContextValidator', () => {
     expect(childContext.foo).toBe('FOO');
   });
 
+  it('should only warn about missing getChildContext once per component type', () => {
+    spyOn(console, 'error');
+
+    class ComponentA extends React.Component {
+      static childContextTypes = {
+        foo: React.PropTypes.string.isRequired,
+      };
+      render() {
+        return <div />;
+      }
+    }
+    class ComponentB extends React.Component {
+      static childContextTypes = {
+        foo: React.PropTypes.string.isRequired,
+      };
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<ComponentA/>);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: getChildContext() is not defined for ComponentA'
+    );
+    ReactTestUtils.renderIntoDocument(<ComponentA/>);
+    expectDev(console.error.calls.count()).toBe(1);
+    ReactTestUtils.renderIntoDocument(<ComponentB/>);
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      'Warning: getChildContext() is not defined for ComponentB'
+    );
+  });
+
 });
