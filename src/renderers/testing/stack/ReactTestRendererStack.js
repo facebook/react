@@ -75,6 +75,7 @@ class ReactTestComponent {
   ) {
     var element = this._currentElement;
     this._hostContainerInfo = hostContainerInfo;
+    this._nodeMock = hostContainerInfo.createNodeMock(element);
     // $FlowFixMe https://github.com/facebook/flow/issues/1805
     this.mountChildren(element.props.children, transaction, context);
   }
@@ -90,16 +91,10 @@ class ReactTestComponent {
   }
 
   getPublicInstance(): Object {
-    var element = this._currentElement;
-    var hostContainerInfo = this._hostContainerInfo;
     invariant(
-      hostContainerInfo,
-      'hostContainerInfo should be populated before ' +
-      'getPublicInstance is called.'
+      this._nodeMock !== UNSET,
+      'getPublicInstance should not be called before component is mounted.'
     );
-    if (this._nodeMock === UNSET) {
-      this._nodeMock = hostContainerInfo.createNodeMock(element);
-    }
     return this._nodeMock;
   }
 
