@@ -18,6 +18,7 @@ import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
 import type { ReifiedYield } from 'ReactReifiedYield';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
 var {
@@ -25,6 +26,7 @@ var {
 } = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
+var ReactPriorityLevel = require('ReactPriorityLevel');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -42,6 +44,10 @@ var {
   Ref,
   Update,
 } = ReactTypeOfSideEffect;
+var {
+  NoWork,
+  OffscreenPriority,
+} = ReactPriorityLevel;
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -50,6 +56,7 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
+  getUpdateAndChildPriority : (fiber: Fiber) => PriorityLevel,
 ) {
   const {
     createInstance,
@@ -65,6 +72,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getHostContext,
     popHostContainer,
   } = hostContext;
+
+  function resetWorkPriority(workInProgress : Fiber) {
+    let newPriority = NoWork;
+    // progressedChild is going to be the child set with the highest priority.
+    // Either it is the same as child, or it just bailed out because it choose
+    // not to do the work.
+    let child = workInProgress.progressedChild;
+    while (child) {
+      const childPriority = getUpdateAndChildPriority(child);
+      // Ensure that remaining work priority bubbles up.
+      if (childPriority !== NoWork &&
+          (newPriority === NoWork ||
+          newPriority > childPriority)) {
+        newPriority = childPriority;
+      }
+      child = child.sibling;
+    }
+    workInProgress.pendingWorkPriority = newPriority;
+  }
 
   function markUpdate(workInProgress : Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -164,17 +190,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+  function completeWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
     if (__DEV__) {
       ReactDebugCurrentFiber.current = workInProgress;
     }
 
     switch (workInProgress.tag) {
       case FunctionalComponent:
+        resetWorkPriority(workInProgress);
         return null;
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         popContextProvider(workInProgress);
+        resetWorkPriority(workInProgress);
         return null;
       }
       case HostRoot: {
@@ -184,6 +212,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
+        resetWorkPriority(workInProgress);
         return null;
       }
       case HostComponent: {
@@ -247,6 +276,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             workInProgress.effectTag |= Ref;
           }
         }
+        if (newProps.hidden &&
+            priorityLevel !== NoWork &&
+            priorityLevel < OffscreenPriority) {
+          // If this node is hidden, and we're reconciling at higher than
+          // offscreen priority, there's remaining work in the subtree.
+          workInProgress.pendingWorkPriority = OffscreenPriority;
+        } else {
+          resetWorkPriority(workInProgress);
+        }
         return null;
       }
       case HostText: {
@@ -272,23 +310,30 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           const textInstance = createTextInstance(newText, rootContainerInstance, currentHostContext, workInProgress);
           workInProgress.stateNode = textInstance;
         }
+        resetWorkPriority(workInProgress);
         return null;
       }
-      case CoroutineComponent:
-        return moveCoroutineToHandlerPhase(current, workInProgress);
+      case CoroutineComponent: {
+        const next = moveCoroutineToHandlerPhase(current, workInProgress);
+        resetWorkPriority(workInProgress);
+        return next;
+      }
       case CoroutineHandlerPhase:
         // Reset the tag to now be a first phase coroutine.
         workInProgress.tag = CoroutineComponent;
+        resetWorkPriority(workInProgress);
         return null;
       case YieldComponent:
         // Does nothing.
         return null;
       case Fragment:
+        resetWorkPriority(workInProgress);
         return null;
       case HostPortal:
         // TODO: Only mark this as an update if we have any pending callbacks.
         markUpdate(workInProgress);
         popHostContainer(workInProgress);
+        resetWorkPriority(workInProgress);
         return null;
 
       // Error cases

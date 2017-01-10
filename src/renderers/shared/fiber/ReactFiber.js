@@ -128,6 +128,8 @@ export type Fiber = {
   lastEffect: ?Fiber,
 
   // This will be used to quickly determine if a subtree has no pending changes.
+  // It represents the priority of the child subtree, not including the
+  // fiber itself.
   pendingWorkPriority: PriorityLevel,
 
   // This value represents the priority level that was last used to process this
@@ -234,7 +236,7 @@ function shouldConstruct(Component) {
 
 // This is used to create an alternate fiber to do work on.
 // TODO: Rename to createWorkInProgressFiber or something like that.
-exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
+exports.cloneFiber = function(fiber : Fiber) : Fiber {
   // We clone to get a work in progress. That means that this fiber is the
   // current. To make it safe to reuse that fiber later on as work in progress
   // we need to reset its work in progress flag now. We don't have an
@@ -278,7 +280,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
   cloneUpdateQueue(fiber, alt);
-  alt.pendingWorkPriority = priorityLevel;
+  alt.pendingWorkPriority = fiber.pendingWorkPriority;
 
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
@@ -297,15 +299,13 @@ exports.createHostRootFiber = function() : Fiber {
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromElement = function(element : ReactElement) : Fiber {
   let owner = null;
   if (__DEV__) {
     owner = element._owner;
   }
-
   const fiber = createFiberFromElementType(element.type, element.key, owner);
   fiber.pendingProps = element.props;
-  fiber.pendingWorkPriority = priorityLevel;
 
   if (__DEV__) {
     fiber._debugSource = element._source;
@@ -315,19 +315,17 @@ exports.createFiberFromElement = function(element : ReactElement, priorityLevel 
   return fiber;
 };
 
-exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromFragment = function(elements : ReactFragment) : Fiber {
   // TODO: Consider supporting keyed fragments. Technically, we accidentally
   // support that in the existing React.
   const fiber = createFiber(Fragment, null);
   fiber.pendingProps = elements;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromText = function(content : string) : Fiber {
   const fiber = createFiber(HostText, null);
   fiber.pendingProps = content;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
@@ -384,24 +382,22 @@ function createFiberFromElementType(type : mixed, key : null | string, debugOwne
 
 exports.createFiberFromElementType = createFiberFromElementType;
 
-exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine) : Fiber {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromYield = function(yieldNode : ReactYield) : Fiber {
   const fiber = createFiber(YieldComponent, yieldNode.key);
   fiber.pendingProps = {};
   return fiber;
 };
 
-exports.createFiberFromPortal = function(portal : ReactPortal, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromPortal = function(portal : ReactPortal) : Fiber {
   const fiber = createFiber(HostPortal, portal.key);
   fiber.pendingProps = portal.children || [];
-  fiber.pendingWorkPriority = priorityLevel;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,
     implementation: portal.implementation,

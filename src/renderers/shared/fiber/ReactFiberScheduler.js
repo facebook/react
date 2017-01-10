@@ -75,6 +75,7 @@ var {
 
 var {
   getPendingPriority,
+  addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -97,7 +98,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     scheduleUpdate,
     getPriorityContext,
   );
-  const { completeWork } = ReactFiberCompleteWork(config, hostContext);
+  const { completeWork } = ReactFiberCompleteWork(
+    config,
+    hostContext,
+    getUpdateAndChildPriority
+  );
   const {
     commitPlacement,
     commitDeletion,
@@ -184,12 +189,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     resetHostContainer();
   }
 
+  function getUpdateAndChildPriority(fiber : Fiber) : PriorityLevel {
+    const childPriority = fiber.pendingWorkPriority;
+    const updatePriority = fiber.updateQueue ?
+      getPendingPriority(fiber.updateQueue) :
+      NoWork;
+    if (childPriority === NoWork ||
+        (childPriority > updatePriority) && updatePriority !== NoWork) {
+      return updatePriority;
+    } else {
+      return childPriority;
+    }
+  }
+
   // findNextUnitOfWork mutates the current priority context. It is reset after
   // after the workLoop exits, so never call findNextUnitOfWork from outside
   // the work loop.
   function findNextUnitOfWork() {
     // Clear out roots with no more work on them, or if they have uncaught errors
-    while (nextScheduledRoot && nextScheduledRoot.current.pendingWorkPriority === NoWork) {
+    while (nextScheduledRoot && getUpdateAndChildPriority(nextScheduledRoot.current) === NoWork) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
       // Read the next pointer now.
@@ -212,10 +230,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     let highestPriorityRoot = null;
     let highestPriorityLevel = NoWork;
     while (root) {
-      if (root.current.pendingWorkPriority !== NoWork && (
+      const rootPriority = getUpdateAndChildPriority(root.current);
+      if (rootPriority !== NoWork && (
           highestPriorityLevel === NoWork ||
-          highestPriorityLevel > root.current.pendingWorkPriority)) {
-        highestPriorityLevel = root.current.pendingWorkPriority;
+          highestPriorityLevel > rootPriority)) {
+        highestPriorityLevel = rootPriority;
         highestPriorityRoot = root;
       }
       // We didn't find anything to do in this root, so let's try the next one.
@@ -232,10 +251,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       // unfortunately this is it.
       resetContextStack();
 
-      return cloneFiber(
-        highestPriorityRoot.current,
-        highestPriorityLevel
-      );
+      return cloneFiber(highestPriorityRoot.current);
     }
 
     nextPriorityLevel = NoWork;
@@ -424,32 +440,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     priorityContext = previousPriorityContext;
   }
 
-  function resetWorkPriority(workInProgress : Fiber) {
-    let newPriority = NoWork;
-
-    // Check for pending update priority. This is usually null so it shouldn't
-    // be a perf issue.
-    const queue = workInProgress.updateQueue;
-    if (queue) {
-      newPriority = getPendingPriority(queue);
-    }
-
-    // progressedChild is going to be the child set with the highest priority.
-    // Either it is the same as child, or it just bailed out because it choose
-    // not to do the work.
-    let child = workInProgress.progressedChild;
-    while (child) {
-      // Ensure that remaining work priority bubbles up.
-      if (child.pendingWorkPriority !== NoWork &&
-          (newPriority === NoWork ||
-          newPriority > child.pendingWorkPriority)) {
-        newPriority = child.pendingWorkPriority;
-      }
-      child = child.sibling;
-    }
-    workInProgress.pendingWorkPriority = newPriority;
-  }
-
   function completeUnitOfWork(workInProgress : Fiber) : ?Fiber {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
@@ -457,12 +447,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
-      const next = completeWork(current, workInProgress);
+      const next = completeWork(current, workInProgress, nextPriorityLevel);
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
-
-      resetWorkPriority(workInProgress);
 
       if (next) {
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
@@ -1044,7 +1032,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       nextUnitOfWork = null;
     }
 
-    let node = fiber;
+    let child = fiber;
+    let node = fiber.return;
     let shouldContinue = true;
     while (node && shouldContinue) {
       // Walk the parent path to the root and update each node's priority. Once
@@ -1065,35 +1054,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           node.alternate.pendingWorkPriority = priorityLevel;
         }
       }
-      if (!node.return) {
-        if (node.tag === HostRoot) {
-          const root : FiberRoot = (node.stateNode : any);
-          scheduleRoot(root, priorityLevel);
-          // Depending on the priority level, either perform work now or
-          // schedule a callback to perform work later.
-          switch (priorityLevel) {
-            case SynchronousPriority:
-              performWork(SynchronousPriority);
-              return;
-            case TaskPriority:
-              // TODO: If we're not already performing work, schedule a
-              // deferred callback.
-              return;
-            case AnimationPriority:
-              scheduleAnimationCallback(performAnimationWork);
-              return;
-            case HighPriority:
-            case LowPriority:
-            case OffscreenPriority:
-              scheduleDeferredCallback(performDeferredWork);
-              return;
-          }
-        } else {
-          // TODO: Warn about setting state on an unmounted component.
-          return;
-        }
-      }
+      child = node;
       node = node.return;
+    }
+
+    if (!node) {
+      if (child.tag === HostRoot) {
+        const root : FiberRoot = (child.stateNode : any);
+        scheduleRoot(root, priorityLevel);
+        // Depending on the priority level, either perform work now or
+        // schedule a callback to perform work later.
+        switch (priorityLevel) {
+          case SynchronousPriority:
+            performWork(SynchronousPriority);
+            return;
+          case TaskPriority:
+            // TODO: If we're not already performing work, schedule a
+            // deferred callback.
+            return;
+          case AnimationPriority:
+            scheduleAnimationCallback(performAnimationWork);
+            return;
+          case HighPriority:
+          case LowPriority:
+          case OffscreenPriority:
+            scheduleDeferredCallback(performDeferredWork);
+            return;
+        }
+      } else {
+        // TODO: Warn about setting state on an unmounted component.
+      }
     }
   }
 
@@ -1107,6 +1097,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function scheduleErrorRecovery(fiber : Fiber) {
+    if (fiber.tag === HostRoot) {
+      // This is a root, which does not have a parent, so we need to use the
+      // update queue.
+      addTopLevelUpdate(fiber, { element: null }, null, TaskPriority);
+    }
     scheduleUpdate(fiber, TaskPriority);
   }
 
