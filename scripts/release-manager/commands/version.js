@@ -29,7 +29,7 @@ function updateJSON(path, fields, value) {
   try {
     data = JSON.parse(fs.readFileSync(path, 'utf8'));
   } catch (e) {
-    this.log(chalk.color.red('ERROR') + ` ${path} doesn't exist… skipping.`);
+    this.log(chalk.red('ERROR') + ` ${path} doesn't exist… skipping.`);
   }
   fields.forEach((field) => {
     let fieldPath = field.split('.');
