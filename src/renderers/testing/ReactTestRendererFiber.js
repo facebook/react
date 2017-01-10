@@ -15,21 +15,22 @@
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var emptyObject = require('emptyObject');
-var invariant = require('invariant');
 
-import type { ReactElement } from 'ReactElementType';
-import type { ReactInstance } from 'ReactInstanceType';
+import type { TestRendererOptions } from 'ReactTestMount';
 
 type ReactTestRendererJSON = {
   type: string,
   props: { [propName: string]: string },
-  children: null | Array<string | ReactTestRendererJSON>,
+  children: null | Array<string | number | ReactTestRendererJSON>,
   $$typeof?: any
 }
 
 let instanceCounter = 0;
 
 class TestContainer {
+  rootID: string;
+  createNodeMock: Function;
+
   constructor(rootID, createNodeMock) {
     this.rootID = rootID;
     this.createNodeMock = createNodeMock;
@@ -41,6 +42,13 @@ class TestContainer {
 }
 
 class TestComponent {
+  id: number;
+  props: Object;
+  type: string;
+  rootContainerInstance: TestContainer;
+  children: Array<Instance | TextInstance>;
+  $$typeof: Symbol;
+
   constructor(type, props, rootContainerInstance) {
     this.id = instanceCounter++;
     this.type = type;
@@ -93,7 +101,7 @@ class TestComponent {
     // eslint-disable ignore the children
     const {children, ...props} = this.props;
     // eslint-enable
-    const json = {
+    const json: ReactTestRendererJSON = {
       type: this.type,
       props: props,
       children: null,
@@ -108,7 +116,7 @@ class TestComponent {
         if (typeof child.toJSON === 'function') {
           childrenJSON.push(child.toJSON());
         } else if (typeof child.text !== 'undefined') {
-          childrenJSON.push(isNaN(+child.text) ? child.text : +child.text);
+          childrenJSON.push();
         }
       });
       json.children = childrenJSON.length ? childrenJSON : null;
@@ -117,17 +125,22 @@ class TestComponent {
   }
 }
 
+type Container = TestContainer;
+type Props = Object;
 type Instance = TestComponent;
+type TextInstance = {
+  text: string | number,
+  id: number,
+  rootContainerInstance: Container,
+  toJSON(): string | number,
+};
 
 var TestRenderer = ReactFiberReconciler({
-  getRootHostContext(rootContainerInstance : Container) : HostContext {
+  getRootHostContext() {
     return emptyObject;
   },
 
-  getChildHostContext(
-    parentHostContext : HostContext,
-    type : string,
-  ) : HostContext {
+  getChildHostContext() {
     return emptyObject;
   },
 
@@ -143,7 +156,7 @@ var TestRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-    hostContext : HostContext,
+    hostContext : Object,
     internalInstanceHandle : Object,
   ) : Instance {
     return new TestComponent(type, props, rootContainerInstance);
@@ -158,9 +171,10 @@ var TestRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-  ) : void {
+  ) : boolean {
     // console.log('finalizeInitialChildren');
     // setInitialProperties(testElement, type, props, rootContainerInstance);
+    return false;
   },
 
   prepareUpdate(
@@ -168,7 +182,7 @@ var TestRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
-    hostContext : HostContext,
+    hostContext : Object,
   ) : boolean {
     return true;
   },
@@ -184,6 +198,16 @@ var TestRenderer = ReactFiberReconciler({
     instance.update(type, newProps);
   },
 
+  commitMount(
+    instance : Instance,
+    type : string,
+    newProps : Props,
+    rootContainerInstance : Object,
+    internalInstanceHandle : Object
+  ) : void {
+    // Noop
+  },
+
   shouldSetTextContent(props : Props) : boolean {
     return (
       typeof props.children === 'string' ||
@@ -196,10 +220,15 @@ var TestRenderer = ReactFiberReconciler({
   createTextInstance(
     text : string,
     rootContainerInstance : Container,
-    hostContext : HostContext,
+    hostContext : Object,
     internalInstanceHandle : Object
   ) : TextInstance {
-    var inst = { text : text, id: instanceCounter++ };
+    var inst = {
+      text : text,
+      id: instanceCounter++,
+      rootContainerInstance,
+      toJSON: () => isNaN(+inst.text) ? inst.text : +inst.text,
+    };
     // Hide from unit tests
     Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
     return inst;
@@ -245,16 +274,21 @@ var defaultTestOptions = {
 };
 
 var ReactTestFiberRenderer = {
-  create(element, options) {
+  create(element: ReactElement<any>, options: TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
     var container = new TestContainer('<default>', createNodeMock);
     var root = TestRenderer.createContainer(container);
-    TestRenderer.updateContainer(element, root, null, null);
+    if (root) {
+      TestRenderer.updateContainer(element, root, null, null);
+    }
     return {
       toJSON() {
+        if (root == null) {
+          return null;
+        }
         const hostInstance = TestRenderer.findHostInstance(root);
         if (hostInstance === null) {
           return hostInstance;
@@ -262,16 +296,25 @@ var ReactTestFiberRenderer = {
         return hostInstance.toJSON();
       },
 
-      update(newElement) {
+      update(newElement: ReactElement<any>) {
+        if (root == null) {
+          return;
+        }
         TestRenderer.updateContainer(newElement, root, null, null);
       },
       unmount() {
+        if (root == null) {
+          return;
+        }
         TestRenderer.updateContainer(null, root, null, () => {
           container = null;
           root = null;
         });
       },
       getInstance() {
+        if (root == null) {
+          return null;
+        }
         return TestRenderer.getPublicRootInstance(root);
       },
     };

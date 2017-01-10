@@ -47,7 +47,7 @@ export type HostConfig<T, P, I, TI, C, CX> = {
 
   getRootHostContext(rootContainerInstance : C) : CX,
   getChildHostContext(parentHostContext : CX, type : T) : CX,
-  getPublicInstance(instance : I) : I | any,
+  getPublicInstance(instance : I | TI) : any, // maybe add a PI (public instance type)?
 
   createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX, internalInstanceHandle : OpaqueNode) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,

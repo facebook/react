@@ -86,13 +86,6 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
-  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
-    const ref = finishedWork.ref;
-    if (ref && (!current || current.ref !== ref)) {
-      ref(getPublicInstance(instance));
-    }
-  }
-
   function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
     while (parent) {
@@ -470,7 +463,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
     const ref = finishedWork.ref;
     if (ref) {
-      const instance = finishedWork.stateNode;
+      const instance = getPublicInstance(finishedWork.stateNode);
       ref(instance);
     }
   }

@@ -1675,6 +1675,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * renders a simple component
 * renders a top-level empty component
 * exposes a type flag
+* can render a composite component
 * renders some basics with an update
 * exposes the instance
 * updates types
@@ -1685,7 +1686,6 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * allows an optional createNodeMock function
 * supports unmounting when using refs
 * supports unmounting inner instances
-* supports updates when using refs
 * supports error boundaries
 
 src/shared/utils/__tests__/KeyEscapeUtils-test.js
