@@ -35,7 +35,6 @@ var {
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
-  hostContext : HostContext<C, CX>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
 
@@ -437,8 +436,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         ) {
           const type = finishedWork.type;
           const props = finishedWork.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          commitMount(instance, type, props, rootContainerInstance, finishedWork);
+          commitMount(instance, type, props, finishedWork);
         }
 
         return;

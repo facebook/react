@@ -114,7 +114,6 @@ const NativeRenderer = ReactFiberReconciler({
     instance : Instance,
     type : string,
     newProps : Props,
-    rootContainerInstance : Object,
     internalInstanceHandle : Object
   ) : void {
     // Noop

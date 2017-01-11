@@ -227,7 +227,6 @@ var DOMRenderer = ReactFiberReconciler({
     domElement : Instance,
     type : string,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
     ((domElement : any) : HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).focus();

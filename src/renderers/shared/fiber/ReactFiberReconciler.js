@@ -55,7 +55,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, hostContext : CX) : null | PL,
   commitUpdate(instance : I, updatePayload : PL, type : T, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
-  commitMount(instance : I, type : T, newProps : P, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : void,
+  commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
