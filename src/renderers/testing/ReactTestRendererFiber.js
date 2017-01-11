@@ -26,30 +26,16 @@ type ReactTestRendererJSON = {
   $$typeof?: any
 }
 
-class TestContainer {
-  createNodeMock: Function;
+class TestBaseElement {
+  props : Object;
+  type : string;
+  children : Array<Instance | TextInstance>;
+  $$typeof : Symbol;
 
-  constructor(createNodeMock) {
-    this.createNodeMock = createNodeMock;
-  }
-  appendChild(child) {}
-  insertBefore(beforeChild, child) {}
-  removeChild(child) {}
-  toJSON() {}
-}
-
-class TestComponent {
-  props: Object;
-  type: string;
-  rootContainerInstance: TestContainer;
-  children: Array<Instance | TextInstance>;
-  $$typeof: Symbol;
-
-  constructor(type, props, rootContainerInstance) {
+  constructor(type, props) {
     this.type = type;
     this.props = props;
     this.children = [];
-    this.rootContainerInstance = rootContainerInstance;
 
     Object.defineProperty(this, '$$typeof', {
       value: Symbol.for('react.test.json'),
@@ -106,6 +92,24 @@ class TestComponent {
         : null;
     }
     return json;
+  }
+}
+
+class TestComponent extends TestBaseElement {
+  rootContainerInstance : TestContainer;
+
+  constructor(type, props, rootContainerInstance) {
+    super(type, props, rootContainerInstance);
+    this.rootContainerInstance = rootContainerInstance;
+  }
+}
+
+class TestContainer extends TestBaseElement {
+  createNodeMock : Function;
+
+  constructor(type, props, createNodeMock) {
+    super(type, props, null);
+    this.createNodeMock = createNodeMock;
   }
 }
 
@@ -260,7 +264,7 @@ var ReactTestFiberRenderer = {
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
-    var container = new TestContainer(createNodeMock);
+    var container = new TestContainer('root', {}, createNodeMock);
     var root = TestRenderer.createContainer(container);
     TestRenderer.updateContainer(element, root, null, null);
 
