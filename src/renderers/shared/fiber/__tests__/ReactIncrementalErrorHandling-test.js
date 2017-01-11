@@ -11,12 +11,14 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var React;
 var ReactNoop;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.mock('ReactFiberErrorLogger');
     React = require('React');
     ReactNoop = require('ReactNoop');
   });
@@ -935,4 +937,96 @@ describe('ReactIncrementalErrorHandling', () => {
     });
     expect(() => ReactNoop.flush()).toThrow('Error!');
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    describe('ReactFiberErrorLogger', () => {
+      function normalizeCodeLocInfo(str) {
+        return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+      }
+
+      let logCapturedErrorCalls;
+      let ReactFiberErrorLogger;
+
+      beforeEach(() => {
+        logCapturedErrorCalls = [];
+
+        ReactFiberErrorLogger = require('ReactFiberErrorLogger');
+        ReactFiberErrorLogger.logCapturedError.mockImplementation(
+          (capturedError) => {
+            logCapturedErrorCalls.push(capturedError);
+          }
+        );
+      });
+
+      it('should log errors that occur during the begin phase', () => {
+        class ErrorThrowingComponent extends React.Component {
+          componentWillMount() {
+            throw Error('componentWillMount error');
+          }
+          render() {
+            return <div/>;
+          }
+        }
+
+        try {
+          ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+          ReactNoop.flushDeferredPri();
+        } catch (error) {}
+
+        expect(logCapturedErrorCalls.length).toBe(1);
+        expect(logCapturedErrorCalls[0].error.message).toBe('componentWillMount error');
+        expect(normalizeCodeLocInfo(logCapturedErrorCalls[0].componentStack)).toContain(
+          '    in ErrorThrowingComponent (at **)\n' +
+          '    in span (at **)\n' +
+          '    in div (at **)'
+        );
+      });
+
+      it('should log errors that occur during the commit phase', () => {
+        class ErrorThrowingComponent extends React.Component {
+          componentDidMount() {
+            throw Error('componentDidMount error');
+          }
+          render() {
+            return <div/>;
+          }
+        }
+
+        try {
+          ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+          ReactNoop.flushDeferredPri();
+        } catch (error) {}
+
+        expect(logCapturedErrorCalls.length).toBe(1);
+        expect(logCapturedErrorCalls[0].error.message).toBe('componentDidMount error');
+        expect(normalizeCodeLocInfo(logCapturedErrorCalls[0].componentStack)).toContain(
+          '    in ErrorThrowingComponent (at **)\n' +
+          '    in span (at **)\n' +
+          '    in div (at **)'
+        );
+      });
+
+      it('should ignore errors thrown in log method to prevent cycle', () => {
+        class ErrorThrowingComponent extends React.Component {
+          render() {
+            throw Error('render error');
+          }
+        }
+
+        ReactFiberErrorLogger.logCapturedError.mockImplementation(
+          (capturedError) => {
+            logCapturedErrorCalls.push(capturedError);
+            throw Error('logCapturedError error');
+          }
+        );
+
+        try {
+          ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+          ReactNoop.flushDeferredPri();
+        } catch (error) {}
+
+        expect(logCapturedErrorCalls.length).toBe(1);
+      });
+    });
+  }
 });
