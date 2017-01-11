@@ -130,7 +130,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    * @param {*} value
    */
-  setValueForProperty: function(node, name, value) {
+  setValueForProperty: function(node, name, value, isCustomElement) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -161,6 +161,8 @@ var DOMPropertyOperations = {
     } else if (DOMProperty.isCustomAttribute(name)) {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
       return;
+    } else if (isCustomElement) {
+      node[name] = value;
     }
 
     if (__DEV__) {
@@ -218,7 +220,7 @@ var DOMPropertyOperations = {
    * @param {DOMElement} node
    * @param {string} name
    */
-  deleteValueForProperty: function(node, name) {
+  deleteValueForProperty: function(node, name, isCustomElement) {
     var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
         DOMProperty.properties[name] : null;
     if (propertyInfo) {
@@ -237,6 +239,8 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
+    } else if (isCustomElement) {
+      delete node[name];
     }
 
     if (__DEV__) {
