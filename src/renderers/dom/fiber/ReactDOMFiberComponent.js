@@ -727,12 +727,8 @@ var ReactDOMFiberComponent = {
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         var nextHtml = nextProp ? nextProp[HTML] : undefined;
         var lastHtml = lastProp ? lastProp[HTML] : undefined;
-        if (nextHtml) {
-          if (lastHtml) {
-            if (lastHtml !== nextHtml) {
-              (updatePayload = updatePayload || []).push(propKey, '' + nextHtml);
-            }
-          } else {
+        if (nextHtml != null) {
+          if (lastHtml !== nextHtml) {
             (updatePayload = updatePayload || []).push(propKey, '' + nextHtml);
           }
         } else {
