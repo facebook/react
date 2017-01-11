@@ -67,10 +67,9 @@ type HostContextDev = {
 };
 type HostContextProd = string;
 type HostContext = HostContextDev | HostContextProd;
-type CommitInfo = {
-  eventsEnabled: boolean,
-  selectionInformation: mixed,
-};
+
+let eventsEnabled : ?boolean = null;
+let selectionInformation : ?mixed = null;
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
@@ -138,18 +137,17 @@ var DOMRenderer = ReactFiberReconciler({
     return getChildNamespace(parentNamespace, type);
   },
 
-  prepareForCommit() : CommitInfo {
-    const eventsEnabled = ReactBrowserEventEmitter.isEnabled();
+  prepareForCommit() : void {
+    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
+    selectionInformation = ReactInputSelection.getSelectionInformation();
     ReactBrowserEventEmitter.setEnabled(false);
-    return {
-      eventsEnabled,
-      selectionInformation: ReactInputSelection.getSelectionInformation(),
-    };
   },
 
-  resetAfterCommit(commitInfo : CommitInfo) : void {
-    ReactInputSelection.restoreSelection(commitInfo.selectionInformation);
-    ReactBrowserEventEmitter.setEnabled(commitInfo.eventsEnabled);
+  resetAfterCommit() : void {
+    ReactInputSelection.restoreSelection(selectionInformation);
+    selectionInformation = null;
+    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+    eventsEnabled = null;
   },
 
   createInstance(

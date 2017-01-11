@@ -34,8 +34,8 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, C, CX, CI>(
-  config : HostConfig<T, P, I, TI, C, CX, CI>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
