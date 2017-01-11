@@ -641,6 +641,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should allow named slot projection on both web components and regular DOM elements
 * should skip reserved props on web components
 * should skip dangerouslySetInnerHTML on web components
+* should render null and undefined as empty but print other falsy values
 * should remove attributes
 * should remove properties
 * should properly update custom attributes on custom elements
