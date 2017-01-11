@@ -300,7 +300,7 @@ describe('ReactDOMComponent', () => {
       ).toBe(false);
     });
 
-    it('can dangerouslySetInnerHTML with falsy value.', () => {
+    it('should render null and undefined as empty but print other falsy values', () => {
       var container = document.createElement('div');
 
       ReactDOM.render(
@@ -316,16 +316,28 @@ describe('ReactDOMComponent', () => {
       expect(container.textContent).toEqual('0');
 
       ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: false}} />,
+        container
+      );
+      expect(container.textContent).toEqual('false');
+
+      ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: ''}} />,
         container
       );
       expect(container.textContent).toEqual('');
 
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: false}} />,
+        <div dangerouslySetInnerHTML={{__html: null}} />,
         container
       );
-      expect(container.textContent).toEqual('false');
+      expect(container.textContent).toEqual('');
+
+      ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: undefined}} />,
+        container
+      );
+      expect(container.textContent).toEqual('');
     });
 
     it('should remove attributes', () => {
