@@ -187,6 +187,26 @@ git commit -am 'Update shrinkwrap'
 
 If you’re feeling extra careful, you can run `npm test` again.
 
+### Update the Error Codes
+
+
+**This step is only necessary for a stable release.**  
+If you’re just cutting an alpha, you should skip it.
+
+Run this so that `scripts/error-codes/codes.json` is up to date:
+
+```
+gulp react:extract-errors
+```
+
+Check `git diff`. Do changes look sensible?
+
+Commit your changes:
+
+```
+git commit -am 'Update error codes'
+```
+
 ### Write the Changelog
 
 **This step is only necessary for a stable release.**  
