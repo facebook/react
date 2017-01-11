@@ -42,19 +42,17 @@ function BrickFlipbox() {
 ## Using React in your Web Components
 
 ```javascript
-const proto = Object.create(HTMLElement.prototype, {
-  attachedCallback: {
-    value: function() {
-      const mountPoint = document.createElement('span');
-      this.createShadowRoot().appendChild(mountPoint);
+class XSearch extends HTMLElement.prototype {
+  constructor() {
+    const mountPoint = document.createElement('span');
+    this.attachShadow({mode: 'open'}).appendChild(mountPoint);
 
-      const name = this.getAttribute('name');
-      const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
-      ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
-    }
+    const name = this.getAttribute('name');
+    const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
+    ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
   }
-});
-document.registerElement('x-search', {prototype: proto});
+}
+customElements.define('x-search', XSearch);
 ```
 
 You can also check out this [complete Web Components example on GitHub](https://github.com/facebook/react/tree/master/examples/webcomponents).
