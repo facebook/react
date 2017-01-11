@@ -49,9 +49,6 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should not count time in a portal towards lifecycle method
 * should work when measurement starts during reconciliation
 
-src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
-* can defer side-effects and reuse them later - complex
-
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * can be retrieved by ID
 
