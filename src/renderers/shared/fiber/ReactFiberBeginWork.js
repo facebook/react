@@ -71,8 +71,8 @@ if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
 
-module.exports = function<T, P, I, TI, C, CX, CI>(
-  config : HostConfig<T, P, I, TI, C, CX, CI>,
+module.exports = function<T, P, I, TI, C, CX>(
+  config : HostConfig<T, P, I, TI, C, CX>,
   hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
   getPriorityContext : () => PriorityLevel,
