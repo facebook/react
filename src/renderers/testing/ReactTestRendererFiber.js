@@ -168,7 +168,7 @@ var TestRenderer = ReactFiberReconciler({
   ) : void {
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
-      this.children.splice(index, 1);
+      parentInstance.children.splice(index, 1);
     }
     const beforeIndex = parentInstance.children.indexOf(beforeChild);
     parentInstance.children.splice(beforeIndex, 0, child);
