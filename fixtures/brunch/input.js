@@ -1,3 +1,5 @@
+'use strict';
+
 var React = require('react');
 var CSSTransitionGroup = require('react-addons-css-transition-group');
 var ReactDOM = require('react-dom');

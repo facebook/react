@@ -1,3 +1,5 @@
+'use strict';
+
 exports.config = {
   paths: {
     public: '.',

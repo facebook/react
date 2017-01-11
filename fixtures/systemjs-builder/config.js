@@ -1,3 +1,5 @@
+'use strict';
+
 System.config({
   paths: {
     react: '../../build/react-with-addons.js',
