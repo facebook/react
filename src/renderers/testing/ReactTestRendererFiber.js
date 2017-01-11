@@ -191,7 +191,7 @@ var TestRenderer = ReactFiberReconciler({
 
   useSyncScheduling: true,
 
-  getPublicInstance(inst) {
+  getPublicInstance(inst: Instance | TextInstance) : * {
     switch (inst.tag) {
       case 'INSTANCE':
         const createNodeMock = inst.rootContainerInstance.createNodeMock;

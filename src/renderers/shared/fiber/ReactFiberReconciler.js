@@ -170,7 +170,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
     deferredUpdates,
 
-    getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | TI | null) {
+    getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | PI | null) {
       const root : FiberRoot = (container.stateNode : any);
       const containerFiber = root.current;
       if (!containerFiber.child) {
