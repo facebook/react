@@ -19,35 +19,31 @@ var emptyObject = require('emptyObject');
 
 import type { TestRendererOptions } from 'ReactTestMount';
 
-var CONTAINER_TYPE = 'CONTAINER';
-var INSTANCE_TYPE = 'INSTANCE';
-var TEXT_TYPE = 'TEXT';
-
 type ReactTestRendererJSON = {|
-  type: string,
-  props: { [propName: string]: string },
-  children: null | Array<string | ReactTestRendererJSON>,
-  $$typeof?: any
+  type : string,
+  props : {[propName: string] : string },
+  children : null | Array<string | ReactTestRendererJSON>,
+  $$typeof ?: Symbol, // Optional because we add it with defineProperty().
 |};
 
 type Container = {|
-  children: Array<Instance | TextInstance>,
-  createNodeMock: Function,
-  $$typeof: typeof CONTAINER_TYPE,
+  children : Array<Instance | TextInstance>,
+  createNodeMock : Function,
+  $$typeof : 'CONTAINER',
 |};
 
 type Props = Object;
 type Instance = {|
-  type: string,
-  props: Object,
-  children: Array<Instance | TextInstance>,
-  rootContainerInstance: Container,
-  $$typeof: typeof INSTANCE_TYPE,
+  type : string,
+  props : Object,
+  children : Array<Instance | TextInstance>,
+  rootContainerInstance : Container,
+  $$typeof : 'INSTANCE',
 |};
 
 type TextInstance = {|
-  text: string,
-  $$typeof: typeof TEXT_TYPE,
+  text : string,
+  $$typeof : 'TEXT',
 |};
 
 var TestRenderer = ReactFiberReconciler({
@@ -79,7 +75,7 @@ var TestRenderer = ReactFiberReconciler({
       props,
       children: [],
       rootContainerInstance,
-      $$typeof: INSTANCE_TYPE,
+      $$typeof: 'INSTANCE',
     };
 
     return inst;
@@ -150,7 +146,7 @@ var TestRenderer = ReactFiberReconciler({
   ) : TextInstance {
     return {
       text,
-      $$typeof: TEXT_TYPE,
+      $$typeof: 'TEXT',
     };
   },
 
@@ -197,12 +193,12 @@ var TestRenderer = ReactFiberReconciler({
 
   getPublicInstance(ref) {
     switch (ref.$$typeof) {
-      case CONTAINER_TYPE:
+      case 'CONTAINER':
         return ref.createNodeMock(ref.children[0]);
-      case INSTANCE_TYPE:
+      case 'INSTANCE':
         const createNodeMock = ref.rootContainerInstance.createNodeMock;
         return createNodeMock(ref);
-      case TEXT_TYPE:
+      case 'TEXT':
         return ref.text;
       default:
         throw new Error('Attempted to getPublicInstance on an invalid ref.');
@@ -250,7 +246,7 @@ var ReactTestFiberRenderer = {
     var container = {
       children: [],
       createNodeMock,
-      $$typeof: CONTAINER_TYPE,
+      $$typeof: 'CONTAINER',
     };
     var root = TestRenderer.createContainer(container);
     TestRenderer.updateContainer(element, root, null, null);
