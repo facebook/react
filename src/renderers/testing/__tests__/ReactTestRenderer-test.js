@@ -118,7 +118,7 @@ describe('ReactTestRenderer', () => {
       type: 'div',
       props: { className: 'purple' },
       children: [
-        7,
+        ReactDOMFeatureFlags.useFiber ? '7' : 7,
         { type: 'moo', props: {}, children: null },
       ],
     });
@@ -494,7 +494,9 @@ describe('ReactTestRenderer', () => {
     renderer.update(<Component>{42}</Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      children: [42],
+      children: [
+        ReactDOMFeatureFlags.useFiber ? '42' : 42,
+      ],
       props: {},
     });
     renderer.update(<Component><div /></Component>);

@@ -210,7 +210,7 @@ var TestRenderer = ReactFiberReconciler({
     var inst = {
       text : text,
       rootContainerInstance,
-      toJSON: () => isNaN(+inst.text) ? inst.text : +inst.text,
+      toJSON: () => inst.text,
     };
     return inst;
   },
