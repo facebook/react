@@ -1538,6 +1538,7 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should throw on string refs in pure functions
 * should warn when given a string ref
 * should warn when given a function ref
+* deduplicates ref warnings based on element or owner
 * should provide a null ref
 * should use correct name in key warning
 * should support default props and prop types
