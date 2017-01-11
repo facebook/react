@@ -19,6 +19,10 @@ var emptyObject = require('emptyObject');
 
 import type { TestRendererOptions } from 'ReactTestMount';
 
+var CONTAINER_TYPE = 'CONTAINER';
+var INSTANCE_TYPE = 'INSTANCE';
+var TEXT_TYPE = 'TEXT';
+
 type ReactTestRendererJSON = {|
   type: string,
   props: { [propName: string]: string },
@@ -28,7 +32,8 @@ type ReactTestRendererJSON = {|
 
 type Container = {|
   children: Array<Instance | TextInstance>,
-  createNodeMock: Function
+  createNodeMock: Function,
+  $$typeof: typeof CONTAINER_TYPE,
 |};
 
 type Props = Object;
@@ -37,9 +42,13 @@ type Instance = {|
   props: Object,
   children: Array<Instance | TextInstance>,
   rootContainerInstance: Container,
-  $$typeof?: any
+  $$typeof: typeof INSTANCE_TYPE,
 |};
-type TextInstance = {|text: string|};
+
+type TextInstance = {|
+  text: string,
+  $$typeof: typeof TEXT_TYPE,
+|};
 
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext() {
@@ -70,11 +79,8 @@ var TestRenderer = ReactFiberReconciler({
       props,
       children: [],
       rootContainerInstance,
+      $$typeof: INSTANCE_TYPE,
     };
-
-    Object.defineProperty(inst, '$$typeof', {
-      value: Symbol.for('react.test.json'),
-    });
 
     return inst;
   },
@@ -142,7 +148,10 @@ var TestRenderer = ReactFiberReconciler({
     hostContext : Object,
     internalInstanceHandle : Object
   ) : TextInstance {
-    return {text};
+    return {
+      text,
+      $$typeof: TEXT_TYPE,
+    };
   },
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
@@ -168,17 +177,11 @@ var TestRenderer = ReactFiberReconciler({
       this.children.splice(index, 1);
     }
     const beforeIndex = parentInstance.children.indexOf(beforeChild);
-    if (beforeIndex === -1) {
-      throw new Error('This child does not exist.');
-    }
     parentInstance.children.splice(beforeIndex, 0, child);
   },
 
   removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     const index = parentInstance.children.indexOf(child);
-    if (index === -1) {
-      throw new Error('This child does not exist.');
-    }
     parentInstance.children.splice(index, 1);
   },
 
@@ -193,18 +196,17 @@ var TestRenderer = ReactFiberReconciler({
   useSyncScheduling: true,
 
   getPublicInstance(ref) {
-    if (typeof ref.text === 'string') {
-      return ref.text;
-    } else if (
-      typeof ref.rootContainerInstance === 'object' &&
-      typeof ref.rootContainerInstance.createNodeMock === 'function'
-    ) {
-      const createNodeMock = ref.rootContainerInstance.createNodeMock;
-      return createNodeMock(ref);
+    switch (ref.$$typeof) {
+      case CONTAINER_TYPE:
+        return ref.createNodeMock(ref.children[0]);
+      case INSTANCE_TYPE:
+        const createNodeMock = ref.rootContainerInstance.createNodeMock;
+        return createNodeMock(ref);
+      case TEXT_TYPE:
+        return ref.text;
+      default:
+        throw new Error('Attempted to getPublicInstance on an invalid ref.');
     }
-
-    // this should not be possible
-    throw new Error('Attempted to getPublicInstance on an invalid ref.');
   },
 
 });
@@ -245,7 +247,11 @@ var ReactTestFiberRenderer = {
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
-    var container = {children: [], createNodeMock};
+    var container = {
+      children: [],
+      createNodeMock,
+      $$typeof: CONTAINER_TYPE,
+    };
     var root = TestRenderer.createContainer(container);
     TestRenderer.updateContainer(element, root, null, null);
 
