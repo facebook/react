@@ -33,7 +33,7 @@
     "babel-plugin-transform-react-jsx-source": "^6.8.0",
     "babel-preset-react": "^6.5.0",
     "babel-traverse": "^6.9.0",
-    "babylon": "6.8.0",
+    "babylon": "6.15.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",

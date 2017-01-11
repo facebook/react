@@ -1675,6 +1675,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * renders a simple component
 * renders a top-level empty component
 * exposes a type flag
+* can render a composite component
 * renders some basics with an update
 * exposes the instance
 * updates types
@@ -1687,6 +1688,9 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * supports unmounting inner instances
 * supports updates when using refs
 * supports error boundaries
+* can update text nodes
+* can update text nodes when rendered as root
+* can render and update root fragments
 
 src/shared/utils/__tests__/KeyEscapeUtils-test.js
 * should properly escape and wrap user defined keys

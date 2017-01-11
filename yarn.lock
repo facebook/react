@@ -859,11 +859,9 @@ babel@^5.4.7:
     slash "^1.0.0"
     source-map "^0.5.0"
 
-babylon@6.8.0:
-  version "6.8.0"
-  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.8.0.tgz#c1057f7bf703620dc04ddb69cd59ade961b87cb0"
-  dependencies:
-    babel-runtime "^6.0.0"
+babylon@6.15.0:
+  version "6.15.0"
+  resolved "http://registry.yarnpkg.com/babylon/-/babylon-6.15.0.tgz#ba65cfa1a80e1759b0e89fb562e27dccae70348e"
 
 babylon@^5.8.38:
   version "5.8.38"

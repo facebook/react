@@ -137,6 +137,10 @@ var DOMRenderer = ReactFiberReconciler({
     return getChildNamespace(parentNamespace, type);
   },
 
+  getPublicInstance(instance) {
+    return instance;
+  },
+
   prepareForCommit() : void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     selectionInformation = ReactInputSelection.getSelectionInformation();
