@@ -270,14 +270,13 @@ var ReactTestFiberRenderer = {
 
     return {
       toJSON() {
-        if (root == null) {
+        if (root == null || container == null || container.children.length === 0) {
           return null;
         }
-        const hostInstance = TestRenderer.findHostInstance(root);
-        if (hostInstance === null) {
-          return hostInstance;
+        if (container.children.length === 1) {
+          return container.children[0].toJSON();
         }
-        return hostInstance.toJSON();
+        return container.children.map(child => child.toJSON());
       },
 
       update(newElement: ReactElement<any>) {
