@@ -22,14 +22,15 @@ import type { TestRendererOptions } from 'ReactTestMount';
 type ReactTestRendererJSON = {|
   type : string,
   props : {[propName: string] : string },
-  children : null | Array<string | ReactTestRendererJSON>,
+  children : null | Array<ReactTestRendererNode>,
   $$typeof ?: Symbol, // Optional because we add it with defineProperty().
 |};
+type ReactTestRendererNode = ReactTestRendererJSON | string;
 
 type Container = {|
   children : Array<Instance | TextInstance>,
   createNodeMock : Function,
-  $$typeof : 'CONTAINER',
+  tag : 'CONTAINER',
 |};
 
 type Props = Object;
@@ -38,12 +39,12 @@ type Instance = {|
   props : Object,
   children : Array<Instance | TextInstance>,
   rootContainerInstance : Container,
-  $$typeof : 'INSTANCE',
+  tag : 'INSTANCE',
 |};
 
 type TextInstance = {|
   text : string,
-  $$typeof : 'TEXT',
+  tag : 'TEXT',
 |};
 
 var TestRenderer = ReactFiberReconciler({
@@ -70,15 +71,13 @@ var TestRenderer = ReactFiberReconciler({
     hostContext : Object,
     internalInstanceHandle : Object,
   ) : Instance {
-    const inst : Instance = {
+    return {
       type,
       props,
       children: [],
       rootContainerInstance,
-      $$typeof: 'INSTANCE',
+      tag: 'INSTANCE',
     };
-
-    return inst;
   },
 
   appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
@@ -127,7 +126,7 @@ var TestRenderer = ReactFiberReconciler({
     rootContainerInstance : Object,
     internalInstanceHandle : Object
   ) : void {
-    // Noop
+    // noop
   },
 
   shouldSetTextContent(props : Props) : boolean {
@@ -135,7 +134,7 @@ var TestRenderer = ReactFiberReconciler({
   },
 
   resetTextContent(testElement : Instance) : void {
-    // Noop
+    // noop
   },
 
   createTextInstance(
@@ -146,7 +145,7 @@ var TestRenderer = ReactFiberReconciler({
   ) : TextInstance {
     return {
       text,
-      $$typeof: 'TEXT',
+      tag: 'TEXT',
     };
   },
 
@@ -156,7 +155,6 @@ var TestRenderer = ReactFiberReconciler({
 
   appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     const index = parentInstance.children.indexOf(child);
-
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
     }
@@ -185,26 +183,24 @@ var TestRenderer = ReactFiberReconciler({
     setTimeout(fn);
   },
 
-  scheduleDeferredCallback(fn: Function) : void {
+  scheduleDeferredCallback(fn : Function) : void {
     setTimeout(fn, 0, {timeRemaining: Infinity});
   },
 
   useSyncScheduling: true,
 
-  getPublicInstance(ref) {
-    switch (ref.$$typeof) {
-      case 'CONTAINER':
-        return ref.createNodeMock(ref.children[0]);
+  getPublicInstance(inst) {
+    switch (inst.tag) {
       case 'INSTANCE':
-        const createNodeMock = ref.rootContainerInstance.createNodeMock;
-        return createNodeMock(ref);
-      case 'TEXT':
-        return ref.text;
+        const createNodeMock = inst.rootContainerInstance.createNodeMock;
+        return createNodeMock({
+          type: inst.type,
+          props: inst.props,
+        });
       default:
-        throw new Error('Attempted to getPublicInstance on an invalid ref.');
+        return inst;
     }
   },
-
 });
 
 var defaultTestOptions = {
@@ -213,32 +209,34 @@ var defaultTestOptions = {
   },
 };
 
-const toJSON = (child : Instance | TextInstance) => {
-  if (typeof child.text === 'string') {
-    return child.text;
+function toJSON(inst : Instance | TextInstance) : ReactTestRendererNode {
+  switch (inst.tag) {
+    case 'TEXT':
+      return inst.text;
+    case 'INSTANCE':
+      /* eslint-disable no-unused-vars */
+      // We don't include the `children` prop in JSON.
+      // Instead, we will include the actual rendered children.
+      const {children, ...props} = inst.props;
+      /* eslint-enable */
+      let renderedChildren = null;
+      if (inst.children && inst.children.length) {
+        renderedChildren = inst.children.map(toJSON);
+      }
+      const json : ReactTestRendererJSON = {
+        type: inst.type,
+        props: props,
+        children: renderedChildren,
+      };
+      Object.defineProperty(json, '$$typeof', {value: Symbol.for('react.test.json')});
+      return json;
+    default:
+      throw new Error(`Unexpected node type in toJSON: ${inst.tag}`);
   }
-
-  const childInst : Instance = (child : any);
-  /* eslint-disable no-unused-vars */
-  /* ignoring the children prop and managing that ourselves*/
-  const {children, ...props} = childInst.props;
-  /* eslint-enable */
-  const json : ReactTestRendererJSON = {
-    type: childInst.type,
-    props: props,
-    children: null,
-  };
-  Object.defineProperty(json, '$$typeof', {value: Symbol.for('react.test.json')});
-  if (childInst.children !== null) {
-    json.children = childInst.children.length
-      ? childInst.children.map(toJSON)
-      : null;
-  }
-  return json;
-};
+}
 
 var ReactTestFiberRenderer = {
-  create(element: ReactElement<any>, options: TestRendererOptions) {
+  create(element : ReactElement<any>, options : TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
@@ -246,7 +244,7 @@ var ReactTestFiberRenderer = {
     var container = {
       children: [],
       createNodeMock,
-      $$typeof: 'CONTAINER',
+      tag: 'CONTAINER',
     };
     var root = TestRenderer.createContainer(container);
     TestRenderer.updateContainer(element, root, null, null);
@@ -264,8 +262,7 @@ var ReactTestFiberRenderer = {
         }
         return container.children.map(toJSON);
       },
-
-      update(newElement: ReactElement<any>) {
+      update(newElement : ReactElement<any>) {
         if (root == null) {
           return;
         }
