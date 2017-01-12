@@ -1127,8 +1127,19 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       const Component = returnFiber.type;
+      let validEmptyReturnType = newChild === null || newChild === false;
+
+      if (__DEV__) {
+        if (!validEmptyReturnType &&
+            returnFiber.tag === ClassComponent &&
+            returnFiber.stateNode.render._isMockFunction) {
+          // We allow auto-mocks to proceed as if they're returning null.
+          validEmptyReturnType = true;
+        }
+      }
+
       invariant(
-        newChild === null || newChild === false,
+        validEmptyReturnType,
         '%s.render(): A valid React element (or null) must be returned. You ' +
         'may have returned undefined, an array or some other invalid object.',
         Component.displayName || Component.name || 'Component'
@@ -1204,7 +1215,18 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case HostRoot:
           // TODO: Top-level render
           break;
-        case ClassComponent:
+        case ClassComponent: {
+          if (__DEV__) {
+            const instance = returnFiber.stateNode;
+            if (instance.render._isMockFunction) {
+              // We allow auto-mocks to proceed as if they're returning null.
+              break;
+            }
+          }
+        }
+        // Intentionally fall through to the next case, which handles both
+        // functions and classes
+        // eslint-disable-next-lined no-fallthrough
         case FunctionalComponent: {
           const Component = returnFiber.type;
           invariant(
