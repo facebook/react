@@ -974,6 +974,9 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(logCapturedErrorCalls.length).toBe(1);
       expect(logCapturedErrorCalls[0].error.message).toBe('componentWillMount error');
       expect(logCapturedErrorCalls[0].componentName).toBe('ErrorThrowingComponent');
+      expect(logCapturedErrorCalls[0].errorBoundaryName).toBe(null);
+      expect(logCapturedErrorCalls[0].errorBoundaryFound).toBe(false);
+      expect(logCapturedErrorCalls[0].willRetry).toBe(false);
       expect(normalizeCodeLocInfo(logCapturedErrorCalls[0].componentStack)).toContain(
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
@@ -999,11 +1002,62 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(logCapturedErrorCalls.length).toBe(1);
       expect(logCapturedErrorCalls[0].error.message).toBe('componentDidMount error');
       expect(logCapturedErrorCalls[0].componentName).toBe('ErrorThrowingComponent');
+      expect(logCapturedErrorCalls[0].errorBoundaryName).toBe(null);
+      expect(logCapturedErrorCalls[0].errorBoundaryFound).toBe(false);
+      expect(logCapturedErrorCalls[0].willRetry).toBe(false);
       expect(normalizeCodeLocInfo(logCapturedErrorCalls[0].componentStack)).toContain(
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
         '    in div (at **)'
       );
+    });
+
+    it('should relay info about error boundary and retry attempts if applicable', () => {
+      class ParentComponent extends React.Component {
+        render() {
+          return <ErrorBoundaryComponent/>;
+        }
+      }
+
+      let handleErrorCalls = [];
+      let renderAttempts = 0;
+
+      class ErrorBoundaryComponent extends React.Component {
+        unstable_handleError(error) {
+          handleErrorCalls.push(error);
+          this.setState({}); // Render again
+        }
+        render() {
+          return <ErrorThrowingComponent/>;
+        }
+      }
+
+      class ErrorThrowingComponent extends React.Component {
+        componentDidMount() {
+          throw Error('componentDidMount error');
+        }
+        render() {
+          renderAttempts++;
+          return <div/>;
+        }
+      }
+
+      try {
+        ReactNoop.render(<ParentComponent/>);
+        ReactNoop.flush();
+      } catch (error) {}
+
+      expect(renderAttempts).toBe(2);
+      expect(handleErrorCalls.length).toBe(1);
+      expect(logCapturedErrorCalls.length).toBe(2);
+      expect(logCapturedErrorCalls[0].error.message).toBe('componentDidMount error');
+      expect(logCapturedErrorCalls[0].errorBoundaryName).toBe('ErrorBoundaryComponent');
+      expect(logCapturedErrorCalls[0].errorBoundaryFound).toBe(true);
+      expect(logCapturedErrorCalls[0].willRetry).toBe(true);
+      expect(logCapturedErrorCalls[1].error.message).toBe('componentDidMount error');
+      expect(logCapturedErrorCalls[1].errorBoundaryName).toBe('ErrorBoundaryComponent');
+      expect(logCapturedErrorCalls[1].errorBoundaryFound).toBe(true);
+      expect(logCapturedErrorCalls[1].willRetry).toBe(false);
     });
 
     it('should ignore errors thrown in log method to prevent cycle', () => {

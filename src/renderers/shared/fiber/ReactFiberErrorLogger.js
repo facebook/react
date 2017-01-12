@@ -8,7 +8,7 @@
  *
  * @providesModule ReactFiberErrorLogger
  * @flow
- */3
+ */
 
 'use strict';
 
@@ -16,13 +16,49 @@ import type { CapturedError } from 'ReactFiberScheduler';
 
 function logCapturedError(capturedError : CapturedError) : void {
   if (__DEV__) {
-    const { componentName, componentStack, error } = capturedError;
-    // TODO Link to unstable_handleError() documentation once it exists.
+    const {
+      componentName,
+      componentStack,
+      error,
+      errorBoundaryName,
+      errorBoundaryFound,
+      willRetry,
+    } = capturedError;
+
+    const componentNameMessage = componentName
+      ? `React caught an error thrown by ${componentName}.`
+      : 'React caught an error thrown by one of your components.';
+
+    let errorBoundaryMessage;
+    if (errorBoundaryFound) {
+      // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
+      if (willRetry) {
+        errorBoundaryMessage =
+          `This error will be handled by the error boundary ${errorBoundaryName || ''}. ` +
+          `React will try to recreate this component tree from scratch.`;
+      } else {
+        errorBoundaryMessage =
+          `This error was initially handled by the error boundary ${errorBoundaryName || ''}. ` +
+          `Recreating the tree from scratch failed so React will unmount the tree.`;
+      }
+    } else {
+      // TODO Link to unstable_handleError() documentation once it exists.
+      errorBoundaryMessage =
+        'Consider adding an error boundary to your tree to customize error handling behavior.';
+    }
+
     console.error(
-      `React caught an error thrown by ${componentName}. ` +
-      `Consider using an error boundary to capture this and other errors.\n\n` +
-      `${error}\n\n` +
+      `${componentNameMessage} You should fix this error in your code.\n\n` +
+      `${errorBoundaryMessage}\n\n` +
+      `${error.stack}\n\n` +
       `The error was thrown in the following location: ${componentStack}`
+    );
+  }
+
+  if (!__DEV__) {
+    const { error } = capturedError;
+    console.error(
+      `React caught an error thrown by one of your components.\n\n${error.stack}`
     );
   }
 }

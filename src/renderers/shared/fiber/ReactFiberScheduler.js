@@ -18,9 +18,12 @@ import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 export type CapturedError = {
-  componentName: string,
-  componentStack: string,
-  error: Error,
+  componentName : ?string,
+  componentStack : string,
+  error : Error,
+  errorBoundaryFound : boolean,
+  errorBoundaryName : ?string,
+  willRetry : boolean,
 };
 
 var {
@@ -825,6 +828,12 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
 
     // Search for the nearest error boundary.
     let boundary : ?Fiber = null;
+
+    // Passed to logCapturedError()
+    let errorBoundaryFound : boolean = false;
+    let willRetry : boolean = false;
+    let errorBoundaryName : ?string = null;
+
     // Host containers are a special case. If the failed work itself is a host
     // container, then it acts as its own boundary. In all other cases, we
     // ignore the work itself and only search through the parents.
@@ -843,6 +852,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         if (node.tag === ClassComponent) {
           const instance = node.stateNode;
           if (typeof instance.unstable_handleError === 'function') {
+            errorBoundaryFound = true;
+            errorBoundaryName = getComponentName(node);
+
             if (isFailedBoundary(node)) {
               // This boundary is already in a failed state. The error should
               // propagate to the next boundary — except in the
@@ -869,6 +881,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
             } else {
               // Found an error boundary!
               boundary = node;
+              willRetry = true;
             }
           }
         } else if (node.tag === HostRoot) {
@@ -892,7 +905,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // The risk is that the return path from this Fiber may not be accurate.
       // That risk is acceptable given the benefit of providing users more context.
       const componentStack = getStackAddendumByWorkInProgressFiber(failedWork);
-      const componentName = getComponentName(failedWork) || 'Unknown';
+      const componentName = getComponentName(failedWork);
 
       // Add to the collection of captured errors. This is stored as a global
       // map of errors and their component stack location keyed by the boundaries
@@ -905,6 +918,9 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         componentName,
         componentStack,
         error,
+        errorBoundaryFound,
+        errorBoundaryName,
+        willRetry,
       });
 
       // If we're in the commit phase, defer scheduling an update on the
