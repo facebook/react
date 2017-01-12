@@ -8,8 +8,6 @@
   "dependencies": {
     "dagre": "^0.7.4",
     "pretty-format": "^4.2.1",
-    "react": "^15.4.2",
-    "react-dom": "^15.4.2",
     "react-draggable": "^2.2.2",
     "react-motion": "^0.4.5"
   },

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Draggable from 'react-draggable';
-import ReactNoop from '../../../../build/packages/react-noop-renderer';
-import ReactFiberInstrumentation from '../../../../build/packages/react-noop-renderer/lib/ReactFiberInstrumentation';
+import ReactNoop from 'react-noop-renderer';
+import ReactFiberInstrumentation from 'react-noop-renderer/lib/ReactFiberInstrumentation';
 import Editor from './Editor';
 import Fibers from './Fibers';
 import describeFibers from './describeFibers';
