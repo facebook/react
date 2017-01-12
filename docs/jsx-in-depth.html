@@ -309,21 +309,21 @@
 </span><span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="functions-as-children"></a>Functions as Children <a class="hash-link" href="#functions-as-children">#</a></h3>
 <p>Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, <code>props.children</code> works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as <code>props.children</code>:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">ListOfTenThings</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Calls the children callback numTimes to produce a repeated component</span>
+<span class="kd">function</span> <span class="nx">Repeat</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="hll">  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">props</span><span class="p">.</span><span class="nx">numTimes</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span>    <span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">(</span><span class="nx">i</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">items</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">ListOfTenThings</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
     <span class="o">&lt;</span><span class="nx">Repeat</span> <span class="nx">numTimes</span><span class="o">=</span><span class="p">{</span><span class="mi">10</span><span class="p">}</span><span class="o">&gt;</span>
 <span class="hll">      <span class="p">{(</span><span class="nx">index</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">index</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">This</span> <span class="nx">is</span> <span class="nx">item</span> <span class="p">{</span><span class="nx">index</span><span class="p">}</span> <span class="k">in</span> <span class="nx">the</span> <span class="nx">list</span><span class="o">&lt;</span><span class="err">/div&gt;}</span>
 </span>    <span class="o">&lt;</span><span class="err">/Repeat&gt;</span>
   <span class="p">);</span>
-<span class="p">}</span>
-
-<span class="c1">// Calls the children callback numTimes to produce a repeated component</span>
-<span class="kd">function</span> <span class="nx">Repeat</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">let</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">[];</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">props</span><span class="p">.</span><span class="nx">numTimes</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="nx">items</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">(</span><span class="nx">i</span><span class="p">));</span>
-</span>  <span class="p">}</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">items</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Children passed to a custom component can be anything, as long as that component transforms them into something React can understand before rendering. This usage is not common, but it works if you want to stretch what JSX is capable of.</p>

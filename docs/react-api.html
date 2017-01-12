@@ -164,7 +164,7 @@
 <blockquote>
 <p>Note</p>
 
-<p><code>React.PureComponent</code>&#39;s <code>shouldComponentUpdate()</code> only shallowly compares the objects. If these contain complex data structures, it may produce false-negatives for deeper differences. Only mix into components which have simple props and state, or use <a href="/react/docs/react-component.html#forceupdate"><code>forceUpdate()</code></a> when you know deep data structures have changed. Or, consider using <a href="https://facebook.github.io/immutable-js/">immutable objects</a> to facilitate fast comparisons of nested data.</p>
+<p><code>React.PureComponent</code>&#39;s <code>shouldComponentUpdate()</code> only shallowly compares the objects. If these contain complex data structures, it may produce false-negatives for deeper differences. Only extend <code>PureComponent</code> when you expect to have simple props and state, or use <a href="/react/docs/react-component.html#forceupdate"><code>forceUpdate()</code></a> when you know deep data structures have changed. Or, consider using <a href="https://facebook.github.io/immutable-js/">immutable objects</a> to facilitate fast comparisons of nested data.</p>
 
 <p>Furthermore, <code>React.PureComponent</code>&#39;s <code>shouldComponentUpdate()</code> skips prop updates for the whole component subtree. Make sure all the children components are also &quot;pure&quot;.</p>
 </blockquote>

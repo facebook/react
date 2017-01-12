@@ -198,7 +198,7 @@
 </code></pre></div>
 <p>Use <code>shouldComponentUpdate()</code> to let React know if a component&#39;s output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.</p>
 
-<p><code>shouldComponentUpdate()</code> is invoked before rendering when new props or state are being received. Defaults to <code>true</code> This method is not called for the initial render or when <code>forceUpdate()</code> is used.</p>
+<p><code>shouldComponentUpdate()</code> is invoked before rendering when new props or state are being received. Defaults to <code>true</code>. This method is not called for the initial render or when <code>forceUpdate()</code> is used.</p>
 
 <p>Returning <code>false</code> does not prevent child components from re-rendering when <em>their</em> state changes.</p>
 
