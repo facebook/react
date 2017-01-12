@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Draggable from 'react-draggable';
-import ReactNoop from '../../../../build/packages/react-noop-renderer';
-import ReactFiberInstrumentation from '../../../../build/packages/react-noop-renderer/lib/ReactFiberInstrumentation';
+import ReactNoop from 'react-noop-renderer';
+import ReactFiberInstrumentation from 'react-noop-renderer/lib/ReactFiberInstrumentation';
 import Editor from './Editor';
 import Fibers from './Fibers';
 import describeFibers from './describeFibers';
@@ -27,7 +27,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      code: defaultCode,
+      code: localStorage.getItem('fiber-debugger-code') || defaultCode,
       isEditing: false,
       history: [],
       currentStep: 0,
@@ -51,6 +51,9 @@ class App extends Component {
     let currentStage;
     let currentRoot;
 
+    ReactFiberInstrumentation.debugTool = null;
+    ReactNoop.render(null);
+    ReactNoop.flush();
     ReactFiberInstrumentation.debugTool = {
       onMountContainer: (root) => {
         currentRoot = root;
@@ -128,6 +131,7 @@ class App extends Component {
   }
 
   handleCloseEdit = (nextCode) => {
+    localStorage.setItem('fiber-debugger-code', nextCode);
     this.setState({
       isEditing: false,
       history: [],

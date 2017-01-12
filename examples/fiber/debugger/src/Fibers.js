@@ -116,6 +116,10 @@ function Graph(props) {
 }
 
 function Vertex(props) {
+  if (Number.isNaN(props.x) || Number.isNaN(props.y)) {
+    return null;
+  }
+
   return (
     <div style={{
       position: 'absolute',
