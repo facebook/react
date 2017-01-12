@@ -1014,20 +1014,25 @@ describe('ReactDOMFiber', () => {
         ReactFeatureFlags.disableNewFiberFeatures = false;
       });
 
+      it('throws if non-element passed to top-level render', () => {
+        const message = 'render(): Invalid component element.';
+
+        expect(() => ReactDOM.render(null, container)).toThrow(message, container);
+        expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
+        expect(() => ReactDOM.render(false, container)).toThrow(message, container);
+        expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
+        expect(() => ReactDOM.render(999, container)).toThrow(message, container);
+        expect(() => ReactDOM.render([<div />], container)).toThrow(message, container);
+      });
+
       it('throws if something other than false, null, or an element is returned from render', () => {
         function Render(props) {
           return props.children;
         }
 
-        const message = (
-          'Warning: Render.render(): A valid React element (or null) must ' +
-          'be returned. You may have returned undefined, an array or some ' +
-          'other invalid object.'
-        );
-
-        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(message);
-        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(message);
-        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(message);
+        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/Render\.render/);
+        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/Render\.render/);
+        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/Render\.render/);
       });
     });
   }
