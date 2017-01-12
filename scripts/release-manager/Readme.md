@@ -141,6 +141,29 @@ You can fix them in a separate commit.
 
 **Tip:** tests might also be failing if dependency versions are incorrect. You might want to run `yarn` first since sometimes `package.json` on master is different from the stable branches.
 
+### Update the Error Codes
+
+**This step is only necessary for a stable release.**  
+If you’re just cutting an alpha, you should skip it.
+
+Run this so that `scripts/error-codes/codes.json` is up to date:
+
+```
+./node_modules/.bin/gulp react:extract-errors
+```
+
+Check `git diff`. Do changes, if any, look sensible?
+
+If there are any changes, commit them:
+
+```
+git commit -am 'Update error codes'
+```
+
+You will see the commit hash. Copy it in your editor. You will need it later to cherry-pick the error codes update to master.
+
+If there were no changes, it’s also fine.
+
 ### Push and Choose the Branch
 
 If you followed the guide correctly (and ran `start-release` in the beginning), you should be on a “stable development” branch such as `15-dev`. Now is a good time to push the development branch:
@@ -316,6 +339,33 @@ Now it’s time to switch our working copy to `master` and cherry-pick it:
 git checkout master
 git pull
 git cherry-pick <hash of the changelog commit>
+```
+
+Verify you picked the right commit:
+
+```
+git diff HEAD~
+```
+
+Looks good? Push it.
+
+```
+git push
+```
+
+### Cherry-Pick the Error Codes
+
+**This step is only necessary for a stable release.**  
+If you’re just cutting an alpha, you should skip it.
+
+If error codes were updated, you were supposed to commit that earlier and record the commit hash.
+
+Did this happen?
+
+If so, cherry-pick it to `master` as well:
+
+```
+git cherry-pick <hash of the error codes update commit>
 ```
 
 Verify you picked the right commit:
