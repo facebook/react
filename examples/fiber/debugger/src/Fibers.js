@@ -58,17 +58,26 @@ function Graph(props) {
 
   dagre.layout(g);
 
+  var activeNode = g.nodes().map(v => g.node(v)).find(node =>
+    node.label.props.isActive
+  );
+  const [winX, winY] = [window.innerWidth / 2, window.innerHeight / 2]
+  var focusDx = activeNode ? (winX - activeNode.x) : 0;
+  var focusDy = activeNode ? (winY - activeNode.y) : 0;
+
   var nodes = g.nodes().map(v => {
     var node = g.node(v);
     return (
       <Motion style={{
-        x: props.isDragging ? node.x : spring(node.x),
-        y: props.isDragging ? node.y : spring(node.y)
+        x: props.isDragging ? node.x + focusDx : spring(node.x + focusDx),
+        y: props.isDragging ? node.y + focusDy : spring(node.y + focusDy)
       }} key={node.label.key}>
         {interpolatingStyle =>
           React.cloneElement(node.label, {
             x: interpolatingStyle.x + props.dx,
-            y: interpolatingStyle.y + props.dy
+            y: interpolatingStyle.y + props.dy,
+            vanillaX: node.x,
+            vanillaY: node.y,
           })
         }
       </Motion>
@@ -80,8 +89,8 @@ function Graph(props) {
     let idx = 0;
     return (
       <Motion style={edge.points.reduce((bag, point) => {
-        bag[idx + ':x'] = props.isDragging ? point.x : spring(point.x);
-        bag[idx + ':y'] = props.isDragging ? point.y : spring(point.y);
+        bag[idx + ':x'] = props.isDragging ? point.x + focusDx : spring(point.x + focusDx);
+        bag[idx + ':y'] = props.isDragging ? point.y + focusDy : spring(point.y + focusDy);
         idx++;
         return bag;
       }, {})} key={edge.label.key}>
@@ -131,7 +140,9 @@ function Vertex(props) {
       overflow: 'hidden',
       padding: '4px',
       wordWrap: 'break-word'
-    }} {...props} />
+    }}>
+      {props.children}
+    </div>
   );
 }
 Vertex.isVertex = true;
@@ -196,6 +207,25 @@ function Edge(props) {
 }
 Edge.isEdge = true;
 
+function formatPriority(priority) {
+  switch (priority) {
+    case 1:
+      return 'synchronous';
+    case 2:
+      return 'task';
+    case 3:
+      return 'animation';
+    case 4:
+      return 'hi-pri work';
+    case 5:
+      return 'lo-pri work';
+    case 6:
+      return 'offscreen work';
+    default:
+      throw new Error('Unknown priority.');
+  }
+}
+
 export default function Fibers({ fibers, show, ...rest }) {
   const items = Object.keys(fibers.descriptions).map(id =>
     fibers.descriptions[id]
@@ -216,12 +246,18 @@ export default function Fibers({ fibers, show, ...rest }) {
       ...rest.style,
       transform: null
     }}>
-      <Graph className="graph" dx={dx} dy={dy} isDragging={isDragging}>
+      <Graph
+        className="graph"
+        dx={dx}
+        dy={dy}
+        isDragging={isDragging}
+      >
         {items.map(fiber => [
           <Vertex
             key={fiber.id}
             width={200}
-            height={100}>
+            height={100}
+            isActive={fiber.id === fibers.workInProgressID}>
             <div
               style={{
                 width: '100%',
@@ -233,7 +269,33 @@ export default function Fibers({ fibers, show, ...rest }) {
               <br />
               {fiber.type}
               <br />
-              <small>Priority: {fiber.pendingWorkPriority} pend, {fiber.progressedPriority} prog</small>
+              {fibers.currentIDs.indexOf(fiber.id) === -1 ?
+                <small>
+                  {fiber.pendingWorkPriority !== 0 && [
+                    <span style={{
+                      fontWeight: fiber.pendingWorkPriority <= fiber.progressedPriority ?
+                        'bold' :
+                        'normal'
+                    }}>
+                      Needs: {formatPriority(fiber.pendingWorkPriority)}
+                    </span>,
+                    <br />
+                  ]}
+                  {fiber.progressedPriority !== 0 && [
+                    `Finished: ${formatPriority(fiber.progressedPriority)}`,
+                    <br />
+                  ]}
+                  {fiber.memoizedProps !== null && fiber.pendingProps !== null && [
+                    fiber.memoizedProps === fiber.pendingProps ?
+                      'Can reuse memoized.' :
+                      'Cannot reuse memoized.',
+                    <br />
+                  ]}
+                </small> :
+                <small>
+                  Committed
+                </small>
+              }
             </div>
           </Vertex>,
           fiber.child && show.child &&
