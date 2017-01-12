@@ -385,4 +385,32 @@ describe('ReactCompositeComponent-state', () => {
       'child render two',
     ]);
   });
+
+  it('should merge state when sCU returns false', function() {
+    const log = [];
+    class Test extends React.Component {
+      state = {a: 0};
+      render() {
+        return null;
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        log.push(
+          'scu from ' + Object.keys(this.state) +
+          ' to ' + Object.keys(nextState)
+        );
+        return false;
+      }
+    }
+
+    const container = document.createElement('div');
+    const test = ReactDOM.render(<Test />, container);
+    test.setState({b: 0});
+    expect(log.length).toBe(1);
+    test.setState({c: 0});
+    expect(log.length).toBe(2);
+    expect(log).toEqual([
+      'scu from a to a,b',
+      'scu from a,b to a,b,c',
+    ]);
+  });
 });
