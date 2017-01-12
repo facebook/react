@@ -34,8 +34,8 @@ function logCapturedError(capturedError : CapturedError) : void {
       // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
       if (willRetry) {
         errorBoundaryMessage =
-          `This error will be handled by the error boundary ${errorBoundaryName || ''}. ` +
-          `React will try to recreate this component tree from scratch.`;
+          `React will try to recreate this component tree from scratch ` +
+          `using the error boundary you provided, ${errorBoundaryName || ''}.`;
       } else {
         errorBoundaryMessage =
           `This error was initially handled by the error boundary ${errorBoundaryName || ''}. ` +
@@ -48,8 +48,7 @@ function logCapturedError(capturedError : CapturedError) : void {
     }
 
     console.error(
-      `${componentNameMessage} You should fix this error in your code.\n\n` +
-      `${errorBoundaryMessage}\n\n` +
+      `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
       `${error.stack}\n\n` +
       `The error was thrown in the following location: ${componentStack}`
     );
