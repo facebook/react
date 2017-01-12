@@ -29,7 +29,7 @@ The development build includes extra warnings that are helpful when building you
 
 ## Profiling Components with Chrome Timeline
 
-In development mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example
+In the **development** mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:
 
 <center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center>
 
@@ -45,7 +45,7 @@ To do this in Chrome:
 
 5. React events will be grouped under the **User Timing** label.
 
-Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.
+Note that **the numbers are relative so components will render faster in production**. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.
 
 Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) so we expect more browsers to add support for it.
 
