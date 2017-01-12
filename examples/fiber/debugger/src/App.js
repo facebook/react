@@ -27,7 +27,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      code: defaultCode,
+      code: localStorage.getItem('fiber-debugger-code') || defaultCode,
       isEditing: false,
       history: [],
       currentStep: 0,
@@ -131,6 +131,7 @@ class App extends Component {
   }
 
   handleCloseEdit = (nextCode) => {
+    localStorage.setItem('fiber-debugger-code', nextCode);
     this.setState({
       isEditing: false,
       history: [],
