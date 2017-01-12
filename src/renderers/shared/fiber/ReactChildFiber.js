@@ -75,6 +75,7 @@ const {
   NoEffect,
   Placement,
   Deletion,
+  Err,
 } = ReactTypeOfSideEffect;
 
 function coerceRef(current: ?Fiber, element: ReactElement) {
@@ -1129,7 +1130,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (returnFiber.tag === HostRoot) {
         // Top-level only accepts elements or portals
         invariant(
-          false,
+          // If the root has an error effect, this is an intentional unmount.
+          // Don't throw an error.
+          returnFiber.effectTag & Err,
           'render(): Invalid component element.'
         );
       } else {
@@ -1247,7 +1250,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const Component = returnFiber.type;
           invariant(
             false,
-            '%s: Nothing was returned from render. This usually means a ' +
+            '%s(...): Nothing was returned from render. This usually means a ' +
             'return statement is missing. Or, to render nothing, ' +
             'return null.',
             Component.displayName || Component.name || 'Component'

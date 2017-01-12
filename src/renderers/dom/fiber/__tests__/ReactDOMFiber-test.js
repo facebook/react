@@ -1015,8 +1015,10 @@ describe('ReactDOMFiber', () => {
       });
 
       it('throws if non-element passed to top-level render', () => {
+        // FIXME: These assertions pass individually, but they leave React in
+        // an inconsistent state. This suggests an error-handling bug. I'll fix
+        // this in a separate PR.
         const message = 'render(): Invalid component element.';
-
         expect(() => ReactDOM.render(null, container)).toThrow(message, container);
         expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
         expect(() => ReactDOM.render(false, container)).toThrow(message, container);
@@ -1030,9 +1032,9 @@ describe('ReactDOMFiber', () => {
           return props.children;
         }
 
-        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/Render\.render/);
-        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/Render\.render/);
-        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/Render\.render/);
+        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You may have returned undefined/);
+        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
+        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
       });
     });
   }
