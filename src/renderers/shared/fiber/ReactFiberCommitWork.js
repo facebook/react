@@ -34,8 +34,8 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, C, CX>(
-  config : HostConfig<T, P, I, TI, C, CX>,
+module.exports = function<T, P, I, TI, PI, C, CX>(
+  config : HostConfig<T, P, I, TI, PI, C, CX>,
   hostContext : HostContext<C, CX>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
@@ -48,6 +48,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     appendChild,
     insertBefore,
     removeChild,
+    getPublicInstance,
   } = config;
 
   const {
@@ -462,7 +463,7 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
     const ref = finishedWork.ref;
     if (ref) {
-      const instance = finishedWork.stateNode;
+      const instance = getPublicInstance(finishedWork.stateNode);
       ref(instance);
     }
   }

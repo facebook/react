@@ -641,6 +641,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should allow named slot projection on both web components and regular DOM elements
 * should skip reserved props on web components
 * should skip dangerouslySetInnerHTML on web components
+* should render null and undefined as empty but print other falsy values
 * should remove attributes
 * should remove properties
 * should properly update custom attributes on custom elements
@@ -1675,6 +1676,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * renders a simple component
 * renders a top-level empty component
 * exposes a type flag
+* can render a composite component
 * renders some basics with an update
 * exposes the instance
 * updates types
@@ -1687,6 +1689,9 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * supports unmounting inner instances
 * supports updates when using refs
 * supports error boundaries
+* can update text nodes
+* can update text nodes when rendered as root
+* can render and update root fragments
 
 src/shared/utils/__tests__/KeyEscapeUtils-test.js
 * should properly escape and wrap user defined keys
