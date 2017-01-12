@@ -1002,5 +1002,33 @@ describe('ReactDOMFiber', () => {
         container
       );
     });
+
+    describe('disableNewFiberFeatures', () => {
+      var ReactFeatureFlags = require('ReactFeatureFlags');
+
+      beforeEach(() => {
+        ReactFeatureFlags.disableNewFiberFeatures = true;
+      });
+
+      afterEach(() => {
+        ReactFeatureFlags.disableNewFiberFeatures = false;
+      });
+
+      it('throws if something other than false, null, or an element is returned from render', () => {
+        function Render(props) {
+          return props.children;
+        }
+
+        const message = (
+          'Warning: Render.render(): A valid React element (or null) must ' +
+          'be returned. You may have returned undefined, an array or some ' +
+          'other invalid object.'
+        );
+
+        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(message);
+        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(message);
+        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(message);
+      });
+    });
   }
 });

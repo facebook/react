@@ -36,6 +36,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
@@ -1099,6 +1100,39 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // If the top level item is an array, we treat it as a set of children,
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
+
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      // Support only the subset of return types that Stack supports. Treat
+      // everything else as empty, but log a warning.
+      if (typeof newChild === 'object' && newChild !== null) {
+        switch (newChild.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+            return placeSingleChild(reconcileSingleElement(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_PORTAL_TYPE:
+            return placeSingleChild(reconcileSinglePortal(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+        }
+      }
+
+      const Component = returnFiber.type;
+      invariant(
+        newChild === null || newChild === false,
+        '%s.render(): A valid React element (or null) must be returned. You ' +
+        'may have returned undefined, an array or some other invalid object.',
+        Component.displayName || Component.name || 'Component'
+      );
+      return deleteRemainingChildren(returnFiber, currentFirstChild);
+    }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       return placeSingleChild(reconcileSingleTextNode(
