@@ -36,6 +36,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
@@ -60,8 +61,10 @@ const {
 const isArray = Array.isArray;
 
 const {
+  FunctionalComponent,
   ClassComponent,
   HostText,
+  HostRoot,
   HostPortal,
   CoroutineComponent,
   YieldComponent,
@@ -72,6 +75,7 @@ const {
   NoEffect,
   Placement,
   Deletion,
+  Err,
 } = ReactTypeOfSideEffect;
 
 function coerceRef(current: ?Fiber, element: ReactElement) {
@@ -1100,6 +1104,68 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      // Support only the subset of return types that Stack supports. Treat
+      // everything else as empty, but log a warning.
+      if (typeof newChild === 'object' && newChild !== null) {
+        switch (newChild.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+            return placeSingleChild(reconcileSingleElement(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_PORTAL_TYPE:
+            return placeSingleChild(reconcileSinglePortal(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+        }
+      }
+
+      if (returnFiber.tag === HostRoot) {
+        // Top-level only accepts elements or portals
+        invariant(
+          // If the root has an error effect, this is an intentional unmount.
+          // Don't throw an error.
+          returnFiber.effectTag & Err,
+          'render(): Invalid component element.'
+        );
+      } else {
+        switch (returnFiber.tag) {
+          case ClassComponent: {
+            if (__DEV__) {
+              const instance = returnFiber.stateNode;
+              if (instance.render._isMockFunction) {
+                // We allow auto-mocks to proceed as if they're
+                // returning null.
+                break;
+              }
+            }
+          }
+          // Intentionally fall through to the next case, which handles both
+          // functions and classes
+          // eslint-disable-next-lined no-fallthrough
+          case FunctionalComponent: {
+            // Composites accept elements, portals, null, or false
+            const Component = returnFiber.type;
+            invariant(
+              newChild === null || newChild === false,
+              '%s.render(): A valid React element (or null) must be ' +
+              'returned. You may have returned undefined, an array or some ' +
+              'other invalid object.',
+              Component.displayName || Component.name || 'Component'
+            );
+          }
+        }
+      }
+      return deleteRemainingChildren(returnFiber, currentFirstChild);
+    }
+
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       return placeSingleChild(reconcileSingleTextNode(
         returnFiber,
@@ -1160,6 +1226,36 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           newChild,
           priority
         );
+      }
+    }
+
+    if (typeof newChild === 'undefined') {
+      switch (returnFiber.tag) {
+        case HostRoot:
+          // TODO: Top-level render
+          break;
+        case ClassComponent: {
+          if (__DEV__) {
+            const instance = returnFiber.stateNode;
+            if (instance.render._isMockFunction) {
+              // We allow auto-mocks to proceed as if they're returning null.
+              break;
+            }
+          }
+        }
+        // Intentionally fall through to the next case, which handles both
+        // functions and classes
+        // eslint-disable-next-lined no-fallthrough
+        case FunctionalComponent: {
+          const Component = returnFiber.type;
+          invariant(
+            false,
+            '%s(...): Nothing was returned from render. This usually means a ' +
+            'return statement is missing. Or, to render nothing, ' +
+            'return null.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
       }
     }
 

@@ -956,6 +956,7 @@ describe('ReactIncremental', () => {
 
     function Trail() {
       ops.push('Trail');
+      return null;
     }
 
     function App(props) {

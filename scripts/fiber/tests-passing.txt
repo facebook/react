@@ -544,6 +544,8 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should bubble events from the portal to the parent
 * should not onMouseLeave when staying in the portal
 * should not crash encountering low-priority tree
+* throws if non-element passed to top-level render
+* throws if something other than false, null, or an element is returned from render
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
@@ -1536,6 +1538,7 @@ src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should update stateless component
 * should unmount stateless component
 * should pass context thru stateless component
+* should throw when stateless component returns undefined
 * should throw on string refs in pure functions
 * should warn when given a string ref
 * should warn when given a function ref

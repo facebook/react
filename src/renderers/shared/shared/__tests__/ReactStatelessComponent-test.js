@@ -15,6 +15,8 @@ var React;
 var ReactDOM;
 var ReactTestUtils;
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 function StatelessComponent(props) {
   return <div>{props.name}</div>;
 }
@@ -123,18 +125,34 @@ describe('ReactStatelessComponent', () => {
     );
   });
 
-  it('should warn when stateless component returns array', () => {
-    spyOn(console, 'error');
+  if (!ReactDOMFeatureFlags.useFiber) {
+    // Stack doesn't support fragments
+    it('should throw when stateless component returns array', () => {
+      function NotAComponent() {
+        return [<div />, <div />];
+      }
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+      }).toThrowError(
+        'NotAComponent(...): A valid React element (or null) must be returned. ' +
+        'You may have returned undefined, an array or some other invalid object.'
+      );
+    });
+  }
+
+  it('should throw when stateless component returns undefined', () => {
     function NotAComponent() {
-      return [<div />, <div />];
     }
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'NotAComponent(...): A valid React element (or null) must be returned. ' +
-      'You may have returned undefined, an array or some other invalid object.'
+    }).toThrowError(
+      ReactDOMFeatureFlags.useFiber ?
+        // Fiber gives a more specific error message for undefined because it
+        // supports more return types.
+        'NotAComponent(...): Nothing was returned from render' :
+        // Stack's message is generic.
+        'NotAComponent(...): A valid React element (or null) must be returned. ' +
+        'You may have returned undefined, an array or some other invalid object.'
     );
   });
 
@@ -374,18 +392,4 @@ describe('ReactStatelessComponent', () => {
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();
   });
 
-  it('should warn when using non-React functions in JSX', () => {
-    spyOn(console, 'error');
-    function NotAComponent() {
-      return [<div />, <div />];
-    }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
-      'have returned undefined, an array or some other invalid object.'
-    );
-  });
 });
