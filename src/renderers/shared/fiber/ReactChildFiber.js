@@ -1126,24 +1126,40 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
       }
 
-      const Component = returnFiber.type;
-      let validEmptyReturnType = newChild === null || newChild === false;
-
-      if (__DEV__) {
-        if (!validEmptyReturnType &&
-            returnFiber.tag === ClassComponent &&
-            returnFiber.stateNode.render._isMockFunction) {
-          // We allow auto-mocks to proceed as if they're returning null.
-          validEmptyReturnType = true;
+      if (returnFiber.tag === HostRoot) {
+        // Top-level only accepts elements or portals
+        invariant(
+          false,
+          'render(): Invalid component element.'
+        );
+      } else {
+        switch (returnFiber.tag) {
+          case ClassComponent: {
+            if (__DEV__) {
+              const instance = returnFiber.stateNode;
+              if (instance.render._isMockFunction) {
+                // We allow auto-mocks to proceed as if they're
+                // returning null.
+                break;
+              }
+            }
+          }
+          // Intentionally fall through to the next case, which handles both
+          // functions and classes
+          // eslint-disable-next-lined no-fallthrough
+          case FunctionalComponent: {
+            // Composites accept elements, portals, null, or false
+            const Component = returnFiber.type;
+            invariant(
+              newChild === null || newChild === false,
+              '%s.render(): A valid React element (or null) must be ' +
+              'returned. You may have returned undefined, an array or some ' +
+              'other invalid object.',
+              Component.displayName || Component.name || 'Component'
+            );
+          }
         }
       }
-
-      invariant(
-        validEmptyReturnType,
-        '%s.render(): A valid React element (or null) must be returned. You ' +
-        'may have returned undefined, an array or some other invalid object.',
-        Component.displayName || Component.name || 'Component'
-      );
       return deleteRemainingChildren(returnFiber, currentFirstChild);
     }
 

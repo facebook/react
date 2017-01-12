@@ -17,10 +17,6 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 import type { ReactNodeList } from 'ReactTypes';
 
-var { isValidElement } = require('ReactElement');
-var invariant = require('invariant');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-
 var {
   addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
@@ -138,11 +134,6 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
     },
 
     updateContainer(element : ReactNodeList, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
-      invariant(
-        !ReactFeatureFlags.disableNewFiberFeatures || isValidElement(element),
-        'render(): Invalid component element.'
-      );
-
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       const current = root.current;
