@@ -973,6 +973,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
       expect(logCapturedErrorCalls.length).toBe(1);
       expect(logCapturedErrorCalls[0].error.message).toBe('componentWillMount error');
+      expect(logCapturedErrorCalls[0].componentName).toBe('ErrorThrowingComponent');
       expect(normalizeCodeLocInfo(logCapturedErrorCalls[0].componentStack)).toContain(
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
@@ -997,6 +998,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
       expect(logCapturedErrorCalls.length).toBe(1);
       expect(logCapturedErrorCalls[0].error.message).toBe('componentDidMount error');
+      expect(logCapturedErrorCalls[0].componentName).toBe('ErrorThrowingComponent');
       expect(normalizeCodeLocInfo(logCapturedErrorCalls[0].componentStack)).toContain(
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
@@ -1005,6 +1007,8 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     it('should ignore errors thrown in log method to prevent cycle', () => {
+      spyOn(console, 'error');
+
       class ErrorThrowingComponent extends React.Component {
         render() {
           throw Error('render error');
@@ -1024,6 +1028,10 @@ describe('ReactIncrementalErrorHandling', () => {
       } catch (error) {}
 
       expect(logCapturedErrorCalls.length).toBe(1);
+
+      // The error thrown in logCapturedError should also be logged
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0].message).toContain('logCapturedError error');
     });
   });
 });

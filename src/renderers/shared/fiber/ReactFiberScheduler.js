@@ -18,6 +18,7 @@ import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
 export type CapturedError = {
+  componentName: string,
   componentStack: string,
   error: Error,
 };
@@ -36,6 +37,7 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var getComponentName = require('getComponentName');
 
 var { cloneFiber } = require('ReactFiber');
 
@@ -890,6 +892,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       // The risk is that the return path from this Fiber may not be accurate.
       // That risk is acceptable given the benefit of providing users more context.
       const componentStack = getStackAddendumByWorkInProgressFiber(failedWork);
+      const componentName = getComponentName(failedWork) || 'Unknown';
 
       // Add to the collection of captured errors. This is stored as a global
       // map of errors and their component stack location keyed by the boundaries
@@ -899,6 +902,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
         capturedErrors = new Map();
       }
       capturedErrors.set(boundary, {
+        componentName,
         componentStack,
         error,
       });
@@ -969,6 +973,7 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
       } catch (e) {
         // Prevent cycle if logCapturedError() throws.
         // A cycle may still occur if logCapturedError renders a component that throws.
+        console.error(e);
       }
     }
 

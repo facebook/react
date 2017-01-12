@@ -8,7 +8,7 @@
  *
  * @providesModule ReactFiberErrorLogger
  * @flow
- */
+ */3
 
 'use strict';
 
@@ -16,11 +16,16 @@ import type { CapturedError } from 'ReactFiberScheduler';
 
 function logCapturedError(capturedError : CapturedError) : void {
   if (__DEV__) {
-    // console.log rather than console.error to avoid breaking tests
-    // (Jest complains about unexpected console.error calls.)
-    console.log(capturedError.error);
-    console.log(`Error location: ${capturedError.componentStack}`);
+    const { componentName, componentStack, error } = capturedError;
+    // TODO Link to unstable_handleError() documentation once it exists.
+    console.error(
+      `React caught an error thrown by ${componentName}. ` +
+      `Consider using an error boundary to capture this and other errors.\n\n` +
+      `${error}\n\n` +
+      `The error was thrown in the following location: ${componentStack}`
+    );
   }
 }
 
 exports.logCapturedError = logCapturedError;
+
