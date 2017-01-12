@@ -51,6 +51,9 @@ class App extends Component {
     let currentStage;
     let currentRoot;
 
+    ReactFiberInstrumentation.debugTool = null;
+    ReactNoop.render(null);
+    ReactNoop.flush();
     ReactFiberInstrumentation.debugTool = {
       onMountContainer: (root) => {
         currentRoot = root;
