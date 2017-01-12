@@ -61,8 +61,10 @@ const {
 const isArray = Array.isArray;
 
 const {
+  FunctionalComponent,
   ClassComponent,
   HostText,
+  HostRoot,
   HostPortal,
   CoroutineComponent,
   YieldComponent,
@@ -1194,6 +1196,25 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           newChild,
           priority
         );
+      }
+    }
+
+    if (typeof newChild === 'undefined') {
+      switch (returnFiber.tag) {
+        case HostRoot:
+          // TODO: Top-level render
+          break;
+        case ClassComponent:
+        case FunctionalComponent: {
+          const Component = returnFiber.type;
+          invariant(
+            false,
+            '%s: Nothing was returned from render. This usually means a ' +
+            'return statement is missing. Or, to render nothing, ' +
+            'return null.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
       }
     }
 
