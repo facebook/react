@@ -118,10 +118,16 @@ describe('ReactStatelessComponent', () => {
 
     ReactDOM.render(<StatelessComponentWithChildContext name="A" />, container);
 
-    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
       'be defined on a functional component.'
+    );
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      'Warning: StatelessComponentWithChildContext.childContextTypes is specified ' +
+      'but there is no getChildContext() method on the instance. You can either ' +
+      'define getChildContext() on StatelessComponentWithChildContext or remove ' +
+      'childContextTypes from it.'
     );
   });
 

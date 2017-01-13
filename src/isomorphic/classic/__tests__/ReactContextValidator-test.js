@@ -289,4 +289,91 @@ describe('ReactContextValidator', () => {
     expectDev(console.error.calls.count()).toBe(2);
   });
 
+  // TODO (bvaughn) Remove this test and the associated behavior in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  it('should warn (but not error) if getChildContext method is missing', () => {
+    spyOn(console, 'error');
+
+    class ComponentA extends React.Component {
+      static childContextTypes = {
+        foo: React.PropTypes.string.isRequired,
+      };
+      render() {
+        return <div />;
+      }
+    }
+    class ComponentB extends React.Component {
+      static childContextTypes = {
+        foo: React.PropTypes.string.isRequired,
+      };
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<ComponentA/>);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: ComponentA.childContextTypes is specified but there is no ' +
+      'getChildContext() method on the instance. You can either define ' +
+      'getChildContext() on ComponentA or remove childContextTypes from it.'
+    );
+
+    // Warnings should be deduped by component type
+    ReactTestUtils.renderIntoDocument(<ComponentA/>);
+    expectDev(console.error.calls.count()).toBe(1);
+    ReactTestUtils.renderIntoDocument(<ComponentB/>);
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      'Warning: ComponentB.childContextTypes is specified but there is no ' +
+      'getChildContext() method on the instance. You can either define ' +
+      'getChildContext() on ComponentB or remove childContextTypes from it.'
+    );
+  });
+
+  // TODO (bvaughn) Remove this test and the associated behavior in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  it('should pass parent context if getChildContext method is missing', () => {
+    spyOn(console, 'error');
+
+    class ParentContextProvider extends React.Component {
+      static childContextTypes = {
+        foo: React.PropTypes.number,
+      };
+      getChildContext() {
+        return {
+          foo: 'FOO',
+        };
+      }
+      render() {
+        return <MiddleMissingContext />;
+      }
+    }
+
+    class MiddleMissingContext extends React.Component {
+      static childContextTypes = {
+        bar: React.PropTypes.string.isRequired,
+      };
+      render() {
+        return <ChildContextConsumer />;
+      }
+    }
+
+    var childContext;
+    var ChildContextConsumer = React.createClass({
+      contextTypes: {
+        bar: React.PropTypes.string.isRequired,
+        foo: React.PropTypes.string.isRequired,
+      },
+      render: function() {
+        childContext = this.context;
+        return <div />;
+      },
+    });
+
+    ReactTestUtils.renderIntoDocument(<ParentContextProvider/>);
+    expect(childContext.bar).toBeUndefined();
+    expect(childContext.foo).toBe('FOO');
+  });
+
 });

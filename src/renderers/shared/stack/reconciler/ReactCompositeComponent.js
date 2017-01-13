@@ -24,6 +24,7 @@ var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var warningAboutMissingGetChildContext = {};
 }
 
 var emptyObject = require('emptyObject');
@@ -698,6 +699,22 @@ var ReactCompositeComponent = {
         );
       }
       return Object.assign({}, currentContext, childContext);
+    } else {
+      if (__DEV__) {
+        const componentName = this.getName();
+        
+        if (!warningAboutMissingGetChildContext[componentName]) {
+          warningAboutMissingGetChildContext[componentName] = true;
+          warning(
+            !Component.childContextTypes,
+            '%s.childContextTypes is specified but there is no getChildContext() method ' +
+            'on the instance. You can either define getChildContext() on %s or remove ' +
+            'childContextTypes from it.',
+            componentName,
+            componentName,
+          );
+        }
+      }
     }
     return currentContext;
   },
