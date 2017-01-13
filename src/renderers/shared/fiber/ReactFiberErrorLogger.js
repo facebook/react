@@ -30,15 +30,15 @@ function logCapturedError(capturedError : CapturedError) : void {
       : 'React caught an error thrown by one of your components.';
 
     let errorBoundaryMessage;
-    if (errorBoundaryFound) {
-      // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
+    // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
+    if (errorBoundaryFound && errorBoundaryName) {
       if (willRetry) {
         errorBoundaryMessage =
           `React will try to recreate this component tree from scratch ` +
-          `using the error boundary you provided, ${errorBoundaryName || ''}.`;
+          `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
         errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName || ''}. ` +
+          `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
