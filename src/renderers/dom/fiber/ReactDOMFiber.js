@@ -226,9 +226,7 @@ var DOMRenderer = ReactFiberReconciler({
     rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
-    if (shouldAutoFocusHostComponent(type, newProps)) {
-      ((domElement : any) : HTMLInputElement).focus();
-    }
+    ((domElement : any) : HTMLInputElement).focus();
   },
 
   commitUpdate(
