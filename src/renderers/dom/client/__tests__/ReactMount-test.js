@@ -78,10 +78,10 @@ describe('ReactMount', () => {
     var container = document.createElement('container');
     document.body.appendChild(container);
 
-    ReactMount.render(<div></div>, container);
+    ReactMount.render(<div />, container);
     expect(container.firstChild.nodeName).toBe('DIV');
 
-    ReactMount.render(<span></span>, container);
+    ReactMount.render(<span />, container);
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 

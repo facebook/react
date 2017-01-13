@@ -70,6 +70,9 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
+    // ESLint is confused here and thinks Parent is unused, presumably because
+    // it is only used inside of the class body?
+    // eslint-disable-next-line no-unused-vars
     class Parent extends React.Component {
       static childContextTypes = {
         foo: React.PropTypes.string.isRequired,
