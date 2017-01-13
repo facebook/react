@@ -2184,4 +2184,87 @@ describe('ReactIncremental', () => {
       'componentDidUpdate',
     ]);
   });
+
+  it('should reuse memoized work if pointers are updated before calling lifecycles', () => {
+    let cduNextProps = [];
+    let cduPrevProps = [];
+    let scuNextProps = [];
+    let scuPrevProps = [];
+    let renderCounter = 0;
+
+    function SecondChild(props) {
+      return <span>{props.children}</span>;
+    }
+
+    class FirstChild extends React.Component {
+      componentDidUpdate(prevProps, prevState) {
+        cduNextProps.push(this.props);
+        cduPrevProps.push(prevProps);
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        scuNextProps.push(nextProps);
+        scuPrevProps.push(this.props);
+        return this.props.children !== nextProps.children;
+      }
+      render() {
+        renderCounter++;
+        return <span>{this.props.children}</span>;
+      }
+    }
+
+    class Middle extends React.Component {
+      render() {
+        return (
+          <div>
+            <FirstChild>{this.props.children}</FirstChild>
+            <SecondChild>{this.props.children}</SecondChild>
+          </div>
+        );
+      }
+    }
+
+    function Root(props) {
+      return (
+        <div hidden={true}>
+          <Middle {...props} />
+        </div>
+      );
+    }
+
+    // Initial render of the entire tree.
+    // Renders: Root, Middle, FirstChild, SecondChild
+    ReactNoop.render(<Root>A</Root>);
+    ReactNoop.flush();
+
+    expect(renderCounter).toBe(1);
+
+    // Schedule low priority work to update children.
+    // Give it enough time to partially render.
+    // Renders: Root, Middle, FirstChild
+    ReactNoop.render(<Root>B</Root>);
+    ReactNoop.flushDeferredPri(20 + 30 + 5);
+
+    // At this point our FirstChild component has rendered a second time,
+    // But since the render is not completed cDU should not be called yet.
+    expect(renderCounter).toBe(2);
+    expect(scuPrevProps).toEqual([{ children: 'A' }]);
+    expect(scuNextProps).toEqual([{ children: 'B' }]);
+    expect(cduPrevProps).toEqual([]);
+    expect(cduNextProps).toEqual([]);
+
+    // Next interrupt the partial render with higher priority work.
+    // The in-progress child content will bailout.
+    // Renders: Root, Middle, FirstChild, SecondChild
+    ReactNoop.render(<Root>B</Root>);
+    ReactNoop.flush();
+
+    // At this point the higher priority render has completed.
+    // Since FirstChild props didn't change, sCU returned false.
+    // The previous memoized copy should be used.
+    expect(renderCounter).toBe(2);
+    expect(scuPrevProps).toEqual([{ children: 'A' }, { children: 'B' }]);
+    expect(scuNextProps).toEqual([{ children: 'B' }, { children: 'B' }]);
+    expect(cduPrevProps).toEqual([{ children: 'A' }]);
+    expect(cduNextProps).toEqual([{ children: 'B' }]);
+  });
 });
