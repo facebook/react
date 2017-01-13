@@ -57,7 +57,10 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
-type Props = { children ?: mixed };
+type Props = {
+  autoFocus ?: boolean,
+  children ?: mixed,
+};
 type Instance = Element;
 type TextInstance = Text;
 
@@ -105,7 +108,7 @@ function shouldAutoFocusHostComponent(
     case 'input':
     case 'select':
     case 'textarea':
-      return !!(props : any).autoFocus;
+      return !!props.autoFocus;
   }
   return false;
 }
@@ -224,7 +227,7 @@ var DOMRenderer = ReactFiberReconciler({
     internalInstanceHandle : Object,
   ) : void {
     if (shouldAutoFocusHostComponent(type, newProps)) {
-      (domElement : any).focus();
+      ((domElement : any) : HTMLInputElement).focus();
     }
   },
 
