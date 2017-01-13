@@ -396,6 +396,9 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
     }
 
     isCommitting = false;
+    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+      ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
+    }
 
     // If we caught any errors during this commit, schedule their boundaries
     // to update.
@@ -448,6 +451,9 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
       resetWorkPriority(workInProgress);
 
       if (next) {
+        if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+          ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
+        }
         // If completing this work spawned new work, do that next. We'll come
         // back here again.
         return next;
@@ -483,6 +489,10 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
         }
       }
 
+      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+        ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
+      }
+
       if (siblingFiber) {
         // If there is more work to do in this returnFiber, do that next.
         return siblingFiber;
@@ -507,40 +517,27 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
   }
 
   function performUnitOfWork(workInProgress : Fiber) : ?Fiber {
-
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
     // progress.
     const current = workInProgress.alternate;
 
-    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-      ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
-    }
     // See if beginning this work spawns more work.
     let next = beginWork(current, workInProgress, nextPriorityLevel);
-
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-      ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
+      ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
     }
 
     if (!next) {
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
-      }
       // If this doesn't spawn new work, complete the current work.
       next = completeUnitOfWork(workInProgress);
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
-      }
     }
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
     }
-
-
 
     return next;
   }
@@ -553,25 +550,15 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
     // progress.
     const current = workInProgress.alternate;
 
-    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-      ReactFiberInstrumentation.debugTool.onWillBeginWork(workInProgress);
-    }
     // See if beginning this work spawns more work.
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
-
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-      ReactFiberInstrumentation.debugTool.onDidBeginWork(workInProgress);
+      ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
     }
 
     if (!next) {
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onWillCompleteWork(workInProgress);
-      }
       // If this doesn't spawn new work, complete the current work.
       next = completeUnitOfWork(workInProgress);
-      if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onDidCompleteWork(workInProgress);
-      }
     }
 
     ReactCurrentOwner.current = null;

@@ -61,52 +61,39 @@ class App extends Component {
       onUpdateContainer: (root) => {
         currentRoot = root;
       },
-      onWillBeginWork: (fiber) => {
+      onBeginWork: (fiber) => {
         const fibers = getFiberState(currentRoot, fiber);
         const stage = currentStage;
         this.setState(({ history }) => ({
           history: [
             ...history, {
-              action: 'willBeginWork',
+              action: 'BEGIN',
               fibers,
               stage
             }
           ]
         }));
       },
-      onDidBeginWork: (fiber) => {
+      onCompleteWork: (fiber) => {
         const fibers = getFiberState(currentRoot, fiber);
         const stage = currentStage;
         this.setState(({ history }) => ({
           history: [
             ...history, {
-              action: 'didBeginWork',
+              action: 'COMPLETE',
               fibers,
               stage
             }
           ]
         }));
       },
-      onWillCompleteWork: (fiber) => {
+      onCommitWork: (fiber) => {
         const fibers = getFiberState(currentRoot, fiber);
         const stage = currentStage;
         this.setState(({ history }) => ({
           history: [
             ...history, {
-              action: 'willCompleteWork',
-              fibers,
-              stage
-            }
-          ]
-        }));
-      },
-      onDidCompleteWork: (fiber) => {
-        const fibers = getFiberState(currentRoot, fiber);
-        const stage = currentStage;
-        this.setState(({ history }) => ({
-          history: [
-            ...history, {
-              action: 'didCompleteWork',
+              action: 'COMMIT',
               fibers,
               stage
             }
@@ -116,6 +103,11 @@ class App extends Component {
     };
     window.React = React;
     window.ReactNoop = ReactNoop;
+    window.expect = () => ({
+      toBe() {},
+      toContain() {},
+      toEqual() {},
+    });
     window.log = s => currentStage = s;
     // eslint-disable-next-line
     eval(window.Babel.transform(code, {
@@ -149,26 +141,10 @@ class App extends Component {
 
     const { fibers, action, stage } = history[currentStep] || {};
     let friendlyAction;
-
     if (fibers) {
       let wipFiber = fibers.descriptions[fibers.workInProgressID];
       let friendlyFiber = wipFiber.type || wipFiber.tag + ' #' + wipFiber.id;
-      switch (action) {
-        case 'willBeginWork':
-          friendlyAction = 'Before BEGIN phase on ' + friendlyFiber;
-          break;
-        case 'didBeginWork':
-          friendlyAction = 'After BEGIN phase on ' + friendlyFiber;
-          break;
-        case 'willCompleteWork':
-          friendlyAction = 'Before COMPLETE phase on ' + friendlyFiber;
-          break;
-        case 'didCompleteWork':
-          friendlyAction = 'After COMPLETE phase on ' + friendlyFiber;
-          break;
-        default:
-          throw new Error('Unknown action');
-      }
+      friendlyAction = `After ${action} on ${friendlyFiber}`;
     }
 
     return (
@@ -190,6 +166,7 @@ class App extends Component {
         }}>
           <input
             type="range"
+            style={{ width: '25%' }}
             min={0}
             max={history.length - 1}
             value={currentStep}
