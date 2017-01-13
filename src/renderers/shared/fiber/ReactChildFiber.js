@@ -1090,7 +1090,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
               returnFiber,
               currentFirstChild,
               newChild,
-              priority
             ));
 
           case REACT_PORTAL_TYPE:
@@ -1098,7 +1097,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
               returnFiber,
               currentFirstChild,
               newChild,
-              priority
             ));
         }
       }

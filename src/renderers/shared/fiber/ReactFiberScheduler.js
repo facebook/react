@@ -75,7 +75,6 @@ var {
 
 var {
   getPendingPriority,
-  addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -1120,10 +1119,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function scheduleErrorRecovery(fiber : Fiber) {
-    if (fiber.tag === HostRoot) {
-      // This is a root, which does not have a parent, so we need to use the
-      // update queue.
-      addTopLevelUpdate(fiber, { element: null }, null, TaskPriority);
+    // Set the priority on the boundaries children, not the boundary itself.
+    // This is a workaround for the fact that host roots, which act as error
+    // boundaries for uncaught errors
+    fiber.pendingWorkPriority = TaskPriority;
+    if (fiber.alternate) {
+      fiber.alternate.pendingWorkPriority = TaskPriority;
     }
     scheduleUpdate(fiber, TaskPriority);
   }
