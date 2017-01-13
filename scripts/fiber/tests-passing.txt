@@ -1621,6 +1621,8 @@ src/renderers/shared/shared/__tests__/refs-test.js
 * coerces numbers to strings
 * attaches, detaches from fiber component with stack layer
 * attaches, detaches from stack component with fiber layer
+* attaches and detaches root refs in stack
+* attaches and detaches root refs in fiber
 
 src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch

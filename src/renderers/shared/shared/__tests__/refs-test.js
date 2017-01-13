@@ -230,7 +230,6 @@ describe('ref swapping', () => {
     expect(refHopsAround.refs.divThreeRef).toEqual(thirdDiv);
   });
 
-
   it('always has a value for this.refs', () => {
     class Component extends React.Component {
       render() {
@@ -391,4 +390,92 @@ describe('string refs between fiber and stack', () => {
       );
     }
   });
+});
+
+describe('root level refs', () => {
+  it('attaches and detaches root refs in stack', () => {
+    assertForRenderer('ReactDOM');
+  });
+
+  it('attaches and detaches root refs in fiber', () => {
+    assertForRenderer('ReactDOMFiber');
+  });
+
+  const assertForRenderer = (which) => {
+    const Renderer = require(which);
+    spyOn(console, 'error');
+    var inst = null;
+
+    // host node
+    var ref = jest.fn(value => inst = value);
+    var container = document.createElement('div');
+    var result = Renderer.render(<div ref={ref} />, container);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLDivElement);
+    expect(result).toBe(ref.mock.calls[0][0]);
+    Renderer.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+
+    // composite
+    class Comp extends React.Component {
+      method() {
+        return true;
+      }
+      render() {
+        return <div>Comp</div>;
+      }
+    }
+
+    inst = null;
+    ref = jest.fn(value => inst = value);
+    result = Renderer.render(<Comp ref={ref}/>, container);
+
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(inst).toBeInstanceOf(Comp);
+    expect(result).toBe(inst);
+
+    // ensure we have the correct instance
+    expect(result.method()).toBe(true);
+    expect(inst.method()).toBe(true);
+
+    Renderer.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+
+    if (which === 'ReactDOMFiber') {
+      // fragment
+      inst = null;
+      ref = jest.fn(value => inst = value);
+      var divInst = null;
+      var ref2 = jest.fn(value => divInst = value);
+      result = Renderer.render([
+        <Comp ref={ref}/>,
+        5,
+        <div ref={ref2}>Hello</div>,
+      ], container);
+
+      // first call should be `Comp`
+      expect(ref).toHaveBeenCalledTimes(1);
+      expect(ref.mock.calls[0][0]).toBeInstanceOf(Comp);
+      expect(result).toBe(ref.mock.calls[0][0]);
+
+      expect(ref2).toHaveBeenCalledTimes(1);
+      expect(divInst).toBeInstanceOf(HTMLDivElement);
+      expect(result).not.toBe(divInst);
+      Renderer.unmountComponentAtNode(container);
+      expect(ref).toHaveBeenCalledTimes(2);
+      expect(ref.mock.calls[1][0]).toBe(null);
+      expect(ref2).toHaveBeenCalledTimes(2);
+      expect(ref2.mock.calls[1][0]).toBe(null);
+
+      // null
+      result = Renderer.render(null, container);
+      expect(result).toBe(null);
+
+      // primitives
+      // result = Renderer.render(5, container);
+      // expect(result).toBe('5');
+    }
+  };
 });
