@@ -1203,6 +1203,10 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * does not interrupt unmounting if detaching a ref throws
 * handles error thrown by host config while working on failed root
 * handles error thrown by top-level callback
+* should log errors that occur during the begin phase
+* should log errors that occur during the commit phase
+* should ignore errors thrown in log method to prevent cycle
+* should relay info about error boundary and retry attempts if applicable
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred

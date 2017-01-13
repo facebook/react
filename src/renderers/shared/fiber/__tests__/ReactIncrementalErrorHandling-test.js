@@ -936,4 +936,176 @@ describe('ReactIncrementalErrorHandling', () => {
     });
     expect(() => ReactNoop.flush()).toThrow('Error!');
   });
+
+  describe('ReactFiberErrorLogger', () => {
+    function initReactFiberErrorLoggerMock(mock) {
+      jest.resetModules();
+      if (mock) {
+        jest.mock('ReactFiberErrorLogger');
+      } else {
+        jest.unmock('ReactFiberErrorLogger');
+      }
+      React = require('React');
+      ReactNoop = require('ReactNoop');
+    }
+
+    function normalizeCodeLocInfo(str) {
+      return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    }
+
+    it('should log errors that occur during the begin phase', () => {
+      initReactFiberErrorLoggerMock();
+      spyOn(console, 'error');
+
+      class ErrorThrowingComponent extends React.Component {
+        componentWillMount() {
+          throw Error('componentWillMount error');
+        }
+        render() {
+          return <div/>;
+        }
+      }
+
+      try {
+        ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+        ReactNoop.flushDeferredPri();
+      } catch (error) {}
+
+      expect(console.error.calls.count()).toBe(1);
+      const errorMessage = console.error.calls.argsFor(0)[0];
+      expect(errorMessage).toContain(
+        'React caught an error thrown by ErrorThrowingComponent. ' +
+        'You should fix this error in your code. ' +
+        'Consider adding an error boundary to your tree to customize error handling behavior.'
+      );
+      expect(errorMessage).toContain('Error: componentWillMount error');
+      expect(normalizeCodeLocInfo(errorMessage)).toContain(
+        'The error was thrown in the following location: \n' +
+        '    in ErrorThrowingComponent (at **)\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)'
+      );
+    });
+
+    it('should log errors that occur during the commit phase', () => {
+      initReactFiberErrorLoggerMock();
+      spyOn(console, 'error');
+
+      class ErrorThrowingComponent extends React.Component {
+        componentDidMount() {
+          throw Error('componentDidMount error');
+        }
+        render() {
+          return <div/>;
+        }
+      }
+
+      try {
+        ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+        ReactNoop.flushDeferredPri();
+      } catch (error) {}
+
+      expect(console.error.calls.count()).toBe(1);
+      const errorMessage = console.error.calls.argsFor(0)[0];
+      expect(errorMessage).toContain(
+        'React caught an error thrown by ErrorThrowingComponent. ' +
+        'You should fix this error in your code. ' +
+        'Consider adding an error boundary to your tree to customize error handling behavior.'
+      );
+      expect(errorMessage).toContain('Error: componentDidMount error');
+      expect(normalizeCodeLocInfo(errorMessage)).toContain(
+        'The error was thrown in the following location: \n' +
+        '    in ErrorThrowingComponent (at **)\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)'
+      );
+    });
+
+    it('should ignore errors thrown in log method to prevent cycle', () => {
+      initReactFiberErrorLoggerMock(true);
+      spyOn(console, 'error');
+
+      class ErrorThrowingComponent extends React.Component {
+        render() {
+          throw Error('render error');
+        }
+      }
+
+      const logCapturedErrorCalls = [];
+
+      const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
+      ReactFiberErrorLogger.logCapturedError.mockImplementation(
+        (capturedError) => {
+          logCapturedErrorCalls.push(capturedError);
+          throw Error('logCapturedError error');
+        }
+      );
+
+      try {
+        ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+        ReactNoop.flushDeferredPri();
+      } catch (error) {}
+
+      expect(logCapturedErrorCalls.length).toBe(1);
+
+      // The error thrown in logCapturedError should also be logged
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0].message).toContain('logCapturedError error');
+    });
+
+    it('should relay info about error boundary and retry attempts if applicable', () => {
+      initReactFiberErrorLoggerMock();
+      spyOn(console, 'error');
+
+      class ParentComponent extends React.Component {
+        render() {
+          return <ErrorBoundaryComponent/>;
+        }
+      }
+
+      let handleErrorCalls = [];
+      let renderAttempts = 0;
+
+      class ErrorBoundaryComponent extends React.Component {
+        unstable_handleError(error) {
+          handleErrorCalls.push(error);
+          this.setState({}); // Render again
+        }
+        render() {
+          return <ErrorThrowingComponent/>;
+        }
+      }
+
+      class ErrorThrowingComponent extends React.Component {
+        componentDidMount() {
+          throw Error('componentDidMount error');
+        }
+        render() {
+          renderAttempts++;
+          return <div/>;
+        }
+      }
+
+      try {
+        ReactNoop.render(<ParentComponent/>);
+        ReactNoop.flush();
+      } catch (error) {}
+
+      expect(renderAttempts).toBe(2);
+      expect(handleErrorCalls.length).toBe(1);
+      expect(console.error.calls.count()).toBe(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'React caught an error thrown by ErrorThrowingComponent. ' +
+        'You should fix this error in your code. ' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundaryComponent.'
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'React caught an error thrown by ErrorThrowingComponent. ' +
+        'You should fix this error in your code. ' +
+        'This error was initially handled by the error boundary ErrorBoundaryComponent. ' +
+        'Recreating the tree from scratch failed so React will unmount the tree.'
+      );
+    });
+  });
 });

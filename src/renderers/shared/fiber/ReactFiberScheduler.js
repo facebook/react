@@ -17,16 +17,30 @@ import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
 
+export type CapturedError = {
+  componentName : ?string,
+  componentStack : string,
+  error : Error,
+  errorBoundaryFound : boolean,
+  errorBoundaryName : ?string,
+  willRetry : boolean,
+};
+
 var {
   popContextProvider,
 } = require('ReactFiberContext');
 const { reset } = require('ReactFiberStack');
+var {
+  getStackAddendumByWorkInProgressFiber,
+} = require('ReactComponentTreeHook');
+var { logCapturedError } = require('ReactFiberErrorLogger');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var getComponentName = require('getComponentName');
 
 var { cloneFiber } = require('ReactFiber');
 
@@ -134,7 +148,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
 
   // Keep track of which fibers have captured an error that need to be handled.
   // Work is removed from this collection after unstable_handleError is called.
-  let capturedErrors : Map<Fiber, Error> | null = null;
+  let capturedErrors : Map<Fiber, CapturedError> | null = null;
   // Keep track of which fibers have failed during the current batch of work.
   // This is a different set than capturedErrors, because it is not reset until
   // the end of the batch. This is needed to propagate errors correctly if a
@@ -797,6 +811,12 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
 
     // Search for the nearest error boundary.
     let boundary : ?Fiber = null;
+
+    // Passed to logCapturedError()
+    let errorBoundaryFound : boolean = false;
+    let willRetry : boolean = false;
+    let errorBoundaryName : ?string = null;
+
     // Host containers are a special case. If the failed work itself is a host
     // container, then it acts as its own boundary. In all other cases, we
     // ignore the work itself and only search through the parents.
@@ -815,6 +835,9 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
         if (node.tag === ClassComponent) {
           const instance = node.stateNode;
           if (typeof instance.unstable_handleError === 'function') {
+            errorBoundaryFound = true;
+            errorBoundaryName = getComponentName(node);
+
             if (isFailedBoundary(node)) {
               // This boundary is already in a failed state. The error should
               // propagate to the next boundary — except in the
@@ -841,6 +864,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
             } else {
               // Found an error boundary!
               boundary = node;
+              willRetry = true;
             }
           }
         } else if (node.tag === HostRoot) {
@@ -859,15 +883,29 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
       }
       failedBoundaries.add(boundary);
 
+      // This method is unsafe outside of the begin and complete phases.
+      // We might be in the commit phase when an error is captured.
+      // The risk is that the return path from this Fiber may not be accurate.
+      // That risk is acceptable given the benefit of providing users more context.
+      const componentStack = getStackAddendumByWorkInProgressFiber(failedWork);
+      const componentName = getComponentName(failedWork);
+
       // Add to the collection of captured errors. This is stored as a global
-      // map of errors keyed by the boundaries that capture them. We mostly
-      // use this Map as a Set; it's a Map only to avoid adding a field to Fiber
-      // to store the error.
+      // map of errors and their component stack location keyed by the boundaries
+      // that capture them. We mostly use this Map as a Set; it's a Map only to
+      // avoid adding a field to Fiber to store the error.
       if (!capturedErrors) {
         capturedErrors = new Map();
       }
+      capturedErrors.set(boundary, {
+        componentName,
+        componentStack,
+        error,
+        errorBoundaryFound,
+        errorBoundaryName,
+        willRetry,
+      });
 
-      capturedErrors.set(boundary, error);
       // If we're in the commit phase, defer scheduling an update on the
       // boundary until after the commit is complete
       if (isCommitting) {
@@ -906,21 +944,36 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
   }
 
   function commitErrorHandling(effectfulFiber : Fiber) {
-    let error;
+    let capturedError;
     if (capturedErrors) {
-      error = capturedErrors.get(effectfulFiber);
+      capturedError = capturedErrors.get(effectfulFiber);
       capturedErrors.delete(effectfulFiber);
-      if (!error) {
+      if (!capturedError) {
         if (effectfulFiber.alternate) {
           effectfulFiber = effectfulFiber.alternate;
-          error = capturedErrors.get(effectfulFiber);
+          capturedError = capturedErrors.get(effectfulFiber);
           capturedErrors.delete(effectfulFiber);
         }
       }
     }
 
-    if (!error) {
+    if (!capturedError) {
       throw new Error('No error for given unit of work.');
+    }
+
+    let error;
+
+    // Conditional required to satisfy Flow
+    if (capturedError) {
+      error = capturedError.error;
+
+      try {
+        logCapturedError(capturedError);
+      } catch (e) {
+        // Prevent cycle if logCapturedError() throws.
+        // A cycle may still occur if logCapturedError renders a component that throws.
+        console.error(e);
+      }
     }
 
     switch (effectfulFiber.tag) {

@@ -10,6 +10,10 @@ jest.mock('ReactDOMFeatureFlags', () => {
   });
 });
 
+// Error logging varies between Fiber and Stack;
+// Rather than fork dozens of tests, mock the error-logging file by default.
+jest.mock('ReactFiberErrorLogger');
+
 var env = jasmine.getEnv();
 
 var callCount = 0;
