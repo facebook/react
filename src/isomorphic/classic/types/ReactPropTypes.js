@@ -213,7 +213,7 @@ function createPrimitiveTypeChecker(expectedType) {
 }
 
 function createAnyTypeChecker() {
-  return createChainableTypeChecker(emptyFunction.thatReturns(null));
+  return createChainableTypeChecker(emptyFunction.thatReturnsNull);
 }
 
 function createArrayOfTypeChecker(typeChecker) {
