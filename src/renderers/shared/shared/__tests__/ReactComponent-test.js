@@ -370,7 +370,7 @@ describe('ReactComponent', () => {
       'Element type is invalid: expected a string (for built-in components) ' +
       'or a class/function (for composite components) but got: undefined. ' +
       'You likely forgot to export your component from the file it\'s ' +
-      'defined in. Check the render method of `Bar`.'
+      'defined in.\n\nCheck the render method of `Bar`.'
     );
 
     // One warning for each element creation

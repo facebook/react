@@ -474,7 +474,7 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: setState(...): Can only update a mounting component.' +
       ' This usually means you called setState() outside componentWillMount() on the server.' +
-      ' This is a no-op. Please check the code for the Foo component.'
+      ' This is a no-op.\n\nPlease check the code for the Foo component.'
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
@@ -500,7 +500,7 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: replaceState(...): Can only update a mounting component. ' +
       'This usually means you called replaceState() outside componentWillMount() on the server. ' +
-      'This is a no-op. Please check the code for the Bar component.'
+      'This is a no-op.\n\nPlease check the code for the Bar component.'
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Bar />);
     expect(markup).toBe('<div>hello</div>');
@@ -527,7 +527,7 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
       'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
-      'This is a no-op. Please check the code for the Baz component.'
+      'This is a no-op.\n\nPlease check the code for the Baz component.'
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');

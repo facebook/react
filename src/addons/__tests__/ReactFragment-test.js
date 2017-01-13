@@ -55,7 +55,7 @@ describe('ReactFragment', () => {
       'Objects are not valid as a React child (found: object with keys ' +
       '{a, b, c}). If you meant to render a collection of children, use an ' +
       'array instead or wrap the object using createFragment(object) from ' +
-      'the React add-ons. Check the render method of `Foo`.'
+      'the React add-ons.\n\nCheck the render method of `Foo`.'
     );
   });
 

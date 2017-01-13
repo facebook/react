@@ -911,7 +911,7 @@ describe('ReactDOMComponent', () => {
           container
         );
       }).toThrowError(
-        'This DOM node was rendered by `Owner`.'
+        '\n\nThis DOM node was rendered by `Owner`.'
       );
     });
 
@@ -1088,7 +1088,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<X />, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-        'nor use `dangerouslySetInnerHTML`. This DOM node was rendered by `X`.'
+        'nor use `dangerouslySetInnerHTML`.\n\nThis DOM node was rendered by `X`.'
       );
     });
 
@@ -1183,7 +1183,7 @@ describe('ReactDOMComponent', () => {
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
         'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
-        'when using JSX. This DOM node was rendered by `Animal`.'
+        'when using JSX.\n\nThis DOM node was rendered by `Animal`.'
       );
     });
 
