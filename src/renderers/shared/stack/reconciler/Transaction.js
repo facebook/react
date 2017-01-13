@@ -87,11 +87,7 @@ var TransactionImpl = {
    */
   reinitializeTransaction: function(): void {
     this.transactionWrappers = this.getTransactionWrappers();
-    if (this.wrapperInitData) {
-      this.wrapperInitData.length = 0;
-    } else {
-      this.wrapperInitData = [];
-    }
+    this.wrapperInitData = [];
     this._isInTransaction = false;
   },
 
