@@ -39,6 +39,7 @@ var {
   Fragment,
 } = ReactTypeOfWork;
 var {
+  Ref,
   Update,
 } = ReactTypeOfSideEffect;
 
@@ -233,13 +234,13 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
           if (finalizeInitialChildren(instance, type, newProps, rootContainerInstance)) {
-            workInProgress.effectTag |= Update;
+            markUpdate(workInProgress);
           }
 
           workInProgress.stateNode = instance;
           if (workInProgress.ref) {
             // If there is a ref on a host node we need to schedule a callback
-            markUpdate(workInProgress);
+            workInProgress.effectTag |= Ref;
           }
         }
         return null;
