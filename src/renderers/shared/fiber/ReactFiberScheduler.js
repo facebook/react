@@ -442,10 +442,6 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
       const current = workInProgress.alternate;
       const next = completeWork(current, workInProgress);
 
-      // The work is now done. We don't need this anymore. This flags
-      // to the system not to redo any work here.
-      workInProgress.pendingProps = null;
-
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
 

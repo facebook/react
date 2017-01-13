@@ -541,6 +541,85 @@ describe('ReactIncremental', () => {
 
   });
 
+  it('can reuse work that began but did not complete, after being preempted', () => {
+    let ops = [];
+    let child;
+    let sibling;
+
+    function GreatGrandchild() {
+      ops.push('GreatGrandchild');
+      return <div />;
+    }
+
+    function Grandchild() {
+      ops.push('Grandchild');
+      return <GreatGrandchild />;
+    }
+
+    class Child extends React.Component {
+      state = { step: 0 };
+      render() {
+        child = this;
+        ops.push('Child');
+        return <Grandchild />;
+      }
+    }
+
+    class Sibling extends React.Component {
+      render() {
+        ops.push('Sibling');
+        sibling = this;
+        return <div />;
+      }
+    }
+
+    function Parent() {
+      ops.push('Parent');
+      return [
+        // The extra div is necessary because when Parent bails out during the
+        // high priority update, its progressedPriority is set to high.
+        // So its direct children cannot be reused when we resume at
+        // low priority. I think this would be fixed by changing
+        // pendingWorkPriority and progressedPriority to be the priority of
+        // the children only, not including the fiber itself.
+        <div><Child /></div>,
+        <Sibling />,
+      ];
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+    ops = [];
+
+    // Begin working on a low priority update to Child, but stop before
+    // GreatGrandchild. Child and Grandchild begin but don't complete.
+    child.setState({ step: 1 });
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual([
+      'Child',
+      'Grandchild',
+    ]);
+
+    // Interrupt the current low pri work with a high pri update elsewhere in
+    // the tree.
+    ops = [];
+    ReactNoop.performAnimationWork(() => {
+      sibling.setState({});
+    });
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual(['Sibling']);
+
+    // Continue the low pri work. The work on Child and GrandChild was memoized
+    // so they should not be worked on again.
+    ops = [];
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // No Child
+      // No Grandchild
+      'GreatGrandchild',
+    ]);
+  });
+
   it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
 
     var ops = [];
@@ -626,6 +705,43 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     expect(ops).toEqual(['Middle']);
 
+  });
+
+  it('memoizes work even if shouldComponentUpdate returns false', () => {
+    let ops = [];
+    class Foo extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        // this.props is the memoized props. So this should return true for
+        // every update except the first one.
+        const shouldUpdate = this.props.step !== 1;
+        ops.push('shouldComponentUpdate: ' + shouldUpdate);
+        return shouldUpdate;
+      }
+      render() {
+        ops.push('render');
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo step={1} />);
+    ReactNoop.flush();
+
+    ops = [];
+    ReactNoop.render(<Foo step={2} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'shouldComponentUpdate: false',
+    ]);
+
+    ops = [];
+    ReactNoop.render(<Foo step={3} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // If the memoized props were not updated during last bail out, sCU will
+      // keep returning false.
+      'shouldComponentUpdate: true',
+      'render',
+    ]);
   });
 
   it('can update in the middle of a tree using setState', () => {
@@ -873,13 +989,13 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo step={1} />);
     ReactNoop.flushDeferredPri(50);
-    // A completed and was reused. B completed but couldn't be reused because
-    // props differences. C didn't complete and therefore couldn't be reused.
-    // D never even started so it needed a new instance.
-    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:C', 'Bar:D']);
+    // A was memoized and reused. B was memoized but couldn't be reused because
+    // props differences. C was memoized and reused. D never even started so it
+    // needed a new instance.
+    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:D']);
 
     // We expect each rerender to correspond to a new instance.
-    expect(instances.size).toBe(6);
+    expect(instances.size).toBe(5);
   });
 
   it('gets new props when setting state on a partly updated component', () => {
@@ -935,7 +1051,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     ReactNoop.flush();
-    expect(ops).toEqual(['Bar:A-1', 'Baz', 'Baz']);
+    expect(ops).toEqual(['Bar:A-1', 'Baz']);
   });
 
   it('calls componentWillMount twice if the initial render is aborted', () => {

@@ -667,7 +667,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    expect(ops).toEqual(['Foo', 'Baz', 'Bar']);
+    expect(ops).toEqual(['Foo']);
     ops = [];
 
     ReactNoop.flush();
@@ -861,7 +861,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    expect(ops).toEqual(['Bar', 'Bar']);
+    expect(ops).toEqual(['Bar']);
   });
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
