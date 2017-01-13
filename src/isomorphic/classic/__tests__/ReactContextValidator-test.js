@@ -314,7 +314,9 @@ describe('ReactContextValidator', () => {
     ReactTestUtils.renderIntoDocument(<ComponentA/>);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: getChildContext() is not defined for ComponentA'
+      'Warning: ComponentA.childContextTypes is specified but there is no ' +
+      'getChildContext() method on the instance. You can either define ' +
+      'getChildContext() on ComponentA or remove childContextTypes from it.'
     );
 
     // Warnings should be deduped by component type
@@ -323,7 +325,9 @@ describe('ReactContextValidator', () => {
     ReactTestUtils.renderIntoDocument(<ComponentB/>);
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-      'Warning: getChildContext() is not defined for ComponentB'
+      'Warning: ComponentB.childContextTypes is specified but there is no ' +
+      'getChildContext() method on the instance. You can either define ' +
+      'getChildContext() on ComponentB or remove childContextTypes from it.'
     );
   });
 
@@ -332,28 +336,28 @@ describe('ReactContextValidator', () => {
   it('should pass parent context if getChildContext method is missing', () => {
     spyOn(console, 'error');
 
-    var ParentContextProvider = React.createClass({
-      childContextTypes: {
+    class ParentContextProvider extends React.Component {
+      static childContextTypes = {
         foo: React.PropTypes.number,
-      },
-      getChildContext: function() {
+      };
+      getChildContext() {
         return {
           foo: 'FOO',
         };
-      },
-      render: function() {
+      }
+      render() {
         return <MiddleMissingContext />;
-      },
-    });
+      }
+    }
 
-    var MiddleMissingContext = React.createClass({
-      childContextTypes: {
+    class MiddleMissingContext extends React.Component {
+      static childContextTypes = {
         bar: React.PropTypes.string.isRequired,
-      },
-      render: function() {
+      };
+      render() {
         return <ChildContextConsumer />;
-      },
-    });
+      }
+    }
 
     var childContext;
     var ChildContextConsumer = React.createClass({

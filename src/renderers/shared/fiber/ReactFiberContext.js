@@ -34,7 +34,7 @@ const {
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
-  var warningAboutMissingGetChildContext = {};
+  var warnedAboutMissingGetChildContext = {};
 }
 
 // A cursor to the current merged context object on the stack.
@@ -150,11 +150,14 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     if (__DEV__) {
       const componentName = getComponentName(fiber);
       
-      if (!warningAboutMissingGetChildContext[componentName]) {
-        warningAboutMissingGetChildContext[componentName] = true;
+      if (!warnedAboutMissingGetChildContext[componentName]) {
+        warnedAboutMissingGetChildContext[componentName] = true;
         warning(
           false,
-          'getChildContext() is not defined for %s',
+          '%s.childContextTypes is specified but there is no getChildContext() method ' +
+          'on the instance. You can either define getChildContext() on %s or remove ' +
+          'childContextTypes from it.',
+          componentName,
           componentName,
         );
       }

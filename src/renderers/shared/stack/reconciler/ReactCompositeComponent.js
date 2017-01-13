@@ -707,7 +707,10 @@ var ReactCompositeComponent = {
           warningAboutMissingGetChildContext[componentName] = true;
           warning(
             !Component.childContextTypes,
-            'getChildContext() is not defined for %s',
+            '%s.childContextTypes is specified but there is no getChildContext() method ' +
+            'on the instance. You can either define getChildContext() on %s or remove ' +
+            'childContextTypes from it.',
+            componentName,
             componentName,
           );
         }
