@@ -11,26 +11,22 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTransitionGroup;
+import React from 'React';
+import ReactDOM from 'ReactDOM';
+import ReactTransitionGroup from 'ReactTransitionGroup';
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactTransitionGroup', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactTransitionGroup = require('ReactTransitionGroup');
-
     container = document.createElement('div');
   });
 
 
   it('should handle willEnter correctly', () => {
-    var log = [];
+    let log = [];
 
     class Child extends React.Component {
       componentDidMount() {
@@ -77,7 +73,7 @@ describe('ReactTransitionGroup', () => {
       state = {count: 1};
 
       render() {
-        var children = [];
+        const children = [];
         for (var i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
@@ -85,7 +81,7 @@ describe('ReactTransitionGroup', () => {
       }
     }
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount', 'willAppear', 'didAppear']);
 
     log = [];
@@ -100,8 +96,8 @@ describe('ReactTransitionGroup', () => {
   });
 
   it('should handle enter/leave/enter/leave correctly', () => {
-    var log = [];
-    var willEnterCb;
+    let log = [];
+    let willEnterCb;
 
     class Child extends React.Component {
       componentDidMount() {
@@ -139,19 +135,19 @@ describe('ReactTransitionGroup', () => {
       state = {count: 1};
 
       render() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       }
     }
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var k = 0; k < 5; k++) {
+    for (let k = 0; k < 5; k++) {
       instance.setState({count: 2});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 1});
@@ -165,8 +161,8 @@ describe('ReactTransitionGroup', () => {
   });
 
   it('should handle enter/leave/enter correctly', () => {
-    var log = [];
-    var willEnterCb;
+    let log = [];
+    let willEnterCb;
 
     class Child extends React.Component {
       componentDidMount() {
@@ -204,19 +200,19 @@ describe('ReactTransitionGroup', () => {
       state = {count: 1};
 
       render() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       }
     }
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
-    for (var k = 0; k < 5; k++) {
+    for (let k = 0; k < 5; k++) {
       instance.setState({count: 1});
       expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
       instance.setState({count: 2});
@@ -228,7 +224,7 @@ describe('ReactTransitionGroup', () => {
   });
 
   it('should handle entering/leaving several elements at once', () => {
-    var log = [];
+    let log = [];
 
     class Child extends React.Component {
       componentDidMount() {
@@ -266,15 +262,15 @@ describe('ReactTransitionGroup', () => {
       state = {count: 1};
 
       render() {
-        var children = [];
-        for (var i = 0; i < this.state.count; i++) {
+        const children = [];
+        for (let i = 0; i < this.state.count; i++) {
           children.push(<Child key={i} id={i} />);
         }
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       }
     }
 
-    var instance = ReactDOM.render(<Component />, container);
+    const instance = ReactDOM.render(<Component />, container);
     expect(log).toEqual(['didMount0']);
     log = [];
 
@@ -297,7 +293,7 @@ describe('ReactTransitionGroup', () => {
 
     class Component extends React.Component {
       render() {
-        var children = [<div key="1"/>, <div key="1" />];
+        const children = [<div key="1"/>, <div key="1" />];
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       }
     }
