@@ -47,7 +47,7 @@ module.exports = {
     'react/react-in-jsx-scope': ERROR,
     'react/self-closing-comp': ERROR,
     // We don't care to do this
-    'react/jsx-wrap-multilines': [ERROR, {declaration: false, assignment: false}],
+    'react/wrap-multilines': [ERROR, {declaration: false, assignment: false}],
 
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
