@@ -257,7 +257,7 @@ function createFiberFromElementType(type : mixed, key : null | string) {
     fiber.type = type;
   } else if (typeof type === 'object' && type !== null) {
     // Currently assumed to be a continuation and therefore is a fiber already.
-    fiber = type;
+    fiber = ((type : any) : Fiber);
   } else {
     throw new Error('Unknown component type: ' + typeof type);
   }
