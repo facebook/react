@@ -76,8 +76,8 @@ describe('ReactElementValidator', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of `InnerClass`. ' +
+      'Each child in an array or iterator should have a unique "key" prop.' +
+      '\n\nCheck the render method of `InnerClass`. ' +
       'It was passed a child from ComponentWrapper. '
     );
   });
@@ -118,7 +118,7 @@ describe('ReactElementValidator', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
-      '"key" prop. Check the top-level render call using <div>. See ' +
+      '"key" prop.\n\nCheck the top-level render call using <div>. See ' +
       'https://fb.me/react-warning-keys for more information.\n' +
       '    in div (at **)'
     );
@@ -150,7 +150,7 @@ describe('ReactElementValidator', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Each child in an array or iterator should have a unique ' +
-      '"key" prop. Check the render method of `Component`. See ' +
+      '"key" prop.\n\nCheck the render method of `Component`. See ' +
       'https://fb.me/react-warning-keys for more information.\n' +
       '    in div (at **)\n' +
       '    in Component (at **)\n' +
@@ -342,14 +342,14 @@ describe('ReactElementValidator', () => {
       ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: null. Check ' +
+      'or a class/function (for composite components) but got: null.\n\nCheck ' +
       'the render method of `ParentComp`.'
     );
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null. Check the render method of `ParentComp`.' +
+      'components) but got: null.\n\nCheck the render method of `ParentComp`.' +
       '\n    in ParentComp'
     );
   });
@@ -551,7 +551,7 @@ describe('ReactElementValidator', () => {
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in. Check your code at **.'
+      'component from the file it\'s defined in.\n\nCheck your code at **.'
     );
   });
 

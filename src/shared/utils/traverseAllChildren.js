@@ -129,7 +129,7 @@ function traverseAllChildrenImpl(
           if (ReactCurrentOwner.current) {
             var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
             if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = ' Check the render method of `' + mapsAsChildrenOwnerName + '`.';
+              mapsAsChildrenAddendum = '\n\nCheck the render method of `' + mapsAsChildrenOwnerName + '`.';
             }
           }
           warning(
@@ -175,7 +175,7 @@ function traverseAllChildrenImpl(
         if (ReactCurrentOwner.current) {
           var name = ReactCurrentOwner.current.getName();
           if (name) {
-            addendum += ' Check the render method of `' + name + '`.';
+            addendum += '\n\nCheck the render method of `' + name + '`.';
           }
         }
       }

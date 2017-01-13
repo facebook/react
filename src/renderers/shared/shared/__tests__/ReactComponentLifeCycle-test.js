@@ -237,7 +237,7 @@ describe('ReactComponentLifeCycle', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
+      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
       'StatefulComponent component.'
     );
   });
