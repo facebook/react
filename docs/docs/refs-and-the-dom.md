@@ -73,7 +73,7 @@ class AutoFocusTextInput extends React.Component {
 }
 ```
 
-You may not use the `ref` attribute on functional components because they don't have instances. You can, however, use the `ref` attribute inside the `render` function of a functional component:
+You may not use the `ref` attribute on functional components because they don't have instances. You can, however, use the `ref` attribute inside the functional component:
 
 ```javascript{2,3,6,13}
 function CustomTextInput(props) {
