@@ -293,17 +293,20 @@ Now X and O take turns. Next, change the "status" text in Board's `render` so th
 
 ## Declaring a Winner
 
-Let's show when the game is won. A `calculateWinner(squares)` helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
+Let's show when the game is won. A `calculateWinner(squares)` helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins. Let's change the render function to:
 
 ```javascript
 render() {
-  const winner = calculateWinner(this.state.squares);
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-  }
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
+return (
+  <div>
   ...
 }
 ```
