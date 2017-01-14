@@ -738,6 +738,8 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates initial namespaced markup
 * creates elements with SVG namespace inside SVG tag during mount
 * creates elements with SVG namespace inside SVG tag during update
+* can render SVG into a non-React SVG tree
+* can render HTML into a foreignObject in non-React SVG tree
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

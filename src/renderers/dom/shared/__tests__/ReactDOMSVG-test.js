@@ -13,6 +13,7 @@
 
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
@@ -20,6 +21,7 @@ describe('ReactDOMSVG', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
   });
 
@@ -155,6 +157,41 @@ describe('ReactDOMSVG', () => {
       // DOM tagName is capitalized by browsers.
       expect(el.tagName).toBe('DIV');
     });
+  });
+
+  it('can render SVG into a non-React SVG tree', () => {
+    var outerSVGRoot = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    var container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    outerSVGRoot.appendChild(container);
+    var image;
+    ReactDOM.render(
+      <image ref={el => image = el} />,
+      container
+    );
+    expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
+    expect(image.tagName).toBe('image');
+  });
+
+  it('can render HTML into a foreignObject in non-React SVG tree', () => {
+    if (!ReactDOMFeatureFlags.useCreateElement) {
+      // jsdom doesn't give HTML namespace to foreignObject.innerHTML children.
+      // This problem doesn't exist in the browsers.
+      // https://github.com/facebook/react/pull/8638#issuecomment-269349642
+      // We will skip this test in non-createElement mode considering
+      // that non-createElement mounting is effectively dead code now anyway.
+      return;
+    }
+
+    var outerSVGRoot = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    var container = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    outerSVGRoot.appendChild(container);
+    var div;
+    ReactDOM.render(
+      <div ref={el => div = el} />,
+      container
+    );
+    expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+    expect(div.tagName).toBe('DIV');
   });
 
 });
