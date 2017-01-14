@@ -142,7 +142,6 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 * should fail when passed nully values
 * should fail when key/value objects
 * should not fail when passed interpolated single child
-* should not throw when passed non-interpolated single child
 * should return the only child
 
 src/isomorphic/children/__tests__/sliceChildren-test.js
