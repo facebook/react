@@ -183,10 +183,12 @@ And change Square to use `this.props.value` again. Now we need to change what ha
 return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
 ```
 
-Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's do that by changing `render` in Square to have:
+Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's do that by changing the button tag inside Square's `render` function to be:
 
 ```javascript
 <button className="square" onClick={() => this.props.onClick()}>
+   {this.props.value}
+</button>
 ```
 
 This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
