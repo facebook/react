@@ -355,63 +355,179 @@ class Game extends React.Component {
       xIsNext: true
     };
   }
+  
   ...
 }
 ```
 
-Then remove the constructor from `Board` and change `Board` so that it takes `squares` via props and has its own `onClick` prop specified by `Game`, like the transformation we made for `Square` earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
+As you can see, we're pulling up `xIsNext` from the `Board` and into `Game`. Next, entirely remove the constructor and `handleClick` from `Board`. Next, change `Board` so that it takes `squares` via props that will soon be passed down from `Game`. Additionally, let's change the `renderSquare` function so that we're passing the location of each square into the passed down `onClick` handler so that we still know which square was clicked:
 
 ```javascript
-return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />;
+  renderSquare(i) {
+    return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />;
+  }
+```
+
+Lastly, let's get rid of the status logic and the status display from the `Board`'s `render` function. That will be handled by the `Game` class. The `Board`'s `render` should look like:
+
+```javascript
+  render() {
+    return (
+      <div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+          
+          ...
 ```
 
 `Game`'s `render` should look at the most recent history entry and can take over calculating the game status:
 
 ```javascript
-const history = this.state.history;
-const current = history[history.length - 1];
-const winner = calculateWinner(current.squares);
+  render() {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const winner = calculateWinner(current.squares);
 
-let status;
-if (winner) {
-  status = 'Winner: ' + winner;
-} else {
-  status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-}
-...
-<div className="game-board">
-  <Board
-    squares={current.squares}
-    onClick={(i) => this.handleClick(i)}
-  />
-</div>
-<div className="game-info">
-  <div>{status}</div>
-  <ol>{/* TODO */}</ol>
-</div>
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+    
+  ...
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board
+          squares={current.squares}
+          onClick={(i) => this.handleClick(i)}
+        />
+      </div>
+      <div className="game-info">
+        <div>{status}</div>
+        <ol>{/* TODO */}</ol>
+      </div>
+    </div>
+  );
 ```
 
-Its `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
+Lastly, add a `handleClick` function to the Game class which can push a new entry onto the stack by concatenating the new history entry to make a new history array:
 
 ```javascript
-handleClick(i) {
-  const history = this.state.history;
-  const current = history[history.length - 1];
-  const squares = current.squares.slice();
-  if (calculateWinner(squares) || squares[i]) {
-    return;
+  handleClick(i) {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      history: history.concat([{
+        squares: squares
+      }]),
+      xIsNext: !this.state.xIsNext,
+    });
   }
-  squares[i] = this.state.xIsNext ? 'X' : 'O';
-  this.setState({
-    history: history.concat([{
-      squares: squares
-    }]),
-    xIsNext: !this.state.xIsNext,
-  });
+```
+
+At this point, Board only should have `renderSquare` and `render`; the state initialization and click handler should both live in Game.
+
+The `Board` component should look like:
+
+```javascript
+class Board extends React.Component {  
+  renderSquare(i) {
+    return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />;
+  }
+  
+  render() {
+    return (
+      <div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
+      </div>
+    );
+  }
 }
 ```
 
-At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
+while the `Game` component should look like this:
+
+```javascript
+class Game extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      history: [{
+        squares: Array(9).fill(null)
+      }],
+      xIsNext: true
+    };
+  }
+  
+  handleClick(i) {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      history: history.concat([{
+        squares: squares
+      }]),
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+
+  render() {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const winner = calculateWinner(current.squares);
+
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+    
+    return (
+      <div className="game">
+        <div className="game-board">
+          <Board
+            squares={current.squares}
+            onClick={(i) => this.handleClick(i)}
+          />
+        </div>
+        <div className="game-info">
+          <div>{status}</div>
+          <ol>{/* TODO */}</ol>
+        </div>
+      </div>
+    );
+  }
+}
+```
 
 ## Showing the Moves
 
