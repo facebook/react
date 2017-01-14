@@ -25,6 +25,10 @@ function logCapturedError(capturedError : CapturedError) : void {
       willRetry,
     } = capturedError;
 
+    const errorSummary = error.message
+      ? `Error: ${error.message}\n\n`
+      : '';
+
     const componentNameMessage = componentName
       ? `React caught an error thrown by ${componentName}.`
       : 'React caught an error thrown by one of your components.';
@@ -49,8 +53,9 @@ function logCapturedError(capturedError : CapturedError) : void {
 
     console.error(
       `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
-      `${error.stack}\n\n` +
-      `The error was thrown in the following location: ${componentStack}`
+      errorSummary +
+      `The error was thrown in the following location: ${componentStack}\n\n` +
+      error.stack
     );
   }
 
