@@ -27,12 +27,13 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+var validateCallback = require('validateCallback');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
@@ -432,7 +433,7 @@ var ReactMount = {
   },
 
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
-    ReactUpdateQueue.validateCallback(callback, 'ReactDOM.render');
+    validateCallback(callback, 'ReactDOM.render');
     invariant(
       React.isValidElement(nextElement),
       'ReactDOM.render(): Invalid component element.%s',
@@ -466,14 +467,7 @@ var ReactMount = {
       { child: nextElement }
     );
 
-    var nextContext;
-    if (parentComponent) {
-      var parentInst = ReactInstanceMap.get(parentComponent);
-      nextContext = parentInst._processChildContext(parentInst._context);
-    } else {
-      nextContext = emptyObject;
-    }
-
+    var nextContext = getContextForSubtree(parentComponent);
     var prevComponent = getTopLevelWrapperInContainer(container);
 
     if (prevComponent) {

@@ -135,12 +135,6 @@ function runBatchedUpdates(transaction) {
     // that performUpdateIfNecessary is a noop.
     var component = dirtyComponents[i];
 
-    // If performUpdateIfNecessary happens to enqueue any new updates, we
-    // shouldn't execute the callbacks until the next render happens, so
-    // stash the callbacks first
-    var callbacks = component._pendingCallbacks;
-    component._pendingCallbacks = null;
-
     var markerName;
     if (ReactFeatureFlags.logTopLevelRenders) {
       var namedComponent = component;
@@ -161,15 +155,6 @@ function runBatchedUpdates(transaction) {
     if (markerName) {
       console.timeEnd(markerName);
     }
-
-    if (callbacks) {
-      for (var j = 0; j < callbacks.length; j++) {
-        transaction.reconcileTransaction.getReactMountReady().enqueue(
-          callbacks[j],
-          component.getPublicInstance()
-        );
-      }
-    }
   }
 }
 
@@ -179,11 +164,9 @@ var flushBatchedUpdates = function() {
   // componentDidUpdate) but we need to check here too in order to catch
   // updates enqueued by setState callbacks.
   while (dirtyComponents.length) {
-    if (dirtyComponents.length) {
-      var transaction = ReactUpdatesFlushTransaction.getPooled();
-      transaction.perform(runBatchedUpdates, null, transaction);
-      ReactUpdatesFlushTransaction.release(transaction);
-    }
+    var transaction = ReactUpdatesFlushTransaction.getPooled();
+    transaction.perform(runBatchedUpdates, null, transaction);
+    ReactUpdatesFlushTransaction.release(transaction);
   }
 };
 

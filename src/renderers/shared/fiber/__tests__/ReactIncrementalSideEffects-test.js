@@ -16,10 +16,14 @@ var ReactNoop;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
   });
+
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
   function div(...children) {
     children = children.map(c => typeof c === 'string' ? { text: c } : c);
@@ -480,6 +484,38 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
+  it('can update a completed tree before it has a chance to commit', () => {
+    function Foo(props) {
+      return <span prop={props.step}/>;
+    }
+    ReactNoop.render(<Foo step={1} />);
+    // This should be just enough to complete the tree without committing it
+    ReactNoop.flushDeferredPri(20);
+    expect(ReactNoop.getChildren()).toEqual([]);
+    // To confirm, perform one more unit of work. The tree should now be flushed.
+    // (ReactNoop decrements the time remaining by 5 *before* returning it from
+    // the deadline, so to perform n units of work, you need to give it 5n + 5.
+    // TODO: This is confusing. Decrement it after.)
+    ReactNoop.flushDeferredPri(10);
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
+
+    ReactNoop.render(<Foo step={2} />);
+    // This should be just enough to complete the tree without committing it
+    ReactNoop.flushDeferredPri(20);
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
+    // This time, before we commit the tree, we update the root component with
+    // new props
+    ReactNoop.render(<Foo step={3} />);
+    // Now let's commit. We already had a commit that was pending, which will
+    // render 2.
+    ReactNoop.flushDeferredPri(10);
+    expect(ReactNoop.getChildren()).toEqual([span(2)]);
+    // If we flush the rest of the work, we should get another commit that
+    // renders 3. If it renders 2 again, that means an update was dropped.
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span(3)]);
+  });
+
   it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
@@ -611,7 +647,7 @@ describe('ReactIncrementalSideEffects', () => {
       );
     }
     ReactNoop.render(<Foo tick={0} idx={0} />);
-    ReactNoop.flushDeferredPri(65);
+    ReactNoop.flushDeferredPri(65 + 5);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(0),
@@ -631,7 +667,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    expect(ops).toEqual(['Foo', 'Baz', 'Bar']);
+    expect(ops).toEqual(['Foo']);
     ops = [];
 
     ReactNoop.flush();
@@ -770,7 +806,7 @@ describe('ReactIncrementalSideEffects', () => {
     ops = [];
 
     ReactNoop.render(<Foo tick={1} idx={1} />);
-    ReactNoop.flushDeferredPri(70);
+    ReactNoop.flushDeferredPri(70 + 5);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         // Updated.
@@ -793,7 +829,7 @@ describe('ReactIncrementalSideEffects', () => {
     // items. Including the set state since that is deprioritized.
     // TODO: The cycles it takes to do this could be lowered with further
     // optimizations.
-    ReactNoop.flushDeferredPri(60);
+    ReactNoop.flushDeferredPri(60 + 5);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         // Updated.
@@ -825,7 +861,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    expect(ops).toEqual(['Bar', 'Bar']);
+    expect(ops).toEqual(['Bar']);
   });
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
@@ -1037,7 +1073,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('invokes ref callbacks after insertion/update/unmount', () => {
-
+    spyOn(console, 'error');
     var classInstance = null;
 
     var ops = [];
@@ -1097,6 +1133,14 @@ describe('ReactIncrementalSideEffects', () => {
       null,
     ]);
 
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+      'Attempts to access this ref will fail. Check the render method ' +
+      'of `Foo`.\n' +
+      '    in FunctionalComponent (at **)\n' +
+      '    in div (at **)\n' +
+      '    in Foo (at **)'
+    );
   });
 
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the

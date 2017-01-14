@@ -15,7 +15,7 @@ describe('CSSProperty', () => {
   var CSSProperty;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     CSSProperty = require('CSSProperty');
   });
 

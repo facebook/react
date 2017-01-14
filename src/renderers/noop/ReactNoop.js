@@ -21,81 +21,93 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { UpdateQueue } from 'ReactFiberUpdateQueue';
-import type { HostChildren } from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactInstanceMap = require('ReactInstanceMap');
 var {
   AnimationPriority,
 } = require('ReactPriorityLevel');
+var emptyObject = require('emptyObject');
 
 var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
 
-const TERMINAL_TAG = 99;
-const TEXT_TAG = 98;
-
 type Container = { rootID: string, children: Array<Instance | TextInstance> };
 type Props = { prop: any };
-type Instance = { tag: 99, type: string, id: number, children: Array<Instance | TextInstance>, prop: any };
-type TextInstance = { tag: 98, text: string };
+type Instance = {| type: string, id: number, children: Array<Instance | TextInstance>, prop: any |};
+type TextInstance = {| text: string, id: number |};
 
 var instanceCounter = 0;
 
-function recursivelyAppendChildren(
-  flatArray : Array<Instance | TextInstance>,
-  child : HostChildren<Instance | TextInstance>
-) {
-  if (!child) {
-    return;
-  }
-  if (child.tag === TERMINAL_TAG || child.tag === TEXT_TAG) {
-    flatArray.push(child);
-  } else {
-    let node = child;
-    do {
-      recursivelyAppendChildren(flatArray, node.output);
-    } while (node = node.sibling);
-  }
-}
-
-function flattenChildren(children : HostChildren<Instance | TextInstance>) {
-  const flatArray = [];
-  recursivelyAppendChildren(flatArray, children);
-  return flatArray;
-}
+var failInBeginPhase = false;
 
 var NoopRenderer = ReactFiberReconciler({
 
-  updateContainer(containerInfo : Container, children : HostChildren<Instance | TextInstance>) : void {
-    containerInfo.children = flattenChildren(children);
+  getRootHostContext() {
+    if (failInBeginPhase) {
+      throw new Error('Error in host config.');
+    }
+    return emptyObject;
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
+  getChildHostContext() {
+    return emptyObject;
+  },
+
+  getPublicInstance(instance) {
+    return instance;
+  },
+
+  createInstance(type : string, props : Props) : Instance {
     const inst = {
-      tag: TERMINAL_TAG,
       id: instanceCounter++,
       type: type,
-      children: flattenChildren(children),
+      children: [],
       prop: props.prop,
     };
     // Hide from unit tests
-    Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
     Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
     return inst;
   },
 
-  prepareUpdate(instance : Instance, oldProps : Props, newProps : Props) : boolean {
+  appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.children.push(child);
+  },
+
+  finalizeInitialChildren(domElement : Instance, type : string, props : Props) : boolean {
+    return false;
+  },
+
+  prepareUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : boolean {
     return true;
   },
 
-  commitUpdate(instance : Instance, oldProps : Props, newProps : Props) : void {
+  commitMount(instance : Instance, type : string, newProps : Props) : void {
+    // Noop
+  },
+
+  commitUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : void {
     instance.prop = newProps.prop;
   },
 
-  createTextInstance(text : string) : TextInstance {
-    var inst = { tag: TEXT_TAG, text : text };
+  shouldSetTextContent(props : Props) : boolean {
+    return (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number'
+    );
+  },
+
+  resetTextContent(instance : Instance) : void {},
+
+  createTextInstance(
+    text : string,
+    rootContainerInstance : Container,
+    hostContext : Object,
+    internalInstanceHandle : Object
+  ) : TextInstance {
+    var inst = { text : text, id: instanceCounter++ };
     // Hide from unit tests
-    Object.defineProperty(inst, 'tag', { value: inst.tag, enumerable: false });
+    Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
     return inst;
   },
 
@@ -103,7 +115,7 @@ var NoopRenderer = ReactFiberReconciler({
     textInstance.text = newText;
   },
 
-  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -112,7 +124,7 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   insertBefore(
-    parentInstance : Instance,
+    parentInstance : Instance | Container,
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
   ) : void {
@@ -127,7 +139,7 @@ var NoopRenderer = ReactFiberReconciler({
     parentInstance.children.splice(beforeIndex, 0, child);
   },
 
-  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     const index = parentInstance.children.indexOf(child);
     if (index === -1) {
       throw new Error('This child does not exist.');
@@ -155,6 +167,12 @@ var NoopRenderer = ReactFiberReconciler({
     scheduledDeferredCallback = callback;
   },
 
+  prepareForCommit() : void {
+  },
+
+  resetAfterCommit() : void {
+  },
+
 });
 
 var rootContainers = new Map();
@@ -178,25 +196,23 @@ var ReactNoop = {
   },
 
   renderToRootWithID(element : ReactElement<any>, rootID : string, callback : ?Function) {
-    if (!roots.has(rootID)) {
+    let root = roots.get(rootID);
+    if (!root) {
       const container = { rootID: rootID, children: [] };
       rootContainers.set(rootID, container);
-      const root = NoopRenderer.mountContainer(element, container, callback);
+      root = NoopRenderer.createContainer(container);
       roots.set(rootID, root);
-    } else {
-      const root = roots.get(rootID);
-      if (root) {
-        NoopRenderer.updateContainer(element, root, callback);
-      }
     }
+    NoopRenderer.updateContainer(element, root, null, callback);
   },
 
   unmountRootWithID(rootID : string) {
     const root = roots.get(rootID);
-    roots.delete(rootID);
-    rootContainers.delete(rootID);
     if (root) {
-      NoopRenderer.unmountContainer(root);
+      NoopRenderer.updateContainer(null, root, null, () => {
+        roots.delete(rootID);
+        rootContainers.delete(rootID);
+      });
     }
   },
 
@@ -206,10 +222,11 @@ var ReactNoop = {
     }
     // Unsound duck typing.
     const component = (componentOrElement : any);
-    if (component.tag === TERMINAL_TAG || component.tag === TEXT_TAG) {
+    if (typeof component.id === 'number') {
       return component;
     }
-    return NoopRenderer.findHostInstance(component);
+    const inst = ReactInstanceMap.get(component);
+    return inst ? NoopRenderer.findHostInstance(inst) : null;
   },
 
   flushAnimationPri() {
@@ -251,6 +268,8 @@ var ReactNoop = {
 
   batchedUpdates: NoopRenderer.batchedUpdates,
 
+  unbatchedUpdates: NoopRenderer.unbatchedUpdates,
+
   syncUpdates: NoopRenderer.syncUpdates,
 
   // Logs the current state of the tree.
@@ -270,10 +289,13 @@ var ReactNoop = {
     function logHostInstances(children: Array<Instance | TextInstance>, depth) {
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
-        if (child.tag === TEXT_TAG) {
-          log('  '.repeat(depth) + '- ' + child.text);
+        var indent = '  '.repeat(depth);
+        if (typeof child.text === 'string') {
+          log(indent + '- ' + child.text);
         } else {
-          log('  '.repeat(depth) + '- ' + child.type + '#' + child.id);
+          // $FlowFixMe - The child should've been refined now.
+          log(indent + '- ' + child.type + '#' + child.id);
+          // $FlowFixMe - The child should've been refined now.
           logHostInstances(child.children, depth + 1);
         }
       }
@@ -285,21 +307,26 @@ var ReactNoop = {
 
     function logUpdateQueue(updateQueue : UpdateQueue, depth) {
       log(
-        '  '.repeat(depth + 1) + 'QUEUED UPDATES',
-        updateQueue.isReplace ? 'is replace' : '',
-        updateQueue.isForced ? 'is forced' : ''
+        '  '.repeat(depth + 1) + 'QUEUED UPDATES'
       );
+      const firstUpdate = updateQueue.first;
+      if (!firstUpdate) {
+        return;
+      }
+
       log(
         '  '.repeat(depth + 1) + '~',
-        updateQueue.partialState,
-        updateQueue.callback ? 'with callback' : ''
+        firstUpdate && firstUpdate.partialState,
+        firstUpdate.callback ? 'with callback' : '',
+        '[' + firstUpdate.priorityLevel + ']'
       );
       var next;
-      while (next = updateQueue.next) {
+      while (next = firstUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
           next.partialState,
-          next.callback ? 'with callback' : ''
+          next.callback ? 'with callback' : '',
+          '[' + firstUpdate.priorityLevel + ']'
         );
       }
     }
@@ -336,6 +363,15 @@ var ReactNoop = {
     logFiber((root.stateNode : any).current, 0);
 
     console.log(...bufferedLog);
+  },
+
+  simulateErrorInHostConfig(fn : () => void) {
+    failInBeginPhase = true;
+    try {
+      fn();
+    } finally {
+      failInBeginPhase = false;
+    }
   },
 
 };

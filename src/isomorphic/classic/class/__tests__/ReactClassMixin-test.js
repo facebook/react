@@ -124,7 +124,7 @@ describe('ReactClass-mixin', () => {
   it('should support chaining delegate functions', () => {
     var listener = jest.fn();
     var instance = <TestComponent listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
@@ -137,7 +137,7 @@ describe('ReactClass-mixin', () => {
   it('should chain functions regardless of spec property order', () => {
     var listener = jest.fn();
     var instance = <TestComponentWithReverseSpec listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
@@ -181,8 +181,7 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.component).toBe(true);
     expect(instance.state.mixin).toBe(true);
   });
@@ -202,9 +201,8 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrowError(
       'mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the ' +
       'same key: `x`. This conflict may be due to a mixin; in particular, ' +
@@ -321,8 +319,8 @@ describe('ReactClass-mixin', () => {
       },
     });
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -341,8 +339,8 @@ describe('ReactClass-mixin', () => {
       },
     });
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -365,8 +363,8 @@ describe('ReactClass-mixin', () => {
       },
     });
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -389,8 +387,8 @@ describe('ReactClass-mixin', () => {
       },
     });
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
       'either null or not an object. Check the mixins included by the ' +
       'component, as well as any mixins they include themselves. ' +
@@ -450,8 +448,7 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(<Component />);
   });
 
   it('should include the mixin keys in even if their values are falsy', () => {
@@ -470,8 +467,7 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(<Component />);
   });
 
   it('should work with a null getInitialState return value and a mixin', () => {
@@ -496,8 +492,7 @@ describe('ReactClass-mixin', () => {
       () => ReactTestUtils.renderIntoDocument(<Component />)
     ).not.toThrow();
 
-    instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Also the other way round should work
@@ -519,8 +514,7 @@ describe('ReactClass-mixin', () => {
       () => ReactTestUtils.renderIntoDocument(<Component />)
     ).not.toThrow();
 
-    instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Multiple mixins should be fine too
@@ -537,8 +531,7 @@ describe('ReactClass-mixin', () => {
       () => ReactTestUtils.renderIntoDocument(<Component />)
     ).not.toThrow();
 
-    instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state).toEqual({foo: 'bar', x: true});
   });
 

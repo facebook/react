@@ -14,13 +14,14 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var ReactDOMFeatureFlags;
 
 describe('ReactElement', () => {
   var ComponentClass;
   var originalSymbol;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     // Delete the native Symbol if we have one to ensure we test the
     // unpolyfilled environment.
@@ -30,6 +31,7 @@ describe('ReactElement', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
     ComponentClass = React.createClass({
@@ -76,10 +78,10 @@ describe('ReactElement', () => {
         );
       },
     });
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `key` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
@@ -106,10 +108,10 @@ describe('ReactElement', () => {
         );
       },
     });
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `key` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
@@ -120,10 +122,10 @@ describe('ReactElement', () => {
   it('should warn when `key` is being accessed on a host element', () => {
     spyOn(console, 'error');
     var element = <div key="3" />;
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     void element.props.key;
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'div: `key` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
@@ -148,10 +150,10 @@ describe('ReactElement', () => {
         );
       },
     });
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `ref` is not a prop. Trying to access it will result ' +
       'in `undefined` being returned. If you need to access the same ' +
       'value within the child component, you should pass it as a different ' +
@@ -266,9 +268,9 @@ describe('ReactElement', () => {
       React.createElement(Wrapper)
     );
 
-    if (typeof element._owner.tag === 'number') { // Fiber reconciler
+    if (ReactDOMFeatureFlags.useFiber) {
       expect(element._owner.stateNode).toBe(instance);
-    } else { // Stack reconciler
+    } else {
       expect(element._owner.getPublicInstance()).toBe(instance);
     }
   });
@@ -280,7 +282,7 @@ describe('ReactElement', () => {
       children: 'text',
     }, a);
     expect(element.props.children).toBe(a);
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not override children if no rest args are provided', () => {
@@ -289,7 +291,7 @@ describe('ReactElement', () => {
       children: 'text',
     });
     expect(element.props.children).toBe('text');
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('overrides children if null is provided as an argument', () => {
@@ -298,7 +300,7 @@ describe('ReactElement', () => {
       children: 'text',
     }, null);
     expect(element.props.children).toBe(null);
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('merges rest arguments onto the children prop in an array', () => {
@@ -308,7 +310,7 @@ describe('ReactElement', () => {
     var c = 3;
     var element = React.createFactory(ComponentClass)(null, a, b, c);
     expect(element.props.children).toEqual([1, 2, 3]);
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -332,7 +334,7 @@ describe('ReactElement', () => {
 
     var element = React.createElement(StaticMethodComponentClass);
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -477,7 +479,7 @@ describe('ReactElement', () => {
     });
     var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -498,7 +500,7 @@ describe('ReactElement', () => {
       return OTHER_SYMBOL;
     };
 
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
 
@@ -531,7 +533,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
   var Child;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');

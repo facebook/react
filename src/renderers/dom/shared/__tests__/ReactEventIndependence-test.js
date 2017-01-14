@@ -17,7 +17,7 @@ var ReactTestUtils;
 
 describe('ReactEventIndependence', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactDOM = require('ReactDOM');

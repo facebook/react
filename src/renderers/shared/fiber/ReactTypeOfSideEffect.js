@@ -12,17 +12,16 @@
 
 'use strict';
 
-export type TypeOfSideEffect = 0 | 1 | 2 | 3 | 4 | 8 | 9 | 10 | 11 | 12;
+export type TypeOfSideEffect = 0 | 1 | 2 | 3 | 4 | 8 | 16 | 32 | 64;
 
 module.exports = {
-  NoEffect: 0,                          // 0b0000
-  Placement: 1,                         // 0b0001
-  Update: 2,                            // 0b0010
-  PlacementAndUpdate: 3,                // 0b0011
-  Deletion: 4,                          // 0b0100
-  Callback: 8,                          // 0b1000
-  PlacementAndCallback: 9,              // 0b1001
-  UpdateAndCallback: 10,                // 0b1010
-  PlacementAndUpdateAndCallback: 11,    // 0b1011
-  DeletionAndCallback: 12,              // 0b1100
+  NoEffect: 0,                                // 0b0000000
+  Placement: 1,                               // 0b0000001
+  Update: 2,                                  // 0b0000010
+  PlacementAndUpdate: 3,                      // 0b0000011
+  Deletion: 4,                                // 0b0000100
+  ContentReset: 8,                            // 0b0001000
+  Callback: 16,                               // 0b0010000
+  Err: 32,                                    // 0b0100000
+  Ref: 64,                                    // 0b1000000
 };

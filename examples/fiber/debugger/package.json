@@ -3,13 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "devDependencies": {
-    "react-scripts": "0.6.1"
+    "react-scripts": "0.8.4"
   },
   "dependencies": {
     "dagre": "^0.7.4",
     "pretty-format": "^4.2.1",
-    "react": "^15.3.2",
-    "react-dom": "^15.3.2",
     "react-draggable": "^2.2.2",
     "react-motion": "^0.4.5"
   },

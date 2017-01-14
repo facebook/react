@@ -12,99 +12,285 @@
 
 'use strict';
 
-import type { HostChildren } from 'ReactFiberReconciler';
+import type { Fiber } from 'ReactFiber';
+import type { ReactNodeList } from 'ReactTypes';
 
-var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactControlledComponent = require('ReactControlledComponent');
+var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMInjection = require('ReactDOMInjection');
+var ReactGenericBatching = require('ReactGenericBatching');
+var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactInputSelection = require('ReactInputSelection');
+var ReactInstanceMap = require('ReactInstanceMap');
+var ReactPortal = require('ReactPortal');
 
+var findDOMNode = require('findDOMNode');
+var invariant = require('invariant');
 var warning = require('warning');
+
+var {
+  createElement,
+  getChildNamespace,
+  setInitialProperties,
+  updateProperties,
+} = ReactDOMFiberComponent;
+var { precacheFiberNode } = ReactDOMComponentTree;
+
+if (__DEV__) {
+  var validateDOMNesting = require('validateDOMNesting');
+  var { updatedAncestorInfo } = validateDOMNesting;
+}
+
+const DOCUMENT_NODE = 9;
+
+ReactDOMInjection.inject();
+ReactControlledComponent.injection.injectFiberControlledHostComponent(
+  ReactDOMFiberComponent
+);
+findDOMNode._injectFiber(function(fiber: Fiber) {
+  return DOMRenderer.findHostInstance(fiber);
+});
 
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
-type Props = { className ?: string };
+type Props = {
+  autoFocus ?: boolean,
+  children ?: mixed,
+};
 type Instance = Element;
 type TextInstance = Text;
 
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance | TextInstance>) {
-  if (!child) {
-    return;
+type HostContextDev = {
+  namespace : string,
+  ancestorInfo : mixed,
+};
+type HostContextProd = string;
+type HostContext = HostContextDev | HostContextProd;
+
+let eventsEnabled : ?boolean = null;
+let selectionInformation : ?mixed = null;
+
+var ELEMENT_NODE_TYPE = 1;
+var DOC_NODE_TYPE = 9;
+var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
+
+/**
+ * True if the supplied DOM node is a valid node element.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @return {boolean} True if the DOM is a valid DOM node.
+ * @internal
+ */
+function isValidContainer(node) {
+  return !!(node && (
+    node.nodeType === ELEMENT_NODE_TYPE ||
+    node.nodeType === DOC_NODE_TYPE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+  ));
+}
+
+function validateContainer(container) {
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
   }
-  /* $FlowFixMe: Element and Text should have this property. */
-  if (child.nodeType === 1 || child.nodeType === 3) {
-    /* $FlowFixMe: Refinement issue. I don't know how to express different. */
-    parent.appendChild(child);
-  } else {
-    /* As a result of the refinement issue this type isn't known. */
-    let node : any = child;
-    do {
-      recursivelyAppendChildren(parent, node.output);
-    } while (node = node.sibling);
+}
+
+function shouldAutoFocusHostComponent(
+  type : string,
+  props : Props,
+) : boolean {
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      return !!props.autoFocus;
   }
+  return false;
 }
 
 var DOMRenderer = ReactFiberReconciler({
 
-  updateContainer(container : Container, children : HostChildren<Instance | TextInstance>) : void {
-    // TODO: Containers should update similarly to other parents.
-    container.innerHTML = '';
-    recursivelyAppendChildren(container, children);
+  getRootHostContext(rootContainerInstance : Container) : HostContext {
+    const type = rootContainerInstance.tagName.toLowerCase();
+    if (__DEV__) {
+      const namespace = getChildNamespace(null, type);
+      const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
+      const ancestorInfo = updatedAncestorInfo(null, isMountingIntoDocument ? '#document' : type, null);
+      return {namespace, ancestorInfo};
+    }
+    return getChildNamespace(null, type);
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance | TextInstance>) : Instance {
-    const domElement = document.createElement(type);
-    recursivelyAppendChildren(domElement, children);
-    if (typeof props.className !== 'undefined') {
-      domElement.className = props.className;
+  getChildHostContext(
+    parentHostContext : HostContext,
+    type : string,
+  ) : HostContext {
+    if (__DEV__) {
+      const parentHostContextDev = ((parentHostContext : any) : HostContextDev);
+      const namespace = getChildNamespace(parentHostContextDev.namespace, type);
+      const ancestorInfo = updatedAncestorInfo(parentHostContextDev.ancestorInfo, type, null);
+      return {namespace, ancestorInfo};
     }
-    if (typeof props.children === 'string') {
-      domElement.textContent = props.children;
-    } else if (typeof props.children === 'number') {
-      domElement.textContent = props.children.toString();
+    const parentNamespace = ((parentHostContext : any) : HostContextProd);
+    return getChildNamespace(parentNamespace, type);
+  },
+
+  getPublicInstance(instance) {
+    return instance;
+  },
+
+  prepareForCommit() : void {
+    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
+    selectionInformation = ReactInputSelection.getSelectionInformation();
+    ReactBrowserEventEmitter.setEnabled(false);
+  },
+
+  resetAfterCommit() : void {
+    ReactInputSelection.restoreSelection(selectionInformation);
+    selectionInformation = null;
+    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+    eventsEnabled = null;
+  },
+
+  createInstance(
+    type : string,
+    props : Props,
+    rootContainerInstance : Container,
+    hostContext : HostContext,
+    internalInstanceHandle : Object,
+  ) : Instance {
+    let parentNamespace : string;
+    if (__DEV__) {
+      // TODO: take namespace into account when validating.
+      const hostContextDev = ((hostContext : any) : HostContextDev);
+      validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
+      if (
+        typeof props.children === 'string' ||
+        typeof props.children === 'number'
+      ) {
+        const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
+        validateDOMNesting(null, String(props.children), null, ownAncestorInfo);
+      }
+      parentNamespace = hostContextDev.namespace;
+    } else {
+      parentNamespace = ((hostContext : any) : HostContextProd);
     }
+    const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
+    precacheFiberNode(internalInstanceHandle, domElement);
     return domElement;
+  },
+
+  appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+    parentInstance.appendChild(child);
+  },
+
+  finalizeInitialChildren(
+    domElement : Instance,
+    type : string,
+    props : Props,
+    rootContainerInstance : Container,
+  ) : boolean {
+    setInitialProperties(domElement, type, props, rootContainerInstance);
+    return shouldAutoFocusHostComponent(type, props);
   },
 
   prepareUpdate(
     domElement : Instance,
+    type : string,
     oldProps : Props,
-    newProps : Props
+    newProps : Props,
+    hostContext : HostContext,
   ) : boolean {
+    if (__DEV__) {
+      const hostContextDev = ((hostContext : any) : HostContextDev);
+      if (typeof newProps.children !== typeof oldProps.children && (
+        typeof newProps.children === 'string' ||
+        typeof newProps.children === 'number'
+      )) {
+        const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
+        validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
+      }
+    }
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props) : void {
-    if (typeof newProps.className !== 'undefined') {
-      domElement.className = newProps.className;
-    }
-    if (typeof newProps.children === 'string') {
-      domElement.textContent = newProps.children;
-    } else if (typeof newProps.children === 'number') {
-      domElement.textContent = newProps.children.toString();
-    }
+  commitMount(
+    domElement : Instance,
+    type : string,
+    newProps : Props,
+    rootContainerInstance : Container,
+    internalInstanceHandle : Object,
+  ) : void {
+    ((domElement : any) : HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).focus();
   },
 
-  createTextInstance(text : string) : TextInstance {
-    return document.createTextNode(text);
+  commitUpdate(
+    domElement : Instance,
+    type : string,
+    oldProps : Props,
+    newProps : Props,
+    rootContainerInstance : Container,
+    internalInstanceHandle : Object,
+  ) : void {
+    // Update the internal instance handle so that we know which props are
+    // the current ones.
+    precacheFiberNode(internalInstanceHandle, domElement);
+    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
+  },
+
+  shouldSetTextContent(props : Props) : boolean {
+    return (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number' ||
+      (
+        typeof props.dangerouslySetInnerHTML === 'object' &&
+        props.dangerouslySetInnerHTML !== null &&
+        typeof props.dangerouslySetInnerHTML.__html === 'string'
+      )
+    );
+  },
+
+  resetTextContent(domElement : Instance) : void {
+    domElement.textContent = '';
+  },
+
+  createTextInstance(
+    text : string,
+    rootContainerInstance : Container,
+    hostContext : HostContext,
+    internalInstanceHandle : Object
+  ) : TextInstance {
+    if (__DEV__) {
+      const hostContextDev = ((hostContext : any) : HostContextDev);
+      validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
+    }
+    var textNode : TextInstance = document.createTextNode(text);
+    precacheFiberNode(internalInstanceHandle, textNode);
+    return textNode;
   },
 
   commitTextUpdate(textInstance : TextInstance, oldText : string, newText : string) : void {
     textInstance.nodeValue = newText;
   },
 
-  appendChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  appendChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     parentInstance.appendChild(child);
   },
 
   insertBefore(
-    parentInstance : Instance,
+    parentInstance : Instance | Container,
     child : Instance | TextInstance,
     beforeChild : Instance | TextInstance
   ) : void {
     parentInstance.insertBefore(child, beforeChild);
   },
 
-  removeChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  removeChild(parentInstance : Instance | Container, child : Instance | TextInstance) : void {
     parentInstance.removeChild(child);
   },
 
@@ -115,6 +301,8 @@ var DOMRenderer = ReactFiberReconciler({
   useSyncScheduling: true,
 
 });
+
+ReactGenericBatching.injection.injectFiberBatchedUpdates(DOMRenderer.batchedUpdates);
 
 var warned = false;
 
@@ -128,46 +316,70 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
+function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, children : ReactNodeList, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  validateContainer(containerNode);
+
+  let container : DOMContainerElement =
+    containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
+  let root = container._reactRootContainer;
+  if (!root) {
+    // First clear any existing content.
+    while (container.lastChild) {
+      container.removeChild(container.lastChild);
+    }
+    const newRoot = DOMRenderer.createContainer(container);
+    root = container._reactRootContainer = newRoot;
+    // Initial mount should not be batched.
+    DOMRenderer.unbatchedUpdates(() => {
+      DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
+    });
+  } else {
+    DOMRenderer.updateContainer(children, root, parentComponent, callback);
+  }
+  return DOMRenderer.getPublicRootInstance(root);
+}
+
 var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
-    warnAboutUnstableUse();
-    let root;
+    validateContainer(container);
+    return renderSubtreeIntoContainer(null, element, container, callback);
+  },
 
-    if (!container._reactRootContainer) {
-      root = container._reactRootContainer = DOMRenderer.mountContainer(element, container, callback);
-    } else {
-      DOMRenderer.updateContainer(element, root = container._reactRootContainer, callback);
-    }
-    return DOMRenderer.getPublicRootInstance(root);
+  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+    invariant(
+      parentComponent != null && ReactInstanceMap.has(parentComponent),
+      'parentComponent must be a valid React Component'
+    );
+    return renderSubtreeIntoContainer(parentComponent, element, containerNode, callback);
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {
+    invariant(
+      isValidContainer(container),
+      'unmountComponentAtNode(...): Target container is not a DOM element.'
+    );
     warnAboutUnstableUse();
-    const root = container._reactRootContainer;
-    if (root) {
-      // TODO: Is it safe to reset this now or should I wait since this
-      // unmount could be deferred?
-      container._reactRootContainer = null;
-      DOMRenderer.unmountContainer(root);
+    if (container._reactRootContainer) {
+      // Unmount should not be batched.
+      return DOMRenderer.unbatchedUpdates(() => {
+        return renderSubtreeIntoContainer(null, null, container, () => {
+          container._reactRootContainer = null;
+        });
+      });
     }
   },
 
-  findDOMNode(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
-    if (componentOrElement == null) {
-      return null;
-    }
-    // Unsound duck typing.
-    const component = (componentOrElement : any);
-    if (component.nodeType === 1) {
-      return component;
-    }
-    return DOMRenderer.findHostInstance(component);
+  findDOMNode: findDOMNode,
+
+  unstable_createPortal(children: ReactNodeList, container : DOMContainerElement, key : ?string = null) {
+    // TODO: pass ReactDOM portal implementation as third argument
+    return ReactPortal.createPortal(children, container, null, key);
   },
 
-  unstable_batchedUpdates<A>(fn : () => A) : A {
-    return DOMRenderer.batchedUpdates(fn);
-  },
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+
+  unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
 };
 

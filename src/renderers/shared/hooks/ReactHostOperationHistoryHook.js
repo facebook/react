@@ -26,25 +26,30 @@ export type Operation = {instanceID: DebugID} & (
   {type: 'remove attribute', payload: string}
 );
 
-var history: Array<Operation> = [];
+// Trust the developer to only use this with a __DEV__ check
+var ReactHostOperationHistoryHook = ((null: any): typeof ReactHostOperationHistoryHook);
 
-var ReactHostOperationHistoryHook = {
-  onHostOperation(operation: Operation) {
-    history.push(operation);
-  },
+if (__DEV__) {
+  var history: Array<Operation> = [];
 
-  clearHistory(): void {
-    if (ReactHostOperationHistoryHook._preventClearing) {
-      // Should only be used for tests.
-      return;
-    }
+  ReactHostOperationHistoryHook = {
+    onHostOperation(operation: Operation) {
+      history.push(operation);
+    },
 
-    history = [];
-  },
+    clearHistory(): void {
+      if (ReactHostOperationHistoryHook._preventClearing) {
+        // Should only be used for tests.
+        return;
+      }
 
-  getHistory(): Array<Operation> {
-    return history;
-  },
-};
+      history = [];
+    },
+
+    getHistory(): Array<Operation> {
+      return history;
+    },
+  };
+}
 
 module.exports = ReactHostOperationHistoryHook;

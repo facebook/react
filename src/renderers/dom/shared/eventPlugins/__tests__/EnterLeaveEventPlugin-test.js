@@ -18,7 +18,7 @@ var ReactDOMComponentTree;
 
 describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     React = require('React');

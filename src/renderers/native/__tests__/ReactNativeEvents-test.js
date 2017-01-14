@@ -19,7 +19,7 @@ var UIManager;
 var createReactNativeComponentClass;
 
 beforeEach(() => {
-  jest.resetModuleRegistry();
+  jest.resetModules();
 
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('React');

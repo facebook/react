@@ -17,7 +17,7 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
-require('InitializeJavaScriptAppEngine');
+require('InitializeCore');
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
@@ -30,6 +30,7 @@ var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 
+var findNodeHandle = require('findNodeHandle');
 var invariant = require('invariant');
 
 function inject() {
@@ -60,6 +61,13 @@ function inject() {
       instantiate
     );
   };
+
+  findNodeHandle.injection.injectFindNode(
+    (instance) => instance.getHostNode()
+  );
+  findNodeHandle.injection.injectFindRootNodeID(
+    (instance) => instance._rootNodeID
+  );
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 

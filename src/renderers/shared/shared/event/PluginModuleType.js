@@ -36,14 +36,5 @@ export type PluginModule<NativeEvent> = {
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
   ) => null | ReactSyntheticEvent,
-  didPutListener?: (
-    inst: ReactInstance,
-    registrationName: string,
-    listener: () => void,
-  ) => void,
-  willDeleteListener?: (
-    inst: ReactInstance,
-    registrationName: string,
-  ) => void,
   tapMoveThreshold?: number,
 };

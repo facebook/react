@@ -13,83 +13,79 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type { PriorityLevel } from 'ReactPriorityLevel';
 
 var {
-  createUpdateQueue,
-  addToQueue,
-  addCallbackToQueue,
-  mergeUpdateQueue,
+  Update,
+} = require('ReactTypeOfSideEffect');
+var {
+  cacheContext,
+  getMaskedContext,
+  getUnmaskedContext,
+  isContextConsumer,
+} = require('ReactFiberContext');
+var {
+  addUpdate,
+  addReplaceUpdate,
+  addForceUpdate,
+  beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
-var { isMounted } = require('ReactFiberTreeReflection');
+var { hasContextChanged } = require('ReactFiberContext');
+var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
+var emptyObject = require('emptyObject');
 var shallowEqual = require('shallowEqual');
 var warning = require('warning');
 var invariant = require('invariant');
 
-
 const isArray = Array.isArray;
 
-module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
-
-  function scheduleUpdateQueue(fiber: Fiber, updateQueue: UpdateQueue) {
-    fiber.updateQueue = updateQueue;
-    // Schedule update on the alternate as well, since we don't know which tree
-    // is current.
-    if (fiber.alternate) {
-      fiber.alternate.updateQueue = updateQueue;
-    }
-    scheduleUpdate(fiber);
-  }
+module.exports = function(
+  scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
+  getPriorityContext : () => PriorityLevel,
+  memoizeProps: (workInProgress : Fiber, props : any) => void,
+  memoizeState: (workInProgress : Fiber, state : any) => void,
+) {
 
   // Class component state updater
   const updater = {
     isMounted,
-    enqueueSetState(instance, partialState) {
+    enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue ?
-        addToQueue(fiber.updateQueue, partialState) :
-        createUpdateQueue(partialState);
-      scheduleUpdateQueue(fiber, updateQueue);
+      const priorityLevel = getPriorityContext();
+      addUpdate(fiber, partialState, callback || null, priorityLevel);
+      scheduleUpdate(fiber, priorityLevel);
     },
-    enqueueReplaceState(instance, state) {
+    enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = createUpdateQueue(state);
-      updateQueue.isReplace = true;
-      scheduleUpdateQueue(fiber, updateQueue);
+      const priorityLevel = getPriorityContext();
+      addReplaceUpdate(fiber, state, callback || null, priorityLevel);
+      scheduleUpdate(fiber, priorityLevel);
     },
-    enqueueForceUpdate(instance) {
+    enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const updateQueue = fiber.updateQueue || createUpdateQueue(null);
-      updateQueue.isForced = true;
-      scheduleUpdateQueue(fiber, updateQueue);
-    },
-    enqueueCallback(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
-      let updateQueue = fiber.updateQueue ?
-        fiber.updateQueue :
-        createUpdateQueue(null);
-      addCallbackToQueue(updateQueue, callback);
-      scheduleUpdateQueue(fiber, updateQueue);
+      const priorityLevel = getPriorityContext();
+      addForceUpdate(fiber, callback || null, priorityLevel);
+      scheduleUpdate(fiber, priorityLevel);
     },
   };
 
-  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, newState) {
-    const updateQueue = workInProgress.updateQueue;
-    if (oldProps === null || (updateQueue && updateQueue.isForced)) {
+  function checkShouldComponentUpdate(workInProgress, oldProps, newProps, oldState, newState, newContext) {
+    if (oldProps === null || (workInProgress.updateQueue && workInProgress.updateQueue.hasForceUpdate)) {
+      // If the workInProgress already has an Update effect, return true
       return true;
     }
 
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
-      const shouldUpdate = instance.shouldComponentUpdate(newProps, newState);
+      const shouldUpdate = instance.shouldComponentUpdate(newProps, newState, newContext);
 
       if (__DEV__) {
         warning(
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
           'boolean value. Make sure to return true or false.',
-          getName(workInProgress, instance)
+          getComponentName(workInProgress)
         );
       }
 
@@ -100,27 +96,18 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     if (type.prototype && type.prototype.isPureReactComponent) {
       return (
         !shallowEqual(oldProps, newProps) ||
-        !shallowEqual(instance.state, newState)
+        !shallowEqual(oldState, newState)
       );
     }
 
     return true;
   }
 
-  function getName(workInProgress: Fiber, inst: any): string {
-    const type = workInProgress.type;
-    const constructor = inst && inst.constructor;
-    return (
-      type.displayName || (constructor && constructor.displayName) ||
-      type.name || (constructor && constructor.name) ||
-      'A Component'
-    );
-  }
-
-  function checkClassInstance(workInProgress: Fiber, inst: any) {
+  function checkClassInstance(workInProgress: Fiber) {
+    const instance = workInProgress.stateNode;
     if (__DEV__) {
-      const name = getName(workInProgress, inst);
-      const renderPresent = inst.render;
+      const name = getComponentName(workInProgress);
+      const renderPresent = instance.render;
       warning(
         renderPresent,
         '%s(...): No `render` method found on the returned component ' +
@@ -128,8 +115,9 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         name
       );
       const noGetInitialStateOnES6 = (
-        !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved
+        !instance.getInitialState ||
+        instance.getInitialState.isReactClassApproved ||
+        instance.state
       );
       warning(
         noGetInitialStateOnES6,
@@ -139,8 +127,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         name
       );
       const noGetDefaultPropsOnES6 = (
-        !inst.getDefaultProps ||
-        inst.getDefaultProps.isReactClassApproved
+        !instance.getDefaultProps ||
+        instance.getDefaultProps.isReactClassApproved
       );
       warning(
         noGetDefaultPropsOnES6,
@@ -149,21 +137,21 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'Use a static property to define defaultProps instead.',
         name
       );
-      const noInstancePropTypes = !inst.propTypes;
+      const noInstancePropTypes = !instance.propTypes;
       warning(
         noInstancePropTypes,
         'propTypes was defined as an instance property on %s. Use a static ' +
         'property to define propTypes instead.',
         name,
       );
-      const noInstanceContextTypes = !inst.contextTypes;
+      const noInstanceContextTypes = !instance.contextTypes;
       warning(
         noInstanceContextTypes,
         'contextTypes was defined as an instance property on %s. Use a static ' +
         'property to define contextTypes instead.',
         name,
       );
-      const noComponentShouldUpdate = typeof inst.componentShouldUpdate !== 'function';
+      const noComponentShouldUpdate = typeof instance.componentShouldUpdate !== 'function';
       warning(
         noComponentShouldUpdate,
         '%s has a method called ' +
@@ -172,7 +160,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'expected to return a value.',
         name
       );
-      const noComponentDidUnmount = typeof inst.componentDidUnmount !== 'function';
+      const noComponentDidUnmount = typeof instance.componentDidUnmount !== 'function';
       warning(
         noComponentDidUnmount,
         '%s has a method called ' +
@@ -180,23 +168,60 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         'Did you mean componentWillUnmount()?',
         name
       );
-      const noComponentWillRecieveProps = typeof inst.componentWillRecieveProps !== 'function';
+      const noComponentWillRecieveProps = typeof instance.componentWillRecieveProps !== 'function';
       warning(
         noComponentWillRecieveProps,
         '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name
       );
+      const hasMutatedProps = instance.props !== workInProgress.pendingProps;
+      warning(
+        instance.props === undefined || !hasMutatedProps,
+        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'up the same props that your component\'s constructor was passed.',
+        name,
+        name
+      );
     }
 
-    const instanceState = inst.state;
-    if (instanceState && (typeof instanceState !== 'object' || isArray(instanceState))) {
+    const state = instance.state;
+    if (state && (typeof state !== 'object' || isArray(state))) {
       invariant(
         false,
         '%s.state: must be set to an object or null',
-        getName(workInProgress, inst)
+        getComponentName(workInProgress)
       );
     }
+    if (typeof instance.getChildContext === 'function') {
+      invariant(
+        typeof workInProgress.type.childContextTypes === 'object',
+        '%s.getChildContext(): childContextTypes must be defined in order to ' +
+        'use getChildContext().',
+        getComponentName(workInProgress)
+      );
+    }
+  }
+
+
+  function markUpdate(workInProgress) {
+    workInProgress.effectTag |= Update;
+  }
+
+  function markUpdateIfAlreadyInProgress(current: ?Fiber, workInProgress : Fiber) {
+    // If an update was already in progress, we should schedule an Update
+    // effect even though we're bailing out, so that cWU/cDU are called.
+    if (current) {
+      if (workInProgress.memoizedProps !== current.memoizedProps ||
+          workInProgress.memoizedState !== current.memoizedState) {
+        markUpdate(workInProgress);
+      }
+    }
+  }
+
+  function resetInputPointers(workInProgress : Fiber, instance : any) {
+    instance.props = workInProgress.memoizedProps;
+    instance.state = workInProgress.memoizedState;
   }
 
   function adoptClassInstance(workInProgress : Fiber, instance : any) : void {
@@ -209,16 +234,26 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
   function constructClassInstance(workInProgress : Fiber) : any {
     const ctor = workInProgress.type;
     const props = workInProgress.pendingProps;
-    const instance = new ctor(props);
-    checkClassInstance(workInProgress, instance);
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+    const needsContext = isContextConsumer(workInProgress);
+    const context = needsContext ? getMaskedContext(workInProgress, unmaskedContext) : emptyObject;
+    const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
+    checkClassInstance(workInProgress);
+
+    // Cache unmasked context so we can avoid recreating masked context unless necessary.
+    // ReactFiberContext usually updates this cache but can't for newly-created instances.
+    if (needsContext) {
+      cacheContext(workInProgress, unmaskedContext, context);
+    }
+
     return instance;
   }
 
   // Invokes the mount life-cycles on a previously never rendered instance.
-  function mountClassInstance(workInProgress : Fiber) : void {
+  function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
+    markUpdate(workInProgress);
     const instance = workInProgress.stateNode;
-
     const state = instance.state || null;
 
     let props = workInProgress.pendingProps;
@@ -226,8 +261,11 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       throw new Error('There must be pending props for an initial mount.');
     }
 
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+
     instance.props = props;
     instance.state = state;
+    instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {
       instance.componentWillMount();
@@ -235,14 +273,25 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue) {
-        instance.state = mergeUpdateQueue(updateQueue, instance, state, props);
+        instance.state = beginUpdateQueue(
+          workInProgress,
+          updateQueue,
+          instance,
+          state,
+          props,
+          priorityLevel
+        );
       }
     }
   }
 
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
-  function resumeMountClassInstance(workInProgress : Fiber) : boolean {
+  function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
+    markUpdate(workInProgress);
+    const instance = workInProgress.stateNode;
+    resetInputPointers(workInProgress, instance);
+
     let newState = workInProgress.memoizedState;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
@@ -253,6 +302,8 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         throw new Error('There should always be pending or memoized props.');
       }
     }
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
     // TODO: Should we deal with a setState that happened after the last
     // componentWillMount and before this componentWillMount? Probably
@@ -262,8 +313,15 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
       workInProgress,
       workInProgress.memoizedProps,
       newProps,
-      newState
+      workInProgress.memoizedState,
+      newState,
+      newContext
     )) {
+      // Update the existing instance's state, props, and context pointers even
+      // though we're bailing out.
+      instance.props = newProps;
+      instance.state = newState;
+      instance.context = newContext;
       return false;
     }
 
@@ -272,6 +330,7 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     const newInstance = constructClassInstance(workInProgress);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
+    newInstance.context = newContext;
 
     if (typeof newInstance.componentWillMount === 'function') {
       newInstance.componentWillMount();
@@ -281,16 +340,24 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue) {
-      newInstance.state = mergeUpdateQueue(newUpdateQueue, newInstance, newState, newProps);
+      newInstance.state = beginUpdateQueue(
+        workInProgress,
+        newUpdateQueue,
+        newInstance,
+        newState,
+        newProps,
+        priorityLevel
+      );
     }
     return true;
   }
 
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
-  function updateClassInstance(current : Fiber, workInProgress : Fiber) : boolean {
+  function updateClassInstance(current : Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
     const instance = workInProgress.stateNode;
+    resetInputPointers(workInProgress, instance);
 
-    const oldProps = workInProgress.memoizedProps || current.memoizedProps;
+    const oldProps = workInProgress.memoizedProps;
     let newProps = workInProgress.pendingProps;
     if (!newProps) {
       // If there aren't any new props, then we'll reuse the memoized props.
@@ -300,55 +367,76 @@ module.exports = function(scheduleUpdate : (fiber: Fiber) => void) {
         throw new Error('There should always be pending or memoized props.');
       }
     }
+    const oldContext = instance.context;
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
     // Note: During these life-cycles, instance.props/instance.state are what
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
 
-    if (oldProps !== newProps) {
+    if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
-        instance.componentWillReceiveProps(newProps);
+        instance.componentWillReceiveProps(newProps, newContext);
       }
     }
 
     // Compute the next state using the memoized state and the update queue.
     const updateQueue = workInProgress.updateQueue;
-    const previousState = workInProgress.memoizedState;
+    const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
     if (updateQueue) {
-      if (!updateQueue.hasUpdate) {
-        newState = previousState;
-      } else {
-        newState = mergeUpdateQueue(updateQueue, instance, previousState, newProps);
-      }
+      newState = beginUpdateQueue(
+        workInProgress,
+        updateQueue,
+        instance,
+        oldState,
+        newProps,
+        priorityLevel
+      );
     } else {
-      newState = previousState;
+      newState = oldState;
     }
 
     if (oldProps === newProps &&
-        previousState === newState &&
-        updateQueue && !updateQueue.isForced) {
+        oldState === newState &&
+        !hasContextChanged() &&
+        !(updateQueue && updateQueue.hasForceUpdate)) {
+      markUpdateIfAlreadyInProgress(current, workInProgress);
       return false;
     }
 
-    if (!checkShouldComponentUpdate(
+    const shouldUpdate = checkShouldComponentUpdate(
       workInProgress,
       oldProps,
       newProps,
-      newState
-    )) {
-      // TODO: Should this get the new props/state updated regardless?
-      return false;
+      oldState,
+      newState,
+      newContext
+    );
+
+    if (shouldUpdate) {
+      markUpdate(workInProgress);
+      if (typeof instance.componentWillUpdate === 'function') {
+        instance.componentWillUpdate(newProps, newState, newContext);
+      }
+    } else {
+      markUpdateIfAlreadyInProgress(current, workInProgress);
+
+      // If shouldComponentUpdate returned false, we should still update the
+      // memoized props/state to indicate that this work can be reused.
+      memoizeProps(workInProgress, newProps);
+      memoizeState(workInProgress, newState);
     }
 
-    if (typeof instance.componentWillUpdate === 'function') {
-      instance.componentWillUpdate(newProps, newState);
-    }
-
+    // Update the existing instance's state, props, and context pointers even
+    // if shouldComponentUpdate returns false.
     instance.props = newProps;
     instance.state = newState;
-    return true;
+    instance.context = newContext;
+
+    return shouldUpdate;
   }
 
   return {

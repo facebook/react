@@ -11,6 +11,8 @@
 
 'use strict';
 
+var EventPluginUtils = require('EventPluginUtils');
+
 var invariant = require('invariant');
 
 // Use to restore controlled state after a change event has fired.
@@ -25,35 +27,69 @@ var ReactControlledComponentInjection = {
   },
 };
 
-var needsRestoreState = false;
+var restoreTarget = null;
+var restoreQueue = null;
+
+function restoreStateOfTarget(target) {
+  // We perform this translation at the end of the event loop so that we
+  // always receive the correct fiber here
+  var internalInstance = EventPluginUtils.getInstanceFromNode(target);
+  if (!internalInstance) {
+    // Unmounted
+    return;
+  }
+  if (typeof internalInstance.tag === 'number') {
+    invariant(
+      fiberHostComponent &&
+      typeof fiberHostComponent.restoreControlledState === 'function',
+      'Fiber needs to be injected to handle a fiber target for controlled ' +
+      'events.'
+    );
+    fiberHostComponent.restoreControlledState(
+      internalInstance.stateNode,
+      internalInstance.type,
+      internalInstance.memoizedProps
+    );
+    return;
+  }
+  invariant(
+    typeof internalInstance.restoreControlledState === 'function',
+    'The internal instance must be a React host component.'
+  );
+  // If it is not a Fiber, we can just use dynamic dispatch.
+  internalInstance.restoreControlledState();
+}
 
 var ReactControlledComponent = {
   injection: ReactControlledComponentInjection,
 
-  enqueueStateRestore() {
-    needsRestoreState = true;
+  enqueueStateRestore(target) {
+    if (restoreTarget) {
+      if (restoreQueue) {
+        restoreQueue.push(target);
+      } else {
+        restoreQueue = [target];
+      }
+    } else {
+      restoreTarget = target;
+    }
   },
 
-  restoreStateIfNeeded(internalInstance) {
-    if (!needsRestoreState) {
+  restoreStateIfNeeded() {
+    if (!restoreTarget) {
       return;
     }
-    needsRestoreState = false;
-    if (typeof internalInstance.tag === 'number') {
-      invariant(
-        fiberHostComponent &&
-        typeof fiberHostComponent.restoreControlledState === 'function',
-        'Fiber needs to be injected to handle a fiber target for controlled ' +
-        'events.'
-      );
-      fiberHostComponent.restoreControlledState(internalInstance);
+    var target = restoreTarget;
+    var queuedTargets = restoreQueue;
+    restoreTarget = null;
+    restoreQueue = null;
+
+    restoreStateOfTarget(target);
+    if (queuedTargets) {
+      for (var i = 0; i < queuedTargets.length; i++) {
+        restoreStateOfTarget(queuedTargets[i]);
+      }
     }
-    invariant(
-      typeof internalInstance.restoreControlledState === 'function',
-      'The internal instance must be a React host component.'
-    );
-    // If it is not a Fiber, we can just use dynamic dispatch.
-    internalInstance.restoreControlledState();
   },
 };
 

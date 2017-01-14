@@ -12,7 +12,7 @@
 'use strict';
 
 var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
+var ReactTreeTraversal = require('ReactTreeTraversal');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
@@ -62,7 +62,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
  */
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    EventPluginUtils.traverseTwoPhase(
+    ReactTreeTraversal.traverseTwoPhase(
       event._targetInst,
       accumulateDirectionalDispatches,
       event
@@ -77,8 +77,8 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     var targetInst = event._targetInst;
     var parentInst =
-      targetInst ? EventPluginUtils.getParentInstance(targetInst) : null;
-    EventPluginUtils.traverseTwoPhase(
+      targetInst ? ReactTreeTraversal.getParentInstance(targetInst) : null;
+    ReactTreeTraversal.traverseTwoPhase(
       parentInst,
       accumulateDirectionalDispatches,
       event
@@ -124,7 +124,7 @@ function accumulateTwoPhaseDispatchesSkipTarget(events) {
 }
 
 function accumulateEnterLeaveDispatches(leave, enter, from, to) {
-  EventPluginUtils.traverseEnterLeave(
+  ReactTreeTraversal.traverseEnterLeave(
     from,
     to,
     accumulateDispatches,

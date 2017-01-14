@@ -22,9 +22,11 @@ describe('ReactPropTypesProduction', function() {
   beforeEach(function() {
     __DEV__ = false;
     oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
+    global.process = {
+      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+    };
 
-    jest.resetModuleRegistry();
+    jest.resetModules();
     PropTypes = require('ReactPropTypes');
     React = require('React');
     ReactPropTypeLocations = require('ReactPropTypeLocations');
@@ -198,7 +200,7 @@ describe('ReactPropTypesProduction', function() {
 
   describe('Custom validator', function() {
     beforeEach(function() {
-      jest.resetModuleRegistry();
+      jest.resetModules();
     });
 
     it('should not have been called', function() {
@@ -212,7 +214,7 @@ describe('ReactPropTypesProduction', function() {
       });
 
       var instance = <Component num={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy).not.toBeCalled();
     });

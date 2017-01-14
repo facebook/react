@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Basic Example with WebComponents</title>
+    <title>Basic Example with Web Components</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
   <body>
-    <h1>Basic Example with WebComponents</h1>
+    <h1>Basic Example with Web Components</h1>
     <div id="container">
       <p>
         To install React, follow the instructions on
@@ -20,9 +20,9 @@
     <br /><br />
     <h4>Example Details</h4>
     <p>
-        This example demonstrates WebComponent/ReactComponent interoperability
-        by rendering a ReactComponent, which renders a WebComponent, which renders
-        another ReactComponent in the WebComponent's shadow DOM.
+        This example demonstrates Web Component / React Component interoperability
+        by rendering a React Component, which renders a Web Component, which renders
+        another React Component in the Web Component's shadow DOM.
     <p>
     <p>
       Learn more about React at
@@ -35,7 +35,7 @@
 
     <script type="text/babel">
 
-      // Define WebComponent
+      // Define Web Component
       var proto = Object.create(HTMLElement.prototype, {
         attachedCallback: {
           value: function() {
@@ -57,7 +57,7 @@
         }
       }
 
-      // Mount React Component (which uses WebComponent which uses React)
+      // Mount React Component (which uses Web Component which uses React)
       var container = document.getElementById('container');
       ReactDOM.render(<HelloMessage name="Jim Sproch" />, container);
     </script>

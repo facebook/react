@@ -8,8 +8,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const SearchSource = require('jest').SearchSource;
-const TestRunner = require('jest').TestRunner;
+const SearchSource = require('jest-cli').SearchSource;
+const TestRunner = require('jest-cli').TestRunner;
+const TestWatcher = require('jest-cli/build/TestWatcher');
 
 const createHasteContext = require('jest-runtime').createHasteContext;
 const readConfig = require('jest-config').readConfig;
@@ -27,25 +28,57 @@ function wrapRunnerFile(runnerPath) {
     filename,
     `
       'use strict';
+      var runnerPath = ${JSON.stringify(runnerPath)};
       var wrap = require(${JSON.stringify(__filename)}).wrapRunner;
-      var original = require(${JSON.stringify(runnerPath)});
-      module.exports = wrap(original);
+      module.exports = wrap(runnerPath);
     `
   );
   return filename;
 }
 
-function wrapRunner(original) {
-  return function runner(config, environment, runtime, testPath) {
-    return original(config, environment, runtime, testPath)
+function wrapRunner(originalPath) {
+  const original = require(originalPath);
+  // Assuming originalPath is .../jest-jasmine2/build/index.js
+  const JasmineReporter = require(
+    path.join(path.dirname(originalPath), 'reporter.js')
+  );
+
+  // For each spec, we store whether there was any expectDev() failure. This
+  // relies on the results being returned in the same order as they are run.
+  const hadDevFailures = [];
+  let environment;
+
+  const oldSpecStarted = JasmineReporter.prototype.specStarted;
+  JasmineReporter.prototype.specStarted = function(result) {
+    oldSpecStarted.apply(this, arguments);
+
+    environment.global.__suppressDevFailures = true;
+    environment.global.__hadDevFailures = false;
+  };
+
+  const oldSpecDone = JasmineReporter.prototype.specDone;
+  JasmineReporter.prototype.specDone = function(result) {
+    oldSpecDone.apply(this, arguments);
+
+    environment.global.__suppressDevFailures = false;
+    hadDevFailures.push(environment.global.__hadDevFailures);
+  };
+
+  return function runner(config, env, runtime, testPath) {
+    environment = env;
+    return original(config, env, runtime, testPath)
       .then((results) => {
         results.failureMessage = null;
+        hadDevFailures.forEach((hadFailures, i) => {
+          results.testResults[i].hadDevFailures = hadFailures;
+        });
+        hadDevFailures.length = 0;
         return results;
       });
   };
 }
 
-function runJest() {
+function runJest(maxWorkers) {
   return readConfig(argv, root)
     .then((config) => {
       config = Object.assign({}, config, {
@@ -59,11 +92,12 @@ function runJest() {
               hasteMap,
               config,
               {
-                maxWorkers: Math.max(os.cpus().length - 1, 1),
+                maxWorkers: maxWorkers,
                 getTestSummary: () => 'You did it!'
               }
             );
-            return runner.runTests(data.paths);
+            const watcher = new TestWatcher({isWatchMode: false});
+            return runner.runTests(data.paths, watcher);
           });
       });
     });
@@ -85,13 +119,17 @@ function formatResults(runResults, predicate) {
   return formatted.join('\n\n');
 }
 
-function recordTests(trackFacts) {
+function recordTests(maxWorkers, trackFacts) {
   process.env.REACT_DOM_JEST_USE_FIBER = true;
-  runJest()
+  runJest(maxWorkers)
     .then((runResults) => {
       const passing = formatResults(
         runResults,
-        (file, test) => test.status === 'passed'
+        (file, test) => test.status === 'passed' && !test.hadDevFailures
+      );
+      const passingExceptDev = formatResults(
+        runResults,
+        (file, test) => test.status === 'passed' && test.hadDevFailures
       );
       const failing = formatResults(
         runResults,
@@ -100,6 +138,10 @@ function recordTests(trackFacts) {
       fs.writeFileSync(
         path.join(__dirname, 'tests-passing.txt'),
         passing + '\n'
+      );
+      fs.writeFileSync(
+        path.join(__dirname, 'tests-passing-except-dev.txt'),
+        passingExceptDev + '\n'
       );
       fs.writeFileSync(
         path.join(__dirname, 'tests-failing.txt'),
@@ -127,12 +169,15 @@ function recordTests(trackFacts) {
 if (require.main === module) {
   const argv = require('yargs')
     .demand(0, 0)
+    .number('max-workers')
+    .describe('max-workers', 'Number of workers to use for jest.')
+    .default('max-workers', Math.max(os.cpus().length - 1, 1))
     .boolean('track-facts')
     .describe('track-facts', 'Use facts-tracker to record passing tests.')
     .strict()
     .help()
     .argv;
-  recordTests(argv.trackFacts);
+  recordTests(argv.maxWorkers, argv.trackFacts);
 }
 
 module.exports = {

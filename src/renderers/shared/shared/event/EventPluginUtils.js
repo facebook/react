@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactTreeTraversal = require('ReactTreeTraversal');
 var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('invariant');
@@ -225,21 +224,6 @@ var EventPluginUtils = {
   },
   getNodeFromInstance: function(node) {
     return ComponentTree.getNodeFromInstance(node);
-  },
-  isAncestor: function(a, b) {
-    return ReactTreeTraversal.isAncestor(a, b);
-  },
-  getLowestCommonAncestor: function(a, b) {
-    return ReactTreeTraversal.getLowestCommonAncestor(a, b);
-  },
-  getParentInstance: function(inst) {
-    return ReactTreeTraversal.getParentInstance(inst);
-  },
-  traverseTwoPhase: function(target, fn, arg) {
-    return ReactTreeTraversal.traverseTwoPhase(target, fn, arg);
-  },
-  traverseEnterLeave: function(from, to, fn, argFrom, argTo) {
-    return ReactTreeTraversal.traverseEnterLeave(from, to, fn, argFrom, argTo);
   },
 
   injection: injection,

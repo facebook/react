@@ -180,7 +180,7 @@ You can pass any JavaScript expression as a prop, by surrounding it with `{}`. F
 <MyComponent foo={1 + 2 + 3 + 4} />
 ```
 
-For `MyComponent`, The value of `props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
+For `MyComponent`, the value of `props.foo` will be `10` because the expression `1 + 2 + 3 + 4` gets evaluated.
 
 `if` statements and `for` loops are not expressions in JavaScript, so they can't be used in JSX directly. Instead, you can put these in the surrounding code. For example:
 
@@ -348,14 +348,6 @@ function Hello(props) {
 Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, `props.children` works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as `props.children`:
 
 ```js{4,13}
-function ListOfTenThings() {
-  return (
-    <Repeat numTimes={10}>
-      {(index) => <div key={index}>This is item {index} in the list</div>}
-    </Repeat>
-  );
-}
-
 // Calls the children callback numTimes to produce a repeated component
 function Repeat(props) {
   let items = [];
@@ -363,6 +355,14 @@ function Repeat(props) {
     items.push(props.children(i));
   }
   return <div>{items}</div>;
+}
+
+function ListOfTenThings() {
+  return (
+    <Repeat numTimes={10}>
+      {(index) => <div key={index}>This is item {index} in the list</div>}
+    </Repeat>
+  );
 }
 ```
 

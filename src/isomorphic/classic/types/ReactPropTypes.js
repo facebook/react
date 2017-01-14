@@ -68,9 +68,11 @@ var warning = require('warning');
 
 var ANONYMOUS = '<<anonymous>>';
 
+var ReactPropTypes;
+
 if (__DEV__) {
   // Keep in sync with production version below
-  var ReactPropTypes = {
+  ReactPropTypes = {
     array: createPrimitiveTypeChecker('array'),
     bool: createPrimitiveTypeChecker('boolean'),
     func: createPrimitiveTypeChecker('function'),
@@ -99,7 +101,7 @@ if (__DEV__) {
   productionTypeChecker.isRequired = productionTypeChecker;
   var getProductionTypeChecker = () => productionTypeChecker;
   // Keep in sync with development version above
-  var ReactPropTypes = {
+  ReactPropTypes = {
     array: productionTypeChecker,
     bool: productionTypeChecker,
     func: productionTypeChecker,
@@ -139,7 +141,7 @@ function is(x, y) {
 
 /**
  * We use an Error-like object for backward compatibility as people may call
- * PropTypes directly and inspect their output. However we don't use real
+ * PropTypes directly and inspect their output. However, we don't use real
  * Errors anymore. We don't inspect their stack anyway, and creating them
  * is prohibitively expensive if they are created too often, such as what
  * happens in oneOfType() for any type before the one that matched.
@@ -211,7 +213,7 @@ function createPrimitiveTypeChecker(expectedType) {
 }
 
 function createAnyTypeChecker() {
-  return createChainableTypeChecker(emptyFunction.thatReturns(null));
+  return createChainableTypeChecker(emptyFunction.thatReturnsNull);
 }
 
 function createArrayOfTypeChecker(typeChecker) {

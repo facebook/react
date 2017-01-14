@@ -20,7 +20,7 @@ describe('ReactHostOperationHistoryHook', () => {
   var ReactHostOperationHistoryHook;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     React = require('React');
     ReactPerf = require('ReactPerf');
@@ -38,7 +38,7 @@ describe('ReactHostOperationHistoryHook', () => {
 
   function assertHistoryMatches(expectedHistory) {
     var actualHistory = ReactHostOperationHistoryHook.getHistory();
-    expect(actualHistory).toEqual(expectedHistory);
+    expectDev(actualHistory).toEqual(expectedHistory);
   }
 
   describe('mount', () => {

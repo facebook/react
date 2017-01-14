@@ -19,7 +19,6 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
@@ -36,14 +35,12 @@ var emptyFunction = require('emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
-var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
-var deleteListener = EventPluginHub.deleteListener;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
@@ -76,69 +73,6 @@ function getDeclarationErrorAddendum(internalInstance) {
   return '';
 }
 
-function friendlyStringify(obj) {
-  if (typeof obj === 'object') {
-    if (Array.isArray(obj)) {
-      return '[' + obj.map(friendlyStringify).join(', ') + ']';
-    } else {
-      var pairs = [];
-      for (var key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          var keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
-            key :
-            JSON.stringify(key);
-          pairs.push(keyEscaped + ': ' + friendlyStringify(obj[key]));
-        }
-      }
-      return '{' + pairs.join(', ') + '}';
-    }
-  } else if (typeof obj === 'string') {
-    return JSON.stringify(obj);
-  } else if (typeof obj === 'function') {
-    return '[function object]';
-  }
-  // Differs from JSON.stringify in that undefined because undefined and that
-  // inf and nan don't become null
-  return String(obj);
-}
-
-var styleMutationWarning = {};
-
-function checkAndWarnForMutatedStyle(style1, style2, component) {
-  if (style1 == null || style2 == null) {
-    return;
-  }
-  if (shallowEqual(style1, style2)) {
-    return;
-  }
-
-  var componentName = component._tag;
-  var owner = component._currentElement._owner;
-  var ownerName;
-  if (owner) {
-    ownerName = owner.getName();
-  }
-
-  var hash = ownerName + '|' + componentName;
-
-  if (styleMutationWarning.hasOwnProperty(hash)) {
-    return;
-  }
-
-  styleMutationWarning[hash] = true;
-
-  warning(
-    false,
-    '`%s` was passed a style object that has previously been mutated. ' +
-    'Mutating `style` is deprecated. Consider cloning it beforehand. Check ' +
-    'the `render` %s. Previous style: %s. Mutated style: %s.',
-    componentName,
-    owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
-    friendlyStringify(style1),
-    friendlyStringify(style2)
-  );
-}
-
 /**
  * @param {object} component
  * @param {?object} props
@@ -154,10 +88,7 @@ function assertValidProps(component, props) {
       '%s is a void element tag and must neither have `children` nor ' +
       'use `dangerouslySetInnerHTML`.%s',
       component._tag,
-      component._currentElement._owner ?
-        ' Check the render method of ' +
-        component._currentElement._owner.getName() + '.' :
-        ''
+      getDeclarationErrorAddendum(component)
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -205,30 +136,6 @@ function assertValidProps(component, props) {
   );
 }
 
-function enqueuePutListener(inst, registrationName, listener, transaction) {
-  if (transaction instanceof ReactServerRenderingTransaction) {
-    return;
-  }
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      'This browser doesn\'t support the `onScroll` event'
-    );
-  }
-  var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-  listenTo(registrationName, doc);
-  transaction.getReactMountReady().enqueue(putListener, {
-    inst: inst,
-    registrationName: registrationName,
-    listener: listener,
-  });
-}
-
-// TODO: This is coming from future #8192. Dedupe this and enqueuePutListener.
 function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
@@ -245,15 +152,6 @@ function ensureListeningTo(inst, registrationName, transaction) {
   var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
-}
-
-function putListener() {
-  var listenerToPut = this;
-  EventPluginHub.putListener(
-    listenerToPut.inst,
-    listenerToPut.registrationName,
-    listenerToPut.listener
-  );
 }
 
 function inputPostMount() {
@@ -512,13 +410,10 @@ var globalIdCounter = 1;
  */
 function ReactDOMComponent(element) {
   var tag = element.type;
-  validateDangerousTag(tag);
   this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
   this._renderedChildren = null;
-  this._previousStyle = null;
-  this._previousStyleCopy = null;
   this._hostNode = null;
   this._hostParent = null;
   this._rootNodeID = 0;
@@ -625,6 +520,15 @@ ReactDOMComponent.Mixin = {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
+      if (__DEV__) {
+        warning(
+          isCustomComponent(this._tag, props) ||
+          this._tag === this._currentElement.type,
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          'in React.',
+          this._currentElement.type
+        );
+      }
       if (this._tag === 'svg') {
         namespaceURI = DOMNamespaces.svg;
       } else if (this._tag === 'math') {
@@ -697,6 +601,7 @@ ReactDOMComponent.Mixin = {
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
+      validateDangerousTag(this._tag);
       var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
       var tagContent = this._createContentMarkup(transaction, props, context);
       if (!tagContent && omittedCloseTags[this._tag]) {
@@ -792,16 +697,14 @@ ReactDOMComponent.Mixin = {
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
-          enqueuePutListener(this, propKey, propValue, transaction);
+          ensureListeningTo(this, propKey, transaction);
         }
       } else {
         if (propKey === STYLE) {
           if (propValue) {
             if (__DEV__) {
-              // See `_updateDOMProperties`. style block
-              this._previousStyle = propValue;
+              Object.freeze(propValue);
             }
-            propValue = this._previousStyleCopy = Object.assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
         }
@@ -890,8 +793,9 @@ ReactDOMComponent.Mixin = {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
+      const innerHTMLContent = innerHTML.__html;
+      if (innerHTMLContent != null && innerHTMLContent !== '') {
+        DOMLazyTree.queueHTML(lazyTree, innerHTMLContent);
       }
     } else {
       var contentToUse =
@@ -1038,21 +942,15 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (propKey === STYLE) {
-        var lastStyle = this._previousStyleCopy;
+        var lastStyle = lastProps[STYLE];
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
           }
         }
-        this._previousStyleCopy = null;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (lastProps[propKey]) {
-          // Only call deleteListener if there was a listener previously or
-          // else willDeleteListener gets called when there wasn't actually a
-          // listener (e.g., onClick={null})
-          deleteListener(this, propKey);
-        }
+        // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
@@ -1068,9 +966,7 @@ ReactDOMComponent.Mixin = {
     }
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
-      var lastProp =
-        propKey === STYLE ? this._previousStyleCopy :
-        lastProps != null ? lastProps[propKey] : undefined;
+      var lastProp = lastProps != null ? lastProps[propKey] : undefined;
       if (!nextProps.hasOwnProperty(propKey) ||
           nextProp === lastProp ||
           nextProp == null && lastProp == null) {
@@ -1079,16 +975,8 @@ ReactDOMComponent.Mixin = {
       if (propKey === STYLE) {
         if (nextProp) {
           if (__DEV__) {
-            checkAndWarnForMutatedStyle(
-              this._previousStyleCopy,
-              this._previousStyle,
-              this
-            );
-            this._previousStyle = nextProp;
+            Object.freeze(nextProp);
           }
-          nextProp = this._previousStyleCopy = Object.assign({}, nextProp);
-        } else {
-          this._previousStyleCopy = null;
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
@@ -1113,9 +1001,7 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          enqueuePutListener(this, propKey, nextProp, transaction);
-        } else if (lastProp) {
-          deleteListener(this, propKey);
+          ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
@@ -1140,6 +1026,13 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: this._debugID,
+          type: 'update styles',
+          payload: styleUpdates,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(
         getNode(this),
         styleUpdates,
@@ -1264,7 +1157,6 @@ ReactDOMComponent.Mixin = {
 
     this.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(this);
-    EventPluginHub.deleteAllListeners(this);
     this._rootNodeID = 0;
     this._domID = 0;
     this._wrapperState = null;

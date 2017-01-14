@@ -23,6 +23,7 @@ var pathToModuleMap = require.resolve('fbjs/module-map');
 var pathToBabelPluginDevWithCode = require.resolve('../error-codes/dev-expression-with-codes');
 var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel-6/rewrite-modules');
 var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
+var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
@@ -71,5 +72,6 @@ module.exports = {
     pathToModuleMap,
     pathToBabelPluginDevWithCode,
     pathToBabelPluginModules,
+    pathToErrorCodes,
   ]),
 };
