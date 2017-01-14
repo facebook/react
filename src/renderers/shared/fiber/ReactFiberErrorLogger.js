@@ -33,6 +33,9 @@ function logCapturedError(capturedError : CapturedError) : void {
       ? `React caught an error thrown by ${componentName}.`
       : 'React caught an error thrown by one of your components.';
 
+    const callStack = error.stack;
+    const trimmedCallStack = callStack.substring(callStack.indexOf('\n'));
+
     let errorBoundaryMessage;
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
     if (errorBoundaryFound && errorBoundaryName) {
@@ -54,8 +57,8 @@ function logCapturedError(capturedError : CapturedError) : void {
     console.error(
       `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
       errorSummary +
-      `The error was thrown in the following location: ${componentStack}\n\n` +
-      error.stack
+      `The error is located at: ${componentStack}\n\n` +
+      `The error was thrown at: ${trimmedCallStack}`
     );
   }
 

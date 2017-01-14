@@ -980,7 +980,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
       expect(errorMessage).toContain('Error: componentWillMount error');
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error was thrown in the following location: \n' +
+        'The error is located at: \n' +
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
         '    in div (at **)'
@@ -1014,7 +1014,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
       expect(errorMessage).toContain('Error: componentDidMount error');
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error was thrown in the following location: \n' +
+        'The error is located at: \n' +
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
         '    in div (at **)'
