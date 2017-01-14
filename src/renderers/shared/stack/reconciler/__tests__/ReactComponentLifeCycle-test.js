@@ -462,8 +462,8 @@ describe('ReactComponentLifeCycle', () => {
     // once when unmounting the component
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: this.state: Setting state directly with this.state is not ' +
-      'recommended. Instead, use this.setState().'
+      'Warning: LifeCycleComponent: Setting state directly with this.state ' +
+      'is not recommended. Instead, use this.setState().'
     );
   });
 

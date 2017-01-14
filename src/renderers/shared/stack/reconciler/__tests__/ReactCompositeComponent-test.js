@@ -1247,7 +1247,7 @@ describe('ReactCompositeComponent', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: this.state: Setting state directly with this.state is not ' +
+      'Warning: Component: Setting state directly with this.state is not ' +
       'recommended. Instead, use this.setState().'
     );
   });

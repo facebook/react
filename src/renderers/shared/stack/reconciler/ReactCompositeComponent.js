@@ -153,7 +153,6 @@ var ReactCompositeComponent = {
     this._renderedNodeType = null;
     this._renderedComponent = null;
     this._context = null;
-    this._currentState = null;
     this._mountOrder = 0;
     this._topLevelWrapper = null;
 
@@ -165,6 +164,7 @@ var ReactCompositeComponent = {
 
     if (__DEV__) {
       this._warnedAboutRefsInRender = false;
+      this._currentState = null;
     }
   },
 
@@ -321,10 +321,12 @@ var ReactCompositeComponent = {
     }
 
     var initialState = inst.state;
-    this._currentState = inst.state === null ? null : Object.assign({}, inst.state);
+    this._saveCurrentState();
     if (initialState === undefined) {
       inst.state = initialState = null;
-      this._currentState = null;
+      if (__DEV__) {
+        this._currentState = null;
+      }
     }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
@@ -350,7 +352,7 @@ var ReactCompositeComponent = {
       // `this._pendingStateQueue` without triggering a re-render.
       if (this._pendingStateQueue) {
         inst.state = this._processPendingState(inst.props, inst.context);
-        this._currentState = inst.state === null ? null : Object.assign({}, inst.state);
+        this._saveCurrentState();
       }
     }
 
@@ -486,7 +488,7 @@ var ReactCompositeComponent = {
       this._instance.unstable_handleError(e);
       if (this._pendingStateQueue) {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
-        this._currentState = this._instance.state === null ? null : Object.assign({}, this._instance.state);
+        this._saveCurrentState();
       }
       checkpoint = transaction.checkpoint();
       this._renderedComponent.unmountComponent(
@@ -614,9 +616,12 @@ var ReactCompositeComponent = {
     // These fields do not really need to be reset since this object is no
     // longer accessible.
     this._context = null;
-    this._currentState = null;
     this._rootNodeID = 0;
     this._topLevelWrapper = null;
+
+    if (__DEV__) {
+      this._currentState = null;
+    }
 
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user
@@ -889,8 +894,9 @@ var ReactCompositeComponent = {
 
       warning(
         shallowEqual(this._currentState, inst.state),
-        'this.state: Setting state directly with this.state is not ' +
-        'recommended. Instead, use this.setState().'
+        '%s: Setting state directly with this.state is not recommended. ' +
+        'Instead, use this.setState().',
+        this.getName() || 'ReactCompositeComponent'
       );
     }
 
@@ -913,7 +919,7 @@ var ReactCompositeComponent = {
       this._context = nextUnmaskedContext;
       inst.props = nextProps;
       inst.state = nextState;
-      this._currentState = inst.state === null ? null : Object.assign({}, inst.state);
+      this._saveCurrentState();
       inst.context = nextContext;
     }
   },
@@ -945,6 +951,22 @@ var ReactCompositeComponent = {
     }
 
     return nextState;
+  },
+
+  /**
+   * Saves a copy of the current component state so we can detect changes made
+   * directly instead of using the `setState` method.
+   *
+   * @private
+   */
+  _saveCurrentState() {
+    if (__DEV__) {
+      if (this._instance.state !== null) {
+        this._currentState = Object.assign({}, this._instance.state);
+      } else {
+        this._currentState = null;
+      }
+    }
   },
 
   /**
@@ -995,7 +1017,7 @@ var ReactCompositeComponent = {
     this._context = unmaskedContext;
     inst.props = nextProps;
     inst.state = nextState;
-    this._currentState = inst.state === null ? null : Object.assign({}, inst.state);
+    this._saveCurrentState();
     inst.context = nextContext;
 
     if (inst.unstable_handleError) {
@@ -1039,7 +1061,7 @@ var ReactCompositeComponent = {
       this._instance.unstable_handleError(e);
       if (this._pendingStateQueue) {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
-        this._currentState = this._instance.state === null ? null : Object.assign({}, this._instance.state);
+        this._saveCurrentState();
       }
       checkpoint = transaction.checkpoint();
 
