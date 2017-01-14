@@ -66,3 +66,15 @@ src/renderers/shared/shared/__tests__/ReactUpdates-test.js
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
+
+src/test/__tests__/ReactTestUtils-test.js
+* should throw for invalid elements
+* should have shallow unmounting
+* can shallow render with a ref
+* lets you update shallowly rendered components
+* can access the mounted component instance
+* can shallowly render components with contextTypes
+* can shallowly render components with ref as function
+* can setState in componentWillMount when shallow rendering
+* can pass context when shallowly rendering
+* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering

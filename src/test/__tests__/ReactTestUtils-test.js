@@ -43,7 +43,7 @@ describe('ReactTestUtils', () => {
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
       <span className="child1" />,
-      <span className="child2" />,
+      <span className="child2" />
     ]);
   });
 
