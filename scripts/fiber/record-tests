@@ -106,12 +106,14 @@ function runJest(maxWorkers) {
 function formatResults(runResults, predicate) {
   const formatted = [];
   runResults.testResults.forEach((fileResult) => {
-    const file = path.relative(root, fileResult.testFilePath);
+    const filePath = path.relative(root, fileResult.testFilePath);
+    // on windows, we still want to output forward slashes
+    const unixFilePath = filePath.replace(/\\/g, '/');
     const tests = fileResult.testResults.filter(
       (test) => predicate(fileResult, test)
     );
     if (tests.length) {
-      const lines = [file].concat(tests.map((test) => '* ' + test.title));
+      const lines = [unixFilePath].concat(tests.map((test) => '* ' + test.title));
       formatted.push(lines.join('\n'));
     }
   });
