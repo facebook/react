@@ -25,16 +25,32 @@ function logCapturedError(capturedError : CapturedError) : void {
       willRetry,
     } = capturedError;
 
-    const errorSummary = error.message
-      ? `Error: ${error.message}\n\n`
-      : '';
+    const {
+      message,
+      name,
+      stack,
+    } = error;
+
+    const errorSummary = message
+      ? `${name}: ${message}`
+      : name;
 
     const componentNameMessage = componentName
       ? `React caught an error thrown by ${componentName}.`
       : 'React caught an error thrown by one of your components.';
 
-    const callStack = error.stack;
-    const trimmedCallStack = callStack.substring(callStack.indexOf('\n'));
+    // Error stack varies by browser, eg:
+    // Chrome prepends the Error name and type.
+    // Firefox, Safari, and IE don't indent the stack lines.
+    // Format it in a consistent way for error logging.
+    let formattedCallStack = stack.slice(0, errorSummary.length) === errorSummary
+      ? stack.slice(errorSummary.length)
+      : stack;
+    formattedCallStack = formattedCallStack
+      .trim()
+      .split('\n')
+      .map((line) => `\n    ${line.trim()}`)
+      .join();
 
     let errorBoundaryMessage;
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
@@ -56,9 +72,9 @@ function logCapturedError(capturedError : CapturedError) : void {
 
     console.error(
       `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
-      errorSummary +
+      `${errorSummary}\n\n` +
       `The error is located at: ${componentStack}\n\n` +
-      `The error was thrown at: ${trimmedCallStack}`
+      `The error was thrown at: ${formattedCallStack}`
     );
   }
 
