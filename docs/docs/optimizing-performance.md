@@ -25,6 +25,18 @@ new webpack.DefinePlugin({
 new webpack.optimize.UglifyJsPlugin()
 ```
 
+* For Rollup, you need to use the [replace](https://github.com/rollup/rollup-plugin-replace) plugin *before* the [commonjs](https://github.com/rollup/rollup-plugin-commonjs) plugin so that development-only modules are not imported. For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
+
+```js
+plugins: [
+  require('rollup-plugin-replace')({
+    'process.env.NODE_ENV': JSON.stringify('production')
+  }),
+  require('rollup-plugin-commonjs')(),
+  // ...
+]
+```
+
 The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
 
 ## Profiling Components with Chrome Timeline
