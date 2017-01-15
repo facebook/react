@@ -186,8 +186,8 @@ Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select
 
 When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let a handler function choose what to do based on the value of `event.target.name`. For example:
 
-```javascript{14-15,18,32,38}
-class RSVP extends React.Component {
+```javascript{14-15,18,32,39}
+class Reservation extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -208,7 +208,6 @@ class RSVP extends React.Component {
         pendingState[event.target.name] = event.target.value;
         break;
       default:
-        // the code should never reach here
         return;
     }
     this.setState(pendingState);
@@ -217,12 +216,14 @@ class RSVP extends React.Component {
   render() {
     return (
       <div>
+        Is going:
         <input
           name="isGoing"
           type="checkbox"
           checked={this.state.isGoing}
           onChange={this.handleInputChange}
         />
+        Number of guests:
         <input
           name="numberOfGuests"
           type="number"
@@ -234,6 +235,8 @@ class RSVP extends React.Component {
   }
 }
 ```
+
+[Try it on CodePen.](https://codepen.io/keyanzhang/pen/pRENvx?editors=0010)
 
 ## Alternatives to Controlled Components
 
