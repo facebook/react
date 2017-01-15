@@ -1163,6 +1163,25 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           }
         }
       }
+
+      if (isArray(newChild)) {
+        return reconcileChildrenArray(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          priority
+        );
+      }
+
+      if (getIteratorFn(newChild)) {
+        return reconcileChildrenIterator(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          priority
+        );
+      }
+
       return deleteRemainingChildren(returnFiber, currentFirstChild);
     }
 

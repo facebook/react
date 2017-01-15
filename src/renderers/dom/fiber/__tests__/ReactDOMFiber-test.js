@@ -1119,6 +1119,14 @@ describe('ReactDOMFiber', () => {
         expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
         expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
       });
+
+      it('still accepts arrays as host children', () => {
+        function Render(props) {
+          return <div>{props.children}</div>;
+        }
+        ReactDOM.render(<Render>{['foo', 'bar']}</Render>, container);
+        expect(container.textContent).toEqual('foobar');
+      });
     });
   }
 });

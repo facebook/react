@@ -554,6 +554,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should not crash encountering low-priority tree
 * throws if non-element passed to top-level render
 * throws if something other than false, null, or an element is returned from render
+* still accepts arrays as host children
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
