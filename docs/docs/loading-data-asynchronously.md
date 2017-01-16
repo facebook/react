@@ -10,9 +10,17 @@ React has no special capabilities for dealing with asynchronous network requests
 
 Often, the data that a component needs is not available at initial render. We can load data asynchronously in the [`componentDidMount` lifecycle hook](/react/docs/react-component.html#componentdidmount).
 
-In the following example we use the `fetch` [browser API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to retrieve information about Facebook's Gists on GitHub and store them in the state.
+In the following example we use the [axios](https://github.com/mzabriskie/axios) to retrieve information about Facebook's Gists on GitHub and store them in the state. So first install it:
 
-```javascript{7-11}
+```
+$ npm install axios --save
+```
+
+And you can use it in your project:
+
+```javascript{1,9-13}
+import axios from 'axios';
+
 class Gists extends React.Component {
   constructor(props) {
     super(props);
@@ -20,9 +28,9 @@ class Gists extends React.Component {
   }
 
   componentDidMount() {
-    fetch('https://api.github.com/users/facebook/gists')
-      .then(res => res.json())
-      .then(gists => this.setState({ gists }));
+    axios.get('https://api.github.com/users/facebook/gists')
+      .then(response => this.setState({ gists: response.data }))
+      .catch(error => console.log(error));
   }
 
   render() {
@@ -30,18 +38,18 @@ class Gists extends React.Component {
     return (
       <div>
         <h1>Gists by facebook</h1>
-        {gists.map(gist => <p><a href={gist.html_url}>{gist.id}</a></p>)}
+        {gists.map(gist =>
+          <p><a href={gist.html_url}>{gist.id}</a></p>
+        )}
       </div>
     );
   }
 }
 ```
 
-The component will perform an initial render without any of the network data. When the fetch promise resolves, it calls `setState` and the component is rerendered.
+The component will perform an initial render without any of the network data. When the axios promise resolves, it calls `setState` and the component is rerendered.
 
-> **Note:**
->
-> The API specification for `fetch` has not been stabilized and browser support is not quite there yet. To use `fetch` today, a [polyfill](https://github.com/github/fetch) is available for non-supporting browsers. If you're using Create React App, a polyfill is available by default.
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/wgzEXJ?editors=0011)
 
 ## Updates
 
