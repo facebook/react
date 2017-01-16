@@ -3,8 +3,15 @@ src/addons/__tests__/ReactFragment-test.js
 * should throw if a plain object even if it is in an owner
 * should throw if a plain object looks like an old element
 
+src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
+* should clean-up silently after the timeout elapses
+
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
+
+src/isomorphic/modern/class/__tests__/ReactClassEquivalence-test.js
+* tests the same thing for es6 classes and CoffeeScript
+* tests the same thing for es6 classes and TypeScript
 
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
@@ -36,6 +43,11 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
+
+src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
+* warns with a no-op when an async setState is triggered
+* warns with a no-op when an async replaceState is triggered
+* warns with a no-op when an async forceUpdate is triggered
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control a value in reentrant events

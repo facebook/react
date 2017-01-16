@@ -511,6 +511,17 @@ describe('ReactTestRenderer', () => {
     });
   });
 
+  it('root instance and createNodeMock ref return the same value', () => {
+    var createNodeMock = ref => ({node: ref});
+    var refInst = null;
+    var renderer = ReactTestRenderer.create(
+      <div ref={ref => refInst = ref} />,
+      {createNodeMock}
+    );
+    var root = renderer.getInstance();
+    expect(root).toEqual(refInst);
+  });
+
   if (ReactDOMFeatureFlags.useFiber) {
     it('can update text nodes when rendered as root', () => {
       var renderer = ReactTestRenderer.create(['Hello', 'world']);

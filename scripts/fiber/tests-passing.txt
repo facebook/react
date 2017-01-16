@@ -82,7 +82,6 @@ src/addons/__tests__/update-test.js
 src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
 * should warn if timeouts aren't specified
 * should not warn if timeouts is zero
-* should clean-up silently after the timeout elapses
 * should keep both sets of DOM nodes around
 * should switch transitionLeave from false to true
 * should work with no children
@@ -385,10 +384,6 @@ src/isomorphic/classic/types/__tests__/ReactPropTypesProduction-test.js
 * should be a no-op
 * should be a no-op
 * should not have been called
-
-src/isomorphic/modern/class/__tests__/ReactClassEquivalence-test.js
-* tests the same thing for es6 classes and CoffeeScript
-* tests the same thing for es6 classes and TypeScript
 
 src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * preserves the name of the class for use in error messages
@@ -785,9 +780,6 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should throw with silly args
 * allows setState in componentWillMount without using DOM
 * renders components with different batching strategies
-* warns with a no-op when an async setState is triggered
-* warns with a no-op when an async replaceState is triggered
-* warns with a no-op when an async forceUpdate is triggered
 * should warn when children are mutated during render
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
@@ -1708,6 +1700,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * supports updates when using refs
 * supports error boundaries
 * can update text nodes
+* root instance and createNodeMock ref return the same value
 * can update text nodes when rendered as root
 * can render and update root fragments
 

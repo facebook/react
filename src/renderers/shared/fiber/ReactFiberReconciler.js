@@ -105,6 +105,10 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) : Reconciler<C, I, TI> {
 
   var {
+    getPublicInstance,
+  } = config;
+
+  var {
     scheduleUpdate,
     getPriorityContext,
     performWithPriority,
@@ -176,7 +180,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       if (!containerFiber.child) {
         return null;
       }
-      return containerFiber.child.stateNode;
+      return getPublicInstance(containerFiber.child.stateNode);
     },
 
     findHostInstance(fiber : Fiber) : I | TI | null {
