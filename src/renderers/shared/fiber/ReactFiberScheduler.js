@@ -84,6 +84,7 @@ var {
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var ReactDebugFiberObserver = require('ReactDebugFiberObserver');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -410,8 +411,11 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
     }
 
     isCommitting = false;
-    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-      ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
+    if (__DEV__) {
+      ReactDebugFiberObserver.onCommitRoot(finishedWork.stateNode);
+      if (ReactFiberInstrumentation.debugTool) {
+        ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
+      }
     }
 
     // If we caught any errors during this commit, schedule their boundaries
