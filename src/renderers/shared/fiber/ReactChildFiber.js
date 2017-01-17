@@ -75,7 +75,6 @@ const {
   NoEffect,
   Placement,
   Deletion,
-  Err,
 } = ReactTypeOfSideEffect;
 
 function coerceRef(current: ?Fiber, element: ReactElement) {
@@ -1127,41 +1126,40 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
       }
 
-      if (returnFiber.tag === HostRoot) {
-        // Top-level only accepts elements or portals
-        invariant(
-          // If the root has an error effect, this is an intentional unmount.
-          // Don't throw an error.
-          returnFiber.effectTag & Err,
-          'render(): Invalid component element.'
-        );
-      } else {
-        switch (returnFiber.tag) {
-          case ClassComponent: {
-            if (__DEV__) {
-              const instance = returnFiber.stateNode;
-              if (instance.render._isMockFunction) {
-                // We allow auto-mocks to proceed as if they're
-                // returning null.
-                break;
-              }
+      switch (returnFiber.tag) {
+        case ClassComponent: {
+          if (__DEV__) {
+            const instance = returnFiber.stateNode;
+            if (instance.render._isMockFunction) {
+              // We allow auto-mocks to proceed as if they're
+              // returning null.
+              break;
             }
           }
-          // Intentionally fall through to the next case, which handles both
-          // functions and classes
-          // eslint-disable-next-lined no-fallthrough
-          case FunctionalComponent: {
-            // Composites accept elements, portals, null, or false
-            const Component = returnFiber.type;
-            invariant(
-              newChild === null || newChild === false,
-              '%s.render(): A valid React element (or null) must be ' +
-              'returned. You may have returned undefined, an array or some ' +
-              'other invalid object.',
-              Component.displayName || Component.name || 'Component'
-            );
-          }
         }
+        // Intentionally fall through to the next case, which handles both
+        // functions and classes
+        // eslint-disable-next-lined no-fallthrough
+        case FunctionalComponent: {
+          // Composites accept elements, portals, null, or false
+          const Component = returnFiber.type;
+          invariant(
+            newChild === null || newChild === false,
+            '%s(...): A valid React element (or null) must be ' +
+            'returned. You may have returned undefined, an array or some ' +
+            'other invalid object.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
+      }
+
+      if (typeof newChild === 'string' || typeof newChild === 'number') {
+        return placeSingleChild(reconcileSingleTextNode(
+          returnFiber,
+          currentFirstChild,
+          '' + newChild,
+          priority
+        ));
       }
 
       if (isArray(newChild)) {

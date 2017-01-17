@@ -18,9 +18,17 @@ var ReactTestUtils = require('ReactTestUtils');
 
 describe('ReactDOMFiber', () => {
   var container;
+  var ReactFeatureFlags;
 
   beforeEach(() => {
     container = document.createElement('div');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  afterEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = true;
   });
 
   it('should render strings as children', () => {
@@ -1085,47 +1093,42 @@ describe('ReactDOMFiber', () => {
         container
       );
     });
-
-    describe('disableNewFiberFeatures', () => {
-      var ReactFeatureFlags = require('ReactFeatureFlags');
-
-      beforeEach(() => {
-        ReactFeatureFlags.disableNewFiberFeatures = true;
-      });
-
-      afterEach(() => {
-        ReactFeatureFlags.disableNewFiberFeatures = false;
-      });
-
-      it('throws if non-element passed to top-level render', () => {
-        const message = 'render(): Invalid component element.';
-        expect(() => ReactDOM.render(null, container)).toThrow(message, container);
-        expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
-        expect(() => ReactDOM.render(false, container)).toThrow(message, container);
-        expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
-        expect(() => ReactDOM.render(999, container)).toThrow(message, container);
-        expect(() => ReactDOM.render([<div />], container)).toThrow(message, container);
-      });
-
-      it('throws if something other than false, null, or an element is returned from render', () => {
-        function Render(props) {
-          return props.children;
-        }
-
-        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You may have returned undefined/);
-        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
-        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
-      });
-
-      it('still accepts arrays and iterables as host children', () => {
-        function Render(props) {
-          return <div>{props.children}</div>;
-        }
-        ReactDOM.render(<Render>{['foo', 'bar']}</Render>, container);
-        expect(container.textContent).toEqual('foobar');
-        ReactDOM.render(<Render>{new Set(['foo', 'bar'])}</Render>, container);
-        expect(container.textContent).toEqual('foobar');
-      });
-    });
   }
+});
+
+// disableNewFiberFeatures currently defaults to true in test
+describe('disableNewFiberFeatures', () => {
+  var container;
+  var ReactFeatureFlags;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = true;
+  });
+
+  afterEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  it('throws if non-element passed to top-level render', () => {
+    const message = 'render(): Invalid component element.';
+    expect(() => ReactDOM.render(null, container)).toThrow(message, container);
+    expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
+    expect(() => ReactDOM.render(false, container)).toThrow(message, container);
+    expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
+    expect(() => ReactDOM.render(999, container)).toThrow(message, container);
+    expect(() => ReactDOM.render([<div />], container)).toThrow(message, container);
+  });
+
+  it('throws if something other than false, null, or an element is returned from render', () => {
+    function Render(props) {
+      return props.children;
+    }
+
+    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You may have returned undefined/);
+    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
+    expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
+  });
 });

@@ -13,12 +13,15 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function normalizeCodeLocInfo(str) {

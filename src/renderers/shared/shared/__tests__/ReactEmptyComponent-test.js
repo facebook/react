@@ -247,18 +247,24 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('can render null at the top level', () => {
+    var ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
     var div = document.createElement('div');
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.render(null, div);
-      expect(div.innerHTML).toBe('');
-    } else {
-      // Stack does not implement this.
-      expect(function() {
+    try {
+      if (ReactDOMFeatureFlags.useFiber) {
         ReactDOM.render(null, div);
-      }).toThrowError(
-        'ReactDOM.render(): Invalid component element.'
-      );
+        expect(div.innerHTML).toBe('');
+      } else {
+        // Stack does not implement this.
+        expect(function() {
+          ReactDOM.render(null, div);
+        }).toThrowError(
+          'ReactDOM.render(): Invalid component element.'
+        );
+      }
+    } finally {
+      ReactFeatureFlags.disableNewFiberFeatures = true;
     }
   });
 

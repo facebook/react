@@ -9,6 +9,12 @@ jest.mock('ReactDOMFeatureFlags', () => {
     useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
   });
 });
+jest.mock('ReactFeatureFlags', () => {
+  const flags = require.requireActual('ReactFeatureFlags');
+  return Object.assign({}, flags, {
+    disableNewFiberFeatures: true,
+  });
+});
 
 // Error logging varies between Fiber and Stack;
 // Rather than fork dozens of tests, mock the error-logging file by default.
