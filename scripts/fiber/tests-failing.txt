@@ -9,9 +9,6 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
-src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
-* should not update event handlers until commit
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should clean up input value tracking
 * should clean up input textarea tracking
@@ -39,6 +36,9 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
+
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should control a value in reentrant events
 
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste

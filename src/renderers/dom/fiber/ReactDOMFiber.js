@@ -38,7 +38,10 @@ var {
   diffProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
-var { precacheFiberNode } = ReactDOMComponentTree;
+var {
+  precacheFiberNode,
+  updateFiberEventHandlers,
+} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
@@ -185,6 +188,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
     const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
+    updateFiberEventHandlers(domElement, props);
     return domElement;
   },
 
@@ -240,9 +244,9 @@ var DOMRenderer = ReactFiberReconciler({
     newProps : Props,
     internalInstanceHandle : Object,
   ) : void {
-    // Update the internal instance handle so that we know which props are
-    // the current ones.
-    precacheFiberNode(internalInstanceHandle, domElement);
+    // Update the props handle so that we know which props are the ones with
+    // with current event handlers.
+    updateFiberEventHandlers(domElement, newProps);
     // Apply the diff to the DOM node.
     updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },

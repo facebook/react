@@ -20,8 +20,11 @@ var invariant = require('invariant');
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var Flags = ReactDOMComponentFlags;
 
-var internalInstanceKey =
-  '__reactInternalInstance$' + Math.random().toString(36).slice(2);
+var randomKey = Math.random().toString(36).slice(2);
+
+var internalInstanceKey = '__reactInternalInstance$' + randomKey;
+
+var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
 
 /**
  * Check if a given node should be cached.
@@ -218,6 +221,14 @@ function getNodeFromInstance(inst) {
   return inst._hostNode;
 }
 
+function getFiberEventHandlersFromNode(node) {
+  return node[internalEventHandlersKey] || null;
+}
+
+function updateFiberEventHandlers(node, props) {
+  node[internalEventHandlersKey] = props;
+}
+
 var ReactDOMComponentTree = {
   getClosestInstanceFromNode: getClosestInstanceFromNode,
   getInstanceFromNode: getInstanceFromNode,
@@ -226,6 +237,8 @@ var ReactDOMComponentTree = {
   precacheNode: precacheNode,
   uncacheNode: uncacheNode,
   precacheFiberNode: precacheFiberNode,
+  getFiberEventHandlersFromNode,
+  updateFiberEventHandlers,
 };
 
 module.exports = ReactDOMComponentTree;

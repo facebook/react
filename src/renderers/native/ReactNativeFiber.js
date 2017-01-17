@@ -33,7 +33,11 @@ const emptyObject = require('emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('invariant');
 
-const { precacheFiberNode, uncacheFiberNode } = ReactNativeComponentTree;
+const {
+  precacheFiberNode,
+  uncacheFiberNode,
+  updateFiberEventHandlers,
+} = ReactNativeComponentTree;
 
 ReactNativeInjection.inject();
 
@@ -129,7 +133,7 @@ const NativeRenderer = ReactFiberReconciler({
   ) : void {
     const viewConfig = instance.viewConfig;
 
-    precacheFiberNode(internalInstanceHandle, instance._nativeTag);
+    updateFiberEventHandlers(instance._nativeTag, newProps);
 
     const updatePayload = ReactNativeAttributePayload.diff(
       oldProps,
@@ -177,6 +181,7 @@ const NativeRenderer = ReactFiberReconciler({
     const component = new NativeHostComponent(tag, viewConfig);
 
     precacheFiberNode(internalInstanceHandle, tag);
+    updateFiberEventHandlers(tag, props);
 
     return component;
   },
