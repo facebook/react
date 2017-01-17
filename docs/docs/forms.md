@@ -186,7 +186,7 @@ Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select
 
 When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let a handler function choose what to do based on the value of `event.target.name`. For example:
 
-```javascript{14-15,18,32,39}
+```javascript{15,18,27,34}
 class Reservation extends React.Component {
   constructor(props) {
     super(props);
@@ -199,18 +199,13 @@ class Reservation extends React.Component {
   }
 
   handleInputChange(event) {
-    const pendingState = {};
-    switch (event.target.name) {
-      case 'isGoing':
-        pendingState[event.target.name] = event.target.checked;
-        break;
-      case 'numberOfGuests':
-        pendingState[event.target.name] = event.target.value;
-        break;
-      default:
-        return;
-    }
-    this.setState(pendingState);
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
   }
 
   render() {
