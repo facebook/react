@@ -27,11 +27,12 @@ var invariant = require('invariant');
 
 import type { ReactElement } from 'ReactElementType';
 import type { ReactInstance } from 'ReactInstanceType';
+import type { ReactText } from 'ReactTypes';
 
 type ReactTestRendererJSON = {
   type: string,
-  props: { [propName: string]: string },
-  children: null | Array<string | ReactTestRendererJSON>,
+  props: { [propName: string]: any },
+  children: null | Array<ReactText | ReactTestRendererJSON>,
   $$typeof?: any
 }
 
