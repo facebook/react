@@ -276,14 +276,14 @@ export default function Fibers({ fibers, show, ...rest }) {
                       fontWeight: fiber.pendingWorkPriority <= fiber.progressedPriority ?
                         'bold' :
                         'normal'
-                    }}>
+                    }} key="span">
                       Needs: {formatPriority(fiber.pendingWorkPriority)}
                     </span>,
-                    <br />
+                    <br key="br" />
                   ]}
                   {fiber.progressedPriority !== 0 && [
                     `Finished: ${formatPriority(fiber.progressedPriority)}`,
-                    <br />
+                    <br key="br" />
                   ]}
                   {fiber.memoizedProps !== null && fiber.pendingProps !== null && [
                     fiber.memoizedProps === fiber.pendingProps ?
