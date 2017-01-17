@@ -658,9 +658,7 @@ var ReactDOMFiberComponent = {
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
                  propKey === CHILDREN) {
-        // TODO: Clear innerHTML. This is currently broken in Fiber because we are
-        // too late to clear everything at this point because new children have
-        // already been inserted.
+        // Noop. This is handled by the clear text mechanism.
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
         // Noop
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
