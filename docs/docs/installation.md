@@ -103,9 +103,17 @@ If you use [Create React App](https://github.com/facebookincubator/create-react-
 
 Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
 
+> **Note:**
+>
+>This guide works with Webpack 1.x and 2, but is hosted on the new Webpack 2 site. If you're not using the Webpack 2 beta, refer to the [Webpack 1.x website](https://webpack.github.io/) for all other documentation.
+
 #### Browserify
 
 Run Browserify with `NODE_ENV` environment variable set to `production` and use [UglifyJS](https://github.com/mishoo/UglifyJS) as the last build step so that development-only code gets stripped out.
+
+#### Rollup
+
+Use [rollup-plugin-replace](https://github.com/rollup/rollup-plugin-replace) plugin together with [rollup-plugin-commonjs](https://github.com/rollup/rollup-plugin-commonjs) (in that order) to remove development-only code. [See this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0) for a complete setup example.
 
 ### Using a CDN
 
