@@ -75,7 +75,6 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * reports update counts
 * does not report top-level wrapper as a root
 * registers inlined text nodes
-* works
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded for host roots
