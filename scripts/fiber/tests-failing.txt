@@ -9,6 +9,9 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
 
+src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
+* should not update event handlers until commit
+
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should clean up input value tracking
 * should clean up input textarea tracking
