@@ -1120,11 +1120,13 @@ describe('ReactDOMFiber', () => {
         expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
       });
 
-      it('still accepts arrays as host children', () => {
+      it('still accepts arrays and iterables as host children', () => {
         function Render(props) {
           return <div>{props.children}</div>;
         }
         ReactDOM.render(<Render>{['foo', 'bar']}</Render>, container);
+        expect(container.textContent).toEqual('foobar');
+        ReactDOM.render(<Render>{new Set(['foo', 'bar'])}</Render>, container);
         expect(container.textContent).toEqual('foobar');
       });
     });
