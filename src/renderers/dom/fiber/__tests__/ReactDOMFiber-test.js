@@ -1131,4 +1131,11 @@ describe('disableNewFiberFeatures', () => {
     expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
     expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
   });
+
+  it('treats mocked render functions as if they return null', () => {
+    class Mocked extends React.Component {}
+    Mocked.prototype.render = jest.fn();
+    ReactDOM.render(<Mocked />, container);
+    expect(container.textContent).toEqual('');
+  });
 });

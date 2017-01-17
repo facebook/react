@@ -1130,7 +1130,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
-            if (instance.render._isMockFunction) {
+            if (instance.render._isMockFunction && typeof newChild === 'undefined') {
               // We allow auto-mocks to proceed as if they're
               // returning null.
               break;
@@ -1254,7 +1254,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
-            if (instance.render._isMockFunction) {
+            if (instance.render._isMockFunction && typeof newChild === 'undefined') {
               // We allow auto-mocks to proceed as if they're returning null.
               break;
             }
