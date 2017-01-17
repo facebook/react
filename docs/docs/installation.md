@@ -101,7 +101,7 @@ If you use [Create React App](https://github.com/facebookincubator/create-react-
 
 #### Webpack
 
--Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
+Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
 
 > **Note:**
 >
