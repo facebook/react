@@ -27,7 +27,6 @@
     "dist/",
     "lib/",
     "index.js",
-    "fiber.js",
     "server.js"
   ],
   "browserify": {
