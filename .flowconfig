@@ -1,6 +1,7 @@
 [ignore]
 
 <PROJECT_ROOT>/examples/.*
+<PROJECT_ROOT>/fixtures/.*
 <PROJECT_ROOT>/build/.*
 <PROJECT_ROOT>/.*/node_modules/y18n/.*
 <PROJECT_ROOT>/.*/__mocks__/.*
