@@ -127,7 +127,10 @@ if (__DEV__) {
     }
   };
 
-  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined') {
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+    __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
+  ) {
     __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
       subscribeToFiberCommits(listener) {
         // Hydrate the current tree.
