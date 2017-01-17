@@ -82,7 +82,8 @@ The core team is monitoring for pull requests. We will review your pull request 
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
 6. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
-7. If you haven't already, complete the CLA.
+7. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes.
+8. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
