@@ -48,7 +48,7 @@ ReactDOM.render(
 
 [Try it on CodePen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
 
-We split JSX over multiple lines for readability. While it isn't mandatory, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
+We split JSX over multiple lines for readability. While it isn't required, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
 
 ### JSX is an Expression Too
 
