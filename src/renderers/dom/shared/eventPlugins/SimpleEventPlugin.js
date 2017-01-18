@@ -114,6 +114,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'submit',
   'suspend',
   'timeUpdate',
+  'toggle',
   'touchCancel',
   'touchEnd',
   'touchMove',
@@ -180,6 +181,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topSubmit':
       case 'topSuspend':
       case 'topTimeUpdate':
+      case 'topToggle':
       case 'topVolumeChange':
       case 'topWaiting':
         // HTML Events

@@ -77,6 +77,7 @@ var topLevelTypes = {
   topSuspend: null,
   topTextInput: null,
   topTimeUpdate: null,
+  topToggle: null,
   topTouchCancel: null,
   topTouchEnd: null,
   topTouchMove: null,
