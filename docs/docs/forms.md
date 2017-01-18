@@ -182,6 +182,57 @@ class FlavorForm extends React.Component {
 
 Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
 
+## Handling Multiple Inputs
+
+When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let a handler function choose what to do based on the value of `event.target.name`. For example:
+
+```javascript{15,18,27,34}
+class Reservation extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isGoing: false,
+      numberOfGuests: 0
+    };
+
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        Is going:
+        <input
+          name="isGoing"
+          type="checkbox"
+          checked={this.state.isGoing}
+          onChange={this.handleInputChange}
+        />
+        Number of guests:
+        <input
+          name="numberOfGuests"
+          type="number"
+          value={this.state.numberOfGuests}
+          onChange={this.handleInputChange}
+        />
+      </div>
+    );
+  }
+}
+```
+
+[Try it on CodePen.](https://codepen.io/keyanzhang/pen/pRENvx?editors=0010)
+
 ## Alternatives to Controlled Components
 
 It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out [uncontrolled components](/react/docs/uncontrolled-components.html), an alternative technique for implementing input forms.
