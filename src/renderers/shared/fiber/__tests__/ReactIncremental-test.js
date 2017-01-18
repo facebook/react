@@ -2225,7 +2225,7 @@ describe('ReactIncremental', () => {
 
     function Root(props) {
       return (
-        <div hidden={true}>
+        <div hidden={props.hidden}>
           <Middle {...props} />
         </div>
       );
@@ -2233,7 +2233,7 @@ describe('ReactIncremental', () => {
 
     // Initial render of the entire tree.
     // Renders: Root, Middle, FirstChild, SecondChild
-    ReactNoop.render(<Root>A</Root>);
+    ReactNoop.render(<Root hidden={true}>A</Root>);
     ReactNoop.flush();
 
     expect(renderCounter).toBe(1);
@@ -2241,7 +2241,7 @@ describe('ReactIncremental', () => {
     // Schedule low priority work to update children.
     // Give it enough time to partially render.
     // Renders: Root, Middle, FirstChild
-    ReactNoop.render(<Root>B</Root>);
+    ReactNoop.render(<Root hidden={true}>B</Root>);
     ReactNoop.flushDeferredPri(20 + 30 + 5);
 
     // At this point our FirstChild component has rendered a second time,
@@ -2255,7 +2255,7 @@ describe('ReactIncremental', () => {
     // Next interrupt the partial render with higher priority work.
     // The in-progress child content will bailout.
     // Renders: Root, Middle, FirstChild, SecondChild
-    ReactNoop.render(<Root>B</Root>);
+    ReactNoop.render(<Root hidden={false}>B</Root>);
     ReactNoop.flush();
 
     // At this point the higher priority render has completed.
