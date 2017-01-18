@@ -756,6 +756,94 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
+  it('does not drop priority from a progressed subtree', () => {
+    let ops = [];
+    let lowPri;
+    let highPri;
+
+    function LowPriDidComplete() {
+      ops.push('LowPriDidComplete');
+      // Because this is terminal, beginning work on LowPriDidComplete implies
+      // that LowPri will be completed before the scheduler yields.
+      return null;
+    }
+
+    class LowPri extends React.Component {
+      state = { step: 0 };
+      render() {
+        ops.push('LowPri');
+        lowPri = this;
+        return [
+          <span prop={this.state.step} />,
+          <LowPriDidComplete />,
+        ];
+      }
+    }
+
+    function LowPriSibling() {
+      ops.push('LowPriSibling');
+      return null;
+    }
+
+    class HighPri extends React.Component {
+      state = { step: 0 };
+      render() {
+        ops.push('HighPri');
+        highPri = this;
+        return <span prop={this.state.step} />;
+      }
+    }
+
+    function App() {
+      ops.push('App');
+      return [
+        <div>
+          <LowPri />
+          <LowPriSibling />
+        </div>,
+        <div><HighPri /></div>,
+      ];
+    }
+
+    ReactNoop.render(<App />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)),
+      div(span(0)),
+    ]);
+    ops = [];
+
+    lowPri.setState({ step: 1 });
+    // Do just enough work to begin LowPri
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual(['LowPri']);
+    // Now we'll do one more tick of work to complete LowPri. Because LowPri
+    // has a sibling, the parent div of LowPri has not yet completed.
+    ReactNoop.flushDeferredPri(10);
+    expect(ops).toEqual(['LowPri', 'LowPriDidComplete']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)), // Complete, but not yet updated
+      div(span(0)),
+    ]);
+    ops = [];
+
+    // Interrupt with high pri update
+    ReactNoop.performAnimationWork(() => highPri.setState({ step: 1 }));
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual(['HighPri']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)), // Completed, but not yet updated
+      div(span(1)),
+    ]);
+    ops = [];
+
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(1)),
+      div(span(1)),
+    ]);
+  });
+
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     var ops = [];
 
