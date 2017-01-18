@@ -18,7 +18,6 @@ var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('emptyObject');
 
 import type { TestRendererOptions } from 'ReactTestMount';
-import type { ReactText } from 'ReactTypes';
 
 type ReactTestRendererJSON = {|
   type : string,
@@ -26,7 +25,7 @@ type ReactTestRendererJSON = {|
   children : null | Array<ReactTestRendererNode>,
   $$typeof ?: Symbol, // Optional because we add it with defineProperty().
 |};
-type ReactTestRendererNode = ReactTestRendererJSON | ReactText;
+type ReactTestRendererNode = ReactTestRendererJSON | string;
 
 type Container = {|
   children : Array<Instance | TextInstance>,
