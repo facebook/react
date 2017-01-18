@@ -180,7 +180,157 @@ class FlavorForm extends React.Component {
 
 [Try it on CodePen.](https://codepen.io/gaearon/pen/JbbEzX?editors=0010)
 
+
+You can also do multiple selection, by setting the `multiple` parameter and using an array as the value.
+
+```js{4,15-25,31}
+class FlavorForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: ['lime', 'mango']};
+    
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+  
+  handleSubmit(event) {
+    alert('Your favorite flavor(s): ' + this.state.value);
+    event.preventDefault();
+  }
+  
+  handleChange(event) {
+    var options = event.target.options;
+    var value = [];
+    for (var i = 0, l = options.length; i < l; i++) {
+      if (options[i].selected) {
+        value.push(options[i].value);
+      }
+    }
+    
+    this.setState({value: value});
+  }
+
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <select multiple={true} value={this.state.value} onChange={this.handleChange}>
+            <option value="grapefruit">Grapefruit</option>
+            <option value="lime">Lime</option>
+            <option value="coconut">Coconut</option>
+            <option value="mango">Mango</option>
+          </select>
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    );
+  }
+}
+```
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/yVaojJ?editors=0010)
+
+
 Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
+
+
+
+
+## Checkbox
+Another form control which you can change it to a controlled component, is `checkbox`:
+
+```html
+<input type="checkbox" />
+```
+
+You can change it to a controlled component by setting the `checked` property:
+
+```js{4,15-17,23}
+class AgreementForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: true};
+    
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+  
+  handleSubmit(event) {
+    alert('Your checkbox is ' + this.state.value);
+    event.preventDefault();
+  }
+  
+  handleChange(event) {
+    this.setState({value: event.target.checked});
+  }
+
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <input type="checkbox" checked={this.state.value} onChange={this.handleChange} />
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    );
+  }
+}
+```
+
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/YpGrEK?editors=0010)
+
+## Radio Buttons
+
+You can use `radio` buttons, in a replace of `select` tag. If you remember, you
+group them with `name` attribute:
+
+```html
+<input type="radio" name="fruit" value="grapefruit" /> Grapefruit
+<input type="radio" name="fruit" value="lime" /> Lime
+<input type="radio" name="fruit" checked value="coconut" /> Coconut
+<input type="radio" name="fruit" value="mango" /> Mango
+```
+
+However, in React, there is no need for `name` attribute, because 
+React will take control of their state, and so, whenever one of them is checked,
+the other ones will be unchecked. Like the checkbox input, you make a radio button
+as a controlled component by setting the `checked` attribute of it:
+
+```js{4,15-17,23-26}
+class FlavorForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: 'lime'};
+    
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+  
+  handleSubmit(event) {
+    alert('Your favorite flavor is: ' + this.state.value);
+    event.preventDefault();
+  }
+  
+  handleChange(event) {
+    this.setState({value: event.target.value});
+  }
+
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <input type="radio" checked={this.state.value === 'grapefruit'} onChange={this.handleChange} value="grapefruit" /> Grapefruit
+          <input type="radio" checked={this.state.value === 'lime'} onChange={this.handleChange} value="lime" /> Lime
+          <input type="radio" checked={this.state.value === 'coconut'} onChange={this.handleChange} value="coconut" /> Coconut
+          <input type="radio" checked={this.state.value === 'mango'} onChange={this.handleChange} value="mango" /> Mango
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+    );
+  }
+}
+```
+
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/qqaPyG?editors=0010)
 
 ## Alternatives to Controlled Components
 
