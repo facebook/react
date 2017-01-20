@@ -20,6 +20,7 @@ var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
@@ -302,9 +303,9 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.removeChild(child);
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: true,
 

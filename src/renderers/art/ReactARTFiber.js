@@ -21,6 +21,7 @@ const invariant = require('fbjs/lib/invariant');
 const emptyObject = require('emptyObject');
 const React = require('React');
 const ReactFiberReconciler = require('ReactFiberReconciler');
+const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 
 const { Component } = React;
 
@@ -509,9 +510,9 @@ const ARTRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   shouldSetTextContent(props) {
     return (

@@ -67,8 +67,8 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   insertBefore(parentInstance : I | C, child : I | TI, beforeChild : I | TI) : void,
   removeChild(parentInstance : I | C, child : I | TI) : void,
 
-  scheduleAnimationCallback(callback : () => void) : void,
-  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
+  scheduleAnimationCallback(callback : () => void) : number | void,
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : number | void,
 
   prepareForCommit() : void,
   resetAfterCommit() : void,
