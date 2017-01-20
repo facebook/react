@@ -47,8 +47,8 @@ if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX>(
-  config : HostConfig<T, P, I, TI, PI, C, CX>,
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
 ) {
   const {
@@ -186,8 +186,9 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         }
         return null;
       }
-      case HostComponent:
+      case HostComponent: {
         popHostContext(workInProgress);
+        const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
         const newProps = workInProgress.memoizedProps;
         if (current && workInProgress.stateNode != null) {
@@ -200,8 +201,12 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
           // Even better would be if children weren't special cased at all tho.
           const instance : I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
-          if (prepareUpdate(instance, type, oldProps, newProps, currentHostContext)) {
-            // This returns true if there was something to update.
+          const updatePayload = prepareUpdate(instance, type, oldProps, newProps, rootContainerInstance, currentHostContext);
+          // TODO: Type this specific to this type of component.
+          workInProgress.updateQueue = (updatePayload : any);
+          // If the update payload indicates that there is a change or if there
+          // is a new ref we mark this as an update.
+          if (updatePayload || current.ref !== workInProgress.ref) {
             markUpdate(workInProgress);
           }
         } else {
@@ -214,7 +219,6 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
             }
           }
 
-          const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
           // TODO: Move createInstance to beginWork and keep it on a context
           // "stack" as the parent. Then append children as we go in beginWork
@@ -244,7 +248,8 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
           }
         }
         return null;
-      case HostText:
+      }
+      case HostText: {
         let newText = workInProgress.memoizedProps;
         if (current && workInProgress.stateNode != null) {
           const oldText = current.memoizedProps;
@@ -268,6 +273,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
           workInProgress.stateNode = textInstance;
         }
         return null;
+      }
       case CoroutineComponent:
         return moveCoroutineToHandlerPhase(current, workInProgress);
       case CoroutineHandlerPhase:

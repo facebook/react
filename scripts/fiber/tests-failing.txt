@@ -37,6 +37,9 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
 
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should control a value in reentrant events
+
 src/renderers/shared/__tests__/ReactPerf-test.js
 * should count no-op update as waste
 * should count no-op update in child as waste

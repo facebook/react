@@ -12,7 +12,6 @@
 'use strict';
 
 var { HostComponent } = require('ReactTypeOfWork');
-var { getNodeFromInstance, getInstanceFromNode } = require('EventPluginUtils');
 
 function getParent(inst) {
   if (inst._hostParent !== undefined) {
@@ -27,13 +26,8 @@ function getParent(inst) {
       // host node but that wouldn't work for React Native and doesn't let us
       // do the portal feature.
     } while (inst && inst.tag !== HostComponent);
-    // Going through the Host Node will guarantee that we get the "current"
-    // Fiber, instead of the alternate because that pointer is updated when
-    // props update.
-    // TODO: This is a bit hacky and possibly slow. We should ideally have
-    // something in the reconciler that allow us to do this safely.
     if (inst) {
-      return getInstanceFromNode(getNodeFromInstance(inst));
+      return inst;
     }
   }
   return null;

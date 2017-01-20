@@ -43,7 +43,7 @@ export type Deadline = {
 
 type OpaqueNode = Fiber;
 
-export type HostConfig<T, P, I, TI, PI, C, CX> = {
+export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   getRootHostContext(rootContainerInstance : C) : CX,
   getChildHostContext(parentHostContext : CX, type : T) : CX,
@@ -53,9 +53,9 @@ export type HostConfig<T, P, I, TI, PI, C, CX> = {
   appendInitialChild(parentInstance : I, child : I | TI) : void,
   finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : boolean,
 
-  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, hostContext : CX) : boolean,
-  commitUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : void,
-  commitMount(instance : I, type : T, newProps : P, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : void,
+  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, hostContext : CX) : null | PL,
+  commitUpdate(instance : I, updatePayload : PL, type : T, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
+  commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
@@ -102,7 +102,7 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
     parentContext;
 });
 
-module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, TI, PI, C, CX>) : Reconciler<C, I, TI> {
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) : Reconciler<C, I, TI> {
 
   var {
     scheduleUpdate,

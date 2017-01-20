@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { HostContext } from 'ReactFiberHostContext';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -34,9 +33,8 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, PI, C, CX>(
-  config : HostConfig<T, P, I, TI, PI, C, CX>,
-  hostContext : HostContext<C, CX>,
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
 
@@ -50,10 +48,6 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     removeChild,
     getPublicInstance,
   } = config;
-
-  const {
-    getRootHostContainer,
-  } = hostContext;
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
@@ -367,9 +361,13 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
           const type = finishedWork.type;
-          commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, finishedWork);
+          // TODO: Type the updateQueue to be specific to host components.
+          const updatePayload : null | PL = (finishedWork.updateQueue : any);
+          finishedWork.updateQueue = null;
+          if (updatePayload) {
+            commitUpdate(instance, updatePayload, type, oldProps, newProps, finishedWork);
+          }
         }
         detachRefIfNeeded(current, finishedWork);
         return;
@@ -438,8 +436,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         ) {
           const type = finishedWork.type;
           const props = finishedWork.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          commitMount(instance, type, props, rootContainerInstance, finishedWork);
+          commitMount(instance, type, props, finishedWork);
         }
 
         return;

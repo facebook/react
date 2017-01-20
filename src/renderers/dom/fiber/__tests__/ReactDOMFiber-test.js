@@ -994,6 +994,89 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
+    it('should not update event handlers until commit', () => {
+      let ops = [];
+      const handlerA = () => ops.push('A');
+      const handlerB = () => ops.push('B');
+
+      class Example extends React.Component {
+        state = { flip: false, count: 0 };
+        flip() {
+          this.setState({ flip: true, count: this.state.count + 1 });
+        }
+        tick() {
+          this.setState({ count: this.state.count + 1 });
+        }
+        render() {
+          const useB = !this.props.forceA && this.state.flip;
+          return (
+            <div onClick={useB ? handlerB : handlerA} />
+          );
+        }
+      }
+
+      class Click extends React.Component {
+        constructor() {
+          super();
+          click(node);
+        }
+        render() {
+          return null;
+        }
+      }
+
+      let inst;
+      ReactDOM.render([<Example ref={n => inst = n} />], container);
+      const node = container.firstChild;
+      expect(node.tagName).toEqual('DIV');
+
+      function click(target) {
+        var fakeNativeEvent = {};
+        ReactTestUtils.simulateNativeEventOnNode(
+          'topClick',
+          target,
+          fakeNativeEvent
+        );
+      }
+
+      click(node);
+
+      expect(ops).toEqual(['A']);
+      ops = [];
+
+      // Render with the other event handler.
+      inst.flip();
+
+      click(node);
+
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Rerender without changing any props.
+      inst.tick();
+
+      click(node);
+
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Render a flip back to the A handler. The second component invokes the
+      // click handler during render to simulate a click during an aborted
+      // render. I use this hack because at current time we don't have a way to
+      // test aborted ReactDOM renders.
+      ReactDOM.render([<Example forceA={true} />, <Click />], container);
+
+      // Because the new click handler has not yet committed, we should still
+      // invoke B.
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Any click that happens after commit, should invoke A.
+      click(node);
+      expect(ops).toEqual(['A']);
+
+    });
+
     it('should not crash encountering low-priority tree', () => {
       ReactDOM.render(
         <div hidden={true}>

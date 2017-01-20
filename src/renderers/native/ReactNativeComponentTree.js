@@ -14,6 +14,7 @@
 var invariant = require('invariant');
 
 var instanceCache = {};
+var instanceProps = {};
 
 /**
  * Drill down (through composites and empty components) until we get a host or
@@ -65,6 +66,14 @@ function getTagFromInstance(inst) {
   return tag;
 }
 
+function getFiberEventHandlersFromTag(tag) {
+  return instanceProps[tag] || null;
+}
+
+function updateFiberEventHandlers(tag, props) {
+  instanceProps[tag] = props;
+}
+
 var ReactNativeComponentTree = {
   getClosestInstanceFromNode: getInstanceFromTag,
   getInstanceFromNode: getInstanceFromTag,
@@ -73,6 +82,8 @@ var ReactNativeComponentTree = {
   precacheNode,
   uncacheFiberNode,
   uncacheNode,
+  getFiberEventHandlersFromNode: getFiberEventHandlersFromTag,
+  updateFiberEventHandlers,
 };
 
 module.exports = ReactNativeComponentTree;

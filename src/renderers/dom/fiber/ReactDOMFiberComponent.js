@@ -301,69 +301,15 @@ function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
-/**
- * Reconciles the properties by detecting differences in property values and
- * updating the DOM as necessary. This function is probably the single most
- * critical path for performance optimization.
- *
- * TODO: Benchmark whether checking for changed values in memory actually
- *       improves performance (especially statically positioned elements).
- * TODO: Benchmark the effects of putting this at the top since 99% of props
- *       do not change for a given reconciliation.
- * TODO: Benchmark areas that can be improved with caching.
- */
-function updateDOMProperties(
+function setInitialDOMProperties(
   domElement : Element,
   rootContainerElement : Element,
-  lastProps : null | Object,
   nextProps : Object,
-  wasCustomComponentTag : boolean,
   isCustomComponentTag : boolean,
 ) : void {
-  var propKey;
-  var styleName;
-  var styleUpdates;
-  for (propKey in lastProps) {
-    if (nextProps.hasOwnProperty(propKey) ||
-       !lastProps.hasOwnProperty(propKey) ||
-       lastProps[propKey] == null) {
-      continue;
-    }
-    if (propKey === STYLE) {
-      var lastStyle = lastProps[propKey];
-      for (styleName in lastStyle) {
-        if (lastStyle.hasOwnProperty(styleName)) {
-          styleUpdates = styleUpdates || {};
-          styleUpdates[styleName] = '';
-        }
-      }
-    } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
-               propKey === CHILDREN) {
-      // TODO: Clear innerHTML. This is currently broken in Fiber because we are
-      // too late to clear everything at this point because new children have
-      // already been inserted.
-    } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
-      // Noop
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
-      // Do nothing for deleted listeners.
-    } else if (wasCustomComponentTag) {
-      DOMPropertyOperations.deleteValueForAttribute(
-        domElement,
-        propKey
-      );
-    } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)) {
-      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
-    }
-  }
-  for (propKey in nextProps) {
+  for (var propKey in nextProps) {
     var nextProp = nextProps[propKey];
-    var lastProp =
-      lastProps != null ? lastProps[propKey] : undefined;
-    if (!nextProps.hasOwnProperty(propKey) ||
-        nextProp === lastProp ||
-        nextProp == null && lastProp == null) {
+    if (!nextProps.hasOwnProperty(propKey)) {
       continue;
     }
     if (propKey === STYLE) {
@@ -374,38 +320,16 @@ function updateDOMProperties(
           Object.freeze(nextProp);
         }
       }
-      if (lastProp) {
-        // Unset styles on `lastProp` but not on `nextProp`.
-        for (styleName in lastProp) {
-          if (lastProp.hasOwnProperty(styleName) &&
-              (!nextProp || !nextProp.hasOwnProperty(styleName))) {
-            styleUpdates = styleUpdates || {};
-            styleUpdates[styleName] = '';
-          }
-        }
-        // Update styles that changed since `lastProp`.
-        for (styleName in nextProp) {
-          if (nextProp.hasOwnProperty(styleName) &&
-              lastProp[styleName] !== nextProp[styleName]) {
-            styleUpdates = styleUpdates || {};
-            styleUpdates[styleName] = nextProp[styleName];
-          }
-        }
-      } else {
-        // Relies on `updateStylesByID` not mutating `styleUpdates`.
-        styleUpdates = nextProp;
-      }
+      // Relies on `updateStylesByID` not mutating `styleUpdates`.
+      // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
+      CSSPropertyOperations.setValueForStyles(
+        domElement,
+        nextProp,
+      );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
-      var lastHtml = lastProp ? lastProp[HTML] : undefined;
-      // Intentional use of != to avoid catching zero/false.
       if (nextHtml != null) {
-        if (lastHtml !== nextHtml) {
-          setInnerHTML(domElement, '' + nextHtml);
-        }
-      } else {
-        // TODO: It might be too late to clear this if we have children
-        // inserted already.
+        setInnerHTML(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === 'string') {
@@ -433,17 +357,56 @@ function updateDOMProperties(
       // brings us in line with the same behavior we have on initial render.
       if (nextProp != null) {
         DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
+      }
+    }
+  }
+}
+
+function updateDOMProperties(
+  domElement : Element,
+  updatePayload : Array<any>,
+  wasCustomComponentTag : boolean,
+  isCustomComponentTag : boolean,
+) : void {
+  // TODO: Handle wasCustomComponentTag
+  for (var i = 0; i < updatePayload.length; i+=2) {
+    var propKey = updatePayload[i];
+    var propValue = updatePayload[i + 1];
+    if (propKey === STYLE) {
+      // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
+      CSSPropertyOperations.setValueForStyles(
+        domElement,
+        propValue,
+      );
+    } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+      setInnerHTML(domElement, propValue);
+    } else if (propKey === CHILDREN) {
+      setTextContent(domElement, propValue);
+    } else if (isCustomComponentTag) {
+      if (propValue != null) {
+        DOMPropertyOperations.setValueForAttribute(
+          domElement,
+          propKey,
+          propValue
+        );
+      } else {
+        DOMPropertyOperations.deleteValueForAttribute(
+          domElement,
+          propKey
+        );
+      }
+    } else if (
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
+      // If we're updating to null or undefined, we should remove the property
+      // from the DOM node instead of inadvertently setting to a string. This
+      // brings us in line with the same behavior we have on initial render.
+      if (propValue != null) {
+        DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
       } else {
         DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
       }
     }
-  }
-  if (styleUpdates) {
-    // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
-    CSSPropertyOperations.setValueForStyles(
-      domElement,
-      styleUpdates,
-    );
   }
 }
 
@@ -592,12 +555,10 @@ var ReactDOMFiberComponent = {
 
     assertValidProps(tag, props);
 
-    updateDOMProperties(
+    setInitialDOMProperties(
       domElement,
       rootContainerElement,
-      null,
       props,
-      false,
       isCustomComponentTag
     );
 
@@ -626,16 +587,19 @@ var ReactDOMFiberComponent = {
     }
   },
 
-  updateProperties(
+  // Calculate the diff between the two objects.
+  diffProperties(
     domElement : Element,
     tag : string,
     lastRawProps : Object,
     nextRawProps : Object,
     rootContainerElement : Element,
-  ) : void {
+  ) : null | Array<mixed> {
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, nextRawProps);
     }
+
+    var updatePayload : null | Array<any> = null;
 
     var lastProps : Object;
     var nextProps : Object;
@@ -643,18 +607,22 @@ var ReactDOMFiberComponent = {
       case 'input':
         lastProps = ReactDOMFiberInput.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberInput.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       case 'option':
         lastProps = ReactDOMFiberOption.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberOption.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       case 'select':
         lastProps = ReactDOMFiberSelect.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberSelect.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       case 'textarea':
         lastProps = ReactDOMFiberTextarea.getHostProps(domElement, lastRawProps);
         nextProps = ReactDOMFiberTextarea.getHostProps(domElement, nextRawProps);
+        updatePayload = [];
         break;
       default:
         lastProps = lastRawProps;
@@ -668,17 +636,154 @@ var ReactDOMFiberComponent = {
     }
 
     assertValidProps(tag, nextProps);
-    var wasCustomComponentTag = isCustomComponent(tag, lastProps);
-    var isCustomComponentTag = isCustomComponent(tag, nextProps);
+
+    var propKey;
+    var styleName;
+    var styleUpdates = null;
+    for (propKey in lastProps) {
+      if (nextProps.hasOwnProperty(propKey) ||
+         !lastProps.hasOwnProperty(propKey) ||
+         lastProps[propKey] == null) {
+        continue;
+      }
+      if (propKey === STYLE) {
+        var lastStyle = lastProps[propKey];
+        for (styleName in lastStyle) {
+          if (lastStyle.hasOwnProperty(styleName)) {
+            if (!styleUpdates) {
+              styleUpdates = {};
+            }
+            styleUpdates[styleName] = '';
+          }
+        }
+      } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
+                 propKey === CHILDREN) {
+        // Noop. This is handled by the clear text mechanism.
+      } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+        // Noop
+      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+        // This is a special case. If any listener updates we need to ensure
+        // that the "current" fiber pointer gets updated so we need a commit
+        // to update this element.
+        if (!updatePayload) {
+          updatePayload = [];
+        }
+      } else {
+        // For all other deleted properties we add it to the queue. We use
+        // the whitelist in the commit phase instead.
+        (updatePayload = updatePayload || []).push(propKey, null);
+      }
+    }
+    for (propKey in nextProps) {
+      var nextProp = nextProps[propKey];
+      var lastProp =
+        lastProps != null ? lastProps[propKey] : undefined;
+      if (!nextProps.hasOwnProperty(propKey) ||
+          nextProp === lastProp ||
+          nextProp == null && lastProp == null) {
+        continue;
+      }
+      if (propKey === STYLE) {
+        if (__DEV__) {
+          if (nextProp) {
+            // Freeze the next style object so that we can assume it won't be
+            // mutated. We have already warned for this in the past.
+            Object.freeze(nextProp);
+          }
+        }
+        if (lastProp) {
+          // Unset styles on `lastProp` but not on `nextProp`.
+          for (styleName in lastProp) {
+            if (lastProp.hasOwnProperty(styleName) &&
+                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
+              if (!styleUpdates) {
+                styleUpdates = {};
+              }
+              styleUpdates[styleName] = '';
+            }
+          }
+          // Update styles that changed since `lastProp`.
+          for (styleName in nextProp) {
+            if (nextProp.hasOwnProperty(styleName) &&
+                lastProp[styleName] !== nextProp[styleName]) {
+              if (!styleUpdates) {
+                styleUpdates = {};
+              }
+              styleUpdates[styleName] = nextProp[styleName];
+            }
+          }
+        } else {
+          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          if (!styleUpdates) {
+            if (!updatePayload) {
+              updatePayload = [];
+            }
+            updatePayload.push(propKey, styleUpdates);
+          }
+          styleUpdates = nextProp;
+        }
+      } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+        var nextHtml = nextProp ? nextProp[HTML] : undefined;
+        var lastHtml = lastProp ? lastProp[HTML] : undefined;
+        if (nextHtml != null) {
+          if (lastHtml !== nextHtml) {
+            (updatePayload = updatePayload || []).push(propKey, '' + nextHtml);
+          }
+        } else {
+          // TODO: It might be too late to clear this if we have children
+          // inserted already.
+        }
+      } else if (propKey === CHILDREN) {
+        if (lastProp !== nextProp && (
+            typeof nextProp === 'string' || typeof nextProp === 'number'
+            )) {
+          (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
+        }
+      } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+        // Noop
+      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+        if (nextProp) {
+          // We eagerly listen to this even though we haven't committed yet.
+          ensureListeningTo(rootContainerElement, propKey);
+        }
+        if (!updatePayload && lastProp !== nextProp) {
+          // This is a special case. If any listener updates we need to ensure
+          // that the "current" props pointer gets updated so we need a commit
+          // to update this element.
+          updatePayload = [];
+        }
+      } else {
+        // For any other property we always add it to the queue and then we
+        // filter it out using the whitelist during the commit.
+        (updatePayload = updatePayload || []).push(propKey, nextProp);
+      }
+    }
+    if (styleUpdates) {
+      (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
+    }
+    return updatePayload;
+  },
+
+  // Apply the diff.
+  updateProperties(
+    domElement : Element,
+    updatePayload : Array<any>,
+    tag : string,
+    lastRawProps : Object,
+    nextRawProps : Object
+  ) : void {
+    var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
+    var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
+    // Apply the diff.
     updateDOMProperties(
       domElement,
-      rootContainerElement,
-      lastProps,
-      nextProps,
+      updatePayload,
       wasCustomComponentTag,
       isCustomComponentTag
     );
 
+    // TODO: Ensure that an update gets scheduled if any of the special props
+    // changed.
     switch (tag) {
       case 'input':
         // Update the wrapper around inputs *after* updating props. This has to

@@ -88,7 +88,7 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, TI, PI, C, CX>) {
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) {
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
   const { beginWork, beginFailedWork } = ReactFiberBeginWork(
@@ -104,7 +104,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
     commitWork,
     commitLifeCycles,
     commitRef,
-  } = ReactFiberCommitWork(config, hostContext, captureError);
+  } = ReactFiberCommitWork(config, captureError);
   const {
     scheduleAnimationCallback: hostScheduleAnimationCallback,
     scheduleDeferredCallback: hostScheduleDeferredCallback,
