@@ -264,6 +264,13 @@ function trapBubbledEventsLocal(node : Element, tag : string) {
         node
       );
       break;
+    case 'details':
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topToggle',
+        'toggle',
+        node
+      );
+      break;
   }
 }
 
