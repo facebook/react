@@ -629,7 +629,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (workInProgress.progressedPriority === priorityLevel) {
       // If we have progressed work on this priority level already, we can
       // proceed with that as the child.
-      workInProgress.pendingWorkPriority = priorityLevel;
       workInProgress.child = workInProgress.progressedChild;
     }
 
