@@ -126,7 +126,7 @@ var EventPluginHub = {
     // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
     // live here; needs to be moved to a better place soon
     if (typeof inst.tag === 'number') {
-      const props = EventPluginUtils.getFiberEventHandlersFromNode(
+      const props = EventPluginUtils.getFiberCurrentPropsFromNode(
         inst.stateNode
       );
       if (!props) {

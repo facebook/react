@@ -40,7 +40,7 @@ var {
 } = ReactDOMFiberComponent;
 var {
   precacheFiberNode,
-  updateFiberEventHandlers,
+  updateFiberProps,
 } = ReactDOMComponentTree;
 
 if (__DEV__) {
@@ -188,7 +188,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
     const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
-    updateFiberEventHandlers(domElement, props);
+    updateFiberProps(domElement, props);
     return domElement;
   },
 
@@ -246,7 +246,7 @@ var DOMRenderer = ReactFiberReconciler({
   ) : void {
     // Update the props handle so that we know which props are the ones with
     // with current event handlers.
-    updateFiberEventHandlers(domElement, newProps);
+    updateFiberProps(domElement, newProps);
     // Apply the diff to the DOM node.
     updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },

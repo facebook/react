@@ -70,7 +70,7 @@ function getFiberEventHandlersFromTag(tag) {
   return instanceProps[tag] || null;
 }
 
-function updateFiberEventHandlers(tag, props) {
+function updateFiberProps(tag, props) {
   instanceProps[tag] = props;
 }
 
@@ -82,8 +82,8 @@ var ReactNativeComponentTree = {
   precacheNode,
   uncacheFiberNode,
   uncacheNode,
-  getFiberEventHandlersFromNode: getFiberEventHandlersFromTag,
-  updateFiberEventHandlers,
+  getFiberCurrentPropsFromNode: getFiberEventHandlersFromTag,
+  updateFiberProps,
 };
 
 module.exports = ReactNativeComponentTree;
