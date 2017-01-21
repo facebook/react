@@ -61,8 +61,5 @@ src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 * should reorder keyed text nodes
 
-src/renderers/shared/shared/__tests__/ReactUpdates-test.js
-* marks top-level updates
-
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
