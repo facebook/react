@@ -8,7 +8,7 @@ const TestCase = React.createClass({
     const parsed = parseFloat(event.target.value, 10)
     const value = isNaN(parsed) ? '' : parsed
 
-    this.setState({ value: value })
+    this.setState({ value })
   },
   render() {
     return (
@@ -68,6 +68,20 @@ const NumberInputs = React.createClass({
           <ol>
             <li>Type "0.01"</li>
             <li>The field should read "0.01"</li>
+          </ol>
+        </TestCase>
+
+        <TestCase>
+          <h2 className="type-subheading">
+            Supports exponent form ("2e4")
+          </h2>
+
+          <ol>
+            <li>Type "2e"</li>
+            <li>The field should read "2e"</li>
+            <li>Type 4, to read "2e4"</li>
+            <li>The field should read "2e4"</li>
+            <li>The value should read "20000"</li>
           </ol>
         </TestCase>
 

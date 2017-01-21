@@ -423,8 +423,18 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
-  it('should properly control a value of number `0.0`', () => {
+  it('should properly control 0.0 for a text input', () => {
     var stub = <input type="text" value={0} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.value = '0.0';
+    ReactTestUtils.Simulate.change(node, { target: { value: '0.0' }});
+    expect(node.value).toBe('0.0');
+  });
+
+  it('should properly control 0.0 for a number input', () => {
+    var stub = <input type="number" value={0} onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
