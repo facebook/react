@@ -19,6 +19,11 @@ March 13-14 in Santa Clara, CA
 
 [Website](http://conf.reactjs.org/)
 
+### JazzCon.Tech 2017
+March 20-22 in New Orleans, LA
+
+[Website](http://jazzcon.tech/)
+
 ### React London 2017
 March 28th at the [QEII Centre, London](http://qeiicentre.london/)
 
@@ -43,6 +48,11 @@ Summer 2017, Portland, Oregon USA
 Fall 2017, Poland
 
 [Website](http://react-native.eu/)
+
+### CONNECT.TECH 2017
+September 20-22 in Atlanta, GA
+
+[Website](http://connect.tech/)
 
 
 ## Past Conferences
