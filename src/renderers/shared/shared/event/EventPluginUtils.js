@@ -219,8 +219,8 @@ var EventPluginUtils = {
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
 
-  getFiberEventHandlersFromNode: function(node) {
-    return ComponentTree.getFiberEventHandlersFromNode(node);
+  getFiberCurrentPropsFromNode: function(node) {
+    return ComponentTree.getFiberCurrentPropsFromNode(node);
   },
   getInstanceFromNode: function(node) {
     return ComponentTree.getInstanceFromNode(node);

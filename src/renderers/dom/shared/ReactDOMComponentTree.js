@@ -221,11 +221,11 @@ function getNodeFromInstance(inst) {
   return inst._hostNode;
 }
 
-function getFiberEventHandlersFromNode(node) {
+function getFiberCurrentPropsFromNode(node) {
   return node[internalEventHandlersKey] || null;
 }
 
-function updateFiberEventHandlers(node, props) {
+function updateFiberProps(node, props) {
   node[internalEventHandlersKey] = props;
 }
 
@@ -237,8 +237,8 @@ var ReactDOMComponentTree = {
   precacheNode: precacheNode,
   uncacheNode: uncacheNode,
   precacheFiberNode: precacheFiberNode,
-  getFiberEventHandlersFromNode,
-  updateFiberEventHandlers,
+  getFiberCurrentPropsFromNode,
+  updateFiberProps,
 };
 
 module.exports = ReactDOMComponentTree;
