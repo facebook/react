@@ -28,6 +28,9 @@ var {
 } = require('ReactFiberContext');
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
+var {
+  HostComponent,
+} = require('ReactTypeOfWork');
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
@@ -180,7 +183,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       if (!containerFiber.child) {
         return null;
       }
-      return getPublicInstance(containerFiber.child.stateNode);
+      switch (containerFiber.child.tag) {
+        case HostComponent:
+          return getPublicInstance(containerFiber.child.stateNode);
+        default:
+          return containerFiber.child.stateNode;
+      }
     },
 
     findHostInstance(fiber : Fiber) : I | TI | null {
