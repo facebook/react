@@ -17,7 +17,6 @@ import type { Fiber } from 'ReactFiber';
 import type { HostContext } from 'ReactFiberHostContext';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig } from 'ReactFiberReconciler';
-import type { ReifiedYield } from 'ReactReifiedYield';
 
 var { reconcileChildFibers } = require('ReactChildFiber');
 var {
@@ -84,7 +83,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress.effectTag |= Update;
   }
 
-  function appendAllYields(yields : Array<ReifiedYield>, workInProgress : Fiber) {
+  function appendAllYields(yields : Array<mixed>, workInProgress : Fiber) {
     let node = workInProgress.stateNode;
     while (node) {
       if (node.tag === HostComponent || node.tag === HostText ||
@@ -128,7 +127,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Build up the yields.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields : Array<ReifiedYield> = [];
+    var yields : Array<mixed> = [];
     appendAllYields(yields, workInProgress);
     var fn = coroutine.handler;
     var props = coroutine.props;

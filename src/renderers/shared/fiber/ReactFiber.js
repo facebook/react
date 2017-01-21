@@ -393,8 +393,7 @@ exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priority
 };
 
 exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
-  const fiber = createFiber(YieldComponent, yieldNode.key);
-  fiber.pendingProps = {};
+  const fiber = createFiber(YieldComponent, null);
   return fiber;
 };
 

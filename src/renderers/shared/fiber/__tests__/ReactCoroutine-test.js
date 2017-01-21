@@ -39,8 +39,11 @@ describe('ReactCoroutine', () => {
     function Child({ bar }) {
       ops.push(['Child', bar]);
       return ReactCoroutine.createYield({
-        bar: bar,
-      }, Continuation, null);
+        props: {
+          bar: bar,
+        },
+        continuation: Continuation,
+      });
     }
 
     function Indirection() {
@@ -103,7 +106,7 @@ describe('ReactCoroutine', () => {
     class Child extends React.Component {
       render() {
         ops.push('Child');
-        return ReactCoroutine.createYield({}, Continuation, null);
+        return ReactCoroutine.createYield(Continuation);
       }
       componentWillUnmount() {
         ops.push('Unmount Child');
@@ -112,7 +115,7 @@ describe('ReactCoroutine', () => {
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map(y => <y.continuation />);
+      return yields.map(ContinuationComponent => <ContinuationComponent />);
     }
 
     class Parent extends React.Component {

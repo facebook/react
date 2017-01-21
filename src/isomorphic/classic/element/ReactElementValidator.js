@@ -200,8 +200,7 @@ var ReactElementValidator = {
   createElement: function(type, props, children) {
     var validType =
       typeof type === 'string' ||
-      typeof type === 'function' ||
-      type !== null && typeof type === 'object' && typeof type.tag === 'number';
+      typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
