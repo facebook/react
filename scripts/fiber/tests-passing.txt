@@ -1246,6 +1246,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can defer side-effects and resume them later on
 * can defer side-effects and reuse them later - complex
 * does not drop priority from a progressed subtree
+* does not complete already completed work
 * deprioritizes setStates that happens within a deprioritized tree
 * calls callback after update is flushed
 * calls setState callback even if component bails out
