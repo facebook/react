@@ -464,30 +464,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
         // side-effect order.
-        if (!returnFiber.firstEffect) {
-          returnFiber.firstEffect = workInProgress.firstEffect;
-        }
-        if (workInProgress.lastEffect) {
-          if (returnFiber.lastEffect) {
-            returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
-          }
-          returnFiber.lastEffect = workInProgress.lastEffect;
-        }
-
-        // If this fiber had side-effects, we append it AFTER the children's
-        // side-effects. We can perform certain side-effects earlier if
-        // needed, by doing multiple passes over the effect list. We don't want
-        // to schedule our own side-effect on our own list because if end up
-        // reusing children we'll schedule this effect onto itself since we're
-        // at the end.
-        if (workInProgress.effectTag !== NoEffect) {
-          if (returnFiber.lastEffect) {
-            returnFiber.lastEffect.nextEffect = workInProgress;
-          } else {
-            returnFiber.firstEffect = workInProgress;
-          }
-          returnFiber.lastEffect = workInProgress;
-        }
+        appendChildEffects(returnFiber, workInProgress);
       }
 
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
@@ -517,20 +494,38 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
   }
 
+  function appendChildEffects(returnFiber : Fiber, workInProgress : Fiber) {
+    if (!returnFiber.firstEffect) {
+      returnFiber.firstEffect = workInProgress.firstEffect;
+    }
+    if (workInProgress.lastEffect) {
+      if (returnFiber.lastEffect) {
+        returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
+      }
+      returnFiber.lastEffect = workInProgress.lastEffect;
+    }
+    // If this fiber had side-effects, we append it AFTER the children's
+    // side-effects. We can perform certain side-effects earlier if
+    // needed, by doing multiple passes over the effect list. We don't want
+    // to schedule our own side-effect on our own list because if end up
+    // reusing children we'll schedule this effect onto itself since we're
+    // at the end.
+    if (workInProgress.effectTag !== NoEffect) {
+      if (returnFiber.lastEffect) {
+        returnFiber.lastEffect.nextEffect = workInProgress;
+      } else {
+        returnFiber.firstEffect = workInProgress;
+      }
+      returnFiber.lastEffect = workInProgress;
+    }
+  }
+
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
     do {
       // Ensure that the first and last effect of the parent corresponds
       // to the children's first and last effect.
-      if (!returnFiber.firstEffect) {
-        returnFiber.firstEffect = child.firstEffect;
-      }
-      if (child.lastEffect) {
-        if (returnFiber.lastEffect) {
-          returnFiber.lastEffect.nextEffect = child.firstEffect;
-        }
-        returnFiber.lastEffect = child.lastEffect;
-      }
+      appendChildEffects(returnFiber, child);
     } while (child = child.sibling);
   }
 
