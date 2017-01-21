@@ -1143,6 +1143,7 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 
 src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should render a coroutine
+* should update a coroutine
 * should unmount a composite in a coroutine
 
 src/renderers/shared/fiber/__tests__/ReactIncremental-test.js

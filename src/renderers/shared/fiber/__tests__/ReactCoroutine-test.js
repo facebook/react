@@ -26,12 +26,21 @@ describe('ReactCoroutine', () => {
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
+  function div(...children) {
+    children = children.map(c => typeof c === 'string' ? { text: c } : c);
+    return { type: 'div', children, prop: undefined };
+  }
+
+  function span(prop) {
+    return { type: 'span', children: [], prop };
+  }
+
   it('should render a coroutine', () => {
     var ops = [];
 
     function Continuation({ isSame }) {
       ops.push(['Continuation', isSame]);
-      return <span>{isSame ? 'foo==bar' : 'foo!=bar'}</span>;
+      return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
     }
 
     // An alternative API could mark Continuation as something that needs
@@ -87,6 +96,67 @@ describe('ReactCoroutine', () => {
       // Continue yields
       ['Continuation', true],
       ['Continuation', false],
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo==bar'),
+        span('foo!=bar'),
+      ),
+    ]);
+  });
+
+  it('should update a coroutine', () => {
+    function Continuation({ isSame }) {
+      return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
+    }
+
+    function Child({ bar }) {
+      return ReactCoroutine.createYield({
+        props: {
+          bar: bar,
+        },
+        continuation: Continuation,
+      });
+    }
+
+    function Indirection() {
+      return [<Child bar={true} />, <Child bar={false} />];
+    }
+
+    function HandleYields(props, yields) {
+      return yields.map(y =>
+        <y.continuation isSame={props.foo === y.props.bar} />
+      );
+    }
+
+    function Parent(props) {
+      return ReactCoroutine.createCoroutine(
+        props.children,
+        HandleYields,
+        props
+      );
+    }
+
+    function App(props) {
+      return <div><Parent foo={props.foo}><Indirection /></Parent></div>;
+    }
+
+    ReactNoop.render(<App foo={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo==bar'),
+        span('foo!=bar'),
+      ),
+    ]);
+
+    ReactNoop.render(<App foo={false} />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        span('foo!=bar'),
+        span('foo==bar'),
+      ),
     ]);
   });
 
