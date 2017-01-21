@@ -146,10 +146,8 @@ describe('ReactCoroutine', () => {
 
     expect(ops).toEqual([
       'Unmount Parent',
-      // TODO: This should happen in the order Child, Continuation which it
-      // will once we swap stateNode and child positions of these.
-      'Unmount Continuation',
       'Unmount Child',
+      'Unmount Continuation',
     ]);
 
   });
