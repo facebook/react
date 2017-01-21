@@ -562,7 +562,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function performFailedUnitOfWork(workInProgress : Fiber) : ?Fiber {
-
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
@@ -576,6 +575,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
 
     if (!next) {
+      const child = workInProgress.child;
+      if (child) {
+        // If we bailed out, ensure that we don't drop the effects from
+        // the subtree.
+        reuseChildrenEffects(workInProgress, child);
+      }
       // If this doesn't spawn new work, complete the current work.
       next = completeUnitOfWork(workInProgress);
     }
