@@ -1411,7 +1411,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
+* should properly control 0.0 for a text input
+* should properly control 0.0 for a number input
 * should properly transition from an empty value to 0
+* should properly transition from 0 to an empty value
 * should have the correct target value
 * should not set a value for submit buttons unnecessarily
 * should control radio buttons
