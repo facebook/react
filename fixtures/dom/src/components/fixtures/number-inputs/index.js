@@ -94,10 +94,6 @@ const NumberInputs = React.createClass({
             <li>Press "e", so that the value reads "3.14e"</li>
             <li>The field should read "3.14e"</li>
           </ol>
-          <p className="footnote">
-            <b>Notes:</b> IE does not allow bad input typed into the end of the number.
-            This makes it impossible to type "3.14e".
-          </p>
         </TestCase>
 
         <TestCase>
@@ -110,10 +106,6 @@ const NumberInputs = React.createClass({
             <li>Press "e" twice, so that the value reads "3.ee14"</li>
             <li>The field should read "3.ee14"</li>
           </ol>
-          <p className="footnote">
-            <b>Notes:</b> IE does not allow bad input typed into the middle of the number.
-            This makes it impossible to type "3.ee14".
-          </p>
         </TestCase>
 
         <TestCase>
