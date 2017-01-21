@@ -573,18 +573,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress : Fiber,
     priorityLevel : PriorityLevel
   ) : ?Fiber {
-    // TODO: We should be able to bail out early if the children have no more
-    // work to do and have already completed. However, we currently don't have
-    // a way of knowing if the child has completed.
-    // if (workInProgress.priorityOfChildren <= priorityLevel) {
-    //   // If there are side-effects in these children that have not yet been
-    //   // committed we need to ensure that they get properly transferred up.
-    //   if (current && current.child !== workInProgress.child) {
-    //     reuseChildrenEffects(workInProgress, child);
-    //   }
-    //   return null;
-    // }
-
     if (current && workInProgress.child === current.child) {
       // If we had any progressed work already, that is invalid at this point so
       // let's throw it out.
