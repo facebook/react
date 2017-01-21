@@ -259,6 +259,11 @@ function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
 }
 
 function handleControlledInputBlur(inst, node) {
+  // TODO: In IE, inst is occasionally null. Why?
+  if (inst == null) {
+    return;
+  }
+
   // Fiber and ReactDOM keep wrapper state in separate places
   let state = inst._wrapperState || node._wrapperState;
 
