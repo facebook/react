@@ -5,7 +5,10 @@ const TestCase = React.createClass({
     return { value: '' };
   },
   onChange(event) {
-    this.setState({ value: event.target.value });
+    const parsed = parseFloat(event.target.value, 10)
+    const value = isNaN(parsed) ? '' : parsed
+
+    this.setState({ value: value })
   },
   render() {
     return (
@@ -66,11 +69,6 @@ const NumberInputs = React.createClass({
             <li>Type "0.01"</li>
             <li>The field should read "0.01"</li>
           </ol>
-          <p className="footnote">
-            <b>Notes:</b> Chrome and Safari clear trailing
-            decimals on blur. React makes this concession so that the
-            value attribute remains in sync with the value property.
-          </p>
         </TestCase>
 
         <TestCase>
