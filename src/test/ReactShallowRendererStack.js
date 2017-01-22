@@ -54,17 +54,16 @@ var ShallowComponentWrapper = function(element) {
 
   this.construct(element);
 };
-Object.assign(ShallowComponentWrapper.prototype, ReactCompositeComponent, {
-  _constructComponent: ReactCompositeComponent._constructComponentWithoutOwner,
-
-  _instantiateReactComponent(element) {
-    return new NoopInternalComponent(element);
-  },
-
-  _replaceNodeWithMarkup() {},
-
-  _renderValidatedComponent: ReactCompositeComponent
-    ._renderValidatedComponentWithoutOwnerOrContext,
+Object.assign(
+  ShallowComponentWrapper.prototype,
+  ReactCompositeComponent, {
+    _constructComponent: ReactCompositeComponent._constructComponentWithoutOwner,
+    _instantiateReactComponent(element) {
+      return new NoopInternalComponent(element);
+    },
+    _replaceNodeWithMarkup() {},
+    _renderValidatedComponent: ReactCompositeComponent
+      ._renderValidatedComponentWithoutOwnerOrContext,
   }
 );
 
