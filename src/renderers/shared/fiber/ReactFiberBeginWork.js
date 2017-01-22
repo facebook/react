@@ -75,6 +75,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
   getPriorityContext : () => PriorityLevel,
+  appendChildEffects : (returnFiber : Fiber, workInProgress : Fiber) => void,
 ) {
 
   const { shouldSetTextContent } = config;
@@ -549,31 +550,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return workInProgress.child;
   }
 
-  /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
     do {
-      // Ensure that the first and last effect of the parent corresponds
-      // to the children's first and last effect.
-      if (!returnFiber.firstEffect) {
-        returnFiber.firstEffect = child.firstEffect;
-      }
-      if (child.lastEffect) {
-        if (returnFiber.lastEffect) {
-          returnFiber.lastEffect.nextEffect = child.firstEffect;
-        }
-        returnFiber.lastEffect = child.lastEffect;
-      }
+      appendChildEffects(returnFiber, child);
     } while (child = child.sibling);
   }
-  */
 
   function bailoutOnAlreadyFinishedWork(
     current : ?Fiber,
     workInProgress : Fiber,
     priorityLevel : PriorityLevel
   ) : ?Fiber {
-    if (current && workInProgress.child === current.child) {
+    const childIsClone = !current || workInProgress.child !== current.child;
+
+    if (!childIsClone) {
       // If we had any progressed work already, that is invalid at this point so
       // let's throw it out.
       clearDeletions(workInProgress);
@@ -583,6 +574,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress.pendingWorkPriority > priorityLevel) {
       // The work in the child's subtree does not have sufficient priority.
       // Bail out.
+      if (childIsClone &&
+          workInProgress.progressedPriority <= priorityLevel &&
+          workInProgress.child) {
+        reuseChildrenEffects(workInProgress, workInProgress.child);
+      } else {
+        workInProgress.child = current ? current.child : null;
+      }
       return null;
     } else {
       // Keep the existing progressed priority

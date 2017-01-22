@@ -1013,8 +1013,8 @@ describe('ReactIncrementalSideEffects', () => {
         // Updated.
         span(1),
         div(
-          span(1),
           // Still not updated.
+          span(0),
           span(0),
           span(0)
         )
