@@ -1732,6 +1732,8 @@ src/test/__tests__/ReactTestUtils-test.js
 * should have shallow rendering
 * should shallow render a functional component
 * can shallow render to null
+* can shallow render with a ref
+* can shallowly render components with contextTypes
 * can fail context when shallowly rendering
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
@@ -1740,6 +1742,7 @@ src/test/__tests__/ReactTestUtils-test.js
 * should support injected wrapper components as DOM components
 * should change the value of an input field
 * should change the value of an input field in a component
+* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
 * should not warn when simulating events with extra properties
 * can scry with stateless components involved
 * should set the type of the event

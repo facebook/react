@@ -12,81 +12,94 @@
 
 'use strict';
 
-const React = require('React');
 const emptyObject = require('emptyObject');
 const ReactFiberReconciler = require('ReactFiberReconciler');
+const ReactElementSymbol = require('ReactElementSymbol');
 
 type Props = {
   children : Array<any>,
 };
 
-type Container = {|
-  children : Array<Instance | TextInstance | null>,
+type Container = {
+  element : Instance | TextInstance | {},
   context : Object,
-|};
+};
 
 type Instance = {|
   type : string,
-  props : Props,
-  children : Array<Instance | TextInstance | null>,
-  rootContainerInstance : Container,
+  $$typeof : number,
+  props : Object,
+  ref : null,
+  key : null,
+  _store : Object,
+  _owner : null,
 |};
 
 type TextInstance = {|
   text : string,
 |};
 
-function removeOwner(element : React$Element) {
-  return {
-    ...element,
-    _owner: null,
-  }
-}
-
 const reconciler = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance : Container) {
-    return rootContainerInstance.context || emptyObject
+    return rootContainerInstance.context || emptyObject;
   },
 
   getChildHostContext(parentHostContext, type) {
     return parentHostContext;
   },
 
-  createInstance(type : string, props : Props) : Instance {
+  getPublicInstance(instance) {
+    return instance;
+  },
+
+  createInstance(type : string, props : Props, hostContext, internalInstanceHandle) : Instance {
+    const { children, ...instanceProps } = props;
+
+    if (children) {
+      instanceProps.children = [];
+    }
+
     return {
       type,
-      props,
-      children: [],
+      $$typeof: ReactElementSymbol,
+      props: instanceProps,
+      key: null,
+      _owner: null,
+      _store: {},
+      ref: null,
     };
   },
 
-  appendInitialChild(parentInstance, child) {},
-  finalizeInitialChildren(parentInstance, type, props, rootContainerInstance) {},
+  appendInitialChild(parentInstance, child) {
+    parentInstance.props.children.push(child);
+  },
+  finalizeInitialChildren(parentInstance, type, props, rootContainerInstance) : boolean {
+    return false;
+  },
 
-  prepareUpdate(instance, type, oldProps, newProps, hostContext) {},
+  prepareUpdate(instance, type, oldProps, newProps, hostContext) : boolean {
+    return true;
+  },
   commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, internalInstanceHandle) {},
   commitMount(instance, type, newProps, rootContainerInstance, internalInstanceHandle) {},
 
-  shouldSetTextContent(props) {},
+  shouldSetTextContent(props : Props) : boolean {
+    return (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number'
+    );
+  },
   resetTextContent(instance) {},
 
   createTextInstance(text : string) : TextInstance {
-    return { text }
+    return { text };
   },
   commitTextUpdate(textInstance, oldText, newText) {},
 
-  appendChild(parentInstance : Container | Instance, child : Instance) {
-    parentInstance.children.push({
-      $$typeof: child.$$typeof,
-      type: child.type,
-      key: child.key,
-      _owner: null,
-      _store: {},
-      ref: child.ref,
-      props: {
-        children: [...child.props.children].map(removeOwner),
-      },
-    });
+  appendChild(parentInstance : Container | Instance, child : Instance | TextInstance) {
+    if (parentInstance.element) {
+      parentInstance.element = child;
+    }
   },
   insertBefore(parentInstance, child, beforeChild) {},
   removeChild(parentInstance, child) {},
@@ -100,24 +113,22 @@ const reconciler = ReactFiberReconciler({
 });
 
 class ReactShallowRendererFiber {
-  container = (null: ?Container);
+  container_ = (null: ?Container);
 
-  render(element, context = emptyObject) {
-    this.container = {
+  render(element : React$Element<*>, context = emptyObject) {
+    this.container_ = {
       context,
-      children: [],
+      element: emptyObject,
     };
 
-    const root = reconciler.createContainer(this.container);
-
+    const root = reconciler.createContainer(this.container_);
     reconciler.updateContainer(element, root, null, null);
-
     return this.getRenderOutput();
   }
 
   getRenderOutput() {
-    const hasChildren = this.container.children.length > 0;
-    return hasChildren ? this.container.children[0] : null;
+    const component = this.container_ && this.container_.element;
+    return component === emptyObject ? null : component;
   }
 }
 
