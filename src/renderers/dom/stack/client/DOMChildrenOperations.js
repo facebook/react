@@ -255,7 +255,7 @@ var DOMChildrenOperations = {
    * @return {object} observer instance with pre-defined options.
    */
   mutationObserver: function() {
-    if (MutationObserver) {
+    if (window.MutationObserver) {
       var config = {
         childList: true,
         subtree: true,
@@ -267,8 +267,11 @@ var DOMChildrenOperations = {
       }
 
       var observer = new MutationObserver(callback);
-      var reactRoot = document.querySelector('[data-reactroot]');
-      observer.observe(reactRoot, config);
+      var reactRoots = document.querySelectorAll('[data-reactroot]');
+
+      for (let i = 0; i < reactRoots.length; i++) {
+        observer.observe(reactRoots[i], config);
+      }
       return observer;
     }
   },
