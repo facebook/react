@@ -68,7 +68,6 @@ src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/test/__tests__/ReactTestUtils-test.js
-* should have shallow unmounting
 * lets you update shallowly rendered components
 * can access the mounted component instance
 * can shallowly render components with ref as function

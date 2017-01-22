@@ -115,7 +115,7 @@ const reconciler = ReactFiberReconciler({
 });
 
 class ReactShallowRendererFiber {
-  container_ = (null: ?Container);
+  root_ = (null : ?Object)
 
   render(element : React$Element<*>, context = emptyObject) {
     invariant(
@@ -133,20 +133,28 @@ class ReactShallowRendererFiber {
       'inspecting the rendered output, look at `el.props` directly instead.',
       element.type
     );
-    
-    this.container_ = {
+
+    this.root_ = reconciler.createContainer({
       context,
       element: emptyObject,
-    };
+    });
 
-    const root = reconciler.createContainer(this.container_);
-    reconciler.updateContainer(element, root, null, null);
+    reconciler.updateContainer(element, this.root_, null, null);
     return this.getRenderOutput();
   }
 
+  unmount() {
+    if (this.root_ != null) {
+      reconciler.updateContainer(null, this.root_, null, () => {
+        this.root_ = null;
+      });
+    }
+  }
+
   getRenderOutput() {
-    const component = this.container_ && this.container_.element;
-    return component === emptyObject ? null : component;
+    return this.root_ != null
+      ? reconciler.findHostInstance(this.root_)
+      : null;
   }
 }
 
