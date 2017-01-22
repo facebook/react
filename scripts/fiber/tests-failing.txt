@@ -68,8 +68,6 @@ src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/test/__tests__/ReactTestUtils-test.js
-* lets you update shallowly rendered components
 * can access the mounted component instance
-* can shallowly render components with ref as function
 * can setState in componentWillMount when shallow rendering
 * can pass context when shallowly rendering

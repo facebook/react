@@ -82,7 +82,9 @@ const reconciler = ReactFiberReconciler({
   prepareUpdate(instance, type, oldProps, newProps, hostContext) : boolean {
     return true;
   },
-  commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, internalInstanceHandle) {},
+  commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, internalInstanceHandle) {
+    instance.props = newProps;
+  },
   commitMount(instance, type, newProps, rootContainerInstance, internalInstanceHandle) {},
 
   shouldSetTextContent(props : Props) : boolean {
@@ -134,10 +136,12 @@ class ReactShallowRendererFiber {
       element.type
     );
 
-    this.root_ = reconciler.createContainer({
-      context,
-      element: emptyObject,
-    });
+    if (this.root_ == null) {
+      this.root_ = reconciler.createContainer({
+        context,
+        element: emptyObject,
+      });
+    }
 
     reconciler.updateContainer(element, this.root_, null, null);
     return this.getRenderOutput();

@@ -1735,7 +1735,9 @@ src/test/__tests__/ReactTestUtils-test.js
 * should have shallow unmounting
 * can shallow render to null
 * can shallow render with a ref
+* lets you update shallowly rendered components
 * can shallowly render components with contextTypes
+* can shallowly render components with ref as function
 * can fail context when shallowly rendering
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
