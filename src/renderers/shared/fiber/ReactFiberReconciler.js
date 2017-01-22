@@ -49,18 +49,43 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   getChildHostContext(parentHostContext : CX, type : T) : CX,
   getPublicInstance(instance : I | TI) : PI,
 
-  createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX, internalInstanceHandle : OpaqueNode) : I,
+  createInstance(
+    type : T,
+    props : P,
+    rootContainerInstance : C,
+    hostContext : CX,
+    internalInstanceHandle : OpaqueNode
+  ) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,
   finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : boolean,
 
-  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, hostContext : CX) : null | PL,
-  commitUpdate(instance : I, updatePayload : PL, type : T, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
+  prepareUpdate(
+    instance : I,
+    type : T,
+    oldProps : P,
+    newProps : P,
+    rootContainerInstance : C,
+    hostContext : CX
+  ) : null | PL,
+  commitUpdate(
+    instance : I,
+    updatePayload : PL,
+    type : T,
+    oldProps : P,
+    newProps : P,
+    internalInstanceHandle : OpaqueNode
+  ) : void,
   commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
 
-  createTextInstance(text : string, rootContainerInstance : C, hostContext : CX, internalInstanceHandle : OpaqueNode) : TI,
+  createTextInstance(
+    text : string,
+    rootContainerInstance : C,
+    hostContext : CX,
+    internalInstanceHandle : OpaqueNode
+  ) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
   appendChild(parentInstance : I | C, child : I | TI) : void,
@@ -78,15 +103,16 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
 export type Reconciler<C, I, TI> = {
   createContainer(containerInfo : C) : OpaqueNode,
-  updateContainer(element : ReactNodeList, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>) : void,
+  updateContainer(
+    element : ReactNodeList,
+    container : OpaqueNode,
+    parentComponent : ?ReactComponent<any, any, any>
+  ) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
-  /* eslint-disable no-undef */
-  // FIXME: ESLint complains about type parameter
   batchedUpdates<A>(fn : () => A) : A,
   unbatchedUpdates<A>(fn : () => A) : A,
   syncUpdates<A>(fn : () => A) : A,
   deferredUpdates<A>(fn : () => A) : A,
-  /* eslint-enable no-undef */
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
@@ -102,8 +128,9 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
     parentContext;
 });
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) : Reconciler<C, I, TI> {
-
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>
+) : Reconciler<C, I, TI> {
   var {
     scheduleUpdate,
     getPriorityContext,
@@ -133,7 +160,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       return current;
     },
 
-    updateContainer(element : ReactNodeList, container : OpaqueNode, parentComponent : ?ReactComponent<any, any, any>, callback: ?Function) : void {
+    updateContainer(
+      element : ReactNodeList,
+      container : OpaqueNode,
+      parentComponent : ?ReactComponent<any, any, any>,
+      callback: ?Function
+    ) : void {
       // TODO: If this is a nested container, this won't be the root.
       const root : FiberRoot = (container.stateNode : any);
       const current = root.current;

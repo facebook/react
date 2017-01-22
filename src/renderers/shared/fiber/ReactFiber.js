@@ -331,7 +331,11 @@ exports.createFiberFromText = function(content : string, priorityLevel : Priorit
   return fiber;
 };
 
-function createFiberFromElementType(type : mixed, key : null | string, debugOwner : null | Fiber | ReactInstance) : Fiber {
+function createFiberFromElementType(
+  type : mixed,
+  key : null | string,
+  debugOwner : null | Fiber | ReactInstance
+) : Fiber {
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type) ?
