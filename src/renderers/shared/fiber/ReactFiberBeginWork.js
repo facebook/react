@@ -583,9 +583,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       return null;
     } else {
-      // Keep the existing progressed priority
       cloneChildFibers(current, workInProgress);
-      markChildAsProgressed(current, workInProgress, workInProgress.progressedPriority);
+      markChildAsProgressed(current, workInProgress, priorityLevel);
       return workInProgress.child;
     }
   }
