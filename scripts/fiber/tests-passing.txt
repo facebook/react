@@ -1731,6 +1731,7 @@ src/shared/utils/__tests__/reactProdInvariant-test.js
 src/test/__tests__/ReactTestUtils-test.js
 * should have shallow rendering
 * should shallow render a functional component
+* should throw for invalid elements
 * can shallow render to null
 * can shallow render with a ref
 * can shallowly render components with contextTypes

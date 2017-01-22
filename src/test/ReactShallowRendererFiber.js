@@ -12,9 +12,11 @@
 
 'use strict';
 
+const React = require('React');
 const emptyObject = require('emptyObject');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactElementSymbol = require('ReactElementSymbol');
+const invariant = require('invariant');
 
 type Props = {
   children : Array<any>,
@@ -116,6 +118,22 @@ class ReactShallowRendererFiber {
   container_ = (null: ?Container);
 
   render(element : React$Element<*>, context = emptyObject) {
+    invariant(
+      React.isValidElement(element),
+      'ReactShallowRenderer render(): Invalid component element.%s',
+      typeof element === 'function' ?
+        ' Instead of passing a component class, make sure to instantiate ' +
+        'it by passing it to React.createElement.' :
+        ''
+    );
+    invariant(
+      typeof element.type !== 'string',
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+      'components, not primitives (%s). Instead of calling `.render(el)` and ' +
+      'inspecting the rendered output, look at `el.props` directly instead.',
+      element.type
+    );
+    
     this.container_ = {
       context,
       element: emptyObject,
