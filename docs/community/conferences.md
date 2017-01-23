@@ -42,7 +42,7 @@ Summer 2017, Portland, Oregon USA
 ### React Js Day 2017
 October 6th in Verona, Italy
 
-[Website](https://2017.reactjsday.it) - [Twitter](https://twitter.com/reactjsday)
+[Website](http://2017.reactjsday.it) - [Twitter](https://twitter.com/reactjsday)
 
 ### React Native EU 2017
 Fall 2017, Poland
