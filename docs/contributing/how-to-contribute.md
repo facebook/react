@@ -142,7 +142,7 @@ However, there are still some styles that the linter cannot pick up. If you are 
 * 2 spaces for indentation (no tabs)
 * Prefer `'` over `"`
 * `'use strict';`
-* 80 character line length (**except documentation**)
+* 120 character line length (**except documentation**)
 * Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
