@@ -233,6 +233,22 @@ class Reservation extends React.Component {
 
 [Try it on CodePen.](https://codepen.io/keyanzhang/pen/pRENvx?editors=0010)
 
+Note how we used the ES6 [computed property name](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names) syntax to update the state key corresponding to the given input name:
+
+```js{2}
+this.setState({
+  [name]: value
+});
+```
+
+It is equivalent to this ES5 code:
+
+```js{2}
+var nextState = {};
+nextState[name] = value;
+this.setState(nextState);
+```
+
 ## Alternatives to Controlled Components
 
 It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out [uncontrolled components](/react/docs/uncontrolled-components.html), an alternative technique for implementing input forms.
