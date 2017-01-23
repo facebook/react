@@ -1,3 +1,5 @@
+'use strict';
+
 var Builder = require('systemjs-builder');
 
 var builder = new Builder('/', './config.js');

@@ -8,6 +8,7 @@ function run(done, coverage) {
 
   var args = [
     path.join('node_modules', 'jest', 'bin', 'jest'),
+    '--runInBand',
   ];
   if (coverage) {
     args.push('--coverage');

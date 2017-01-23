@@ -1,3 +1,5 @@
+'use strict';
+
 require(['react', 'react-dom'], function(React, ReactDOM) {
   var CSSTransitionGroup = React.addons.CSSTransitionGroup;
   ReactDOM.render(
