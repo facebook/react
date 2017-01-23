@@ -186,26 +186,23 @@ This will merge the commits you cherry-picked into the stable branch.
 
 However, if you plan to cut an alpha or a beta, you should stay on the “stable development” branch.
 
-### Update the Shrinkwrap
+### Update the Lockfile
 
 Run this so that the build is reproducible:
 
 ```
-rm npm-shrinkwrap.json
+rm yarn.lock
 rm -rf node_modules
-npm cache clear
-npm i
-npm shrinkwrap --dev
+yarn cache clean
+yarn
 ```
 
 Check `git diff`. Do changes look sensible?
 
-**Tip:** there are buggy npm versions that remove information from shrinkwrap. If you see a lot of `"dev": true` lines removed, you may be on a buggy version. Last time I tried, `npm@3.10.8` worked well.
-
 Commit your changes:
 
 ```
-git commit -am 'Update shrinkwrap'
+git commit -am 'Update Yarn lockfile'
 ```
 
 If you’re feeling extra careful, you can run `npm test` again.
