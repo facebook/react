@@ -184,15 +184,17 @@ Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select
 
 ## Handling Multiple Inputs
 
-When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let a handler function choose what to do based on the value of `event.target.name`. For example:
+When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let the handler function choose what to do based on the value of `event.target.name`.
 
-```javascript{15,18,27,34}
+For example:
+
+```javascript{15,18,28,37}
 class Reservation extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isGoing: false,
-      numberOfGuests: 0
+      isGoing: true,
+      numberOfGuests: 2
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -210,28 +212,31 @@ class Reservation extends React.Component {
 
   render() {
     return (
-      <div>
-        Is going:
-        <input
-          name="isGoing"
-          type="checkbox"
-          checked={this.state.isGoing}
-          onChange={this.handleInputChange}
-        />
-        Number of guests:
-        <input
-          name="numberOfGuests"
-          type="number"
-          value={this.state.numberOfGuests}
-          onChange={this.handleInputChange}
-        />
-      </div>
+      <form>
+        <label>
+          Is going:
+          <input
+            name="isGoing"
+            type="checkbox"
+            checked={this.state.isGoing}
+            onChange={this.handleInputChange} />
+        </label>
+        <br />
+        <label>
+          Number of guests:
+          <input
+            name="numberOfGuests"
+            type="number"
+            value={this.state.numberOfGuests}
+            onChange={this.handleInputChange} />
+        </label>
+      </form>
     );
   }
 }
 ```
 
-[Try it on CodePen.](https://codepen.io/keyanzhang/pen/pRENvx?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/wgedvV?editors=0010)
 
 Note how we used the ES6 [computed property name](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names) syntax to update the state key corresponding to the given input name:
 
@@ -244,10 +249,12 @@ this.setState({
 It is equivalent to this ES5 code:
 
 ```js{2}
-var nextState = {};
-nextState[name] = value;
-this.setState(nextState);
+var partialState = {};
+partialState[name] = value;
+this.setState(partialState);
 ```
+
+Also, since `setState()` automatically [merges a partial state into the current state](/react/docs/state-and-lifecycle.html#state-updates-are-merged), we only needed to call it with the changed parts.
 
 ## Alternatives to Controlled Components
 
