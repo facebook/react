@@ -280,7 +280,7 @@ describe('ReactDOMInput', () => {
 
     node.value = 'giraffe';
 
-    var fakeNativeEvent = new function() {};
+    var fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
     fakeNativeEvent.path = [node, container];
     ReactTestUtils.simulateNativeEventOnNode(

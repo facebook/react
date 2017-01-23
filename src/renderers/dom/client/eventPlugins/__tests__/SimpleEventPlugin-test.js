@@ -168,7 +168,7 @@ describe('SimpleEventPlugin', function() {
     it('does not add a local click to interactive elements', function() {
       var container = document.createElement('div');
 
-      ReactDOM.render(<button onClick={ onClick }></button>, container);
+      ReactDOM.render(<button onClick={ onClick } />, container);
 
       var node = container.firstChild;
 
@@ -180,7 +180,7 @@ describe('SimpleEventPlugin', function() {
     it('adds a local click listener to non-interactive elements', function() {
       var container = document.createElement('div');
 
-      ReactDOM.render(<div onClick={ onClick }></div>, container);
+      ReactDOM.render(<div onClick={ onClick } />, container);
 
       var node = container.firstChild;
 

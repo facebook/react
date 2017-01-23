@@ -272,7 +272,7 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('kitten');
 
-    ReactDOM.render(<textarea defaultValue="gorilla"></textarea>, container);
+    ReactDOM.render(<textarea defaultValue="gorilla" />, container);
 
     expect(node.value).toEqual('kitten');
   });
@@ -284,11 +284,11 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('kitten');
 
-    ReactDOM.render(<textarea value="puppies" onChange={emptyFunction}></textarea>, container);
+    ReactDOM.render(<textarea value="puppies" onChange={emptyFunction} />, container);
 
     expect(node.value).toBe('puppies');
 
-    ReactDOM.render(<textarea defaultValue="gorilla"></textarea>, container);
+    ReactDOM.render(<textarea defaultValue="gorilla" />, container);
 
     expect(node.value).toEqual('puppies');
   });

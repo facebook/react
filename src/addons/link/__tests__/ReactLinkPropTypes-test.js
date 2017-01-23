@@ -82,8 +82,8 @@ describe('ReactLink', () => {
     );
     typeCheckPass(
       LinkPropTypes.link(),
-      {value: {}, requestChange: emptyFunction,
-    });
+      {value: {}, requestChange: emptyFunction}
+    );
   });
 
   it('should allow no link to be passed at all', () => {

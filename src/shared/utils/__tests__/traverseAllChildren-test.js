@@ -213,15 +213,13 @@ describe('traverseAllChildren', () => {
       });
 
     var instance = (
-      <div>{
-        [
-          frag({
-            firstHalfKey: [zero, one, two],
-            secondHalfKey: [three, four],
-            keyFive: five,
-          }),
-        ]
-      }</div>
+      <div>{[
+        frag({
+          firstHalfKey: [zero, one, two],
+          secondHalfKey: [three, four],
+          keyFive: five,
+        }),
+      ]}</div>
     );
 
     traverseAllChildren(instance.props.children, traverseFn, traverseContext);

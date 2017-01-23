@@ -27,8 +27,8 @@ var deleteListener = ReactNativeEventEmitter.deleteListener;
 var deleteAllListeners = ReactNativeEventEmitter.deleteAllListeners;
 
 type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object;
-  uiViewClassName: string;
+  validAttributes: Object,
+  uiViewClassName: string,
 }
 
 // require('UIManagerStatTracker').install(); // uncomment to enable

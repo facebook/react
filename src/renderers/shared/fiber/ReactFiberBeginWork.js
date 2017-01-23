@@ -381,7 +381,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>, getSchedu
         }
         return null;
       case HostComponent:
-        if (workInProgress.stateNode && config.beginUpdate) {
+        if (workInProgress.stateNode && typeof config.beginUpdate === 'function') {
           config.beginUpdate(workInProgress.stateNode);
         }
         return updateHostComponent(current, workInProgress);
