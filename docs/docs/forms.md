@@ -231,8 +231,6 @@ class Reservation extends React.Component {
 }
 ```
 
-Since `setState()` automatically [merges a partial state into the current state](/react/docs/state-and-lifecycle.html#state-updates-are-merged), we only needed to call it with the changed parts.
-
 [Try it on CodePen.](https://codepen.io/keyanzhang/pen/pRENvx?editors=0010)
 
 Note how we used the ES6 [computed property name](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names) syntax to update the state key corresponding to the given input name:
@@ -246,10 +244,12 @@ this.setState({
 It is equivalent to this ES5 code:
 
 ```js{2}
-var nextState = {};
-nextState[name] = value;
-this.setState(nextState);
+var partialState = {};
+partialState[name] = value;
+this.setState(partialState);
 ```
+
+Also, since `setState()` automatically [merges a partial state into the current state](/react/docs/state-and-lifecycle.html#state-updates-are-merged), we only needed to call it with the changed parts.
 
 ## Alternatives to Controlled Components
 
