@@ -207,7 +207,7 @@
 
 <p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see that the data table is updated correctly.</p>
 <h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add Inverse Data Flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>
-<p data-height="265" data-theme-id="0" data-slug-hash="JbYQvL" data-default-tab="js,result" data-user="snakajima" data-embed-version="2" data-pen-title="Thinking In React: Step 5" class="codepen">See the Pen <a href="http://codepen.io/snakajima/pen/JbYQvL/">Thinking In React: Step 5</a> on <a href="http://codepen.io">CodePen</a>.</p>
+<p data-height="265" data-theme-id="0" data-slug-hash="JbYQvL" data-default-tab="js,result" data-user="snakajima" data-embed-version="2" data-pen-title="Thinking In React: Step 5" class="codepen">See the Pen <a href="http://codepen.io/rohan10/pen/qRqmjd">Thinking In React: Step 5</a> on <a href="http://codepen.io">CodePen</a>.</p>
 
 <script async src="https://production-assets.codepen.io/assets/embed/ei.js"></script>
 
@@ -217,7 +217,7 @@
 
 <p>If you try to type or check the box in the current version of the example, you&#39;ll see that React ignores your input. This is intentional, as we&#39;ve set the <code>value</code> prop of the <code>input</code> to always be equal to the <code>state</code> passed in from <code>FilterableProductTable</code>.</p>
 
-<p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form, we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass a callback to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. And the callback passed by <code>FilterableProductTable</code> will call <code>setState()</code>, and the app will be updated.</p>
+<p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form, we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass callbacks to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. The callbacks passed by <code>FilterableProductTable</code> will call <code>setState()</code>, and the app will be updated.</p>
 
 <p>Though this sounds complex, it&#39;s really just a few lines of code. And it&#39;s really explicit how your data is flowing throughout the app.</p>
 <h2><a class="anchor" name="and-thats-it"></a>And That&#39;s It <a class="hash-link" href="#and-thats-it">#</a></h2>

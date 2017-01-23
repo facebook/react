@@ -133,12 +133,13 @@
         <span class="p">))}</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
-  <span class="p">}}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Later, you write a component for subscribing to a single blog post, which follows a similar pattern:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">BlogPost</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">();</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
       <span class="nx">blogPost</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getBlogPost</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
@@ -161,7 +162,8 @@
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">BlogPost</span> <span class="nx">blogPost</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">blogPost</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p><code>CommentList</code> and <code>BlogPost</code> aren&#39;t identical — they call different methods on <code>DataSource</code>, and they render different output. But much of their implementation is the same:</p>
 
@@ -219,7 +221,7 @@
       <span class="c1">// Notice that we pass through any additional props</span>
       <span class="k">return</span> <span class="o">&lt;</span><span class="nx">WrappedComponent</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
     <span class="p">}</span>
-  <span class="p">});</span>
+  <span class="p">};</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Note that an HOC doesn&#39;t modify the input component, nor does it use inheritance to copy its behavior. Rather, an HOC <em>composes</em> the original component by <em>wrapping</em> it in a container component. An HOC is a pure function with zero side-effects.</p>

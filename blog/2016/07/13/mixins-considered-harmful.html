@@ -474,7 +474,7 @@
 <h4><a class="anchor" name="solution"></a>Solution <a class="hash-link" href="#solution">#</a></h4>
 <p>If you see rendering logic inside a mixin, it’s time to extract a component!</p>
 
-<p>Instead of <code>RowMixin</code>, we will define a <code>&lt;Row&gt;</code> component. We will also replace the convention of defining a <code>getHeaderText()</code> method with the standard mechanism of top-data flow in React: passing props.</p>
+<p>Instead of <code>RowMixin</code>, we will define a <code>&lt;RowHeader&gt;</code> component. We will also replace the convention of defining a <code>getHeaderText()</code> method with the standard mechanism of top-data flow in React: passing props.</p>
 
 <p>Finally, since neither of those components currently need lifecycle hooks or state, we can declare them as simple functions:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">RowHeader</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>

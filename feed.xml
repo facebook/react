@@ -985,7 +985,7 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution&quot;&gt;&lt;/a&gt;Solution &lt;a class=&quot;hash-link&quot; href=&quot;#solution&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;p&gt;If you see rendering logic inside a mixin, it’s time to extract a component!&lt;/p&gt;
 
-&lt;p&gt;Instead of &lt;code&gt;RowMixin&lt;/code&gt;, we will define a &lt;code&gt;&amp;lt;Row&amp;gt;&lt;/code&gt; component. We will also replace the convention of defining a &lt;code&gt;getHeaderText()&lt;/code&gt; method with the standard mechanism of top-data flow in React: passing props.&lt;/p&gt;
+&lt;p&gt;Instead of &lt;code&gt;RowMixin&lt;/code&gt;, we will define a &lt;code&gt;&amp;lt;RowHeader&amp;gt;&lt;/code&gt; component. We will also replace the convention of defining a &lt;code&gt;getHeaderText()&lt;/code&gt; method with the standard mechanism of top-data flow in React: passing props.&lt;/p&gt;
 
 &lt;p&gt;Finally, since neither of those components currently need lifecycle hooks or state, we can declare them as simple functions:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;RowHeader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;

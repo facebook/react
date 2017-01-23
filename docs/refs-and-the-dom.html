@@ -132,7 +132,7 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>You may not use the <code>ref</code> attribute on functional components because they don&#39;t have instances. You can, however, use the <code>ref</code> attribute inside the <code>render</code> function of a functional component:</p>
+<p>You may not use the <code>ref</code> attribute on functional components because they don&#39;t have instances. You can, however, use the <code>ref</code> attribute inside the functional component:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">CustomTextInput</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">  <span class="c1">// textInput must be declared here so the ref callback can refer to it</span>
 </span><span class="hll">  <span class="kd">let</span> <span class="nx">textInput</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>

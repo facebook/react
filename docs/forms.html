@@ -223,6 +223,52 @@
 <p><a href="https://codepen.io/gaearon/pen/JbbEzX?editors=0010">Try it on CodePen.</a></p>
 
 <p>Overall, this makes it so that <code>&lt;input type=&quot;text&quot;&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;select&gt;</code> all work very similarly - they all accept a <code>value</code> attribute that you can use to implement a controlled component.</p>
+<h2><a class="anchor" name="handling-multiple-inputs"></a>Handling Multiple Inputs <a class="hash-link" href="#handling-multiple-inputs">#</a></h2>
+<p>When you need to handle multiple controlled <code>input</code> elements, you can add a <code>name</code> attribute to each element and let a handler function choose what to do based on the value of <code>event.target.name</code>. For example:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Reservation</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">isGoing</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+      <span class="nx">numberOfGuests</span><span class="o">:</span> <span class="mi">0</span>
+    <span class="p">};</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">handleInputChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleInputChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">handleInputChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">;</span>
+    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">target</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;checkbox&#39;</span> <span class="o">?</span> <span class="nx">target</span><span class="p">.</span><span class="nx">checked</span> <span class="o">:</span> <span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">name</span> <span class="o">=</span> <span class="nx">target</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
+</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+<span class="hll">      <span class="p">[</span><span class="nx">name</span><span class="p">]</span><span class="o">:</span> <span class="nx">value</span>
+</span>    <span class="p">});</span>
+  <span class="p">}</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="nx">Is</span> <span class="nx">going</span><span class="o">:</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+<span class="hll">          <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;isGoing&quot;</span>
+</span>          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
+          <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">isGoing</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleInputChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+        <span class="nb">Number</span> <span class="nx">of</span> <span class="nx">guests</span><span class="o">:</span>
+        <span class="o">&lt;</span><span class="nx">input</span>
+<span class="hll">          <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;numberOfGuests&quot;</span>
+</span>          <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;number&quot;</span>
+          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">numberOfGuests</span><span class="p">}</span>
+          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleInputChange</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="https://codepen.io/keyanzhang/pen/pRENvx?editors=0010">Try it on CodePen.</a></p>
 <h2><a class="anchor" name="alternatives-to-controlled-components"></a>Alternatives to Controlled Components <a class="hash-link" href="#alternatives-to-controlled-components">#</a></h2>
 <p>It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out <a href="/react/docs/uncontrolled-components.html">uncontrolled components</a>, an alternative technique for implementing input forms.</p>
 

@@ -95,6 +95,17 @@
 <span class="p">}),</span>
 <span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">optimize</span><span class="p">.</span><span class="nx">UglifyJsPlugin</span><span class="p">()</span>
 </code></pre></div>
+<ul>
+<li>For Rollup, you need to use the <a href="https://github.com/rollup/rollup-plugin-replace">replace</a> plugin <em>before</em> the <a href="https://github.com/rollup/rollup-plugin-commonjs">commonjs</a> plugin so that development-only modules are not imported. For a complete setup example <a href="https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0">see this gist</a>.</li>
+</ul>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">plugins</span><span class="o">:</span> <span class="p">[</span>
+  <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rollup-plugin-replace&#39;</span><span class="p">)({</span>
+    <span class="s1">&#39;process.env.NODE_ENV&#39;</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s1">&#39;production&#39;</span><span class="p">)</span>
+  <span class="p">}),</span>
+  <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;rollup-plugin-commonjs&#39;</span><span class="p">)(),</span>
+  <span class="c1">// ...</span>
+<span class="p">]</span>
+</code></pre></div>
 <p>The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.</p>
 <h2><a class="anchor" name="profiling-components-with-chrome-timeline"></a>Profiling Components with Chrome Timeline <a class="hash-link" href="#profiling-components-with-chrome-timeline">#</a></h2>
 <p>In the <strong>development</strong> mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:</p>
@@ -219,7 +230,7 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>The problem is that <code>PureComponent</code> will do a simple comparison between the old and new values of <code>this.props.words</code>. Since this code mutates the <code>words</code> array in the <code>handleClick</code> method of <code>WordAdder</code>, the old and new values of <code>this.props.words</code> will compare as equal, even though the actual words in the array have changed. The <code>ListOfWords</code> will thus not update even though it has new words that shoud be rendered.</p>
+<p>The problem is that <code>PureComponent</code> will do a simple comparison between the old and new values of <code>this.props.words</code>. Since this code mutates the <code>words</code> array in the <code>handleClick</code> method of <code>WordAdder</code>, the old and new values of <code>this.props.words</code> will compare as equal, even though the actual words in the array have changed. The <code>ListOfWords</code> will thus not update even though it has new words that should be rendered.</p>
 <h2><a class="anchor" name="the-power-of-not-mutating-data"></a>The Power Of Not Mutating Data <a class="hash-link" href="#the-power-of-not-mutating-data">#</a></h2>
 <p>The simplest way to avoid this problem is to avoid mutating values that you are using as props or state. For example, the <code>handleClick</code> method above could be rewritten using <code>concat</code> as:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">()</span> <span class="p">{</span>

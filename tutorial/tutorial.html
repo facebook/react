@@ -325,7 +325,7 @@
 
 <p>Square no longer keeps its own state; it receives its value from its parent <code>Board</code> and informs its parent when it&#39;s clicked. We call components like this <strong>controlled components</strong>.</p>
 <h2><a class="anchor" name="why-immutability-is-important"></a>Why Immutability Is Important <a class="hash-link" href="#why-immutability-is-important">#</a></h2>
-<p>In the previous code example, I suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changes and to prevent mutating the existing array. Let&#39;s talk about what this means and why it is an important concept to learn.</p>
+<p>In the previous code example, we suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changes and to prevent mutating the existing array. Let&#39;s talk about what this means and why it is an important concept to learn.</p>
 
 <p>There are generally two ways for changing data. The first method is to <em>mutate</em> the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.</p>
 <h4><a class="anchor" name="data-change-with-mutation"></a>Data change with mutation <a class="hash-link" href="#data-change-with-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>

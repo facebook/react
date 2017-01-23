@@ -140,8 +140,16 @@ npm install --save react react-dom
 <p>If you use <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>, <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder.</p>
 <h4><a class="anchor" name="webpack"></a>Webpack <a class="hash-link" href="#webpack">#</a></h4>
 <p>Include both <code>DefinePlugin</code> and <code>UglifyJsPlugin</code> into your production Webpack configuration as described in <a href="https://webpack.js.org/guides/production-build/">this guide</a>.</p>
+
+<blockquote>
+<p><strong>Note:</strong></p>
+
+<p>This guide works with Webpack 1.x and 2, but is hosted on the new Webpack 2 site. If you&#39;re not using the Webpack 2 beta, refer to the <a href="https://webpack.github.io/">Webpack 1.x website</a> for all other documentation.</p>
+</blockquote>
 <h4><a class="anchor" name="browserify"></a>Browserify <a class="hash-link" href="#browserify">#</a></h4>
 <p>Run Browserify with <code>NODE_ENV</code> environment variable set to <code>production</code> and use <a href="https://github.com/mishoo/UglifyJS">UglifyJS</a> as the last build step so that development-only code gets stripped out.</p>
+<h4><a class="anchor" name="rollup"></a>Rollup <a class="hash-link" href="#rollup">#</a></h4>
+<p>Use <a href="https://github.com/rollup/rollup-plugin-replace">rollup-plugin-replace</a> plugin together with <a href="https://github.com/rollup/rollup-plugin-commonjs">rollup-plugin-commonjs</a> (in that order) to remove development-only code. <a href="https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0">See this gist</a> for a complete setup example.</p>
 <h3><a class="anchor" name="using-a-cdn"></a>Using a CDN <a class="hash-link" href="#using-a-cdn">#</a></h3>
 <p>If you don&#39;t want to use npm to manage client packages, the <code>react</code> and <code>react-dom</code> npm packages also provide single-file distributions in <code>dist</code> folders, which are hosted on a CDN:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>

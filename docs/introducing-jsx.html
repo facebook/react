@@ -112,7 +112,7 @@
 </code></pre></div>
 <p><a href="http://codepen.io/gaearon/pen/PGEjdG?editors=0010">Try it on CodePen.</a></p>
 
-<p>We split JSX over multiple lines for readability. While it isn&#39;t mandatory, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of <a href="http://stackoverflow.com/q/2846283">automatic semicolon insertion</a>.</p>
+<p>We split JSX over multiple lines for readability. While it isn&#39;t required, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of <a href="http://stackoverflow.com/q/2846283">automatic semicolon insertion</a>.</p>
 <h3><a class="anchor" name="jsx-is-an-expression-too"></a>JSX is an Expression Too <a class="hash-link" href="#jsx-is-an-expression-too">#</a></h3>
 <p>After compilation, JSX expressions become regular JavaScript objects.</p>
 
@@ -129,7 +129,9 @@
 </code></pre></div>
 <p>You may also use curly braces to embed a JavaScript expression in an attribute:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">avatarUrl</span><span class="p">}</span><span class="o">&gt;&lt;</span><span class="err">/img&gt;;</span>
-</code></pre></div><h3><a class="anchor" name="specifying-children-with-jsx"></a>Specifying Children with JSX <a class="hash-link" href="#specifying-children-with-jsx">#</a></h3>
+</code></pre></div>
+<p>Don&#39;t put quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal rather than an expression. You should either use quotes (for string values) or curly braces (for expressions), but not both in the same attribute.</p>
+<h3><a class="anchor" name="specifying-children-with-jsx"></a>Specifying Children with JSX <a class="hash-link" href="#specifying-children-with-jsx">#</a></h3>
 <p>If a tag is empty, you may close it immediately with <code>/&gt;</code>, like XML:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">avatarUrl</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
