@@ -79,7 +79,7 @@ You may also use curly braces to embed a JavaScript expression in an attribute:
 const element = <img src={user.avatarUrl}></img>;
 ```
 
-You must remove quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal, not as JavaScript code.  This is an important difference between JSX and HTML, XML, or other templating languages that require quotes around all attributes.
+Don't put quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal rather than an expression. You should either use quotes (for string values) or curly braces (for expressions), but not both in the same attribute.
 
 ### Specifying Children with JSX
 
