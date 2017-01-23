@@ -39,6 +39,11 @@ Summer 2017, Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
 
+### ReactJS Day 2017
+October 6th in Verona, Italy
+
+[Website](http://2017.reactjsday.it) - [Twitter](https://twitter.com/reactjsday)
+
 ### React Native EU 2017
 Fall 2017, Poland
 
