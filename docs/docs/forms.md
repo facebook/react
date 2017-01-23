@@ -231,7 +231,7 @@ class Reservation extends React.Component {
 }
 ```
 
-Since `setState()` automatically merges a partial state into the current state ([State Updates are Merged](/react/docs/state-and-lifecycle.html#state-updates-are-merged)), we only needed to call it with the changed parts.
+Since `setState()` automatically [merges a partial state into the current state](/react/docs/state-and-lifecycle.html#state-updates-are-merged), we only needed to call it with the changed parts.
 
 [Try it on CodePen.](https://codepen.io/keyanzhang/pen/pRENvx?editors=0010)
 
