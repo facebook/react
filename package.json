@@ -8,7 +8,8 @@
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
-    "babel-eslint": "^5.0.0",
+    "babel-eslint": "^7.1.0",
+    "babel-jest": "18.0.0",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
@@ -40,12 +41,16 @@
     "coveralls": "^2.11.6",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
-    "eslint": "1.10.3",
-    "eslint-plugin-react": "4.1.0",
+    "es6-symbol": "^3.0.2",
+    "eslint": "^3.10.2",
+    "eslint-config-fbjs": "^1.1.1",
+    "eslint-plugin-babel": "^3.3.0",
+    "eslint-plugin-flowtype": "^2.25.0",
+    "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "file:eslint-rules",
-    "fbjs": "^0.8.4",
+    "fbjs": "^0.8.5",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.31.0",
+    "flow-bin": "^0.37.0",
     "glob": "^6.0.1",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
@@ -57,7 +62,10 @@
     "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest": "^15.1.1",
+    "jest-cli": "18.0.0",
+    "jest-config": "^18.0.0",
+    "jest-jasmine2": "^18.0.0",
+    "jest-runtime": "^18.0.0",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.0",
@@ -70,8 +78,8 @@
     "uglifyify": "^3.0.1"
   },
   "devEngines": {
-    "node": "4.x || 5.x || 6.x",
-    "npm": "2.x || 3.x"
+    "node": "4.x || 5.x || 6.x || 7.x",
+    "npm": "2.x || 3.x || 4.x"
   },
   "commonerConfig": {
     "version": 7
@@ -90,11 +98,13 @@
       "/react/build/"
     ],
     "rootDir": "",
-    "scriptPreprocessor": "scripts/jest/preprocessor.js",
+    "transform": {
+      ".*": "./scripts/jest/preprocessor.js"
+    },
     "setupFiles": [
-      "scripts/jest/environment.js"
+      "./scripts/jest/environment.js"
     ],
-    "setupTestFrameworkScriptFile": "scripts/jest/test-framework-setup.js",
+    "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
     "testRegex": "/__tests__/",
     "moduleFileExtensions": [
       "js",

@@ -124,7 +124,7 @@ describe('ReactClass-mixin', () => {
   it('should support chaining delegate functions', () => {
     var listener = jest.fn();
     var instance = <TestComponent listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
@@ -137,7 +137,7 @@ describe('ReactClass-mixin', () => {
   it('should chain functions regardless of spec property order', () => {
     var listener = jest.fn();
     var instance = <TestComponentWithReverseSpec listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
@@ -451,7 +451,7 @@ describe('ReactClass-mixin', () => {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should include the mixin keys in even if their values are falsy', () => {
@@ -471,7 +471,7 @@ describe('ReactClass-mixin', () => {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should work with a null getInitialState return value and a mixin', () => {

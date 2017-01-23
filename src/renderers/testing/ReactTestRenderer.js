@@ -96,6 +96,8 @@ class ReactTestComponent {
   }
 
   toJSON(): ReactTestRendererJSON {
+    // not using `children`, but I don't want to rewrite without destructuring
+    // eslint-disable-next-line no-unused-vars
     var {children, ...props} = this._currentElement.props;
     var childrenJSON = [];
     for (var key in this._renderedChildren) {

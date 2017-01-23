@@ -74,8 +74,15 @@ describe('ReactTestRenderer', () => {
       }
     }
 
-    var Child = () => (renders++, <moo />);
-    var Null = () => (renders++, null);
+    var Child = () => {
+      renders++;
+      return <moo />;
+    };
+
+    var Null = () => {
+      renders++;
+      return null;
+    };
 
     var renderer = ReactTestRenderer.create(<Component />);
     expect(renderer.toJSON()).toEqual({
