@@ -21,7 +21,7 @@ import type { TestRendererOptions } from 'ReactTestMount';
 
 type ReactTestRendererJSON = {|
   type : string,
-  props : {[propName: string] : string },
+  props : {[propName: string] : any },
   children : null | Array<ReactTestRendererNode>,
   $$typeof ?: Symbol, // Optional because we add it with defineProperty().
 |};
