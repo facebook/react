@@ -108,6 +108,10 @@ src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should handle entering/leaving several elements at once
 * should warn for duplicated keys
 
+src/isomorphic/__tests__/React-test.js
+* should log a deprecation warning once when using React.__spread
+* should log a deprecation warning once when using React.createMixin
+
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
 * should treat single arrayless child as being in array
