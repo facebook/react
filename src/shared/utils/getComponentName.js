@@ -19,7 +19,7 @@ function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string | nu
   if (typeof instanceOrFiber.getName === 'function') {
     // Stack reconciler
     const instance = ((instanceOrFiber : any) : ReactInstance);
-    return instance.getName() || 'Component';
+    return instance.getName() || 'Component' || null;
   }
   if (typeof instanceOrFiber.tag === 'number') {
     // Fiber reconciler
@@ -32,6 +32,7 @@ function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string | nu
       return type.displayName || type.name || null;
     }
   }
+  return null;
 }
 
 module.exports = getComponentName;
