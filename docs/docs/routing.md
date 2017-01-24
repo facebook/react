@@ -68,7 +68,7 @@ Typically, these issues are solved by creating a separate object which manages a
 - It will normalise events between browsers
 - It will emit navigation events caused by both the application and external stimuli
 
-While it is certainly possible to create your own objcet to manage access to the History API, in this guide we'll use the popular [history](https://github.com/mjackson/history) package.
+While it is certainly possible to create your own object to manage access to the History API, in this guide we'll use the popular [history](https://github.com/mjackson/history) package.
 
 ```bash
 npm install history --save
