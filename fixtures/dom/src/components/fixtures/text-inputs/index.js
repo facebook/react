@@ -24,7 +24,7 @@ const TextInputFixtures = React.createClass({
 
     return (
       <div key={type} className="field">
-        <label htmlFor={id}>{type}</label>
+        <label className="control-label" htmlFor={id}>{type}</label>
         <input id={id} type={type} value={state} onChange={onChange} />
         &nbsp; &rarr; {JSON.stringify(state)}
       </div>
@@ -35,7 +35,7 @@ const TextInputFixtures = React.createClass({
     let id = `uncontrolled_${type}`;
     return (
       <div key={type} className="field">
-        <label htmlFor={id}>{type}</label>
+        <label className="control-label" htmlFor={id}>{type}</label>
         <input id={id} type={type} />
       </div>
     );
