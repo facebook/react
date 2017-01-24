@@ -25,7 +25,7 @@ function App({ location }) {
       content = <h1>News</h1>;
     } else if (location.pathname == '/profile') {
       content = <h1>Profile</h1>;
-    } lse {
+    } else {
       content = <h1>Not Found</h1>;
     }
     
