@@ -50,17 +50,16 @@ But while this app will work, it has one major issue; it will reload the entire 
 
 The HTML5 [History API](https://developer.mozilla.org/en/docs/Web/API/History) makes it possible to update the browser's URL without causing a page reload. It also emits browser events when the user clicks *Back* or *Forward*. By using this API, you can write applications that respond faster and behave as expected when *Back* or *Forward* are clicked.
 
-Adding support for HTML5 History involves three steps:
+Single page applications will often make use of the following two parts of the History API:
 
-1. Exporting a history wrapper object
-2. Ensuring links call the History API instead of reloading the page
-3. Updating your rendered content when the current URL changes
+- The [popstate](https://developer.mozilla.org/en-US/docs/Web/Events/popstate) browser event, which is emitted when *Back* or *Forward* are clicked
+- The [History.pushState()](https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method) method, which allows the app to replace the contents of the URL bar without actually navigating
 
 ## History wrapper objects
 
 The HTML5 History API is not without issues.
 
-Firstly, there are inconsistencies between how the different browsers emit navigation events. Notably, some versions of Chrome and Safari will emit an event on page load while other versions won't.
+Firstly, there are inconsistencies between how the different browsers use the `popstate` event. Some versions of Chrome and Safari will emit an event on page load while other versions won't.
 
 Secondly, navigation events are only emitted when they're caused by external stimuli such as the *Back* or *Forward* buttons. When the application itself updates the URL, nothing will happen. This means that the application will need to manually pass the new URL from the link that caused it to the top-level component that is handling routing.
 
@@ -69,20 +68,18 @@ Typically, these issues are solved by creating a wrapper around the HTML5 Histor
 - It will normalise events between browsers
 - It will emit navigation events caused by both the application and external stimuli
 
-While it is certainly possible to create your own wrapper, most React applications in the wild make use of the [history](https://github.com/mjackson/history) package.
+While it is certainly possible to create your own wrapper, in this guide we'll use the popular [history](https://github.com/mjackson/history) package.
 
 ```bash
 npm install history --save
 ```
 
-As the History API is global, the wrapper will also need to be accessible everywhere. A good place to put it is in a `historyWrapper.js` file at the root of your source tree.
+As the History API is global, the wrapper will also need to be accessible everywhere.
 
 ```js
 import createBrowserHistory from 'history/createBrowserHistory';
 
 const historyWrapper = createBrowserHistory();
-
-export default historyWrapper;
 ```
 
 This guide will use the following methods and properties from the wrapper object:
@@ -108,7 +105,7 @@ You can view the documentation for the full wrapper API at the [history](https:/
 
 By default, HTML `<a>` elements will always cause the page to reload when clicked. If you'd like to update the URL using the History API, you'll need to cancel the default behaviour and then implement an alternative.
 
-While you could do this by adding an `onClick` handler to each individual `<a>` element, React applications often use a `Link` component. Instances of this component behave exactly like `<a>` elements, except that instead of refreshing the page, they will update the URL in-place using `historyWrapper.push()`:
+You could do this by adding an `onClick` handler to each individual `<a>` element, but since most links within an app will share the same logic, people often create a component for them. Instances of this component behave exactly like `<a>` elements, except that instead of refreshing the page, they will update the URL in-place using `historyWrapper.push()`:
 
 ```js
 class Link extends React.Component {
