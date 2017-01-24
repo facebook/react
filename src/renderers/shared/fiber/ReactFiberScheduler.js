@@ -85,72 +85,27 @@ var {
 } = require('ReactFiberContext');
 
 var onCommitRootInDev = null;
-var callCommitListenerInDev = null;
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('warning');
-
-  var devCommitListeners = [];
-  var devMountedRoots = new Set();
-
-  callCommitListenerInDev = function(root, listener) {
-    if (__DEV__) {
-      try {
-        listener(root);
-      } catch (err) {
-        warning(
-          false,
-          'React DevTools error: %s.',
-          err,
-        );
-      }
-    }
-  };
-
-  onCommitRootInDev = function(root) {
-    const current = root.current;
-    const isKnownRoot = devMountedRoots.has(root);
-    const isUnmounting = current.memoizedState == null || current.memoizedState.element == null;
-    // Keep track of mounted roots so we can hydrate when DevTools connect.
-    if (!isKnownRoot && !isUnmounting) {
-      devMountedRoots.add(root);
-    } else if (isKnownRoot && isUnmounting) {
-      devMountedRoots.delete(root);
-    }
-    // Notify the listeners.
-    for (let i = 0; i < devCommitListeners.length; i++) {
-      if (callCommitListenerInDev) {
-        callCommitListenerInDev(root, devCommitListeners[i]);
-      }
-    }
-  };
-
   if (
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-    __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot === 'function'
   ) {
-    __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-      subscribeToFiberCommits(listener) {
-        // Hydrate the current tree.
-        devMountedRoots.forEach(root => {
-          if (callCommitListenerInDev) {
-            callCommitListenerInDev(root, listener);
-          }
-        });
-        // Subscribe for updates.
-        devCommitListeners.push(listener);
-        return {
-          unsubscribe() {
-            const index = devCommitListeners.indexOf(listener);
-            if (index !== -1) {
-              devCommitListeners.splice(index, 1);
-            }
-          },
-        };
-      },
+    const rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
+      isFiber: true,
+      // TODO
     });
+    onCommitRootInDev = function(root) {
+      try {
+        __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot(rendererID, root);
+      } catch (err) {
+        // Catch all errors because it is unsafe to throw in the commit phase.
+        warning('React DevTools encountered an error: %s', err);
+      }
+    };
   }
 }
 
