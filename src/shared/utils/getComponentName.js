@@ -15,11 +15,11 @@
 import type { ReactInstance } from 'ReactInstanceType';
 import type { Fiber } from 'ReactFiber';
 
-function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string | null {
+function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string {
   if (typeof instanceOrFiber.getName === 'function') {
     // Stack reconciler
     const instance = ((instanceOrFiber : any) : ReactInstance);
-    return instance.getName() || 'Component' || null;
+    return instance.getName() || 'Component';
   }
   if (typeof instanceOrFiber.tag === 'number') {
     // Fiber reconciler
@@ -29,10 +29,10 @@ function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string | nu
       return type;
     }
     if (typeof type === 'function') {
-      return type.displayName || type.name || null;
+      return type.displayName || type.name || 'Component';
     }
   }
-  return null;
+  return 'Component';
 }
 
 module.exports = getComponentName;
