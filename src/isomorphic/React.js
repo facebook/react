@@ -35,20 +35,35 @@ if (__DEV__) {
 }
 
 var __spread = Object.assign;
+var createMixin = function(mixin) {
+  return mixin;
+};
 
 if (__DEV__) {
-  var warned = false;
+  var warnedForSpread = false;
+  var warnedForCreateMixin = false;
   __spread = function() {
     warning(
-      warned,
+      warnedForSpread,
       'React.__spread is deprecated and should not be used. Use ' +
       'Object.assign directly or another helper function with similar ' +
       'semantics. You may be seeing this warning due to your compiler. ' +
       'See https://fb.me/react-spread-deprecation for more details.'
     );
-    warned = true;
+    warnedForSpread = true;
     return Object.assign.apply(null, arguments);
   };
+
+  createMixin = function(mixin) {
+    warning(
+      warnedForCreateMixin,
+      'React.createMixin is deprecated and should not be used. You ' +
+      'can use your mixin directly instead.'
+    );
+    warnedForCreateMixin = true;
+    return mixin;
+  };
+
 }
 
 var React = {
@@ -75,10 +90,7 @@ var React = {
   PropTypes: ReactPropTypes,
   createClass: ReactClass.createClass,
   createFactory: createFactory,
-  createMixin: function(mixin) {
-    // Currently a noop. Will be used to validate and trace mixins.
-    return mixin;
-  },
+  createMixin: createMixin,
 
   // This looks DOM specific but these are actually isomorphic helpers
   // since they are just generating DOM strings.
