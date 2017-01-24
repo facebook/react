@@ -19,7 +19,7 @@ function getComponentName(instanceOrFiber : ReactInstance | Fiber) : string | nu
   if (typeof instanceOrFiber.getName === 'function') {
     // Stack reconciler
     const instance = ((instanceOrFiber : any) : ReactInstance);
-    return instance.getName() || 'Component' || null;
+    return instance.getName() || 'Component';
   }
   if (typeof instanceOrFiber.tag === 'number') {
     // Fiber reconciler
