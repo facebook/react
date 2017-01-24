@@ -55,7 +55,7 @@ Single page applications will often make use of the following two parts of the H
 - The [popstate](https://developer.mozilla.org/en-US/docs/Web/Events/popstate) browser event, which is emitted when *Back* or *Forward* are clicked
 - The [History.pushState()](https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method) method, which allows the app to replace the contents of the URL bar without actually navigating
 
-## History wrapper objects
+## History objects
 
 The HTML5 History API is not without issues.
 
@@ -63,49 +63,49 @@ Firstly, there are inconsistencies between how the different browsers use the `p
 
 Secondly, navigation events are only emitted when they're caused by external stimuli such as the *Back* or *Forward* buttons. When the application itself updates the URL, nothing will happen. This means that the application will need to manually pass the new URL from the link that caused it to the top-level component that is handling routing.
 
-Typically, these issues are solved by creating a wrapper around the HTML5 History API. This wrapper will do two things:
+Typically, these issues are solved by creating a separate object which manages access to the HTML5 History API. This object will do two things:
 
 - It will normalise events between browsers
 - It will emit navigation events caused by both the application and external stimuli
 
-While it is certainly possible to create your own wrapper, in this guide we'll use the popular [history](https://github.com/mjackson/history) package.
+While it is certainly possible to create your own objcet to manage access to the History API, in this guide we'll use the popular [history](https://github.com/mjackson/history) package.
 
 ```bash
 npm install history --save
 ```
 
-As the History API is global, the wrapper will also need to be accessible everywhere.
+As the History API is global, our object will also need to be accessible everywhere.
 
 ```js
 import createBrowserHistory from 'history/createBrowserHistory';
 
-const historyWrapper = createBrowserHistory();
+const history = createBrowserHistory();
 ```
 
-This guide will use the following methods and properties from the wrapper object:
+This guide will use the following methods and properties from the `history` object:
 
 ```js
 // Get the current location.
-const location = historyWrapper.location
+const location = history.location
 
 // Listen for changes to the current location.
-const unlisten = historyWrapper.listen((location) => {
+const unlisten = history.listen((location) => {
   // location is an object like window.location
   console.log(location.pathname)
 })
 
 // Change current location, adding a new entry to the
 // browser history.
-historyWrapper.push('/home')
+history.push('/home')
 ```
 
-You can view the documentation for the full wrapper API at the [history](https://github.com/mjackson/history) package's page.
+You can view the documentation for the full `history` object API at the [history](https://github.com/mjackson/history) package's page.
 
 ## Links
 
 By default, HTML `<a>` elements will always cause the page to reload when clicked. If you'd like to update the URL using the History API, you'll need to cancel the default behaviour and then implement an alternative.
 
-You could do this by adding an `onClick` handler to each individual `<a>` element, but since most links within an app will share the same logic, people often create a component for them. Instances of this component behave exactly like `<a>` elements, except that instead of refreshing the page, they will update the URL in-place using `historyWrapper.push()`:
+You could do this by adding an `onClick` handler to each individual `<a>` element, but since most links within an app will share the same logic, people often create a component for them. Instances of this component behave exactly like `<a>` elements, except that instead of refreshing the page, they will update the URL in-place using `history.push()`:
 
 ```js
 class Link extends React.Component {
@@ -143,7 +143,7 @@ class Link extends React.Component {
     // Ensure the browser doesn't navigate
     event.preventDefault();
     
-    // historyWrapper.push() expects an object that takes the
+    // history.push() expects an object that takes the
     // same shape as `window.location`
     const pathname = this.props.href.split('?')[0];
     const search = this.props.href.slice(pathname.length);
@@ -151,7 +151,7 @@ class Link extends React.Component {
     
     // Update the browser URL and notify any listeners
     // added via history.listen()
-    historyWrapper.push(location);
+    history.push(location);
   }
 
   render() {
@@ -179,13 +179,13 @@ function Menu() {
 
 ## Updating rendered content
 
-When the URL is updated by `historyWrapper.push()`, by default nothing will happen. In order to update the displayed content, you will need to listen for history events and take appropriate action.
+When the URL is updated by `history.push()`, by default nothing will happen. In order to update the displayed content, you will need to listen for history events and take appropriate action.
 
 Since the displayed content is decided by your `App` component, the current location will need to be available within that component's `render()` method. You could accomplish this by passing it in via `props`, but we'll take take the approach of storing it in [component state](/react/docs/state-and-lifecycle.html).
 
 Assuming we're keeping the current location under the `location` key of `this.state`, this will involve four steps:
 
-1. Setting the initial state to the current value of `historyWrapper.location`.
+1. Setting the initial state to the current value of `history.location`.
 2. Subscribing to history events once the component has initially rendered.
 3. Updating the state whenever a new location is emitted.
 4. Unsubscribing from history events when the component is unmounted.
@@ -197,7 +197,7 @@ class App extends React.Component {
     
     // Set the initial location
     this.state = {
-      location: historyWrapper.location
+      location: history.location
     };
   }
   
@@ -205,7 +205,7 @@ class App extends React.Component {
     // Subscribe after the component has mounted, in case the
     // component is being rendered server-side and subscribing
     // doesn't make sense
-    this.unsubscribe = historyWrapper.listen(location => {
+    this.unsubscribe = history.listen(location => {
       // Update the component state whenever the browser's
       // location is updated
       this.setState({ location })
