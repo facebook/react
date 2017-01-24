@@ -60,7 +60,7 @@ if (__DEV__) {
     warning(
       warnedForCreateMixin,
       'React.createMixin is deprecated and should not be used. You ' +
-      'can use your mixin directly instead.'
+      'can use this mixin directly instead.'
     );
     warnedForCreateMixin = true;
     return mixin;
