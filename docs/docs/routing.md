@@ -18,18 +18,14 @@ function Menu() {
   );
 }
 
-class App extends React.Component {
+function App({ location }) {
   render() {
-    const location = window.location;
-  
     let content;
     if (location.pathname == '/news') {
       content = <h1>News</h1>;
-    }
-    else if (location.pathname == '/profile') {
+    } else if (location.pathname == '/profile') {
       content = <h1>Profile</h1>;
-    }
-    else {
+    } lse {
       content = <h1>Not Found</h1>;
     }
     
@@ -41,6 +37,11 @@ class App extends React.Component {
     );
   }
 }
+
+ReactDOM.render(
+  <App location={window.location} />,
+  document.getElementById('root')
+);
 ```
 
 But while this app will work, it has one major issue; it will reload the entire page every time a user clicks a link.
@@ -111,7 +112,13 @@ While you could do this by adding an `onClick` handler to each individual `<a>` 
 
 ```js
 class Link extends React.Component {
-  handleClick = (event) => {
+  constructor(props) {
+    super(props)
+
+    this.handleClick = this.handleClick.bind(this)
+  }
+
+  handleClick(event) {
     // Instead of letting the `<a>` element handle
     // onClick, do it here
     if (this.props.onClick) {
@@ -220,11 +227,9 @@ class App extends React.Component {
     let content;
     if (location.pathname == '/news') {
       content = <h1>News</h1>;
-    }
-    else if (location.pathname == '/profile') {
+    } else if (location.pathname == '/profile') {
       content = <h1>Profile</h1>;
-    }
-    else {
+    } else {
       content = <h1>Not Found</h1>;
     }
     
