@@ -103,7 +103,7 @@ if (__DEV__) {
         __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot(rendererID, root);
       } catch (err) {
         // Catch all errors because it is unsafe to throw in the commit phase.
-        warning('React DevTools encountered an error: %s', err);
+        warning(false, 'React DevTools encountered an error: %s', err);
       }
     };
   }
