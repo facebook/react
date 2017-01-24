@@ -465,7 +465,7 @@ var ReactDOMFiberComponent = {
         // Create the script via .innerHTML so its "parser-inserted" flag is
         // set to true and it does not execute
         var div = ownerDocument.createElement('div');
-        div.innerHTML = '<script></script>';
+        div.innerHTML = '<script><' + '/script>';  // eslint-disable-line
         // This is guaranteed to yield a script element.
         var firstChild = ((div.firstChild : any) : HTMLScriptElement);
         domElement = div.removeChild(firstChild);
