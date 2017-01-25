@@ -535,6 +535,47 @@ describe('ReactErrorBoundaries', () => {
     };
   });
 
+  it('catches update errors', () => {
+    ErrorBoundary = class extends React.Component {
+      state = {
+        error: null,
+      };
+      unstable_handleError(error) {
+        log.push('ErrorBoundary unstable_handleError');
+        this.setState({ error: error });
+      }
+      render() {
+        if (this.state.error) {
+          log.push('ErrorBoundary render error');
+          return <span>{this.state.error.message}</span>;
+        }
+        log.push('ErrorBoundary render children');
+        return this.props.children;
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        log.push('Child render');
+        throw new Error('Child error');
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<ErrorBoundary><h1>Child</h1></ErrorBoundary>, container);
+    expect(log).toEqual([
+      'ErrorBoundary render children',
+    ]);
+    log = [];
+    expect(() => ReactDOM.render(<ErrorBoundary><Child /></ErrorBoundary>, container)).not.toThrow();
+    expect(log).toEqual([
+      'ErrorBoundary render children',
+      'Child render',
+      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary render error',
+    ]);
+  });
+
   it('does not swallow exceptions on mounting without boundaries', () => {
     var container = document.createElement('div');
     expect(() => {
