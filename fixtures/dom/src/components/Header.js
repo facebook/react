@@ -13,7 +13,7 @@ const Header = React.createClass({
       .then(res => res.json())
       .then(tags => {
         let versions = tags.map(tag => tag.name.slice(1));
-        versions = ['local', ...versions];
+        versions = [`local (${React.version})`, ...versions];
         this.setState({ versions });
       });
   },

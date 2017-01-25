@@ -18,6 +18,7 @@ select {
   width: 12rem;
 }
 
+
 .header {
   background: #222;
   box-shadow: inset 0 -1px 3px #000;
@@ -133,9 +134,47 @@ li {
   padding: 2rem;
 }
 
+.test-case--complete {
+  border-color: #5cb85c;
+}
+
+.test-case--complete .test-case__title {
+  color: #5cb85c;
+}
+
+.test-case__details {
+  font-size: 75%;
+  margin: 0;
+}
+
+.test-case__details > * {
+  display: inline-block;
+}
+
+.test-case__details > dt {
+  color: #464a4c;
+  font-style: italic;
+}
+
+
+.test-case__details > dd {
+  margin-left: 1rem;
+  color: #8949b9;
+}
+
+.test-case__details > dd + dt {
+  margin-left: 1.5rem;
+}
+
+.test-case__invalid-version {
+  font-style: italic;
+  font-size: 1.6rem;
+  color: #5cb85c;
+}
+
 .test-fixture {
   padding: 2rem;
   margin: 0 -2rem -2rem;
-  background-color: #EEE;
+  background-color: #f4f4f4;
   border-top: 1px solid #d9d9d9;
 }

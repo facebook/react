@@ -38,9 +38,10 @@ class InputChangeEvents extends React.Component {
             Radio inputs should only fire change events when the checked
             state changes.
           `}
+          minimumVersion="16.0.0"
         >
           <TestCase.Steps>
-            <li>Click on the Radio input</li>
+            <li>Click on the Radio input (or label text)</li>
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
@@ -56,6 +57,8 @@ class InputChangeEvents extends React.Component {
             Text inputs with placeholders should not trigger changes
             when the placeholder is altered
           `}
+          minimumVersion="15.0.0"
+          affectedBrowsers="IE9+"
         >
           <TestCase.Steps>
             <li>Click on the Text input</li>
