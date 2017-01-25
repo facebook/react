@@ -127,6 +127,7 @@ describe('ReactTreeTraversal', () => {
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_2);
       var expectedCalls = [
         ['P_P1_C1__DIV_1', 'bubbled', ARG],
+        // enter/leave shouldn't fire anything on the parent
         ['P_P1_C1__DIV_2', 'captured', ARG2],
       ];
       ReactTreeTraversal.traverseEnterLeave(
