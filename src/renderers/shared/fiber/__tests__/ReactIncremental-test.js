@@ -333,7 +333,7 @@ describe('ReactIncremental', () => {
 
     // We're now rendering an update that will bail out on updating middle.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushDeferredPri(45 + 5);
+    ReactNoop.flushDeferredPri(45 + 10);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
@@ -428,7 +428,7 @@ describe('ReactIncremental', () => {
     // Let us try this again without fully finishing the first time. This will
     // create a hanging subtree that is reconciling at the normal priority.
     ReactNoop.render(<Foo text="foo" />);
-    ReactNoop.flushDeferredPri(40);
+    ReactNoop.flushDeferredPri(35);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
