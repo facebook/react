@@ -16,15 +16,7 @@ import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 import type { HostConfig, Deadline } from 'ReactFiberReconciler';
 import type { PriorityLevel } from 'ReactPriorityLevel';
-
-export type CapturedError = {
-  componentName : ?string,
-  componentStack : string,
-  error : Error,
-  errorBoundaryFound : boolean,
-  errorBoundaryName : ?string,
-  willRetry : boolean,
-};
+import type { CapturedError } from 'ReactDevInterface';
 
 var {
   popContextProvider,
@@ -33,7 +25,7 @@ const { reset } = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
 } = require('ReactComponentTreeHook');
-var { logCapturedError } = require('ReactFiberErrorLogger');
+var ReactDevInterface = require('ReactDevInterface');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
@@ -985,7 +977,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       error = capturedError.error;
 
       try {
-        logCapturedError(capturedError);
+        ReactDevInterface.error(capturedError);
       } catch (e) {
         // Prevent cycle if logCapturedError() throws.
         // A cycle may still occur if logCapturedError renders a component that throws.

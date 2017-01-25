@@ -23,6 +23,7 @@ var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactElement = require('ReactElement');
 
 var checkReactTypeSpec = require('checkReactTypeSpec');
+var ReactDevInterface = require('ReactDevInterface');
 
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
@@ -100,6 +101,9 @@ function validateExplicitKey(element, parentType) {
   }
   memoizer[currentComponentErrorInfo] = true;
 
+  var componentName = getComponentName(element._owner);
+  var componentStack = ReactComponentTreeHook.getCurrentStackAddendum(element);
+
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
@@ -109,17 +113,21 @@ function validateExplicitKey(element, parentType) {
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
     childOwner =
-      ` It was passed a child from ${getComponentName(element._owner)}.`;
+      ` It was passed a child from ${componentName}.`;
   }
 
-  warning(
-    false,
+  var message =
     'Each child in an array or iterator should have a unique "key" prop.' +
-    '%s%s See https://fb.me/react-warning-keys for more information.%s',
-    currentComponentErrorInfo,
-    childOwner,
-    ReactComponentTreeHook.getCurrentStackAddendum(element)
-  );
+    `${currentComponentErrorInfo}${childOwner} ` +
+    'See https://fb.me/react-warning-keys for more information.';
+
+  // TODO (bvaughn) Bundle this up in a more convenient format to reduce boilerplate.
+  // eg warnForFiber(fiber : Fiber, message : string) : void
+  ReactDevInterface.warn({
+    componentName,
+    componentStack,
+    message,
+  });
 }
 
 /**

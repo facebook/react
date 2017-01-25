@@ -15,6 +15,7 @@ var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactPureComponent = require('ReactPureComponent');
 var ReactClass = require('ReactClass');
+var ReactDevInterface = require('ReactDevInterface');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactPropTypes = require('ReactPropTypes');
@@ -80,6 +81,8 @@ var React = {
 
   Component: ReactComponent,
   PureComponent: ReactPureComponent,
+
+  DevInterface: ReactDevInterface,
 
   createElement: createElement,
   cloneElement: cloneElement,
