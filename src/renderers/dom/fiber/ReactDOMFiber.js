@@ -18,6 +18,7 @@ import type { ReactNodeList } from 'ReactTypes';
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
@@ -27,6 +28,8 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
+var { isValidElement } = require('ReactElement');
+
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -48,6 +51,7 @@ if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var { updatedAncestorInfo } = validateDOMNesting;
 }
+
 
 const DOCUMENT_NODE = 9;
 
@@ -352,6 +356,17 @@ var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     validateContainer(container);
+
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      // Top-level check occurs here instead of inside child reconciler because
+      // because requirements vary between renderers. E.g. React Art
+      // allows arrays.
+      invariant(
+        isValidElement(element),
+        'render(): Invalid component element.'
+      );
+    }
+
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 

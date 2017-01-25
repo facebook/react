@@ -64,7 +64,6 @@ const {
   FunctionalComponent,
   ClassComponent,
   HostText,
-  HostRoot,
   HostPortal,
   CoroutineComponent,
   YieldComponent,
@@ -75,7 +74,6 @@ const {
   NoEffect,
   Placement,
   Deletion,
-  Err,
 } = ReactTypeOfSideEffect;
 
 function coerceRef(current: ?Fiber, element: ReactElement) {
@@ -1104,10 +1102,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
-    if (ReactFeatureFlags.disableNewFiberFeatures) {
+    const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+
+    // Handle object types
+    if (typeof newChild === 'object' && newChild !== null) {
       // Support only the subset of return types that Stack supports. Treat
       // everything else as empty, but log a warning.
-      if (typeof newChild === 'object' && newChild !== null) {
+      if (disableNewFiberFeatures) {
         switch (newChild.$$typeof) {
           case REACT_ELEMENT_TYPE:
             return placeSingleChild(reconcileSingleElement(
@@ -1125,45 +1126,72 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
               priority
             ));
         }
-      }
-
-      if (returnFiber.tag === HostRoot) {
-        // Top-level only accepts elements or portals
-        invariant(
-          // If the root has an error effect, this is an intentional unmount.
-          // Don't throw an error.
-          returnFiber.effectTag & Err,
-          'render(): Invalid component element.'
-        );
       } else {
-        switch (returnFiber.tag) {
-          case ClassComponent: {
-            if (__DEV__) {
-              const instance = returnFiber.stateNode;
-              if (instance.render._isMockFunction) {
-                // We allow auto-mocks to proceed as if they're
-                // returning null.
-                break;
-              }
-            }
-          }
-          // Intentionally fall through to the next case, which handles both
-          // functions and classes
-          // eslint-disable-next-lined no-fallthrough
-          case FunctionalComponent: {
-            // Composites accept elements, portals, null, or false
-            const Component = returnFiber.type;
-            invariant(
-              newChild === null || newChild === false,
-              '%s.render(): A valid React element (or null) must be ' +
-              'returned. You may have returned undefined, an array or some ' +
-              'other invalid object.',
-              Component.displayName || Component.name || 'Component'
-            );
-          }
+        switch (newChild.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+            return placeSingleChild(reconcileSingleElement(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_COROUTINE_TYPE:
+            return placeSingleChild(reconcileSingleCoroutine(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_YIELD_TYPE:
+            return placeSingleChild(reconcileSingleYield(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_PORTAL_TYPE:
+            return placeSingleChild(reconcileSinglePortal(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
         }
       }
-      return deleteRemainingChildren(returnFiber, currentFirstChild);
+    }
+
+    if (disableNewFiberFeatures) {
+      // The new child is not an element. If it's not null or false,
+      // and the return fiber is a composite component, throw an error.
+      switch (returnFiber.tag) {
+        case ClassComponent: {
+          if (__DEV__) {
+            const instance = returnFiber.stateNode;
+            if (instance.render._isMockFunction && typeof newChild === 'undefined') {
+              // We allow auto-mocks to proceed as if they're
+              // returning null.
+              break;
+            }
+          }
+        }
+        // Intentionally fall through to the next case, which handles both
+        // functions and classes
+        // eslint-disable-next-lined no-fallthrough
+        case FunctionalComponent: {
+          // Composites accept elements, portals, null, or false
+          const Component = returnFiber.type;
+          invariant(
+            newChild === null || newChild === false,
+            '%s(...): A valid React element (or null) must be ' +
+            'returned. You may have returned undefined, an array or some ' +
+            'other invalid object.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
+      }
     }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
@@ -1175,65 +1203,29 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       ));
     }
 
-    if (typeof newChild === 'object' && newChild !== null) {
-      switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
-          return placeSingleChild(reconcileSingleElement(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
-
-        case REACT_COROUTINE_TYPE:
-          return placeSingleChild(reconcileSingleCoroutine(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
-
-        case REACT_YIELD_TYPE:
-          return placeSingleChild(reconcileSingleYield(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
-
-        case REACT_PORTAL_TYPE:
-          return placeSingleChild(reconcileSinglePortal(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
-      }
-
-      if (isArray(newChild)) {
-        return reconcileChildrenArray(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          priority
-        );
-      }
-
-      if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          priority
-        );
-      }
+    if (isArray(newChild)) {
+      return reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        priority
+      );
     }
 
-    if (typeof newChild === 'undefined') {
+    if (getIteratorFn(newChild)) {
+      return reconcileChildrenIterator(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        priority
+      );
+    }
+
+    if (!disableNewFiberFeatures && typeof newChild === 'undefined') {
+      // If the new child is undefined, and the return fiber is a composite
+      // component, throw an error. If Fiber return types are disabled,
+      // we already threw above.
       switch (returnFiber.tag) {
-        case HostRoot:
-          // TODO: Top-level render
-          break;
         case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;

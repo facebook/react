@@ -13,12 +13,16 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
+
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   it('should render a simple component', () => {

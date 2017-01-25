@@ -14,6 +14,7 @@
 var React;
 var ReactNoop;
 var ReactCoroutine;
+var ReactFeatureFlags;
 
 describe('ReactCoroutine', () => {
   beforeEach(() => {
@@ -21,6 +22,8 @@ describe('ReactCoroutine', () => {
     React = require('React');
     ReactNoop = require('ReactNoop');
     ReactCoroutine = require('ReactCoroutine');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   it('should render a coroutine', () => {

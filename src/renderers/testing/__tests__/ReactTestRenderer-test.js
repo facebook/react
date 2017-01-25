@@ -14,8 +14,14 @@
 var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactFeatureFlags;
 
 describe('ReactTestRenderer', () => {
+  beforeEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }

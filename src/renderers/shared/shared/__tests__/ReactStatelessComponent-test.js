@@ -152,13 +152,8 @@ describe('ReactStatelessComponent', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrowError(
-      ReactDOMFeatureFlags.useFiber ?
-        // Fiber gives a more specific error message for undefined because it
-        // supports more return types.
-        'NotAComponent(...): Nothing was returned from render' :
-        // Stack's message is generic.
-        'NotAComponent(...): A valid React element (or null) must be returned. ' +
-        'You may have returned undefined, an array or some other invalid object.'
+      'NotAComponent(...): A valid React element (or null) must be returned. ' +
+      'You may have returned undefined, an array or some other invalid object.'
     );
   });
 
