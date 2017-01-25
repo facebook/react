@@ -471,11 +471,15 @@ var ReactCompositeComponent = {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
       }
       checkpoint = transaction.checkpoint();
-      this._renderedComponent.unmountComponent(
-        true, /* safely */
-        // Don't call componentWillUnmount() because they never fully mounted:
-        true /* skipLifecyle */
-      );
+      
+      if (this._renderedComponent) {
+        this._renderedComponent.unmountComponent(
+          true, /* safely */
+          // Don't call componentWillUnmount() because they never fully mounted:
+          true /* skipLifecyle */
+        );
+      }
+      
       transaction.rollback(checkpoint);
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
