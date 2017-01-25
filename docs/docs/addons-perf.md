@@ -23,10 +23,11 @@ React is usually quite fast out of the box. However, in situations where you nee
 
 In addition to giving you an overview of your app's overall performance, `Perf` is a profiling tool that tells you exactly where you need to put these hooks.
 
-See these articles by the [Benchling Engineering Team](http://benchling.engineering) for a in-depth introduction to performance tooling:
+See these articles for an introduction to React performance tooling:
 
+ - ["How to Benchmark React Components"](https://medium.com/code-life/how-to-benchmark-react-components-the-quick-and-dirty-guide-f595baf1014c)
  - ["Performance Engineering with React"](http://benchling.engineering/performance-engineering-with-react/)
- - ["A Deep Dive into React Perf Debugging"](http://benchling.engineering/deep-dive-react-perf-debugging/)
+ - ["A Deep Dive into React Perf Debugging"](http://benchling.engineering/deep-dive-react-perf-debugging/) 
 
 ### Development vs. Production Builds
 
