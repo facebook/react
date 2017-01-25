@@ -18,30 +18,25 @@ function Menu() {
   );
 }
 
-function App({ location }) {
-  render() {
-    let content;
-    if (location.pathname == '/news') {
-      content = <h1>News</h1>;
-    } else if (location.pathname == '/profile') {
-      content = <h1>Profile</h1>;
-    } else {
-      content = <h1>Not Found</h1>;
-    }
-    
-    return (
-      <div>
-        <Menu />
-        <div>{content}</div>
-      </div>
-    );
-  }
-}
+function App() {
+  const location = window.location;
 
-ReactDOM.render(
-  <App location={window.location} />,
-  document.getElementById('root')
-);
+  let content;
+  if (location.pathname == '/news') {
+    content = <h1>News</h1>;
+  } else if (location.pathname == '/profile') {
+    content = <h1>Profile</h1>;
+  } else {
+    content = <h1>Not Found</h1>;
+  }
+  
+  return (
+    <div>
+      <Menu />
+      <div>{content}</div>
+    </div>
+  );
+}
 ```
 
 But while this app will work, it has one major issue; it will reload the entire page every time a user clicks a link.
@@ -79,33 +74,33 @@ As the History API is global, our object will also need to be accessible everywh
 ```js
 import createBrowserHistory from 'history/createBrowserHistory';
 
-const history = createBrowserHistory();
+const browserHistory = createBrowserHistory();
 ```
 
-This guide will use the following methods and properties from the `history` object:
+This guide will use the following methods and properties from the `browserHistory` object:
 
 ```js
-// Get the current location.
+// Get the current browserHistory.
 const location = history.location
 
 // Listen for changes to the current location.
-const unlisten = history.listen((location) => {
+const unlisten = browserHistory.listen((location) => {
   // location is an object like window.location
   console.log(location.pathname)
 })
 
 // Change current location, adding a new entry to the
 // browser history.
-history.push('/home')
+browserHistory.push('/home')
 ```
 
-You can view the documentation for the full `history` object API at the [history](https://github.com/mjackson/history) package's page.
+You can view the documentation for the full `browserHistory` object API at the [history](https://github.com/mjackson/history) package's page.
 
 ## Links
 
 By default, HTML `<a>` elements will always cause the page to reload when clicked. If you'd like to update the URL using the History API, you'll need to cancel the default behaviour and then implement an alternative.
 
-You could do this by adding an `onClick` handler to each individual `<a>` element, but since most links within an app will share the same logic, people often create a component for them. Instances of this component behave exactly like `<a>` elements, except that instead of refreshing the page, they will update the URL in-place using `history.push()`:
+You could do this by adding an `onClick` handler to each individual `<a>` element, but since most links within an app will share the same logic, people often create a component for them. Instances of this component behave exactly like `<a>` elements, except that instead of refreshing the page, they will update the URL in-place using `browserHistory.push()`:
 
 ```js
 class Link extends React.Component {
@@ -143,15 +138,15 @@ class Link extends React.Component {
     // Ensure the browser doesn't navigate
     event.preventDefault();
     
-    // history.push() expects an object that takes the
+    // browserHistory.push() expects an object that takes the
     // same shape as `window.location`
     const pathname = this.props.href.split('?')[0];
     const search = this.props.href.slice(pathname.length);
     const location = { pathname, search };
     
     // Update the browser URL and notify any listeners
-    // added via history.listen()
-    history.push(location);
+    // added via browserHistory.listen()
+    browserHistory.push(location);
   }
 
   render() {
@@ -179,13 +174,13 @@ function Menu() {
 
 ## Updating rendered content
 
-When the URL is updated by `history.push()`, by default nothing will happen. In order to update the displayed content, you will need to listen for history events and take appropriate action.
+When the URL is updated by `browserHistory.push()`, by default nothing will happen. In order to update the displayed content, you will need to listen for history events and take appropriate action.
 
 Since the displayed content is decided by your `App` component, the current location will need to be available within that component's `render()` method. You could accomplish this by passing it in via `props`, but we'll take take the approach of storing it in [component state](/react/docs/state-and-lifecycle.html).
 
 Assuming we're keeping the current location under the `location` key of `this.state`, this will involve four steps:
 
-1. Setting the initial state to the current value of `history.location`.
+1. Setting the initial state to the current value of `browserHistory.location`.
 2. Subscribing to history events once the component has initially rendered.
 3. Updating the state whenever a new location is emitted.
 4. Unsubscribing from history events when the component is unmounted.
@@ -197,7 +192,7 @@ class App extends React.Component {
     
     // Set the initial location
     this.state = {
-      location: history.location
+      location: browserHistory.location
     };
   }
   
@@ -205,7 +200,7 @@ class App extends React.Component {
     // Subscribe after the component has mounted, in case the
     // component is being rendered server-side and subscribing
     // doesn't make sense
-    this.unsubscribe = history.listen(location => {
+    this.unsubscribe = browserHistory.listen(location => {
       // Update the component state whenever the browser's
       // location is updated
       this.setState({ location })
@@ -222,9 +217,9 @@ class App extends React.Component {
     const location = this.state.location;
   
     let content;
-    if (location.pathname == '/news') {
+    if (location.pathname === '/news') {
       content = <h1>News</h1>;
-    } else if (location.pathname == '/profile') {
+    } else if (location.pathname === '/profile') {
       content = <h1>Profile</h1>;
     } else {
       content = <h1>Not Found</h1>;
