@@ -553,7 +553,7 @@ describe('ReactErrorBoundaries', () => {
           return null;
         }
 
-        throw new Error('Error');
+        throw new Error('render error');
       }
     };
 
