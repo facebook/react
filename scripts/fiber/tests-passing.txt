@@ -1440,6 +1440,7 @@ src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * preserves the dom node during updates
 
 src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
+* catches update errors
 * does not swallow exceptions on mounting without boundaries
 * does not swallow exceptions on updating without boundaries
 * does not swallow exceptions on unmounting without boundaries
