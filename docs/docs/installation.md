@@ -37,7 +37,7 @@ Create React App doesn't handle backend logic or databases; it just creates a fr
 
 You don't need to rewrite your app to start using React.
 
-We recommend adding React to a small part of your application, such an individual widget, so you can see if it works well for your use case.
+We recommend adding React to a small part of your application, such as an individual widget, so you can see if it works well for your use case.
 
 While React [can be used](/react/docs/react-without-es6.html) without a build pipeline, we recommend setting it up so you can be more productive. A modern build pipeline typically consists of:
 
