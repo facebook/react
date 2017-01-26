@@ -82,12 +82,12 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-var onCommitRootInDev = null;
+var onCommitRoot = null;
 
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var { onCommitRootInDev } = require('ReactDebugFiberHook');
+  var { onCommitRoot } = require('ReactDebugFiberHook');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -415,8 +415,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
     isCommitting = false;
     if (__DEV__) {
-      if (onCommitRootInDev) {
-        onCommitRootInDev(finishedWork.stateNode);
+      if (typeof onCommitRoot === 'function') {
+        onCommitRoot(finishedWork.stateNode);
       }
       if (ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);

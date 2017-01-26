@@ -34,7 +34,19 @@ if (__DEV__) {
     });
   };
 
-  exports.onCommitRootInDev = function(root) {
+  exports.onCommitUnmount = function(fiber) {
+    if (!supportsDevTools || rendererID == null) {
+      return;
+    }
+    try {
+      __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount(rendererID, fiber);
+    } catch (err) {
+      // Catch all errors because it is unsafe to throw in the commit phase.
+      warning(false, 'React DevTools encountered an error: %s', err);
+    }
+  }
+
+  exports.onCommitRoot = function(root) {
     if (!supportsDevTools || rendererID == null) {
       return;
     }
@@ -43,6 +55,6 @@ if (__DEV__) {
     } catch (err) {
       // Catch all errors because it is unsafe to throw in the commit phase.
       warning(false, 'React DevTools encountered an error: %s', err);
-    }    
+    }
   };
 }

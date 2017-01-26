@@ -33,6 +33,10 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
+if (__DEV__) {
+  var { onCommitUnmount } = require('ReactDebugFiberHook');
+}
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
@@ -317,6 +321,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // deletion, so don't let them throw. Host-originating errors should
   // interrupt deletion, so it's okay
   function commitUnmount(current : Fiber) : void {
+    if (__DEV__) {
+      if (typeof onCommitUnmount === 'function') {
+        onCommitUnmount(current);
+      }
+    }
+
     switch (current.tag) {
       case ClassComponent: {
         safelyDetachRef(current);
