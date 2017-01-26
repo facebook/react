@@ -50,6 +50,7 @@ var {
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var { updatedAncestorInfo } = validateDOMNesting;
+  var { injectInternals } = require('ReactDebugFiberHook');
 }
 
 
@@ -406,5 +407,10 @@ var ReactDOM = {
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
 };
+
+injectInternals({
+  ComponentTree: ReactDOMComponentTree,
+  findHostInstance: DOMRenderer.findHostInstance,
+});
 
 module.exports = ReactDOM;

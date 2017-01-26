@@ -10,8 +10,6 @@
  * @flow
  */
 
-/* globals __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
@@ -89,24 +87,7 @@ var onCommitRootInDev = null;
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var warning = require('warning');
-  if (
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot === 'function'
-  ) {
-    const rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-      isFiber: true,
-      // TODO
-    });
-    onCommitRootInDev = function(root) {
-      try {
-        __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot(rendererID, root);
-      } catch (err) {
-        // Catch all errors because it is unsafe to throw in the commit phase.
-        warning(false, 'React DevTools encountered an error: %s', err);
-      }
-    };
-  }
+  var { onCommitRootInDev } = require('ReactDebugFiberHook');
 }
 
 var timeHeuristicForUnitOfWork = 1;
