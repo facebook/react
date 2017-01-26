@@ -28,7 +28,7 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
-var { isValidElement } = require('ReactElement');
+var { isValidElement } = require('React');
 
 
 var findDOMNode = require('findDOMNode');
