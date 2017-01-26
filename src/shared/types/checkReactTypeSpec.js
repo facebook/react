@@ -34,8 +34,7 @@ if (
 }
 
 var loggedTypeFailures = {};
-
-// function checkReactTypeSpec(typeSpecs, values, location, componentName, element, debugID) {
+var mistypedPropFailures = {};
 
 /**
  * Assert that the values match with the type specs.
@@ -59,9 +58,8 @@ function checkReactTypeSpec(
   // only during reconciliation (begin and complete phase).
   workInProgressOrDebugID,
 ) {
-  const mismatched = Object.keys(values).filter(x => Object.keys(typeSpecs).indexOf(x) === -1)
-    .map(i => i.toLowerCase());
-  const mismatched = Object.keys(values).filter(x => Object.keys(typeSpecs).indexOf(x) === -1);
+  // values can be undefined, at least in pre existing test cases, so default to empty array
+  const mismatched = values ? Object.keys(values).filter(x => Object.keys(typeSpecs).indexOf(x) === -1) : [];
   const lowercase = mismatched.map(i => i.toLowerCase());
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
@@ -132,7 +130,7 @@ function checkReactTypeSpec(
           componentStackInfo
         );
       }
-      if (lowercase.indexOf(typeSpecName.toLowerCase()) !== -1) {
+      if (lowercase.indexOf(typeSpecName.toLowerCase()) !== -1 && !mistypedPropFailures[typeSpecName]) {
         const mismatch = mismatched[lowercase.indexOf(typeSpecName.toLowerCase())];
         warning(
           false,
@@ -140,6 +138,7 @@ function checkReactTypeSpec(
           mismatch,
           typeSpecName,
         );
+        mistypedPropFailures[typeSpecName] = true;
       }
     }
   }

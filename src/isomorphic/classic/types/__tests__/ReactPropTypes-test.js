@@ -166,8 +166,10 @@ describe('ReactPropTypes', () => {
           return <div>{this.props.label}</div>;
         },
       });
-      var instance = <Component onaction={() => alert('hello')} label="HelloWorld" />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      var node = <Component onaction={() => alert('hello')} label="HelloWorld" />;
+      var node2 = <Component onaction={() => alert('hello')} label="HelloWorld" />;
+      ReactTestUtils.renderIntoDocument(node);
+      ReactTestUtils.renderIntoDocument(node2);
       expect(console.error.calls.argsFor(0)[0]).toBe(
         'Warning: Provided prop onaction is not defined in propTypes, did you mean onAction?',
       );
