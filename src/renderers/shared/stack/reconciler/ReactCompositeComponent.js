@@ -1119,7 +1119,7 @@ var ReactCompositeComponent = {
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
-
+      
       if (!ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
         ReactReconciler.unmountComponent(
           prevComponentInstance,
@@ -1134,7 +1134,7 @@ var ReactCompositeComponent = {
         nextRenderedElement,
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
-      this._renderedComponent = child;
+      
 
       var nextMarkup = ReactReconciler.mountComponent(
         child,
@@ -1144,6 +1144,8 @@ var ReactCompositeComponent = {
         this._processChildContext(context),
         debugID
       );
+
+      this._renderedComponent = child;
 
       if (ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
         ReactReconciler.unmountComponent(
@@ -1165,6 +1167,7 @@ var ReactCompositeComponent = {
         nextMarkup,
         prevComponentInstance
       );
+      
     }
   },
 

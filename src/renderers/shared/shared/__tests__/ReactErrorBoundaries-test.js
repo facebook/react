@@ -535,7 +535,7 @@ describe('ReactErrorBoundaries', () => {
     };
   });
 
-  it('catches update errors', () => {
+  it('catches error in mounting component in a already mounted tree', () => {
     ErrorBoundary = class extends React.Component {
       state = {
         error: null,
