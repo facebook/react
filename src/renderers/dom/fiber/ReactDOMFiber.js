@@ -10,6 +10,8 @@
  * @flow
  */
 
+/* globals __REACT_DEVTOOLS_GLOBAL_HOOK__*/
+
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
@@ -48,8 +50,18 @@ var {
 } = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var ReactDebugFiberObserver = require('ReactDebugFiberObserver');
   var validateDOMNesting = require('validateDOMNesting');
   var { updatedAncestorInfo } = validateDOMNesting;
+
+  // Inject the runtime into a devtools global hook regardless of browser.
+  // Allows for debugging when the hook is injected on the page.
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function'
+  ) {
+    __REACT_DEVTOOLS_GLOBAL_HOOK__.inject(ReactDebugFiberObserver);
+  }
 }
 
 
