@@ -542,7 +542,7 @@ describe('ReactErrorBoundaries', () => {
       };
       unstable_handleError(error) {
         log.push('ErrorBoundary unstable_handleError');
-        this.setState({ error: error });
+        this.setState({ error: error });
       }
       render() {
         if (this.state.error) {
@@ -552,14 +552,14 @@ describe('ReactErrorBoundaries', () => {
         log.push('ErrorBoundary render children');
         return this.props.children;
       }
-    }
+    };
 
-    class Child extends React.Component {
+    BrokenRender = class extends React.Component {
       render() {
-        log.push('Child render');
+        log.push('Broken render');
         throw new Error('Child error');
       }
-    }
+    };
 
     var container = document.createElement('div');
     ReactDOM.render(<ErrorBoundary><h1>Child</h1></ErrorBoundary>, container);
@@ -567,10 +567,10 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render children',
     ]);
     log = [];
-    expect(() => ReactDOM.render(<ErrorBoundary><Child /></ErrorBoundary>, container)).not.toThrow();
+    expect(() => ReactDOM.render(<ErrorBoundary><BrokenRender /></ErrorBoundary>, container)).not.toThrow();    
     expect(log).toEqual([
       'ErrorBoundary render children',
-      'Child render',
+      'Broken render',
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
     ]);

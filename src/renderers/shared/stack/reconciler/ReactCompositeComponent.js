@@ -1134,7 +1134,6 @@ var ReactCompositeComponent = {
         nextRenderedElement,
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
-      
 
       var nextMarkup = ReactReconciler.mountComponent(
         child,
@@ -1167,7 +1166,6 @@ var ReactCompositeComponent = {
         nextMarkup,
         prevComponentInstance
       );
-      
     }
   },
 
