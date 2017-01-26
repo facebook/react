@@ -1119,7 +1119,7 @@ var ReactCompositeComponent = {
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
-      
+
       if (!ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
         ReactReconciler.unmountComponent(
           prevComponentInstance,
