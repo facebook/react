@@ -48,7 +48,6 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 
 src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * can be retrieved by ID
-* works
 
 src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update

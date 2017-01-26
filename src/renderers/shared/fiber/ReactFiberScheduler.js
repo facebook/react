@@ -415,11 +415,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     if (typeof onCommitRoot === 'function') {
       onCommitRoot(finishedWork.stateNode);
     }
-
-    if (__DEV__) {
-      if (ReactFiberInstrumentation.debugTool) {
-        ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
-      }
+    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
+      ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
     }
 
     // If we caught any errors during this commit, schedule their boundaries
