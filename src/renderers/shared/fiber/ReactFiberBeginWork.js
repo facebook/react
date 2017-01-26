@@ -516,13 +516,54 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
       }
     } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      nextCoroutine = workInProgress.memoizedProps;
+      // TODO: When bailing out, we might need to return the stateNode instead
+      // of the child. To check it for work.
+      // return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    reconcileChildren(current, workInProgress, nextCoroutine.children);
+
+    const nextChildren = nextCoroutine.children;
+    const priorityLevel = workInProgress.pendingWorkPriority;
+
+    // The following is a fork of reconcileChildrenAtPriority but using
+    // stateNode to store the child.
+
+    // At this point any memoization is no longer valid since we'll have changed
+    // the children.
+    workInProgress.memoizedProps = null;
+    if (!current) {
+      workInProgress.stateNode = mountChildFibersInPlace(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel
+      );
+    } else if (current.child === workInProgress.child) {
+      clearDeletions(workInProgress);
+
+      workInProgress.stateNode = reconcileChildFibers(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel
+      );
+
+      transferDeletions(workInProgress);
+    } else {
+      workInProgress.stateNode = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel
+      );
+
+      transferDeletions(workInProgress);
+    }
+
     memoizeProps(workInProgress, nextCoroutine);
     // This doesn't take arbitrary time so we could synchronously just begin
     // eagerly do the work of workInProgress.child as an optimization.
-    return workInProgress.child;
+    return workInProgress.stateNode;
   }
 
   function updatePortalComponent(current, workInProgress) {

@@ -435,6 +435,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       newPriority = getPendingPriority(queue);
     }
 
+    // TODO: Coroutines need to visit stateNode
+
     // progressedChild is going to be the child set with the highest priority.
     // Either it is the same as child, or it just bailed out because it choose
     // not to do the work.

@@ -168,7 +168,6 @@ exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
       return node;
     } else if (node.child) {
       // TODO: If we hit a Portal, we're supposed to skip it.
-      // TODO: Coroutines need to visit the stateNode.
       node.child.return = node;
       node = node.child;
       continue;

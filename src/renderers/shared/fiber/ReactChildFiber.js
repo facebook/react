@@ -29,7 +29,6 @@ var {
 } = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
-var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
@@ -52,11 +51,6 @@ const {
   createFiberFromYield,
   createFiberFromPortal,
 } = ReactFiber;
-
-const {
-  createReifiedYield,
-  createUpdatedReifiedYield,
-} = ReactReifiedYield;
 
 const isArray = Array.isArray;
 
@@ -316,21 +310,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
-    // TODO: Should this also compare continuation to determine whether to reuse?
     if (current == null || current.tag !== YieldComponent) {
       // Insert
-      const reifiedYield = createReifiedYield(yieldNode);
       const created = createFiberFromYield(yieldNode, priority);
-      created.type = reifiedYield;
+      created.type = yieldNode.value;
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
-      existing.type = createUpdatedReifiedYield(
-        current.type,
-        yieldNode
-      );
+      existing.type = yieldNode.value;
       existing.return = returnFiber;
       return existing;
     }
@@ -411,9 +400,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          const reifiedYield = createReifiedYield(newChild);
           const created = createFiberFromYield(newChild, priority);
-          created.type = reifiedYield;
+          created.type = newChild.value;
           created.return = returnFiber;
           return created;
         }
@@ -474,7 +462,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          if (newChild.key === key) {
+          // Yields doesn't have keys. If the previous node is implicitly keyed
+          // we can continue to replace it without aborting even if it is not a
+          // yield.
+          if (key === null) {
             return updateYield(returnFiber, oldFiber, newChild, priority);
           } else {
             return null;
@@ -527,9 +518,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          // Yields doesn't have keys, so we neither have to check the old nor
+          // new node for the key. If both are yields, they match.
+          const matchedFiber = existingChildren.get(newIdx) || null;
           return updateYield(returnFiber, matchedFiber, newChild, priority);
         }
 
@@ -561,7 +552,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (child.$$typeof) {
         case REACT_ELEMENT_TYPE:
         case REACT_COROUTINE_TYPE:
-        case REACT_YIELD_TYPE:
         case REACT_PORTAL_TYPE:
           const key = child.key;
           if (typeof key !== 'string') {
@@ -1019,34 +1009,22 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
-    const key = yieldNode.key;
+    // There's no need to check for keys on yields since they're stateless.
     let child = currentFirstChild;
-    while (child) {
-      // TODO: If key === null and child.key === null, then this only applies to
-      // the first item in the list.
-      if (child.key === key) {
-        if (child.tag === YieldComponent) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, priority);
-          existing.type = createUpdatedReifiedYield(
-            child.type,
-            yieldNode
-          );
-          existing.return = returnFiber;
-          return existing;
-        } else {
-          deleteRemainingChildren(returnFiber, child);
-          break;
-        }
+    if (child) {
+      if (child.tag === YieldComponent) {
+        deleteRemainingChildren(returnFiber, child.sibling);
+        const existing = useFiber(child, priority);
+        existing.type = yieldNode.value;
+        existing.return = returnFiber;
+        return existing;
       } else {
-        deleteChild(returnFiber, child);
+        deleteRemainingChildren(returnFiber, child);
       }
-      child = child.sibling;
     }
 
-    const reifiedYield = createReifiedYield(yieldNode);
     const created = createFiberFromYield(yieldNode, priority);
-    created.type = reifiedYield;
+    created.type = yieldNode.value;
     created.return = returnFiber;
     return created;
   }
