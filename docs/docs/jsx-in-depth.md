@@ -352,7 +352,7 @@ Normally, JavaScript expressions inserted in JSX will evaluate to a string, a Re
 function Repeat(props) {
   let items = [];
   for (let i = 0; i < props.numTimes; i++) {
-    items.push(props.children(i));
+    items.push(props.children[i]);
   }
   return <div>{items}</div>;
 }
