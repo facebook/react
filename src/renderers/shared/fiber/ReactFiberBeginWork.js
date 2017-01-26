@@ -516,7 +516,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
       }
     } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      nextCoroutine = workInProgress.memoizedProps;
+      // TODO: When bailing out, we might need to return the stateNode instead
+      // of the child. To check it for work.
+      // return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
     const nextChildren = nextCoroutine.children;

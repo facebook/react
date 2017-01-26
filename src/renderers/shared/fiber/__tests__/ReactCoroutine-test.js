@@ -224,4 +224,45 @@ describe('ReactCoroutine', () => {
     ]);
 
   });
+
+  it('should handle deep updates in coroutine', () => {
+    let instances = {};
+
+    class Counter extends React.Component {
+      state = {value: 5};
+      render() {
+        instances[this.props.id] = this;
+        return ReactCoroutine.createYield(this.state.value);
+      }
+    }
+
+    function App(props) {
+      return ReactCoroutine.createCoroutine(
+        [
+          <Counter id="a" />,
+          <Counter id="b" />,
+          <Counter id="c" />,
+        ],
+        (p, yields) => yields.map(y => <span prop={y * 100} />),
+        {}
+      );
+    }
+
+    ReactNoop.render(<App />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      span(500),
+      span(500),
+      span(500),
+    ]);
+
+    instances.a.setState({value: 1});
+    instances.b.setState({value: 2});
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      span(100),
+      span(200),
+      span(500),
+    ]);
+  });
 });
