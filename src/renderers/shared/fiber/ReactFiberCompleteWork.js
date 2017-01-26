@@ -85,6 +85,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function appendAllYields(yields : Array<mixed>, workInProgress : Fiber) {
     let node = workInProgress.stateNode;
+    if (node) {
+      node.return = workInProgress;
+    }
     while (node) {
       if (node.tag === HostComponent || node.tag === HostText ||
           node.tag === HostPortal) {
@@ -95,9 +98,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         node.child.return = node;
         node = node.child;
         continue;
-      }
-      if (node === workInProgress) {
-        return;
       }
       while (!node.sibling) {
         if (!node.return || node.return === workInProgress) {
