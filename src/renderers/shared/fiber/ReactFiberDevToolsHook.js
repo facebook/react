@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDebugFiberHook
+ * @providesModule ReactFiberDevToolsHook
  * @flow
  */
 
@@ -14,40 +14,25 @@
 
 'use strict';
 
-if (__DEV__) {
-  var warning = require('warning');
+var emptyFunction = require('emptyFunction');
+var warning = require('warning');
 
-  const supportsDevTools = (
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot === 'function'
-  );
-  let rendererID = null;
-
+let rendererID = null;
+if (
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot === 'function'
+) {
   exports.injectInternals = function(internals) {
-    if (!supportsDevTools) {
-      return;
-    }
     warning(rendererID == null, 'Cannot inject into DevTools twice.');
     rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
       isFiber: true,
+      // TODO: pass a version number so we can change the internals more safely.
+      // Currently DevTools just use duck typing.
       ...internals,
     });
   };
-
-  exports.onCommitUnmount = function(fiber) {
-    if (!supportsDevTools || rendererID == null) {
-      return;
-    }
-    try {
-      __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount(rendererID, fiber);
-    } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      warning(false, 'React DevTools encountered an error: %s', err);
-    }
-  }
-
   exports.onCommitRoot = function(root) {
-    if (!supportsDevTools || rendererID == null) {
+    if (rendererID == null) {
       return;
     }
     try {
@@ -57,4 +42,19 @@ if (__DEV__) {
       warning(false, 'React DevTools encountered an error: %s', err);
     }
   };
+  exports.onCommitUnmount = function(fiber) {
+    if (rendererID == null) {
+      return;
+    }
+    try {
+      __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount(rendererID, fiber);
+    } catch (err) {
+      // Catch all errors because it is unsafe to throw in the commit phase.
+      warning(false, 'React DevTools encountered an error: %s', err);
+    }
+  }
+} else {
+  exports.injectInternals = null;
+  exports.onCommitRoot = null;
+  exports.onCommitUnmount = null;
 }

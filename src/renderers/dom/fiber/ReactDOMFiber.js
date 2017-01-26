@@ -29,7 +29,7 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var { isValidElement } = require('React');
-
+var { injectInternals } = require('ReactFiberDevToolsHook');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -50,7 +50,6 @@ var {
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var { updatedAncestorInfo } = validateDOMNesting;
-  var { injectInternals } = require('ReactDebugFiberHook');
 }
 
 

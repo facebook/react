@@ -44,6 +44,7 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 
 var { cloneFiber } = require('ReactFiber');
+var { onCommitRoot } = require('ReactFiberDevToolsHook');
 
 var {
   NoWork,
@@ -82,12 +83,9 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-var onCommitRoot = null;
-
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var { onCommitRoot } = require('ReactDebugFiberHook');
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -414,10 +412,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
 
     isCommitting = false;
+    if (typeof onCommitRoot === 'function') {
+      onCommitRoot(finishedWork.stateNode);
+    }
+
     if (__DEV__) {
-      if (typeof onCommitRoot === 'function') {
-        onCommitRoot(finishedWork.stateNode);
-      }
       if (ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
       }
