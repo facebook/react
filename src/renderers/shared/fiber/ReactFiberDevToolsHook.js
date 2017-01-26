@@ -14,24 +14,26 @@
 
 'use strict';
 
-var emptyFunction = require('emptyFunction');
+import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
+
 var warning = require('warning');
 
 let rendererID = null;
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot === 'function'
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
 ) {
-  exports.injectInternals = function(internals) {
+  exports.injectInternals = function(internals : Object) {
     warning(rendererID == null, 'Cannot inject into DevTools twice.');
     rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-      isFiber: true,
-      // TODO: pass a version number so we can change the internals more safely.
-      // Currently DevTools just use duck typing.
       ...internals,
+      // Increment when internals become incompatible with DevTools.
+      // This way older DevTools can ignore newer Fiber versions.
+      version: 1,
     });
   };
-  exports.onCommitRoot = function(root) {
+  exports.onCommitRoot = function(root : FiberRoot) {
     if (rendererID == null) {
       return;
     }
@@ -42,7 +44,7 @@ if (
       warning(false, 'React DevTools encountered an error: %s', err);
     }
   };
-  exports.onCommitUnmount = function(fiber) {
+  exports.onCommitUnmount = function(fiber : Fiber) {
     if (rendererID == null) {
       return;
     }
@@ -52,7 +54,7 @@ if (
       // Catch all errors because it is unsafe to throw in the commit phase.
       warning(false, 'React DevTools encountered an error: %s', err);
     }
-  }
+  };
 } else {
   exports.injectInternals = null;
   exports.onCommitRoot = null;

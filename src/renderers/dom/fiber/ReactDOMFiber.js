@@ -407,9 +407,11 @@ var ReactDOM = {
 
 };
 
-injectInternals({
-  ComponentTree: ReactDOMComponentTree,
-  findHostInstance: DOMRenderer.findHostInstance,
-});
+if (typeof injectInternals === 'function') {
+  injectInternals({
+    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+    findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  });
+}
 
 module.exports = ReactDOM;
