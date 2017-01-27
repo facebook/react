@@ -29,7 +29,7 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var { isValidElement } = require('React');
-
+var { injectInternals } = require('ReactFiberDevToolsHook');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -406,5 +406,12 @@ var ReactDOM = {
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
 };
+
+if (typeof injectInternals === 'function') {
+  injectInternals({
+    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+    findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  });
+}
 
 module.exports = ReactDOM;
