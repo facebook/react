@@ -17,46 +17,58 @@
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
 
-var warning = require('warning');
+if (__DEV__) {
+  var warning = require('warning');
+}
 
 let rendererID = null;
+let injectInternals = null;
+let onCommitRoot = null;
+let onCommitUnmount = null;
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
 ) {
-  exports.injectInternals = function(internals : Object) {
+  let {
+    inject,
+    onCommitFiberRoot,
+    onCommitFiberUnmount,
+  } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+  injectInternals = function(internals : Object) {
     warning(rendererID == null, 'Cannot inject into DevTools twice.');
-    rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-      ...internals,
-      // Increment when internals become incompatible with DevTools.
-      // This way older DevTools can ignore newer Fiber versions.
-      version: 1,
-    });
+    rendererID = inject(internals);
   };
-  exports.onCommitRoot = function(root : FiberRoot) {
+
+  onCommitRoot = function(root : FiberRoot) {
     if (rendererID == null) {
       return;
     }
     try {
-      __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot(rendererID, root);
+      onCommitFiberRoot(rendererID, root);
     } catch (err) {
       // Catch all errors because it is unsafe to throw in the commit phase.
-      warning(false, 'React DevTools encountered an error: %s', err);
+      if (__DEV__) {
+        warning(false, 'React DevTools encountered an error: %s', err);
+      }
     }
   };
-  exports.onCommitUnmount = function(fiber : Fiber) {
+
+  onCommitUnmount = function(fiber : Fiber) {
     if (rendererID == null) {
       return;
     }
     try {
-      __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount(rendererID, fiber);
+      onCommitFiberUnmount(rendererID, fiber);
     } catch (err) {
       // Catch all errors because it is unsafe to throw in the commit phase.
-      warning(false, 'React DevTools encountered an error: %s', err);
+      if (__DEV__) {
+        warning(false, 'React DevTools encountered an error: %s', err);
+      }
     }
   };
-} else {
-  exports.injectInternals = null;
-  exports.onCommitRoot = null;
-  exports.onCommitUnmount = null;
 }
+
+exports.injectInternals = injectInternals;
+exports.onCommitRoot = onCommitRoot;
+exports.onCommitUnmount = onCommitUnmount;
