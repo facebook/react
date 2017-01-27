@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { HostContext } from 'ReactFiberHostContext';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -30,27 +29,25 @@ var { commitCallbacks } = require('ReactFiberUpdateQueue');
 var {
   Placement,
   Update,
+  Callback,
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, C, CX>(
-  config : HostConfig<T, P, I, TI, C, CX>,
-  hostContext : HostContext<C, CX>,
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
 ) {
 
   const {
+    commitMount,
     commitUpdate,
     resetTextContent,
     commitTextUpdate,
     appendChild,
     insertBefore,
     removeChild,
+    getPublicInstance,
   } = config;
-
-  const {
-    getRootHostContainer,
-  } = hostContext;
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
@@ -80,13 +77,6 @@ module.exports = function<T, P, I, TI, C, CX>(
       if (currentRef && currentRef !== finishedWork.ref) {
         currentRef(null);
       }
-    }
-  }
-
-  function attachRef(current : ?Fiber, finishedWork : Fiber, instance : any) {
-    const ref = finishedWork.ref;
-    if (ref && (!current || current.ref !== ref)) {
-      ref(instance);
     }
   }
 
@@ -146,7 +136,6 @@ module.exports = function<T, P, I, TI, C, CX>(
       while (node.tag !== HostComponent && node.tag !== HostText) {
         // If it is not host node and, we might have a host node inside it.
         // Try to search down until we find one.
-        // TODO: For coroutines, this will have to search the stateNode.
         if (node.effectTag & Placement) {
           // If we don't have a child, try the siblings instead.
           continue siblings;
@@ -208,7 +197,6 @@ module.exports = function<T, P, I, TI, C, CX>(
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.child) {
-        // TODO: Coroutines need to visit the stateNode.
         node.child.return = node;
         node = node.child;
         continue;
@@ -239,7 +227,6 @@ module.exports = function<T, P, I, TI, C, CX>(
       // Visit children because they may contain more composite or host nodes.
       // Skip portals because commitUnmount() currently visits them recursively.
       if (node.child && node.tag !== HostPortal) {
-        // TODO: Coroutines need to visit the stateNode.
         node.child.return = node;
         node = node.child;
         continue;
@@ -283,7 +270,6 @@ module.exports = function<T, P, I, TI, C, CX>(
         commitUnmount(node);
         // Visit children because we may find more host components below.
         if (node.child) {
-          // TODO: Coroutines need to visit the stateNode.
           node.child.return = node;
           node = node.child;
           continue;
@@ -371,9 +357,13 @@ module.exports = function<T, P, I, TI, C, CX>(
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
           const type = finishedWork.type;
-          commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, finishedWork);
+          // TODO: Type the updateQueue to be specific to host components.
+          const updatePayload : null | PL = (finishedWork.updateQueue : any);
+          finishedWork.updateQueue = null;
+          if (updatePayload) {
+            commitUpdate(instance, updatePayload, type, oldProps, newProps, finishedWork);
+          }
         }
         detachRefIfNeeded(current, finishedWork);
         return;
@@ -415,25 +405,36 @@ module.exports = function<T, P, I, TI, C, CX>(
               instance.componentDidUpdate(prevProps, prevState);
             }
           }
-          attachRef(current, finishedWork, instance);
         }
-        const callbackList = finishedWork.callbackList;
-        if (callbackList) {
-          commitCallbacks(finishedWork, callbackList, instance);
+        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue) {
+          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
-        const callbackList = finishedWork.callbackList;
-        if (callbackList) {
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, callbackList, instance);
+          commitCallbacks(finishedWork, updateQueue, instance);
         }
         return;
       }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
-        attachRef(current, finishedWork, instance);
+
+        // Renderers may schedule work to be done after host components are mounted
+        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
+        // These effects should only be committed when components are first mounted,
+        // aka when there is no current/alternate.
+        if (
+          !current &&
+          finishedWork.effectTag & Update
+        ) {
+          const type = finishedWork.type;
+          const props = finishedWork.memoizedProps;
+          commitMount(instance, type, props, finishedWork);
+        }
+
         return;
       }
       case HostText: {
@@ -449,11 +450,23 @@ module.exports = function<T, P, I, TI, C, CX>(
     }
   }
 
+  function commitRef(finishedWork : Fiber) {
+    if (finishedWork.tag !== ClassComponent && finishedWork.tag !== HostComponent) {
+      return;
+    }
+    const ref = finishedWork.ref;
+    if (ref) {
+      const instance = getPublicInstance(finishedWork.stateNode);
+      ref(instance);
+    }
+  }
+
   return {
     commitPlacement,
     commitDeletion,
     commitWork,
     commitLifeCycles,
+    commitRef,
   };
 
 };

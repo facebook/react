@@ -133,15 +133,15 @@ describe('ReactDOM', () => {
 
     var myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
-      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, {})).toThrowError(
-      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
-      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
   });
@@ -164,15 +164,15 @@ describe('ReactDOM', () => {
     ReactDOM.render(<A />, myDiv);
 
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
-      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: string.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, {})).toThrowError(
-      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Object.'
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
-      'ReactDOM.render(...): Expected the last optional `callback` argument ' +
+      'render(...): Expected the last optional `callback` argument ' +
       'to be a function. Instead received: Foo (keys: a, b).'
     );
   });
@@ -234,5 +234,38 @@ describe('ReactDOM', () => {
       'input2 focused',
     ]);
     document.body.removeChild(container);
+  });
+
+  it('calls focus() on autoFocus elements after they have been mounted to the DOM', () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let inputFocusedAfterMount = false;
+
+      // This test needs to determine that focus is called after mount.
+      // Can't check document.activeElement because PhantomJS is too permissive;
+      // It doesn't require element to be in the DOM to be focused.
+      HTMLElement.prototype.focus = function() {
+        focusedElement = this;
+        inputFocusedAfterMount = !!this.parentNode;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(
+        <div>
+          <h1>Auto-focus Test</h1>
+          <input autoFocus={true}/>
+          <p>The above input should be focused after mount.</p>
+        </div>,
+        container,
+      );
+
+      expect(inputFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('INPUT');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+    }
   });
 });

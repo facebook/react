@@ -13,12 +13,15 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncrementalReflection', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   it('handles isMounted even when the initial render is deferred', () => {

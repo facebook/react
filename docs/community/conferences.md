@@ -14,6 +14,16 @@ January 20-21 in Dornbirn, Austria
 
 [Website](http://agent.sh/)
 
+### React Conf 2017
+March 13-14 in Santa Clara, CA
+
+[Website](http://conf.reactjs.org/)
+
+### React London 2017
+March 28th at the [QEII Centre, London](http://qeiicentre.london/)
+
+[Website](http://react.london/)
+
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
@@ -28,6 +38,11 @@ April 21st in Amsterdam, The Netherlands
 Summer 2017, Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
+
+### ReactJS Day 2017
+October 6th in Verona, Italy
+
+[Website](http://2017.reactjsday.it) - [Twitter](https://twitter.com/reactjsday)
 
 ### React Native EU 2017
 Fall 2017, Poland

@@ -54,7 +54,7 @@ There is also [an active community of React users on the Discord chat platform](
 
 ### Proposing a Change
 
-If you intend to change to the public API, or make any non-trivial changes to the implementation, we recommend [filing an issue](https://github.com/facebook/react/issues/new). This lets us reach an agreement on your proposal before you put significant effort into it.
+If you intend to change the public API, or make any non-trivial changes to the implementation, we recommend [filing an issue](https://github.com/facebook/react/issues/new). This lets us reach an agreement on your proposal before you put significant effort into it.
 
 If you're only fixing a bug, it's fine to submit a pull request right away but we still recommend to file an issue detailing what you're fixing. This is helpful in case we don't accept that specific fix but want to keep track of the issue.
 
@@ -82,7 +82,8 @@ The core team is monitoring for pull requests. We will review your pull request 
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
 6. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
-7. If you haven't already, complete the CLA.
+7. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes.
+8. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
@@ -141,7 +142,7 @@ However, there are still some styles that the linter cannot pick up. If you are 
 * 2 spaces for indentation (no tabs)
 * Prefer `'` over `"`
 * `'use strict';`
-* 80 character line length (**except documentation**)
+* 120 character line length (**except documentation**)
 * Write "attractive" code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 

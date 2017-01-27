@@ -48,7 +48,7 @@ ReactDOM.render(
 
 [Try it on CodePen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
 
-We split JSX over multiple lines for readability. While it isn't mandatory, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
+We split JSX over multiple lines for readability. While it isn't required, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
 
 ### JSX is an Expression Too
 
@@ -78,6 +78,8 @@ You may also use curly braces to embed a JavaScript expression in an attribute:
 ```js
 const element = <img src={user.avatarUrl}></img>;
 ```
+
+Don't put quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal rather than an expression. You should either use quotes (for string values) or curly braces (for expressions), but not both in the same attribute.
 
 ### Specifying Children with JSX
 

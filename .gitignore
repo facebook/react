@@ -19,6 +19,8 @@ docs/downloads/*.zip
 docs/vendor/bundle
 examples/shared/*.js
 examples/**/bundle.js
+fixtures/dom/public/react-dom.js
+fixtures/dom/public/react.js
 test/the-files-to-test.generated.js
 *.log*
 chrome-user-data

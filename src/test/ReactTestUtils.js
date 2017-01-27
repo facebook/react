@@ -97,7 +97,6 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       }
     }
     if (node.child) {
-      // TODO: Coroutines need to visit the stateNode.
       node.child.return = node;
       node = node.child;
       continue;

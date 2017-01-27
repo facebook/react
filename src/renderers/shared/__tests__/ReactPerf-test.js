@@ -614,7 +614,7 @@ describe('ReactPerf', () => {
       }
     }
     class EvilPortal extends React.Component {
-      componentWillMount() {
+      componentDidMount() {
         var portalContainer = document.createElement('div');
         ReactDOM.render(<Evil />, portalContainer);
       }
@@ -694,7 +694,7 @@ describe('ReactPerf', () => {
       }
     }
     class EvilPortal extends React.Component {
-      componentWillMount() {
+      componentDidMount() {
         var portalContainer = document.createElement('div');
         ReactDOM.render(<Evil />, portalContainer);
       }

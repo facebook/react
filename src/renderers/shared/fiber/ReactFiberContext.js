@@ -17,6 +17,7 @@ import type { StackCursor } from 'ReactFiberStack';
 
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
+var warning = require('warning');
 var {
   getComponentName,
   isFiberMounted,
@@ -33,6 +34,7 @@ const {
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var warnedAboutMissingGetChildContext = {};
 }
 
 // A cursor to the current merged context object on the stack.
@@ -55,15 +57,33 @@ function getUnmaskedContext(workInProgress : Fiber) : Object {
   }
   return contextStackCursor.current;
 }
+exports.getUnmaskedContext = getUnmaskedContext;
 
-exports.getMaskedContext = function(workInProgress : Fiber) {
+function cacheContext(workInProgress : Fiber, unmaskedContext : Object, maskedContext : Object) {
+  const instance = workInProgress.stateNode;
+  instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
+  instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
+}
+exports.cacheContext = cacheContext;
+
+exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Object) {
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
   if (!contextTypes) {
     return emptyObject;
   }
 
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  // Avoid recreating masked context unless unmasked context has changed.
+  // Failing to do this will result in unnecessary calls to componentWillReceiveProps.
+  // This may trigger infinite loops if componentWillReceiveProps calls setState.
+  const instance = workInProgress.stateNode;
+  if (
+    instance &&
+    instance.__reactInternalMemoizedUnmaskedChildContext === unmaskedContext
+  ) {
+    return instance.__reactInternalMemoizedMaskedChildContext;
+  }
+
   const context = {};
   for (let key in contextTypes) {
     context[key] = unmaskedContext[key];
@@ -74,12 +94,26 @@ exports.getMaskedContext = function(workInProgress : Fiber) {
     checkReactTypeSpec(contextTypes, context, 'context', name, null, workInProgress);
   }
 
+  // Cache unmasked context so we can avoid recreating masked context unless necessary.
+  // Context is created before the class component is instantiated so check for instance.
+  if (instance) {
+    cacheContext(workInProgress, unmaskedContext, context);
+  }
+
   return context;
 };
 
 exports.hasContextChanged = function() : boolean {
   return didPerformWorkStackCursor.current;
 };
+
+function isContextConsumer(fiber : Fiber) : boolean {
+  return (
+    fiber.tag === ClassComponent &&
+    fiber.type.contextTypes != null
+  );
+}
+exports.isContextConsumer = isContextConsumer;
 
 function isContextProvider(fiber : Fiber) : boolean {
   return (
@@ -109,6 +143,28 @@ exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, di
 function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
+
+  // TODO (bvaughn) Replace this behavior with an invariant() in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  if (typeof instance.getChildContext !== 'function') {
+    if (__DEV__) {
+      const componentName = getComponentName(fiber);
+      
+      if (!warnedAboutMissingGetChildContext[componentName]) {
+        warnedAboutMissingGetChildContext[componentName] = true;
+        warning(
+          false,
+          '%s.childContextTypes is specified but there is no getChildContext() method ' +
+          'on the instance. You can either define getChildContext() on %s or remove ' +
+          'childContextTypes from it.',
+          componentName,
+          componentName,
+        );
+      }
+    }
+    return parentContext;
+  }
+
   const childContext = instance.getChildContext();
   for (let contextKey in childContext) {
     invariant(

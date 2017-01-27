@@ -1,6 +1,3 @@
-src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
-* does not do a deep comparison
-
 src/addons/__tests__/ReactFragment-test.js
 * should throw if a plain object is used as a child
 * should throw if a plain object even if it is in an owner
@@ -11,10 +8,6 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 
 src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should throw with an error code in production
-
-src/renderers/dom/shared/__tests__/ReactDOM-test.js
-* throws in render() if the mount callback is not a function
-* throws in render() if the update callback is not a function
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should clean up input value tracking
@@ -30,7 +23,6 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
-* throws when given a non-node
 * throws when given a string
 * throws when given a factory
 * tracks root instances
@@ -63,22 +55,11 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
-src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
-* should update refs if shouldComponentUpdate gives false
-
 src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
 * should still throw when rendering to undefined
 
 src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
 * should reorder keyed text nodes
-
-src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
-* should warn when stateless component returns array
-* should throw on string refs in pure functions
-* should warn when using non-React functions in JSX
-
-src/renderers/shared/shared/__tests__/ReactUpdates-test.js
-* marks top-level updates
 
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs

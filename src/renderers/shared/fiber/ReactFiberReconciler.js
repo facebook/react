@@ -43,17 +43,19 @@ export type Deadline = {
 
 type OpaqueNode = Fiber;
 
-export type HostConfig<T, P, I, TI, C, CX> = {
+export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   getRootHostContext(rootContainerInstance : C) : CX,
   getChildHostContext(parentHostContext : CX, type : T) : CX,
+  getPublicInstance(instance : I | TI) : PI,
 
   createInstance(type : T, props : P, rootContainerInstance : C, hostContext : CX, internalInstanceHandle : OpaqueNode) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,
-  finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : void,
+  finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : boolean,
 
-  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, hostContext : CX) : boolean,
-  commitUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, internalInstanceHandle : OpaqueNode) : void,
+  prepareUpdate(instance : I, type : T, oldProps : P, newProps : P, rootContainerInstance : C, hostContext : CX) : null | PL,
+  commitUpdate(instance : I, updatePayload : PL, type : T, oldProps : P, newProps : P, internalInstanceHandle : OpaqueNode) : void,
+  commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueNode) : void,
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
@@ -65,8 +67,8 @@ export type HostConfig<T, P, I, TI, C, CX> = {
   insertBefore(parentInstance : I | C, child : I | TI, beforeChild : I | TI) : void,
   removeChild(parentInstance : I | C, child : I | TI) : void,
 
-  scheduleAnimationCallback(callback : () => void) : void,
-  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : void,
+  scheduleAnimationCallback(callback : () => void) : number | void,
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : number | void,
 
   prepareForCommit() : void,
   resetAfterCommit() : void,
@@ -81,6 +83,7 @@ export type Reconciler<C, I, TI> = {
   /* eslint-disable no-undef */
   // FIXME: ESLint complains about type parameter
   batchedUpdates<A>(fn : () => A) : A,
+  unbatchedUpdates<A>(fn : () => A) : A,
   syncUpdates<A>(fn : () => A) : A,
   deferredUpdates<A>(fn : () => A) : A,
   /* eslint-enable no-undef */
@@ -99,13 +102,14 @@ getContextForSubtree._injectFiber(function(fiber : Fiber) {
     parentContext;
 });
 
-module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C, CX>) : Reconciler<C, I, TI> {
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) : Reconciler<C, I, TI> {
 
   var {
     scheduleUpdate,
     getPriorityContext,
     performWithPriority,
     batchedUpdates,
+    unbatchedUpdates,
     syncUpdates,
     deferredUpdates,
   } = ReactFiberScheduler(config);
@@ -159,6 +163,8 @@ module.exports = function<T, P, I, TI, C, CX>(config : HostConfig<T, P, I, TI, C
     performWithPriority,
 
     batchedUpdates,
+
+    unbatchedUpdates,
 
     syncUpdates,
 

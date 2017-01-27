@@ -13,8 +13,18 @@
 
 var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactFeatureFlags;
 
 describe('ReactTestRenderer', () => {
+  beforeEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
 
   it('renders a simple component', () => {
     function Link() {
@@ -50,6 +60,31 @@ describe('ReactTestRenderer', () => {
         expect(key).not.toBe('$$typeof');
       }
     }
+  });
+
+  it('can render a composite component', () => {
+    class Component extends React.Component {
+      render() {
+        return (
+          <div className="purple">
+            <Child />
+          </div>
+        );
+      }
+    }
+
+    var Child = () => {
+      return <moo />;
+    };
+
+    var renderer = ReactTestRenderer.create(<Component />);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: { className: 'purple' },
+      children: [
+        { type: 'moo', props: {}, children: null },
+      ],
+    });
   });
 
   it('renders some basics with an update', () => {
@@ -89,7 +124,7 @@ describe('ReactTestRenderer', () => {
       type: 'div',
       props: { className: 'purple' },
       children: [
-        7,
+        ReactDOMFeatureFlags.useFiber ? '7' : 7,
         { type: 'moo', props: {}, children: null },
       ],
     });
@@ -121,8 +156,8 @@ describe('ReactTestRenderer', () => {
     mouse.handleMoose();
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      props: {},
       children: ['moose'],
+      props: {},
     });
   });
 
@@ -231,10 +266,11 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<Baz />);
     ReactTestRenderer.create(<Foo />);
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Stateless function components cannot be given refs ' +
-      '(See ref "foo" in Bar created by Foo). ' +
-      'Attempts to access this ref will fail.'
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. Attempts ' +
+      'to access this ref will fail. Check the render method of `Foo`.\n' +
+      '    in Bar (at **)\n' +
+      '    in Foo (at **)'
     );
   });
 
@@ -362,8 +398,7 @@ describe('ReactTestRenderer', () => {
       {createNodeMock}
     );
     inst.update(<Foo useDiv={false} />);
-    // It's called with 'div' twice (mounting and unmounting)
-    expect(log).toEqual(['div', 'div', 'span']);
+    expect(log).toEqual(['div', 'span']);
   });
 
   it('supports error boundaries', () => {
@@ -416,12 +451,107 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['Happy Birthday!'],
     });
-    expect(log).toEqual([
-      'Boundary render',
-      'Angry render',
-      'Boundary render',
-      'Boundary componentDidMount',
-    ]);
+    if (ReactDOMFeatureFlags.useFiber) {
+      expect(log).toEqual([
+        'Boundary render',
+        'Angry render',
+        'Boundary componentDidMount',
+        'Boundary render',
+      ]);
+    } else {
+      expect(log).toEqual([
+        'Boundary render',
+        'Angry render',
+        'Boundary render',
+        'Boundary componentDidMount',
+      ]);
+    }
   });
 
+  it('can update text nodes', () => {
+    class Component extends React.Component {
+      render() {
+        return (
+          <div>
+            {this.props.children}
+          </div>
+        );
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Component>Hi</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['Hi'],
+      props: {},
+    });
+    renderer.update(<Component>{['Hi', 'Bye']}</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['Hi', 'Bye'],
+      props: {},
+    });
+    renderer.update(<Component>Bye</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['Bye'],
+      props: {},
+    });
+    renderer.update(<Component>{42}</Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: [
+        ReactDOMFeatureFlags.useFiber ? '42' : 42,
+      ],
+      props: {},
+    });
+    renderer.update(<Component><div /></Component>);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: [{
+        type: 'div',
+        children: null,
+        props: {},
+      }],
+      props: {},
+    });
+  });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('can update text nodes when rendered as root', () => {
+      var renderer = ReactTestRenderer.create(['Hello', 'world']);
+      expect(renderer.toJSON()).toEqual(['Hello', 'world']);
+      renderer.update(42);
+      expect(renderer.toJSON()).toEqual('42');
+      renderer.update([42, 'world']);
+      expect(renderer.toJSON()).toEqual(['42', 'world']);
+    });
+
+    it('can render and update root fragments', () => {
+      var Component = (props) => props.children;
+
+      var renderer = ReactTestRenderer.create([
+        <Component>Hi</Component>,
+        <Component>Bye</Component>,
+      ]);
+      expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
+      renderer.update(<div />);
+      expect(renderer.toJSON()).toEqual({
+        type: 'div',
+        children: null,
+        props: {},
+      });
+      renderer.update([<div>goodbye</div>, 'world']);
+      expect(renderer.toJSON()).toEqual([
+        {
+          type: 'div',
+          children: [
+            'goodbye',
+          ],
+          props: {},
+        },
+        'world',
+      ]);
+    });
+  }
 });

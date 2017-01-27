@@ -39,6 +39,20 @@ function getDeclarationErrorAddendum() {
   return '';
 }
 
+function getSourceInfoErrorAddendum(elementProps) {
+  if (
+    elementProps !== null &&
+    elementProps !== undefined &&
+    elementProps.__source !== undefined
+  ) {
+    var source = elementProps.__source;
+    var fileName = source.fileName.replace(/^.*[\\\/]/, '');
+    var lineNumber = source.lineNumber;
+    return ' Check your code at ' + fileName + ':' + lineNumber + '.';
+  }
+  return '';
+}
+
 /**
  * Warn if there's no key explicitly set on dynamic arrays of children or
  * object keys are not valid. This allows us to keep track of children between
@@ -186,8 +200,7 @@ var ReactElementValidator = {
   createElement: function(type, props, children) {
     var validType =
       typeof type === 'string' ||
-      typeof type === 'function' ||
-      type !== null && typeof type === 'object' && typeof type.tag === 'number';
+      typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
@@ -206,7 +219,16 @@ var ReactElementValidator = {
             ' You likely forgot to export your component from the file ' +
             'it\'s defined in.';
         }
-        info += getDeclarationErrorAddendum();
+
+        var sourceInfo = getSourceInfoErrorAddendum(props);
+        if (sourceInfo) {
+          info += sourceInfo;
+        } else {
+          info += getDeclarationErrorAddendum();
+        }
+
+        info += ReactComponentTreeHook.getCurrentStackAddendum();
+
         warning(
           false,
           'React.createElement: type is invalid -- expected a string (for ' +

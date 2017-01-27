@@ -18,14 +18,18 @@ import type { ReactNodeList } from 'ReactTypes';
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
+var { isValidElement } = require('React');
+
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -35,14 +39,19 @@ var {
   createElement,
   getChildNamespace,
   setInitialProperties,
+  diffProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
-var { precacheFiberNode } = ReactDOMComponentTree;
+var {
+  precacheFiberNode,
+  updateFiberProps,
+} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var { updatedAncestorInfo } = validateDOMNesting;
 }
+
 
 const DOCUMENT_NODE = 9;
 
@@ -57,7 +66,10 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 type DOMContainerElement = Element & { _reactRootContainer: ?Object };
 
 type Container = Element;
-type Props = { children ?: mixed };
+type Props = {
+  autoFocus ?: boolean,
+  children ?: mixed,
+};
 type Instance = Element;
 type TextInstance = Text;
 
@@ -96,17 +108,33 @@ function validateContainer(container) {
   }
 }
 
+function shouldAutoFocusHostComponent(
+  type : string,
+  props : Props,
+) : boolean {
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      return !!props.autoFocus;
+  }
+  return false;
+}
+
 var DOMRenderer = ReactFiberReconciler({
 
   getRootHostContext(rootContainerInstance : Container) : HostContext {
-    const type = rootContainerInstance.tagName.toLowerCase();
+    const ownNamespace = rootContainerInstance.namespaceURI || null;
+    const type = rootContainerInstance.tagName;
+    const namespace = getChildNamespace(ownNamespace, type);
     if (__DEV__) {
-      const namespace = getChildNamespace(null, type);
       const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
-      const ancestorInfo = updatedAncestorInfo(null, isMountingIntoDocument ? '#document' : type, null);
+      const validatedTag = isMountingIntoDocument ? '#document' : type.toLowerCase();
+      const ancestorInfo = updatedAncestorInfo(null, validatedTag, null);
       return {namespace, ancestorInfo};
     }
-    return getChildNamespace(null, type);
+    return namespace;
   },
 
   getChildHostContext(
@@ -123,10 +151,14 @@ var DOMRenderer = ReactFiberReconciler({
     return getChildNamespace(parentNamespace, type);
   },
 
+  getPublicInstance(instance) {
+    return instance;
+  },
+
   prepareForCommit() : void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
-    ReactBrowserEventEmitter.setEnabled(false);
     selectionInformation = ReactInputSelection.getSelectionInformation();
+    ReactBrowserEventEmitter.setEnabled(false);
   },
 
   resetAfterCommit() : void {
@@ -161,6 +193,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
     const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
+    updateFiberProps(domElement, props);
     return domElement;
   },
 
@@ -173,8 +206,9 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-  ) : void {
+  ) : boolean {
     setInitialProperties(domElement, type, props, rootContainerInstance);
+    return shouldAutoFocusHostComponent(type, props);
   },
 
   prepareUpdate(
@@ -182,8 +216,9 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
+    rootContainerInstance : Container,
     hostContext : HostContext,
-  ) : boolean {
+  ) : null | Array<mixed> {
     if (__DEV__) {
       const hostContextDev = ((hostContext : any) : HostContextDev);
       if (typeof newProps.children !== typeof oldProps.children && (
@@ -194,21 +229,31 @@ var DOMRenderer = ReactFiberReconciler({
         validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
-    return true;
+    return diffProperties(domElement, type, oldProps, newProps, rootContainerInstance);
+  },
+
+  commitMount(
+    domElement : Instance,
+    type : string,
+    newProps : Props,
+    internalInstanceHandle : Object,
+  ) : void {
+    ((domElement : any) : HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).focus();
   },
 
   commitUpdate(
     domElement : Instance,
+    updatePayload : Array<mixed>,
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
-    // Update the internal instance handle so that we know which props are
-    // the current ones.
-    precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
+    // Update the props handle so that we know which props are the ones with
+    // with current event handlers.
+    updateFiberProps(domElement, newProps);
+    // Apply the diff to the DOM node.
+    updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },
 
   shouldSetTextContent(props : Props) : boolean {
@@ -262,9 +307,9 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.removeChild(child);
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: true,
 
@@ -295,9 +340,15 @@ function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, 
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    root = container._reactRootContainer = DOMRenderer.createContainer(container);
+    const newRoot = DOMRenderer.createContainer(container);
+    root = container._reactRootContainer = newRoot;
+    // Initial mount should not be batched.
+    DOMRenderer.unbatchedUpdates(() => {
+      DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
+    });
+  } else {
+    DOMRenderer.updateContainer(children, root, parentComponent, callback);
   }
-  DOMRenderer.updateContainer(children, root, parentComponent, callback);
   return DOMRenderer.getPublicRootInstance(root);
 }
 
@@ -305,6 +356,17 @@ var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     validateContainer(container);
+
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      // Top-level check occurs here instead of inside child reconciler because
+      // because requirements vary between renderers. E.g. React Art
+      // allows arrays.
+      invariant(
+        isValidElement(element),
+        'render(): Invalid component element.'
+      );
+    }
+
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
@@ -317,10 +379,17 @@ var ReactDOM = {
   },
 
   unmountComponentAtNode(container : DOMContainerElement) {
+    invariant(
+      isValidContainer(container),
+      'unmountComponentAtNode(...): Target container is not a DOM element.'
+    );
     warnAboutUnstableUse();
     if (container._reactRootContainer) {
-      return renderSubtreeIntoContainer(null, null, container, () => {
-        container._reactRootContainer = null;
+      // Unmount should not be batched.
+      return DOMRenderer.unbatchedUpdates(() => {
+        return renderSubtreeIntoContainer(null, null, container, () => {
+          container._reactRootContainer = null;
+        });
       });
     }
   },

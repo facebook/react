@@ -9,24 +9,28 @@
  * @providesModule ReactAddonsDOMDependenciesUMDShim
  */
 
-/* globals ReactDOM */
-
 'use strict';
 
-exports.getReactDOM = function() {
-  return ReactDOM;
-};
+var ReactDOM;
 
-exports.getReactInstanceMap = function() {
-  return ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactInstanceMap;
-};
+function getReactDOM() {
+  if (!ReactDOM) {
+    // This is safe to use because current module only exists in the addons build:
+    var ReactWithAddonsUMDEntry = require('ReactWithAddonsUMDEntry');
+    // This is injected by the ReactDOM UMD build:
+    ReactDOM = ReactWithAddonsUMDEntry.__SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+  }
+  return ReactDOM;
+}
+
+exports.getReactDOM = getReactDOM;
 
 if (__DEV__) {
   exports.getReactPerf = function() {
-    return ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
+    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
   };
 
   exports.getReactTestUtils = function() {
-    return ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactTestUtils;
+    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactTestUtils;
   };
 }

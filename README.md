@@ -27,32 +27,19 @@ ReactDOM.render(
 
 This example will render "Hello John" into a container on the page.
 
-You'll notice that we used an HTML-like syntax; [we call it JSX](https://facebook.github.io/react/docs/jsx-in-depth.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. A simple transform is included with React that allows converting JSX into native JavaScript for browsers to digest.
+You'll notice that we used an HTML-like syntax; [we call it JSX](https://facebook.github.io/react/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. We recommend using [Babel](https://babeljs.io/) with a [React preset](https://babeljs.io/docs/plugins/preset-react/) to convert JSX into native JavaScript for browsers to digest.
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from a CDN. We're using [unpkg](https://unpkg.com/) below but React is also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](https://www.jsdelivr.com/projects/react):
+React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://facebook.github.io/react/docs/installation.html#using-a-cdn).
 
-```html
-<!-- The core React library -->
-<script src="https://unpkg.com/react@15.4.0/dist/react.js"></script>
-<!-- The ReactDOM Library -->
-<script src="https://unpkg.com/react-dom@15.4.0/dist/react-dom.js"></script>
-```
+React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
-We've also built a [starter kit](https://facebook.github.io/react/downloads/react-15.4.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
 
-If you'd like to use [bower](http://bower.io), it's as easy as:
-
-```sh
-bower install --save react
-```
-
-And it's just as easy with [npm](http://npmjs.com):
-
-```sh
-npm i --save react
-```
+* [Trying Out React](https://facebook.github.io/react/docs/installation.html#trying-out-react)
+* [Creating a Single Page Application](https://facebook.github.io/react/docs/installation.html#creating-a-single-page-application)
+* [Adding React to an Existing Application](https://facebook.github.io/react/docs/installation.html#adding-react-to-an-existing-application)
 
 ## Contributing
 

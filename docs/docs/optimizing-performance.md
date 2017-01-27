@@ -25,7 +25,42 @@ new webpack.DefinePlugin({
 new webpack.optimize.UglifyJsPlugin()
 ```
 
+* For Rollup, you need to use the [replace](https://github.com/rollup/rollup-plugin-replace) plugin *before* the [commonjs](https://github.com/rollup/rollup-plugin-commonjs) plugin so that development-only modules are not imported. For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
+
+```js
+plugins: [
+  require('rollup-plugin-replace')({
+    'process.env.NODE_ENV': JSON.stringify('production')
+  }),
+  require('rollup-plugin-commonjs')(),
+  // ...
+]
+```
+
 The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+
+## Profiling Components with Chrome Timeline
+
+In the **development** mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:
+
+<center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center>
+
+To do this in Chrome:
+
+1. Load your app with `?react_perf` in the query string (for example, `http://localhost:3000/?react_perf`).
+
+2. Open the Chrome DevTools **[Timeline](https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool)** tab and press **Record**.
+
+3. Perform the actions you want to profile. Don't record more than 20 seconds or Chrome might hang.
+
+4. Stop recording.
+
+5. React events will be grouped under the **User Timing** label.
+
+Note that **the numbers are relative so components will render faster in production**. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.
+
+Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) so we expect more browsers to add support for it.
+
 
 ## Avoid Reconciliation
 
@@ -149,7 +184,7 @@ class WordAdder extends React.Component {
 }
 ```
 
-The problem is that `PureComponent` will do a simple comparison between the old and new values of `this.props.words`. Since this code mutates the `words` array in the `handleClick` method of `WordAdder`, the old and new values of `this.props.words` will compare as equal, even though the actual words in the array have changed. The `ListOfWords` will thus not update even though it has new words that shoud be rendered.
+The problem is that `PureComponent` will do a simple comparison between the old and new values of `this.props.words`. Since this code mutates the `words` array in the `handleClick` method of `WordAdder`, the old and new values of `this.props.words` will compare as equal, even though the actual words in the array have changed. The `ListOfWords` will thus not update even though it has new words that should be rendered.
 
 ## The Power Of Not Mutating Data
 

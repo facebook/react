@@ -29,13 +29,13 @@ var {
 } = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
-var ReactReifiedYield = require('ReactReifiedYield');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
@@ -52,14 +52,10 @@ const {
   createFiberFromPortal,
 } = ReactFiber;
 
-const {
-  createReifiedYield,
-  createUpdatedReifiedYield,
-} = ReactReifiedYield;
-
 const isArray = Array.isArray;
 
 const {
+  FunctionalComponent,
   ClassComponent,
   HostText,
   HostPortal,
@@ -78,14 +74,16 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
-      const ownerFiber : ?(Fiber | ReactInstance) = (element._owner : any);
+      const owner : ?(Fiber | ReactInstance) = (element._owner : any);
       let inst;
-      if (ownerFiber) {
-        if ((ownerFiber : any).tag === ClassComponent) {
-          inst = (ownerFiber : any).stateNode;
+      if (owner) {
+        if (typeof owner.tag === 'number') {
+          const ownerFiber = ((owner : any) : Fiber);
+          invariant(ownerFiber.tag === ClassComponent, 'Stateless function components cannot have refs.');
+          inst = ownerFiber.stateNode;
         } else {
           // Stack
-          inst = (ownerFiber : any).getPublicInstance();
+          inst = (owner : any).getPublicInstance();
         }
       }
       invariant(inst, 'Missing owner for string ref %s', mixedRef);
@@ -312,21 +310,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
-    // TODO: Should this also compare continuation to determine whether to reuse?
     if (current == null || current.tag !== YieldComponent) {
       // Insert
-      const reifiedYield = createReifiedYield(yieldNode);
       const created = createFiberFromYield(yieldNode, priority);
-      created.type = reifiedYield;
+      created.type = yieldNode.value;
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, priority);
-      existing.type = createUpdatedReifiedYield(
-        current.type,
-        yieldNode
-      );
+      existing.type = yieldNode.value;
       existing.return = returnFiber;
       return existing;
     }
@@ -407,9 +400,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          const reifiedYield = createReifiedYield(newChild);
           const created = createFiberFromYield(newChild, priority);
-          created.type = reifiedYield;
+          created.type = newChild.value;
           created.return = returnFiber;
           return created;
         }
@@ -470,7 +462,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          if (newChild.key === key) {
+          // Yields doesn't have keys. If the previous node is implicitly keyed
+          // we can continue to replace it without aborting even if it is not a
+          // yield.
+          if (key === null) {
             return updateYield(returnFiber, oldFiber, newChild, priority);
           } else {
             return null;
@@ -523,9 +518,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key
-          ) || null;
+          // Yields doesn't have keys, so we neither have to check the old nor
+          // new node for the key. If both are yields, they match.
+          const matchedFiber = existingChildren.get(newIdx) || null;
           return updateYield(returnFiber, matchedFiber, newChild, priority);
         }
 
@@ -557,7 +552,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (child.$$typeof) {
         case REACT_ELEMENT_TYPE:
         case REACT_COROUTINE_TYPE:
-        case REACT_YIELD_TYPE:
         case REACT_PORTAL_TYPE:
           const key = child.key;
           if (typeof key !== 'string') {
@@ -1015,34 +1009,22 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
-    const key = yieldNode.key;
+    // There's no need to check for keys on yields since they're stateless.
     let child = currentFirstChild;
-    while (child) {
-      // TODO: If key === null and child.key === null, then this only applies to
-      // the first item in the list.
-      if (child.key === key) {
-        if (child.tag === YieldComponent) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, priority);
-          existing.type = createUpdatedReifiedYield(
-            child.type,
-            yieldNode
-          );
-          existing.return = returnFiber;
-          return existing;
-        } else {
-          deleteRemainingChildren(returnFiber, child);
-          break;
-        }
+    if (child) {
+      if (child.tag === YieldComponent) {
+        deleteRemainingChildren(returnFiber, child.sibling);
+        const existing = useFiber(child, priority);
+        existing.type = yieldNode.value;
+        existing.return = returnFiber;
+        return existing;
       } else {
-        deleteChild(returnFiber, child);
+        deleteRemainingChildren(returnFiber, child);
       }
-      child = child.sibling;
     }
 
-    const reifiedYield = createReifiedYield(yieldNode);
     const created = createFiberFromYield(yieldNode, priority);
-    created.type = reifiedYield;
+    created.type = yieldNode.value;
     created.return = returnFiber;
     return created;
   }
@@ -1098,6 +1080,98 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
+    const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+
+    // Handle object types
+    if (typeof newChild === 'object' && newChild !== null) {
+      // Support only the subset of return types that Stack supports. Treat
+      // everything else as empty, but log a warning.
+      if (disableNewFiberFeatures) {
+        switch (newChild.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+            return placeSingleChild(reconcileSingleElement(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_PORTAL_TYPE:
+            return placeSingleChild(reconcileSinglePortal(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+        }
+      } else {
+        switch (newChild.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+            return placeSingleChild(reconcileSingleElement(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_COROUTINE_TYPE:
+            return placeSingleChild(reconcileSingleCoroutine(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_YIELD_TYPE:
+            return placeSingleChild(reconcileSingleYield(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+
+          case REACT_PORTAL_TYPE:
+            return placeSingleChild(reconcileSinglePortal(
+              returnFiber,
+              currentFirstChild,
+              newChild,
+              priority
+            ));
+        }
+      }
+    }
+
+    if (disableNewFiberFeatures) {
+      // The new child is not an element. If it's not null or false,
+      // and the return fiber is a composite component, throw an error.
+      switch (returnFiber.tag) {
+        case ClassComponent: {
+          if (__DEV__) {
+            const instance = returnFiber.stateNode;
+            if (instance.render._isMockFunction && typeof newChild === 'undefined') {
+              // We allow auto-mocks to proceed as if they're
+              // returning null.
+              break;
+            }
+          }
+        }
+        // Intentionally fall through to the next case, which handles both
+        // functions and classes
+        // eslint-disable-next-lined no-fallthrough
+        case FunctionalComponent: {
+          // Composites accept elements, portals, null, or false
+          const Component = returnFiber.type;
+          invariant(
+            newChild === null || newChild === false,
+            '%s(...): A valid React element (or null) must be ' +
+            'returned. You may have returned undefined, an array or some ' +
+            'other invalid object.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
+      }
+    }
+
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       return placeSingleChild(reconcileSingleTextNode(
         returnFiber,
@@ -1107,57 +1181,51 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       ));
     }
 
-    if (typeof newChild === 'object' && newChild !== null) {
-      switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
-          return placeSingleChild(reconcileSingleElement(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
+    if (isArray(newChild)) {
+      return reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        priority
+      );
+    }
 
-        case REACT_COROUTINE_TYPE:
-          return placeSingleChild(reconcileSingleCoroutine(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
+    if (getIteratorFn(newChild)) {
+      return reconcileChildrenIterator(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        priority
+      );
+    }
 
-        case REACT_YIELD_TYPE:
-          return placeSingleChild(reconcileSingleYield(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
-
-        case REACT_PORTAL_TYPE:
-          return placeSingleChild(reconcileSinglePortal(
-            returnFiber,
-            currentFirstChild,
-            newChild,
-            priority
-          ));
-      }
-
-      if (isArray(newChild)) {
-        return reconcileChildrenArray(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          priority
-        );
-      }
-
-      if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          priority
-        );
+    if (!disableNewFiberFeatures && typeof newChild === 'undefined') {
+      // If the new child is undefined, and the return fiber is a composite
+      // component, throw an error. If Fiber return types are disabled,
+      // we already threw above.
+      switch (returnFiber.tag) {
+        case ClassComponent: {
+          if (__DEV__) {
+            const instance = returnFiber.stateNode;
+            if (instance.render._isMockFunction) {
+              // We allow auto-mocks to proceed as if they're returning null.
+              break;
+            }
+          }
+        }
+        // Intentionally fall through to the next case, which handles both
+        // functions and classes
+        // eslint-disable-next-lined no-fallthrough
+        case FunctionalComponent: {
+          const Component = returnFiber.type;
+          invariant(
+            false,
+            '%s(...): Nothing was returned from render. This usually means a ' +
+            'return statement is missing. Or, to render nothing, ' +
+            'return null.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
       }
     }
 

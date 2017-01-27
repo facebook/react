@@ -45,10 +45,13 @@ function restoreStateOfTarget(target) {
       'Fiber needs to be injected to handle a fiber target for controlled ' +
       'events.'
     );
+    const props = EventPluginUtils.getFiberCurrentPropsFromNode(
+      internalInstance.stateNode
+    );
     fiberHostComponent.restoreControlledState(
       internalInstance.stateNode,
       internalInstance.type,
-      internalInstance.memoizedProps
+      props
     );
     return;
   }
