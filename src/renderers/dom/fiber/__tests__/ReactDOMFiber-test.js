@@ -1041,16 +1041,9 @@ describe('disableNewFiberFeatures', () => {
       return props.children;
     }
 
-    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
-    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
-    expect(() =>
-      ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
+    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You returned string/);
+    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You returned number/);
+    expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You returned an array/);
   });
 
   it('treats mocked render functions as if they return null', () => {
