@@ -131,7 +131,10 @@ module.exports = function(vorpal, app) {
             .then((richPRs) => {
               return richPRs.filter((pr) => {
                 if (!pr.merged_at) {
-                  this.log(`${chalk.yellow.bold('WARNING')} ${pr.html_url} was not merged, should have the milestone unset.`);
+                  this.log(
+                    `${chalk.yellow.bold('WARNING')} ${pr.html_url} was not merged,` +
+                     ` should have the milestone unset.`
+                  );
                   return false;
                 }
                 return true;
@@ -168,7 +171,10 @@ module.exports = function(vorpal, app) {
                 resolve(results);
               })
               .catch((err) => {
-                this.log(`${chalk.red.bold('ERROR')} Something went wrong and your repo is probably in a bad state. Sorry.`);
+                this.log(
+                  `${chalk.red.bold('ERROR')} Something went wrong and your repo is` +
+                   ` probably in a bad state. Sorry.`
+                );
                 resolve({
                   successful: [],
                   skipped: [],
