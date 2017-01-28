@@ -146,7 +146,7 @@ function accumulateDirectDispatches(events) {
  * are sets of events that have already been annotated with a set of dispatched
  * listener functions/ids. The API is designed this way to discourage these
  * propagation strategies from actually executing the dispatches, since we
- * always want to collect the entire set of dispatches before executing event a
+ * always want to collect the entire set of dispatches before executing even a
  * single one.
  *
  * @constructor EventPropagators
