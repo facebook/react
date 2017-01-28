@@ -154,7 +154,7 @@ function validateChildKeys(node, parentType) {
       if (iteratorFn !== node.entries) {
         var iterator = iteratorFn.call(node);
         var step;
-        while (!(step = iterator.next()).done) {
+        while (!(step = iterator.next())['done']) {
           if (ReactElement.isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
           }

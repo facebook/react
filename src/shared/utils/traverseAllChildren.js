@@ -113,7 +113,7 @@ function traverseAllChildrenImpl(
       var step;
       if (iteratorFn !== children.entries) {
         var ii = 0;
-        while (!(step = iterator.next()).done) {
+        while (!(step = iterator.next())['done']) {
           child = step.value;
           nextName = nextNamePrefix + getComponentKey(child, ii++);
           subtreeCount += traverseAllChildrenImpl(
@@ -142,7 +142,7 @@ function traverseAllChildrenImpl(
           didWarnAboutMaps = true;
         }
         // Iterator will provide entry [k,v] tuples rather than values.
-        while (!(step = iterator.next()).done) {
+        while (!(step = iterator.next())['done']) {
           var entry = step.value;
           if (entry) {
             child = entry[1];
