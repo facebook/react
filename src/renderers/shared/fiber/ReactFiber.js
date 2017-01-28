@@ -368,7 +368,7 @@ function createFiberFromElementType(type : mixed, key : null | string, debugOwne
       }
       const ownerName = debugOwner ? getComponentName(debugOwner) : null;
       if (ownerName) {
-        info += ' Check the render method of `' + ownerName + '`.';
+        info += '\n\nCheck the render method of `' + ownerName + '`.';
       }
     }
     invariant(

@@ -190,7 +190,7 @@ describe('ReactStatelessComponent', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail. Check the render method ' +
+      'Attempts to access this ref will fail.\n\nCheck the render method ' +
       'of `ParentUsingStringRef`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +
@@ -225,7 +225,7 @@ describe('ReactStatelessComponent', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail. Check the render method ' +
+      'Attempts to access this ref will fail.\n\nCheck the render method ' +
       'of `ParentUsingFunctionRef`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +

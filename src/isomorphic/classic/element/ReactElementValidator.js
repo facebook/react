@@ -33,7 +33,7 @@ function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
     var name = getComponentName(ReactCurrentOwner.current);
     if (name) {
-      return ' Check the render method of `' + name + '`.';
+      return '\n\nCheck the render method of `' + name + '`.';
     }
   }
   return '';
@@ -48,7 +48,7 @@ function getSourceInfoErrorAddendum(elementProps) {
     var source = elementProps.__source;
     var fileName = source.fileName.replace(/^.*[\\\/]/, '');
     var lineNumber = source.lineNumber;
-    return ' Check your code at ' + fileName + ':' + lineNumber + '.';
+    return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
 }
@@ -67,7 +67,7 @@ function getCurrentComponentErrorInfo(parentType) {
     var parentName = typeof parentType === 'string' ?
       parentType : parentType.displayName || parentType.name;
     if (parentName) {
-      info = ` Check the top-level render call using <${parentName}>.`;
+      info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }
   }
   return info;

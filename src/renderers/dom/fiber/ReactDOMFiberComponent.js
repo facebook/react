@@ -68,7 +68,7 @@ function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
     // TODO: also report the stack.
-    return ' This DOM node was rendered by `' + ownerName + '`.';
+    return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
   }
   return '';
 }

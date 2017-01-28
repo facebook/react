@@ -35,7 +35,7 @@ function getDeclarationErrorAddendum(owner) {
   if (owner) {
     var name = owner.getName();
     if (name) {
-      return ' Check the render method of `' + name + '`.';
+      return '\n\nCheck the render method of `' + name + '`.';
     }
   }
   return '';

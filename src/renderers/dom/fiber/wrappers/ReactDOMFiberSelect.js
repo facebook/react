@@ -28,7 +28,7 @@ var didWarnValueDefaultValue = false;
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
-    return ' Check the render method of `' + ownerName + '`.';
+    return '\n\nCheck the render method of `' + ownerName + '`.';
   }
   return '';
 }

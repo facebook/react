@@ -280,7 +280,7 @@ describe('ReactCompositeComponent', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounted or ' +
       'mounting component. This usually means you called forceUpdate() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
+      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
       'Component component.'
     );
   });
@@ -324,7 +324,7 @@ describe('ReactCompositeComponent', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
+      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
       'Component component.'
     );
   });
@@ -1033,7 +1033,7 @@ describe('ReactCompositeComponent', () => {
       'Warning: _renderNewRootComponent(): Render methods should ' +
       'be a pure function of props and state; triggering nested component ' +
       'updates from render is not allowed. If necessary, trigger nested ' +
-      'updates in componentDidUpdate. Check the render method of Outer.'
+      'updates in componentDidUpdate.\n\nCheck the render method of Outer.'
     );
   });
 

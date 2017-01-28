@@ -369,7 +369,7 @@ var ReactMount = {
       '_renderNewRootComponent(): Render methods should be a pure function ' +
       'of props and state; triggering nested component updates from ' +
       'render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate. Check the render method of %s.',
+      'componentDidUpdate.\n\nCheck the render method of %s.',
       ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
         'ReactCompositeComponent'
     );
@@ -572,7 +572,7 @@ var ReactMount = {
       'unmountComponentAtNode(): Render methods should be a pure function ' +
       'of props and state; triggering nested component updates from render ' +
       'is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate. Check the render method of %s.',
+      'componentDidUpdate.\n\nCheck the render method of %s.',
       ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
         'ReactCompositeComponent'
     );

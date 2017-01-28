@@ -128,7 +128,7 @@ if (__DEV__) {
       // TODO: also report the stack.
     }
     if (ownerName) {
-      return ' Check the render method of `' + ownerName + '`.';
+      return '\n\nCheck the render method of `' + ownerName + '`.';
     }
     return '';
   };
