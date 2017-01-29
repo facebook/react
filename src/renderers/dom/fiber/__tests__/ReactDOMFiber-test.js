@@ -1041,8 +1041,8 @@ describe('disableNewFiberFeatures', () => {
       return props.children;
     }
 
-    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You returned string/);
-    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You returned number/);
+    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You returned a string/);
+    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You returned a number/);
     expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You returned an array/);
   });
 

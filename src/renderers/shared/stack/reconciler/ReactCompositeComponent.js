@@ -45,27 +45,13 @@ function getElementTypeForWarning(element) {
   if (element === null) {
     return 'null';
   }
+  if (element === undefined) {
+    return 'undefined'
+  }
   if (Array.isArray(element)) {
     return 'an array';
   }
-  return typeof element;
-}
-
-function warnIfInvalidElement(Component, element) {
-  if (__DEV__) {
-    warning(
-      element === null || element === false || React.isValidElement(element),
-      '%s(...) must return a valid React element (or null). ' +
-      'You returned %s.',
-      Component.displayName || Component.name || 'Component',
-      getElementTypeForWarning(element)
-    );
-    warning(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a functional component.',
-      Component.displayName || Component.name || 'Component'
-    );
-  }
+  return `a ${typeof element}`; // number, string, Symbol, boolean
 }
 
 function shouldConstruct(Component) {
