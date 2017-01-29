@@ -29,10 +29,11 @@ function ReactPureComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-function ComponentDummy() {}
-ComponentDummy.prototype = ReactComponent.prototype;
-ReactPureComponent.prototype = new ComponentDummy();
-ReactPureComponent.prototype.constructor = ReactPureComponent;
+// Set the ReactPureComponent.prototype to a new object that delegates to
+// ReactComponent.prototype
+ReactPureComponent.prototype = Object.create(ReactComponent.prototype);
+// Reassign constructor to the ReactPureComponent.prototype
+ReactPureComponent.constructor = ReactPureComponent;
 // Avoid an extra prototype jump for these methods.
 Object.assign(ReactPureComponent.prototype, ReactComponent.prototype);
 ReactPureComponent.prototype.isPureReactComponent = true;
