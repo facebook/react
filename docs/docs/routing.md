@@ -231,7 +231,7 @@ class App extends React.Component {
   }
   
   componentWillUnmount() {
-    // Ensure our listener does not keep calling `setState` after the component
+    // Ensure our listener does not keep calling `setState` after
     // the component has been unmounted
     this.unsubscribe();
   }
