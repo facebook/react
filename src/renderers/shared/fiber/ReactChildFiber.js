@@ -36,9 +36,11 @@ var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
+  var { getComponentName } = require('ReactFiberTreeReflection');
   var warning = require('warning');
 }
 
@@ -105,6 +107,37 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
     }
   }
   return mixedRef;
+}
+
+function throwOnInvalidObjectType(newChild : Object) {
+  const childrenString = String(newChild);
+  let addendum = '';
+  if (__DEV__) {
+    addendum =
+      ' If you meant to render a collection of children, use an array ' +
+      'instead or wrap the object using createFragment(object) from the ' +
+      'React add-ons.';
+    if (newChild._isReactElement) {
+      addendum =
+        ' It looks like you\'re using an element created by a different ' +
+        'version of React. Make sure to use only one copy of React.';
+    }
+    if (ReactCurrentOwner.current) {
+      const owner : Fiber = (ReactCurrentOwner.current : any);
+      let name = getComponentName(owner);
+      if (name) {
+        addendum += ' Check the render method of `' + name + '`.';
+      }
+    }
+  }
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s).%s',
+    childrenString === '[object Object]' ?
+      'object with keys {' + Object.keys(newChild).join(', ') + '}' :
+      childrenString,
+    addendum
+  );
 }
 
 // This wrapper function exists because I expect to clone the code in each path
@@ -418,6 +451,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         created.return = returnFiber;
         return created;
       }
+
+      throwOnInvalidObjectType(newChild);
     }
 
     return null;
@@ -481,6 +516,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
         return updateFragment(returnFiber, oldFiber, newChild, priority);
       }
+
+      throwOnInvalidObjectType(newChild);
     }
 
     return null;
@@ -536,6 +573,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         const matchedFiber = existingChildren.get(newIdx) || null;
         return updateFragment(returnFiber, matchedFiber, newChild, priority);
       }
+
+      throwOnInvalidObjectType(newChild);
     }
 
     return null;
@@ -1083,7 +1122,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
 
     // Handle object types
-    if (typeof newChild === 'object' && newChild !== null) {
+    const isObject = typeof newChild === 'object' && newChild !== null;
+    if (isObject) {
       // Support only the subset of return types that Stack supports. Treat
       // everything else as empty, but log a warning.
       if (disableNewFiberFeatures) {
@@ -1197,6 +1237,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         newChild,
         priority
       );
+    }
+
+    if (isObject) {
+      throwOnInvalidObjectType(newChild);
     }
 
     if (!disableNewFiberFeatures && typeof newChild === 'undefined') {
