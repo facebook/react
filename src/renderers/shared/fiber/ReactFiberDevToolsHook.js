@@ -10,14 +10,12 @@
  * @flow
  */
 
-/* globals __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__ : Object | void;
-
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
+
+declare var __REACT_DEVTOOLS_GLOBAL_HOOK__ : Object | void;
 
 if (__DEV__) {
   var warning = require('warning');
