@@ -565,11 +565,11 @@ describe('ReactDOMComponent', () => {
       expect(node.removeAttribute.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div id="" />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(2);
+      expect(node.setAttribute.mock.calls.length).toBe(1);
       expect(node.removeAttribute.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(2);
+      expect(node.setAttribute.mock.calls.length).toBe(1);
       expect(node.removeAttribute.mock.calls.length).toBe(2);
     });
 
@@ -586,9 +586,6 @@ describe('ReactDOMComponent', () => {
         oldSetAttribute(key, value);
         nodeValueSetter(key, value);
       };
-
-      ReactDOM.render(<div value="foo" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div value="foo" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
@@ -629,10 +626,10 @@ describe('ReactDOMComponent', () => {
       expect(nodeValueSetter.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div checked={false} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
 
       ReactDOM.render(<div checked={true} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(3);
+      expect(nodeValueSetter.mock.calls.length).toBe(2);
     });
 
     it('should ignore attribute whitelist for elements with the "is: attribute', () => {
