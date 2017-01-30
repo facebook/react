@@ -10,7 +10,7 @@ React has no special capabilities for dealing with asynchronous network requests
 
 Often, the data that a component needs is not available at initial render. We can load data asynchronously in the [`componentDidMount` lifecycle hook](/react/docs/react-component.html#componentdidmount).
 
-In the following example we use the [axios](https://github.com/mzabriskie/axios) to retrieve information about Facebook's Gists on GitHub and store them in the state. So first install it:
+In the following example we use the [axios](https://github.com/mzabriskie/axios) to retrieve information about Facebook's Repos on GitHub and store them in the state. So first install it:
 
 ```
 $ npm install axios --save
@@ -21,25 +21,24 @@ And you can use it in your project:
 ```javascript{1,9-13}
 import axios from 'axios';
 
-class Gists extends React.Component {
+class Repos extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {gists: []};
+    this.state = {repos: []};
   }
 
   componentDidMount() {
-    axios.get('https://api.github.com/users/facebook/gists')
-      .then(response => this.setState({ gists: response.data }))
+    axios.get('https://api.github.com/users/facebook/repos')
+      .then(response => this.setState({ repos: response.data }))
       .catch(error => console.log(error));
   }
 
   render() {
-    const { gists } = this.state;
     return (
       <div>
-        <h1>Gists by facebook</h1>
-        {gists.map(gist =>
-          <p><a href={gist.html_url}>{gist.id}</a></p>
+        <h1>Repos by facebook</h1>
+        {this.state.repos.map(repo =>
+          <div key={repo.id}>{repo.name}</div>
         )}
       </div>
     );
@@ -55,162 +54,102 @@ The component will perform an initial render without any of the network data. Wh
 
 If the props change, we might need to fetch new data for the updated props. The [`componentDidUpdate` lifecycle hook](/react/docs/react-component.html#componentdidupdate) is a good place to achieve this, since we may not need to fetch new data if the props that we're interested in have not changed.
 
-Building on the previous example, we will pass the username as a prop instead and fetch new gists when it changes:
+Building on the previous example, we will pass the username as a prop instead and fetch new repos when it changes:
 
-```javascript{7-12,14-23}
-class Gists extends React.Component {
+```javascript{7-11,,13-15,17-21,35,38,44-47,53}
+class Repos extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {gists: []};
+    this.state = {repos: []};
+  }
+
+  fetchRepos() {
+    axios.get(`https://api.github.com/users/${this.props.username}/repos`)
+      .then(response => this.setState({ repos: response.data }))
+      .catch(error => console.log(error));
   }
 
   componentDidMount() {
-    const { username } = this.props;
-    fetch(`https://api.github.com/users/${username}/gists`)
-      .then(res => res.json())
-      .then(gists => this.setState({ gists }));
+    this.fetchRepos();
   }
 
   componentDidUpdate(prevProps) {
-    const { username } = this.props;
-    // Make sure that the `username` prop did change before
-    // we initiate a network request.
-    if (username !== prevProps.username) {
-      fetch(`https://api.github.com/users/${username}/gists`)
-        .then(res => res.json())
-        .then(gists => this.setState({ gists }));
+    if (this.props.username != prevProps.username) {
+      this.fetchRepos();
     }
   }
 
   render() {
-    const { username } = this.props;
-    const { gists } = this.state;
     return (
       <div>
-        <h1>Gists by {username}.</h1>
-        {gists.map(gist => 
-          <p><a href={gist.html_url}>{gist.id}</a></p>
+        <h1>Repos by {this.props.username}</h1>
+        {this.state.repos.map(repo =>
+          <div key={repo.id}>{repo.name}</div>
         )}
       </div>
     );
   }
 }
-```
 
-We can extract the common code in `componentDidMount` and `componentDidUpdate` into a new method, `fetchGists`, and call that in both lifecycle hooks.
-
-```javascript{8,13,17-22}
-class Gists extends React.Component {
+class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {gists: []};
-  }
-
-  componentDidMount() {
-    this.fetchGists();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.username !== prevProps.username) {
-      this.fetchGists();
-    }
-  }
-
-  fetchGists() {
-    const { username } = this.props;
-    fetch(`https://api.github.com/users/${username}/gists`)
-      .then(res => res.json())
-      .then(gists => this.setState({ gists }));
+    this.state = {username: 'facebook'};
   }
 
   render() {
-    const { username } = this.props;
-    const { gists } = this.state;
     return (
       <div>
-        <h1>Gists by {username}.</h1>
-        {gists.map(gist => 
-          <p><a href={gist.html_url}>{gist.id}</a></p>
-        )}
+        <button onClick={() => this.setState({username: 'facebook'})}>Facebook</button>
+        <button onClick={() => this.setState({username: 'microsoft'})}>Microsoft</button>
+        <button onClick={() => this.setState({username: 'google'})}>Google</button>
+        <Repos username={this.state.username} />
       </div>
     );
   }
 }
+
+ReactDOM.render(<App />, document.getElementById('app'))
 ```
 
-[Try it out on CodePen.](http://codepen.io/rthor/pen/kkqrQx?editors=0010)
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/zNpzVW?editors=0011)
 
-We can simplify the `fetchGists` method by using the [`async / await`](https://tc39.github.io/ecmascript-asyncawait/) feature:
-
-```javascript{1,3-4}
-async fetchGists() {
-  const { username } = this.props;
-  const data = await fetch(`https://api.github.com/users/${username}/gists`);
-  this.setState({gists: await data.json()});
-}
-```
-
-[Try it out on CodePen.](https://codepen.io/rthor/pen/xEoWod?editors=0010)
-
-> **Note:**
-> 
-> `async / await` is still a proposal for the ECMAScript spec and therefore hasn't been implemented in most browsers. To use it today, a [Babel](http://babeljs.io/docs/plugins/transform-async-to-generator/) (or similar) transform is needed. If you're using Create React App, it works by default.
-
-## Pitfalls
+## Cancellation
 
 An old promise can be pending when a newer promise fulfills. This can cause the old promise to override the result of the new one. If a promise is pending when a component is updated, the result of the first promise should be ignored before a new one is created.
+Some data fetching APIs allow you to cancel requests, and for axios, we use [Cancellation](https://github.com/mzabriskie/axios#cancellation) by token:
 
-Additionally, a component can unmount while a promise is pending. React warns you if you call `setState` on unmounted components to prevent memory leaks. Some data fetching APIs allow you to cancel requests, and this is preferable when a component unmounts. For APIs such as `fetch` that don't offer a cancellation mechanism, you need to keep track of whether the component is mounted to avoid seeing warnings. Here is how we could implement this:
+```javascript{5-8,10-11,14-15,19-23}
+class Repos extends React.Component {
+  // removed for brevity
 
-```javascript{8,15,19-21,23,26,29-34}
-class Gists extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { gists: [] };
-  }
-
-  componentDidMount() {
-    this.fetchGists(this.props.username);
-  }
-
-  componentDidUpdate(prevProps) {
-    // Make sure that the `username` prop did change before
-    // we initiate a network request.
-    if (this.props.username !== prevProps.username) {
-      this.fetchGists(this.props.username);
+  fetchRepos() {
+    // cancel the previous request
+    if (typeof this._source != typeof undefined) {
+      this._source.cancel('Operation canceled due to new request.')
     }
+
+    // save the new request for cancellation
+    this._source = axios.CancelToken.source();
+    
+    axios.get(`https://api.github.com/users/${this.props.username}/repos`,
+      // cancel token used by axios
+      { cancelToken: this._source.token }
+    )
+      .then(response => this.setState({ repos: response.data }))
+      .catch(error => {
+         if (axios.isCancel(error)) {
+           console.log('Request canceled', error);
+         } else {
+           console.log(error);
+         }
+      });
   }
 
-  componentWillUnmount() {
-    this.isUnmounted = true;
-  }
-
-  fetchGists(username) {   
-    fetch(`https://api.github.com/users/${username}/gists`)
-      .then(data => data.json())
-      .then(gists => this.handleFetchSuccess(username, gists));
-  }
-
-  handleFetchSuccess(username, gists) {
-    if (this.isUnmounted || username !== this.props.username) {
-      return;
-    }
-    this.setState({ gists });
-  }
-
-  render() {
-    const { username } = this.props;
-    const { gists } = this.state;
-    return (
-      <div>
-        <h1>Gists by {username}.</h1>
-        {gists.map(gist => 
-          <p><a href={gist.html_url}>{gist.id}</a></p>
-        )}
-      </div>
-    );
-  }
+  // removed for brevity
 }
 ```
 
-[Try it out on CodePen.](http://codepen.io/rthor/pen/edweqz?editors=0010)
+[Try it on CodePen.](http://codepen.io/dashtinejad/pen/Lxejpq?editors=0011)
+
+[You can clone the whole sourcecode from GitHub](https://github.com/dashtinejad/react-ajax-axios).
