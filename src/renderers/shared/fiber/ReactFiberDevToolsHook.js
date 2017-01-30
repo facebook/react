@@ -12,6 +12,8 @@
 
 /* globals __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 
+declare var __REACT_DEVTOOLS_GLOBAL_HOOK__ : Object | void;
+
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
