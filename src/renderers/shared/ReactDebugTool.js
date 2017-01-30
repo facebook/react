@@ -70,7 +70,7 @@ if (__DEV__) {
   var hooks = [];
   var didHookThrowForEvent = {};
 
-  const callHook = function(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
+  var callHook = function(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
     try {
       fn.call(context, arg1, arg2, arg3, arg4, arg5);
     } catch (e) {
@@ -84,7 +84,7 @@ if (__DEV__) {
     }
   };
 
-  const emitEvent = function(event, arg1, arg2, arg3, arg4, arg5) {
+  var emitEvent = function(event, arg1, arg2, arg3, arg4, arg5) {
     for (var i = 0; i < hooks.length; i++) {
       var hook = hooks[i];
       var fn = hook[event];
@@ -107,12 +107,12 @@ if (__DEV__) {
 
   var lifeCycleTimerHasWarned = false;
 
-  const clearHistory = function() {
+  var clearHistory = function() {
     ReactComponentTreeHook.purgeUnmountedComponents();
     ReactHostOperationHistoryHook.clearHistory();
   };
 
-  const getTreeSnapshot = function(registeredIDs) {
+  var getTreeSnapshot = function(registeredIDs) {
     return registeredIDs.reduce((tree, id) => {
       var ownerID = ReactComponentTreeHook.getOwnerID(id);
       var parentID = ReactComponentTreeHook.getParentID(id);
@@ -131,7 +131,7 @@ if (__DEV__) {
     }, {});
   };
 
-  const resetMeasurements = function() {
+  var resetMeasurements = function() {
     var previousStartTime = currentFlushStartTime;
     var previousMeasurements = currentFlushMeasurements;
     var previousOperations = ReactHostOperationHistoryHook.getHistory();
@@ -158,7 +158,7 @@ if (__DEV__) {
     currentFlushMeasurements = [];
   };
 
-  const checkDebugID = function(debugID, allowRoot = false) {
+  var checkDebugID = function(debugID, allowRoot = false) {
     if (allowRoot && debugID === 0) {
       return;
     }
@@ -167,7 +167,7 @@ if (__DEV__) {
     }
   };
 
-  const beginLifeCycleTimer = function(debugID, timerType) {
+  var beginLifeCycleTimer = function(debugID, timerType) {
     if (currentFlushNesting === 0) {
       return;
     }
@@ -189,7 +189,7 @@ if (__DEV__) {
     currentTimerType = timerType;
   };
 
-  const endLifeCycleTimer = function(debugID, timerType) {
+  var endLifeCycleTimer = function(debugID, timerType) {
     if (currentFlushNesting === 0) {
       return;
     }
@@ -218,7 +218,7 @@ if (__DEV__) {
     currentTimerType = null;
   };
 
-  const pauseCurrentLifeCycleTimer = function() {
+  var pauseCurrentLifeCycleTimer = function() {
     var currentTimer = {
       startTime: currentTimerStartTime,
       nestedFlushStartTime: performanceNow(),
@@ -232,7 +232,7 @@ if (__DEV__) {
     currentTimerType = null;
   };
 
-  const resumeCurrentLifeCycleTimer = function() {
+  var resumeCurrentLifeCycleTimer = function() {
     var {startTime, nestedFlushStartTime, debugID, timerType} = lifeCycleTimerStack.pop();
     var nestedFlushDuration = performanceNow() - nestedFlushStartTime;
     currentTimerStartTime = startTime;
@@ -249,7 +249,7 @@ if (__DEV__) {
     typeof performance.measure === 'function' &&
     typeof performance.clearMeasures === 'function';
 
-  const shouldMark = function(debugID) {
+  var shouldMark = function(debugID) {
     if (!isProfiling || !canUsePerformanceMeasure) {
       return false;
     }
@@ -264,7 +264,7 @@ if (__DEV__) {
     return true;
   };
 
-  const markBegin = function(debugID, markType) {
+  var markBegin = function(debugID, markType) {
     if (!shouldMark(debugID)) {
       return;
     }
@@ -274,7 +274,7 @@ if (__DEV__) {
     performance.mark(markName);
   };
 
-  const markEnd = function(debugID, markType) {
+  var markEnd = function(debugID, markType) {
     if (!shouldMark(debugID)) {
       return;
     }
