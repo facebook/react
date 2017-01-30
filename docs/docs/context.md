@@ -108,9 +108,11 @@ If `contextTypes` is not defined, then `context` will be an empty object.
 
 ## Parent-Child Coupling
 
-Context can also let you build an API where parents and children communicate. For example, one library that works this way is [React Router V4](https://react-router.now.sh/basic):
+Context can also let you build an API where parents and children communicate. For example, one library that works this way is [React Router V4](https://reacttraining.com/react-router):
 
 ```javascript
+import { Router, Route, Link } from 'react-router-dom';
+
 const BasicExample = () => (
   <Router>
     <div>
@@ -120,17 +122,17 @@ const BasicExample = () => (
         <li><Link to="/topics">Topics</Link></li>
       </ul>
 
-      <hr/>
+      <hr />
 
-      <Match exactly pattern="/" component={Home} />
-      <Match pattern="/about" component={About} />
-      <Match pattern="/topics" component={Topics} />
+      <Route exact path="/" component={Home} />
+      <Route path="/about" component={About} />
+      <Route path="/topics" component={Topics} />
     </div>
   </Router>
-)
+);
 ```
 
-By passing down some information from the `Router` component, each `Link` and `Match` can communicate back to the containing `Router`.
+By passing down some information from the `Router` component, each `Link` and `Route` can communicate back to the containing `Router`.
 
 Before you build components with an API similar to this, consider if there are cleaner alternatives. For example, you can pass entire React component as props if you'd like to.
 
