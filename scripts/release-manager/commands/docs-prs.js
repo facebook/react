@@ -16,7 +16,8 @@ const DOCS_LABEL = 'Documentation: needs merge to stable';
 // track progress. on fail, pause and force user to handle manually, continue? prompt
 // git push
 // update labels on each PR
-//   ALT: dump link to https://github.com/facebook/react/issues?q=label%3A%22Documentation%3A+needs+merge+to+stable%22+is%3Aclosed
+//   ALT: dump link to
+//        https://github.com/facebook/react/issues?q=label%3A%22Documentation%3A+needs+merge+to+stable%22+is%3Aclosed
 //        and say manual step to remove label
 
 

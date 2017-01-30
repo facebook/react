@@ -211,7 +211,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // Even better would be if children weren't special cased at all tho.
           const instance : I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
-          const updatePayload = prepareUpdate(instance, type, oldProps, newProps, rootContainerInstance, currentHostContext);
+          const updatePayload = prepareUpdate(
+            instance,
+            type,
+            oldProps,
+            newProps,
+            rootContainerInstance,
+            currentHostContext
+          );
+
           // TODO: Type this specific to this type of component.
           workInProgress.updateQueue = (updatePayload : any);
           // If the update payload indicates that there is a change or if there

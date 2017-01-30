@@ -25,6 +25,7 @@ var {
   CoroutineComponent,
 } = ReactTypeOfWork;
 var { commitCallbacks } = require('ReactFiberUpdateQueue');
+var { onCommitUnmount } = require('ReactFiberDevToolsHook');
 
 var {
   Placement,
@@ -317,6 +318,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // deletion, so don't let them throw. Host-originating errors should
   // interrupt deletion, so it's okay
   function commitUnmount(current : Fiber) : void {
+    if (typeof onCommitUnmount === 'function') {
+      onCommitUnmount(current);
+    }
+
     switch (current.tag) {
       case ClassComponent: {
         safelyDetachRef(current);

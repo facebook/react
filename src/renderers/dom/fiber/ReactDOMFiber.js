@@ -29,7 +29,7 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var { isValidElement } = require('React');
-
+var { injectInternals } = require('ReactFiberDevToolsHook');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -329,7 +329,12 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
-function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, children : ReactNodeList, containerNode : DOMContainerElement | Document, callback: ?Function) {
+function renderSubtreeIntoContainer(
+  parentComponent : ?ReactComponent<any, any, any>,
+  children : ReactNodeList,
+  containerNode : DOMContainerElement | Document,
+  callback: ?Function
+) {
   validateContainer(containerNode);
 
   let container : DOMContainerElement =
@@ -370,7 +375,12 @@ var ReactDOM = {
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
-  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  unstable_renderSubtreeIntoContainer(
+    parentComponent : ReactComponent<any, any, any>,
+    element : ReactElement<any>,
+    containerNode : DOMContainerElement | Document,
+    callback: ?Function
+  ) {
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
@@ -406,5 +416,12 @@ var ReactDOM = {
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
 };
+
+if (typeof injectInternals === 'function') {
+  injectInternals({
+    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+    findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  });
+}
 
 module.exports = ReactDOM;

@@ -368,16 +368,16 @@ describe('ReactMultiChild', () => {
       'twoA componentDidMount',
 
       ...(
-        ReactDOMFeatureFlags.useFiber ?
-          [
+        ReactDOMFeatureFlags.useFiber
+          ? [
             'oneB componentWillMount',
             'oneB render',
             'twoB componentWillMount',
             'twoB render',
             'oneA componentWillUnmount',
             'twoA componentWillUnmount',
-          ] :
-          [
+          ]
+          : [
             'oneB componentWillMount',
             'oneB render',
             'oneA componentWillUnmount',
