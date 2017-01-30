@@ -110,34 +110,36 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
 }
 
 function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
-  const childrenString = String(newChild);
-  let addendum = '';
-  if (__DEV__) {
-    addendum =
-      ' If you meant to render a collection of children, use an array ' +
-      'instead or wrap the object using createFragment(object) from the ' +
-      'React add-ons.';
-    if (newChild._isReactElement) {
+  if (returnFiber.type !== 'textarea') {
+    const childrenString = String(newChild);
+    let addendum = '';
+    if (__DEV__) {
       addendum =
-        ' It looks like you\'re using an element created by a different ' +
-        'version of React. Make sure to use only one copy of React.';
-    }
-    const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
-    if (owner && typeof owner.tag === 'number') {
-      const name = getComponentName((owner : any));
-      if (name) {
-        addendum += ' Check the render method of `' + name + '`.';
+        ' If you meant to render a collection of children, use an array ' +
+        'instead or wrap the object using createFragment(object) from the ' +
+        'React add-ons.';
+      if (newChild._isReactElement) {
+        addendum =
+          ' It looks like you\'re using an element created by a different ' +
+          'version of React. Make sure to use only one copy of React.';
+      }
+      const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
+      if (owner && typeof owner.tag === 'number') {
+        const name = getComponentName((owner : any));
+        if (name) {
+          addendum += ' Check the render method of `' + name + '`.';
+        }
       }
     }
+    invariant(
+      false,
+      'Objects are not valid as a React child (found: %s).%s',
+      childrenString === '[object Object]' ?
+        'object with keys {' + Object.keys(newChild).join(', ') + '}' :
+        childrenString,
+      addendum
+    );
   }
-  invariant(
-    false,
-    'Objects are not valid as a React child (found: %s).%s',
-    childrenString === '[object Object]' ?
-      'object with keys {' + Object.keys(newChild).join(', ') + '}' :
-      childrenString,
-    addendum
-  );
 }
 
 // This wrapper function exists because I expect to clone the code in each path
